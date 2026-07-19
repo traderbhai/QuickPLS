@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.1.1 native keyboard workflow smoke",
+  "passed": true,
+  "checklist": {
+    "release_executable_launches_for_native_keyboard_context": true,
+    "completed_result_keyboard_regions_pass_browser_contract": true,
+    "results_keyboard_regions_named": true,
+    "report_keyboard_regions_named": true,
+    "focus_visible_contract_passed": true,
+    "pywinauto_availability_recorded": true
+  },
+  "pywinauto": {
+    "available": true,
+    "note": "UIA focus traversal can be promoted to literal native-key smoke when pywinauto is installed in validation tooling."
+  },
+  "commands": [
+    {
+      "command": [
+        "node",
+        "validation/v11_keyboard_workflow_smoke.mjs"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "elapsed_seconds": 2.7351,
+      "stdout_tail": "{\n  \"schema_version\": 1,\n  \"target\": \"QuickPLS v1.1 keyboard workflow smoke\",\n  \"viewport\": {\n    \"width\": 1440,\n    \"height\": 900\n  },\n  \"passed\": true,\n  \"checklist\": {\n    \"results_regions_named\": true,\n    \"report_regions_named\": true,\n    \"results_focus_reaches_table_regions\": true,\n    \"report_focus_reaches_table_regions\": true,\n    \"focus_visible_css_present\": true,\n    \"screenshots_written\": true\n  },\n  \"errors\": [],\n  \"evidence\": {\n    \"results\": {\n      \"regions\": [\n        {\n          \"label\": \"PLS path modeling core run result summary\",\n          \"className\": \"result-summary\"\n        }\n      ],\n      \"focused\": [\n        {\n          \"label\": \"PLS path modeling core run result summary\",\n          \"className\": \"result-summary\",\n          \"hasVisibleFocusRule\": true\n        }\n      ]\n    },\n    \"report\": {\n      \"regions\": [\n        {\n          \"label\": \"Run comparison table\",\n          \"className\": \"bootstrap-table-scroll\"\n        },\n        {\n          \"label\": \"Run provenance table\",\n          \"className\": \"bootstrap-table-scroll\"\n        }\n      ],\n      \"focused\": [\n        {\n          \"label\": \"Run comparison table\",\n          \"className\": \"bootstrap-table-scroll\",\n          \"hasVisibleFocusRule\": true\n        },\n        {\n          \"label\": \"Run provenance table\",\n          \"className\": \"bootstrap-table-scroll\",\n          \"hasVisibleFocusRule\": true\n        }\n      ]\n    }\n  },\n  \"artifacts\": {\n    \"results\": \"D:\\\\QuickPLS\\\\validation\\\\results\\\\v11\\\\keyboard-smoke\\\\results-keyboard.png\",\n    \"report\": \"D:\\\\QuickPLS\\\\validation\\\\results\\\\v11\\\\keyboard-smoke\\\\report-keyboard.png\"\n  }\n}\n",
+      "stderr_tail": ""
+    }
+  ],
+  "launch": {
+    "passed": true,
+    "path": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+    "smoke_env": "QUICKPLS_SMOKE_UI=1"
+  },
+  "artifacts": {
+    "browser_keyboard": "D:\\QuickPLS\\validation\\results\\v11_keyboard_workflow_smoke.json"
+  }
+}

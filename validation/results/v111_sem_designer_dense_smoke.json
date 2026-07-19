@@ -1,0 +1,279 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.1.1 dense SEM designer smoke",
+  "passed": true,
+  "checklist": {
+    "medium_fixture_has_expected_nodes": true,
+    "large_fixture_has_expected_nodes": true,
+    "latent_nodes_do_not_overlap": true,
+    "structural_edges_render_and_labels_do_not_collide": true,
+    "screenshots_written": true
+  },
+  "errors": [],
+  "evidence": {
+    "medium": {
+      "latent_count": 8,
+      "indicator_count": 32,
+      "structural_edge_count": 12,
+      "edge_label_count": 0,
+      "latent_rects": [
+        {
+          "left": 527.4297485351562,
+          "top": 401.1777038574219,
+          "right": 587.066162109375,
+          "bottom": 456.7479248046875
+        },
+        {
+          "left": 527.4297485351562,
+          "top": 481.1446533203125,
+          "right": 587.066162109375,
+          "bottom": 536.7149047851562
+        },
+        {
+          "left": 527.4297485351562,
+          "top": 561.111572265625,
+          "right": 587.066162109375,
+          "bottom": 616.6818237304688
+        },
+        {
+          "left": 717.1818237304688,
+          "top": 401.1777038574219,
+          "right": 776.8182373046875,
+          "bottom": 456.7479248046875
+        },
+        {
+          "left": 717.1818237304688,
+          "top": 481.1446533203125,
+          "right": 776.8182373046875,
+          "bottom": 536.7149047851562
+        },
+        {
+          "left": 717.1818237304688,
+          "top": 561.111572265625,
+          "right": 776.8182373046875,
+          "bottom": 616.6818237304688
+        },
+        {
+          "left": 906.9338989257812,
+          "top": 401.1777038574219,
+          "right": 966.5703125,
+          "bottom": 456.7479248046875
+        },
+        {
+          "left": 906.9338989257812,
+          "top": 481.1446533203125,
+          "right": 966.5703125,
+          "bottom": 536.7149047851562
+        }
+      ],
+      "label_rects": [],
+      "latent_overlap_count": 0,
+      "label_overlap_count": 0,
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v111\\sem-designer\\medium.png"
+    },
+    "large": {
+      "latent_count": 20,
+      "indicator_count": 80,
+      "structural_edge_count": 28,
+      "edge_label_count": 0,
+      "latent_rects": [
+        {
+          "left": 527.4297485351562,
+          "top": 241.24380493164062,
+          "right": 587.066162109375,
+          "bottom": 296.8140563964844
+        },
+        {
+          "left": 527.4297485351562,
+          "top": 321.21075439453125,
+          "right": 587.066162109375,
+          "bottom": 376.781005859375
+        },
+        {
+          "left": 527.4297485351562,
+          "top": 401.1777038574219,
+          "right": 587.066162109375,
+          "bottom": 456.7479553222656
+        },
+        {
+          "left": 527.4297485351562,
+          "top": 481.1446533203125,
+          "right": 587.066162109375,
+          "bottom": 536.7149047851562
+        },
+        {
+          "left": 527.4297485351562,
+          "top": 561.111572265625,
+          "right": 587.066162109375,
+          "bottom": 616.6818237304688
+        },
+        {
+          "left": 527.4297485351562,
+          "top": 641.0784912109375,
+          "right": 587.066162109375,
+          "bottom": 696.6487426757812
+        },
+        {
+          "left": 527.4297485351562,
+          "top": 721.0454711914062,
+          "right": 587.066162109375,
+          "bottom": 776.61572265625
+        },
+        {
+          "left": 717.1818237304688,
+          "top": 241.24380493164062,
+          "right": 776.8182373046875,
+          "bottom": 296.8140563964844
+        },
+        {
+          "left": 717.1818237304688,
+          "top": 321.21075439453125,
+          "right": 776.8182373046875,
+          "bottom": 376.781005859375
+        },
+        {
+          "left": 717.1818237304688,
+          "top": 401.1777038574219,
+          "right": 776.8182373046875,
+          "bottom": 456.7479553222656
+        },
+        {
+          "left": 717.1818237304688,
+          "top": 481.1446533203125,
+          "right": 776.8182373046875,
+          "bottom": 536.7149047851562
+        },
+        {
+          "left": 717.1818237304688,
+          "top": 561.111572265625,
+          "right": 776.8182373046875,
+          "bottom": 616.6818237304688
+        },
+        {
+          "left": 717.1818237304688,
+          "top": 641.0784912109375,
+          "right": 776.8182373046875,
+          "bottom": 696.6487426757812
+        },
+        {
+          "left": 717.1818237304688,
+          "top": 721.0454711914062,
+          "right": 776.8182373046875,
+          "bottom": 776.61572265625
+        },
+        {
+          "left": 906.9338989257812,
+          "top": 241.24380493164062,
+          "right": 966.5703125,
+          "bottom": 296.8140563964844
+        },
+        {
+          "left": 906.9338989257812,
+          "top": 321.21075439453125,
+          "right": 966.5703125,
+          "bottom": 376.781005859375
+        },
+        {
+          "left": 906.9338989257812,
+          "top": 401.1777038574219,
+          "right": 966.5703125,
+          "bottom": 456.7479553222656
+        },
+        {
+          "left": 906.9338989257812,
+          "top": 481.1446533203125,
+          "right": 966.5703125,
+          "bottom": 536.7149047851562
+        },
+        {
+          "left": 906.9338989257812,
+          "top": 561.111572265625,
+          "right": 966.5703125,
+          "bottom": 616.6818237304688
+        },
+        {
+          "left": 906.9338989257812,
+          "top": 641.0784912109375,
+          "right": 966.5703125,
+          "bottom": 696.6487426757812
+        }
+      ],
+      "label_rects": [],
+      "latent_overlap_count": 0,
+      "label_overlap_count": 0,
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v111\\sem-designer\\large.png"
+    },
+    "mediation": {
+      "latent_count": 3,
+      "indicator_count": 9,
+      "structural_edge_count": 6,
+      "edge_label_count": 0,
+      "latent_rects": [
+        {
+          "left": 527.4297485351562,
+          "top": 482.5,
+          "right": 587.0661010742188,
+          "bottom": 538.0702514648438
+        },
+        {
+          "left": 717.1818237304688,
+          "top": 482.5,
+          "right": 776.8182373046875,
+          "bottom": 538.0702514648438
+        },
+        {
+          "left": 906.9338989257812,
+          "top": 482.5,
+          "right": 966.5702514648438,
+          "bottom": 538.0702514648438
+        }
+      ],
+      "label_rects": [],
+      "latent_overlap_count": 0,
+      "label_overlap_count": 0,
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v111\\sem-designer\\mediation.png"
+    },
+    "formative": {
+      "latent_count": 5,
+      "indicator_count": 15,
+      "structural_edge_count": 8,
+      "edge_label_count": 0,
+      "latent_rects": [
+        {
+          "left": 527.4297485351562,
+          "top": 442.51654052734375,
+          "right": 587.066162109375,
+          "bottom": 498.0867919921875
+        },
+        {
+          "left": 527.4297485351562,
+          "top": 522.4835205078125,
+          "right": 587.066162109375,
+          "bottom": 578.0537109375
+        },
+        {
+          "left": 717.1818237304688,
+          "top": 442.51654052734375,
+          "right": 776.8182373046875,
+          "bottom": 498.0867919921875
+        },
+        {
+          "left": 717.1818237304688,
+          "top": 522.4835205078125,
+          "right": 776.8182373046875,
+          "bottom": 578.0537109375
+        },
+        {
+          "left": 906.9338989257812,
+          "top": 442.51654052734375,
+          "right": 966.5703125,
+          "bottom": 498.0867919921875
+        }
+      ],
+      "label_rects": [],
+      "latent_overlap_count": 0,
+      "label_overlap_count": 0,
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v111\\sem-designer\\formative.png"
+    }
+  }
+}

@@ -1,4 +1,4 @@
-export type WorkspaceView = "data" | "models" | "analyses" | "runs" | "groups" | "reports";
+export type WorkspaceView = "data" | "models" | "analyses" | "run" | "runs" | "groups" | "reports";
 export type MeasurementMode = "reflective" | "formative";
 export type MethodStatus = "experimental" | "validated" | "unsupported";
 export type AnalysisMethodId = "pls_pm" | "bootstrap" | "plsc" | "wpls" | "cca" | "cta_pls" | "endogeneity" | "nonlinear_effects" | "moderated_mediation" | "predict" | "mga" | "ipma" | "cbsem" | "pca" | "gsca" | "regression" | "nca";

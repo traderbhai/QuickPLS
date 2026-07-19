@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.1 desktop UX completion audit",
+  "passed": true,
+  "checklist": {
+    "desktop_visual_smoke_passed": true,
+    "native_launch_smoke_passed": true,
+    "native_workflow_smoke_passed": true,
+    "report_export_parity_passed": true,
+    "keyboard_workflow_smoke_passed": true,
+    "screenshots_exist": true,
+    "audit_doc_records_completion": true,
+    "mobile_non_gating_recorded": true
+  },
+  "artifacts": {
+    "visual_smoke": "validation/results/v11_desktop_ux_smoke.json",
+    "native_launch": "validation/results/v11_native_desktop_smoke.json",
+    "native_workflow": "validation/results/v11_native_workflow_smoke.json",
+    "report_parity": "validation/results/v11_report_export_parity.json",
+    "keyboard_smoke": "validation/results/v11_keyboard_workflow_smoke.json",
+    "screenshots": "validation/results/screens/v11/",
+    "audit_doc": "docs/V1_1_UX_AUDIT.md"
+  }
+}

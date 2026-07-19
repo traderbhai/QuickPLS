@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.1.1 broad report/export parity",
+  "passed": true,
+  "checklist": {
+    "all_cases_have_svg": true,
+    "all_cases_have_matching_core_counts": true,
+    "completed_result_has_r2": true,
+    "all_cases_omit_edit_chrome": true,
+    "all_cases_avoid_r2_mojibake": true
+  },
+  "errors": [],
+  "cases": [
+    {
+      "name": "model-only-current",
+      "downloadedPath": "D:\\QuickPLS\\validation\\results\\screens\\v111\\export-parity\\model-only-current.svg",
+      "preview": {
+        "text": ".bg{fill:#fff}.caption{font:10px Arial,sans-serif;fill:#526169}.warning{font:10px Arial,sans-serif;fill:#666} .latent{fill:#fff;stroke:#2d777a;stroke-width:1.8}.latent.formative{stroke:#a16d0b}.latent-title{font:700 12px Arial,sans-serif;fill:#172126}.latent-meta{font:10px Arial,sans-serif;fill:#56656b}.r2{font:700 10px Arial,sans-serif;fill:#32630d}.indicator{fill:#fff8df;stroke:#c49116;stroke-width:1.2}.indicator.formative{fill:#eaf8f8;stroke:#0b8f92}.indicator-text{font:700 9px Arial,sans-serif;fill:#253137}.indicator-stat{font:700 8px Arial,sans-serif;fill:#32630d} .smartpls-latent{fill:#7d7d7d;stroke:#777;stroke-width:1}.smartpls-latent-label{font:10px Arial,sans-serif;fill:#222}.smartpls-r2{font:700 10px Arial,sans-serif;fill:#fff}.smartpls-indicator{fill:#eee;stroke:#d2d2d2;stroke-width:1}.smartpls-indicator-text{font:700 9px Arial,sans-serif;fill:#222} .edge{stroke:#465961;stroke-width:1.45;fill:none}.measurement{stroke:#9c7a20;stroke-width:1.05;fill:none}.measurement.formative{stroke:#0c777b}.covariance{stroke:#8d5798;stroke-width:1.25;stroke-dasharray:4 3;fill:none}.edge-label{font:700 10px Arial,sans-serif;fill:#172126}.label-bg{fill:#fff;stroke:#dce2e5}.arrow{fill:#465961} .smartpls .edge,.smartpls .measurement{stroke:#333;stroke-width:1.05}.smartpls .edge-label{font:500 9px Arial,sans-serif;fill:#222}.smartpls .label-bg{fill:#fff;stroke:none;fill-opacity:.85}.smartpls .arrow{fill:#333} .mono .latent,.mono .indicator{stroke:#333}.mono .indicator{fill:#fff}.mono .edge,.mono .measurement,.mono .covariance{stroke:#333}.mono .arrow{fill:#333}.high-contrast .smartpls-latent{fill:#222;stroke:#111}.high-contrast .smartpls-indicator{fill:#fff;stroke:#111}.quickpls-color .smartpls-latent{fill:#4f9fa2;stroke:#1f6e72}.quickpls-color .smartpls-indicator{fill:#fff8df;stroke:#c49116} QuickPLS model diagram Competence Likeability Customer Satisfaction Customer Loyalty COMP1 COMP2 COMP3 LIKE1 LIKE2 CUSA1 CUSA2 CUSL1 CUSL2",
+        "svg_present": true,
+        "latent_count": 8,
+        "indicator_count": 18,
+        "path_count": 0,
+        "has_r2": false,
+        "has_edit_chrome": false,
+        "has_mojibake": false
+      },
+      "exported": {
+        "text": ".bg{fill:#fff}.caption{font:10px Arial,sans-serif;fill:#526169}.warning{font:10px Arial,sans-serif;fill:#666} .latent{fill:#fff;stroke:#2d777a;stroke-width:1.8}.latent.formative{stroke:#a16d0b}.latent-title{font:700 12px Arial,sans-serif;fill:#172126}.latent-meta{font:10px Arial,sans-serif;fill:#56656b}.r2{font:700 10px Arial,sans-serif;fill:#32630d}.indicator{fill:#fff8df;stroke:#c49116;stroke-width:1.2}.indicator.formative{fill:#eaf8f8;stroke:#0b8f92}.indicator-text{font:700 9px Arial,sans-serif;fill:#253137}.indicator-stat{font:700 8px Arial,sans-serif;fill:#32630d} .smartpls-latent{fill:#7d7d7d;stroke:#777;stroke-width:1}.smartpls-latent-label{font:10px Arial,sans-serif;fill:#222}.smartpls-r2{font:700 10px Arial,sans-serif;fill:#fff}.smartpls-indicator{fill:#eee;stroke:#d2d2d2;stroke-width:1}.smartpls-indicator-text{font:700 9px Arial,sans-serif;fill:#222} .edge{stroke:#465961;stroke-width:1.45;fill:none}.measurement{stroke:#9c7a20;stroke-width:1.05;fill:none}.measurement.formative{stroke:#0c777b}.covariance{stroke:#8d5798;stroke-width:1.25;stroke-dasharray:4 3;fill:none}.edge-label{font:700 10px Arial,sans-serif;fill:#172126}.label-bg{fill:#fff;stroke:#dce2e5}.arrow{fill:#465961} .smartpls .edge,.smartpls .measurement{stroke:#333;stroke-width:1.05}.smartpls .edge-label{font:500 9px Arial,sans-serif;fill:#222}.smartpls .label-bg{fill:#fff;stroke:none;fill-opacity:.85}.smartpls .arrow{fill:#333} .mono .latent,.mono .indicator{stroke:#333}.mono .indicator{fill:#fff}.mono .edge,.mono .measurement,.mono .covariance{stroke:#333}.mono .arrow{fill:#333}.high-contrast .smartpls-latent{fill:#222;stroke:#111}.high-contrast .smartpls-indicator{fill:#fff;stroke:#111}.quickpls-color .smartpls-latent{fill:#4f9fa2;stroke:#1f6e72}.quickpls-color .smartpls-indicator{fill:#fff8df;stroke:#c49116} QuickPLS model diagram Competence Likeability Customer Satisfaction Customer Loyalty COMP1 COMP2 COMP3 LIKE1 LIKE2 CUSA1 CUSA2 CUSL1 CUSL2",
+        "svg_present": true,
+        "latent_count": 8,
+        "indicator_count": 18,
+        "path_count": 0,
+        "has_r2": false,
+        "has_edit_chrome": false,
+        "has_mojibake": false
+      },
+      "same_core_counts": true,
+      "no_edit_chrome": true,
+      "no_mojibake": true
+    },
+    {
+      "name": "completed-result-current",
+      "downloadedPath": "D:\\QuickPLS\\validation\\results\\screens\\v111\\export-parity\\completed-result-current.svg",
+      "preview": {
+        "text": ".bg{fill:#fff}.caption{font:10px Arial,sans-serif;fill:#526169}.warning{font:10px Arial,sans-serif;fill:#666} .latent{fill:#fff;stroke:#2d777a;stroke-width:1.8}.latent.formative{stroke:#a16d0b}.latent-title{font:700 12px Arial,sans-serif;fill:#172126}.latent-meta{font:10px Arial,sans-serif;fill:#56656b}.r2{font:700 10px Arial,sans-serif;fill:#32630d}.indicator{fill:#fff8df;stroke:#c49116;stroke-width:1.2}.indicator.formative{fill:#eaf8f8;stroke:#0b8f92}.indicator-text{font:700 9px Arial,sans-serif;fill:#253137}.indicator-stat{font:700 8px Arial,sans-serif;fill:#32630d} .smartpls-latent{fill:#7d7d7d;stroke:#777;stroke-width:1}.smartpls-latent-label{font:10px Arial,sans-serif;fill:#222}.smartpls-r2{font:700 10px Arial,sans-serif;fill:#fff}.smartpls-indicator{fill:#eee;stroke:#d2d2d2;stroke-width:1}.smartpls-indicator-text{font:700 9px Arial,sans-serif;fill:#222} .edge{stroke:#465961;stroke-width:1.45;fill:none}.measurement{stroke:#9c7a20;stroke-width:1.05;fill:none}.measurement.formative{stroke:#0c777b}.covariance{stroke:#8d5798;stroke-width:1.25;stroke-dasharray:4 3;fill:none}.edge-label{font:700 10px Arial,sans-serif;fill:#172126}.label-bg{fill:#fff;stroke:#dce2e5}.arrow{fill:#465961} .smartpls .edge,.smartpls .measurement{stroke:#333;stroke-width:1.05}.smartpls .edge-label{font:500 9px Arial,sans-serif;fill:#222}.smartpls .label-bg{fill:#fff;stroke:none;fill-opacity:.85}.smartpls .arrow{fill:#333} .mono .latent,.mono .indicator{stroke:#333}.mono .indicator{fill:#fff}.mono .edge,.mono .measurement,.mono .covariance{stroke:#333}.mono .arrow{fill:#333}.high-contrast .smartpls-latent{fill:#222;stroke:#111}.high-contrast .smartpls-indicator{fill:#fff;stroke:#111}.quickpls-color .smartpls-latent{fill:#4f9fa2;stroke:#1f6e72}.quickpls-color .smartpls-indicator{fill:#fff8df;stroke:#c49116} PLS path modeling core run publication diagram 0.403 0.327 0.116 0.172 0.544 0.842 0.811 0.786 0.874 0.861 0.902 0.888 0.913 0.894 Competence Likeability R² 0.544 Customer Satisfaction R² 0.617 Customer Loyalty COMP1 COMP2 COMP3 LIKE1 LIKE2 CUSA1 CUSA2 CUSL1 CUSL2 Validated for documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked. Run v11-smoke-completed-pls | 2026-07-19T12:00:00.000Z",
+        "svg_present": true,
+        "latent_count": 8,
+        "indicator_count": 18,
+        "path_count": 0,
+        "has_r2": true,
+        "has_edit_chrome": false,
+        "has_mojibake": false
+      },
+      "exported": {
+        "text": ".bg{fill:#fff}.caption{font:10px Arial,sans-serif;fill:#526169}.warning{font:10px Arial,sans-serif;fill:#666} .latent{fill:#fff;stroke:#2d777a;stroke-width:1.8}.latent.formative{stroke:#a16d0b}.latent-title{font:700 12px Arial,sans-serif;fill:#172126}.latent-meta{font:10px Arial,sans-serif;fill:#56656b}.r2{font:700 10px Arial,sans-serif;fill:#32630d}.indicator{fill:#fff8df;stroke:#c49116;stroke-width:1.2}.indicator.formative{fill:#eaf8f8;stroke:#0b8f92}.indicator-text{font:700 9px Arial,sans-serif;fill:#253137}.indicator-stat{font:700 8px Arial,sans-serif;fill:#32630d} .smartpls-latent{fill:#7d7d7d;stroke:#777;stroke-width:1}.smartpls-latent-label{font:10px Arial,sans-serif;fill:#222}.smartpls-r2{font:700 10px Arial,sans-serif;fill:#fff}.smartpls-indicator{fill:#eee;stroke:#d2d2d2;stroke-width:1}.smartpls-indicator-text{font:700 9px Arial,sans-serif;fill:#222} .edge{stroke:#465961;stroke-width:1.45;fill:none}.measurement{stroke:#9c7a20;stroke-width:1.05;fill:none}.measurement.formative{stroke:#0c777b}.covariance{stroke:#8d5798;stroke-width:1.25;stroke-dasharray:4 3;fill:none}.edge-label{font:700 10px Arial,sans-serif;fill:#172126}.label-bg{fill:#fff;stroke:#dce2e5}.arrow{fill:#465961} .smartpls .edge,.smartpls .measurement{stroke:#333;stroke-width:1.05}.smartpls .edge-label{font:500 9px Arial,sans-serif;fill:#222}.smartpls .label-bg{fill:#fff;stroke:none;fill-opacity:.85}.smartpls .arrow{fill:#333} .mono .latent,.mono .indicator{stroke:#333}.mono .indicator{fill:#fff}.mono .edge,.mono .measurement,.mono .covariance{stroke:#333}.mono .arrow{fill:#333}.high-contrast .smartpls-latent{fill:#222;stroke:#111}.high-contrast .smartpls-indicator{fill:#fff;stroke:#111}.quickpls-color .smartpls-latent{fill:#4f9fa2;stroke:#1f6e72}.quickpls-color .smartpls-indicator{fill:#fff8df;stroke:#c49116} PLS path modeling core run publication diagram 0.403 0.327 0.116 0.172 0.544 0.842 0.811 0.786 0.874 0.861 0.902 0.888 0.913 0.894 Competence Likeability R&#178; 0.544 Customer Satisfaction R&#178; 0.617 Customer Loyalty COMP1 COMP2 COMP3 LIKE1 LIKE2 CUSA1 CUSA2 CUSL1 CUSL2 Validated for documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked. Run v11-smoke-completed-pls | 2026-07-19T12:00:00.000Z",
+        "svg_present": true,
+        "latent_count": 8,
+        "indicator_count": 18,
+        "path_count": 0,
+        "has_r2": true,
+        "has_edit_chrome": false,
+        "has_mojibake": false
+      },
+      "same_core_counts": true,
+      "no_edit_chrome": true,
+      "no_mojibake": true
+    },
+    {
+      "name": "large-model-only-current",
+      "downloadedPath": "D:\\QuickPLS\\validation\\results\\screens\\v111\\export-parity\\large-model-only-current.svg",
+      "preview": {
+        "text": ".bg{fill:#fff}.caption{font:10px Arial,sans-serif;fill:#526169}.warning{font:10px Arial,sans-serif;fill:#666} .latent{fill:#fff;stroke:#2d777a;stroke-width:1.8}.latent.formative{stroke:#a16d0b}.latent-title{font:700 12px Arial,sans-serif;fill:#172126}.latent-meta{font:10px Arial,sans-serif;fill:#56656b}.r2{font:700 10px Arial,sans-serif;fill:#32630d}.indicator{fill:#fff8df;stroke:#c49116;stroke-width:1.2}.indicator.formative{fill:#eaf8f8;stroke:#0b8f92}.indicator-text{font:700 9px Arial,sans-serif;fill:#253137}.indicator-stat{font:700 8px Arial,sans-serif;fill:#32630d} .smartpls-latent{fill:#7d7d7d;stroke:#777;stroke-width:1}.smartpls-latent-label{font:10px Arial,sans-serif;fill:#222}.smartpls-r2{font:700 10px Arial,sans-serif;fill:#fff}.smartpls-indicator{fill:#eee;stroke:#d2d2d2;stroke-width:1}.smartpls-indicator-text{font:700 9px Arial,sans-serif;fill:#222} .edge{stroke:#465961;stroke-width:1.45;fill:none}.measurement{stroke:#9c7a20;stroke-width:1.05;fill:none}.measurement.formative{stroke:#0c777b}.covariance{stroke:#8d5798;stroke-width:1.25;stroke-dasharray:4 3;fill:none}.edge-label{font:700 10px Arial,sans-serif;fill:#172126}.label-bg{fill:#fff;stroke:#dce2e5}.arrow{fill:#465961} .smartpls .edge,.smartpls .measurement{stroke:#333;stroke-width:1.05}.smartpls .edge-label{font:500 9px Arial,sans-serif;fill:#222}.smartpls .label-bg{fill:#fff;stroke:none;fill-opacity:.85}.smartpls .arrow{fill:#333} .mono .latent,.mono .indicator{stroke:#333}.mono .indicator{fill:#fff}.mono .edge,.mono .measurement,.mono .covariance{stroke:#333}.mono .arrow{fill:#333}.high-contrast .smartpls-latent{fill:#222;stroke:#111}.high-contrast .smartpls-indicator{fill:#fff;stroke:#111}.quickpls-color .smartpls-latent{fill:#4f9fa2;stroke:#1f6e72}.quickpls-color .smartpls-indicator{fill:#fff8df;stroke:#c49116} QuickPLS model diagram Construct 1 Construct 2 Construct 3 Construct 4 Construct 5 Construct 6 Construct 7 Construct 8 Construct 9 Construct 10 Construct 11 Construct 12 Construct 13 Construct 14 Construct 15 Construct 16 Construct 17 Construct 18 Construct 19 Construct 20 C1I1 C1I2 C1I3 C1I4 C2I1 C2I2 C2I3 C2I4 C3I1 C3I2 C3I3 C3I4 C4I1 C4I2 C4I3 C4I4 C5I1 C5I2 C5I3 C5I4 C6I1 C6I2 C6I3 C6I4 C7I1 C7I2 C7I3 C7I4 C8I1 C8I2 C8I3 C8I4 C9I1 C9I2 C9I3 C9I4 C10I1 C10I2 C10I3 C10I4 C11I1 C11I2 C11I3 C11I4 C12I1 C12I2 C12I3 C12I4 C13I1 C13I2 C13I3 C13I4 C14I1 C14I2 C14I3 C14I4 C15I1 C15I2 C15I3 C15I4 C16I1 C16I2 C16I3 C16I4 C17I1 C17I2 C17I3 C17I4 C18I1 C18I2 C18I3 C18I4 C19I1 C19I2 C19I3 C19I4 C20I1 C20I2 C20I3 C20I4",
+        "svg_present": true,
+        "latent_count": 40,
+        "indicator_count": 160,
+        "path_count": 0,
+        "has_r2": false,
+        "has_edit_chrome": false,
+        "has_mojibake": false
+      },
+      "exported": {
+        "text": ".bg{fill:#fff}.caption{font:10px Arial,sans-serif;fill:#526169}.warning{font:10px Arial,sans-serif;fill:#666} .latent{fill:#fff;stroke:#2d777a;stroke-width:1.8}.latent.formative{stroke:#a16d0b}.latent-title{font:700 12px Arial,sans-serif;fill:#172126}.latent-meta{font:10px Arial,sans-serif;fill:#56656b}.r2{font:700 10px Arial,sans-serif;fill:#32630d}.indicator{fill:#fff8df;stroke:#c49116;stroke-width:1.2}.indicator.formative{fill:#eaf8f8;stroke:#0b8f92}.indicator-text{font:700 9px Arial,sans-serif;fill:#253137}.indicator-stat{font:700 8px Arial,sans-serif;fill:#32630d} .smartpls-latent{fill:#7d7d7d;stroke:#777;stroke-width:1}.smartpls-latent-label{font:10px Arial,sans-serif;fill:#222}.smartpls-r2{font:700 10px Arial,sans-serif;fill:#fff}.smartpls-indicator{fill:#eee;stroke:#d2d2d2;stroke-width:1}.smartpls-indicator-text{font:700 9px Arial,sans-serif;fill:#222} .edge{stroke:#465961;stroke-width:1.45;fill:none}.measurement{stroke:#9c7a20;stroke-width:1.05;fill:none}.measurement.formative{stroke:#0c777b}.covariance{stroke:#8d5798;stroke-width:1.25;stroke-dasharray:4 3;fill:none}.edge-label{font:700 10px Arial,sans-serif;fill:#172126}.label-bg{fill:#fff;stroke:#dce2e5}.arrow{fill:#465961} .smartpls .edge,.smartpls .measurement{stroke:#333;stroke-width:1.05}.smartpls .edge-label{font:500 9px Arial,sans-serif;fill:#222}.smartpls .label-bg{fill:#fff;stroke:none;fill-opacity:.85}.smartpls .arrow{fill:#333} .mono .latent,.mono .indicator{stroke:#333}.mono .indicator{fill:#fff}.mono .edge,.mono .measurement,.mono .covariance{stroke:#333}.mono .arrow{fill:#333}.high-contrast .smartpls-latent{fill:#222;stroke:#111}.high-contrast .smartpls-indicator{fill:#fff;stroke:#111}.quickpls-color .smartpls-latent{fill:#4f9fa2;stroke:#1f6e72}.quickpls-color .smartpls-indicator{fill:#fff8df;stroke:#c49116} QuickPLS model diagram Construct 1 Construct 2 Construct 3 Construct 4 Construct 5 Construct 6 Construct 7 Construct 8 Construct 9 Construct 10 Construct 11 Construct 12 Construct 13 Construct 14 Construct 15 Construct 16 Construct 17 Construct 18 Construct 19 Construct 20 C1I1 C1I2 C1I3 C1I4 C2I1 C2I2 C2I3 C2I4 C3I1 C3I2 C3I3 C3I4 C4I1 C4I2 C4I3 C4I4 C5I1 C5I2 C5I3 C5I4 C6I1 C6I2 C6I3 C6I4 C7I1 C7I2 C7I3 C7I4 C8I1 C8I2 C8I3 C8I4 C9I1 C9I2 C9I3 C9I4 C10I1 C10I2 C10I3 C10I4 C11I1 C11I2 C11I3 C11I4 C12I1 C12I2 C12I3 C12I4 C13I1 C13I2 C13I3 C13I4 C14I1 C14I2 C14I3 C14I4 C15I1 C15I2 C15I3 C15I4 C16I1 C16I2 C16I3 C16I4 C17I1 C17I2 C17I3 C17I4 C18I1 C18I2 C18I3 C18I4 C19I1 C19I2 C19I3 C19I4 C20I1 C20I2 C20I3 C20I4",
+        "svg_present": true,
+        "latent_count": 40,
+        "indicator_count": 160,
+        "path_count": 0,
+        "has_r2": false,
+        "has_edit_chrome": false,
+        "has_mojibake": false
+      },
+      "same_core_counts": true,
+      "no_edit_chrome": true,
+      "no_mojibake": true
+    },
+    {
+      "name": "formative-model-only-current",
+      "downloadedPath": "D:\\QuickPLS\\validation\\results\\screens\\v111\\export-parity\\formative-model-only-current.svg",
+      "preview": {
+        "text": ".bg{fill:#fff}.caption{font:10px Arial,sans-serif;fill:#526169}.warning{font:10px Arial,sans-serif;fill:#666} .latent{fill:#fff;stroke:#2d777a;stroke-width:1.8}.latent.formative{stroke:#a16d0b}.latent-title{font:700 12px Arial,sans-serif;fill:#172126}.latent-meta{font:10px Arial,sans-serif;fill:#56656b}.r2{font:700 10px Arial,sans-serif;fill:#32630d}.indicator{fill:#fff8df;stroke:#c49116;stroke-width:1.2}.indicator.formative{fill:#eaf8f8;stroke:#0b8f92}.indicator-text{font:700 9px Arial,sans-serif;fill:#253137}.indicator-stat{font:700 8px Arial,sans-serif;fill:#32630d} .smartpls-latent{fill:#7d7d7d;stroke:#777;stroke-width:1}.smartpls-latent-label{font:10px Arial,sans-serif;fill:#222}.smartpls-r2{font:700 10px Arial,sans-serif;fill:#fff}.smartpls-indicator{fill:#eee;stroke:#d2d2d2;stroke-width:1}.smartpls-indicator-text{font:700 9px Arial,sans-serif;fill:#222} .edge{stroke:#465961;stroke-width:1.45;fill:none}.measurement{stroke:#9c7a20;stroke-width:1.05;fill:none}.measurement.formative{stroke:#0c777b}.covariance{stroke:#8d5798;stroke-width:1.25;stroke-dasharray:4 3;fill:none}.edge-label{font:700 10px Arial,sans-serif;fill:#172126}.label-bg{fill:#fff;stroke:#dce2e5}.arrow{fill:#465961} .smartpls .edge,.smartpls .measurement{stroke:#333;stroke-width:1.05}.smartpls .edge-label{font:500 9px Arial,sans-serif;fill:#222}.smartpls .label-bg{fill:#fff;stroke:none;fill-opacity:.85}.smartpls .arrow{fill:#333} .mono .latent,.mono .indicator{stroke:#333}.mono .indicator{fill:#fff}.mono .edge,.mono .measurement,.mono .covariance{stroke:#333}.mono .arrow{fill:#333}.high-contrast .smartpls-latent{fill:#222;stroke:#111}.high-contrast .smartpls-indicator{fill:#fff;stroke:#111}.quickpls-color .smartpls-latent{fill:#4f9fa2;stroke:#1f6e72}.quickpls-color .smartpls-indicator{fill:#fff8df;stroke:#c49116} QuickPLS model diagram Construct 1 Construct 2 Construct 3 Construct 4 Construct 5 C1I1 C1I2 C1I3 C2I1 C2I2 C2I3 C3I1 C3I2 C3I3 C4I1 C4I2 C4I3 C5I1 C5I2 C5I3",
+        "svg_present": true,
+        "latent_count": 10,
+        "indicator_count": 30,
+        "path_count": 0,
+        "has_r2": false,
+        "has_edit_chrome": false,
+        "has_mojibake": false
+      },
+      "exported": {
+        "text": ".bg{fill:#fff}.caption{font:10px Arial,sans-serif;fill:#526169}.warning{font:10px Arial,sans-serif;fill:#666} .latent{fill:#fff;stroke:#2d777a;stroke-width:1.8}.latent.formative{stroke:#a16d0b}.latent-title{font:700 12px Arial,sans-serif;fill:#172126}.latent-meta{font:10px Arial,sans-serif;fill:#56656b}.r2{font:700 10px Arial,sans-serif;fill:#32630d}.indicator{fill:#fff8df;stroke:#c49116;stroke-width:1.2}.indicator.formative{fill:#eaf8f8;stroke:#0b8f92}.indicator-text{font:700 9px Arial,sans-serif;fill:#253137}.indicator-stat{font:700 8px Arial,sans-serif;fill:#32630d} .smartpls-latent{fill:#7d7d7d;stroke:#777;stroke-width:1}.smartpls-latent-label{font:10px Arial,sans-serif;fill:#222}.smartpls-r2{font:700 10px Arial,sans-serif;fill:#fff}.smartpls-indicator{fill:#eee;stroke:#d2d2d2;stroke-width:1}.smartpls-indicator-text{font:700 9px Arial,sans-serif;fill:#222} .edge{stroke:#465961;stroke-width:1.45;fill:none}.measurement{stroke:#9c7a20;stroke-width:1.05;fill:none}.measurement.formative{stroke:#0c777b}.covariance{stroke:#8d5798;stroke-width:1.25;stroke-dasharray:4 3;fill:none}.edge-label{font:700 10px Arial,sans-serif;fill:#172126}.label-bg{fill:#fff;stroke:#dce2e5}.arrow{fill:#465961} .smartpls .edge,.smartpls .measurement{stroke:#333;stroke-width:1.05}.smartpls .edge-label{font:500 9px Arial,sans-serif;fill:#222}.smartpls .label-bg{fill:#fff;stroke:none;fill-opacity:.85}.smartpls .arrow{fill:#333} .mono .latent,.mono .indicator{stroke:#333}.mono .indicator{fill:#fff}.mono .edge,.mono .measurement,.mono .covariance{stroke:#333}.mono .arrow{fill:#333}.high-contrast .smartpls-latent{fill:#222;stroke:#111}.high-contrast .smartpls-indicator{fill:#fff;stroke:#111}.quickpls-color .smartpls-latent{fill:#4f9fa2;stroke:#1f6e72}.quickpls-color .smartpls-indicator{fill:#fff8df;stroke:#c49116} QuickPLS model diagram Construct 1 Construct 2 Construct 3 Construct 4 Construct 5 C1I1 C1I2 C1I3 C2I1 C2I2 C2I3 C3I1 C3I2 C3I3 C4I1 C4I2 C4I3 C5I1 C5I2 C5I3",
+        "svg_present": true,
+        "latent_count": 10,
+        "indicator_count": 30,
+        "path_count": 0,
+        "has_r2": false,
+        "has_edit_chrome": false,
+        "has_mojibake": false
+      },
+      "same_core_counts": true,
+      "no_edit_chrome": true,
+      "no_mojibake": true
+    },
+    {
+      "name": "formative-model-only-tidy",
+      "downloadedPath": "D:\\QuickPLS\\validation\\results\\screens\\v111\\export-parity\\formative-model-only-tidy.svg",
+      "preview": {
+        "text": ".bg{fill:#fff}.caption{font:10px Arial,sans-serif;fill:#526169}.warning{font:10px Arial,sans-serif;fill:#666} .latent{fill:#fff;stroke:#2d777a;stroke-width:1.8}.latent.formative{stroke:#a16d0b}.latent-title{font:700 12px Arial,sans-serif;fill:#172126}.latent-meta{font:10px Arial,sans-serif;fill:#56656b}.r2{font:700 10px Arial,sans-serif;fill:#32630d}.indicator{fill:#fff8df;stroke:#c49116;stroke-width:1.2}.indicator.formative{fill:#eaf8f8;stroke:#0b8f92}.indicator-text{font:700 9px Arial,sans-serif;fill:#253137}.indicator-stat{font:700 8px Arial,sans-serif;fill:#32630d} .smartpls-latent{fill:#7d7d7d;stroke:#777;stroke-width:1}.smartpls-latent-label{font:10px Arial,sans-serif;fill:#222}.smartpls-r2{font:700 10px Arial,sans-serif;fill:#fff}.smartpls-indicator{fill:#eee;stroke:#d2d2d2;stroke-width:1}.smartpls-indicator-text{font:700 9px Arial,sans-serif;fill:#222} .edge{stroke:#465961;stroke-width:1.45;fill:none}.measurement{stroke:#9c7a20;stroke-width:1.05;fill:none}.measurement.formative{stroke:#0c777b}.covariance{stroke:#8d5798;stroke-width:1.25;stroke-dasharray:4 3;fill:none}.edge-label{font:700 10px Arial,sans-serif;fill:#172126}.label-bg{fill:#fff;stroke:#dce2e5}.arrow{fill:#465961} .smartpls .edge,.smartpls .measurement{stroke:#333;stroke-width:1.05}.smartpls .edge-label{font:500 9px Arial,sans-serif;fill:#222}.smartpls .label-bg{fill:#fff;stroke:none;fill-opacity:.85}.smartpls .arrow{fill:#333} .mono .latent,.mono .indicator{stroke:#333}.mono .indicator{fill:#fff}.mono .edge,.mono .measurement,.mono .covariance{stroke:#333}.mono .arrow{fill:#333}.high-contrast .smartpls-latent{fill:#222;stroke:#111}.high-contrast .smartpls-indicator{fill:#fff;stroke:#111}.quickpls-color .smartpls-latent{fill:#4f9fa2;stroke:#1f6e72}.quickpls-color .smartpls-indicator{fill:#fff8df;stroke:#c49116} QuickPLS model diagram Construct 1 Construct 2 Construct 3 Construct 4 Construct 5 C1I1 C1I2 C1I3 C2I1 C2I2 C2I3 C3I1 C3I2 C3I3 C4I1 C4I2 C4I3 C5I1 C5I2 C5I3",
+        "svg_present": true,
+        "latent_count": 10,
+        "indicator_count": 30,
+        "path_count": 0,
+        "has_r2": false,
+        "has_edit_chrome": false,
+        "has_mojibake": false
+      },
+      "exported": {
+        "text": ".bg{fill:#fff}.caption{font:10px Arial,sans-serif;fill:#526169}.warning{font:10px Arial,sans-serif;fill:#666} .latent{fill:#fff;stroke:#2d777a;stroke-width:1.8}.latent.formative{stroke:#a16d0b}.latent-title{font:700 12px Arial,sans-serif;fill:#172126}.latent-meta{font:10px Arial,sans-serif;fill:#56656b}.r2{font:700 10px Arial,sans-serif;fill:#32630d}.indicator{fill:#fff8df;stroke:#c49116;stroke-width:1.2}.indicator.formative{fill:#eaf8f8;stroke:#0b8f92}.indicator-text{font:700 9px Arial,sans-serif;fill:#253137}.indicator-stat{font:700 8px Arial,sans-serif;fill:#32630d} .smartpls-latent{fill:#7d7d7d;stroke:#777;stroke-width:1}.smartpls-latent-label{font:10px Arial,sans-serif;fill:#222}.smartpls-r2{font:700 10px Arial,sans-serif;fill:#fff}.smartpls-indicator{fill:#eee;stroke:#d2d2d2;stroke-width:1}.smartpls-indicator-text{font:700 9px Arial,sans-serif;fill:#222} .edge{stroke:#465961;stroke-width:1.45;fill:none}.measurement{stroke:#9c7a20;stroke-width:1.05;fill:none}.measurement.formative{stroke:#0c777b}.covariance{stroke:#8d5798;stroke-width:1.25;stroke-dasharray:4 3;fill:none}.edge-label{font:700 10px Arial,sans-serif;fill:#172126}.label-bg{fill:#fff;stroke:#dce2e5}.arrow{fill:#465961} .smartpls .edge,.smartpls .measurement{stroke:#333;stroke-width:1.05}.smartpls .edge-label{font:500 9px Arial,sans-serif;fill:#222}.smartpls .label-bg{fill:#fff;stroke:none;fill-opacity:.85}.smartpls .arrow{fill:#333} .mono .latent,.mono .indicator{stroke:#333}.mono .indicator{fill:#fff}.mono .edge,.mono .measurement,.mono .covariance{stroke:#333}.mono .arrow{fill:#333}.high-contrast .smartpls-latent{fill:#222;stroke:#111}.high-contrast .smartpls-indicator{fill:#fff;stroke:#111}.quickpls-color .smartpls-latent{fill:#4f9fa2;stroke:#1f6e72}.quickpls-color .smartpls-indicator{fill:#fff8df;stroke:#c49116} QuickPLS model diagram Construct 1 Construct 2 Construct 3 Construct 4 Construct 5 C1I1 C1I2 C1I3 C2I1 C2I2 C2I3 C3I1 C3I2 C3I3 C4I1 C4I2 C4I3 C5I1 C5I2 C5I3",
+        "svg_present": true,
+        "latent_count": 10,
+        "indicator_count": 30,
+        "path_count": 0,
+        "has_r2": false,
+        "has_edit_chrome": false,
+        "has_mojibake": false
+      },
+      "same_core_counts": true,
+      "no_edit_chrome": true,
+      "no_mojibake": true
+    }
+  ]
+}

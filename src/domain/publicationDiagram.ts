@@ -144,7 +144,13 @@ function renderEdge(edge: Edge, nodes: Array<Node>, bounds: { minX: number; minY
     : String(edge.className ?? "").includes("covariance-edge") ? "covariance"
       : "edge";
   const marker = className === "covariance" ? `marker-start="url(#arrow-start)" marker-end="url(#arrow)"` : `marker-end="url(#arrow)"`;
-  const mid = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 - (smartpls ? 2 : 5) };
+  const offset = edge.data?.labelOffset && typeof edge.data.labelOffset === "object"
+    ? edge.data.labelOffset as { x?: number; y?: number }
+    : {};
+  const mid = {
+    x: (start.x + end.x) / 2 + Number(offset.x ?? 0),
+    y: (start.y + end.y) / 2 - (smartpls ? 2 : 5) + Number(offset.y ?? 0),
+  };
   const d = className === "covariance"
     ? `M${start.x},${start.y} Q${mid.x},${mid.y - 45} ${end.x},${end.y}`
     : `M${start.x},${start.y} L${end.x},${end.y}`;

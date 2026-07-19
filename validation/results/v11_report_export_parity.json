@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.1 report SVG parity",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "passed": true,
+  "checklist": {
+    "preview_svg_present": true,
+    "exported_svg_file_written": true,
+    "preview_has_expected_labels": true,
+    "export_has_expected_labels": true,
+    "preview_and_export_have_same_key_labels": true,
+    "export_omits_edit_chrome": true,
+    "no_r_squared_mojibake": true
+  },
+  "errors": [],
+  "artifacts": {
+    "screenshot": "D:\\QuickPLS\\validation\\results\\v11\\report-parity\\report-parity.png",
+    "exported_svg": "D:\\QuickPLS\\validation\\results\\v11\\report-parity\\quickpls-publication-diagram.svg"
+  }
+}

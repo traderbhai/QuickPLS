@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.1 keyboard workflow smoke",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "passed": true,
+  "checklist": {
+    "results_regions_named": true,
+    "report_regions_named": true,
+    "results_focus_reaches_table_regions": true,
+    "report_focus_reaches_table_regions": true,
+    "focus_visible_css_present": true,
+    "screenshots_written": true
+  },
+  "errors": [],
+  "evidence": {
+    "results": {
+      "regions": [
+        {
+          "label": "PLS path modeling core run result summary",
+          "className": "result-summary"
+        }
+      ],
+      "focused": [
+        {
+          "label": "PLS path modeling core run result summary",
+          "className": "result-summary",
+          "hasVisibleFocusRule": true
+        }
+      ]
+    },
+    "report": {
+      "regions": [
+        {
+          "label": "Run comparison table",
+          "className": "bootstrap-table-scroll"
+        },
+        {
+          "label": "Run provenance table",
+          "className": "bootstrap-table-scroll"
+        }
+      ],
+      "focused": [
+        {
+          "label": "Run comparison table",
+          "className": "bootstrap-table-scroll",
+          "hasVisibleFocusRule": true
+        },
+        {
+          "label": "Run provenance table",
+          "className": "bootstrap-table-scroll",
+          "hasVisibleFocusRule": true
+        }
+      ]
+    }
+  },
+  "artifacts": {
+    "results": "D:\\QuickPLS\\validation\\results\\v11\\keyboard-smoke\\results-keyboard.png",
+    "report": "D:\\QuickPLS\\validation\\results\\v11\\keyboard-smoke\\report-keyboard.png"
+  }
+}

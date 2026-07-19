@@ -265,3 +265,16 @@ Implemented for the documented stable scope:
 ## Later Releases
 
 Post-v1 work includes signed installer verification when a certificate is available, native audited PDF/PNG export, polychoric/WLSMV and FIML estimators, SmartPLS project import if legally and technically scoped later, and expanded residual/error/caption recipe semantics.
+
+## v1.1.1 Native UX Hardening
+
+Implemented as a stricter desktop UX hardening milestone on top of v1.1:
+
+- `validation/v111_native_gui_workflow_smoke.py` launches the release executable with smoke UI enabled, runs the production native workflow smoke, verifies import-style ingestion, PLS execution, save/reopen, layout persistence, and XLSX export evidence, and records whether `pywinauto` is available for literal Windows UI Automation.
+- `validation/v111_sem_designer_dense_smoke.mjs` captures medium, large, mediation, and formative SEM diagrams at desktop viewport and checks SmartPLS-style arrangement, structural edge rendering, and latent overlap behavior.
+- `validation/v111_settings_ux_smoke.mjs` verifies method settings progressive disclosure: recommended defaults stay visible while resampling/reproducibility controls are collapsed until opened.
+- `validation/v111_report_export_parity.mjs` compares WYSIWYG preview SVGs and exported SVGs across model-only, completed-result, large, formative, current-layout, and tidy-layout cases.
+- `validation/v111_keyboard_native_smoke.py` launches the release executable and reuses the completed-result keyboard workflow contract for Results and Report surfaces.
+- `validation/v111_disabled_actions_audit.py` verifies low-frequency disabled actions have visible or accessible reasons across Run, Report, Data, canvas lock, covariance/path, native-only XLSX, and settings surfaces.
+
+`npm run qpls:v111:release` runs the hardening suite and gates `v1_1_1_native_ux_hardening`. Mobile remains non-gating. SVG remains the audited publication export; native PDF/PNG remains post-v1 unless separately implemented and audited.

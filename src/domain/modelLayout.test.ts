@@ -33,4 +33,19 @@ describe("layoutModel", () => {
     const result = layoutModel([node("x"), node("y")], [{ id: "x-y", source: "x", target: "y" }], "vertical");
     expect(result.find((item) => item.id === "x")!.position.y).toBeLessThan(result.find((item) => item.id === "y")!.position.y);
   });
+
+  it("orders adjacent columns by structural neighbors to reduce crossings", () => {
+    const positioned = [
+      { ...node("a"), position: { x: 0, y: 300 } },
+      { ...node("b"), position: { x: 0, y: 0 } },
+      { ...node("c"), position: { x: 300, y: 300 } },
+      { ...node("d"), position: { x: 300, y: 0 } },
+    ];
+    const result = layoutModel(positioned, [
+      { id: "a-d", source: "a", target: "d" },
+      { id: "b-c", source: "b", target: "c" },
+    ]);
+    expect(result.find((item) => item.id === "b")!.position.y).toBeLessThan(result.find((item) => item.id === "a")!.position.y);
+    expect(result.find((item) => item.id === "c")!.position.y).toBeLessThan(result.find((item) => item.id === "d")!.position.y);
+  });
 });

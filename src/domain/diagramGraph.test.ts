@@ -71,6 +71,22 @@ describe("SEM diagram graph", () => {
     expect(arranged.find((node) => node.id === "x")?.position).not.toEqual(nodes.find((node) => node.id === "x")?.position);
   });
 
+  it("orders SmartPLS arrangement by structural neighbors to reduce crossings", () => {
+    const crossingNodes: Array<Node<ConstructData>> = [
+      { id: "a", type: "construct", position: { x: 0, y: 300 }, data: { label: "A", shortName: "A", mode: "reflective", indicators: ["a1"] } },
+      { id: "b", type: "construct", position: { x: 0, y: 0 }, data: { label: "B", shortName: "B", mode: "reflective", indicators: ["b1"] } },
+      { id: "c", type: "construct", position: { x: 500, y: 300 }, data: { label: "C", shortName: "C", mode: "reflective", indicators: ["c1"] } },
+      { id: "d", type: "construct", position: { x: 500, y: 0 }, data: { label: "D", shortName: "D", mode: "reflective", indicators: ["d1"] } },
+    ];
+    const crossingEdges: Edge[] = [
+      { id: "a-d", source: "a", target: "d" },
+      { id: "b-c", source: "b", target: "c" },
+    ];
+    const arranged = layoutSmartplsModel(crossingNodes, crossingEdges);
+    expect(arranged.find((node) => node.id === "b")!.position.y).toBeLessThan(arranged.find((node) => node.id === "a")!.position.y);
+    expect(arranged.find((node) => node.id === "c")!.position.y).toBeLessThan(arranged.find((node) => node.id === "d")!.position.y);
+  });
+
   it("lays out SmartPLS-like result diagrams with predictors left and outcomes right", () => {
     const graph = buildDiagramGraph(nodes, edges, "smartpls_result", "paths_r2", run);
     const predictor = graph.nodes.find((node) => node.id === "x")!;
@@ -82,6 +98,35 @@ describe("SEM diagram graph", () => {
     expect(outcomeIndicator.position.x).toBeGreaterThan(outcome.position.x);
     expect(graph.edges.find((edge) => edge.id === "x-y")?.label).toBe("0.457");
     expect(graph.edges.find((edge) => edge.id === "measurement::x::x1")?.label).toBe("0.910");
+    expect(graph.edges.find((edge) => edge.id === "x-y")).toMatchObject({ sourceHandle: "source-right", targetHandle: "target-left" });
+    expect(graph.edges.find((edge) => edge.id === "measurement::x::x1")).toMatchObject({ sourceHandle: "source-left", targetHandle: "target-right" });
+  });
+
+  it("keeps mediator indicators away from the latent label zone", () => {
+    const mediatorNodes: Array<Node<ConstructData>> = [
+      { id: "x1", type: "construct", position: { x: 120, y: 80 }, data: { label: "Predictor A", shortName: "XA", mode: "reflective", indicators: ["xa1"] } },
+      { id: "x2", type: "construct", position: { x: 120, y: 220 }, data: { label: "Predictor B", shortName: "XB", mode: "reflective", indicators: ["xb1"] } },
+      { id: "m", type: "construct", position: { x: 390, y: 150 }, data: { label: "Mediator", shortName: "M", mode: "reflective", indicators: ["m1", "m2"] } },
+      { id: "y", type: "construct", position: { x: 660, y: 150 }, data: { label: "Outcome", shortName: "Y", mode: "reflective", indicators: ["y1"] } },
+    ];
+    const mediatorEdges: Edge[] = [
+      { id: "x1-m", source: "x1", target: "m" },
+      { id: "x2-m", source: "x2", target: "m" },
+      { id: "m-y", source: "m", target: "y" },
+    ];
+    const graph = buildDiagramGraph(mediatorNodes, mediatorEdges, "sem", "model");
+    const mediator = graph.nodes.find((node) => node.id === "m")!;
+    const firstIndicator = graph.nodes.find((node) => node.id === indicatorNodeId("m", "m1"))!;
+    const firstMeasurement = graph.edges.find((edge) => edge.id === "measurement::m::m1")!;
+    expect(firstIndicator.position.y).toBeLessThan(mediator.position.y - 50);
+    expect(firstMeasurement).toMatchObject({ sourceHandle: "source-top", targetHandle: "target-bottom" });
+
+    const arranged = buildDiagramGraph(mediatorNodes, mediatorEdges, "smartpls_result", "model", undefined, { layoutSource: "tidy_publication" });
+    const arrangedPredictor = arranged.nodes.find((node) => node.id === "x1")!;
+    const arrangedMediator = arranged.nodes.find((node) => node.id === "m")!;
+    const arrangedOutcome = arranged.nodes.find((node) => node.id === "y")!;
+    expect(arrangedMediator.position.x - arrangedPredictor.position.x).toBeGreaterThanOrEqual(270);
+    expect(arrangedOutcome.position.x - arrangedMediator.position.x).toBeGreaterThanOrEqual(270);
   });
 
   it("suppresses SmartPLS-like result labels for stale runs", () => {
@@ -108,6 +153,13 @@ describe("SEM diagram graph", () => {
     expect(graph.nodes.find((node) => node.id === "x")?.position).toEqual({ x: 900, y: 240 });
     const tidy = buildDiagramGraph(moved, edges, "smartpls_result", "model", undefined, { layoutSource: "tidy_publication" });
     expect(tidy.nodes.find((node) => node.id === "x")?.position).not.toEqual({ x: 900, y: 240 });
+  });
+
+  it("applies persisted edge label offsets to graph edges", () => {
+    const layout = defaultDiagramLayout(nodes, edges);
+    layout.edgeLayouts["x-y"].labelOffset = { x: 18, y: -12 };
+    const graph = buildDiagramGraph(nodes, edges, "sem", "model", undefined, { layout });
+    expect(graph.edges.find((edge) => edge.id === "x-y")?.data?.labelOffset).toEqual({ x: 18, y: -12 });
   });
 
   it("fingerprints only engine-relevant structural paths", () => {

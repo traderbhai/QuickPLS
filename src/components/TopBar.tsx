@@ -1,7 +1,9 @@
 import { Download, FlaskConical, FolderOpen, Menu, Play, Plus, RotateCcw, Save, Square, Upload } from "lucide-react";
 import Papa from "papaparse";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { methods } from "../data/sample";
+import { analysisReadiness } from "../domain/analysisReadiness";
+import { isSelectableAnalysisMethod, methodStatusDescription, methodStatusLabel } from "../domain/methodStatus";
 import { useWorkspace } from "../store";
 import type { AnalysisMethodId, Dataset, JobSnapshot } from "../types";
 import { cancelNativePlsJob, createNativeProject, dismissNativePlsJob, getNativePlsJob, getNativePlsJobResult, importNativeDataset, isNativeDesktop, openNativeDemoProject, openNativeProject, saveNativeProject, startNativePlsJob } from "../services/projectService";
@@ -28,7 +30,7 @@ export function TopBar() {
   const publicationDiagramSettings = useWorkspace((state) => state.publicationDiagramSettings);
   const diagramLayout = useWorkspace((state) => state.diagramLayout);
   const setAnalysisSettings = useWorkspace((state) => state.setAnalysisSettings);
-  const runnableMethods = methods.filter((candidate) => candidate.status !== "unsupported");
+  const runnableMethods = methods.filter(isSelectableAnalysisMethod);
   const selectedMethod = runnableMethods.find((candidate) => candidate.id === analysisSettings.method) ?? runnableMethods[0];
 
   const download = (name: string, contents: string, type: string) => {
@@ -84,11 +86,8 @@ export function TopBar() {
     });
   };
 
-  const methodSettingsComplete =
-    (analysisSettings.method !== "mga" || Boolean(analysisSettings.groupColumn)) &&
-    (analysisSettings.method !== "regression" || Boolean(analysisSettings.regressionOutcome && analysisSettings.regressionPredictors)) &&
-    (analysisSettings.method !== "nca" || Boolean(analysisSettings.ncaX && analysisSettings.ncaY));
-  const canRun = isNativeDesktop() && Boolean(dataset.fingerprint) && nodes.length > 0 && nodes.every((node) => node.data.indicators.length > 0) && methodSettingsComplete;
+  const readiness = analysisReadiness({ dataset, nodes, edges, settings: analysisSettings, nativeDesktop: isNativeDesktop() });
+  const canRun = readiness.canRun;
   const runAnalysis = async () => {
     if (!dataset.fingerprint) throw new Error("Import and save a dataset before running an analysis.");
     const createdAt = new Date().toISOString();
@@ -192,6 +191,14 @@ export function TopBar() {
     if (!activeJob) return;
     setActiveJob(await cancelNativePlsJob(activeJob.id));
   };
+  useEffect(() => {
+    const handleRunRequest = () => {
+      if (activeJob || !canRun) return;
+      void runAnalysis().catch((error) => { setActiveJob(null); window.alert(error); });
+    };
+    window.addEventListener("quickpls:run-analysis", handleRunRequest);
+    return () => window.removeEventListener("quickpls:run-analysis", handleRunRequest);
+  }, [activeJob, canRun, runAnalysis]);
 
   return <>
     <header className="title-bar">
@@ -199,26 +206,30 @@ export function TopBar() {
       <span className="alpha-mark">v1.0.0</span>
     </header>
     <div className="command-bar">
-      <button className="icon-command" title="New project" onClick={() => { void newProjectCommand().catch((error) => window.alert(error)); }}><Plus size={17} /><span>New</span></button>
-      <button className="icon-command" title="Open project" onClick={() => { void openProjectCommand().catch((error) => window.alert(error)); }}><FolderOpen size={17} /><span>Open</span></button>
-      <button className="icon-command" title="Open v0.4 demo evidence project" onClick={() => { void openDemoProjectCommand().catch((error) => window.alert(error)); }}><FlaskConical size={17} /><span>Demo</span></button>
-      <button className="icon-command" title="Save project" onClick={() => { void saveProject().catch((error) => window.alert(error)); }}><Save size={17} /><span>Save</span></button>
+      <button className="icon-command" aria-label="New project" title="New project" onClick={() => { void newProjectCommand().catch((error) => window.alert(error)); }}><Plus size={17} /><span>New</span></button>
+      <button className="icon-command" aria-label="Open project" title="Open project" onClick={() => { void openProjectCommand().catch((error) => window.alert(error)); }}><FolderOpen size={17} /><span>Open</span></button>
+      <button className="icon-command" aria-label="Open demo evidence project" title="Open demo evidence project" onClick={() => { void openDemoProjectCommand().catch((error) => window.alert(error)); }}><FlaskConical size={17} /><span>Demo</span></button>
+      <button className="icon-command" aria-label="Save project" title="Save project" onClick={() => { void saveProject().catch((error) => window.alert(error)); }}><Save size={17} /><span>Save</span></button>
       <span className="command-separator" />
-      <button className="icon-command" title="Import data" onClick={() => { void importDataCommand().catch((error) => window.alert(error)); }}><Upload size={17} /><span>Import</span></button>
-      <button className="icon-command" title="Export report" onClick={exportSummary}><Download size={17} /><span>Export</span></button>
+      <button className="icon-command" aria-label="Import data" title="Import data" onClick={() => { void importDataCommand().catch((error) => window.alert(error)); }}><Upload size={17} /><span>Import</span></button>
+      <button className="icon-command" aria-label="Export report summary" title="Export report" onClick={exportSummary}><Download size={17} /><span>Export</span></button>
       <input ref={inputRef} className="file-input" type="file" accept=".csv,.tsv,text/csv" onChange={(event) => importCsv(event.target.files?.[0])} />
       <input ref={projectInputRef} className="file-input" type="file" accept=".json,.qpls" onChange={(event) => { void openProject(event.target.files?.[0]); }} />
       <span className="command-separator" />
-      <button className="icon-command" title="Reset project" onClick={resetProject}><RotateCcw size={17} /><span>Reset</span></button>
+      <button className="icon-command" aria-label="Reset project" title="Reset project" onClick={resetProject}><RotateCcw size={17} /><span>Reset</span></button>
       <div className="command-spacer" />
-      <select className="method-select" aria-label="Analysis method" value={analysisSettings.method} onChange={(event) => setAnalysisSettings({ method: event.target.value as AnalysisMethodId })}>
-        {runnableMethods.map((candidate) => <option key={candidate.id} value={candidate.id}>{candidate.name}</option>)}
-        <option disabled>GSCA (planned)</option>
-      </select>
-      <button className="run-button" disabled={!activeJob && !canRun} title={activeJob ? "Cancel the active analysis" : canRun ? `Run ${selectedMethod.name}` : analysisSettings.method === "mga" && !analysisSettings.groupColumn ? "Select a group column in Analysis methods before running MGA" : analysisSettings.method === "regression" ? "Select regression outcome and predictors in Analysis methods" : analysisSettings.method === "nca" ? "Select NCA X and Y variables in Analysis methods" : "Import data and assign indicators before running"} onClick={() => { void (activeJob ? cancelAnalysis() : runAnalysis()).catch((error) => { setActiveJob(null); window.alert(error); }); }}>
+      <div className="method-picker" title={selectedMethod ? methodStatusDescription(selectedMethod) : undefined}>
+        <select className="method-select" aria-label="Analysis method" value={analysisSettings.method} onChange={(event) => setAnalysisSettings({ method: event.target.value as AnalysisMethodId })}>
+          {runnableMethods.map((candidate) => <option key={candidate.id} value={candidate.id}>{candidate.name}</option>)}
+          <option disabled>GSCA (planned)</option>
+        </select>
+        {selectedMethod ? <span className={`status-text ${selectedMethod.status}`}>{methodStatusLabel(selectedMethod.status)}</span> : null}
+      </div>
+      <button className="run-button" aria-label={activeJob ? "Cancel active analysis" : `Run ${selectedMethod.name}`} aria-describedby={!activeJob && !canRun ? "run-disabled-reason" : undefined} disabled={!activeJob && !canRun} title={activeJob ? "Cancel the active analysis" : canRun ? `Run ${selectedMethod.name}` : readiness.blockers[0]?.detail ?? readiness.summary} onClick={() => { void (activeJob ? cancelAnalysis() : runAnalysis()).catch((error) => { setActiveJob(null); window.alert(error); }); }}>
         {activeJob ? <Square size={14} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
         <span className="run-button-label">{activeJob ? `${activeJob.phase} ${activeJob.completed_units}/${activeJob.total_units}` : `Run ${selectedMethod.name}`}</span>
       </button>
+      {!activeJob && !canRun ? <span id="run-disabled-reason" className="command-disabled-reason">{readiness.blockers[0]?.detail ?? readiness.summary}</span> : null}
     </div>
   </>;
 }

@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.1 native desktop smoke",
+  "passed": true,
+  "checklist": {
+    "release_executable_exists": true,
+    "installer_artifact_exists": true,
+    "frontend_dist_exists": true,
+    "release_exe_newer_than_frontend_dist": true,
+    "launches_without_dev_server": true,
+    "v11_desktop_width_ux_smoke_passed": true,
+    "completed_run_overlay_smoke_passed": true
+  },
+  "release_executable": {
+    "exists": true,
+    "path": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+    "size": 23532032,
+    "mtime": 1784484248.7346058,
+    "last_write_time": "2026-07-19T23:34:08+0530"
+  },
+  "installer": {
+    "exists": true,
+    "path": "D:\\QuickPLS\\target\\release\\bundle\\nsis\\QuickPLS_1.0.0_x64-setup.exe",
+    "size": 4950685,
+    "mtime": 1784484248.6114602,
+    "last_write_time": "2026-07-19T23:34:08+0530"
+  },
+  "newest_frontend_dist_asset": {
+    "exists": true,
+    "path": "D:\\QuickPLS\\dist\\assets\\icons-D5X5gQ23.js",
+    "size": 22071,
+    "mtime": 1784484111.7816806,
+    "last_write_time": "2026-07-19T23:31:51+0530"
+  },
+  "launch_probe": {
+    "passed": true,
+    "path": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+    "started": true
+  },
+  "linked_evidence": {
+    "ux_smoke": "validation/results/v11_desktop_ux_smoke.json",
+    "screenshots": "validation/results/screens/v11/"
+  }
+}

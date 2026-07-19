@@ -11,8 +11,14 @@ export function IndicatorNode({ data, selected }: NodeProps<Node<IndicatorNodeDa
     return <div
       className={`smartpls-indicator-node ${data.mode}${selected ? " selected" : ""}`}
     >
-      <Handle className="smartpls-hidden-handle" id="target" type="target" position={Position.Left} />
-      <Handle className="smartpls-hidden-handle" id="source" type="source" position={Position.Right} />
+      <Handle className="smartpls-hidden-handle" id="target-left" type="target" position={Position.Left} />
+      <Handle className="smartpls-hidden-handle" id="target-right" type="target" position={Position.Right} />
+      <Handle className="smartpls-hidden-handle" id="target-top" type="target" position={Position.Top} />
+      <Handle className="smartpls-hidden-handle" id="target-bottom" type="target" position={Position.Bottom} />
+      <Handle className="smartpls-hidden-handle" id="source-left" type="source" position={Position.Left} />
+      <Handle className="smartpls-hidden-handle" id="source-right" type="source" position={Position.Right} />
+      <Handle className="smartpls-hidden-handle" id="source-top" type="source" position={Position.Top} />
+      <Handle className="smartpls-hidden-handle" id="source-bottom" type="source" position={Position.Bottom} />
       <span title={data.indicator}>{data.indicator}</span>
     </div>;
   }

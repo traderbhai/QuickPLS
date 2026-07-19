@@ -1,0 +1,426 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1052" height="994" viewBox="0 0 1052 994" role="img" aria-label="QuickPLS model diagram" class="smartpls mono">
+<defs>
+<marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="arrow"/></marker>
+<marker id="arrow-start" markerWidth="8" markerHeight="8" refX="1" refY="4" orient="auto"><path d="M8,0 L0,4 L8,8 z" class="arrow"/></marker>
+<style>
+.bg{fill:#fff}.caption{font:10px Arial,sans-serif;fill:#526169}.warning{font:10px Arial,sans-serif;fill:#666}
+.latent{fill:#fff;stroke:#2d777a;stroke-width:1.8}.latent.formative{stroke:#a16d0b}.latent-title{font:700 12px Arial,sans-serif;fill:#172126}.latent-meta{font:10px Arial,sans-serif;fill:#56656b}.r2{font:700 10px Arial,sans-serif;fill:#32630d}.indicator{fill:#fff8df;stroke:#c49116;stroke-width:1.2}.indicator.formative{fill:#eaf8f8;stroke:#0b8f92}.indicator-text{font:700 9px Arial,sans-serif;fill:#253137}.indicator-stat{font:700 8px Arial,sans-serif;fill:#32630d}
+.smartpls-latent{fill:#7d7d7d;stroke:#777;stroke-width:1}.smartpls-latent-label{font:10px Arial,sans-serif;fill:#222}.smartpls-r2{font:700 10px Arial,sans-serif;fill:#fff}.smartpls-indicator{fill:#eee;stroke:#d2d2d2;stroke-width:1}.smartpls-indicator-text{font:700 9px Arial,sans-serif;fill:#222}
+.edge{stroke:#465961;stroke-width:1.45;fill:none}.measurement{stroke:#9c7a20;stroke-width:1.05;fill:none}.measurement.formative{stroke:#0c777b}.covariance{stroke:#8d5798;stroke-width:1.25;stroke-dasharray:4 3;fill:none}.edge-label{font:700 10px Arial,sans-serif;fill:#172126}.label-bg{fill:#fff;stroke:#dce2e5}.arrow{fill:#465961}
+.smartpls .edge,.smartpls .measurement{stroke:#333;stroke-width:1.05}.smartpls .edge-label{font:500 9px Arial,sans-serif;fill:#222}.smartpls .label-bg{fill:#fff;stroke:none;fill-opacity:.85}.smartpls .arrow{fill:#333}
+.mono .latent,.mono .indicator{stroke:#333}.mono .indicator{fill:#fff}.mono .edge,.mono .measurement,.mono .covariance{stroke:#333}.mono .arrow{fill:#333}.high-contrast .smartpls-latent{fill:#222;stroke:#111}.high-contrast .smartpls-indicator{fill:#fff;stroke:#111}.quickpls-color .smartpls-latent{fill:#4f9fa2;stroke:#1f6e72}.quickpls-color .smartpls-indicator{fill:#fff8df;stroke:#c49116}
+</style>
+</defs>
+<rect class="bg" width="100%" height="100%"/>
+<text x="42" y="25" class="caption">QuickPLS model diagram</text>
+<path class="edge" d="M290,153 L482,153" marker-end="url(#arrow)"/>
+
+<path class="edge" d="M290,271 L482,271" marker-end="url(#arrow)"/>
+
+<path class="edge" d="M290,389 L482,389" marker-end="url(#arrow)"/>
+
+<path class="edge" d="M290,507 L482,507" marker-end="url(#arrow)"/>
+
+<path class="edge" d="M290,625 L482,625" marker-end="url(#arrow)"/>
+
+<path class="edge" d="M290,743 L482,743" marker-end="url(#arrow)"/>
+
+<path class="edge" d="M290,861 L482,861" marker-end="url(#arrow)"/>
+
+<path class="edge" d="M526,182 L806,714" marker-end="url(#arrow)"/>
+
+<path class="edge" d="M526,300 L806,596" marker-end="url(#arrow)"/>
+
+<path class="edge" d="M570,389 L762,507" marker-end="url(#arrow)"/>
+
+<path class="edge" d="M570,507 L762,389" marker-end="url(#arrow)"/>
+
+<path class="edge" d="M526,596 L806,300" marker-end="url(#arrow)"/>
+
+<path class="edge" d="M526,714 L806,182" marker-end="url(#arrow)"/>
+
+<path class="edge" d="M570,861 L762,743" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,153 L120,108" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,153 L120,138" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,153 L120,168" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,153 L120,198" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,271 L120,226" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,271 L120,256" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,271 L120,286" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,271 L120,316" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,389 L120,344" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,389 L120,374" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,389 L120,404" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,389 L120,434" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,507 L120,462" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,507 L120,492" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,507 L120,522" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,507 L120,552" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,625 L120,580" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,625 L120,610" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,625 L120,640" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,625 L120,670" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,743 L120,698" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,743 L120,728" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,743 L120,758" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,743 L120,788" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,861 L120,816" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,861 L120,846" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,861 L120,876" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M202,861 L120,906" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M482,153 L436,54" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M526,124 L483,66" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M526,124 L569,66" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M570,153 L616,54" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M482,271 L436,172" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M526,242 L483,184" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M526,242 L569,184" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M570,271 L616,172" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M482,389 L436,290" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M526,360 L483,302" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M526,360 L569,302" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M570,389 L616,290" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M482,507 L436,408" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M526,478 L483,420" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M526,478 L569,420" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M570,507 L616,408" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M482,625 L436,526" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M526,596 L483,538" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M526,596 L569,538" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M570,625 L616,526" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M482,743 L436,644" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M526,714 L483,656" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M526,714 L569,656" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M570,743 L616,644" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M482,861 L436,762" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M526,832 L483,774" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M526,832 L569,774" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M570,861 L616,762" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,153 L932,108" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,153 L932,138" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,153 L932,168" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,153 L932,198" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,271 L932,226" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,271 L932,256" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,271 L932,286" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,271 L932,316" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,389 L932,344" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,389 L932,374" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,389 L932,404" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,389 L932,434" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,507 L932,462" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,507 L932,492" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,507 L932,522" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,507 L932,552" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,625 L932,580" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,625 L932,610" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,625 L932,640" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,625 L932,670" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,743 L932,698" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,743 L932,728" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,743 L932,758" marker-end="url(#arrow)"/>
+
+<path class="measurement " d="M850,743 L932,788" marker-end="url(#arrow)"/>
+
+<ellipse class="smartpls-latent" cx="246" cy="153" rx="44" ry="29"/>
+
+<text x="246" y="198" text-anchor="middle" class="smartpls-latent-label">Construct 1</text>
+<ellipse class="smartpls-latent" cx="246" cy="271" rx="44" ry="29"/>
+
+<text x="246" y="316" text-anchor="middle" class="smartpls-latent-label">Construct 2</text>
+<ellipse class="smartpls-latent" cx="246" cy="389" rx="44" ry="29"/>
+
+<text x="246" y="434" text-anchor="middle" class="smartpls-latent-label">Construct 3</text>
+<ellipse class="smartpls-latent" cx="246" cy="507" rx="44" ry="29"/>
+
+<text x="246" y="552" text-anchor="middle" class="smartpls-latent-label">Construct 4</text>
+<ellipse class="smartpls-latent" cx="246" cy="625" rx="44" ry="29"/>
+
+<text x="246" y="670" text-anchor="middle" class="smartpls-latent-label">Construct 5</text>
+<ellipse class="smartpls-latent" cx="246" cy="743" rx="44" ry="29"/>
+
+<text x="246" y="788" text-anchor="middle" class="smartpls-latent-label">Construct 6</text>
+<ellipse class="smartpls-latent" cx="246" cy="861" rx="44" ry="29"/>
+
+<text x="246" y="906" text-anchor="middle" class="smartpls-latent-label">Construct 7</text>
+<ellipse class="smartpls-latent" cx="526" cy="153" rx="44" ry="29"/>
+
+<text x="526" y="198" text-anchor="middle" class="smartpls-latent-label">Construct 8</text>
+<ellipse class="smartpls-latent" cx="526" cy="271" rx="44" ry="29"/>
+
+<text x="526" y="316" text-anchor="middle" class="smartpls-latent-label">Construct 9</text>
+<ellipse class="smartpls-latent" cx="526" cy="389" rx="44" ry="29"/>
+
+<text x="526" y="434" text-anchor="middle" class="smartpls-latent-label">Construct 10</text>
+<ellipse class="smartpls-latent" cx="526" cy="507" rx="44" ry="29"/>
+
+<text x="526" y="552" text-anchor="middle" class="smartpls-latent-label">Construct 11</text>
+<ellipse class="smartpls-latent" cx="526" cy="625" rx="44" ry="29"/>
+
+<text x="526" y="670" text-anchor="middle" class="smartpls-latent-label">Construct 12</text>
+<ellipse class="smartpls-latent" cx="526" cy="743" rx="44" ry="29"/>
+
+<text x="526" y="788" text-anchor="middle" class="smartpls-latent-label">Construct 13</text>
+<ellipse class="smartpls-latent" cx="526" cy="861" rx="44" ry="29"/>
+
+<text x="526" y="906" text-anchor="middle" class="smartpls-latent-label">Construct 14</text>
+<ellipse class="smartpls-latent" cx="806" cy="153" rx="44" ry="29"/>
+
+<text x="806" y="198" text-anchor="middle" class="smartpls-latent-label">Construct 15</text>
+<ellipse class="smartpls-latent" cx="806" cy="271" rx="44" ry="29"/>
+
+<text x="806" y="316" text-anchor="middle" class="smartpls-latent-label">Construct 16</text>
+<ellipse class="smartpls-latent" cx="806" cy="389" rx="44" ry="29"/>
+
+<text x="806" y="434" text-anchor="middle" class="smartpls-latent-label">Construct 17</text>
+<ellipse class="smartpls-latent" cx="806" cy="507" rx="44" ry="29"/>
+
+<text x="806" y="552" text-anchor="middle" class="smartpls-latent-label">Construct 18</text>
+<ellipse class="smartpls-latent" cx="806" cy="625" rx="44" ry="29"/>
+
+<text x="806" y="670" text-anchor="middle" class="smartpls-latent-label">Construct 19</text>
+<ellipse class="smartpls-latent" cx="806" cy="743" rx="44" ry="29"/>
+
+<text x="806" y="788" text-anchor="middle" class="smartpls-latent-label">Construct 20</text>
+<rect class="smartpls-indicator" x="42" y="96" width="78" height="24"/>
+<text x="81" y="112" text-anchor="middle" class="smartpls-indicator-text">C1I1</text>
+<rect class="smartpls-indicator" x="42" y="126" width="78" height="24"/>
+<text x="81" y="142" text-anchor="middle" class="smartpls-indicator-text">C1I2</text>
+<rect class="smartpls-indicator" x="42" y="156" width="78" height="24"/>
+<text x="81" y="172" text-anchor="middle" class="smartpls-indicator-text">C1I3</text>
+<rect class="smartpls-indicator" x="42" y="186" width="78" height="24"/>
+<text x="81" y="202" text-anchor="middle" class="smartpls-indicator-text">C1I4</text>
+<rect class="smartpls-indicator" x="42" y="214" width="78" height="24"/>
+<text x="81" y="230" text-anchor="middle" class="smartpls-indicator-text">C2I1</text>
+<rect class="smartpls-indicator" x="42" y="244" width="78" height="24"/>
+<text x="81" y="260" text-anchor="middle" class="smartpls-indicator-text">C2I2</text>
+<rect class="smartpls-indicator" x="42" y="274" width="78" height="24"/>
+<text x="81" y="290" text-anchor="middle" class="smartpls-indicator-text">C2I3</text>
+<rect class="smartpls-indicator" x="42" y="304" width="78" height="24"/>
+<text x="81" y="320" text-anchor="middle" class="smartpls-indicator-text">C2I4</text>
+<rect class="smartpls-indicator" x="42" y="332" width="78" height="24"/>
+<text x="81" y="348" text-anchor="middle" class="smartpls-indicator-text">C3I1</text>
+<rect class="smartpls-indicator" x="42" y="362" width="78" height="24"/>
+<text x="81" y="378" text-anchor="middle" class="smartpls-indicator-text">C3I2</text>
+<rect class="smartpls-indicator" x="42" y="392" width="78" height="24"/>
+<text x="81" y="408" text-anchor="middle" class="smartpls-indicator-text">C3I3</text>
+<rect class="smartpls-indicator" x="42" y="422" width="78" height="24"/>
+<text x="81" y="438" text-anchor="middle" class="smartpls-indicator-text">C3I4</text>
+<rect class="smartpls-indicator" x="42" y="450" width="78" height="24"/>
+<text x="81" y="466" text-anchor="middle" class="smartpls-indicator-text">C4I1</text>
+<rect class="smartpls-indicator" x="42" y="480" width="78" height="24"/>
+<text x="81" y="496" text-anchor="middle" class="smartpls-indicator-text">C4I2</text>
+<rect class="smartpls-indicator" x="42" y="510" width="78" height="24"/>
+<text x="81" y="526" text-anchor="middle" class="smartpls-indicator-text">C4I3</text>
+<rect class="smartpls-indicator" x="42" y="540" width="78" height="24"/>
+<text x="81" y="556" text-anchor="middle" class="smartpls-indicator-text">C4I4</text>
+<rect class="smartpls-indicator" x="42" y="568" width="78" height="24"/>
+<text x="81" y="584" text-anchor="middle" class="smartpls-indicator-text">C5I1</text>
+<rect class="smartpls-indicator" x="42" y="598" width="78" height="24"/>
+<text x="81" y="614" text-anchor="middle" class="smartpls-indicator-text">C5I2</text>
+<rect class="smartpls-indicator" x="42" y="628" width="78" height="24"/>
+<text x="81" y="644" text-anchor="middle" class="smartpls-indicator-text">C5I3</text>
+<rect class="smartpls-indicator" x="42" y="658" width="78" height="24"/>
+<text x="81" y="674" text-anchor="middle" class="smartpls-indicator-text">C5I4</text>
+<rect class="smartpls-indicator" x="42" y="686" width="78" height="24"/>
+<text x="81" y="702" text-anchor="middle" class="smartpls-indicator-text">C6I1</text>
+<rect class="smartpls-indicator" x="42" y="716" width="78" height="24"/>
+<text x="81" y="732" text-anchor="middle" class="smartpls-indicator-text">C6I2</text>
+<rect class="smartpls-indicator" x="42" y="746" width="78" height="24"/>
+<text x="81" y="762" text-anchor="middle" class="smartpls-indicator-text">C6I3</text>
+<rect class="smartpls-indicator" x="42" y="776" width="78" height="24"/>
+<text x="81" y="792" text-anchor="middle" class="smartpls-indicator-text">C6I4</text>
+<rect class="smartpls-indicator" x="42" y="804" width="78" height="24"/>
+<text x="81" y="820" text-anchor="middle" class="smartpls-indicator-text">C7I1</text>
+<rect class="smartpls-indicator" x="42" y="834" width="78" height="24"/>
+<text x="81" y="850" text-anchor="middle" class="smartpls-indicator-text">C7I2</text>
+<rect class="smartpls-indicator" x="42" y="864" width="78" height="24"/>
+<text x="81" y="880" text-anchor="middle" class="smartpls-indicator-text">C7I3</text>
+<rect class="smartpls-indicator" x="42" y="894" width="78" height="24"/>
+<text x="81" y="910" text-anchor="middle" class="smartpls-indicator-text">C7I4</text>
+<rect class="smartpls-indicator" x="358" y="42" width="78" height="24"/>
+<text x="397" y="58" text-anchor="middle" class="smartpls-indicator-text">C8I1</text>
+<rect class="smartpls-indicator" x="444" y="42" width="78" height="24"/>
+<text x="483" y="58" text-anchor="middle" class="smartpls-indicator-text">C8I2</text>
+<rect class="smartpls-indicator" x="530" y="42" width="78" height="24"/>
+<text x="569" y="58" text-anchor="middle" class="smartpls-indicator-text">C8I3</text>
+<rect class="smartpls-indicator" x="616" y="42" width="78" height="24"/>
+<text x="655" y="58" text-anchor="middle" class="smartpls-indicator-text">C8I4</text>
+<rect class="smartpls-indicator" x="358" y="160" width="78" height="24"/>
+<text x="397" y="176" text-anchor="middle" class="smartpls-indicator-text">C9I1</text>
+<rect class="smartpls-indicator" x="444" y="160" width="78" height="24"/>
+<text x="483" y="176" text-anchor="middle" class="smartpls-indicator-text">C9I2</text>
+<rect class="smartpls-indicator" x="530" y="160" width="78" height="24"/>
+<text x="569" y="176" text-anchor="middle" class="smartpls-indicator-text">C9I3</text>
+<rect class="smartpls-indicator" x="616" y="160" width="78" height="24"/>
+<text x="655" y="176" text-anchor="middle" class="smartpls-indicator-text">C9I4</text>
+<rect class="smartpls-indicator" x="358" y="278" width="78" height="24"/>
+<text x="397" y="294" text-anchor="middle" class="smartpls-indicator-text">C10I1</text>
+<rect class="smartpls-indicator" x="444" y="278" width="78" height="24"/>
+<text x="483" y="294" text-anchor="middle" class="smartpls-indicator-text">C10I2</text>
+<rect class="smartpls-indicator" x="530" y="278" width="78" height="24"/>
+<text x="569" y="294" text-anchor="middle" class="smartpls-indicator-text">C10I3</text>
+<rect class="smartpls-indicator" x="616" y="278" width="78" height="24"/>
+<text x="655" y="294" text-anchor="middle" class="smartpls-indicator-text">C10I4</text>
+<rect class="smartpls-indicator" x="358" y="396" width="78" height="24"/>
+<text x="397" y="412" text-anchor="middle" class="smartpls-indicator-text">C11I1</text>
+<rect class="smartpls-indicator" x="444" y="396" width="78" height="24"/>
+<text x="483" y="412" text-anchor="middle" class="smartpls-indicator-text">C11I2</text>
+<rect class="smartpls-indicator" x="530" y="396" width="78" height="24"/>
+<text x="569" y="412" text-anchor="middle" class="smartpls-indicator-text">C11I3</text>
+<rect class="smartpls-indicator" x="616" y="396" width="78" height="24"/>
+<text x="655" y="412" text-anchor="middle" class="smartpls-indicator-text">C11I4</text>
+<rect class="smartpls-indicator" x="358" y="514" width="78" height="24"/>
+<text x="397" y="530" text-anchor="middle" class="smartpls-indicator-text">C12I1</text>
+<rect class="smartpls-indicator" x="444" y="514" width="78" height="24"/>
+<text x="483" y="530" text-anchor="middle" class="smartpls-indicator-text">C12I2</text>
+<rect class="smartpls-indicator" x="530" y="514" width="78" height="24"/>
+<text x="569" y="530" text-anchor="middle" class="smartpls-indicator-text">C12I3</text>
+<rect class="smartpls-indicator" x="616" y="514" width="78" height="24"/>
+<text x="655" y="530" text-anchor="middle" class="smartpls-indicator-text">C12I4</text>
+<rect class="smartpls-indicator" x="358" y="632" width="78" height="24"/>
+<text x="397" y="648" text-anchor="middle" class="smartpls-indicator-text">C13I1</text>
+<rect class="smartpls-indicator" x="444" y="632" width="78" height="24"/>
+<text x="483" y="648" text-anchor="middle" class="smartpls-indicator-text">C13I2</text>
+<rect class="smartpls-indicator" x="530" y="632" width="78" height="24"/>
+<text x="569" y="648" text-anchor="middle" class="smartpls-indicator-text">C13I3</text>
+<rect class="smartpls-indicator" x="616" y="632" width="78" height="24"/>
+<text x="655" y="648" text-anchor="middle" class="smartpls-indicator-text">C13I4</text>
+<rect class="smartpls-indicator" x="358" y="750" width="78" height="24"/>
+<text x="397" y="766" text-anchor="middle" class="smartpls-indicator-text">C14I1</text>
+<rect class="smartpls-indicator" x="444" y="750" width="78" height="24"/>
+<text x="483" y="766" text-anchor="middle" class="smartpls-indicator-text">C14I2</text>
+<rect class="smartpls-indicator" x="530" y="750" width="78" height="24"/>
+<text x="569" y="766" text-anchor="middle" class="smartpls-indicator-text">C14I3</text>
+<rect class="smartpls-indicator" x="616" y="750" width="78" height="24"/>
+<text x="655" y="766" text-anchor="middle" class="smartpls-indicator-text">C14I4</text>
+<rect class="smartpls-indicator" x="932" y="96" width="78" height="24"/>
+<text x="971" y="112" text-anchor="middle" class="smartpls-indicator-text">C15I1</text>
+<rect class="smartpls-indicator" x="932" y="126" width="78" height="24"/>
+<text x="971" y="142" text-anchor="middle" class="smartpls-indicator-text">C15I2</text>
+<rect class="smartpls-indicator" x="932" y="156" width="78" height="24"/>
+<text x="971" y="172" text-anchor="middle" class="smartpls-indicator-text">C15I3</text>
+<rect class="smartpls-indicator" x="932" y="186" width="78" height="24"/>
+<text x="971" y="202" text-anchor="middle" class="smartpls-indicator-text">C15I4</text>
+<rect class="smartpls-indicator" x="932" y="214" width="78" height="24"/>
+<text x="971" y="230" text-anchor="middle" class="smartpls-indicator-text">C16I1</text>
+<rect class="smartpls-indicator" x="932" y="244" width="78" height="24"/>
+<text x="971" y="260" text-anchor="middle" class="smartpls-indicator-text">C16I2</text>
+<rect class="smartpls-indicator" x="932" y="274" width="78" height="24"/>
+<text x="971" y="290" text-anchor="middle" class="smartpls-indicator-text">C16I3</text>
+<rect class="smartpls-indicator" x="932" y="304" width="78" height="24"/>
+<text x="971" y="320" text-anchor="middle" class="smartpls-indicator-text">C16I4</text>
+<rect class="smartpls-indicator" x="932" y="332" width="78" height="24"/>
+<text x="971" y="348" text-anchor="middle" class="smartpls-indicator-text">C17I1</text>
+<rect class="smartpls-indicator" x="932" y="362" width="78" height="24"/>
+<text x="971" y="378" text-anchor="middle" class="smartpls-indicator-text">C17I2</text>
+<rect class="smartpls-indicator" x="932" y="392" width="78" height="24"/>
+<text x="971" y="408" text-anchor="middle" class="smartpls-indicator-text">C17I3</text>
+<rect class="smartpls-indicator" x="932" y="422" width="78" height="24"/>
+<text x="971" y="438" text-anchor="middle" class="smartpls-indicator-text">C17I4</text>
+<rect class="smartpls-indicator" x="932" y="450" width="78" height="24"/>
+<text x="971" y="466" text-anchor="middle" class="smartpls-indicator-text">C18I1</text>
+<rect class="smartpls-indicator" x="932" y="480" width="78" height="24"/>
+<text x="971" y="496" text-anchor="middle" class="smartpls-indicator-text">C18I2</text>
+<rect class="smartpls-indicator" x="932" y="510" width="78" height="24"/>
+<text x="971" y="526" text-anchor="middle" class="smartpls-indicator-text">C18I3</text>
+<rect class="smartpls-indicator" x="932" y="540" width="78" height="24"/>
+<text x="971" y="556" text-anchor="middle" class="smartpls-indicator-text">C18I4</text>
+<rect class="smartpls-indicator" x="932" y="568" width="78" height="24"/>
+<text x="971" y="584" text-anchor="middle" class="smartpls-indicator-text">C19I1</text>
+<rect class="smartpls-indicator" x="932" y="598" width="78" height="24"/>
+<text x="971" y="614" text-anchor="middle" class="smartpls-indicator-text">C19I2</text>
+<rect class="smartpls-indicator" x="932" y="628" width="78" height="24"/>
+<text x="971" y="644" text-anchor="middle" class="smartpls-indicator-text">C19I3</text>
+<rect class="smartpls-indicator" x="932" y="658" width="78" height="24"/>
+<text x="971" y="674" text-anchor="middle" class="smartpls-indicator-text">C19I4</text>
+<rect class="smartpls-indicator" x="932" y="686" width="78" height="24"/>
+<text x="971" y="702" text-anchor="middle" class="smartpls-indicator-text">C20I1</text>
+<rect class="smartpls-indicator" x="932" y="716" width="78" height="24"/>
+<text x="971" y="732" text-anchor="middle" class="smartpls-indicator-text">C20I2</text>
+<rect class="smartpls-indicator" x="932" y="746" width="78" height="24"/>
+<text x="971" y="762" text-anchor="middle" class="smartpls-indicator-text">C20I3</text>
+<rect class="smartpls-indicator" x="932" y="776" width="78" height="24"/>
+<text x="971" y="792" text-anchor="middle" class="smartpls-indicator-text">C20I4</text>
+
+
+</svg>

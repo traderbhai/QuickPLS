@@ -14,6 +14,7 @@ export function Explorer() {
   const assignIndicators = useWorkspace((state) => state.assignIndicators);
   const [query, setQuery] = useState("");
   const [selectedVariables, setSelectedVariables] = useState<string[]>([]);
+  const [draggingVariables, setDraggingVariables] = useState<string[]>([]);
   const ownerByIndicator = useMemo(() => new Map(nodes.flatMap((node) => node.data.indicators.map((indicator) => [indicator, node.data.shortName]))), [nodes]);
   const variables = dataset.columns.filter((column) => column.toLowerCase().includes(query.toLowerCase()));
 
@@ -31,7 +32,7 @@ export function Explorer() {
     <div className="variables-block">
       <div className="section-label"><span>Dataset variables</span><small>{dataset.columns.length}</small></div>
       <label className="variable-search"><Search size={13} /><input aria-label="Search dataset variables" placeholder="Find variable" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
-      {selectedVariables.length > 0 && <div className="variable-bulk-actions">
+      {selectedVariables.length > 0 && <div className="variable-bulk-actions" aria-live="polite">
         <span>{selectedVariables.length} selected</span>
         <button title="Create construct from selected variables" onClick={() => { addConstruct(undefined, selectedVariables); setSelectedVariables([]); }}><Plus size={13} />Construct</button>
         <button title="Create constructs grouped by variable prefix" onClick={() => { addConstructsFromIndicatorGroups(selectedVariables); setSelectedVariables([]); }}><Boxes size={13} />Group</button>
@@ -45,19 +46,25 @@ export function Explorer() {
           const checked = selectedVariables.includes(variable);
           return <div
             key={variable}
-            className={`${owner ? "variable-row assigned" : "variable-row"}${checked ? " selected" : ""}`}
+            className={`${owner ? "variable-row assigned" : "variable-row"}${checked ? " selected" : ""}${draggingVariables.includes(variable) ? " dragging" : ""}`}
             draggable
             title={`Drag ${checked ? "selected variables" : variable} onto a construct or empty canvas`}
             onDragStart={(event) => {
               const dragged = checked ? selectedVariables : [variable];
+              setDraggingVariables(dragged);
+              window.dispatchEvent(new CustomEvent("quickpls:variables-dragging", { detail: { count: dragged.length } }));
               event.dataTransfer.setData("application/qpls-indicator", variable);
               event.dataTransfer.setData("application/qpls-indicators", JSON.stringify(dragged));
               event.dataTransfer.effectAllowed = "move";
             }}
+            onDragEnd={() => {
+              setDraggingVariables([]);
+              window.dispatchEvent(new CustomEvent("quickpls:variables-dragging", { detail: { count: 0 } }));
+            }}
           >
             <GripVertical size={12} />
             <input type="checkbox" aria-label={`Select ${variable}`} checked={checked} onChange={() => setSelectedVariables((current) => current.includes(variable) ? current.filter((item) => item !== variable) : [...current, variable])} />
-            <button onClick={() => setSelectedVariables((current) => current.includes(variable) ? current.filter((item) => item !== variable) : [...current, variable])}><span>{variable}</span><small>{owner ?? "Unassigned"}</small></button>
+            <button type="button" aria-pressed={checked} onClick={() => setSelectedVariables((current) => current.includes(variable) ? current.filter((item) => item !== variable) : [...current, variable])}><span>{variable}</span><small>{owner ?? "Unassigned"}</small></button>
           </div>;
         })}
       </div>

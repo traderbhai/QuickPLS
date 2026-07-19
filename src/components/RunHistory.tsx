@@ -2,22 +2,31 @@ import { AlertTriangle, FlaskConical } from "lucide-react";
 import { useWorkspace } from "../store";
 import type { HtmtAssessment, PlsResult } from "../types";
 import { findBcaParameter, findBootstrapParameter, findStudentizedParameter, formatParameterIdentity } from "../domain/inference";
+import { analysisReadiness } from "../domain/analysisReadiness";
+import { isNativeDesktop } from "../services/projectService";
+import { ReadinessPanel } from "./ReadinessPanel";
 
 export function RunHistory() {
   const runs = useWorkspace((state) => state.runs);
   const setView = useWorkspace((state) => state.setView);
+  const dataset = useWorkspace((state) => state.dataset);
+  const nodes = useWorkspace((state) => state.nodes);
+  const edges = useWorkspace((state) => state.edges);
+  const settings = useWorkspace((state) => state.analysisSettings);
+  const readiness = analysisReadiness({ dataset, nodes, edges, settings, nativeDesktop: isNativeDesktop() });
 
   if (runs.length === 0) return <section className="workspace-page">
-    <div className="page-heading"><div><h1>Saved runs</h1><p>Immutable analysis recipes and provenance records</p></div></div>
-    <div className="empty-state"><FlaskConical size={30} /><h2>No analysis runs</h2><p>Complete the model and run an available method.</p><button className="secondary-button" onClick={() => setView("models")}>Open model</button></div>
+    <div className="page-heading"><div><h1>Results</h1><p>Completed runs, immutable recipes, estimates, and provenance records.</p></div></div>
+    <ReadinessPanel readiness={readiness} compact onNavigate={setView} />
+    <div className="empty-state"><FlaskConical size={30} /><h2>No completed results</h2><p>{readiness.canRun ? "Run the selected method to create the first result." : readiness.blockers[0]?.detail ?? "Complete the analysis checklist before running."}</p><div className="empty-actions"><button className="secondary-button" onClick={() => setView("models")}>Open model</button><button className="secondary-button" onClick={() => setView("analyses")}>Check readiness</button></div></div>
   </section>;
 
   return <section className="workspace-page">
-    <div className="page-heading"><div><h1>Saved runs</h1><p>Immutable analysis recipes and provenance records</p></div></div>
+    <div className="page-heading"><div><h1>Results</h1><p>Completed runs, immutable analysis recipes, estimates, and provenance records.</p></div></div>
     <div className="run-list">{runs.map((run) => <article key={run.id} className="run-row">
       <div className="run-icon"><FlaskConical size={18} /></div>
       <div className="run-content"><strong>{run.name}</strong><p>{new Date(run.createdAt).toLocaleString()} | seed {run.seed} | fingerprint {run.fingerprint}</p><span><AlertTriangle size={13} />{run.warnings[0]}</span>
-        {run.result && <div className="result-summary">
+        {run.result && <div className="result-summary" tabIndex={0} role="region" aria-label={`${run.name} result summary`}>
           <div><b>{run.result.iterations}</b><small>Iterations</small></div>
           <div><b>{run.result.used_observations}</b><small>Observations</small></div>
           {Object.entries(run.result.r_squared).map(([construct, value]) => <div key={construct}><b>{value.toFixed(4)}</b><small>R2 {construct}</small></div>)}
@@ -50,7 +59,7 @@ export function RunHistory() {
           </tbody></table></>}
           <MethodPayloadSections result={run.result} />
         </div>}
-        {run.assessment && <div className="quality-summary">
+        {run.assessment && <div className="quality-summary" tabIndex={0} role="region" aria-label={`${run.name} measurement quality tables`}>
           <strong>Measurement quality</strong>
           <table><thead><tr><th>Construct</th><th>Alpha</th><th>rho_A</th><th>rho_C</th><th>AVE</th></tr></thead><tbody>
             {run.assessment.construct_quality.map((quality) => <tr key={quality.construct}>
@@ -89,7 +98,7 @@ export function RunHistory() {
         {run.bootstrap && <div className="bootstrap-summary">
           <div className="bootstrap-meta"><strong>Bootstrap replicates</strong><span>{run.bootstrap.usable_replicates} usable</span><span>{run.bootstrap.failed_replicates.length} failed</span><span>{Math.round(run.bootstrap.percentile.confidence_level * 100)}% percentile CI</span>{run.bootstrap.bca && <span>{run.bootstrap.bca.jackknife_case_count} jackknife cases | BCa CI</span>}{run.bootstrap.studentized && <span>{run.bootstrap.studentized.inner_replicates} inner replicates | {run.bootstrap.studentized.failure ? "bootstrap-t failed" : "bootstrap-t CI"}</span>}</div>
           {run.bootstrap.studentized?.failure && <div className="inference-failure" role="alert"><strong>Bootstrap-t unavailable</strong><span>{run.bootstrap.studentized.failure.message}</span></div>}
-          <div className="bootstrap-table-scroll"><table><thead><tr><th>Parameter</th><th>Original</th><th>Mean</th><th>Bias</th><th>SE</th><th>t</th><th>p (two-sided)</th><th>Percentile lower</th><th>Percentile upper</th><th>BCa lower</th><th>BCa upper</th><th>Bootstrap-t lower</th><th>Bootstrap-t upper</th></tr></thead><tbody>
+          <div className="bootstrap-table-scroll" tabIndex={0} role="region" aria-label={`${run.name} bootstrap parameter table`}><table><thead><tr><th>Parameter</th><th>Original</th><th>Mean</th><th>Bias</th><th>SE</th><th>t</th><th>p (two-sided)</th><th>Percentile lower</th><th>Percentile upper</th><th>BCa lower</th><th>BCa upper</th><th>Bootstrap-t lower</th><th>Bootstrap-t upper</th></tr></thead><tbody>
               {run.bootstrap.percentile.parameters.map((parameter) => { const bca = run.bootstrap!.bca?.parameters.find((value) => value.parameter === parameter.parameter); const studentized = run.bootstrap!.studentized?.parameters.find((value) => value.parameter === parameter.parameter); return <tr key={parameter.parameter}>
                 <td>{formatParameterIdentity(parameter.parameter)}</td><td>{parameter.original.toFixed(6)}</td><td>{parameter.bootstrap_mean.toFixed(6)}</td><td>{parameter.bias.toFixed(6)}</td><td>{parameter.standard_error.toFixed(6)}</td><td>{parameter.t_statistic?.toFixed(4) ?? "N/A"}</td><td>{formatPValue(parameter.p_value_two_sided)}</td><td>{parameter.lower.toFixed(6)}</td><td>{parameter.upper.toFixed(6)}</td><td title={bca?.unavailable_reason ?? undefined}>{bca?.lower?.toFixed(6) ?? "N/A"}</td><td title={bca?.unavailable_reason ?? undefined}>{bca?.upper?.toFixed(6) ?? "N/A"}</td><td title={studentized?.unavailable_reason ?? undefined}>{studentized?.lower?.toFixed(6) ?? "N/A"}</td><td title={studentized?.unavailable_reason ?? undefined}>{studentized?.upper?.toFixed(6) ?? "N/A"}</td>
               </tr>; })}
@@ -97,12 +106,12 @@ export function RunHistory() {
         </div>}
         {run.permutation && <div className="bootstrap-summary">
           <div className="bootstrap-meta"><strong>Freedman-Lane permutation</strong><span>{run.permutation.plan.permutations} samples</span><span>two-sided finite-sample corrected p-values</span></div>
-          <div className="bootstrap-table-scroll"><table><thead><tr><th>Path</th><th>Original coefficient</th><th>Exceedances</th><th>p (two-sided)</th></tr></thead><tbody>
+          <div className="bootstrap-table-scroll" tabIndex={0} role="region" aria-label={`${run.name} permutation parameter table`}><table><thead><tr><th>Path</th><th>Original coefficient</th><th>Exceedances</th><th>p (two-sided)</th></tr></thead><tbody>
             {run.permutation.parameters.map((parameter) => <tr key={parameter.parameter}><td>{formatParameterIdentity(parameter.parameter)}</td><td>{parameter.original.toFixed(6)}</td><td>{parameter.exceedances} / {parameter.permutations}</td><td>{formatPValue(parameter.p_value_two_sided)}</td></tr>)}
           </tbody></table></div>
         </div>}
       </div>
-      <div className="run-status">Experimental</div>
+      <div className="run-status">Scope checked</div>
     </article>)}</div>
   </section>;
 }

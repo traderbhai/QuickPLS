@@ -16,10 +16,10 @@ export const sampleDataset: Dataset = {
 };
 
 export const initialNodes: Array<Node<ConstructData>> = [
-  { id: "competence", type: "construct", position: { x: 90, y: 105 }, data: { label: "Competence", shortName: "COMP", mode: "reflective", indicators: ["COMP1", "COMP2", "COMP3"] } },
-  { id: "likeability", type: "construct", position: { x: 90, y: 340 }, data: { label: "Likeability", shortName: "LIKE", mode: "reflective", indicators: ["LIKE1", "LIKE2"] } },
-  { id: "satisfaction", type: "construct", position: { x: 465, y: 105 }, data: { label: "Customer Satisfaction", shortName: "CUSA", mode: "reflective", indicators: ["CUSA1", "CUSA2"] } },
-  { id: "loyalty", type: "construct", position: { x: 465, y: 340 }, data: { label: "Customer Loyalty", shortName: "CUSL", mode: "reflective", indicators: ["CUSL1", "CUSL2"] } },
+  { id: "competence", type: "construct", position: { x: 120, y: 125 }, data: { label: "Competence", shortName: "COMP", mode: "reflective", indicators: ["COMP1", "COMP2", "COMP3"] } },
+  { id: "likeability", type: "construct", position: { x: 120, y: 335 }, data: { label: "Likeability", shortName: "LIKE", mode: "reflective", indicators: ["LIKE1", "LIKE2"] } },
+  { id: "satisfaction", type: "construct", position: { x: 390, y: 230 }, data: { label: "Customer Satisfaction", shortName: "CUSA", mode: "reflective", indicators: ["CUSA1", "CUSA2"] } },
+  { id: "loyalty", type: "construct", position: { x: 650, y: 230 }, data: { label: "Customer Loyalty", shortName: "CUSL", mode: "reflective", indicators: ["CUSL1", "CUSL2"] } },
 ];
 
 export const initialEdges: Edge[] = [

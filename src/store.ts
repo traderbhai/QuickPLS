@@ -67,6 +67,9 @@ interface WorkspaceState {
   addTwoStageInteraction: (predictor: string, moderator: string, outcome: string) => void;
   updateConstruct: (id: string, patch: Partial<ConstructData>) => void;
   updateEdge: (id: string, patch: Partial<Edge>) => void;
+  setEdgeLabelOffset: (id: string, offset: { x: number; y: number }) => void;
+  nudgeEdgeLabel: (id: string, delta: { x: number; y: number }) => void;
+  resetEdgeLabel: (id: string) => void;
   addConstruct: (position?: XYPosition, indicators?: string[]) => void;
   addConstructsFromIndicators: (indicators: string[]) => void;
   addConstructsFromIndicatorGroups: (indicators: string[]) => void;
@@ -79,6 +82,7 @@ interface WorkspaceState {
   autoLayout: (direction?: "horizontal" | "vertical" | "smartpls") => void;
   moveIndicator: (constructId: string, indicator: string, position: XYPosition) => void;
   setIndicatorSide: (constructId: string, indicator: string, side: IndicatorSide) => void;
+  setConstructIndicatorSide: (constructId: string, side: Exclude<IndicatorSide, "free">) => void;
   resetIndicatorLayout: (constructId: string, indicator?: string) => void;
   assignIndicator: (constructId: string, indicator: string) => void;
   assignIndicators: (constructId: string, indicators: string[]) => void;
@@ -230,6 +234,36 @@ const nextConstructPosition = (nodes: Array<Node<ConstructData>>): XYPosition =>
     }
   }
   return { x: 80, y: 85 + nodes.length * 170 };
+};
+
+const snapPosition = (position: XYPosition): XYPosition => ({
+  x: Math.round(position.x / 10) * 10,
+  y: Math.round(position.y / 10) * 10,
+});
+
+const constructPositionIsOpen = (candidate: XYPosition, nodes: Array<Node<ConstructData>>) =>
+  nodes.every((node) => Math.abs(node.position.x - candidate.x) >= 190 || Math.abs(node.position.y - candidate.y) >= 140);
+
+const nearestOpenConstructPosition = (requested: XYPosition, nodes: Array<Node<ConstructData>>): XYPosition => {
+  const origin = snapPosition(requested);
+  if (constructPositionIsOpen(origin, nodes)) return origin;
+  const offsets = [
+    { x: 220, y: 0 },
+    { x: 0, y: 170 },
+    { x: 220, y: 170 },
+    { x: -220, y: 0 },
+    { x: 0, y: -170 },
+    { x: -220, y: 170 },
+    { x: 220, y: -170 },
+    { x: -220, y: -170 },
+  ];
+  for (let ring = 1; ring <= 6; ring += 1) {
+    for (const offset of offsets) {
+      const candidate = snapPosition({ x: origin.x + offset.x * ring, y: origin.y + offset.y * ring });
+      if (constructPositionIsOpen(candidate, nodes)) return candidate;
+    }
+  }
+  return nextConstructPosition(nodes);
 };
 
 const constructIdFromIndicator = (indicator: string, nodes: Array<Node<ConstructData>>) => {
@@ -446,11 +480,52 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     ...historyPatch(state),
     edges: state.edges.map((edge) => edge.id === id ? { ...edge, ...patch } : edge),
   })),
+  setEdgeLabelOffset: (id, offset) => set((state) => ({
+    diagramLayout: {
+      ...state.diagramLayout,
+      edgeLayouts: {
+        ...state.diagramLayout.edgeLayouts,
+        [id]: {
+          ...(state.diagramLayout.edgeLayouts[id] ?? { routing: "straight" }),
+          labelOffset: offset,
+          pinned: true,
+        },
+      },
+    },
+  })),
+  nudgeEdgeLabel: (id, delta) => set((state) => {
+    const current = state.diagramLayout.edgeLayouts[id]?.labelOffset ?? { x: 0, y: 0 };
+    return {
+      ...historyPatch(state),
+      diagramLayout: {
+        ...state.diagramLayout,
+        edgeLayouts: {
+          ...state.diagramLayout.edgeLayouts,
+          [id]: {
+            ...(state.diagramLayout.edgeLayouts[id] ?? { routing: "straight" }),
+            labelOffset: { x: current.x + delta.x, y: current.y + delta.y },
+            pinned: true,
+          },
+        },
+      },
+    };
+  }),
+  resetEdgeLabel: (id) => set((state) => ({
+    ...historyPatch(state),
+    diagramLayout: {
+      ...state.diagramLayout,
+      edgeLayouts: {
+        ...state.diagramLayout.edgeLayouts,
+        [id]: { ...(state.diagramLayout.edgeLayouts[id] ?? { routing: "straight" }), labelOffset: undefined, pinned: false },
+      },
+    },
+  })),
   addConstruct: (position, indicators = []) => set((state) => {
     const id = `construct-${Date.now()}`;
     const name = nextConstructName(state.nodes);
     const fallback = nextConstructPosition(state.nodes);
     const validIndicators = validUniqueIndicators(indicators, state.dataset);
+    const nextPosition = position ? nearestOpenConstructPosition(position, state.nodes) : fallback;
     return {
       ...historyPatch(state),
       selectedNodeId: id,
@@ -461,7 +536,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
       })), {
         id,
         type: "construct",
-        position: position ?? fallback,
+        position: nextPosition,
         data: { ...name, mode: "reflective", indicators: validIndicators },
       }],
     };
@@ -681,6 +756,25 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
             ...constructIndicators,
             [indicator]: { ...current, side, x: undefined, y: undefined, pinned: side === "free" },
           },
+        },
+      }),
+    };
+  }),
+  setConstructIndicatorSide: (constructId, side) => set((state) => {
+    const construct = state.nodes.find((node) => node.id === constructId);
+    if (!construct || construct.data.indicators.length === 0) return state;
+    const constructIndicators = state.diagramLayout.indicatorLayouts[constructId] ?? {};
+    const nextIndicators = Object.fromEntries(construct.data.indicators.map((indicator, index) => {
+      const current = constructIndicators[indicator] ?? { order: index };
+      return [indicator, { ...current, side, x: undefined, y: undefined, order: current.order ?? index, pinned: false }];
+    }));
+    return {
+      ...historyPatch(state),
+      diagramLayout: syncedDiagramLayout(state.nodes, state.edges, {
+        ...state.diagramLayout,
+        indicatorLayouts: {
+          ...state.diagramLayout.indicatorLayouts,
+          [constructId]: nextIndicators,
         },
       }),
     };

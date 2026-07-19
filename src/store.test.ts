@@ -74,6 +74,15 @@ describe("model editor state", () => {
     expect(state.nodes.slice(0, -1).every((node) => Math.abs(node.position.x - created.position.x) >= 190 || Math.abs(node.position.y - created.position.y) >= 140)).toBe(true);
   });
 
+  it("nudges dropped constructs to the nearest open space instead of overlapping the model", () => {
+    const state = useWorkspace.getState();
+    const occupied = state.nodes.find((node) => node.id === "satisfaction")!;
+    useWorkspace.getState().addConstruct(occupied.position, ["COMP1"]);
+    const created = useWorkspace.getState().nodes.at(-1)!;
+    expect(created.position).not.toEqual(occupied.position);
+    expect(useWorkspace.getState().nodes.slice(0, -1).every((node) => Math.abs(node.position.x - created.position.x) >= 190 || Math.abs(node.position.y - created.position.y) >= 140)).toBe(true);
+  });
+
   it("creates separate single-item constructs from selected variables in one undo step", () => {
     const originalCount = useWorkspace.getState().nodes.length;
     useWorkspace.getState().addConstructsFromIndicators(["COMP1", "COMP2", "NOT_A_COLUMN", "COMP1"]);
@@ -310,6 +319,20 @@ describe("model editor state", () => {
     expect(useWorkspace.getState().diagramLayout.indicatorLayouts.competence.COMP1.side).not.toBe("free");
   });
 
+  it("places all construct indicators on one side without changing the engine model", () => {
+    const originalIndicators = useWorkspace.getState().nodes.find((node) => node.id === "competence")?.data.indicators;
+    useWorkspace.getState().moveIndicator("competence", "COMP1", { x: 42, y: 57 });
+    useWorkspace.getState().setConstructIndicatorSide("competence", "right");
+    let state = useWorkspace.getState();
+    expect(Object.values(state.diagramLayout.indicatorLayouts.competence).map((layout) => layout.side)).toEqual(["right", "right", "right"]);
+    expect(state.diagramLayout.indicatorLayouts.competence.COMP1).toMatchObject({ x: undefined, y: undefined, pinned: false });
+    expect(state.nodes.find((node) => node.id === "competence")?.data.indicators).toEqual(originalIndicators);
+
+    useWorkspace.getState().undo();
+    state = useWorkspace.getState();
+    expect(state.diagramLayout.indicatorLayouts.competence.COMP1).toMatchObject({ side: "free", x: 42, y: 57, pinned: true });
+  });
+
   it("aligns selected constructs and supports undo", () => {
     const state = useWorkspace.getState();
     state.loadProject({
@@ -347,5 +370,22 @@ describe("model editor state", () => {
     const selected = useWorkspace.getState().nodes.filter((node) => node.selected).sort((left, right) => left.position.x - right.position.x);
     const centers = selected.map((node) => node.position.x + 85);
     expect(centers).toEqual([85, 235, 385]);
+  });
+
+  it("persists edge label offsets and supports reset with undo", () => {
+    const edgeId = "competence-satisfaction";
+    useWorkspace.getState().checkpoint();
+    useWorkspace.getState().setEdgeLabelOffset(edgeId, { x: 12, y: -10 });
+    expect(useWorkspace.getState().diagramLayout.edgeLayouts[edgeId].labelOffset).toEqual({ x: 12, y: -10 });
+    useWorkspace.getState().undo();
+    expect(useWorkspace.getState().diagramLayout.edgeLayouts[edgeId]?.labelOffset).toBeUndefined();
+    useWorkspace.getState().nudgeEdgeLabel(edgeId, { x: 18, y: -16 });
+    expect(useWorkspace.getState().diagramLayout.edgeLayouts[edgeId].labelOffset).toEqual({ x: 18, y: -16 });
+    useWorkspace.getState().nudgeEdgeLabel(edgeId, { x: 0, y: 16 });
+    expect(useWorkspace.getState().diagramLayout.edgeLayouts[edgeId].labelOffset).toEqual({ x: 18, y: 0 });
+    useWorkspace.getState().resetEdgeLabel(edgeId);
+    expect(useWorkspace.getState().diagramLayout.edgeLayouts[edgeId].labelOffset).toBeUndefined();
+    useWorkspace.getState().undo();
+    expect(useWorkspace.getState().diagramLayout.edgeLayouts[edgeId].labelOffset).toEqual({ x: 18, y: 0 });
   });
 });

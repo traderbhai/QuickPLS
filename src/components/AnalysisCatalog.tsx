@@ -1,22 +1,41 @@
 import { CheckCircle2, Clock3, LockKeyhole } from "lucide-react";
 import { methods } from "../data/sample";
+import { analysisReadiness } from "../domain/analysisReadiness";
+import { isSelectableAnalysisMethod, methodStatusDescription, methodStatusLabel } from "../domain/methodStatus";
+import { isNativeDesktop } from "../services/projectService";
 import { useWorkspace } from "../store";
-import type { AnalysisMethodId } from "../types";
+import type { AnalysisMethodId, MethodDefinition } from "../types";
+import { ReadinessPanel } from "./ReadinessPanel";
 
-const runnableMethods = methods.filter((method) => method.status !== "unsupported");
+const runnableMethods = methods.filter(isSelectableAnalysisMethod);
+
+function MethodStatusPill({ method }: { method: MethodDefinition }) {
+  const selectable = isSelectableAnalysisMethod(method);
+  const effectiveStatus = selectable ? method.status : "unsupported";
+  return <span className={`status-text ${effectiveStatus}`} title={methodStatusDescription(method)}>
+    {effectiveStatus === "validated" ? <CheckCircle2 size={15} /> : effectiveStatus === "experimental" ? <Clock3 size={15} /> : <LockKeyhole size={15} />}
+    {selectable ? methodStatusLabel(method.status) : "Configured elsewhere"}
+  </span>;
+}
 
 export function AnalysisCatalog() {
   const settings = useWorkspace((state) => state.analysisSettings);
   const setSettings = useWorkspace((state) => state.setAnalysisSettings);
   const columns = useWorkspace((state) => state.dataset.columns);
+  const dataset = useWorkspace((state) => state.dataset);
+  const edges = useWorkspace((state) => state.edges);
   const nodes = useWorkspace((state) => state.nodes);
+  const setView = useWorkspace((state) => state.setView);
+  const readiness = analysisReadiness({ dataset, nodes, edges, settings, nativeDesktop: isNativeDesktop() });
   return <section className="workspace-page">
-    <div className="page-heading"><div><h1>Analysis methods</h1><p>Capabilities remain unavailable until their numerical and validation gates pass.</p></div></div>
+    <div className="page-heading"><div><h1>Validate and run</h1><p>Check readiness, select a validated or watermarked method, then run the offline engine.</p></div></div>
+    <ReadinessPanel readiness={readiness} onNavigate={setView} />
     <div className="analysis-settings">
-      <div><strong>PLS-SEM execution</strong><span className="status-text experimental"><Clock3 size={14} />experimental</span></div>
+      <div><strong>Analysis setup</strong><span className={readiness.canRun ? "status-text validated" : "status-text experimental"}>{readiness.canRun ? <CheckCircle2 size={14} /> : <Clock3 size={14} />}{readiness.canRun ? "ready" : "needs attention"}</span></div>
       <label>Run method<select value={settings.method} onChange={(event) => setSettings({ method: event.target.value as AnalysisMethodId })}>
-        {runnableMethods.map((method) => <option key={method.id} value={method.id}>{method.name}</option>)}
+        {runnableMethods.map((method) => <option key={method.id} value={method.id}>{method.name} | {methodStatusLabel(method.status)}</option>)}
       </select></label>
+      <p className="settings-guidance">Recommended defaults are applied automatically. Open advanced settings only when you need resampling, worker, or reproducibility controls.</p>
       {settings.method === "wpls" && <label>Case weight column<select value={settings.caseWeightColumn ?? ""} onChange={(event) => setSettings({ caseWeightColumn: event.target.value || null })}>
         <option value="">Select column</option>
         {columns.map((column) => <option key={column} value={column}>{column}</option>)}
@@ -119,13 +138,21 @@ export function AnalysisCatalog() {
         <option value="cr_fdh">CR-FDH</option>
       </select></label>}
       {settings.method === "nca" && <label>NCA permutations<input type="number" min={1} max={10000} step={100} value={settings.ncaPermutationSamples ?? 999} onChange={(event) => setSettings({ ncaPermutationSamples: Math.min(10000, Math.max(1, Math.trunc(Number(event.target.value) || 999))) })} /></label>}
-      <label>Bootstrap replicates<input type="number" min={0} max={10000} step={100} value={settings.bootstrapSamples} onChange={(event) => { const value = Math.min(10000, Math.max(0, Math.trunc(Number(event.target.value) || 0))); setSettings(value === 0 ? { bootstrapSamples: 0, studentizedInnerSamples: 0 } : { bootstrapSamples: value }); }} /></label>
-      <label>Studentized inner replicates<input type="number" min={0} max={999} step={2} value={settings.studentizedInnerSamples} onChange={(event) => { const value = Math.trunc(Number(event.target.value) || 0); setSettings({ studentizedInnerSamples: value }); }} /></label>
-      <label>Permutation samples<input type="number" min={0} max={10000} step={100} value={settings.permutationSamples} onChange={(event) => { const value = Math.trunc(Number(event.target.value) || 0); setSettings({ permutationSamples: value === 0 ? 0 : Math.min(10000, Math.max(99, value)) }); }} /></label>
-      <label>Random seed<input type="number" min={0} max={4294967295} step={1} value={settings.seed} onChange={(event) => setSettings({ seed: Math.min(4294967295, Math.max(0, Math.trunc(Number(event.target.value) || 0))) })} /></label>
-      <label>Workers<input type="number" min={1} max={64} step={1} value={settings.workers} onChange={(event) => setSettings({ workers: Math.min(64, Math.max(1, Math.trunc(Number(event.target.value) || 1))) })} /></label>
-      <label>Confidence level<input type="number" min={0.8} max={0.999} step={0.01} value={settings.confidenceLevel} onChange={(event) => setSettings({ confidenceLevel: Math.min(0.999, Math.max(0.8, Number(event.target.value) || 0.95)) })} /></label>
+      <details className="settings-section advanced-settings">
+        <summary>Advanced resampling and reproducibility</summary>
+        <label>Bootstrap replicates<input type="number" min={0} max={10000} step={100} value={settings.bootstrapSamples} onChange={(event) => { const value = Math.min(10000, Math.max(0, Math.trunc(Number(event.target.value) || 0))); setSettings(value === 0 ? { bootstrapSamples: 0, studentizedInnerSamples: 0 } : { bootstrapSamples: value }); }} /></label>
+        <label>Studentized inner replicates<input type="number" min={0} max={999} step={2} value={settings.studentizedInnerSamples} onChange={(event) => { const value = Math.trunc(Number(event.target.value) || 0); setSettings({ studentizedInnerSamples: value }); }} /></label>
+        <label>Permutation samples<input type="number" min={0} max={10000} step={100} value={settings.permutationSamples} onChange={(event) => { const value = Math.trunc(Number(event.target.value) || 0); setSettings({ permutationSamples: value === 0 ? 0 : Math.min(10000, Math.max(99, value)) }); }} /></label>
+        <label>Random seed<input type="number" min={0} max={4294967295} step={1} value={settings.seed} onChange={(event) => setSettings({ seed: Math.min(4294967295, Math.max(0, Math.trunc(Number(event.target.value) || 0))) })} /></label>
+        <label>Workers<input type="number" min={1} max={64} step={1} value={settings.workers} onChange={(event) => setSettings({ workers: Math.min(64, Math.max(1, Math.trunc(Number(event.target.value) || 1))) })} /></label>
+        <label>Confidence level<input type="number" min={0.8} max={0.999} step={0.01} value={settings.confidenceLevel} onChange={(event) => setSettings({ confidenceLevel: Math.min(0.999, Math.max(0.8, Number(event.target.value) || 0.95)) })} /></label>
+      </details>
     </div>
-    <div className="method-table"><div className="method-table-head"><span>Method</span><span>Family</span><span>Status</span></div>{methods.map((method) => <button type="button" className={`method-row ${settings.method === method.id ? "selected" : ""}`} key={method.id} disabled={method.status === "unsupported"} onClick={() => setSettings({ method: method.id as AnalysisMethodId })}><strong>{method.name}</strong><span>{method.family}</span><span className={`status-text ${method.status}`}>{method.status === "validated" ? <CheckCircle2 size={15} /> : method.status === "experimental" ? <Clock3 size={15} /> : <LockKeyhole size={15} />}{method.status}</span></button>)}</div>
+    <div className="method-table"><div className="method-table-head"><span>Method</span><span>Family</span><span>Status</span></div>{methods.map((method) => {
+      const selectable = isSelectableAnalysisMethod(method);
+      return <button type="button" className={`method-row ${settings.method === method.id ? "selected" : ""}`} key={method.id} disabled={!selectable} title={methodStatusDescription(method)} onClick={() => { if (selectable) setSettings({ method: method.id }); }}>
+        <strong>{method.name}</strong><span>{method.family}</span><MethodStatusPill method={method} />
+      </button>;
+    })}</div>
   </section>;
 }

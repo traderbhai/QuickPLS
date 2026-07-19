@@ -1074,6 +1074,91 @@ mod desktop_job_tests {
     }
 }
 
+#[test]
+fn desktop_native_v11_workflow_smoke_import_run_save_reopen_and_export() {
+    use qpls_project::{load_project, save_project};
+    use std::fs;
+
+    let directory = tempfile::tempdir().unwrap();
+    let project_path = directory.path().join("v11-workflow.qpls");
+    let xlsx_path = directory.path().join("v11-export.xlsx");
+
+    let dataset = import_delimited_bytes(
+        include_bytes!("../../validation/fixtures/simple_reflective.csv"),
+        "simple_reflective.csv",
+        b',',
+        &ImportOptions::default(),
+    )
+    .unwrap();
+    let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+        "../../validation/fixtures/simple_reflective.recipe.json"
+    ))
+    .unwrap();
+    recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+    recipe.settings.workers = 1;
+    recipe.settings.bootstrap_samples = 0;
+    recipe.settings.permutation_samples = 0;
+
+    let result = run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+    let workspace = serde_json::json!({
+        "activeDatasetId": dataset.id.to_string(),
+        "analysisSettings": {"method": "pls_pm", "workers": 1, "bootstrapSamples": 0, "permutationSamples": 0},
+        "nodes": [
+            {"id": "x", "type": "construct", "position": {"x": 120, "y": 160}, "data": {"label": "X", "shortName": "X", "mode": "reflective", "indicators": ["x1", "x2"]}},
+            {"id": "y", "type": "construct", "position": {"x": 420, "y": 160}, "data": {"label": "Y", "shortName": "Y", "mode": "reflective", "indicators": ["y1", "y2"]}}
+        ],
+        "edges": [
+            {"id": "path-x-y", "source": "x", "target": "y", "type": "smoothstep", "label": "Path"}
+        ],
+        "runs": [{
+            "id": result.id.to_string(),
+            "name": "v1.1 native workflow run",
+            "method": "PLS path modeling core",
+            "createdAt": result.provenance.completed_at,
+            "seed": result.provenance.seed,
+            "status": "completed",
+            "warnings": ["Validated for the documented QuickPLS v1.0.0 supported scope."],
+            "fingerprint": result.provenance.dataset_fingerprint.chars().take(12).collect::<String>()
+        }],
+        "diagramLayout": {
+            "constructLayouts": {
+                "x": {"position": {"x": 120, "y": 160}, "pinned": true},
+                "y": {"position": {"x": 420, "y": 160}, "pinned": true}
+            }
+        }
+    });
+    let mut project = Project::new("v1.1 native workflow smoke");
+    project.datasets.push(dataset.clone());
+    project.models.push(recipe.model.clone());
+    project.recipes.push(recipe);
+    project.results.push(result);
+    project.layouts.insert("workspace".into(), workspace);
+
+    save_project(&project_path, &project).unwrap();
+    let reopened = load_project(&project_path).unwrap();
+    assert_eq!(reopened.datasets.len(), 1);
+    assert_eq!(reopened.models.len(), 1);
+    assert_eq!(reopened.recipes.len(), 1);
+    assert_eq!(reopened.results.len(), 1);
+    assert_eq!(
+        reopened.layouts["workspace"]["diagramLayout"]["constructLayouts"]["x"]["pinned"],
+        true
+    );
+
+    let tables = vec![ExportTable {
+        title: "v1.1 native workflow".into(),
+        status: "validated".into(),
+        warning: None,
+        columns: vec!["Field".into(), "Value".into()],
+        rows: vec![
+            vec!["datasets".into(), reopened.datasets.len().to_string()],
+            vec!["runs".into(), reopened.results.len().to_string()],
+        ],
+    }];
+    write_xlsx_tables(&xlsx_path, &tables).unwrap();
+    assert!(fs::metadata(&xlsx_path).unwrap().len() > 0);
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()

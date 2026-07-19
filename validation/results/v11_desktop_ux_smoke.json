@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "target": "v1.1 desktop UX workflow smoke",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "passed": true,
+  "metrics": {
+    "dataMetrics": {
+      "focusedDataGrid": true,
+      "dataGridRole": "region",
+      "dataGridTabIndex": "0",
+      "dataGridLabel": "Data preview table for Corporate Reputation.csv",
+      "dataCaption": "Data preview: first 5 rows of Corporate Reputation.csv"
+    },
+    "modelMetrics": {
+      "academicLatents": 4,
+      "academicIndicators": 9,
+      "toolbar": true,
+      "overlayStatus": "Model-only diagramRun or select a compatible result to show loadings, path coefficients, and R².",
+      "overlayStatusMojibake": false,
+      "nextAction": "Next stepOpen run checklist",
+      "shortcutHelp": false
+    },
+    "validateMetrics": {
+      "readinessItems": 6,
+      "methodRows": 18,
+      "statusBadges": 21,
+      "hasReadinessAction": true
+    },
+    "runMetrics": {
+      "readinessPanel": true,
+      "runDisabledReason": true,
+      "runLaunchCard": true,
+      "runBlockerIsActionable": true,
+      "hasReadinessAction": true
+    },
+    "resultsMetrics": {
+      "emptyResults": true,
+      "readinessPanel": true
+    },
+    "reportMetrics": {
+      "publicationPreview": true,
+      "exportReason": true,
+      "rSquaredMojibake": false,
+      "rSquaredStructuralLabel": true
+    },
+    "workflowMetrics": {
+      "workflowLabels": [
+        "Data",
+        "Model",
+        "Validate",
+        "Run",
+        "Results",
+        "Report"
+      ],
+      "navLabels": [
+        "Data",
+        "Model",
+        "Validate",
+        "Run",
+        "Results",
+        "Groups",
+        "Report"
+      ],
+      "footerReadinessPills": 6,
+      "footerReadinessLabels": [
+        "Runtime",
+        "Constructs",
+        "Indicators",
+        "Model structure",
+        "Sample size",
+        "Method"
+      ],
+      "footerReadinessNamed": "Persistent analysis readiness checklist"
+    },
+    "smokeHarnessMetrics": {
+      "available": true
+    },
+    "completedResultsMetrics": {
+      "hasCompletedRun": true,
+      "hasResultSummary": true,
+      "hasQualityWarning": true,
+      "pathRows": 5,
+      "rSquaredValues": 2
+    },
+    "completedModelMetrics": {
+      "overlayHasLoadings": true,
+      "overlayHasPaths": true,
+      "overlayHasRSquared": true,
+      "overlayStatusActive": true,
+      "hasEditChrome": true
+    },
+    "completedReportMetrics": {
+      "runSelected": true,
+      "wysiwygStatement": true,
+      "svgHasLoadings": true,
+      "svgHasPaths": true,
+      "svgHasRSquared": true,
+      "exportReasonExplainsRuntime": true
+    }
+  },
+  "errors": [],
+  "screenshots": {
+    "data": "D:\\QuickPLS\\validation\\results\\screens\\v11\\v11_01_data_1440x900.png",
+    "model": "D:\\QuickPLS\\validation\\results\\screens\\v11\\v11_02_model_1440x900.png",
+    "validate": "D:\\QuickPLS\\validation\\results\\screens\\v11\\v11_03_validate_1440x900.png",
+    "run": "D:\\QuickPLS\\validation\\results\\screens\\v11\\v11_04_run_1440x900.png",
+    "results": "D:\\QuickPLS\\validation\\results\\screens\\v11\\v11_05_results_1440x900.png",
+    "report": "D:\\QuickPLS\\validation\\results\\screens\\v11\\v11_06_report_1440x900.png",
+    "completedResults": "D:\\QuickPLS\\validation\\results\\screens\\v11\\v11_07_results_completed_1440x900.png",
+    "completedModelOverlay": "D:\\QuickPLS\\validation\\results\\screens\\v11\\v11_08_model_completed_overlay_1440x900.png",
+    "completedReport": "D:\\QuickPLS\\validation\\results\\screens\\v11\\v11_09_report_completed_1440x900.png"
+  }
+}

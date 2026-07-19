@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.1.1 disabled-action explanation audit",
+  "passed": true,
+  "checklist": {
+    "topbar_run_disabled_reason": true,
+    "run_workspace_disabled_reason": true,
+    "report_export_disabled_reason": true,
+    "data_metadata_disabled_reason": true,
+    "canvas_locked_mode_reason": true,
+    "canvas_selected_action_reason": true,
+    "covariance_action_reason": true,
+    "native_xlsx_reason": true,
+    "progressive_settings_guidance": true,
+    "disabled_reason_css_exists": true
+  },
+  "required_surfaces": [
+    "TopBar Run/Cancel",
+    "Run workspace",
+    "Report CSV/HTML/XLSX/SVG/PDF exports",
+    "Data metadata Apply",
+    "SEM canvas locked result/publication actions",
+    "SEM canvas edge/covariance actions",
+    "Analysis settings progressive disclosure"
+  ]
+}

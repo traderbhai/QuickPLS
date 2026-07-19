@@ -18,6 +18,8 @@ export function Inspector() {
   const reverseSelectedPath = useWorkspace((state) => state.reverseSelectedPath);
   const removeSelection = useWorkspace((state) => state.removeSelection);
   const autoLayout = useWorkspace((state) => state.autoLayout);
+  const resetIndicatorLayout = useWorkspace((state) => state.resetIndicatorLayout);
+  const setConstructIndicatorSide = useWorkspace((state) => state.setConstructIndicatorSide);
   const addTwoStageInteraction = useWorkspace((state) => state.addTwoStageInteraction);
   const setSelectedNode = useWorkspace((state) => state.setSelectedNode);
   const setSelectedEdge = useWorkspace((state) => state.setSelectedEdge);
@@ -61,16 +63,20 @@ export function Inspector() {
   if (!node) return <aside className="inspector model-inspector">
     <div className="inspector-tabs"><button onClick={() => setSelectedNode(nodes[0]?.id ?? null)}>Construct</button><button onClick={() => setSelectedEdge(edges[0]?.id ?? null)}>Path</button><button className="active">Model</button></div>
     <div className="path-heading"><Network size={16} /><div><strong>Structural model</strong><span>{nodes.length} constructs | {edges.length} paths</span></div></div>
-    <label>Weighting scheme<select defaultValue="path"><option value="path">Path weighting</option><option value="factor">Factor weighting</option><option value="pca">PCA weighting</option></select></label>
-    <label>Preprocessing<select defaultValue="standardized"><option value="standardized">Standardized</option><option value="centered">Mean centered</option><option value="unstandardized">Unstandardized</option></select></label>
+    <details className="inspector-section" open><summary>Essentials</summary>
+      <label>Weighting scheme<select defaultValue="path"><option value="path">Path weighting</option><option value="factor">Factor weighting</option><option value="pca">PCA weighting</option></select></label>
+      <label>Preprocessing<select defaultValue="standardized"><option value="standardized">Standardized</option><option value="centered">Mean centered</option><option value="unstandardized">Unstandardized</option></select></label>
+    </details>
+    <details className="inspector-section"><summary>Advanced interactions</summary>
     <fieldset><legend>Two-stage interaction</legend>
       <label>Predictor<select value={interactionDraft.predictor} onChange={(event) => setInteractionDraft((value) => ({ ...value, predictor: event.target.value }))}><option value="">Choose...</option>{nodes.map((item) => <option key={item.id} value={item.id}>{item.data.shortName}</option>)}</select></label>
       <label>Moderator<select value={interactionDraft.moderator} onChange={(event) => setInteractionDraft((value) => ({ ...value, moderator: event.target.value }))}><option value="">Choose...</option>{nodes.map((item) => <option key={item.id} value={item.id}>{item.data.shortName}</option>)}</select></label>
       <label>Outcome<select value={interactionDraft.outcome} onChange={(event) => setInteractionDraft((value) => ({ ...value, outcome: event.target.value }))}><option value="">Choose...</option>{nodes.map((item) => <option key={item.id} value={item.id}>{item.data.shortName}</option>)}</select></label>
       <div className="inspector-actions"><button className="secondary-button" disabled={new Set([interactionDraft.predictor, interactionDraft.moderator, interactionDraft.outcome]).size !== 3 || !interactionDraft.predictor || !interactionDraft.moderator || !interactionDraft.outcome} onClick={() => addTwoStageInteraction(interactionDraft.predictor, interactionDraft.moderator, interactionDraft.outcome)}>Create interaction</button></div>
     </fieldset>
+    </details>
     <div className="inspector-actions"><button className="secondary-button" onClick={() => autoLayout("horizontal")}>Arrange model</button></div>
-    <div className="method-note"><strong>QuickPLS v0.9 RC</strong><p>Supported PLS-SEM estimates and assessment outputs are validated for the documented release-candidate scope. Unsupported model shapes remain blocked or explicitly marked.</p></div>
+    <div className="method-note"><strong>QuickPLS v1.0 stable scope</strong><p>Supported PLS-SEM estimates and assessment outputs are validated for the documented v1.0 scope. Unsupported model shapes remain blocked or explicitly marked.</p></div>
   </aside>;
 
   const update = (patch: Parameters<typeof updateConstruct>[1]) => updateConstruct(node.id, patch);
@@ -109,27 +115,16 @@ export function Inspector() {
   };
   return <aside className="inspector">
     <div className="inspector-tabs"><button className="active">Construct</button><button onClick={() => setSelectedEdge(edges.find((item) => item.source === node.id || item.target === node.id)?.id ?? edges[0]?.id ?? null)}>Path</button><button onClick={() => setSelectedNode(null)}>Model</button></div>
+    <details className="inspector-section" open><summary>Essentials</summary>
     <label>Name<input value={node.data.label} onChange={(event) => update({ label: event.target.value })} /></label>
     <label>Short name<input value={node.data.shortName} onChange={(event) => update({ shortName: event.target.value.toUpperCase().slice(0, 8) })} /></label>
-    {node.data.semantic === "interaction" && node.data.interaction ? <div className="method-note"><strong>Two-stage interaction</strong><p>{nodes.find((item) => item.id === node.data.interaction?.predictor)?.data.shortName} x {nodes.find((item) => item.id === node.data.interaction?.moderator)?.data.shortName} moderates {nodes.find((item) => item.id === node.data.interaction?.outcome)?.data.shortName}. Estimation is blocked until the v0.5 two-stage engine gate is complete.</p></div> : null}
-    {node.data.semantic !== "interaction" ? <fieldset><legend>Higher-order construct</legend>
-      <label className="checkbox-row"><input type="checkbox" checked={node.data.semantic === "higher_order"} onChange={(event) => setHigherOrderEnabled(event.target.checked)} />Use as higher-order construct</label>
-      {node.data.semantic === "higher_order" && <div className="hoc-editor">
-        <label>Method<select value={higherOrder?.method ?? "repeated_indicators"} onChange={(event) => update({ semantic: "higher_order", higherOrder: { id: node.id, components: higherOrderComponents, method: event.target.value as "repeated_indicators" | "two_stage" | "hybrid", stage_one_recipe: higherOrder?.stage_one_recipe ?? null } })}>
-          <option value="repeated_indicators">Repeated indicators</option>
-          <option value="two_stage">Two-stage</option>
-          <option value="hybrid">Hybrid</option>
-        </select></label>
-        {higherOrder?.method === "hybrid" ? <div className="method-note"><strong>Hybrid experimental</strong><p>Hybrid splits each component's indicators between lower-order and higher-order blocks. Components need at least two indicators.</p></div> : null}
-        <div className="component-list">
-          {componentCandidates.map((candidate) => <label className="checkbox-row" key={candidate.id}><input type="checkbox" checked={higherOrderComponents.includes(candidate.id)} onChange={(event) => updateHigherOrderComponent(candidate.id, event.target.checked)} />{candidate.data.shortName}</label>)}
-          {componentCandidates.length === 0 ? <div className="indicator-empty">No lower-order components available.</div> : null}
-        </div>
-      </div>}
-    </fieldset> : null}
     <fieldset><legend>Measurement mode</legend><div className="segmented">
       {(["reflective", "formative"] as MeasurementMode[]).map((mode) => <button key={mode} className={node.data.mode === mode ? "active" : ""} onClick={() => update({ mode })}>{mode}</button>)}
     </div></fieldset>
+    <div className="inspector-actions"><button className="secondary-button danger" onClick={removeSelection}><Trash2 size={14} />Delete construct</button></div>
+    </details>
+    {node.data.semantic === "interaction" && node.data.interaction ? <div className="method-note"><strong>Two-stage interaction</strong><p>{nodes.find((item) => item.id === node.data.interaction?.predictor)?.data.shortName} x {nodes.find((item) => item.id === node.data.interaction?.moderator)?.data.shortName} moderates {nodes.find((item) => item.id === node.data.interaction?.outcome)?.data.shortName}. Estimation is blocked until the v0.5 two-stage engine gate is complete.</p></div> : null}
+    <details className="inspector-section" open><summary>Indicators</summary>
     <div className="inspector-section-title"><strong>Indicators ({node.data.indicators.length})</strong></div>
     <label className="indicator-picker"><span><Plus size={13} />Assign dataset variable</span><select value="" onChange={(event) => { if (event.target.value) assignIndicator(node.id, event.target.value); }}>
       <option value="">Choose variable...</option>{availableIndicators.map((indicator) => <option key={indicator}>{indicator}</option>)}
@@ -143,7 +138,34 @@ export function Inspector() {
       </div>)}
       {node.data.indicators.length === 0 ? <div className="indicator-empty">No indicators assigned.</div> : null}
     </div>
-    <label>Missing values<select><option>Use dataset setting</option><option>Casewise deletion</option><option>Mean replacement</option></select></label>
-    <div className="method-note"><strong>QuickPLS v0.9 RC</strong><p>Mode A and Mode B measurement, supported assessment, bootstrap, and permutation workflows are available within the documented release-candidate scope.</p></div>
+    </details>
+    <details className="inspector-section"><summary>Layout</summary>
+      <div className="inspector-actions wrap">
+        <button className="secondary-button" onClick={() => setConstructIndicatorSide(node.id, "left")}>Indicators left</button>
+        <button className="secondary-button" onClick={() => setConstructIndicatorSide(node.id, "right")}>Indicators right</button>
+        <button className="secondary-button" onClick={() => setConstructIndicatorSide(node.id, "top")}>Indicators top</button>
+        <button className="secondary-button" onClick={() => setConstructIndicatorSide(node.id, "bottom")}>Indicators bottom</button>
+        <button className="secondary-button" onClick={() => resetIndicatorLayout(node.id)}>Reset layout</button>
+      </div>
+    </details>
+    {node.data.semantic !== "interaction" ? <details className="inspector-section"><summary>Advanced semantics</summary><fieldset><legend>Higher-order construct</legend>
+      <label className="checkbox-row"><input type="checkbox" checked={node.data.semantic === "higher_order"} onChange={(event) => setHigherOrderEnabled(event.target.checked)} />Use as higher-order construct</label>
+      {node.data.semantic === "higher_order" && <div className="hoc-editor">
+        <label>Method<select value={higherOrder?.method ?? "repeated_indicators"} onChange={(event) => update({ semantic: "higher_order", higherOrder: { id: node.id, components: higherOrderComponents, method: event.target.value as "repeated_indicators" | "two_stage" | "hybrid", stage_one_recipe: higherOrder?.stage_one_recipe ?? null } })}>
+          <option value="repeated_indicators">Repeated indicators</option>
+          <option value="two_stage">Two-stage</option>
+          <option value="hybrid">Hybrid</option>
+        </select></label>
+        {higherOrder?.method === "hybrid" ? <div className="method-note"><strong>Hybrid experimental</strong><p>Hybrid splits each component's indicators between lower-order and higher-order blocks. Components need at least two indicators.</p></div> : null}
+        <div className="component-list">
+          {componentCandidates.map((candidate) => <label className="checkbox-row" key={candidate.id}><input type="checkbox" checked={higherOrderComponents.includes(candidate.id)} onChange={(event) => updateHigherOrderComponent(candidate.id, event.target.checked)} />{candidate.data.shortName}</label>)}
+          {componentCandidates.length === 0 ? <div className="indicator-empty">No lower-order components available.</div> : null}
+        </div>
+      </div>}
+    </fieldset></details> : null}
+    <details className="inspector-section"><summary>Diagnostics</summary>
+      <label>Missing values<select><option>Use dataset setting</option><option>Casewise deletion</option><option>Mean replacement</option></select></label>
+    </details>
+    <div className="method-note"><strong>QuickPLS v1.0 stable scope</strong><p>Mode A and Mode B measurement, supported assessment, bootstrap, and permutation workflows are available within the documented v1.0 scope.</p></div>
   </aside>;
 }

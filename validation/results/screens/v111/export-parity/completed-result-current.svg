@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1022" height="430" viewBox="0 0 1022 430" role="img" aria-label="PLS path modeling core run publication diagram" class="smartpls mono">
+<defs>
+<marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="arrow"/></marker>
+<marker id="arrow-start" markerWidth="8" markerHeight="8" refX="1" refY="4" orient="auto"><path d="M8,0 L0,4 L8,8 z" class="arrow"/></marker>
+<style>
+.bg{fill:#fff}.caption{font:10px Arial,sans-serif;fill:#526169}.warning{font:10px Arial,sans-serif;fill:#666}
+.latent{fill:#fff;stroke:#2d777a;stroke-width:1.8}.latent.formative{stroke:#a16d0b}.latent-title{font:700 12px Arial,sans-serif;fill:#172126}.latent-meta{font:10px Arial,sans-serif;fill:#56656b}.r2{font:700 10px Arial,sans-serif;fill:#32630d}.indicator{fill:#fff8df;stroke:#c49116;stroke-width:1.2}.indicator.formative{fill:#eaf8f8;stroke:#0b8f92}.indicator-text{font:700 9px Arial,sans-serif;fill:#253137}.indicator-stat{font:700 8px Arial,sans-serif;fill:#32630d}
+.smartpls-latent{fill:#7d7d7d;stroke:#777;stroke-width:1}.smartpls-latent-label{font:10px Arial,sans-serif;fill:#222}.smartpls-r2{font:700 10px Arial,sans-serif;fill:#fff}.smartpls-indicator{fill:#eee;stroke:#d2d2d2;stroke-width:1}.smartpls-indicator-text{font:700 9px Arial,sans-serif;fill:#222}
+.edge{stroke:#465961;stroke-width:1.45;fill:none}.measurement{stroke:#9c7a20;stroke-width:1.05;fill:none}.measurement.formative{stroke:#0c777b}.covariance{stroke:#8d5798;stroke-width:1.25;stroke-dasharray:4 3;fill:none}.edge-label{font:700 10px Arial,sans-serif;fill:#172126}.label-bg{fill:#fff;stroke:#dce2e5}.arrow{fill:#465961}
+.smartpls .edge,.smartpls .measurement{stroke:#333;stroke-width:1.05}.smartpls .edge-label{font:500 9px Arial,sans-serif;fill:#222}.smartpls .label-bg{fill:#fff;stroke:none;fill-opacity:.85}.smartpls .arrow{fill:#333}
+.mono .latent,.mono .indicator{stroke:#333}.mono .indicator{fill:#fff}.mono .edge,.mono .measurement,.mono .covariance{stroke:#333}.mono .arrow{fill:#333}.high-contrast .smartpls-latent{fill:#222;stroke:#111}.high-contrast .smartpls-indicator{fill:#fff;stroke:#111}.quickpls-color .smartpls-latent{fill:#4f9fa2;stroke:#1f6e72}.quickpls-color .smartpls-indicator{fill:#fff8df;stroke:#c49116}
+</style>
+</defs>
+<rect class="bg" width="100%" height="100%"/>
+<text x="42" y="25" class="caption">PLS path modeling core run publication diagram</text>
+<path class="edge" d="M290,84 L472,189" marker-end="url(#arrow)"/>
+<rect class="label-bg" x="363.5" y="122.5" width="35" height="15" rx="2"/><text x="381" y="134.5" text-anchor="middle" class="edge-label">0.403</text>
+<path class="edge" d="M290,294 L472,189" marker-end="url(#arrow)"/>
+<rect class="label-bg" x="363.5" y="227.5" width="35" height="15" rx="2"/><text x="381" y="239.5" text-anchor="middle" class="edge-label">0.327</text>
+<path class="edge" d="M290,84 L732,189" marker-end="url(#arrow)"/>
+<rect class="label-bg" x="493.5" y="122.5" width="35" height="15" rx="2"/><text x="511" y="134.5" text-anchor="middle" class="edge-label">0.116</text>
+<path class="edge" d="M290,294 L732,189" marker-end="url(#arrow)"/>
+<rect class="label-bg" x="493.5" y="227.5" width="35" height="15" rx="2"/><text x="511" y="239.5" text-anchor="middle" class="edge-label">0.172</text>
+<path class="edge" d="M560,189 L732,189" marker-end="url(#arrow)"/>
+<rect class="label-bg" x="628.5" y="175" width="35" height="15" rx="2"/><text x="646" y="187" text-anchor="middle" class="edge-label">0.544</text>
+<path class="measurement " d="M202,84 L120,54" marker-end="url(#arrow)"/>
+<rect class="label-bg" x="143.5" y="55" width="35" height="15" rx="2"/><text x="161" y="67" text-anchor="middle" class="edge-label">0.842</text>
+<path class="measurement " d="M202,84 L120,84" marker-end="url(#arrow)"/>
+<rect class="label-bg" x="143.5" y="70" width="35" height="15" rx="2"/><text x="161" y="82" text-anchor="middle" class="edge-label">0.811</text>
+<path class="measurement " d="M202,84 L120,114" marker-end="url(#arrow)"/>
+<rect class="label-bg" x="143.5" y="101" width="35" height="15" rx="2"/><text x="161" y="113" text-anchor="middle" class="edge-label">0.786</text>
+<path class="measurement " d="M202,294 L120,279" marker-end="url(#arrow)"/>
+<rect class="label-bg" x="143.5" y="272.5" width="35" height="15" rx="2"/><text x="161" y="284.5" text-anchor="middle" class="edge-label">0.874</text>
+<path class="measurement " d="M202,294 L120,309" marker-end="url(#arrow)"/>
+<rect class="label-bg" x="143.5" y="287.5" width="35" height="15" rx="2"/><text x="161" y="299.5" text-anchor="middle" class="edge-label">0.861</text>
+<path class="measurement " d="M516,160 L473,102" marker-end="url(#arrow)"/>
+<rect class="label-bg" x="477" y="117" width="35" height="15" rx="2"/><text x="494.5" y="129" text-anchor="middle" class="edge-label">0.902</text>
+<path class="measurement " d="M516,160 L559,102" marker-end="url(#arrow)"/>
+<rect class="label-bg" x="520" y="117" width="35" height="15" rx="2"/><text x="537.5" y="129" text-anchor="middle" class="edge-label">0.888</text>
+<path class="measurement " d="M820,189 L902,174" marker-end="url(#arrow)"/>
+<rect class="label-bg" x="843.5" y="167.5" width="35" height="15" rx="2"/><text x="861" y="179.5" text-anchor="middle" class="edge-label">0.913</text>
+<path class="measurement " d="M820,189 L902,204" marker-end="url(#arrow)"/>
+<rect class="label-bg" x="843.5" y="198.5" width="35" height="15" rx="2"/><text x="861" y="210.5" text-anchor="middle" class="edge-label">0.894</text>
+<ellipse class="smartpls-latent" cx="246" cy="84" rx="44" ry="29"/>
+
+<text x="246" y="129" text-anchor="middle" class="smartpls-latent-label">Competence</text>
+<ellipse class="smartpls-latent" cx="246" cy="294" rx="44" ry="29"/>
+
+<text x="246" y="339" text-anchor="middle" class="smartpls-latent-label">Likeability</text>
+<ellipse class="smartpls-latent" cx="516" cy="189" rx="44" ry="29"/>
+<text x="516" y="193" text-anchor="middle" class="smartpls-r2">R&#178; 0.544</text>
+<text x="516" y="234" text-anchor="middle" class="smartpls-latent-label">Customer Satisfaction</text>
+<ellipse class="smartpls-latent" cx="776" cy="189" rx="44" ry="29"/>
+<text x="776" y="193" text-anchor="middle" class="smartpls-r2">R&#178; 0.617</text>
+<text x="776" y="234" text-anchor="middle" class="smartpls-latent-label">Customer Loyalty</text>
+<rect class="smartpls-indicator" x="42" y="42" width="78" height="24"/>
+<text x="81" y="58" text-anchor="middle" class="smartpls-indicator-text">COMP1</text>
+<rect class="smartpls-indicator" x="42" y="72" width="78" height="24"/>
+<text x="81" y="88" text-anchor="middle" class="smartpls-indicator-text">COMP2</text>
+<rect class="smartpls-indicator" x="42" y="102" width="78" height="24"/>
+<text x="81" y="118" text-anchor="middle" class="smartpls-indicator-text">COMP3</text>
+<rect class="smartpls-indicator" x="42" y="267" width="78" height="24"/>
+<text x="81" y="283" text-anchor="middle" class="smartpls-indicator-text">LIKE1</text>
+<rect class="smartpls-indicator" x="42" y="297" width="78" height="24"/>
+<text x="81" y="313" text-anchor="middle" class="smartpls-indicator-text">LIKE2</text>
+<rect class="smartpls-indicator" x="434" y="78" width="78" height="24"/>
+<text x="473" y="94" text-anchor="middle" class="smartpls-indicator-text">CUSA1</text>
+<rect class="smartpls-indicator" x="520" y="78" width="78" height="24"/>
+<text x="559" y="94" text-anchor="middle" class="smartpls-indicator-text">CUSA2</text>
+<rect class="smartpls-indicator" x="902" y="162" width="78" height="24"/>
+<text x="941" y="178" text-anchor="middle" class="smartpls-indicator-text">CUSL1</text>
+<rect class="smartpls-indicator" x="902" y="192" width="78" height="24"/>
+<text x="941" y="208" text-anchor="middle" class="smartpls-indicator-text">CUSL2</text>
+<text x="42" y="415" class="warning">Validated for documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked.</text>
+<text x="980" y="415" text-anchor="end" class="caption">Run v11-smoke-completed-pls | 2026-07-19T12:00:00.000Z</text>
+</svg>

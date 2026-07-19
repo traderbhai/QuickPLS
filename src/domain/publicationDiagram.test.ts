@@ -72,8 +72,16 @@ describe("publication diagram SVG", () => {
     const layout = defaultDiagramLayout(nodes, edges);
     layout.indicatorLayouts.x.x1 = { side: "free", x: 25, y: 35, order: 0, pinned: true };
     const svg = publicationDiagramSvg(nodes, edges, run, { layoutSource: "current_canvas" }, layout);
-    expect(svg).toContain('x="115" y="42" width="78" height="24"');
+    expect(svg).toContain('x="127" y="42" width="78" height="24"');
     expect(svg).toContain("R&#178; 0.208");
     expect(svg).not.toContain("RÂ²");
+  });
+  it("exports persisted edge label offsets", () => {
+    const layout = defaultDiagramLayout(nodes, edges);
+    const baseline = publicationDiagramSvg(nodes, edges, run, { layoutSource: "current_canvas" }, layout);
+    layout.edgeLayouts["x-y"].labelOffset = { x: 20, y: -16 };
+    const shifted = publicationDiagramSvg(nodes, edges, run, { layoutSource: "current_canvas" }, layout);
+    expect(shifted).toContain("0.457");
+    expect(shifted).not.toBe(baseline);
   });
 });

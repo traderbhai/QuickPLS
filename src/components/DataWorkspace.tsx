@@ -113,7 +113,7 @@ export function DataWorkspace() {
       void file.text().then((csv) => setParsedDataset(csv, file.name));
     }} />
     <div className="data-workbench">
-      <div className="data-grid"><table><thead><tr><th>#</th>{dataset.columns.map((column) => { const metadata = dataset.columnMetadata?.find((item) => item.name === column); return <th className={selectedColumn === column ? "selected-column" : ""} key={column} onClick={() => setSelectedColumn(column)}>{column}<small>{metadata?.scale_type ?? metadata?.column_type ?? "Numeric"}</small></th>; })}</tr></thead><tbody>{dataset.rows.slice(0, 100).map((row, index) => <tr key={index}><td>{index + 1}</td>{dataset.columns.map((column) => <td key={column}>{row[column] ?? <span className="missing-value">missing</span>}</td>)}</tr>)}</tbody></table></div>
+      <div className="data-grid" tabIndex={0} role="region" aria-label={`Data preview table for ${dataset.name}`}><table><caption>Data preview: first {Math.min(100, dataset.rows.length)} rows of {dataset.name}</caption><thead><tr><th>#</th>{dataset.columns.map((column) => { const metadata = dataset.columnMetadata?.find((item) => item.name === column); return <th className={selectedColumn === column ? "selected-column" : ""} key={column} onClick={() => setSelectedColumn(column)}>{column}<small>{metadata?.scale_type ?? metadata?.column_type ?? "Numeric"}</small></th>; })}</tr></thead><tbody>{dataset.rows.slice(0, 100).map((row, index) => <tr key={index}><td>{index + 1}</td>{dataset.columns.map((column) => <td key={column}>{row[column] ?? <span className="missing-value">missing</span>}</td>)}</tr>)}</tbody></table></div>
       <aside className="metadata-editor" aria-label="Column metadata">
         <div className="metadata-heading"><strong>{selectedColumn || "No column"}</strong><span>Column metadata</span></div>
         <label>Label<input value={draft.label ?? ""} onChange={(event) => setDraft({ ...draft, label: event.target.value || null })} /></label>
@@ -121,6 +121,7 @@ export function DataWorkspace() {
         <label>Import missing markers<input value={draft.missing_markers.join(", ")} readOnly title="Missing markers are applied when the dataset is imported" /></label>
         <div className="metadata-range"><label>Minimum<input type="number" value={draft.theoretical_min ?? ""} onChange={(event) => setDraft({ ...draft, theoretical_min: event.target.value === "" ? null : Number(event.target.value) })} /></label><label>Maximum<input type="number" value={draft.theoretical_max ?? ""} onChange={(event) => setDraft({ ...draft, theoretical_max: event.target.value === "" ? null : Number(event.target.value) })} /></label></div>
         <button className="secondary-button" disabled={!selectedColumn} onClick={() => { void saveMetadata().catch((error) => window.alert(error)); }}><Save size={15} />Apply metadata</button>
+        {!selectedColumn ? <p className="disabled-reason inline-disabled-reason">Select a column in the data preview to edit and apply metadata.</p> : null}
       </aside>
     </div>
   </section>;

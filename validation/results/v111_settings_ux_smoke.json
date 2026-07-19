@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.1.1 method settings progressive disclosure",
+  "passed": true,
+  "checklist": {
+    "recommended_defaults_guidance_visible": true,
+    "advanced_settings_collapsed_by_default": true,
+    "readiness_panel_visible": true,
+    "advanced_settings_expand_to_resampling_controls": true,
+    "screenshot_written": true
+  },
+  "errors": [],
+  "evidence": {
+    "before": {
+      "has_guidance": true,
+      "advanced_closed": true,
+      "bootstrap_hidden_when_closed": true,
+      "readiness_present": true
+    },
+    "after": {
+      "advanced_open": true,
+      "bootstrap_visible": true,
+      "seed_visible": true,
+      "workers_visible": true
+    },
+    "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v111\\settings-ux\\settings-progressive-disclosure.png"
+  }
+}

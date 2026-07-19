@@ -18,18 +18,22 @@ export function LatentNode({ id, data, selected }: NodeProps<Node<LatentNodeData
 
   const paperStyle = data.displayMode === "sem" || data.displayMode === "publication" || data.displayMode === "smartpls_result";
   const lockedResultMode = data.displayMode === "smartpls_result";
+  const setCanvasDropTarget = (active: boolean) => {
+    window.dispatchEvent(new CustomEvent("quickpls:diagram-drop-target", { detail: { constructId: active ? id : null } }));
+  };
 
   if (paperStyle) {
     return <div
       className={`smartpls-latent-node ${data.mode}${selected ? " selected" : ""}${dropTarget ? " drop-target" : ""}`}
-      onDragEnter={(event) => { if (lockedResultMode) return; event.preventDefault(); setDropTarget(true); }}
-      onDragOver={(event) => { if (lockedResultMode) return; event.preventDefault(); event.dataTransfer.dropEffect = "move"; }}
-      onDragLeave={() => setDropTarget(false)}
+      onDragEnter={(event) => { if (lockedResultMode) return; event.preventDefault(); setDropTarget(true); setCanvasDropTarget(true); }}
+      onDragOver={(event) => { if (lockedResultMode) return; event.preventDefault(); event.dataTransfer.dropEffect = "move"; setCanvasDropTarget(true); }}
+      onDragLeave={() => { setDropTarget(false); setCanvasDropTarget(false); }}
       onDrop={(event) => {
         if (lockedResultMode) return;
         event.preventDefault();
         event.stopPropagation();
         setDropTarget(false);
+        setCanvasDropTarget(false);
         const encoded = event.dataTransfer.getData("application/qpls-indicators");
         const indicator = event.dataTransfer.getData("application/qpls-indicator");
         let indicators = indicator ? [indicator] : [];
@@ -43,8 +47,12 @@ export function LatentNode({ id, data, selected }: NodeProps<Node<LatentNodeData
       }}
     >
       <Handle className="smartpls-hidden-handle" id="target-left" type="target" position={Position.Left} />
+      <Handle className="smartpls-hidden-handle" id="target-right" type="target" position={Position.Right} />
       <Handle className="smartpls-hidden-handle" id="target-top" type="target" position={Position.Top} />
+      <Handle className="smartpls-hidden-handle" id="target-bottom" type="target" position={Position.Bottom} />
+      <Handle className="smartpls-hidden-handle" id="source-left" type="source" position={Position.Left} />
       <Handle className="smartpls-hidden-handle" id="source-right" type="source" position={Position.Right} />
+      <Handle className="smartpls-hidden-handle" id="source-top" type="source" position={Position.Top} />
       <Handle className="smartpls-hidden-handle" id="source-bottom" type="source" position={Position.Bottom} />
       <div className="smartpls-latent-ellipse">
         {data.resultR2 !== undefined && data.overlayMode !== "model" ? <span className="smartpls-r2">R² {data.resultR2.toFixed(3)}</span> : null}
@@ -65,13 +73,14 @@ export function LatentNode({ id, data, selected }: NodeProps<Node<LatentNodeData
 
   return <div
     className={`latent-node ${data.mode}${selected ? " selected" : ""}${dropTarget ? " drop-target" : ""}${data.semantic ? ` ${data.semantic}` : ""}`}
-    onDragEnter={(event) => { event.preventDefault(); setDropTarget(true); }}
-    onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; }}
-    onDragLeave={() => setDropTarget(false)}
+    onDragEnter={(event) => { event.preventDefault(); setDropTarget(true); setCanvasDropTarget(true); }}
+    onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; setCanvasDropTarget(true); }}
+    onDragLeave={() => { setDropTarget(false); setCanvasDropTarget(false); }}
     onDrop={(event) => {
       event.preventDefault();
       event.stopPropagation();
       setDropTarget(false);
+      setCanvasDropTarget(false);
       const encoded = event.dataTransfer.getData("application/qpls-indicators");
       const indicator = event.dataTransfer.getData("application/qpls-indicator");
       let indicators = indicator ? [indicator] : [];

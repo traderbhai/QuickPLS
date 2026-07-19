@@ -38,10 +38,11 @@ const SMARTPLS_LATENT_WIDTH = 88;
 const SMARTPLS_LATENT_HEIGHT = 58;
 const SMARTPLS_INDICATOR_WIDTH = 78;
 const SMARTPLS_INDICATOR_HEIGHT = 24;
-const SMARTPLS_COLUMN_GAP = 230;
-const SMARTPLS_VERTICAL_GAP = 112;
+const SMARTPLS_COLUMN_GAP = 270;
+const SMARTPLS_VERTICAL_GAP = 135;
 const SMARTPLS_INDICATOR_GAP = 30;
-const SMARTPLS_MEASUREMENT_GAP = 70;
+const SMARTPLS_MEASUREMENT_GAP = 82;
+const SMARTPLS_BOTTOM_INDICATOR_GAP = 82;
 
 export const isIndicatorNodeId = (id: string) => id.startsWith("indicator::");
 export const indicatorNodeId = (constructId: string, indicator: string) => `indicator::${constructId}::${encodeURIComponent(indicator)}`;
@@ -95,9 +96,14 @@ export function buildDiagramGraph(
   });
   const visualEdges: Edge[] = structuralEdges.map((edge) => {
     const coefficient = pathCoefficients.get(`${edge.source}\u0000${edge.target}`);
+    const sourceNode = visualNodes.find((node) => node.id === edge.source);
+    const targetNode = visualNodes.find((node) => node.id === edge.target);
+    const route = paperStyle && sourceNode && targetNode ? routeSides(sourceNode.position, targetNode.position) : null;
     return {
       ...edge,
-      type: paperStyle ? "straight" : edge.type ?? "smoothstep",
+      type: paperStyle ? "semEdge" : edge.type ?? "smoothstep",
+      sourceHandle: route ? handleId("source", route.source) : edge.sourceHandle,
+      targetHandle: route ? handleId("target", route.target) : edge.targetHandle,
       label: resultForOverlay && coefficient !== undefined && (paperStyle || overlayMode === "paths_r2" || overlayMode === "significance")
         ? coefficient.toFixed(3)
         : paperStyle ? ""
@@ -105,6 +111,7 @@ export function buildDiagramGraph(
       markerEnd: { type: MarkerType.ArrowClosed, width: paperStyle ? 10 : 16, height: paperStyle ? 10 : 16 },
       className: edge.data?.role === "control" ? "control-edge" : paperStyle ? "smartpls-structural-edge structural-edge" : "structural-edge",
       selectable: !lockedResultMode,
+      data: { ...edge.data, labelOffset: options.layout?.edgeLayouts[edge.id]?.labelOffset, edgeClassName: edge.data?.role === "control" ? "control-edge" : paperStyle ? "smartpls-structural-edge structural-edge" : "structural-edge" },
     };
   });
 
@@ -115,10 +122,12 @@ export function buildDiagramGraph(
         ?? indicatorPositionsForConstruct(node, latentPosition, paperStyle, structuralShape, options.layout);
       node.data.indicators.forEach((indicator, index) => {
         const estimate = loadingByConstruct.get(node.id)?.get(indicator);
+        const indicatorPosition = placement[index] ?? latentPosition;
+        const route = paperStyle ? routeSides(latentPosition, indicatorPosition) : null;
         visualNodes.push({
           id: indicatorNodeId(node.id, indicator),
           type: "indicator",
-          position: placement[index] ?? latentPosition,
+          position: indicatorPosition,
           draggable: !lockedResultMode,
           selectable: true,
           data: { constructId: node.id, indicator, mode: node.data.mode, displayMode: mode, loading: estimate?.loading, weight: estimate?.weight },
@@ -128,7 +137,9 @@ export function buildDiagramGraph(
           id: `measurement::${node.id}::${indicator}`,
           source: reflective ? node.id : indicatorNodeId(node.id, indicator),
           target: reflective ? indicatorNodeId(node.id, indicator) : node.id,
-          type: "straight",
+          sourceHandle: route ? handleId("source", reflective ? route.source : route.target) : undefined,
+          targetHandle: route ? handleId("target", reflective ? route.target : route.source) : undefined,
+          type: paperStyle ? "semEdge" : "straight",
           label: resultForOverlay && (paperStyle || overlayMode === "loadings")
             ? (reflective ? estimate?.loading : estimate?.weight)?.toFixed(3) ?? ""
             : paperStyle ? ""
@@ -136,25 +147,28 @@ export function buildDiagramGraph(
           markerEnd: { type: MarkerType.ArrowClosed, width: paperStyle ? 8 : 14, height: paperStyle ? 8 : 14 },
           className: reflective ? `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge reflective` : `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge formative`,
           selectable: false,
-          data: { visualOnly: true },
+          data: { visualOnly: true, edgeClassName: reflective ? `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge reflective` : `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge formative` },
         });
       });
     }
     for (const edge of covarianceEdges) {
       visualEdges.push({
         ...edge,
-        type: "default",
+        type: paperStyle ? "semEdge" : "default",
         label: edge.label ?? "Covariance",
         markerStart: { type: MarkerType.ArrowClosed, width: 12, height: 12 },
         markerEnd: { type: MarkerType.ArrowClosed, width: 12, height: 12 },
         className: "covariance-edge",
+        data: { ...edge.data, labelOffset: options.layout?.edgeLayouts[edge.id]?.labelOffset, edgeClassName: "covariance-edge" },
       });
     }
   }
 
+  const edgesWithLabelOffsets = applyAutomaticEdgeLabelOffsets(visualEdges, visualNodes);
+
   return {
     nodes: visualNodes,
-    edges: visualEdges,
+    edges: edgesWithLabelOffsets,
     compatible,
     diagnostic: result && !compatible
       ? "Selected run does not match the current model. Numeric overlays are hidden."
@@ -162,6 +176,30 @@ export function buildDiagramGraph(
         ? "Run or select a compatible result to show estimates."
         : null,
   };
+}
+
+function applyAutomaticEdgeLabelOffsets(edges: Edge[], nodes: DiagramGraph["nodes"]): Edge[] {
+  const occupied = new Map<string, number>();
+  return edges.map((edge) => {
+    const label = typeof edge.label === "string" ? edge.label : "";
+    if (!label) return edge;
+    const existing = edge.data?.labelOffset;
+    if (existing && typeof existing === "object") return edge;
+    const source = nodes.find((node) => node.id === edge.source);
+    const target = nodes.find((node) => node.id === edge.target);
+    if (!source || !target) return edge;
+    const mid = {
+      x: (source.position.x + target.position.x) / 2,
+      y: (source.position.y + target.position.y) / 2,
+    };
+    const key = `${Math.round(mid.x / 40)}:${Math.round(mid.y / 24)}`;
+    const count = occupied.get(key) ?? 0;
+    occupied.set(key, count + 1);
+    if (count === 0) return edge;
+    const spread = Math.ceil(count / 2) * 16;
+    const sign = count % 2 === 0 ? -1 : 1;
+    return { ...edge, data: { ...edge.data, labelOffset: { x: 0, y: sign * spread } } };
+  });
 }
 
 export function indicatorPositions(position: XYPosition, count: number): XYPosition[] {
@@ -237,14 +275,14 @@ function smartplsLayout(modelNodes: Array<Node<ConstructData>>, structuralEdges:
     const currentLevel = level.get(node.id) ?? 0;
     byLevel.set(currentLevel, [...(byLevel.get(currentLevel) ?? []), node]);
   }
-  for (const nodes of byLevel.values()) nodes.sort((left, right) => left.position.y - right.position.y || left.id.localeCompare(right.id));
+  const orderedLevels = orderSmartplsLevels(byLevel, shape);
 
   const latents = new Map<string, XYPosition>();
   const indicators = new Map<string, XYPosition[]>();
-  const maxStack = Math.max(...[...byLevel.values()].map((nodes) => nodes.length), 1);
+  const maxStack = Math.max(...[...orderedLevels.values()].map((nodes) => nodes.length), 1);
   const canvasTop = 80;
   const maxLevel = Math.max(...level.values(), 0);
-  for (const [currentLevel, columnNodes] of byLevel) {
+  for (const [currentLevel, columnNodes] of [...orderedLevels.entries()].sort(([a], [b]) => a - b)) {
     const columnHeight = (columnNodes.length - 1) * SMARTPLS_VERTICAL_GAP;
     const globalHeight = (maxStack - 1) * SMARTPLS_VERTICAL_GAP;
     const startY = canvasTop + Math.max(0, (globalHeight - columnHeight) / 2);
@@ -260,6 +298,53 @@ function smartplsLayout(modelNodes: Array<Node<ConstructData>>, structuralEdges:
   return { latents, indicators };
 }
 
+function orderSmartplsLevels(
+  byLevel: Map<number, Array<Node<ConstructData>>>,
+  shape: ReturnType<typeof structuralShapeMaps>,
+) {
+  const levels = [...byLevel.keys()].sort((a, b) => a - b);
+  let ordered = new Map(levels.map((level) => [
+    level,
+    [...(byLevel.get(level) ?? [])].sort((left, right) => left.position.y - right.position.y || left.id.localeCompare(right.id)),
+  ]));
+
+  for (let sweep = 0; sweep < 4; sweep += 1) {
+    ordered = sweepSmartplsLevels(ordered, levels, shape.parents, "parents");
+    ordered = sweepSmartplsLevels(ordered, [...levels].reverse(), shape.children, "children");
+  }
+
+  return ordered;
+}
+
+function sweepSmartplsLevels(
+  ordered: Map<number, Array<Node<ConstructData>>>,
+  levels: number[],
+  neighbors: Map<string, string[]>,
+  relation: "parents" | "children",
+) {
+  const next = new Map(ordered);
+  for (const level of levels) {
+    const levelNodes = next.get(level) ?? [];
+    const neighborLevel = relation === "parents" ? level - 1 : level + 1;
+    const neighborOrder = new Map((next.get(neighborLevel) ?? []).map((node, index) => [node.id, index]));
+    if (neighborOrder.size === 0) continue;
+    next.set(level, [...levelNodes].sort((left, right) => {
+      const leftScore = smartplsBarycenter(left, neighbors, neighborOrder);
+      const rightScore = smartplsBarycenter(right, neighbors, neighborOrder);
+      return leftScore - rightScore || left.position.y - right.position.y || left.id.localeCompare(right.id);
+    }));
+  }
+  return next;
+}
+
+function smartplsBarycenter(node: Node<ConstructData>, neighbors: Map<string, string[]>, neighborOrder: Map<string, number>) {
+  const indexes = (neighbors.get(node.id) ?? [])
+    .map((id) => neighborOrder.get(id))
+    .filter((index): index is number => typeof index === "number");
+  if (indexes.length === 0) return node.position.y / SMARTPLS_VERTICAL_GAP;
+  return indexes.reduce((sum, index) => sum + index, 0) / indexes.length;
+}
+
 export function layoutSmartplsModel(modelNodes: Array<Node<ConstructData>>, modelEdges: Edge[]): Array<Node<ConstructData>> {
   const structuralEdges = modelEdges.filter((edge) => edge.data?.role !== "covariance");
   const placement = smartplsLayout(modelNodes, structuralEdges);
@@ -271,13 +356,15 @@ function structuralShapeMaps(modelNodes: Array<Node<ConstructData>>, structuralE
   const incoming = new Map(modelNodes.map((node) => [node.id, 0]));
   const outgoing = new Map(modelNodes.map((node) => [node.id, 0]));
   const parents = new Map(modelNodes.map((node) => [node.id, [] as string[]]));
+  const children = new Map(modelNodes.map((node) => [node.id, [] as string[]]));
   for (const edge of structuralEdges) {
     if (!nodeIds.has(edge.source) || !nodeIds.has(edge.target)) continue;
     outgoing.set(edge.source, (outgoing.get(edge.source) ?? 0) + 1);
     incoming.set(edge.target, (incoming.get(edge.target) ?? 0) + 1);
     parents.get(edge.target)?.push(edge.source);
+    children.get(edge.source)?.push(edge.target);
   }
-  return { incoming, outgoing, parents };
+  return { incoming, outgoing, parents, children };
 }
 
 function indicatorSide(id: string, shape: ReturnType<typeof structuralShapeMaps>, finalLevel: boolean): "left" | "right" | "top" | "bottom" {
@@ -285,7 +372,7 @@ function indicatorSide(id: string, shape: ReturnType<typeof structuralShapeMaps>
   const outgoingCount = shape.outgoing.get(id) ?? 0;
   if (incomingCount === 0) return "left";
   if (finalLevel || outgoingCount === 0) return "right";
-  return "bottom";
+  return "top";
 }
 
 function smartplsIndicatorPositions(position: XYPosition, count: number, side: "left" | "right" | "top" | "bottom"): XYPosition[] {
@@ -294,7 +381,7 @@ function smartplsIndicatorPositions(position: XYPosition, count: number, side: "
     const stackWidth = Math.max(0, count - 1) * (SMARTPLS_INDICATOR_WIDTH + 8);
     const y = side === "top"
       ? position.y - SMARTPLS_MEASUREMENT_GAP
-      : position.y + SMARTPLS_LATENT_HEIGHT + 52;
+      : position.y + SMARTPLS_LATENT_HEIGHT + SMARTPLS_BOTTOM_INDICATOR_GAP;
     return Array.from({ length: count }, (_, index) => ({
       x: position.x + SMARTPLS_LATENT_WIDTH / 2 - SMARTPLS_INDICATOR_WIDTH / 2 - stackWidth / 2 + index * (SMARTPLS_INDICATOR_WIDTH + 8),
       y,
@@ -306,6 +393,19 @@ function smartplsIndicatorPositions(position: XYPosition, count: number, side: "
     : position.x + SMARTPLS_LATENT_WIDTH + SMARTPLS_MEASUREMENT_GAP;
   const centerY = position.y + SMARTPLS_LATENT_HEIGHT / 2 - SMARTPLS_INDICATOR_HEIGHT / 2;
   return Array.from({ length: count }, (_, index) => ({ x, y: centerY - stackHeight / 2 + index * SMARTPLS_INDICATOR_GAP }));
+}
+
+function handleId(kind: "source" | "target", side: "left" | "right" | "top" | "bottom") {
+  return `${kind}-${side}`;
+}
+
+function routeSides(source: XYPosition, target: XYPosition): { source: "left" | "right" | "top" | "bottom"; target: "left" | "right" | "top" | "bottom" } {
+  const dx = target.x - source.x;
+  const dy = target.y - source.y;
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    return dx >= 0 ? { source: "right", target: "left" } : { source: "left", target: "right" };
+  }
+  return dy >= 0 ? { source: "bottom", target: "top" } : { source: "top", target: "bottom" };
 }
 
 function indicatorPositionsForConstruct(

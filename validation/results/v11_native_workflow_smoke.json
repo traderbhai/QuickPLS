@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.1 native workflow smoke",
+  "passed": true,
+  "checklist": {
+    "desktop_workflow_rust_test_passed": true,
+    "release_executable_exists": true,
+    "installer_artifact_exists": true,
+    "visual_desktop_ux_smoke_passed": true,
+    "native_launch_smoke_passed": true,
+    "completed_run_overlay_evidence_passed": true,
+    "report_export_overlay_evidence_passed": true
+  },
+  "commands": [
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "quickpls-desktop",
+        "desktop_native_v11_workflow_smoke_import_run_save_reopen_and_export"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "elapsed_seconds": 59.6707,
+      "stdout_tail": "\nrunning 1 test\ntest desktop_native_v11_workflow_smoke_import_run_save_reopen_and_export ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.07s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": "   Compiling quickpls-desktop v1.0.0 (D:\\QuickPLS\\src-tauri)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 59.07s\n     Running unittests src\\lib.rs (target\\debug\\deps\\quickpls_desktop_lib-6fd99ccd0aebba08.exe)\n     Running unittests src\\main.rs (target\\debug\\deps\\quickpls_desktop-361acc4412441d6c.exe)\n"
+    }
+  ],
+  "artifacts": {
+    "release_executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+    "installer": "D:\\QuickPLS\\target\\release\\bundle\\nsis\\QuickPLS_1.0.0_x64-setup.exe",
+    "visual_smoke": "validation/results/v11_desktop_ux_smoke.json",
+    "native_launch_smoke": "validation/results/v11_native_desktop_smoke.json"
+  }
+}

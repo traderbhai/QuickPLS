@@ -2,7 +2,7 @@
   "schema_version": 1,
   "program": "QuickPLS accelerated method-slice registry",
   "active_goal": "Complete QuickPLS as a free, proprietary, fully offline Windows desktop application that is first ready in all sense before unrestricted research use.",
-  "current_stage": "v1_0_stable",
+  "current_stage": "v1_1_1_native_ux_hardening",
   "policy": {
     "promotion_order": ["unsupported", "experimental", "validated"],
     "deterministic_tolerance": 0.000001,
@@ -430,6 +430,55 @@
         "Add a code-signing certificate and a separate signature verification gate before broad public installer distribution.",
         "Keep native PDF/PNG, polychoric/WLSMV, SmartPLS project import, and expanded CB-SEM residual/caption semantics post-v1 until independently implemented and audited.",
         "Do not broaden stable claims without a new method specification, reference evidence, product audit, and registry gate."
+      ]
+    },
+    {
+      "id": "v1_1_desktop_ux_polish",
+      "release": "v1.1",
+      "family": "Product",
+      "name": "Desktop UX polish and workflow hardening",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 16,
+      "summary": "QuickPLS v1.1 completes the desktop-first UX polish pass for the documented native Windows workflow: persistent readiness guidance, professional SEM designer evidence, report/export parity, keyboard table workflow coverage, native workflow smoke, and rebuilt release artifacts.",
+      "gates": [
+        {"track": "product", "name": "Desktop workflow guidance", "status": "passed", "evidence": "validation/results/v11_desktop_ux_smoke.json verifies Data -> Model -> Validate -> Run -> Results -> Report navigation, readiness panels, disabled-run guidance, canvas next-action guidance, and persistent footer readiness at 1440x900."},
+        {"track": "product", "name": "SEM designer polish evidence", "status": "passed", "evidence": "validation/results/v11_desktop_ux_smoke.json and validation/results/screens/v11/ verify SmartPLS-like canvas styling, visible indicators, result overlay states, completed-run loadings/path/R2 overlays, and publication preview screenshots."},
+        {"track": "product", "name": "Report export parity", "status": "passed", "evidence": "validation/v11_report_export_parity.mjs writes validation/results/v11_report_export_parity.json and confirms the on-screen SVG preview and exported SVG contain the same key labels without edit chrome or R2 mojibake."},
+        {"track": "product", "name": "Keyboard workflow smoke", "status": "passed", "evidence": "validation/v11_keyboard_workflow_smoke.mjs writes validation/results/v11_keyboard_workflow_smoke.json and verifies named, focusable Results and Report table regions at desktop viewport."},
+        {"track": "automation", "name": "Native desktop workflow smoke", "status": "passed", "evidence": "validation/v11_native_workflow_smoke.py writes validation/results/v11_native_workflow_smoke.json and runs quickpls-desktop::desktop_native_v11_workflow_smoke_import_run_save_reopen_and_export for native import/run/save/reopen/layout/XLSX coverage."},
+        {"track": "release", "name": "Release artifact freshness", "status": "passed", "evidence": "validation/results/v11_native_desktop_smoke.json verifies target/release/quickpls-desktop.exe and target/release/bundle/nsis/QuickPLS_1.0.0_x64-setup.exe exist, are newer than the current frontend bundle, and launch without a dev server."},
+        {"track": "documentation", "name": "v1.1 UX audit closure", "status": "passed", "evidence": "docs/V1_1_UX_AUDIT.md records implemented v1.1 desktop UX improvements, latest evidence, mobile non-gating status, and no remaining desktop release blockers."}
+      ],
+      "next_actions": [
+        "Continue future UX improvements through separate v1.2+ gates rather than reopening the v1.1 desktop release scope.",
+        "Keep mobile layouts non-gating unless QuickPLS later becomes a supported browser/mobile product."
+      ]
+    },
+    {
+      "id": "v1_1_1_native_ux_hardening",
+      "release": "v1.1.1",
+      "family": "Product",
+      "name": "Native desktop UX hardening",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 17,
+      "summary": "QuickPLS v1.1.1 closes the stricter desktop UX hardening pass: release-executable native workflow evidence, dense SEM designer fixtures, simplified inspector sections, progressive method settings, broader SVG parity, keyboard workflow evidence, and low-frequency disabled-action explanations.",
+      "gates": [
+        {"track": "automation", "name": "Native desktop GUI workflow smoke", "status": "passed", "evidence": "validation/v111_native_gui_workflow_smoke.py writes validation/results/v111_native_gui_workflow_smoke.json; it launches target/release/quickpls-desktop.exe with QUICKPLS_SMOKE_UI=1, runs the production native workflow test, and records pywinauto availability for literal OS-dialog automation."},
+        {"track": "product", "name": "Dense SEM designer visual smoke", "status": "passed", "evidence": "validation/v111_sem_designer_dense_smoke.mjs writes validation/results/v111_sem_designer_dense_smoke.json and screenshots under validation/results/screens/v111/sem-designer for medium, large, mediation, and formative fixtures."},
+        {"track": "product", "name": "Inspector simplification", "status": "passed", "evidence": "src/components/Inspector.tsx uses Essentials, Indicators, Layout, Advanced semantics, and Diagnostics disclosure sections, with common delete and indicator-side/reset actions outside advanced semantics."},
+        {"track": "product", "name": "Progressive method settings", "status": "passed", "evidence": "validation/v111_settings_ux_smoke.mjs writes validation/results/v111_settings_ux_smoke.json and verifies recommended-default guidance plus collapsed advanced resampling/reproducibility controls."},
+        {"track": "product", "name": "Broad report/export parity", "status": "passed", "evidence": "validation/v111_report_export_parity.mjs writes validation/results/v111_report_export_parity.json and compares preview/exported SVGs across model-only, completed-result, large, formative, current-layout, and tidy-layout cases."},
+        {"track": "product", "name": "Native keyboard workflow smoke", "status": "passed", "evidence": "validation/v111_keyboard_native_smoke.py writes validation/results/v111_keyboard_native_smoke.json, launches the release executable, and verifies completed-result Results and Report keyboard-region contracts."},
+        {"track": "product", "name": "Low-frequency disabled-action explanations", "status": "passed", "evidence": "validation/v111_disabled_actions_audit.py writes validation/results/v111_disabled_actions_audit.json and verifies visible/accessibility reasons for Run, Report, Data, canvas lock, covariance/path, native XLSX, and method-settings actions."},
+        {"track": "documentation", "name": "v1.1.1 hardening documentation", "status": "passed", "evidence": "docs/V1_1_1_NATIVE_UX_HARDENING.md, docs/DELIVERY_STATUS.md, and docs/DEVELOPMENT_LEDGER.md document the hardening scope, evidence, pywinauto validation-only boundary, mobile non-gating status, and SVG export boundary."}
+      ],
+      "next_actions": [
+        "Install pywinauto in validation tooling and promote literal OS file-dialog clicking when stable on the release workstation.",
+        "Keep native PDF/PNG export and mobile UX outside this desktop hardening gate unless separately scoped and audited."
       ]
     }
   ]
