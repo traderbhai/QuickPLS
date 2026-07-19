@@ -1,0 +1,138 @@
+{
+  "schema_version": 2,
+  "id": "00000000-0000-0000-0000-000000000411",
+  "created_at": "2026-07-18T00:00:00Z",
+  "dataset_fingerprint": "v2:434b82f149415d2f0109ebf46997e7f7f4634de2291efa690f84cb409dc8a574",
+  "model": {
+    "id": "00000000-0000-0000-0000-000000000412",
+    "name": "cSEM satisfaction published assessment fixture",
+    "constructs": [
+      {
+        "id": "IMAG",
+        "name": "Image",
+        "short_name": "IMAG",
+        "mode": "formative",
+        "indicators": [
+          "imag1",
+          "imag2",
+          "imag3"
+        ]
+      },
+      {
+        "id": "EXPE",
+        "name": "Expectation",
+        "short_name": "EXPE",
+        "mode": "formative",
+        "indicators": [
+          "expe1",
+          "expe2",
+          "expe3"
+        ]
+      },
+      {
+        "id": "QUAL",
+        "name": "Quality",
+        "short_name": "QUAL",
+        "mode": "formative",
+        "indicators": [
+          "qual1",
+          "qual2",
+          "qual3",
+          "qual4",
+          "qual5"
+        ]
+      },
+      {
+        "id": "VAL",
+        "name": "Value",
+        "short_name": "VAL",
+        "mode": "formative",
+        "indicators": [
+          "val1",
+          "val2",
+          "val3"
+        ]
+      },
+      {
+        "id": "SAT",
+        "name": "Satisfaction",
+        "short_name": "SAT",
+        "mode": "reflective",
+        "indicators": [
+          "sat1",
+          "sat2",
+          "sat3",
+          "sat4"
+        ]
+      },
+      {
+        "id": "LOY",
+        "name": "Loyalty",
+        "short_name": "LOY",
+        "mode": "reflective",
+        "indicators": [
+          "loy1",
+          "loy2",
+          "loy3",
+          "loy4"
+        ]
+      }
+    ],
+    "paths": [
+      {
+        "source": "IMAG",
+        "target": "EXPE"
+      },
+      {
+        "source": "EXPE",
+        "target": "QUAL"
+      },
+      {
+        "source": "EXPE",
+        "target": "VAL"
+      },
+      {
+        "source": "QUAL",
+        "target": "VAL"
+      },
+      {
+        "source": "IMAG",
+        "target": "SAT"
+      },
+      {
+        "source": "EXPE",
+        "target": "SAT"
+      },
+      {
+        "source": "QUAL",
+        "target": "SAT"
+      },
+      {
+        "source": "VAL",
+        "target": "SAT"
+      },
+      {
+        "source": "IMAG",
+        "target": "LOY"
+      },
+      {
+        "source": "SAT",
+        "target": "LOY"
+      }
+    ]
+  },
+  "settings": {
+    "method": "pls_pm",
+    "weighting_scheme": "path",
+    "tolerance": 1e-07,
+    "max_iterations": 3000,
+    "bootstrap_samples": 0,
+    "seed": 20260718,
+    "preprocessing": "standardized",
+    "missing_data": "listwise_deletion"
+  },
+  "metadata": {
+    "fixture": "cSEM satisfaction",
+    "source": "cSEM package README satisfaction example; GPL reference used only in validation tooling"
+  }
+}

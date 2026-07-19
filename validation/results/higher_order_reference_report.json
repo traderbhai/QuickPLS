@@ -1,0 +1,119 @@
+{
+  "method": "repeated_indicator_hoc_independent_reference_v1",
+  "tolerance": 1e-06,
+  "passed": true,
+  "max_abs_difference": 4.4853010194856324e-14,
+  "warning_present": true,
+  "differences": [
+    {
+      "kind": "path",
+      "id": [
+        "x",
+        "hoc"
+      ],
+      "expected": 0.6542851613290843,
+      "actual": 0.6542851613290652,
+      "abs_difference": 1.9095836023552692e-14
+    },
+    {
+      "kind": "path",
+      "id": [
+        "z",
+        "hoc"
+      ],
+      "expected": 0.6293286491149067,
+      "actual": 0.6293286491149233,
+      "abs_difference": 1.6542323066914832e-14
+    },
+    {
+      "kind": "path",
+      "id": [
+        "hoc",
+        "y"
+      ],
+      "expected": 0.9510309771977425,
+      "actual": 0.9510309771977431,
+      "abs_difference": 5.551115123125783e-16
+    },
+    {
+      "kind": "hoc_loading",
+      "id": [
+        "hoc",
+        "x1"
+      ],
+      "expected": 0.787351239045447,
+      "actual": 0.7873512390454261,
+      "abs_difference": 2.0872192862952943e-14
+    },
+    {
+      "kind": "hoc_weight",
+      "id": [
+        "hoc",
+        "x1"
+      ],
+      "expected": 0.32764846802585185,
+      "actual": 0.3276484680258383,
+      "abs_difference": 1.354472090042691e-14
+    },
+    {
+      "kind": "hoc_loading",
+      "id": [
+        "hoc",
+        "x2"
+      ],
+      "expected": 0.7877309561161628,
+      "actual": 0.7877309561161614,
+      "abs_difference": 1.4432899320127035e-15
+    },
+    {
+      "kind": "hoc_weight",
+      "id": [
+        "hoc",
+        "x2"
+      ],
+      "expected": 0.32757853353436467,
+      "actual": 0.32757853353435773,
+      "abs_difference": 6.938893903907228e-15
+    },
+    {
+      "kind": "hoc_loading",
+      "id": [
+        "hoc",
+        "z1"
+      ],
+      "expected": 0.7649263356040631,
+      "actual": 0.7649263356041079,
+      "abs_difference": 4.4853010194856324e-14
+    },
+    {
+      "kind": "hoc_weight",
+      "id": [
+        "hoc",
+        "z1"
+      ],
+      "expected": 0.3141225980567172,
+      "actual": 0.31412259805673814,
+      "abs_difference": 2.09277040141842e-14
+    },
+    {
+      "kind": "hoc_loading",
+      "id": [
+        "hoc",
+        "z2"
+      ],
+      "expected": 0.7706797518594825,
+      "actual": 0.7706797518594728,
+      "abs_difference": 9.658940314238862e-15
+    },
+    {
+      "kind": "hoc_weight",
+      "id": [
+        "hoc",
+        "z2"
+      ],
+      "expected": 0.31621587676904345,
+      "actual": 0.3162158767690385,
+      "abs_difference": 4.9404924595819466e-15
+    }
+  ]
+}

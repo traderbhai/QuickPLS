@@ -1,0 +1,40 @@
+{
+  "kind": "v07_cbsem_reference",
+  "status": "passed",
+  "sections": {
+    "cfa": {
+      "parameters": 24,
+      "srmr": 0.13013513111043848
+    },
+    "sem": {
+      "paths": 3,
+      "chi_square": 16.52942197552889
+    },
+    "fit": {
+      "df": 24,
+      "cfi": 1.0,
+      "rmsea": 0.0
+    },
+    "mi": {
+      "candidates": 50,
+      "top_mi": 0.15789617650863985
+    },
+    "bootstrap": {
+      "intervals": 21
+    },
+    "multigroup": {
+      "groups": 2,
+      "steps": [
+        "configural",
+        "metric",
+        "scalar"
+      ]
+    },
+    "export": {
+      "export_bytes": 38389
+    },
+    "guard": {
+      "guard_code": "cbsem.reflective_only"
+    }
+  }
+}

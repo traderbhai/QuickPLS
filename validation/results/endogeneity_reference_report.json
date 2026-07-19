@@ -1,0 +1,42 @@
+{
+  "checks": {
+    "coefficient_delta": 2.8486223102586194e-09,
+    "has_experimental_warning": true,
+    "method_version": true,
+    "p_values_in_range": true,
+    "payload_version": true,
+    "skewness_delta": 1.0930145677434666e-13,
+    "standard_error_delta": 5.868893149241217e-10,
+    "t_delta": 5.544559353309886e-09
+  },
+  "estimates": [
+    {
+      "applicable": true,
+      "copula_coefficient": 0.10698443340924778,
+      "p_value_two_sided": 0.3543933805758668,
+      "path_coefficient": 0.7432117151929603,
+      "predictor_skewness": 1.4505806358646747,
+      "source": "x",
+      "standard_error": 0.11515133806648233,
+      "t_statistic": 0.9290767715393858,
+      "target": "y",
+      "warning": null
+    },
+    {
+      "applicable": false,
+      "copula_coefficient": -0.055201800770526874,
+      "p_value_two_sided": 0.9126131232173367,
+      "path_coefficient": 0.27399171944760914,
+      "predictor_skewness": -0.0911958891926253,
+      "source": "z",
+      "standard_error": 0.502132377932253,
+      "t_statistic": -0.1099347566429477,
+      "target": "y",
+      "warning": "Predictor score skewness is below the experimental applicability threshold; Gaussian-copula evidence is weak for near-normal predictors."
+    }
+  ],
+  "kind": "gaussian_copula_endogeneity_reference_v1",
+  "passed": true,
+  "schema_version": 1,
+  "tolerance": 1e-06
+}

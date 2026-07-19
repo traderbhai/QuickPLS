@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "rows": [
+    {
+      "procedure": "bootstrap_percentile",
+      "contract": "indexed bootstrap percentile intervals",
+      "reference_evidence": "validation/results/pls_bootstrap_external_reference.json",
+      "worker_invariance_evidence": "validation/results/studentized_worker_matrix.json",
+      "coverage_type_i_evidence": "validation/results/monte_carlo_qualification.json",
+      "performance_evidence": "validation/results/studentized_release_stress.json",
+      "unsupported_cases": "fixed complete-case sample; unsupported failed fits are reported",
+      "complete": true
+    },
+    {
+      "procedure": "bca",
+      "contract": "BCa bootstrap intervals",
+      "reference_evidence": "validation/results/studentized_supplied_reference.json",
+      "worker_invariance_evidence": "validation/results/studentized_worker_matrix.json",
+      "coverage_type_i_evidence": "validation/results/monte_carlo_qualification.json",
+      "performance_evidence": "validation/results/studentized_release_stress.json",
+      "unsupported_cases": "requires jackknife availability; degenerate acceleration is explicit",
+      "complete": true
+    },
+    {
+      "procedure": "studentized_bootstrap_t",
+      "contract": "nested studentized/bootstrap-t intervals",
+      "reference_evidence": "validation/results/studentized_supplied_reference.json",
+      "worker_invariance_evidence": "validation/results/studentized_worker_matrix.json",
+      "coverage_type_i_evidence": "validation/results/monte_carlo_studentized_qualification.json",
+      "performance_evidence": "validation/results/studentized_release_stress.json",
+      "unsupported_cases": "nested failure is explicit without corrupting percentile results",
+      "complete": true
+    },
+    {
+      "procedure": "jackknife",
+      "contract": "jackknife support for BCa and diagnostics",
+      "reference_evidence": "validation/results/studentized_supplied_reference.json",
+      "worker_invariance_evidence": "validation/results/studentized_worker_matrix.json",
+      "coverage_type_i_evidence": "validation/results/monte_carlo_studentized_qualification.json",
+      "performance_evidence": "validation/results/v04_inference_qualification_quick.json",
+      "unsupported_cases": "invalid plans and cancellation are explicit",
+      "complete": true
+    },
+    {
+      "procedure": "freedman_lane_permutation",
+      "contract": "Freedman-Lane path permutation",
+      "reference_evidence": "validation/results/v04_inference_qualification_quick.json",
+      "worker_invariance_evidence": "validation/results/studentized_worker_matrix.json",
+      "coverage_type_i_evidence": "validation/results/monte_carlo_qualification.json",
+      "performance_evidence": "validation/results/v04_inference_qualification_quick.json",
+      "unsupported_cases": "linear nuisance model assumptions documented",
+      "complete": true
+    }
+  ],
+  "passed": true
+}

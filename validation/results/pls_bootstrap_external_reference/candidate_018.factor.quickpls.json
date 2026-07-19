@@ -1,0 +1,371 @@
+{
+  "schema_version": 1,
+  "id": "42737c6a-0cb2-4d97-a636-f48e81905b2f",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "00000000-0000-0000-0000-000000000503",
+    "dataset_fingerprint": "v2:c76b2ec94482094a4ffd71425f299ef50d267deefdc86d093b4bdaee80a4771b",
+    "method": "pls_pm",
+    "method_version": "pls_pm_v1+pls_assessment_v7",
+    "engine_version": "0.3.0-alpha.1",
+    "seed": 20260718,
+    "settings": {
+      "method": "pls_pm",
+      "weighting_scheme": "factor",
+      "tolerance": 1e-12,
+      "max_iterations": 3000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260718,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion"
+    },
+    "started_at": "2026-07-18T19:15:27.950888200Z",
+    "completed_at": "2026-07-18T19:15:27.955543800Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.two_indicator_limited_information for construct 'x'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.two_indicator_limited_information for construct 'y'"
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "construct_scores": {
+        "x": [
+          0.12946166731765088,
+          -0.64349916638454,
+          0.9005179159179842,
+          -0.64349916638454,
+          -1.1581715271520479,
+          1.4151902766854927
+        ],
+        "y": [
+          0.3243408435276688,
+          -0.7344536351410865,
+          0.8488162325887519,
+          -0.7344536351410865,
+          -1.0873851280306717,
+          1.383135322196424
+        ]
+      },
+      "converged": true,
+      "effects": [
+        {
+          "direct": 0.9936765377439192,
+          "indirect": 0.0,
+          "source": "x",
+          "target": "y",
+          "total": 0.9936765377439192
+        }
+      ],
+      "iterations": 5,
+      "method_version": "pls_pm_v1",
+      "omitted_observations": 0,
+      "outer_estimates": [
+        {
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9946591223349647,
+          "weight": 0.5078943620185835
+        },
+        {
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9944349434679529,
+          "weight": 0.4975873413197947
+        },
+        {
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.997855185332357,
+          "weight": 0.5000510952373186
+        },
+        {
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9978725843663941,
+          "weight": 0.5020895748974248
+        }
+      ],
+      "paths": [
+        {
+          "coefficient": 0.9936765377439192,
+          "source": "x",
+          "target": "y"
+        }
+      ],
+      "r_squared": {
+        "y": 0.9873930616627421
+      },
+      "transforms": [
+        {
+          "indicator": "x1",
+          "mean": 3.3333333333333335,
+          "scale": 1.9663841605003503
+        },
+        {
+          "indicator": "x2",
+          "mean": 4.166666666666667,
+          "scale": 1.9407902170679516
+        },
+        {
+          "indicator": "y1",
+          "mean": 5.0,
+          "scale": 2.756809750418044
+        },
+        {
+          "indicator": "y2",
+          "mean": 4.166666666666667,
+          "scale": 2.9268868558020253
+        }
+      ],
+      "used_observations": 6,
+      "warnings": []
+    },
+    "assessment": {
+      "blindfolding": {
+        "constructs": [
+          {
+            "construct": "y",
+            "observation_sum_squares": 28.537317705190883,
+            "prediction_error_sum_squares": 9.326504341572978,
+            "q_squared": 0.6731821666660527
+          }
+        ],
+        "settings": {
+          "missing_value_treatment": "indicator_mean_replacement",
+          "omission_distance": 5,
+          "selection": "preferred_7_then_smallest_valid_5_to_12"
+        }
+      },
+      "construct_quality": [
+        {
+          "ave": 0.9891238132171365,
+          "construct": "x",
+          "cronbach_alpha": 0.9890053762414646,
+          "normalized_weight_norm_squared": 0.5055498452119659,
+          "off_diagonal_denominator": 0.1277366217159757,
+          "off_diagonal_numerator": 0.49445015478803456,
+          "rho_a": 0.9893160494996586,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.9945321719804516,
+          "score_variance_before_normalization": 1.0000000000000002
+        },
+        {
+          "ave": 0.9957323327623694,
+          "construct": "y",
+          "cronbach_alpha": 0.9957140594520928,
+          "normalized_weight_norm_squared": 0.5021450390687189,
+          "off_diagonal_denominator": 0.12607273352614004,
+          "off_diagonal_numerator": 0.4978549609312815,
+          "rho_a": 0.9957264016577415,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.9978616033984641,
+          "score_variance_before_normalization": 0.9999999999999999
+        }
+      ],
+      "cross_loadings": [
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9946591223349646
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x1",
+          "loading": 0.998284770473385
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9944349434679529
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x2",
+          "loading": 0.9780259478480253
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y1",
+          "loading": 0.9895329085238147
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9978551853323568
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y2",
+          "loading": 0.9935667817144608
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.997872584366394
+        }
+      ],
+      "f_squared": [
+        {
+          "excluded_r_squared": 0.0,
+          "f_squared": 78.3214001090694,
+          "included_r_squared": 0.9873930616627421,
+          "source_construct": "x",
+          "target_construct": "y"
+        }
+      ],
+      "formative_indicator_vif": [],
+      "fornell_larcker": {
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "values": [
+          [
+            0.9945470392179228,
+            0.9936765377439191
+          ],
+          [
+            0.9936765377439191,
+            0.9978638848872974
+          ]
+        ]
+      },
+      "htmt": null,
+      "htmt_original": {
+        "absolute_correlations": false,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.001223871672002
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.001223871672002
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_original_method_version": "henseler_et_al_htmt_v1",
+      "htmt_plus": {
+        "absolute_correlations": true,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.001223871672002
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.001223871672002
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
+      "method_version": "pls_assessment_v7",
+      "model_fit": {
+        "estimated": {
+          "d_uls": 0.0005690088029140878,
+          "srmr": 0.007543267215962111
+        },
+        "saturated": {
+          "d_uls": 0.0005690088029140878,
+          "srmr": 0.007543267215962111
+        }
+      },
+      "r_squared": {
+        "y": 0.9873930616627421
+      },
+      "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
+      "structural_quality": [
+        {
+          "adjusted_r_squared": 0.9842413270784276,
+          "construct": "y",
+          "predictor_count": 1,
+          "r_squared": 0.9873930616627421
+        }
+      ],
+      "structural_vif": [
+        {
+          "predictor_construct": "x",
+          "target_construct": "y",
+          "vif": 1.0
+        }
+      ],
+      "warnings": [
+        "rho_a.two_indicator_limited_information for construct 'x'",
+        "rho_a.two_indicator_limited_information for construct 'y'"
+      ]
+    }
+  }
+}

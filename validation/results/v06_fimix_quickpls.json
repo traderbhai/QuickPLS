@@ -1,0 +1,2473 @@
+{
+  "schema_version": 1,
+  "id": "5d3c85c4-be99-47b0-9abe-a82737af96b5",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "00000000-0000-0000-0000-000000000601",
+    "dataset_fingerprint": "v2:ab3c89398f3ee2eac71ad698ccb09b3677b7006d4aa0e2850e52123b5cd87189",
+    "method": "predict",
+    "method_version": "pls_pm_v1+plspredict_holdout_v1+fimix_pls_v1+pls_pos_v1+pls_mediation_v1+pls_assessment_v7",
+    "engine_version": "0.9.0-rc.1",
+    "seed": 20260719,
+    "settings": {
+      "method": "predict",
+      "weighting_scheme": "path",
+      "tolerance": 1e-7,
+      "max_iterations": 3000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260719,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion",
+      "case_weight_column": null
+    },
+    "started_at": "2026-07-19T11:49:27.495195500Z",
+    "completed_at": "2026-07-19T11:49:28.581931500Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "PLSpredict holdout v1 is experimental and must not be treated as publication-validated."
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "PLS-POS v1 is experimental; this preview uses deterministic score-space partitioning and must not be used as publication-ready full PLS-POS evidence."
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "FIMIX-PLS v1 is experimental; this preview uses deterministic finite-mixture style score-space segmentation with information criteria and requires external validation before publication use."
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "cbsem": null,
+      "cca": null,
+      "construct_scores": {
+        "x": [
+          -0.5936178763358289,
+          -0.6630551992943438,
+          -0.14392732021238341,
+          0.14641849509203939,
+          -0.28660343900722507,
+          2.2453414347752547,
+          0.38818413667447915,
+          1.6044571859666463,
+          0.10605847070233974,
+          -0.12244657483038515,
+          -0.21685593667205982,
+          -0.44684806715218506,
+          -0.5415328501687987,
+          -0.42103921573392045,
+          1.1191620267828515,
+          0.2253919655003464,
+          2.4689191334633085,
+          -0.669857845662718,
+          1.180395320481618,
+          -0.27636377469726076,
+          -0.6925392912385718,
+          -1.2779162368560566,
+          0.4787728184158019,
+          -0.7470723826662219,
+          -1.112207046218978,
+          0.09450903753644145,
+          0.40776344079716,
+          -1.3593378537666565,
+          0.06016164863615017,
+          -2.2324398786149557,
+          0.20106756304238924,
+          -0.6372053411547979,
+          1.2467701240880624,
+          1.4833193566568335,
+          1.3739260663505035,
+          0.31007012603307993,
+          -0.7836550925012269,
+          -1.3755145317423183,
+          -0.10854046517145856,
+          -0.35121908935085305,
+          0.16120164488831715,
+          -1.0935275738989803,
+          0.8265633399245149,
+          -0.6879143752771764,
+          0.7606936086261873,
+          -1.2995207445139911,
+          0.24795498760419307,
+          -0.9047652905130805,
+          0.6979004796153595,
+          0.14489330883028062,
+          0.40607663307230996,
+          0.5453968932826515,
+          0.8541293583369264,
+          -0.8175464000943353,
+          -0.34676393834412,
+          -1.4756198937496379,
+          0.6130565260543658,
+          0.15956960668023296,
+          0.37260869241736955,
+          0.9176559265702922,
+          0.43279459413534266,
+          -1.3901934403158591,
+          -0.047817786474215904,
+          0.41369655452142673,
+          0.06690335681968924,
+          1.8346215157302956,
+          -0.10368867894567235,
+          -0.7955197039637243,
+          0.29878208159193287,
+          1.4900731162513534,
+          0.806668130050485,
+          -0.3908165626124836,
+          -0.38507327149538884,
+          0.4983929415272558,
+          0.31801595426920654,
+          -0.04824304846359273,
+          2.1900914964780385,
+          0.32550496287021324,
+          -1.7057077591030072,
+          0.02810785192000411,
+          2.979792356561109,
+          -0.2983935408863236,
+          -1.4779005924701376,
+          0.3669659109513193,
+          1.037561720653168,
+          0.9963837158241122,
+          -0.7565094477163006,
+          1.0522531883836275,
+          -0.6189782277810334,
+          -0.29249394733465056,
+          -0.39896399506802394,
+          0.5427123478557928,
+          -0.2696179633185997,
+          -0.14676401592161803,
+          -1.2596636216021282,
+          0.7616975075604672,
+          -1.0700439829153676,
+          -0.5776489215939259,
+          -0.5361373210651915,
+          -0.19762237333988222,
+          0.7902723051031544,
+          1.0788246076290395,
+          -2.0757115180776724,
+          0.1318115829548796,
+          0.4794987595110113,
+          -1.526885980255569,
+          2.133055980202553,
+          0.5272225814840806,
+          -0.5593777086955459,
+          -0.43114587818034233,
+          -0.5990427814395729,
+          -1.4073650253799557,
+          1.0737361727659593,
+          0.3034282730369652,
+          -0.24915450168636116,
+          -0.34508118642766056,
+          -0.7397577637356506,
+          -0.46912864720945574,
+          -0.5013598742914135,
+          1.0268471340345544,
+          -0.4696995851696919,
+          0.9241952029418664,
+          0.5206672779908447,
+          0.0032478409503723465,
+          -1.3484915848803538,
+          -1.5058373463500676,
+          2.348519913864552,
+          1.4159509594761244,
+          0.32751519411363555,
+          -0.8675227314275917,
+          0.4085927962714432,
+          -0.30677316168989216,
+          0.4994680329127022,
+          -0.6764079128245417,
+          -0.3185975500029096,
+          -2.1989313497981047,
+          0.6991271349882798,
+          1.5067667070692852,
+          2.035177084454212,
+          1.6446710715459418,
+          -1.071039579506771,
+          -0.26571949097555736,
+          1.257993603000721,
+          -2.6349911708004283,
+          0.9058136596317821,
+          -1.5468658497176448,
+          1.0756871661337268,
+          -1.0484127814256181,
+          -0.18075961866796353,
+          -1.7786000527894563,
+          -1.665984080598066,
+          0.9501695469009235,
+          -0.5603742702066373,
+          -1.0470911126402838,
+          0.29036523677945497,
+          -1.0941169642212307,
+          -0.2379484742752074,
+          -0.9440878019570503,
+          -0.047021606027079416,
+          0.05266536665527664,
+          0.16632979769706185,
+          1.274003404955015,
+          -0.07302734576440922,
+          0.9926465862942562,
+          -0.9891794238985074,
+          0.36960826843254796,
+          0.4894090913456888,
+          0.242046436840858
+        ],
+        "y": [
+          -0.967175102582656,
+          -0.9103566384180516,
+          0.14488190959905697,
+          0.48817700528501373,
+          -0.19111959099354164,
+          2.843330282248177,
+          0.6183688036217904,
+          2.6394244445933546,
+          -0.2056619386566363,
+          -0.42951380333525874,
+          0.09119092482622566,
+          -0.5100363563247695,
+          -0.48703366538490844,
+          -0.34644140070634766,
+          1.7392515887713105,
+          0.464218890045699,
+          3.0834919004030765,
+          -0.8993626002743088,
+          1.5120322395256647,
+          -0.06417521332449305,
+          -1.1824554898070219,
+          -1.9795141541854089,
+          0.47158088327576103,
+          -0.6540054347420868,
+          -1.244978397317828,
+          0.0870105435312805,
+          0.4441812286896833,
+          -1.8842218903046817,
+          -0.1398327762428097,
+          -3.2388889635893925,
+          0.3347113347552522,
+          -1.509411295249735,
+          1.4017354718314203,
+          2.1745769998097226,
+          1.7780815178560987,
+          0.026456622264751914,
+          -0.8868576760438804,
+          -1.8201648455328217,
+          0.0925716774582078,
+          -0.20213353241375498,
+          0.19998341481915685,
+          -1.4146357144483146,
+          1.0833688786267726,
+          -1.2521863577153496,
+          0.8741083734964445,
+          -1.641843927898197,
+          0.5299584247895138,
+          -1.535677650817913,
+          0.5254121034527325,
+          0.44861092307873446,
+          0.5021184435389361,
+          0.4170718513798278,
+          1.5957881756006085,
+          -1.1161880902292725,
+          -0.48965052225066935,
+          -2.124396190119309,
+          -0.3768338569567837,
+          0.07204587843109095,
+          -0.20149837735732914,
+          -0.3848723781392343,
+          -0.120399506504757,
+          1.522189048513116,
+          0.3236392542439177,
+          -0.1803505970015743,
+          0.007889848652212785,
+          -2.208554349767105,
+          0.3452365680895033,
+          1.0703932068563757,
+          -0.46174203101994865,
+          -1.0490700554304262,
+          -0.9901231936935222,
+          0.45063901135662093,
+          0.294251495500076,
+          0.3039616036696755,
+          -0.3520777790333486,
+          0.3227924643527552,
+          -2.0355544436599016,
+          -0.2928367815097248,
+          1.5010621092982215,
+          0.24056173990983204,
+          -2.952976772508611,
+          0.41055040824542405,
+          1.6430048552023109,
+          -0.10106974836905377,
+          -0.8080733715122999,
+          -0.900471437028226,
+          1.3221631661204094,
+          -0.7055086379126473,
+          0.7659197291036954,
+          0.5734061474543574,
+          0.7906874209237231,
+          -0.5946063896274246,
+          0.36166234417278786,
+          -0.059413152882556476,
+          0.9543972057958703,
+          -0.5172919416137542,
+          1.2259253616407584,
+          0.9942825986727655,
+          0.5504317314172068,
+          0.04141026550641151,
+          -0.6407768209633803,
+          -1.4503880387825376,
+          2.2940705230080125,
+          0.2177866416099993,
+          -0.8111300550844622,
+          1.723760931634152,
+          -1.6468833963398843,
+          0.18552591354219716,
+          0.8151959555749888,
+          0.838810365340473,
+          0.11553626244193793,
+          1.802166598435046,
+          0.18917656235321414,
+          0.2352472647267272,
+          -0.049881855497056427,
+          0.0904346037181732,
+          -0.631613573509016,
+          0.196221147983015,
+          -0.48475465200489637,
+          0.4651680055956197,
+          0.10028746767913164,
+          0.7307458994700889,
+          -0.08773682041287181,
+          0.0395057076866699,
+          -0.33651370518110263,
+          -1.0955832534514374,
+          1.0562711465921104,
+          1.0594099253005427,
+          -0.23512672734268977,
+          -0.20529378677178603,
+          0.0835977641650311,
+          -0.36664432757981047,
+          0.5430242813298933,
+          -0.1594966037149819,
+          -0.4524460844302759,
+          -0.7798593832035978,
+          0.5674845260187827,
+          0.987562284452387,
+          0.8051484838268501,
+          0.5600247701052629,
+          -0.1349537898733194,
+          -0.1379564259383849,
+          0.8108088947973795,
+          -1.3245013211404575,
+          0.26525204923015544,
+          -0.6865704539765461,
+          -0.003653329574450915,
+          0.016786436390126967,
+          -0.1130539952003863,
+          -1.1646115087866682,
+          -0.40553096090585583,
+          0.48774571160871366,
+          -0.09103227388481151,
+          -0.7925192205684698,
+          -0.49606073730103356,
+          -0.7685056730191328,
+          -0.11652796556076245,
+          -0.370479745740116,
+          -0.16812667058699104,
+          0.46727463112702605,
+          0.02884532296173004,
+          0.4882159887244568,
+          0.11997506679796495,
+          0.14617724536819893,
+          -0.13984562805524445,
+          0.007236849079685255,
+          0.05806772804969798,
+          -0.3294444722087686
+        ]
+      },
+      "control_estimates": [],
+      "converged": true,
+      "cta_pls": null,
+      "effects": [
+        {
+          "direct": 0.2316407872521849,
+          "indirect": 0.0,
+          "source": "x",
+          "target": "y",
+          "total": 0.2316407872521849
+        }
+      ],
+      "endogeneity": null,
+      "fimix": {
+        "aic": 297.48474643502954,
+        "bic": 331.8483502084654,
+        "caic": 342.8483502084654,
+        "classes": 3,
+        "classes_summary": [
+          {
+            "class": "class_1",
+            "observations": 77,
+            "paths": [
+              {
+                "coefficient": 0.023413757305051932,
+                "source": "x",
+                "target": "y"
+              }
+            ],
+            "r_squared": {
+              "y": 0.0013241830487226158
+            },
+            "share": 0.4583333333333333
+          },
+          {
+            "class": "class_2",
+            "observations": 72,
+            "paths": [
+              {
+                "coefficient": 0.5634632044322162,
+                "source": "x",
+                "target": "y"
+              }
+            ],
+            "r_squared": {
+              "y": 0.5332559053327112
+            },
+            "share": 0.42857142857142855
+          },
+          {
+            "class": "class_3",
+            "observations": 19,
+            "paths": [
+              {
+                "coefficient": 0.1425671793866839,
+                "source": "x",
+                "target": "y"
+              }
+            ],
+            "r_squared": {
+              "y": 0.0812424398647259
+            },
+            "share": 0.1130952380952381
+          }
+        ],
+        "entropy": 0.503739550450474,
+        "iterations": 1,
+        "log_likelihood": -137.74237321751477,
+        "memberships": [
+          {
+            "class": "class_1",
+            "observation": 0,
+            "probability": 0.94328373056961
+          },
+          {
+            "class": "class_1",
+            "observation": 1,
+            "probability": 0.9394693994476507
+          },
+          {
+            "class": "class_2",
+            "observation": 2,
+            "probability": 0.5320088571037804
+          },
+          {
+            "class": "class_2",
+            "observation": 3,
+            "probability": 0.7086187566582312
+          },
+          {
+            "class": "class_1",
+            "observation": 4,
+            "probability": 0.6157950039605146
+          },
+          {
+            "class": "class_2",
+            "observation": 5,
+            "probability": 0.998033957520937
+          },
+          {
+            "class": "class_2",
+            "observation": 6,
+            "probability": 0.7988598553073628
+          },
+          {
+            "class": "class_2",
+            "observation": 7,
+            "probability": 0.9734102904980829
+          },
+          {
+            "class": "class_1",
+            "observation": 8,
+            "probability": 0.5221358562801013
+          },
+          {
+            "class": "class_1",
+            "observation": 9,
+            "probability": 0.7175693194280235
+          },
+          {
+            "class": "class_2",
+            "observation": 10,
+            "probability": 0.4859555336102655
+          },
+          {
+            "class": "class_1",
+            "observation": 11,
+            "probability": 0.8162385580394136
+          },
+          {
+            "class": "class_1",
+            "observation": 12,
+            "probability": 0.8218276960546951
+          },
+          {
+            "class": "class_1",
+            "observation": 13,
+            "probability": 0.736906715770193
+          },
+          {
+            "class": "class_2",
+            "observation": 14,
+            "probability": 0.924133036430729
+          },
+          {
+            "class": "class_2",
+            "observation": 15,
+            "probability": 0.7368754501650145
+          },
+          {
+            "class": "class_2",
+            "observation": 16,
+            "probability": 0.9992640809687183
+          },
+          {
+            "class": "class_1",
+            "observation": 17,
+            "probability": 0.9382999298355238
+          },
+          {
+            "class": "class_2",
+            "observation": 18,
+            "probability": 0.9478032289995079
+          },
+          {
+            "class": "class_1",
+            "observation": 19,
+            "probability": 0.5276347688637758
+          },
+          {
+            "class": "class_1",
+            "observation": 20,
+            "probability": 0.9690550278614276
+          },
+          {
+            "class": "class_1",
+            "observation": 21,
+            "probability": 0.9972196703227221
+          },
+          {
+            "class": "class_2",
+            "observation": 22,
+            "probability": 0.8171150939426464
+          },
+          {
+            "class": "class_1",
+            "observation": 23,
+            "probability": 0.8982116971505837
+          },
+          {
+            "class": "class_1",
+            "observation": 24,
+            "probability": 0.9823570173388941
+          },
+          {
+            "class": "class_2",
+            "observation": 25,
+            "probability": 0.5948921276715851
+          },
+          {
+            "class": "class_2",
+            "observation": 26,
+            "probability": 0.7938602827779792
+          },
+          {
+            "class": "class_1",
+            "observation": 27,
+            "probability": 0.996790828551017
+          },
+          {
+            "class": "class_1",
+            "observation": 28,
+            "probability": 0.4910768310098308
+          },
+          {
+            "class": "class_1",
+            "observation": 29,
+            "probability": 0.9999132921565427
+          },
+          {
+            "class": "class_2",
+            "observation": 30,
+            "probability": 0.7100509818345554
+          },
+          {
+            "class": "class_1",
+            "observation": 31,
+            "probability": 0.9849722235137032
+          },
+          {
+            "class": "class_2",
+            "observation": 32,
+            "probability": 0.9601157491794128
+          },
+          {
+            "class": "class_2",
+            "observation": 33,
+            "probability": 0.9686752689935388
+          },
+          {
+            "class": "class_2",
+            "observation": 34,
+            "probability": 0.9653229092857688
+          },
+          {
+            "class": "class_2",
+            "observation": 35,
+            "probability": 0.6382915482699069
+          },
+          {
+            "class": "class_1",
+            "observation": 36,
+            "probability": 0.9431506113645833
+          },
+          {
+            "class": "class_1",
+            "observation": 37,
+            "probability": 0.9963446721347395
+          },
+          {
+            "class": "class_2",
+            "observation": 38,
+            "probability": 0.5256629817530196
+          },
+          {
+            "class": "class_1",
+            "observation": 39,
+            "probability": 0.6380632281058521
+          },
+          {
+            "class": "class_2",
+            "observation": 40,
+            "probability": 0.6605889108679003
+          },
+          {
+            "class": "class_1",
+            "observation": 41,
+            "probability": 0.9879068601235579
+          },
+          {
+            "class": "class_2",
+            "observation": 42,
+            "probability": 0.9012047871613361
+          },
+          {
+            "class": "class_1",
+            "observation": 43,
+            "probability": 0.9736448252987508
+          },
+          {
+            "class": "class_2",
+            "observation": 44,
+            "probability": 0.8963895824926199
+          },
+          {
+            "class": "class_1",
+            "observation": 45,
+            "probability": 0.9941193180574835
+          },
+          {
+            "class": "class_2",
+            "observation": 46,
+            "probability": 0.7486944597076752
+          },
+          {
+            "class": "class_1",
+            "observation": 47,
+            "probability": 0.9890660007485741
+          },
+          {
+            "class": "class_2",
+            "observation": 48,
+            "probability": 0.8742543771637397
+          },
+          {
+            "class": "class_2",
+            "observation": 49,
+            "probability": 0.7057444145100122
+          },
+          {
+            "class": "class_2",
+            "observation": 50,
+            "probability": 0.7995874020607858
+          },
+          {
+            "class": "class_2",
+            "observation": 51,
+            "probability": 0.8267181812127421
+          },
+          {
+            "class": "class_2",
+            "observation": 52,
+            "probability": 0.855264110222772
+          },
+          {
+            "class": "class_1",
+            "observation": 53,
+            "probability": 0.9680211939455863
+          },
+          {
+            "class": "class_1",
+            "observation": 54,
+            "probability": 0.7911605466291335
+          },
+          {
+            "class": "class_1",
+            "observation": 55,
+            "probability": 0.9983110362677662
+          },
+          {
+            "class": "class_2",
+            "observation": 56,
+            "probability": 0.4999294362056816
+          },
+          {
+            "class": "class_2",
+            "observation": 57,
+            "probability": 0.610404721489807
+          },
+          {
+            "class": "class_2",
+            "observation": 58,
+            "probability": 0.534314939683112
+          },
+          {
+            "class": "class_2",
+            "observation": 59,
+            "probability": 0.5859602087598142
+          },
+          {
+            "class": "class_2",
+            "observation": 60,
+            "probability": 0.6001283217164387
+          },
+          {
+            "class": "class_3",
+            "observation": 61,
+            "probability": 0.9944649573162002
+          },
+          {
+            "class": "class_2",
+            "observation": 62,
+            "probability": 0.6147678105028617
+          },
+          {
+            "class": "class_2",
+            "observation": 63,
+            "probability": 0.5597113033655392
+          },
+          {
+            "class": "class_2",
+            "observation": 64,
+            "probability": 0.5493958714138422
+          },
+          {
+            "class": "class_1",
+            "observation": 65,
+            "probability": 0.9777893903644306
+          },
+          {
+            "class": "class_2",
+            "observation": 66,
+            "probability": 0.5948841775620622
+          },
+          {
+            "class": "class_3",
+            "observation": 67,
+            "probability": 0.8890132445346332
+          },
+          {
+            "class": "class_1",
+            "observation": 68,
+            "probability": 0.6330585340285809
+          },
+          {
+            "class": "class_1",
+            "observation": 69,
+            "probability": 0.692641195278356
+          },
+          {
+            "class": "class_1",
+            "observation": 70,
+            "probability": 0.7992584727944502
+          },
+          {
+            "class": "class_2",
+            "observation": 71,
+            "probability": 0.4630089586600403
+          },
+          {
+            "class": "class_2",
+            "observation": 72,
+            "probability": 0.46885496323863857
+          },
+          {
+            "class": "class_2",
+            "observation": 73,
+            "probability": 0.7924947480931208
+          },
+          {
+            "class": "class_1",
+            "observation": 74,
+            "probability": 0.5583544819892259
+          },
+          {
+            "class": "class_2",
+            "observation": 75,
+            "probability": 0.614457687088046
+          },
+          {
+            "class": "class_1",
+            "observation": 76,
+            "probability": 0.9514454039873619
+          },
+          {
+            "class": "class_1",
+            "observation": 77,
+            "probability": 0.5173135513689284
+          },
+          {
+            "class": "class_3",
+            "observation": 78,
+            "probability": 0.9976345462214911
+          },
+          {
+            "class": "class_2",
+            "observation": 79,
+            "probability": 0.6257164999496273
+          },
+          {
+            "class": "class_3",
+            "observation": 80,
+            "probability": 0.3333333333333333
+          },
+          {
+            "class": "class_2",
+            "observation": 81,
+            "probability": 0.5108002254265592
+          },
+          {
+            "class": "class_3",
+            "observation": 82,
+            "probability": 0.9971929213851478
+          },
+          {
+            "class": "class_2",
+            "observation": 83,
+            "probability": 0.5903412198744595
+          },
+          {
+            "class": "class_1",
+            "observation": 84,
+            "probability": 0.6540190879578559
+          },
+          {
+            "class": "class_1",
+            "observation": 85,
+            "probability": 0.7178705577111545
+          },
+          {
+            "class": "class_3",
+            "observation": 86,
+            "probability": 0.9365512063984769
+          },
+          {
+            "class": "class_1",
+            "observation": 87,
+            "probability": 0.5842229809096976
+          },
+          {
+            "class": "class_3",
+            "observation": 88,
+            "probability": 0.6778555840390691
+          },
+          {
+            "class": "class_2",
+            "observation": 89,
+            "probability": 0.4911997699991252
+          },
+          {
+            "class": "class_3",
+            "observation": 90,
+            "probability": 0.5743867893102494
+          },
+          {
+            "class": "class_1",
+            "observation": 91,
+            "probability": 0.6498717325651026
+          },
+          {
+            "class": "class_2",
+            "observation": 92,
+            "probability": 0.5239376531393198
+          },
+          {
+            "class": "class_1",
+            "observation": 93,
+            "probability": 0.49202067853163467
+          },
+          {
+            "class": "class_3",
+            "observation": 94,
+            "probability": 0.9449388064658146
+          },
+          {
+            "class": "class_1",
+            "observation": 95,
+            "probability": 0.540335841351024
+          },
+          {
+            "class": "class_3",
+            "observation": 96,
+            "probability": 0.9642696632987067
+          },
+          {
+            "class": "class_3",
+            "observation": 97,
+            "probability": 0.7850745577338198
+          },
+          {
+            "class": "class_3",
+            "observation": 98,
+            "probability": 0.47775167936730195
+          },
+          {
+            "class": "class_2",
+            "observation": 99,
+            "probability": 0.47307294390312626
+          },
+          {
+            "class": "class_1",
+            "observation": 100,
+            "probability": 0.6132289019360844
+          },
+          {
+            "class": "class_1",
+            "observation": 101,
+            "probability": 0.9128005892100475
+          },
+          {
+            "class": "class_3",
+            "observation": 102,
+            "probability": 0.9999657722138751
+          },
+          {
+            "class": "class_2",
+            "observation": 103,
+            "probability": 0.6562012721255205
+          },
+          {
+            "class": "class_1",
+            "observation": 104,
+            "probability": 0.7792376471294642
+          },
+          {
+            "class": "class_3",
+            "observation": 105,
+            "probability": 0.998178007759614
+          },
+          {
+            "class": "class_1",
+            "observation": 106,
+            "probability": 0.8679652677196084
+          },
+          {
+            "class": "class_2",
+            "observation": 107,
+            "probability": 0.7660989069227326
+          },
+          {
+            "class": "class_3",
+            "observation": 108,
+            "probability": 0.6789756664819664
+          },
+          {
+            "class": "class_3",
+            "observation": 109,
+            "probability": 0.62387824958249
+          },
+          {
+            "class": "class_1",
+            "observation": 110,
+            "probability": 0.4585948320494405
+          },
+          {
+            "class": "class_3",
+            "observation": 111,
+            "probability": 0.9979324568697833
+          },
+          {
+            "class": "class_2",
+            "observation": 112,
+            "probability": 0.878712418132031
+          },
+          {
+            "class": "class_2",
+            "observation": 113,
+            "probability": 0.7181007493392041
+          },
+          {
+            "class": "class_1",
+            "observation": 114,
+            "probability": 0.511046222422035
+          },
+          {
+            "class": "class_2",
+            "observation": 115,
+            "probability": 0.43925164613864986
+          },
+          {
+            "class": "class_1",
+            "observation": 116,
+            "probability": 0.8920341495298877
+          },
+          {
+            "class": "class_2",
+            "observation": 117,
+            "probability": 0.4209672809010312
+          },
+          {
+            "class": "class_1",
+            "observation": 118,
+            "probability": 0.8147773032595492
+          },
+          {
+            "class": "class_2",
+            "observation": 119,
+            "probability": 0.9198039327981727
+          },
+          {
+            "class": "class_1",
+            "observation": 120,
+            "probability": 0.4493065781219777
+          },
+          {
+            "class": "class_2",
+            "observation": 121,
+            "probability": 0.9251965993688792
+          },
+          {
+            "class": "class_2",
+            "observation": 122,
+            "probability": 0.6447887752857544
+          },
+          {
+            "class": "class_2",
+            "observation": 123,
+            "probability": 0.5424479960187136
+          },
+          {
+            "class": "class_1",
+            "observation": 124,
+            "probability": 0.8543380461634673
+          },
+          {
+            "class": "class_1",
+            "observation": 125,
+            "probability": 0.9829601347366893
+          },
+          {
+            "class": "class_2",
+            "observation": 126,
+            "probability": 0.9970875465361626
+          },
+          {
+            "class": "class_2",
+            "observation": 127,
+            "probability": 0.9766200421440788
+          },
+          {
+            "class": "class_2",
+            "observation": 128,
+            "probability": 0.500053705031665
+          },
+          {
+            "class": "class_1",
+            "observation": 129,
+            "probability": 0.7368805593441438
+          },
+          {
+            "class": "class_2",
+            "observation": 130,
+            "probability": 0.694284329600442
+          },
+          {
+            "class": "class_1",
+            "observation": 131,
+            "probability": 0.7241745997892367
+          },
+          {
+            "class": "class_2",
+            "observation": 132,
+            "probability": 0.8293458478295901
+          },
+          {
+            "class": "class_1",
+            "observation": 133,
+            "probability": 0.6775937789460136
+          },
+          {
+            "class": "class_1",
+            "observation": 134,
+            "probability": 0.7693103973418957
+          },
+          {
+            "class": "class_1",
+            "observation": 135,
+            "probability": 0.9782385041008868
+          },
+          {
+            "class": "class_2",
+            "observation": 136,
+            "probability": 0.8781369771220081
+          },
+          {
+            "class": "class_2",
+            "observation": 137,
+            "probability": 0.9805510662542559
+          },
+          {
+            "class": "class_2",
+            "observation": 138,
+            "probability": 0.9916691697165976
+          },
+          {
+            "class": "class_2",
+            "observation": 139,
+            "probability": 0.9742232900673168
+          },
+          {
+            "class": "class_1",
+            "observation": 140,
+            "probability": 0.7165939980809721
+          },
+          {
+            "class": "class_1",
+            "observation": 141,
+            "probability": 0.5756317197689612
+          },
+          {
+            "class": "class_2",
+            "observation": 142,
+            "probability": 0.9630534205056329
+          },
+          {
+            "class": "class_1",
+            "observation": 143,
+            "probability": 0.9966375433745972
+          },
+          {
+            "class": "class_2",
+            "observation": 144,
+            "probability": 0.8695475755459617
+          },
+          {
+            "class": "class_1",
+            "observation": 145,
+            "probability": 0.9533499225868864
+          },
+          {
+            "class": "class_2",
+            "observation": 146,
+            "probability": 0.8214813599013676
+          },
+          {
+            "class": "class_1",
+            "observation": 147,
+            "probability": 0.592589985782797
+          },
+          {
+            "class": "class_1",
+            "observation": 148,
+            "probability": 0.5374542826881091
+          },
+          {
+            "class": "class_1",
+            "observation": 149,
+            "probability": 0.9889084642371039
+          },
+          {
+            "class": "class_1",
+            "observation": 150,
+            "probability": 0.8981863067487408
+          },
+          {
+            "class": "class_2",
+            "observation": 151,
+            "probability": 0.9123631043696899
+          },
+          {
+            "class": "class_1",
+            "observation": 152,
+            "probability": 0.609286452560446
+          },
+          {
+            "class": "class_1",
+            "observation": 153,
+            "probability": 0.9447327286004814
+          },
+          {
+            "class": "class_1",
+            "observation": 154,
+            "probability": 0.6558983501251983
+          },
+          {
+            "class": "class_1",
+            "observation": 155,
+            "probability": 0.9439227403539019
+          },
+          {
+            "class": "class_1",
+            "observation": 156,
+            "probability": 0.5542638017601156
+          },
+          {
+            "class": "class_1",
+            "observation": 157,
+            "probability": 0.8302757936613228
+          },
+          {
+            "class": "class_1",
+            "observation": 158,
+            "probability": 0.5393107512779308
+          },
+          {
+            "class": "class_2",
+            "observation": 159,
+            "probability": 0.669730557591701
+          },
+          {
+            "class": "class_2",
+            "observation": 160,
+            "probability": 0.5928337678006733
+          },
+          {
+            "class": "class_2",
+            "observation": 161,
+            "probability": 0.947224333364849
+          },
+          {
+            "class": "class_2",
+            "observation": 162,
+            "probability": 0.5491055931044833
+          },
+          {
+            "class": "class_2",
+            "observation": 163,
+            "probability": 0.8544084657373242
+          },
+          {
+            "class": "class_1",
+            "observation": 164,
+            "probability": 0.7109772262779389
+          },
+          {
+            "class": "class_2",
+            "observation": 165,
+            "probability": 0.6476224098250197
+          },
+          {
+            "class": "class_2",
+            "observation": 166,
+            "probability": 0.7067582285168725
+          },
+          {
+            "class": "class_1",
+            "observation": 167,
+            "probability": 0.5650785260135108
+          }
+        ],
+        "method_version": "fimix_pls_v1",
+        "starts": 6,
+        "warnings": [
+          "FIMIX-PLS v1 is experimental; this preview uses deterministic finite-mixture style score-space segmentation with information criteria and requires external validation before publication use."
+        ]
+      },
+      "gsca": null,
+      "ipma": null,
+      "iterations": 3,
+      "mediation": {
+        "estimates": [
+          {
+            "classification": "direct_only",
+            "direct": 0.2316407872521849,
+            "indirect": 0.0,
+            "source": "x",
+            "target": "y",
+            "total": 0.2316407872521849,
+            "variance_accounted_for": 0.0,
+            "warning": "direct-only structural effect; no mediated component exceeds tolerance"
+          }
+        ],
+        "method_version": "pls_mediation_v1",
+        "tolerance": 1e-12,
+        "warnings": [
+          "Mediation classes are descriptive effect-decomposition labels; publication inference requires validated bootstrap or permutation intervals for the relevant indirect effect."
+        ]
+      },
+      "method_version": "plspredict_holdout_v1",
+      "mga": null,
+      "mga_permutation": null,
+      "micom": null,
+      "moderated_mediation": null,
+      "moderation": {
+        "estimates": [],
+        "method_version": "pls_two_stage_moderation_v1",
+        "moderator_score_levels": [
+          -1.0,
+          0.0,
+          1.0
+        ],
+        "warnings": []
+      },
+      "nca": null,
+      "nonlinear_effects": null,
+      "omitted_observations": 0,
+      "outer_estimates": [
+        {
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9994985998694257,
+          "weight": 0.4988133352169922
+        },
+        {
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9995043258032174,
+          "weight": 0.5016854423831084
+        },
+        {
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9988919982242311,
+          "weight": 0.48983863461496213
+        },
+        {
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9989828052177092,
+          "weight": 0.5112241219714818
+        }
+      ],
+      "paths": [
+        {
+          "coefficient": 0.2316407872521849,
+          "source": "x",
+          "target": "y"
+        }
+      ],
+      "pca": null,
+      "plsc": null,
+      "predict": {
+        "benchmark": "training-mean construct-score benchmark fixed at zero; optional LM benchmark predicts target construct scores from predecessor indicators",
+        "method_version": "plspredict_holdout_v1",
+        "repeated_kfold": {
+          "assignment": "deterministic_complete_case_index_multiplier_modulo_5",
+          "cvpat": [
+            {
+              "comparison": "pls_vs_training_mean_benchmark",
+              "loss": "squared_error_difference_pls_minus_comparison",
+              "mean_loss_difference": -0.029726263604753066,
+              "observations": 504,
+              "p_value_two_sided": 0.47876198821047256,
+              "preferred_model": "pls",
+              "standard_error": 0.04193743039624262,
+              "t_statistic": -0.7088241535994629,
+              "target": "y",
+              "warning": null
+            },
+            {
+              "comparison": "pls_vs_lm_benchmark",
+              "loss": "squared_error_difference_pls_minus_comparison",
+              "mean_loss_difference": -0.024996824313304872,
+              "observations": 504,
+              "p_value_two_sided": 0.000027356992347904452,
+              "preferred_model": "pls",
+              "standard_error": 0.005904528968700345,
+              "t_statistic": -4.2335001565428785,
+              "target": "y",
+              "warning": null
+            }
+          ],
+          "folds": 5,
+          "method_version": "plspredict_repeated_kfold_v1",
+          "repeats": 3,
+          "targets": [
+            {
+              "construct": "y",
+              "mae_benchmark": 0.7433415343183348,
+              "mae_lm": 0.708224955994857,
+              "mae_pls": 0.7020855164216353,
+              "predictor_count": 1,
+              "q_squared_predict": 0.028589900523452116,
+              "q_squared_predict_lm": 0.004548644278744685,
+              "rmse_benchmark": 1.0196798569526293,
+              "rmse_lm": 1.0173581332959825,
+              "rmse_pls": 1.0049978841122909
+            }
+          ],
+          "total_test_observations": 504,
+          "warnings": [
+            "Repeated k-fold PLSpredict and CVPAT are experimental; fold assignment is deterministic for reproducibility and is not yet a seeded randomized plan."
+          ]
+        },
+        "split": "deterministic_complete_case_modulo_4_test_rows",
+        "targets": [
+          {
+            "construct": "y",
+            "mae_benchmark": 0.6345704524056539,
+            "mae_lm": 0.5939266812608446,
+            "mae_pls": 0.586770112112475,
+            "predictor_count": 1,
+            "q_squared_predict": 0.1431059140626273,
+            "q_squared_predict_lm": 0.13891623898717986,
+            "rmse_benchmark": 0.8781561568081863,
+            "rmse_lm": 0.8148814846142455,
+            "rmse_pls": 0.8128966302843248
+          }
+        ],
+        "test_observations": 42,
+        "training_observations": 126,
+        "warnings": [
+          "PLSpredict holdout v1 is experimental; it uses deterministic holdout plus bounded repeated 5-fold prediction, construct-score LM benchmarks, paired-loss benchmark CVPAT diagnostics, and metadata-configured drop-path model-pair CVPAT, but does not yet implement separate saved-model CVPAT or indicator-level PLSpredict tables."
+        ]
+      },
+      "r_squared": {
+        "y": 0.0536574543188123
+      },
+      "regression": null,
+      "segmentation": {
+        "algorithm": "deterministic_multi_segment_score_space_sse_partition",
+        "assignment": "6 deterministic starts; 3 segments; minimum segment size 17",
+        "max_path_separation": 0.5400494471271643,
+        "memberships": [
+          {
+            "observation": 0,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 1,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 2,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 3,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 4,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 5,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 6,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 7,
+            "segment": "segment_3"
+          },
+          {
+            "observation": 8,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 9,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 10,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 11,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 12,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 13,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 14,
+            "segment": "segment_3"
+          },
+          {
+            "observation": 15,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 16,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 17,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 18,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 19,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 20,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 21,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 22,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 23,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 24,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 25,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 26,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 27,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 28,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 29,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 30,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 31,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 32,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 33,
+            "segment": "segment_3"
+          },
+          {
+            "observation": 34,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 35,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 36,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 37,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 38,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 39,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 40,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 41,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 42,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 43,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 44,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 45,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 46,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 47,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 48,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 49,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 50,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 51,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 52,
+            "segment": "segment_3"
+          },
+          {
+            "observation": 53,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 54,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 55,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 56,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 57,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 58,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 59,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 60,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 61,
+            "segment": "segment_3"
+          },
+          {
+            "observation": 62,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 63,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 64,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 65,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 66,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 67,
+            "segment": "segment_3"
+          },
+          {
+            "observation": 68,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 69,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 70,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 71,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 72,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 73,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 74,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 75,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 76,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 77,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 78,
+            "segment": "segment_3"
+          },
+          {
+            "observation": 79,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 80,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 81,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 82,
+            "segment": "segment_3"
+          },
+          {
+            "observation": 83,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 84,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 85,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 86,
+            "segment": "segment_3"
+          },
+          {
+            "observation": 87,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 88,
+            "segment": "segment_3"
+          },
+          {
+            "observation": 89,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 90,
+            "segment": "segment_3"
+          },
+          {
+            "observation": 91,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 92,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 93,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 94,
+            "segment": "segment_3"
+          },
+          {
+            "observation": 95,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 96,
+            "segment": "segment_3"
+          },
+          {
+            "observation": 97,
+            "segment": "segment_3"
+          },
+          {
+            "observation": 98,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 99,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 100,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 101,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 102,
+            "segment": "segment_3"
+          },
+          {
+            "observation": 103,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 104,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 105,
+            "segment": "segment_3"
+          },
+          {
+            "observation": 106,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 107,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 108,
+            "segment": "segment_3"
+          },
+          {
+            "observation": 109,
+            "segment": "segment_3"
+          },
+          {
+            "observation": 110,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 111,
+            "segment": "segment_3"
+          },
+          {
+            "observation": 112,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 113,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 114,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 115,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 116,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 117,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 118,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 119,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 120,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 121,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 122,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 123,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 124,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 125,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 126,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 127,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 128,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 129,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 130,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 131,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 132,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 133,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 134,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 135,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 136,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 137,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 138,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 139,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 140,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 141,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 142,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 143,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 144,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 145,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 146,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 147,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 148,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 149,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 150,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 151,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 152,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 153,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 154,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 155,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 156,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 157,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 158,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 159,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 160,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 161,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 162,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 163,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 164,
+            "segment": "segment_1"
+          },
+          {
+            "observation": 165,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 166,
+            "segment": "segment_2"
+          },
+          {
+            "observation": 167,
+            "segment": "segment_1"
+          }
+        ],
+        "method_version": "pls_pos_v1",
+        "min_segment_share": 0.1130952380952381,
+        "objective": 50.69752385969896,
+        "objective_history": [
+          {
+            "iteration": 0,
+            "objective": 50.69752385969896,
+            "start": 0
+          }
+        ],
+        "objective_improvement": 0.6792091948425426,
+        "observations": 168,
+        "pooled_objective": 158.03920512875837,
+        "requested_segments": 3,
+        "segment_size_imbalance": 0.34523809523809523,
+        "segments": [
+          {
+            "observations": 77,
+            "paths": [
+              {
+                "coefficient": 0.023413757305051932,
+                "source": "x",
+                "target": "y"
+              }
+            ],
+            "r_squared": {
+              "y": 0.0013241830487226158
+            },
+            "segment": "segment_1",
+            "share": 0.4583333333333333
+          },
+          {
+            "observations": 72,
+            "paths": [
+              {
+                "coefficient": 0.5634632044322162,
+                "source": "x",
+                "target": "y"
+              }
+            ],
+            "r_squared": {
+              "y": 0.5332559053327112
+            },
+            "segment": "segment_2",
+            "share": 0.42857142857142855
+          },
+          {
+            "observations": 19,
+            "paths": [
+              {
+                "coefficient": 0.1425671793866839,
+                "source": "x",
+                "target": "y"
+              }
+            ],
+            "r_squared": {
+              "y": 0.0812424398647259
+            },
+            "segment": "segment_3",
+            "share": 0.1130952380952381
+          }
+        ],
+        "selected_segments": 3,
+        "warnings": [
+          "PLS-POS v1 is experimental; this preview uses deterministic score-space partitioning and must not be used as publication-ready full PLS-POS evidence."
+        ]
+      },
+      "transforms": [
+        {
+          "indicator": "x1",
+          "mean": -0.08388360119345238,
+          "scale": 1.0742730617345955
+        },
+        {
+          "indicator": "x2",
+          "mean": -0.06966842870892857,
+          "scale": 1.00052234621257
+        },
+        {
+          "indicator": "y1",
+          "mean": -0.049247916093452374,
+          "scale": 0.6910794505604272
+        },
+        {
+          "indicator": "y2",
+          "mean": -0.04751904259226193,
+          "scale": 0.6342638657112387
+        }
+      ],
+      "used_observations": 168,
+      "warnings": [
+        "PLSpredict holdout v1 is experimental and must not be treated as publication-validated.",
+        "PLS-POS v1 is experimental; this preview uses deterministic score-space partitioning and must not be used as publication-ready full PLS-POS evidence.",
+        "FIMIX-PLS v1 is experimental; this preview uses deterministic finite-mixture style score-space segmentation with information criteria and requires external validation before publication use."
+      ],
+      "wpls": null
+    },
+    "assessment": {
+      "blindfolding": {
+        "constructs": [
+          {
+            "construct": "y",
+            "observation_sum_squares": 437.8055707713266,
+            "prediction_error_sum_squares": 418.2680184985037,
+            "q_squared": 0.04462609335555412
+          }
+        ],
+        "settings": {
+          "missing_value_treatment": "indicator_mean_replacement",
+          "omission_distance": 5,
+          "selection": "preferred_7_then_smallest_valid_5_to_12"
+        }
+      },
+      "construct_quality": [
+        {
+          "ave": 0.9990031742201432,
+          "construct": "x",
+          "cronbach_alpha": 0.9990021877897513,
+          "normalized_weight_norm_squared": 0.500503026489435,
+          "off_diagonal_denominator": 0.12524751114731295,
+          "off_diagonal_numerator": 0.4994969735105652,
+          "rho_a": 0.9990268775088158,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.9995013385707835,
+          "score_variance_before_normalization": 0.9999999999999993
+        },
+        {
+          "ave": 0.9978759346185204,
+          "construct": "y",
+          "cronbach_alpha": 0.9978723843337809,
+          "normalized_weight_norm_squared": 0.5012919908469631,
+          "off_diagonal_denominator": 0.1254176742105384,
+          "off_diagonal_numerator": 0.4987080091530369,
+          "rho_a": 0.9992384384719583,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.9989368381944755,
+          "score_variance_before_normalization": 0.9999999999999996
+        }
+      ],
+      "cross_loadings": [
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9994985998694248
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x1",
+          "loading": 0.23085877116869516
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9995043258032178
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x2",
+          "loading": 0.23218802819572004
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y1",
+          "loading": 0.22634833394612613
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9988919982242316
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y2",
+          "loading": 0.2362303013772495
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9989828052177079
+        }
+      ],
+      "f_squared": [
+        {
+          "excluded_r_squared": 0.0,
+          "f_squared": 0.05669982245191046,
+          "included_r_squared": 0.0536574543188123,
+          "source_construct": "x",
+          "target_construct": "y"
+        }
+      ],
+      "formative_indicator_vif": [],
+      "fornell_larcker": {
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "values": [
+          [
+            0.9995014628404219,
+            0.23164078725218487
+          ],
+          [
+            0.23164078725218487,
+            0.9989374027528053
+          ]
+        ]
+      },
+      "htmt": null,
+      "htmt_original": {
+        "absolute_correlations": false,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.23189574863883264
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.23189574863883264
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_original_method_version": "henseler_et_al_htmt_v1",
+      "htmt_plus": {
+        "absolute_correlations": true,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.23189574863883264
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.23189574863883264
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
+      "method_version": "pls_assessment_v7",
+      "model_fit": {
+        "estimated": {
+          "d_uls": 0.00010445178831972319,
+          "srmr": 0.003231900189048591
+        },
+        "saturated": {
+          "d_uls": 0.00010445178831972316,
+          "srmr": 0.003231900189048591
+        }
+      },
+      "r_squared": {
+        "y": 0.0536574543188123
+      },
+      "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
+      "structural_quality": [
+        {
+          "adjusted_r_squared": 0.04795659560988952,
+          "construct": "y",
+          "predictor_count": 1,
+          "r_squared": 0.0536574543188123
+        }
+      ],
+      "structural_vif": [
+        {
+          "predictor_construct": "x",
+          "target_construct": "y",
+          "vif": 1.0
+        }
+      ],
+      "warnings": [
+        "rho_a.two_indicator_limited_information for construct 'x'",
+        "rho_a.two_indicator_limited_information for construct 'y'"
+      ]
+    }
+  }
+}

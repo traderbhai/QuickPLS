@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "schema_version": 1,
+  "target": "v0.8 extended methods experimental preview",
+  "selected_section": "all",
+  "tolerance": 1e-06,
+  "checks": {
+    "pca": {
+      "passed": true,
+      "method_version": "pca_v1",
+      "max_abs_difference": 6.661338147750939e-16,
+      "retained_components": 3
+    },
+    "ols": {
+      "passed": true,
+      "method_version": "regression_ols_v1",
+      "max_abs_difference": 1.6653345369377348e-15
+    },
+    "logistic": {
+      "passed": true,
+      "method_version": "regression_logistic_v1",
+      "max_abs_difference": 2.220446049250313e-16
+    },
+    "process": {
+      "passed": true,
+      "method_version": "regression_process_v1",
+      "max_abs_difference": 6.106226635438361e-16
+    },
+    "nca": {
+      "passed": true,
+      "method_version": "nca_v1",
+      "max_abs_difference": 0.0,
+      "bottleneck_monotonic": true
+    },
+    "gsca": {
+      "passed": true,
+      "method_version": "gsca_v1",
+      "paths": 1,
+      "weights": 5,
+      "fit": 0.5874516116264552
+    }
+  },
+  "note": "v0.8 methods are experimental and watermarked; this is bounded reference evidence, not publication validation."
+}

@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "target": "v0.3 PLS publication audit",
+  "passed": true,
+  "references": {
+    "csem": {
+      "path": "validation/results/pls_csem_comparison.json",
+      "passed": true
+    },
+    "plspm": {
+      "path": "validation/results/pls_plspm_comparison.json",
+      "passed": true
+    },
+    "numpy_pca": {
+      "path": "validation/results/pls_pca_numpy_comparison.json",
+      "passed": true
+    },
+    "published_csem": {
+      "path": "validation/results/pls_csem_threecommonfactors_comparison.json",
+      "passed": true
+    }
+  },
+  "stable_export": {
+    "path": "validation\\results\\pls_publication_stable_export.csv",
+    "exists": true,
+    "contains_scope_warning": false,
+    "contains_stable_scope_note": true,
+    "contains_assessment_rows": true
+  },
+  "benchmark": {
+    "profile": "bounded_smoke",
+    "elapsed_seconds": 0.0744,
+    "command_passed": true,
+    "future_maximum_profile": "100000 rows, 300 indicators, 100 constructs, 10000 resamples remains in the release performance blocker"
+  },
+  "known_differences": {
+    "path": "docs/KNOWN_DIFFERENCES.md",
+    "present": true
+  },
+  "commands": [
+    {
+      "command": [
+        "cargo",
+        "build",
+        "-p",
+        "qpls-cli"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "elapsed_seconds": 2.3233,
+      "stdout_tail": "",
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.15s\n"
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "export",
+        "validation/results/pls_quickpls_path_mode_a.json",
+        "--format",
+        "csv",
+        "--output",
+        "validation\\results\\pls_publication_stable_export.csv"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "elapsed_seconds": 0.0442,
+      "stdout_tail": "wrote v0.3 estimator-only export validation\\results\\pls_publication_stable_export.csv\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "D:\\QuickPLS\\target\\debug\\qpls.exe",
+        "run",
+        "validation/fixtures/simple_reflective.recipe.json",
+        "--data",
+        "validation/fixtures/simple_reflective.csv",
+        "--output",
+        "validation/results/pls_publication_benchmark_quickpls.json",
+        "--allow-experimental"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "elapsed_seconds": 0.0744,
+      "stdout_tail": "wrote analysis result validation/results/pls_publication_benchmark_quickpls.json\n",
+      "stderr_tail": ""
+    }
+  ]
+}

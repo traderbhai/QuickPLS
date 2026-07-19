@@ -1,0 +1,591 @@
+{
+  "schema_version": 1,
+  "id": "a2e4d2d8-e76c-49be-a75b-e242d34685b5",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "00000000-0000-0000-0000-000000006601",
+    "dataset_fingerprint": "v2:377248715b14dccaba386c40ae986c34792dcc3ff8b7d11476abfd91ebdce4c0",
+    "method": "pls_pm",
+    "method_version": "pls_pm_v1+pls_mediation_v1+pls_assessment_v7",
+    "engine_version": "0.3.0-alpha.1",
+    "seed": 20260719,
+    "settings": {
+      "method": "pls_pm",
+      "weighting_scheme": "path",
+      "tolerance": 1e-7,
+      "max_iterations": 3000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260719,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion",
+      "case_weight_column": null
+    },
+    "started_at": "2026-07-19T06:07:45.386573Z",
+    "completed_at": "2026-07-19T06:07:45.403870100Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.two_indicator_limited_information for construct 'x'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.two_indicator_limited_information for construct 'y'"
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "cca": null,
+      "construct_scores": {
+        "x": [
+          1.1223562703180097,
+          1.395456135255707,
+          0.5770287447376461,
+          1.8741943242047718,
+          -1.5125190659517087,
+          1.5314105204145223,
+          -2.3187106064261207,
+          1.2543704216244158,
+          0.4613706591981238,
+          0.5762105098026111,
+          -1.2436871543068388,
+          0.7866513605227533,
+          -0.468920695566011,
+          -0.6667273510026152,
+          2.5746122148055846,
+          1.3697890679371805,
+          -0.8147661446205914,
+          0.15266276766263726,
+          -1.0316355433740634,
+          -0.5280014732534271,
+          0.3919313039728974,
+          -0.17930942395991578,
+          2.0512828446003515,
+          0.3216323462884045,
+          -1.2608591751886309,
+          -0.9775159926017076,
+          -0.11382739514408119,
+          1.3847145864835284,
+          -1.0955972210545073,
+          0.43554151733172713,
+          1.2859202852312368,
+          -0.8718854233464735,
+          -0.7413944553715445,
+          -0.44087839546903984,
+          -0.8314919977284804,
+          1.1203927188979708,
+          -0.6346884662176322,
+          0.4292720241632397,
+          -0.11607899693562679,
+          -1.2858982523920133,
+          -0.46055586642907964,
+          1.633001621074152,
+          0.47148445279142476,
+          1.91827936041929,
+          -1.6776600758206488,
+          1.1667480458306678,
+          -0.5474697057725322,
+          -0.7603811631300895,
+          -0.0068968135824306566,
+          0.3230265639679028,
+          0.39637806174294643,
+          -1.0079944285876234,
+          -0.5678789022151622,
+          -0.27411824607550983,
+          -0.04831085503067685,
+          -0.3477770213269543,
+          0.9412592977202994,
+          1.411327617555744,
+          -0.8370167765481186,
+          -0.14304131348743016,
+          0.3306430132063597,
+          0.15826766239790888,
+          0.5554007618312903,
+          -0.06274660939891122,
+          -0.26789113623709404,
+          0.3618713740593739,
+          -0.8915118550526147,
+          1.5328820038003264,
+          -2.1242515950745275,
+          0.4553372155226195,
+          -1.581935012683867,
+          -0.7127951957962301,
+          -1.0295593111826704,
+          0.39681837903371925,
+          -0.31049624770100803,
+          -0.8472140784886751,
+          2.2982961517718246,
+          -0.8543153642247964,
+          -0.2527313454056303,
+          -1.0689449035955576,
+          -0.6890653031948745,
+          -0.688964749334808,
+          -1.1195117292630021,
+          0.03300904642863687,
+          -0.1001452176479438,
+          0.6604980780747665,
+          0.05429313449716144,
+          0.3951718354527668,
+          0.7887656435126668,
+          0.39094735987152485,
+          -0.6879681850336364,
+          1.2078829098857655,
+          -0.78089954182507,
+          -0.022536769668559314,
+          -0.42175121505219826,
+          -0.6496604501234973
+        ],
+        "y": [
+          1.0987272643189507,
+          1.456309939104073,
+          0.5137160819114648,
+          1.7346154745736952,
+          -1.385911783054248,
+          1.4769943917637545,
+          -2.09192413814624,
+          1.0317218346075405,
+          0.5302657538147684,
+          0.7723713183253885,
+          -1.3529213206731447,
+          0.5025727367247611,
+          -0.45242691340855773,
+          -0.7978603936994061,
+          2.3784132078916898,
+          1.7171889650588341,
+          -0.7513183441448587,
+          0.24593307061544956,
+          -0.9204877290439895,
+          -0.3921414645987407,
+          0.5551821963900738,
+          -0.3738430137203412,
+          2.230818763767756,
+          -0.19325454272125825,
+          -1.2851378486328413,
+          -1.0310374887737077,
+          0.07415574881358693,
+          1.6599668429335523,
+          -1.031788539321651,
+          0.19362278801658891,
+          1.3582780450855718,
+          -0.972110646960497,
+          -1.1030935903311851,
+          -0.32815342109475326,
+          -0.5238749866228145,
+          0.7965640141908934,
+          -0.4532272418071791,
+          0.4956142689586053,
+          -0.35065752441818004,
+          -0.8504702392085204,
+          -0.5265278620507502,
+          1.644052274406022,
+          0.637586677989575,
+          1.6066734692509625,
+          -1.711335444029382,
+          1.272651286801097,
+          -0.9846221204656789,
+          -0.4721036135453276,
+          0.08645847862955718,
+          0.20468426466019965,
+          0.29757768392445333,
+          -1.0553229762813143,
+          -0.6348965060679951,
+          -0.5857968257198517,
+          0.13728422370239654,
+          -0.011439789773343687,
+          1.113199219513197,
+          1.0535825472499805,
+          -0.5858296605237956,
+          -0.4174813819381876,
+          0.18505906930912577,
+          0.18513929548876387,
+          0.9195572371813878,
+          -0.24611241941268203,
+          -0.18097023580596022,
+          0.5441582503758354,
+          -0.8201403088767355,
+          1.2402740423798624,
+          -2.0414413182612217,
+          0.5161452961281898,
+          -1.5348351391984998,
+          -0.7732730969300483,
+          -0.7648654267741246,
+          0.5391547337819148,
+          -0.5208431239099012,
+          -0.8142684822608196,
+          2.489703147710685,
+          -0.5143438626101142,
+          -0.461027720761728,
+          -0.9957500556792268,
+          -0.5944226853272441,
+          -0.8006127456290768,
+          -1.2131958080110663,
+          0.010490153490124436,
+          -0.5293290274059803,
+          0.41282857107604926,
+          -0.2770172925349068,
+          0.6537048682437211,
+          0.9733949534287136,
+          0.1803948781661556,
+          -0.6153108125669546,
+          1.5964932254451354,
+          -1.1836650717379742,
+          0.328412308339149,
+          -0.5697689320768287,
+          -0.5735019469904178
+        ]
+      },
+      "control_estimates": [],
+      "converged": true,
+      "cta_pls": null,
+      "effects": [
+        {
+          "direct": 0.9770947517891612,
+          "indirect": 0.0,
+          "source": "x",
+          "target": "y",
+          "total": 0.9770947517891612
+        }
+      ],
+      "endogeneity": null,
+      "iterations": 2,
+      "mediation": {
+        "estimates": [
+          {
+            "classification": "direct_only",
+            "direct": 0.9770947517891612,
+            "indirect": 0.0,
+            "source": "x",
+            "target": "y",
+            "total": 0.9770947517891612,
+            "variance_accounted_for": 0.0,
+            "warning": "direct-only structural effect; no mediated component exceeds tolerance"
+          }
+        ],
+        "method_version": "pls_mediation_v1",
+        "tolerance": 1e-12,
+        "warnings": [
+          "Mediation classes are descriptive effect-decomposition labels; publication inference requires validated bootstrap or permutation intervals for the relevant indirect effect."
+        ]
+      },
+      "method_version": "pls_pm_v1",
+      "moderated_mediation": null,
+      "moderation": {
+        "estimates": [],
+        "method_version": "pls_two_stage_moderation_v1",
+        "moderator_score_levels": [
+          -1.0,
+          0.0,
+          1.0
+        ],
+        "warnings": []
+      },
+      "nonlinear_effects": null,
+      "omitted_observations": 0,
+      "outer_estimates": [
+        {
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9995197067703522,
+          "weight": 0.5005357081503768
+        },
+        {
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9995185715880954,
+          "weight": 0.4999453836735464
+        },
+        {
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.999407637327649,
+          "weight": 0.5006276321332648
+        },
+        {
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9994060676963658,
+          "weight": 0.49996586686780636
+        }
+      ],
+      "paths": [
+        {
+          "coefficient": 0.9770947517891612,
+          "source": "x",
+          "target": "y"
+        }
+      ],
+      "plsc": null,
+      "predict": null,
+      "r_squared": {
+        "y": 0.9547141539739222
+      },
+      "segmentation": null,
+      "transforms": [
+        {
+          "indicator": "x1",
+          "mean": 0.11723827645833333,
+          "scale": 0.9371563434688898
+        },
+        {
+          "indicator": "x2",
+          "mean": 0.09422229635416667,
+          "scale": 0.8613762066827172
+        },
+        {
+          "indicator": "y1",
+          "mean": 0.2915071026041666,
+          "scale": 0.8416900584623742
+        },
+        {
+          "indicator": "y2",
+          "mean": 0.25944189656250005,
+          "scale": 0.7542183519131452
+        }
+      ],
+      "used_observations": 96,
+      "warnings": [],
+      "wpls": null
+    },
+    "assessment": {
+      "blindfolding": {
+        "constructs": [
+          {
+            "construct": "y",
+            "observation_sum_squares": 234.16189617851313,
+            "prediction_error_sum_squares": 18.034677389079803,
+            "q_squared": 0.9229820150784435
+          }
+        ],
+        "settings": {
+          "missing_value_treatment": "indicator_mean_replacement",
+          "omission_distance": 7,
+          "selection": "preferred_7_then_smallest_valid_5_to_12"
+        }
+      },
+      "construct_quality": [
+        {
+          "ave": 0.9990385095858987,
+          "construct": "x",
+          "cronbach_alpha": 0.9990375845674253,
+          "normalized_weight_norm_squared": 0.5004813817900887,
+          "off_diagonal_denominator": 0.12524063235007166,
+          "off_diagonal_numerator": 0.4995186182099116,
+          "rho_a": 0.9990386276717558,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.9995190235658338,
+          "score_variance_before_normalization": 1.0000000000000002
+        },
+        {
+          "ave": 0.9988140568485733,
+          "construct": "y",
+          "cronbach_alpha": 0.9988126492368137,
+          "normalized_weight_norm_squared": 0.5005938940882364,
+          "off_diagonal_denominator": 0.1252969041725889,
+          "off_diagonal_numerator": 0.4994061059117639,
+          "rho_a": 0.9988139594024482,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.9994066766003751,
+          "score_variance_before_normalization": 1.0000000000000007
+        }
+      ],
+      "cross_loadings": [
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9995197067703513
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x1",
+          "loading": 0.9772008136832995
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9995185715880949
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x2",
+          "loading": 0.9760483173612041
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y1",
+          "loading": 0.9771606041080838
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9994076373276483
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y2",
+          "loading": 0.975868923607188
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9994060676963651
+        }
+      ],
+      "f_squared": [
+        {
+          "excluded_r_squared": 0.0,
+          "f_squared": 21.081954688980566,
+          "included_r_squared": 0.9547141539739222,
+          "source_construct": "x",
+          "target_construct": "y"
+        }
+      ],
+      "formative_indicator_vif": [],
+      "fornell_larcker": {
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "values": [
+          [
+            0.999519139179385,
+            0.9770947517891607
+          ],
+          [
+            0.9770947517891607,
+            0.9994068525123155
+          ]
+        ]
+      },
+      "htmt": null,
+      "htmt_original": {
+        "absolute_correlations": false,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.9781453827405695
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.9781453827405695
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_original_method_version": "henseler_et_al_htmt_v1",
+      "htmt_plus": {
+        "absolute_correlations": true,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.9781453827405695
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.9781453827405695
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
+      "method_version": "pls_assessment_v7",
+      "model_fit": {
+        "estimated": {
+          "d_uls": 5.342111149942058e-6,
+          "srmr": 0.0007308974722860968
+        },
+        "saturated": {
+          "d_uls": 5.342111149942056e-6,
+          "srmr": 0.0007308974722860968
+        }
+      },
+      "r_squared": {
+        "y": 0.9547141539739222
+      },
+      "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
+      "structural_quality": [
+        {
+          "adjusted_r_squared": 0.9542323896544959,
+          "construct": "y",
+          "predictor_count": 1,
+          "r_squared": 0.9547141539739222
+        }
+      ],
+      "structural_vif": [
+        {
+          "predictor_construct": "x",
+          "target_construct": "y",
+          "vif": 1.0
+        }
+      ],
+      "warnings": [
+        "rho_a.two_indicator_limited_information for construct 'x'",
+        "rho_a.two_indicator_limited_information for construct 'y'"
+      ]
+    }
+  }
+}

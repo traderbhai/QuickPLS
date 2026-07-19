@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "target": "v0.7 CB-SEM/CFA publication audit",
+  "passed": true,
+  "section_coverage": {
+    "cfa": true,
+    "sem": true,
+    "fit": true,
+    "mi": true,
+    "bootstrap": true,
+    "multigroup": true,
+    "export": true,
+    "guard": true
+  },
+  "lavaan_coverage": {
+    "status_passed": true,
+    "model_count": 6,
+    "all_models_passed": true
+  },
+  "docs": [
+    {
+      "path": "docs\\methods\\CBSEM_ML_V1.md",
+      "present": true,
+      "bytes": 1760
+    },
+    {
+      "path": "docs\\methods\\CFA_ML_V1.md",
+      "present": true,
+      "bytes": 1334
+    },
+    {
+      "path": "docs\\methods\\CBSEM_FIT_V1.md",
+      "present": true,
+      "bytes": 1037
+    },
+    {
+      "path": "docs\\methods\\CBSEM_MODIFICATION_INDICES_V1.md",
+      "present": true,
+      "bytes": 930
+    },
+    {
+      "path": "docs\\methods\\CBSEM_MULTIGROUP_INVARIANCE_V1.md",
+      "present": true,
+      "bytes": 887
+    }
+  ],
+  "commands": [
+    {
+      "command": [
+        "npm.cmd",
+        "run",
+        "qpls:v07:validate"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "stdout_tail": "013513111043848\n    },\n    \"sem\": {\n      \"paths\": 3,\n      \"chi_square\": 16.52942197552889\n    },\n    \"fit\": {\n      \"df\": 24,\n      \"cfi\": 1.0,\n      \"rmsea\": 0.0\n    },\n    \"mi\": {\n      \"candidates\": 50,\n      \"top_mi\": 0.15789617650863985\n    },\n    \"bootstrap\": {\n      \"intervals\": 21\n    },\n    \"multigroup\": {\n      \"groups\": 2,\n      \"steps\": [\n        \"configural\",\n        \"metric\",\n        \"scalar\"\n      ]\n    },\n    \"export\": {\n      \"export_bytes\": 38389\n    },\n    \"guard\": {\n      \"guard_code\": \"cbsem.reflective_only\"\n    }\n  }\n}\n{\n  \"status\": \"passed\",\n  \"models\": [\n    {\n      \"model\": \"one_factor_cfa\",\n      \"matched_parameters\": 7,\n      \"max_estimate_delta\": 1.6937576785558406e-08,\n      \"max_standard_error_delta\": 1.2584340236543312e-09,\n      \"max_z_delta\": 3.0688406571499627e-07,\n      \"max_p_delta\": 7.280842595491777e-13,\n      \"max_standardized_delta\": 1.1398395449724319e-08,\n      \"max_fit_delta\": 2.4560701130850177e-09,\n      \"passed\": true\n    },\n    {\n      \"model\": \"two_factor_cfa\",\n      \"matched_parameters\": 15,\n      \"max_estimate_delta\": 8.537530893359957e-08,\n      \"max_standard_error_delta\": 7.258439849167075e-09,\n      \"max_z_delta\": 3.4753875581827742e-06,\n      \"max_p_delta\": 2.675508703475771e-10,\n      \"max_standardized_delta\": 5.3091318508169394e-08,\n      \"max_fit_delta\": 6.2049907365024914e-09,\n      \"passed\": true\n    },\n    {\n      \"model\": \"three_factor_cfa\",\n      \"matched_parameters\": 24,\n      \"max_estimate_delta\": 5.609642284021277e-08,\n      \"max_standard_error_delta\": 5.740573377766012e-09,\n      \"max_z_delta\": 1.89370128111932e-06,\n      \"max_p_delta\": 5.867262231618042e-11,\n      \"max_standardized_delta\": 5.4851161168656404e-08,\n      \"max_fit_delta\": 5.057917140671719e-10,\n      \"passed\": true\n    },\n    {\n      \"model\": \"latent_regression_sem\",\n      \"matched_parameters\": 24,\n      \"max_estimate_delta\": 9.85340856685113e-08,\n      \"max_standard_error_delta\": 9.981841873896169e-09,\n      \"max_z_delta\": 4.208637903957424e-06,\n      \"max_p_delta\": 1.3988921132579435e-10,\n      \"max_standardized_delta\": 8.34888540524048e-08,\n      \"max_fit_delta\": 3.751667261575609e-09,\n      \"passed\": true\n    },\n    {\n      \"model\": \"latent_mediation_sem\",\n      \"matched_parameters\": 24,\n      \"max_estimate_delta\": 2.182780940440665e-07,\n      \"max_standard_error_delta\": 2.8359076018058538e-08,\n      \"max_z_delta\": 1.179546566731915e-05,\n      \"max_p_delta\": 3.537765635996948e-10,\n      \"max_standardized_delta\": 1.673439770089047e-07,\n      \"max_fit_delta\": 6.014413335420077e-09,\n      \"passed\": true\n    },\n    {\n      \"model\": \"correlated_exogenous_sem\",\n      \"matched_parameters\": 24,\n      \"max_estimate_delta\": 5.462345956663839e-07,\n      \"max_standard_error_delta\": 5.0223601028021037e-08,\n      \"max_z_delta\": 8.470334012855574e-06,\n      \"max_p_delta\": 8.26472223991459e-11,\n      \"max_standardized_delta\": 2.809076414811429e-07,\n      \"max_fit_delta\": 6.328363614388488e-10,\n      \"passed\": true\n    }\n  ]\n}\n",
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.10s\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.34s\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "run",
+        "-p",
+        "qpls-cli",
+        "--",
+        "evidence",
+        "v07-cbsem"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "stdout_tail": "wrote D:\\QuickPLS\\validation/results/v07_cbsem_evidence.json | artifacts_present=true validation_status=passed open_gates=0\n",
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.55s\n     Running `target\\debug\\qpls.exe evidence v07-cbsem`\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "qpls-estimation"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 20 tests\ntest pls::tests::benchmark_target_shape_100k_300_100 ... ignored, release performance qualification\ntest pls::tests::mediation_classifier_covers_descriptive_effect_patterns ... ok\ntest pls::tests::cycles_and_constant_indicators_are_rejected ... ok\ntest pls::tests::execution_control_reports_progress_and_cancels_inside_iteration ... ok\ntest pls::tests::iteration_limit_produces_no_completed_result ... ok\ntest pls::tests::hybrid_higher_order_splits_component_indicator_blocks ... ok\ntest pls::tests::control_estimates_mirror_declared_structural_paths ... ok\ntest pls::tests::agrees_with_python_plspm_reference_fixture ... ok\ntest pls::tests::execution_rejects_wrong_dispatch_resampling_and_malformed_models ... ok\ntest pls::tests::factor_single_item_and_preprocessing_modes_are_supported ... ok\ntest pls::tests::indicator_order_does_not_change_paths ... ok\ntest pls::tests::reflective_path_model_converges_and_decomposes_effects ... ok\ntest pls::tests::three_construct_path_model_reports_indirect_only_mediation ... ok\ntest pls::tests::repeated_indicator_higher_order_expands_component_blocks ... ok\ntest pls::tests::two_stage_higher_order_uses_component_scores_as_indicators ... ok\ntest pls::tests::listwise_deletion_affine_scaling_and_construct_order_are_stable ... ok\ntest pls::tests::two_stage_moderation_generates_product_score_and_estimates_interaction_path ... ok\ntest pls::tests::plspredict_holdout_reports_leakage_free_prediction_metrics ... ok\ntest pls::tests::pca_weighting_and_formative_mode_are_executable ... ok\ntest pls::tests::unstandardized_mode_b_is_invariant_to_indicator_offsets ... ok\n\ntest result: ok. 19 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.03s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.63s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_estimation-4b8a1486bf525f96.exe)\n   Doc-tests qpls_estimation\n"
+    }
+  ],
+  "note": "Supported publication scope is bounded to the documented raw-data reflective ML CFA/SEM cases; unsupported estimators and constraints remain blocked or experimental."
+}

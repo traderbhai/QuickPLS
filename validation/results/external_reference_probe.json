@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "target": "v04-assessment-external-references",
+  "generated_at": "2026-07-19T01:34:55.124758+00:00",
+  "can_execute_csem_reference": true,
+  "blocked_reasons": [],
+  "runtimes": [
+    {
+      "command": "Rscript",
+      "env_var": "QPLS_RSCRIPT",
+      "configured_path": null,
+      "path": "C:\\Users\\mohd.naved\\AppData\\Local\\Programs\\R\\R-4.6.1\\bin\\Rscript.exe",
+      "available": true,
+      "exit_code": 0,
+      "version": [
+        "Rscript (R) version 4.6.1 (2026-06-24)"
+      ]
+    },
+    {
+      "command": "R",
+      "env_var": "QPLS_R",
+      "configured_path": null,
+      "path": null,
+      "available": false,
+      "version": null,
+      "error": "R was not found on PATH and QPLS_R is not set"
+    }
+  ],
+  "files": [
+    {
+      "path": "validation/rho_a_csem_reference.R",
+      "present": true,
+      "bytes": 2276
+    },
+    {
+      "path": "validation/r_csem_reference.R",
+      "present": true,
+      "bytes": 3237
+    },
+    {
+      "path": "validation/fixtures/rho_a_reference.csv",
+      "present": true,
+      "bytes": 191
+    },
+    {
+      "path": "validation/fixtures/corporate_reputation.csv",
+      "present": true,
+      "bytes": 270
+    },
+    {
+      "path": "validation/r-library/cSEM",
+      "present": true,
+      "bytes": 4096
+    }
+  ],
+  "planned_commands": [
+    {
+      "id": "rho_a_csem_0_6_1",
+      "command": "Rscript --vanilla validation/rho_a_csem_reference.R validation/fixtures/rho_a_reference.csv validation/results/rho_a_csem_0_6_1.csv",
+      "required_for": [
+        "rho_a"
+      ],
+      "status": "ready_to_run"
+    },
+    {
+      "id": "pls_csem_variant_reference",
+      "command": "Rscript --vanilla validation/r_csem_reference.R",
+      "required_for": [
+        "pls_mode_a",
+        "pls_mode_b",
+        "factor_weighting",
+        "pca_weighting"
+      ],
+      "status": "ready_to_run"
+    }
+  ],
+  "note": "This is a reproducible environment probe, not numerical validation. R/cSEM are development-only validation tools and are not runtime requirements for QuickPLS users. The v0.4 assessment external-reference gate remains open for HTMT external references and primary-paper rho_A evidence."
+}

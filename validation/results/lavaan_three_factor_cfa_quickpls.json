@@ -1,0 +1,3452 @@
+{
+  "schema_version": 1,
+  "id": "818bcbb3-bdbd-4060-8164-6d8512d98cd5",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "00000000-0000-0000-0000-000000071016",
+    "dataset_fingerprint": "v2:9d54c17c0544081519f6d7b95543abf57e48ac57ea9f28e019e42a53d9d24417",
+    "method": "cbsem",
+    "method_version": "pls_pm_v1+cfa_ml_v1+cbsem_fit_v1+cbsem_modification_indices_v1+cbsem_ml_v1+pls_mediation_v1+pls_assessment_v7",
+    "engine_version": "0.9.0-rc.1",
+    "seed": 20260722,
+    "settings": {
+      "method": "cbsem",
+      "weighting_scheme": "path",
+      "tolerance": 1e-7,
+      "max_iterations": 3000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260722,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion",
+      "case_weight_column": null
+    },
+    "started_at": "2026-07-19T11:49:53.915291200Z",
+    "completed_at": "2026-07-19T11:49:54.068605400Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "CB-SEM/CFA ML v1 is experimental; this run used the v0.7.1 direct maximum-likelihood optimizer for the supported simple reflective raw-data scope."
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "cbsem": {
+        "bootstrap": null,
+        "converged": true,
+        "diagnostics": [],
+        "estimator": "ml",
+        "fit": {
+          "aic": 63.268150268456054,
+          "baseline_chi_square": 2788.1766261634502,
+          "baseline_degrees_of_freedom": 36,
+          "bic": 136.36156765863785,
+          "cfi": 1.0,
+          "chi_square": 21.268150268456054,
+          "degrees_of_freedom": 24,
+          "method_version": "cbsem_fit_v1",
+          "p_value": 0.6228602021258545,
+          "rmsea": 0.0,
+          "rmsea_ci_lower": 0.0,
+          "rmsea_ci_upper": 1e-12,
+          "srmr": 0.014859973529725071,
+          "tli": 1.001488921371674
+        },
+        "gradient_norm": 5.909551263600663e-7,
+        "implied_covariance": [
+          {
+            "column": "x1",
+            "row": "x1",
+            "value": 0.9958333448680211
+          },
+          {
+            "column": "x2",
+            "row": "x1",
+            "value": 0.9308736502819693
+          },
+          {
+            "column": "x3",
+            "row": "x1",
+            "value": 0.9134406150860974
+          },
+          {
+            "column": "m1",
+            "row": "x1",
+            "value": 0.27904698823445145
+          },
+          {
+            "column": "m2",
+            "row": "x1",
+            "value": 0.2770919176055759
+          },
+          {
+            "column": "m3",
+            "row": "x1",
+            "value": 0.2710128555507517
+          },
+          {
+            "column": "y1",
+            "row": "x1",
+            "value": 0.3229602488916469
+          },
+          {
+            "column": "y2",
+            "row": "x1",
+            "value": 0.3181218326187939
+          },
+          {
+            "column": "y3",
+            "row": "x1",
+            "value": 0.2975833361097187
+          },
+          {
+            "column": "x1",
+            "row": "x2",
+            "value": 0.9308736502819693
+          },
+          {
+            "column": "x2",
+            "row": "x2",
+            "value": 0.9958333078944918
+          },
+          {
+            "column": "x3",
+            "row": "x2",
+            "value": 0.8896142948980298
+          },
+          {
+            "column": "m1",
+            "row": "x2",
+            "value": 0.2717682852959322
+          },
+          {
+            "column": "m2",
+            "row": "x2",
+            "value": 0.2698642110186799
+          },
+          {
+            "column": "m3",
+            "row": "x2",
+            "value": 0.26394371611816136
+          },
+          {
+            "column": "y1",
+            "row": "x2",
+            "value": 0.3145361059632255
+          },
+          {
+            "column": "y2",
+            "row": "x2",
+            "value": 0.3098238956564925
+          },
+          {
+            "column": "y3",
+            "row": "x2",
+            "value": 0.289821128329944
+          },
+          {
+            "column": "x1",
+            "row": "x3",
+            "value": 0.9134406150860974
+          },
+          {
+            "column": "x2",
+            "row": "x3",
+            "value": 0.8896142948980297
+          },
+          {
+            "column": "x3",
+            "row": "x3",
+            "value": 0.9958333706710136
+          },
+          {
+            "column": "m1",
+            "row": "x3",
+            "value": 0.2666787158562444
+          },
+          {
+            "column": "m2",
+            "row": "x3",
+            "value": 0.26481030033233727
+          },
+          {
+            "column": "m3",
+            "row": "x3",
+            "value": 0.25900068212915184
+          },
+          {
+            "column": "y1",
+            "row": "x3",
+            "value": 0.30864559761768534
+          },
+          {
+            "column": "y2",
+            "row": "x3",
+            "value": 0.30402163573016877
+          },
+          {
+            "column": "y3",
+            "row": "x3",
+            "value": 0.2843934723541273
+          },
+          {
+            "column": "x1",
+            "row": "m1",
+            "value": 0.27904698823445145
+          },
+          {
+            "column": "x2",
+            "row": "m1",
+            "value": 0.2717682852959322
+          },
+          {
+            "column": "x3",
+            "row": "m1",
+            "value": 0.2666787158562444
+          },
+          {
+            "column": "m1",
+            "row": "m1",
+            "value": 0.9958333550473704
+          },
+          {
+            "column": "m2",
+            "row": "m1",
+            "value": 0.9287205802969463
+          },
+          {
+            "column": "m3",
+            "row": "m1",
+            "value": 0.9083455722923683
+          },
+          {
+            "column": "y1",
+            "row": "m1",
+            "value": 0.4415686988463798
+          },
+          {
+            "column": "y2",
+            "row": "m1",
+            "value": 0.43495335474315666
+          },
+          {
+            "column": "y3",
+            "row": "m1",
+            "value": 0.4068720128105278
+          },
+          {
+            "column": "x1",
+            "row": "m2",
+            "value": 0.2770919176055759
+          },
+          {
+            "column": "x2",
+            "row": "m2",
+            "value": 0.26986421101867986
+          },
+          {
+            "column": "x3",
+            "row": "m2",
+            "value": 0.2648103003323372
+          },
+          {
+            "column": "m1",
+            "row": "m2",
+            "value": 0.9287205802969463
+          },
+          {
+            "column": "m2",
+            "row": "m2",
+            "value": 0.9958333360981744
+          },
+          {
+            "column": "m3",
+            "row": "m2",
+            "value": 0.901981483718992
+          },
+          {
+            "column": "y1",
+            "row": "m2",
+            "value": 0.43847496184098333
+          },
+          {
+            "column": "y2",
+            "row": "m2",
+            "value": 0.4319059664370884
+          },
+          {
+            "column": "y3",
+            "row": "m2",
+            "value": 0.4040213691716543
+          },
+          {
+            "column": "x1",
+            "row": "m3",
+            "value": 0.2710128555507517
+          },
+          {
+            "column": "x2",
+            "row": "m3",
+            "value": 0.2639437161181613
+          },
+          {
+            "column": "x3",
+            "row": "m3",
+            "value": 0.25900068212915184
+          },
+          {
+            "column": "m1",
+            "row": "m3",
+            "value": 0.9083455722923683
+          },
+          {
+            "column": "m2",
+            "row": "m3",
+            "value": 0.901981483718992
+          },
+          {
+            "column": "m3",
+            "row": "m3",
+            "value": 0.9958333649813499
+          },
+          {
+            "column": "y1",
+            "row": "m3",
+            "value": 0.4288553506825222
+          },
+          {
+            "column": "y2",
+            "row": "m3",
+            "value": 0.4224304711050404
+          },
+          {
+            "column": "y3",
+            "row": "m3",
+            "value": 0.39515762823004524
+          },
+          {
+            "column": "x1",
+            "row": "y1",
+            "value": 0.3229602488916469
+          },
+          {
+            "column": "x2",
+            "row": "y1",
+            "value": 0.3145361059632255
+          },
+          {
+            "column": "x3",
+            "row": "y1",
+            "value": 0.30864559761768534
+          },
+          {
+            "column": "m1",
+            "row": "y1",
+            "value": 0.4415686988463798
+          },
+          {
+            "column": "m2",
+            "row": "y1",
+            "value": 0.43847496184098333
+          },
+          {
+            "column": "m3",
+            "row": "y1",
+            "value": 0.4288553506825222
+          },
+          {
+            "column": "y1",
+            "row": "y1",
+            "value": 0.9958333465401527
+          },
+          {
+            "column": "y2",
+            "row": "y1",
+            "value": 0.9098472477813389
+          },
+          {
+            "column": "y3",
+            "row": "y1",
+            "value": 0.8511059335857135
+          },
+          {
+            "column": "x1",
+            "row": "y2",
+            "value": 0.3181218326187939
+          },
+          {
+            "column": "x2",
+            "row": "y2",
+            "value": 0.3098238956564925
+          },
+          {
+            "column": "x3",
+            "row": "y2",
+            "value": 0.30402163573016877
+          },
+          {
+            "column": "m1",
+            "row": "y2",
+            "value": 0.43495335474315666
+          },
+          {
+            "column": "m2",
+            "row": "y2",
+            "value": 0.4319059664370884
+          },
+          {
+            "column": "m3",
+            "row": "y2",
+            "value": 0.4224304711050404
+          },
+          {
+            "column": "y1",
+            "row": "y2",
+            "value": 0.9098472477813389
+          },
+          {
+            "column": "y2",
+            "row": "y2",
+            "value": 0.9958333215818843
+          },
+          {
+            "column": "y3",
+            "row": "y2",
+            "value": 0.8383551234995954
+          },
+          {
+            "column": "x1",
+            "row": "y3",
+            "value": 0.2975833361097187
+          },
+          {
+            "column": "x2",
+            "row": "y3",
+            "value": 0.28982112832994394
+          },
+          {
+            "column": "x3",
+            "row": "y3",
+            "value": 0.2843934723541273
+          },
+          {
+            "column": "m1",
+            "row": "y3",
+            "value": 0.4068720128105278
+          },
+          {
+            "column": "m2",
+            "row": "y3",
+            "value": 0.4040213691716543
+          },
+          {
+            "column": "m3",
+            "row": "y3",
+            "value": 0.39515762823004524
+          },
+          {
+            "column": "y1",
+            "row": "y3",
+            "value": 0.8511059335857135
+          },
+          {
+            "column": "y2",
+            "row": "y3",
+            "value": 0.8383551234995954
+          },
+          {
+            "column": "y3",
+            "row": "y3",
+            "value": 0.9958333626742499
+          }
+        ],
+        "input": "raw",
+        "iterations": 28,
+        "mean_structure": false,
+        "method_version": "cfa_ml_v1",
+        "model_type": "cfa",
+        "modification_indices": [
+          {
+            "expected_parameter_change": -0.042506602150833565,
+            "kind": "residual_covariance",
+            "lhs": "m3",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.4336346943382197,
+            "rhs": "y3"
+          },
+          {
+            "expected_parameter_change": -0.04113844253483025,
+            "kind": "residual_covariance",
+            "lhs": "x2",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.40616914900596734,
+            "rhs": "m1"
+          },
+          {
+            "expected_parameter_change": 0.03599187091784631,
+            "kind": "residual_covariance",
+            "lhs": "x1",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.3108995453200586,
+            "rhs": "m3"
+          },
+          {
+            "expected_parameter_change": 0.0325143905638191,
+            "kind": "residual_covariance",
+            "lhs": "x3",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.25372454249677645,
+            "rhs": "m3"
+          },
+          {
+            "expected_parameter_change": 0.02594768022896123,
+            "kind": "residual_covariance",
+            "lhs": "x3",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.16158770622346214,
+            "rhs": "y1"
+          },
+          {
+            "expected_parameter_change": -0.023883700534252948,
+            "kind": "residual_covariance",
+            "lhs": "m3",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.1369034762903699,
+            "rhs": "y2"
+          },
+          {
+            "expected_parameter_change": 0.02059570844787295,
+            "kind": "residual_covariance",
+            "lhs": "m1",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.10180396955274845,
+            "rhs": "y1"
+          },
+          {
+            "expected_parameter_change": -0.0195251177859776,
+            "kind": "residual_covariance",
+            "lhs": "m3",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.09149525389351172,
+            "rhs": "y1"
+          },
+          {
+            "expected_parameter_change": 0.019125566068087768,
+            "kind": "residual_covariance",
+            "lhs": "x3",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.08778894658194966,
+            "rhs": "m2"
+          },
+          {
+            "expected_parameter_change": -0.016512801366731018,
+            "kind": "residual_covariance",
+            "lhs": "m2",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.0654414261545073,
+            "rhs": "y3"
+          },
+          {
+            "expected_parameter_change": -0.01634576919631493,
+            "kind": "residual_covariance",
+            "lhs": "x1",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.06412420094860753,
+            "rhs": "m1"
+          },
+          {
+            "expected_parameter_change": -0.014484733893545891,
+            "kind": "residual_covariance",
+            "lhs": "x2",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.05035380383204091,
+            "rhs": "m2"
+          },
+          {
+            "expected_parameter_change": -0.013346644330041946,
+            "kind": "residual_covariance",
+            "lhs": "x2",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.0427518995694338,
+            "rhs": "y2"
+          },
+          {
+            "expected_parameter_change": -0.011956755418638599,
+            "kind": "residual_covariance",
+            "lhs": "x1",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.034311360033874444,
+            "rhs": "y2"
+          },
+          {
+            "expected_parameter_change": -0.011201629805357757,
+            "kind": "residual_covariance",
+            "lhs": "x1",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.030114362471107024,
+            "rhs": "y3"
+          },
+          {
+            "expected_parameter_change": 0.011200165779054154,
+            "kind": "residual_covariance",
+            "lhs": "x2",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.030106491234790977,
+            "rhs": "m3"
+          },
+          {
+            "expected_parameter_change": 0.008932472206815457,
+            "kind": "residual_covariance",
+            "lhs": "m2",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.019149374334127348,
+            "rhs": "y1"
+          },
+          {
+            "expected_parameter_change": 0.008781542260000268,
+            "kind": "residual_covariance",
+            "lhs": "x3",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.018507716271400947,
+            "rhs": "m1"
+          },
+          {
+            "expected_parameter_change": -0.006790328726765424,
+            "kind": "residual_covariance",
+            "lhs": "m1",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.011066055412208578,
+            "rhs": "y3"
+          },
+          {
+            "expected_parameter_change": 0.006767062087448832,
+            "kind": "residual_covariance",
+            "lhs": "x1",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.010990351030892962,
+            "rhs": "y1"
+          },
+          {
+            "expected_parameter_change": 0.006719212252880728,
+            "kind": "residual_covariance",
+            "lhs": "x1",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.010835475191823003,
+            "rhs": "m2"
+          },
+          {
+            "expected_parameter_change": 0.00471319192257442,
+            "kind": "residual_covariance",
+            "lhs": "m1",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.005331402743764981,
+            "rhs": "y2"
+          },
+          {
+            "expected_parameter_change": 0.0038733051423539013,
+            "kind": "residual_covariance",
+            "lhs": "x2",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.003600598254188442,
+            "rhs": "y1"
+          },
+          {
+            "expected_parameter_change": -0.0026878491256827576,
+            "kind": "residual_covariance",
+            "lhs": "x2",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.0017338879013840554,
+            "rhs": "y3"
+          },
+          {
+            "expected_parameter_change": 0.002432702973148363,
+            "kind": "residual_covariance",
+            "lhs": "y2",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.0014203305013355723,
+            "rhs": "y3"
+          },
+          {
+            "expected_parameter_change": 0.0016337779054803484,
+            "kind": "residual_covariance",
+            "lhs": "m2",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.000640615258664581,
+            "rhs": "y2"
+          },
+          {
+            "expected_parameter_change": -0.0007983695723809227,
+            "kind": "residual_covariance",
+            "lhs": "y1",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.00015297455378488736,
+            "rhs": "y3"
+          },
+          {
+            "expected_parameter_change": -0.00041269677195331203,
+            "kind": "residual_covariance",
+            "lhs": "y1",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.00004087647013936417,
+            "rhs": "y2"
+          },
+          {
+            "expected_parameter_change": -0.00038778385247325117,
+            "kind": "residual_covariance",
+            "lhs": "x3",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.000036090315897359095,
+            "rhs": "y3"
+          },
+          {
+            "expected_parameter_change": 0.00035288695375229866,
+            "kind": "residual_covariance",
+            "lhs": "x3",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.000029887008510858478,
+            "rhs": "y2"
+          },
+          {
+            "expected_parameter_change": 0.00034955264198680745,
+            "kind": "residual_covariance",
+            "lhs": "m2",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.000029324891884789725,
+            "rhs": "m3"
+          },
+          {
+            "expected_parameter_change": -0.00031365308390150526,
+            "kind": "residual_covariance",
+            "lhs": "m1",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.000023610781689821927,
+            "rhs": "m2"
+          },
+          {
+            "expected_parameter_change": -0.00029606017472997046,
+            "kind": "residual_covariance",
+            "lhs": "x1",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.000021036390494673753,
+            "rhs": "x3"
+          },
+          {
+            "expected_parameter_change": 0.00022256865386309258,
+            "kind": "residual_covariance",
+            "lhs": "x1",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.000011888833363782988,
+            "rhs": "x2"
+          },
+          {
+            "expected_parameter_change": 0.00020943287291900296,
+            "kind": "residual_covariance",
+            "lhs": "m1",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.00001052691078218574,
+            "rhs": "m3"
+          },
+          {
+            "expected_parameter_change": -0.00003723124075727485,
+            "kind": "residual_covariance",
+            "lhs": "x2",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 3.3267966919827935e-7,
+            "rhs": "x3"
+          },
+          {
+            "expected_parameter_change": 0.0,
+            "kind": "cross_loading",
+            "lhs": "m",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.0,
+            "rhs": "x1"
+          },
+          {
+            "expected_parameter_change": 0.0,
+            "kind": "cross_loading",
+            "lhs": "m",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.0,
+            "rhs": "x2"
+          },
+          {
+            "expected_parameter_change": 0.0,
+            "kind": "cross_loading",
+            "lhs": "m",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.0,
+            "rhs": "x3"
+          },
+          {
+            "expected_parameter_change": 0.0,
+            "kind": "cross_loading",
+            "lhs": "m",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.0,
+            "rhs": "y1"
+          },
+          {
+            "expected_parameter_change": 0.0,
+            "kind": "cross_loading",
+            "lhs": "m",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.0,
+            "rhs": "y2"
+          },
+          {
+            "expected_parameter_change": 0.0,
+            "kind": "cross_loading",
+            "lhs": "m",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.0,
+            "rhs": "y3"
+          },
+          {
+            "expected_parameter_change": 0.0,
+            "kind": "cross_loading",
+            "lhs": "x",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.0,
+            "rhs": "m1"
+          },
+          {
+            "expected_parameter_change": 0.0,
+            "kind": "cross_loading",
+            "lhs": "x",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.0,
+            "rhs": "m2"
+          },
+          {
+            "expected_parameter_change": 0.0,
+            "kind": "cross_loading",
+            "lhs": "x",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.0,
+            "rhs": "m3"
+          },
+          {
+            "expected_parameter_change": 0.0,
+            "kind": "cross_loading",
+            "lhs": "x",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.0,
+            "rhs": "y1"
+          },
+          {
+            "expected_parameter_change": 0.0,
+            "kind": "cross_loading",
+            "lhs": "x",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.0,
+            "rhs": "y2"
+          },
+          {
+            "expected_parameter_change": 0.0,
+            "kind": "cross_loading",
+            "lhs": "x",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.0,
+            "rhs": "y3"
+          },
+          {
+            "expected_parameter_change": 0.0,
+            "kind": "cross_loading",
+            "lhs": "y",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.0,
+            "rhs": "m1"
+          },
+          {
+            "expected_parameter_change": 0.0,
+            "kind": "cross_loading",
+            "lhs": "y",
+            "method_version": "cbsem_modification_indices_v1",
+            "modification_index": 0.0,
+            "rhs": "m2"
+          }
+        ],
+        "multigroup": null,
+        "objective": 0.08861729278523356,
+        "parameters": [
+          {
+            "estimate": 1.0,
+            "fixed": true,
+            "kind": "loading",
+            "lhs": "x",
+            "name": "x=~x1",
+            "p_value_two_sided": null,
+            "rhs": "x1",
+            "standard_error": null,
+            "warning": null,
+            "z_statistic": null
+          },
+          {
+            "estimate": 0.9739158520055275,
+            "fixed": false,
+            "kind": "loading",
+            "lhs": "x",
+            "name": "x=~x2",
+            "p_value_two_sided": 0.0,
+            "rhs": "x2",
+            "standard_error": 0.02511314769045725,
+            "warning": null,
+            "z_statistic": 38.7811143393867
+          },
+          {
+            "estimate": 0.9556767394034177,
+            "fixed": false,
+            "kind": "loading",
+            "lhs": "x",
+            "name": "x=~x3",
+            "p_value_two_sided": 0.0,
+            "rhs": "x3",
+            "standard_error": 0.027604114548451852,
+            "warning": null,
+            "z_statistic": 34.62080762365971
+          },
+          {
+            "estimate": 0.9558050096064008,
+            "fixed": false,
+            "kind": "latent_variance",
+            "lhs": "x",
+            "name": "x~~x",
+            "p_value_two_sided": 0.0,
+            "rhs": "x",
+            "standard_error": 0.09132037724902696,
+            "warning": null,
+            "z_statistic": 10.466503078496482
+          },
+          {
+            "estimate": 0.04002833526162034,
+            "fixed": false,
+            "kind": "residual_variance",
+            "lhs": "x1",
+            "name": "x1~~x1",
+            "p_value_two_sided": 0.00007438575135676473,
+            "rhs": "x1",
+            "standard_error": 0.010103564027235236,
+            "warning": null,
+            "z_statistic": 3.9618034936701236
+          },
+          {
+            "estimate": 0.08924070367063212,
+            "fixed": false,
+            "kind": "residual_variance",
+            "lhs": "x2",
+            "name": "x2~~x2",
+            "p_value_two_sided": 1.7008616737257398e-13,
+            "rhs": "x2",
+            "standard_error": 0.01210786465872309,
+            "warning": null,
+            "z_statistic": 7.370474165842184
+          },
+          {
+            "estimate": 0.12287942200687973,
+            "fixed": false,
+            "kind": "residual_variance",
+            "lhs": "x3",
+            "name": "x3~~x3",
+            "p_value_two_sided": 0.0,
+            "rhs": "x3",
+            "standard_error": 0.014166852863569718,
+            "warning": null,
+            "z_statistic": 8.673727551929764
+          },
+          {
+            "estimate": 1.0,
+            "fixed": true,
+            "kind": "loading",
+            "lhs": "m",
+            "name": "m=~m1",
+            "p_value_two_sided": null,
+            "rhs": "m1",
+            "standard_error": null,
+            "warning": null,
+            "z_statistic": null
+          },
+          {
+            "estimate": 0.9929937583585997,
+            "fixed": false,
+            "kind": "loading",
+            "lhs": "m",
+            "name": "m=~m2",
+            "p_value_two_sided": 0.0,
+            "rhs": "m2",
+            "standard_error": 0.02583671630035036,
+            "warning": null,
+            "z_statistic": 38.43343507027378
+          },
+          {
+            "estimate": 0.9712086744439271,
+            "fixed": false,
+            "kind": "loading",
+            "lhs": "m",
+            "name": "m=~m3",
+            "p_value_two_sided": 0.0,
+            "rhs": "m3",
+            "standard_error": 0.028631565026851703,
+            "warning": null,
+            "z_statistic": 33.92090769516417
+          },
+          {
+            "estimate": 0.9352733312564866,
+            "fixed": false,
+            "kind": "latent_variance",
+            "lhs": "m",
+            "name": "m~~m",
+            "p_value_two_sided": 0.0,
+            "rhs": "m",
+            "standard_error": 0.09119883885309467,
+            "warning": null,
+            "z_statistic": 10.255320605156474
+          },
+          {
+            "estimate": 0.06056002379088373,
+            "fixed": false,
+            "kind": "residual_variance",
+            "lhs": "m1",
+            "name": "m1~~m1",
+            "p_value_two_sided": 1.4785603408284942e-8,
+            "rhs": "m1",
+            "standard_error": 0.010692032480842169,
+            "warning": null,
+            "z_statistic": 5.664032904819015
+          },
+          {
+            "estimate": 0.07361959660412995,
+            "fixed": false,
+            "kind": "residual_variance",
+            "lhs": "m2",
+            "name": "m2~~m2",
+            "p_value_two_sided": 6.300560073668748e-11,
+            "rhs": "m2",
+            "standard_error": 0.011262971299571356,
+            "warning": null,
+            "z_statistic": 6.536427612750088
+          },
+          {
+            "estimate": 0.11364026577826845,
+            "fixed": false,
+            "kind": "residual_variance",
+            "lhs": "m3",
+            "name": "m3~~m3",
+            "p_value_two_sided": 0.0,
+            "rhs": "m3",
+            "standard_error": 0.013544903811245254,
+            "warning": null,
+            "z_statistic": 8.389890940674086
+          },
+          {
+            "estimate": 1.0,
+            "fixed": true,
+            "kind": "loading",
+            "lhs": "y",
+            "name": "y=~y1",
+            "p_value_two_sided": null,
+            "rhs": "y1",
+            "standard_error": null,
+            "warning": null,
+            "z_statistic": null
+          },
+          {
+            "estimate": 0.9850185393110833,
+            "fixed": false,
+            "kind": "loading",
+            "lhs": "y",
+            "name": "y=~y2",
+            "p_value_two_sided": 0.0,
+            "rhs": "y2",
+            "standard_error": 0.030870107220392316,
+            "warning": null,
+            "z_statistic": 31.908491029159602
+          },
+          {
+            "estimate": 0.921424036335685,
+            "fixed": false,
+            "kind": "loading",
+            "lhs": "y",
+            "name": "y=~y3",
+            "p_value_two_sided": 0.0,
+            "rhs": "y3",
+            "standard_error": 0.03687128290097895,
+            "warning": null,
+            "z_statistic": 24.990289565194946
+          },
+          {
+            "estimate": 0.9236854043556186,
+            "fixed": false,
+            "kind": "latent_variance",
+            "lhs": "y",
+            "name": "y~~y",
+            "p_value_two_sided": 0.0,
+            "rhs": "y",
+            "standard_error": 0.0917378087487721,
+            "warning": null,
+            "z_statistic": 10.068753733645094
+          },
+          {
+            "estimate": 0.07214794218453402,
+            "fixed": false,
+            "kind": "residual_variance",
+            "lhs": "y1",
+            "name": "y1~~y1",
+            "p_value_two_sided": 2.9931463234600386e-6,
+            "rhs": "y1",
+            "standard_error": 0.015444973194817904,
+            "warning": null,
+            "z_statistic": 4.671289569394727
+          },
+          {
+            "estimate": 0.0996169145761007,
+            "fixed": false,
+            "kind": "residual_variance",
+            "lhs": "y2",
+            "name": "y2~~y2",
+            "p_value_two_sided": 1.122436366074453e-9,
+            "rhs": "y2",
+            "standard_error": 0.016354909965822492,
+            "warning": null,
+            "z_statistic": 6.090948515416724
+          },
+          {
+            "estimate": 0.21160389800045026,
+            "fixed": false,
+            "kind": "residual_variance",
+            "lhs": "y3",
+            "name": "y3~~y3",
+            "p_value_two_sided": 0.0,
+            "rhs": "y3",
+            "standard_error": 0.022856521178792718,
+            "warning": null,
+            "z_statistic": 9.257922338452172
+          },
+          {
+            "estimate": 0.27904698823445145,
+            "fixed": false,
+            "kind": "latent_covariance",
+            "lhs": "x",
+            "name": "x~~m",
+            "p_value_two_sided": 0.000019363233826119597,
+            "rhs": "m",
+            "standard_error": 0.06531831174196755,
+            "warning": null,
+            "z_statistic": 4.272109624278018
+          },
+          {
+            "estimate": 0.3229602488916469,
+            "fixed": false,
+            "kind": "latent_covariance",
+            "lhs": "x",
+            "name": "x~~y",
+            "p_value_two_sided": 1.0618537291673391e-6,
+            "rhs": "y",
+            "standard_error": 0.0661828872039626,
+            "warning": null,
+            "z_statistic": 4.879815047904258
+          },
+          {
+            "estimate": 0.4415686988463798,
+            "fixed": false,
+            "kind": "latent_covariance",
+            "lhs": "m",
+            "name": "m~~y",
+            "p_value_two_sided": 1.3611578530969837e-10,
+            "rhs": "y",
+            "standard_error": 0.06877827356802384,
+            "warning": null,
+            "z_statistic": 6.420177127732854
+          }
+        ],
+        "residual_correlation": [
+          {
+            "column": "x1",
+            "row": "x1",
+            "value": -1.1582951278735003e-8
+          },
+          {
+            "column": "x2",
+            "row": "x1",
+            "value": 0.00022256865386309258
+          },
+          {
+            "column": "x3",
+            "row": "x1",
+            "value": -0.00029606017472997046
+          },
+          {
+            "column": "m1",
+            "row": "x1",
+            "value": -0.01634576919631493
+          },
+          {
+            "column": "m2",
+            "row": "x1",
+            "value": 0.006719212252880728
+          },
+          {
+            "column": "m3",
+            "row": "x1",
+            "value": 0.03599187091784631
+          },
+          {
+            "column": "y1",
+            "row": "x1",
+            "value": 0.006767062087448832
+          },
+          {
+            "column": "y2",
+            "row": "x1",
+            "value": -0.011956755418638599
+          },
+          {
+            "column": "y3",
+            "row": "x1",
+            "value": -0.011201629805357757
+          },
+          {
+            "column": "x1",
+            "row": "x2",
+            "value": 0.00022256865386309258
+          },
+          {
+            "column": "x2",
+            "row": "x2",
+            "value": 2.5545279699088768e-8
+          },
+          {
+            "column": "x3",
+            "row": "x2",
+            "value": -0.00003723124075727485
+          },
+          {
+            "column": "m1",
+            "row": "x2",
+            "value": -0.04113844253483025
+          },
+          {
+            "column": "m2",
+            "row": "x2",
+            "value": -0.014484733893545891
+          },
+          {
+            "column": "m3",
+            "row": "x2",
+            "value": 0.011200165779054154
+          },
+          {
+            "column": "y1",
+            "row": "x2",
+            "value": 0.0038733051423539013
+          },
+          {
+            "column": "y2",
+            "row": "x2",
+            "value": -0.013346644330041946
+          },
+          {
+            "column": "y3",
+            "row": "x2",
+            "value": -0.0026878491256827576
+          },
+          {
+            "column": "x1",
+            "row": "x3",
+            "value": -0.00029606017472997046
+          },
+          {
+            "column": "x2",
+            "row": "x3",
+            "value": -0.00003723124075716336
+          },
+          {
+            "column": "x3",
+            "row": "x3",
+            "value": -3.7493904996086e-8
+          },
+          {
+            "column": "m1",
+            "row": "x3",
+            "value": 0.008781542260000268
+          },
+          {
+            "column": "m2",
+            "row": "x3",
+            "value": 0.019125566068087768
+          },
+          {
+            "column": "m3",
+            "row": "x3",
+            "value": 0.0325143905638191
+          },
+          {
+            "column": "y1",
+            "row": "x3",
+            "value": 0.02594768022896123
+          },
+          {
+            "column": "y2",
+            "row": "x3",
+            "value": 0.00035288695375229866
+          },
+          {
+            "column": "y3",
+            "row": "x3",
+            "value": -0.00038778385247325117
+          },
+          {
+            "column": "x1",
+            "row": "m1",
+            "value": -0.01634576919631493
+          },
+          {
+            "column": "x2",
+            "row": "m1",
+            "value": -0.04113844253483025
+          },
+          {
+            "column": "x3",
+            "row": "m1",
+            "value": 0.008781542260000268
+          },
+          {
+            "column": "m1",
+            "row": "m1",
+            "value": -2.180488983235513e-8
+          },
+          {
+            "column": "m2",
+            "row": "m1",
+            "value": -0.00031365308390150526
+          },
+          {
+            "column": "m3",
+            "row": "m1",
+            "value": 0.00020943287291900296
+          },
+          {
+            "column": "y1",
+            "row": "m1",
+            "value": 0.02059570844787295
+          },
+          {
+            "column": "y2",
+            "row": "m1",
+            "value": 0.00471319192257442
+          },
+          {
+            "column": "y3",
+            "row": "m1",
+            "value": -0.006790328726765424
+          },
+          {
+            "column": "x1",
+            "row": "m2",
+            "value": 0.006719212252880728
+          },
+          {
+            "column": "x2",
+            "row": "m2",
+            "value": -0.014484733893545836
+          },
+          {
+            "column": "x3",
+            "row": "m2",
+            "value": 0.019125566068087824
+          },
+          {
+            "column": "m1",
+            "row": "m2",
+            "value": -0.00031365308390150526
+          },
+          {
+            "column": "m2",
+            "row": "m2",
+            "value": -2.7764091723020475e-9
+          },
+          {
+            "column": "m3",
+            "row": "m2",
+            "value": 0.00034955264198680745
+          },
+          {
+            "column": "y1",
+            "row": "m2",
+            "value": 0.008932472206815457
+          },
+          {
+            "column": "y2",
+            "row": "m2",
+            "value": 0.0016337779054803484
+          },
+          {
+            "column": "y3",
+            "row": "m2",
+            "value": -0.016512801366731018
+          },
+          {
+            "column": "x1",
+            "row": "m3",
+            "value": 0.03599187091784631
+          },
+          {
+            "column": "x2",
+            "row": "m3",
+            "value": 0.01120016577905421
+          },
+          {
+            "column": "x3",
+            "row": "m3",
+            "value": 0.0325143905638191
+          },
+          {
+            "column": "m1",
+            "row": "m3",
+            "value": 0.00020943287291900296
+          },
+          {
+            "column": "m2",
+            "row": "m3",
+            "value": 0.00034955264198680745
+          },
+          {
+            "column": "m3",
+            "row": "m3",
+            "value": -3.178043457406671e-8
+          },
+          {
+            "column": "y1",
+            "row": "m3",
+            "value": -0.0195251177859776
+          },
+          {
+            "column": "y2",
+            "row": "m3",
+            "value": -0.023883700534252948
+          },
+          {
+            "column": "y3",
+            "row": "m3",
+            "value": -0.042506602150833565
+          },
+          {
+            "column": "x1",
+            "row": "y1",
+            "value": 0.006767062087448832
+          },
+          {
+            "column": "x2",
+            "row": "y1",
+            "value": 0.0038733051423539013
+          },
+          {
+            "column": "x3",
+            "row": "y1",
+            "value": 0.02594768022896123
+          },
+          {
+            "column": "m1",
+            "row": "y1",
+            "value": 0.02059570844787295
+          },
+          {
+            "column": "m2",
+            "row": "y1",
+            "value": 0.008932472206815457
+          },
+          {
+            "column": "m3",
+            "row": "y1",
+            "value": -0.0195251177859776
+          },
+          {
+            "column": "y1",
+            "row": "y1",
+            "value": -1.3262079412342071e-8
+          },
+          {
+            "column": "y2",
+            "row": "y1",
+            "value": -0.00041269677195331203
+          },
+          {
+            "column": "y3",
+            "row": "y1",
+            "value": -0.0007983695723809227
+          },
+          {
+            "column": "x1",
+            "row": "y2",
+            "value": -0.011956755418638599
+          },
+          {
+            "column": "x2",
+            "row": "y2",
+            "value": -0.013346644330041946
+          },
+          {
+            "column": "x3",
+            "row": "y2",
+            "value": 0.00035288695375229866
+          },
+          {
+            "column": "m1",
+            "row": "y2",
+            "value": 0.00471319192257442
+          },
+          {
+            "column": "m2",
+            "row": "y2",
+            "value": 0.0016337779054803484
+          },
+          {
+            "column": "m3",
+            "row": "y2",
+            "value": -0.023883700534252948
+          },
+          {
+            "column": "y1",
+            "row": "y2",
+            "value": -0.00041269677195331203
+          },
+          {
+            "column": "y2",
+            "row": "y2",
+            "value": 1.1800618278919208e-8
+          },
+          {
+            "column": "y3",
+            "row": "y2",
+            "value": 0.002432702973148363
+          },
+          {
+            "column": "x1",
+            "row": "y3",
+            "value": -0.011201629805357757
+          },
+          {
+            "column": "x2",
+            "row": "y3",
+            "value": -0.0026878491256827016
+          },
+          {
+            "column": "x3",
+            "row": "y3",
+            "value": -0.00038778385247325117
+          },
+          {
+            "column": "m1",
+            "row": "y3",
+            "value": -0.006790328726765424
+          },
+          {
+            "column": "m2",
+            "row": "y3",
+            "value": -0.016512801366731018
+          },
+          {
+            "column": "m3",
+            "row": "y3",
+            "value": -0.042506602150833565
+          },
+          {
+            "column": "y1",
+            "row": "y3",
+            "value": -0.0007983695723809227
+          },
+          {
+            "column": "y2",
+            "row": "y3",
+            "value": 0.002432702973148363
+          },
+          {
+            "column": "y3",
+            "row": "y3",
+            "value": -2.9463683041470144e-8
+          }
+        ],
+        "residual_covariance": [
+          {
+            "column": "x1",
+            "row": "x1",
+            "value": -1.153468898174026e-8
+          },
+          {
+            "column": "x2",
+            "row": "x1",
+            "value": 0.00022164128447199616
+          },
+          {
+            "column": "x3",
+            "row": "x1",
+            "value": -0.0002948265906685954
+          },
+          {
+            "column": "m1",
+            "row": "x1",
+            "value": -0.016277661824663614
+          },
+          {
+            "column": "m2",
+            "row": "x1",
+            "value": 0.006691215535160389
+          },
+          {
+            "column": "m3",
+            "row": "x1",
+            "value": 0.03584190478902194
+          },
+          {
+            "column": "y1",
+            "row": "x1",
+            "value": 0.0067388659954177865
+          },
+          {
+            "column": "y2",
+            "row": "x1",
+            "value": -0.011906935604394264
+          },
+          {
+            "column": "y3",
+            "row": "x1",
+            "value": -0.01115495634783542
+          },
+          {
+            "column": "x1",
+            "row": "x2",
+            "value": 0.00022164128447199616
+          },
+          {
+            "column": "x2",
+            "row": "x2",
+            "value": 2.5438841033675885e-8
+          },
+          {
+            "column": "x3",
+            "row": "x2",
+            "value": -0.00003707611058745286
+          },
+          {
+            "column": "m1",
+            "row": "x2",
+            "value": -0.040967032357601796
+          },
+          {
+            "column": "m2",
+            "row": "x2",
+            "value": -0.014424380835656114
+          },
+          {
+            "column": "m3",
+            "row": "x2",
+            "value": 0.011153498421641428
+          },
+          {
+            "column": "y1",
+            "row": "x2",
+            "value": 0.003857166370927423
+          },
+          {
+            "column": "y2",
+            "row": "x2",
+            "value": -0.0132910333120001
+          },
+          {
+            "column": "y3",
+            "row": "x2",
+            "value": -0.002676649754325744
+          },
+          {
+            "column": "x1",
+            "row": "x3",
+            "value": -0.0002948265906685954
+          },
+          {
+            "column": "x2",
+            "row": "x3",
+            "value": -0.00003707611058734184
+          },
+          {
+            "column": "x3",
+            "row": "x3",
+            "value": -3.7337680391935635e-8
+          },
+          {
+            "column": "m1",
+            "row": "x3",
+            "value": 0.008744952500583603
+          },
+          {
+            "column": "m2",
+            "row": "x3",
+            "value": 0.019045876209470736
+          },
+          {
+            "column": "m3",
+            "row": "x3",
+            "value": 0.032378913936469855
+          },
+          {
+            "column": "y1",
+            "row": "x3",
+            "value": 0.025839564894673872
+          },
+          {
+            "column": "y2",
+            "row": "x3",
+            "value": 0.00035141659144499737
+          },
+          {
+            "column": "y3",
+            "row": "x3",
+            "value": -0.0003861680864212791
+          },
+          {
+            "column": "x1",
+            "row": "m1",
+            "value": -0.016277661824663614
+          },
+          {
+            "column": "x2",
+            "row": "m1",
+            "value": -0.040967032357601796
+          },
+          {
+            "column": "x3",
+            "row": "m1",
+            "value": 0.008744952500583603
+          },
+          {
+            "column": "m1",
+            "row": "m1",
+            "value": -2.1714036124720337e-8
+          },
+          {
+            "column": "m2",
+            "row": "m1",
+            "value": -0.0003123461960519158
+          },
+          {
+            "column": "m3",
+            "row": "m1",
+            "value": 0.00020856023594850726
+          },
+          {
+            "column": "y1",
+            "row": "m1",
+            "value": 0.020509892996006807
+          },
+          {
+            "column": "y2",
+            "row": "m1",
+            "value": 0.004693553622897029
+          },
+          {
+            "column": "y3",
+            "row": "m1",
+            "value": -0.0067620356904039
+          },
+          {
+            "column": "x1",
+            "row": "m2",
+            "value": 0.006691215535160389
+          },
+          {
+            "column": "x2",
+            "row": "m2",
+            "value": -0.014424380835656059
+          },
+          {
+            "column": "x3",
+            "row": "m2",
+            "value": 0.01904587620947079
+          },
+          {
+            "column": "m1",
+            "row": "m2",
+            "value": -0.0003123461960519158
+          },
+          {
+            "column": "m2",
+            "row": "m2",
+            "value": -2.7648408007507896e-9
+          },
+          {
+            "column": "m3",
+            "row": "m2",
+            "value": 0.0003480961726451959
+          },
+          {
+            "column": "y1",
+            "row": "m2",
+            "value": 0.008895253572620387
+          },
+          {
+            "column": "y2",
+            "row": "m2",
+            "value": 0.0016269704975408472
+          },
+          {
+            "column": "y3",
+            "row": "m2",
+            "value": -0.016443998027702966
+          },
+          {
+            "column": "x1",
+            "row": "m3",
+            "value": 0.03584190478902194
+          },
+          {
+            "column": "x2",
+            "row": "m3",
+            "value": 0.011153498421641483
+          },
+          {
+            "column": "x3",
+            "row": "m3",
+            "value": 0.032378913936469855
+          },
+          {
+            "column": "m1",
+            "row": "m3",
+            "value": 0.00020856023594850726
+          },
+          {
+            "column": "m2",
+            "row": "m3",
+            "value": 0.0003480961726451959
+          },
+          {
+            "column": "m3",
+            "row": "m3",
+            "value": -3.164801609667478e-8
+          },
+          {
+            "column": "y1",
+            "row": "m3",
+            "value": -0.019443763128536018
+          },
+          {
+            "column": "y2",
+            "row": "m3",
+            "value": -0.023784185115360235
+          },
+          {
+            "column": "y3",
+            "row": "m3",
+            "value": -0.042329491308538414
+          },
+          {
+            "column": "x1",
+            "row": "y1",
+            "value": 0.0067388659954177865
+          },
+          {
+            "column": "x2",
+            "row": "y1",
+            "value": 0.003857166370927423
+          },
+          {
+            "column": "x3",
+            "row": "y1",
+            "value": 0.025839564894673872
+          },
+          {
+            "column": "m1",
+            "row": "y1",
+            "value": 0.020509892996006807
+          },
+          {
+            "column": "m2",
+            "row": "y1",
+            "value": 0.008895253572620387
+          },
+          {
+            "column": "m3",
+            "row": "y1",
+            "value": -0.019443763128536018
+          },
+          {
+            "column": "y1",
+            "row": "y1",
+            "value": -1.320682074812396e-8
+          },
+          {
+            "column": "y2",
+            "row": "y1",
+            "value": -0.00041097720207017296
+          },
+          {
+            "column": "y3",
+            "row": "y1",
+            "value": -0.0007950430324960012
+          },
+          {
+            "column": "x1",
+            "row": "y2",
+            "value": -0.011906935604394264
+          },
+          {
+            "column": "x2",
+            "row": "y2",
+            "value": -0.0132910333120001
+          },
+          {
+            "column": "x3",
+            "row": "y2",
+            "value": 0.00035141659144499737
+          },
+          {
+            "column": "m1",
+            "row": "y2",
+            "value": 0.004693553622897029
+          },
+          {
+            "column": "m2",
+            "row": "y2",
+            "value": 0.0016269704975408472
+          },
+          {
+            "column": "m3",
+            "row": "y2",
+            "value": -0.023784185115360235
+          },
+          {
+            "column": "y1",
+            "row": "y2",
+            "value": -0.00041097720207017296
+          },
+          {
+            "column": "y2",
+            "row": "y2",
+            "value": 1.1751449036090378e-8
+          },
+          {
+            "column": "y3",
+            "row": "y2",
+            "value": 0.0024225667107602433
+          },
+          {
+            "column": "x1",
+            "row": "y3",
+            "value": -0.01115495634783542
+          },
+          {
+            "column": "x2",
+            "row": "y3",
+            "value": -0.0026766497543256884
+          },
+          {
+            "column": "x3",
+            "row": "y3",
+            "value": -0.0003861680864212791
+          },
+          {
+            "column": "m1",
+            "row": "y3",
+            "value": -0.0067620356904039
+          },
+          {
+            "column": "m2",
+            "row": "y3",
+            "value": -0.016443998027702966
+          },
+          {
+            "column": "m3",
+            "row": "y3",
+            "value": -0.042329491308538414
+          },
+          {
+            "column": "y1",
+            "row": "y3",
+            "value": -0.0007950430324960012
+          },
+          {
+            "column": "y2",
+            "row": "y3",
+            "value": 0.0024225667107602433
+          },
+          {
+            "column": "y3",
+            "row": "y3",
+            "value": -2.9340917695463986e-8
+          }
+        ],
+        "sample_size": 240,
+        "standardized": [
+          {
+            "kind": "loading",
+            "lhs": "x",
+            "name": "x=~x1",
+            "rhs": "x1",
+            "std_all": 0.9796959643836701,
+            "std_lv": 0.9776528062693836
+          },
+          {
+            "kind": "loading",
+            "lhs": "x",
+            "name": "x=~x2",
+            "rhs": "x2",
+            "std_all": 0.9541414475718907,
+            "std_lv": 0.9521515657834416
+          },
+          {
+            "kind": "loading",
+            "lhs": "x",
+            "name": "x=~x3",
+            "rhs": "x3",
+            "std_all": 0.936272632719014,
+            "std_lv": 0.9343200461641257
+          },
+          {
+            "kind": "latent_variance",
+            "lhs": "x",
+            "name": "x~~x",
+            "rhs": "x",
+            "std_all": 1.0,
+            "std_lv": 1.0
+          },
+          {
+            "kind": "residual_variance",
+            "lhs": "x1",
+            "name": "x1~~x1",
+            "rhs": "x1",
+            "std_all": 0.0401958173703506,
+            "std_lv": 0.04002833526162034
+          },
+          {
+            "kind": "residual_variance",
+            "lhs": "x2",
+            "name": "x2~~x2",
+            "rhs": "x2",
+            "std_all": 0.08961409802541687,
+            "std_lv": 0.08924070367063212
+          },
+          {
+            "kind": "residual_variance",
+            "lhs": "x3",
+            "name": "x3~~x3",
+            "rhs": "x3",
+            "std_all": 0.12339355722140641,
+            "std_lv": 0.12287942200687973
+          },
+          {
+            "kind": "loading",
+            "lhs": "m",
+            "name": "m=~m1",
+            "rhs": "m1",
+            "std_all": 0.9691163956482542,
+            "std_lv": 0.9670953061909082
+          },
+          {
+            "kind": "loading",
+            "lhs": "m",
+            "name": "m=~m2",
+            "rhs": "m2",
+            "std_all": 0.9623265411575058,
+            "std_lv": 0.9603196027854707
+          },
+          {
+            "kind": "loading",
+            "lhs": "m",
+            "name": "m=~m3",
+            "rhs": "m3",
+            "std_all": 0.9412142453048552,
+            "std_lv": 0.9392513503866158
+          },
+          {
+            "kind": "latent_variance",
+            "lhs": "m",
+            "name": "m~~m",
+            "rhs": "m",
+            "std_all": 1.0,
+            "std_lv": 1.0
+          },
+          {
+            "kind": "residual_variance",
+            "lhs": "m1",
+            "name": "m1~~m1",
+            "rhs": "m1",
+            "std_all": 0.06081341168573629,
+            "std_lv": 0.06056002379088373
+          },
+          {
+            "kind": "residual_variance",
+            "lhs": "m2",
+            "name": "m2~~m2",
+            "rhs": "m2",
+            "std_all": 0.07392762818383111,
+            "std_lv": 0.07361959660412995
+          },
+          {
+            "kind": "residual_variance",
+            "lhs": "m3",
+            "name": "m3~~m3",
+            "rhs": "m3",
+            "std_all": 0.11411574443521154,
+            "std_lv": 0.11364026577826845
+          },
+          {
+            "kind": "loading",
+            "lhs": "y",
+            "name": "y=~y1",
+            "rhs": "y1",
+            "std_all": 0.9630940683760956,
+            "std_lv": 0.9610855343597773
+          },
+          {
+            "kind": "loading",
+            "lhs": "y",
+            "name": "y=~y2",
+            "rhs": "y2",
+            "std_all": 0.948665524339048,
+            "std_lv": 0.9466870692080798
+          },
+          {
+            "kind": "loading",
+            "lhs": "y",
+            "name": "y=~y3",
+            "rhs": "y3",
+            "std_all": 0.8874180166652607,
+            "std_lv": 0.8855673123336247
+          },
+          {
+            "kind": "latent_variance",
+            "lhs": "y",
+            "name": "y~~y",
+            "rhs": "y",
+            "std_all": 1.0,
+            "std_lv": 1.0
+          },
+          {
+            "kind": "residual_variance",
+            "lhs": "y1",
+            "name": "y1~~y1",
+            "rhs": "y1",
+            "std_all": 0.07244981545878065,
+            "std_lv": 0.07214794218453402
+          },
+          {
+            "kind": "residual_variance",
+            "lhs": "y2",
+            "name": "y2~~y2",
+            "rhs": "y2",
+            "std_all": 0.10003372293051906,
+            "std_lv": 0.0996169145761007
+          },
+          {
+            "kind": "residual_variance",
+            "lhs": "y3",
+            "name": "y3~~y3",
+            "rhs": "y3",
+            "std_all": 0.21248926369789506,
+            "std_lv": 0.21160389800045026
+          },
+          {
+            "kind": "latent_covariance",
+            "lhs": "x",
+            "name": "x~~m",
+            "rhs": "m",
+            "std_all": 0.2951368330960277,
+            "std_lv": 0.2951368330960277
+          },
+          {
+            "kind": "latent_covariance",
+            "lhs": "x",
+            "name": "x~~y",
+            "rhs": "y",
+            "std_all": 0.3437180816844822,
+            "std_lv": 0.3437180816844822
+          },
+          {
+            "kind": "latent_covariance",
+            "lhs": "m",
+            "name": "m~~y",
+            "rhs": "y",
+            "std_all": 0.4750802368104726,
+            "std_lv": 0.4750802368104726
+          }
+        ],
+        "warnings": [
+          "CB-SEM/CFA ML v1 is experimental; this run used the v0.7.1 direct maximum-likelihood optimizer for the supported simple reflective raw-data scope."
+        ]
+      },
+      "cca": null,
+      "construct_scores": {
+        "m": [
+          0.7309963996862505,
+          -0.3276299521887412,
+          0.5081186545189808,
+          -0.2275576849320849,
+          1.1188917505623113,
+          -0.7384132782610329,
+          1.3670019286135344,
+          -1.949937947053045,
+          1.9190533725029426,
+          1.7240552366747428,
+          -1.7311517553412965,
+          0.13770862109471574,
+          -1.1621748647922088,
+          0.4297630999024397,
+          -1.364086676619535,
+          0.14855516988382278,
+          -1.2062403291397408,
+          -0.9560766605326311,
+          -1.094201479799374,
+          -2.130459537155482,
+          -0.1713396097045526,
+          0.32043526208148565,
+          -0.4439785694212616,
+          0.8022758729680685,
+          0.5317802701546493,
+          1.4200749444714085,
+          0.821923796662609,
+          -0.5554076306309588,
+          1.8353047781833558,
+          0.2086129752232062,
+          0.5952546658327617,
+          -0.003991691527026685,
+          -0.4594329208040535,
+          1.0254030579931133,
+          -0.856648655245484,
+          0.012348841373596785,
+          -0.6088487866142078,
+          0.8657034818989224,
+          0.710280478642256,
+          0.14415866147840678,
+          0.9181141401269826,
+          1.8692700857026523,
+          -0.5844429862610803,
+          -0.34135345265650463,
+          0.6519793948126472,
+          1.494723625878863,
+          -0.11920187087421368,
+          -0.5304233083690619,
+          0.5172469749653614,
+          -1.4791286820755682,
+          2.016596971440358,
+          1.742463316556881,
+          2.0027531968308727,
+          1.438542890987896,
+          1.9682422497500407,
+          -2.391901608553505,
+          1.0273845236140764,
+          -0.5319258408906381,
+          2.5745539146002105,
+          2.4415698982240284,
+          0.3586241604960413,
+          0.4111995192138111,
+          1.0262647701731797,
+          -1.4926982116492593,
+          -0.6746574068065628,
+          1.297626785660657,
+          -0.47429337050442955,
+          0.5794819251963857,
+          -0.5211764318329225,
+          1.1069808914447876,
+          -0.6599145988762934,
+          0.2511717084543507,
+          -0.42943717215964416,
+          -0.6726782346909281,
+          0.09466907184049934,
+          -0.5266796376471019,
+          0.023184469040456922,
+          -1.028067202797248,
+          -0.3912607980249333,
+          0.9940445615437308,
+          -0.14776888603021304,
+          -0.5340188666922547,
+          -1.962793442924406,
+          -0.4514868880407618,
+          -0.45661077113752924,
+          -1.0526817469969563,
+          -0.7107288296064231,
+          1.1708593529849625,
+          0.9030663532795897,
+          -0.9753101500632482,
+          2.418611122829682,
+          -1.118992528413885,
+          -1.1349603433590227,
+          1.5943036798532169,
+          0.7886480791428199,
+          -0.0799066690670998,
+          0.46393901899102025,
+          0.22799187318550904,
+          0.6937774113730706,
+          0.1425557955444748,
+          -0.8245409464745712,
+          -0.13934647107550416,
+          -1.0396373845870226,
+          2.5491045146733,
+          0.10930379310706126,
+          -0.4961374302274029,
+          -0.2594718092518317,
+          -0.17020733219733986,
+          -0.9523132586500069,
+          0.7915391013577787,
+          0.4855202473439231,
+          -0.2802132838544521,
+          0.5240633599162441,
+          0.34144697600559004,
+          0.5050875818305574,
+          0.8022958259149621,
+          0.13729633790755139,
+          -0.38989170558625763,
+          1.3011322926797055,
+          1.0067629149524469,
+          0.2793057561732141,
+          0.046751615282469725,
+          -0.9172846267918897,
+          -0.16895272447155987,
+          -0.8184007783559228,
+          -0.23654874513368038,
+          0.8442664439714966,
+          -0.5843618600923336,
+          -0.9767449770200847,
+          -0.7441745636316657,
+          -0.41678077175771533,
+          -0.008096956124827887,
+          -0.6666488628380091,
+          1.2950693991595417,
+          -0.10099853968071355,
+          1.6291618020310277,
+          -1.0384985680994787,
+          -0.34993910697043173,
+          1.0805375753017796,
+          -1.5449127166783811,
+          -0.1622493239053485,
+          -1.2939125157765639,
+          0.7170675495540997,
+          -0.07274401585612368,
+          -2.0687904331730316,
+          -0.46185956999188105,
+          -0.6238280374881535,
+          -0.19921485318671722,
+          0.9151372038693102,
+          -0.2097941031131796,
+          -1.1339898640518213,
+          -1.2042474385991768,
+          -1.4921614632621223,
+          1.6388017007424323,
+          2.065260790776875,
+          0.6440835150718809,
+          -0.1035909361705636,
+          -0.9351389971765749,
+          0.01315085168703762,
+          -1.3144831172020979,
+          -0.7790189055117003,
+          -0.6083435679251857,
+          -0.013558027735552182,
+          -0.07215179397843453,
+          1.2165238932874065,
+          0.8109253009226491,
+          0.11494620262932426,
+          0.04385444948997156,
+          -0.7757014361960222,
+          -0.3191618587866395,
+          0.5876814750876437,
+          0.3312151238621051,
+          -0.17031404168295985,
+          -0.26054310976628653,
+          1.916912830914368,
+          0.24706501108622966,
+          1.704108628639058,
+          1.22268891216294,
+          -0.7997002527034041,
+          -0.34633088399307493,
+          -0.7242949650245868,
+          -0.7967481512930625,
+          -0.6612141900933046,
+          -0.11723331001220132,
+          -1.224755907653342,
+          -0.1845470119453146,
+          1.6352101581678031,
+          -1.250605446027616,
+          0.09925117197510921,
+          1.6951193852248714,
+          0.3193838494571603,
+          0.21397499018970734,
+          0.42298002132965606,
+          -0.4127930763518004,
+          0.3706300790502699,
+          -1.310030569484963,
+          -0.3550446776344679,
+          -1.7517375924582648,
+          -0.866176346885414,
+          -2.5458320077603815,
+          -1.410705968663132,
+          -0.2969491328691491,
+          -0.2821939091791106,
+          0.9857641075955698,
+          -0.9193837068742434,
+          -0.14213014835183538,
+          0.6562876313099391,
+          0.9585224698753996,
+          0.9512403366600775,
+          0.1067595719572463,
+          -0.11834077904882168,
+          -1.7121982681767745,
+          0.008304106302582924,
+          -0.08319339921579189,
+          1.5320439913821664,
+          0.5726827611503087,
+          -0.9319647334728609,
+          -0.7173550354089612,
+          1.3728121148714816,
+          -0.6007039698575897,
+          -0.13354847379424598,
+          -0.37578915930517043,
+          -0.39570054033396684,
+          0.42835810508789146,
+          1.301207643802779,
+          -0.01358649532453169,
+          -1.5934391391706673,
+          1.272567092480139,
+          0.05779270755701,
+          -0.8024806085689241,
+          -0.7324263242034621,
+          0.07935343731920977,
+          -0.5373313166525809,
+          -0.14086186632130687,
+          -1.0999625088260818,
+          -0.3837858738810791,
+          -1.568819026717192,
+          -0.9578401311302125,
+          -1.3274953469131523,
+          -0.06024871584738276
+        ],
+        "x": [
+          0.8137760726801849,
+          -0.13121071686091765,
+          -0.23307415761696884,
+          -1.5833429180656244,
+          1.3043783376884284,
+          0.4151777919952735,
+          0.4240546814450928,
+          1.104512202505576,
+          2.2585385142178653,
+          -0.944497739729201,
+          0.4656874521780471,
+          -0.2330123593547076,
+          -0.40871218586650876,
+          -0.4350032145686292,
+          -1.041932679942305,
+          1.1440939731962398,
+          -1.5816094620246552,
+          -1.5464590286959892,
+          -1.3263278181224065,
+          -1.3159200754256142,
+          -0.3924353773563145,
+          1.0481390968118536,
+          0.4252292212034353,
+          0.4708026986217819,
+          -0.5760674638359429,
+          1.0882345543200411,
+          -2.071948312610242,
+          -0.3946208129337814,
+          -0.5292539329893237,
+          1.4945222686906345,
+          -1.042647396274387,
+          -1.0542592687367631,
+          -1.3842527351411213,
+          0.7723931068007134,
+          -0.015297660629997744,
+          0.21857173029839147,
+          0.914349317283861,
+          0.10674769749838844,
+          -0.013911224760503061,
+          -0.174265144829698,
+          -0.36712484199250267,
+          0.6224990139686777,
+          -0.411517176613414,
+          0.22672288321197936,
+          0.5289400035513723,
+          1.1529529423558225,
+          -0.6491559415641155,
+          -1.0983485569602707,
+          -0.6449174841845268,
+          0.1633876094518982,
+          -0.5992767365181686,
+          2.399382233803685,
+          1.7368885331461095,
+          -1.686445662515127,
+          -0.6935797746740142,
+          -0.677870570591694,
+          0.3656165201955357,
+          -0.6370184043591444,
+          1.571168741352509,
+          -0.7632934463307652,
+          -0.396748459392824,
+          -0.09207074889876585,
+          0.022917611468465007,
+          -0.7452614601792791,
+          -0.49399803917853796,
+          0.038590777834919834,
+          -0.7903082495626166,
+          1.558761700761004,
+          0.5397886856089829,
+          0.9636951358254302,
+          1.3921836955914655,
+          1.0984596429901734,
+          0.9909838640365651,
+          -1.7654047256700773,
+          0.9686240127756367,
+          -0.9953752039246724,
+          0.1247254220115153,
+          -0.9654043090859651,
+          0.36648294287283273,
+          -0.6273735757517138,
+          0.6177256407029139,
+          1.368231541709098,
+          1.6771844478729991,
+          -0.52014015578988,
+          0.4748041146321949,
+          -1.4834135512913957,
+          -1.3251487108635414,
+          0.9911770591874165,
+          0.5848900950582532,
+          0.3489242438227618,
+          2.8573755952422877,
+          1.5003749180196226,
+          -0.23078783005352546,
+          0.6749006746046732,
+          -0.25943810989303295,
+          0.009488969307898361,
+          -1.5680856381330035,
+          0.14004422464122948,
+          -0.6552093008610915,
+          1.4608594047035806,
+          -0.3205522227668905,
+          0.5936037728992368,
+          0.23539265425020425,
+          0.7741453342848494,
+          -1.0624977423913098,
+          -1.5838661981857558,
+          -0.1991931466791151,
+          0.15981233985150445,
+          1.011897016583383,
+          0.5122943427517952,
+          -1.8973695982098566,
+          0.9425159420978529,
+          0.30823841001234803,
+          -3.1289034293437394,
+          0.8449605668250946,
+          -0.08568628045149246,
+          -1.5407587571227912,
+          -1.2730831501900863,
+          0.3643144561166867,
+          -0.19964289014277845,
+          -0.21074922757020978,
+          1.411229179961678,
+          -1.4456234300255197,
+          -0.9079025078161636,
+          0.4187988185129249,
+          -1.2068104398801691,
+          0.2505908901007966,
+          0.21995239724533308,
+          -0.7201707523607874,
+          -0.35591874576268406,
+          0.0019234570354454848,
+          -0.05883113084831453,
+          -0.3873365050163698,
+          0.37558385857869325,
+          -0.603175368095387,
+          -0.4052707872838635,
+          -1.504446711234702,
+          -0.597079301182069,
+          1.4792258358826067,
+          -0.6717805494321283,
+          -0.9840043851708504,
+          -0.24007650766855007,
+          0.060915488794829734,
+          -0.25399366423110575,
+          -0.6478225508850622,
+          -1.2040631146585248,
+          -1.9015388005992369,
+          -0.9173510592330989,
+          -0.40090879315961203,
+          1.301714154303776,
+          -0.4773524993532435,
+          -0.2834411731563413,
+          -2.366988252040002,
+          0.9537480931749691,
+          -0.23095432838961785,
+          0.47780156690257636,
+          -0.11839335143648703,
+          0.22082662511458198,
+          -1.066289297783654,
+          -0.7255210144342703,
+          -1.0886551204398724,
+          -0.2513196895174141,
+          0.3542382334351636,
+          1.469653880972448,
+          0.48626215663195116,
+          0.028054394467839944,
+          -0.20863911347495318,
+          -0.671475273584428,
+          -0.6387956484880455,
+          -0.1421711519491563,
+          0.5683333462099154,
+          0.15507156321876223,
+          0.6556862062872457,
+          1.1179049974810271,
+          0.18416367281961782,
+          0.5756331357078024,
+          -0.6174964385789699,
+          0.7387449306006769,
+          0.374117741754481,
+          -0.9242105693816858,
+          -0.8364535234918618,
+          -1.4415467376407183,
+          -0.050826787373577306,
+          0.1003296750327569,
+          -0.713766875117275,
+          -0.1535295566468188,
+          2.2109135963696316,
+          0.8885483912069683,
+          -0.508227439084521,
+          -0.04574391499731913,
+          0.09390881626484775,
+          1.2647747905714137,
+          2.9906183484304463,
+          0.5357248784576452,
+          0.0008484805139387182,
+          0.9735996693265252,
+          0.5516484818127692,
+          -0.013229490125719666,
+          0.3683078851406492,
+          0.6448374433705484,
+          -1.1720801754387262,
+          -0.8648920003342827,
+          0.3354915087543773,
+          -0.11568742263699024,
+          -0.8073019368197185,
+          0.1729517509921679,
+          -0.696471784431876,
+          -0.42014737184148593,
+          1.5066029727185706,
+          1.4595440395118922,
+          0.5986593777861975,
+          -0.032044475338895276,
+          1.4821902528311568,
+          0.15338066152213967,
+          0.4392217159213056,
+          0.6440984567173733,
+          0.844401036773279,
+          0.1384178362097159,
+          1.560103184478427,
+          -1.0198149985644507,
+          0.1350612020947875,
+          1.3369713783847086,
+          -1.7337703737905825,
+          -0.399166141437007,
+          3.138051549975102,
+          0.5860544667646708,
+          -1.087750865753183,
+          -0.8503859109051902,
+          1.5554333834033327,
+          -1.1807981593478127,
+          -0.4079864085284658,
+          0.442389597503769,
+          1.5718730794199942,
+          1.7559272791407543,
+          -0.9533802642829211,
+          0.3999531253581835,
+          -1.0259467564229763,
+          -1.8202208601364396,
+          0.2583777521271705,
+          -0.12246789421018935
+        ],
+        "y": [
+          -0.24405578918558343,
+          -1.4247375738321766,
+          0.060956589114433433,
+          0.5706502095448848,
+          0.8430584675368519,
+          -0.43686018094256807,
+          -0.1841502823327102,
+          -1.6166462829378139,
+          0.15614209530899492,
+          0.27338565787967856,
+          1.102844223695547,
+          -0.9855819504956415,
+          0.3193397648132714,
+          -0.08948098433758693,
+          1.4675214683425164,
+          0.4234440365307557,
+          -2.459777008119052,
+          -0.26194049385811446,
+          -1.1442073747048251,
+          1.1698861147860435,
+          -1.7141857295275456,
+          -0.1347662380871145,
+          -1.267880646582309,
+          -0.11303887400186553,
+          -0.3365256920309431,
+          1.175152217820131,
+          0.1135860745307289,
+          -0.7208694057770061,
+          0.2961676086287447,
+          -0.29861463678162437,
+          0.04828645028533209,
+          -1.7221066244080585,
+          -0.5615138707060465,
+          -0.5445332101991889,
+          -0.15619251343420865,
+          -0.1841392343432919,
+          -0.5186625015823941,
+          -0.8926085952792423,
+          0.5214204834087626,
+          -0.02434569738657142,
+          -0.12623198053758025,
+          1.719777760869183,
+          -0.941670433052305,
+          -0.18185241872681207,
+          1.920693788702269,
+          1.8978059266751248,
+          0.335443569382947,
+          -0.08730607414319208,
+          0.4255139683590337,
+          -0.5439559875717935,
+          -0.20821363858727396,
+          0.8951611800947588,
+          -0.43523832746171176,
+          -0.542651376048379,
+          1.4596778079126729,
+          -1.704811025119132,
+          0.4703939156702236,
+          -1.004944121441249,
+          1.017171077325102,
+          0.9036242133932472,
+          -0.3038971679466703,
+          2.049844257904146,
+          0.3146460546328674,
+          -0.7543187985867283,
+          -0.30887562287923365,
+          -1.3609684737832763,
+          1.0998819033331635,
+          2.117716805159062,
+          0.37472929335018224,
+          1.1093203538895515,
+          0.567691123700821,
+          -0.706439276949786,
+          0.2608977929521719,
+          -0.06447854724650381,
+          0.06619459424275931,
+          0.05309026003143831,
+          -1.4953554001110592,
+          -0.6239565038589087,
+          0.9380310591913049,
+          0.22949479407194007,
+          -0.5021251217205025,
+          0.1616347589021242,
+          -1.3932682650140509,
+          0.029973783479800203,
+          0.6439763444274859,
+          -1.2082852963950994,
+          -0.3322489289127169,
+          1.2946361412356666,
+          -0.5531980898885515,
+          0.08595688939447789,
+          2.1369139920934823,
+          -0.3202652169011477,
+          -0.6865455417355243,
+          0.49004701886282814,
+          0.5917881108748956,
+          -0.9696934064225583,
+          0.9159757247232186,
+          -1.2598426162140246,
+          0.21581126452632912,
+          0.3296019362712213,
+          -0.9509573144981573,
+          -0.27678164801400174,
+          -0.61086063925075,
+          1.565490487214678,
+          0.4677418025872345,
+          -1.392895426240049,
+          0.012949919486990182,
+          0.26480842579996866,
+          -0.3886447213476827,
+          -0.3576460709320969,
+          0.6483114786423941,
+          -1.0252108912602294,
+          0.4012130940825804,
+          -1.7049389109923394,
+          0.824803820532267,
+          0.5613007880987659,
+          -1.32985909145167,
+          -1.1089623330333294,
+          2.0982123875464684,
+          1.3116675674276603,
+          0.7253336635130271,
+          1.2309080272351132,
+          -0.4790168680152998,
+          -0.050546726050769764,
+          -0.033328529707989066,
+          -0.4412891350326604,
+          -0.19582097614945537,
+          -0.6156816250568753,
+          1.1687092603545564,
+          0.17035807139758474,
+          0.9384581772259211,
+          0.4075087281918278,
+          -0.9882419559050967,
+          0.7281495339593871,
+          0.9040203503885741,
+          1.9848246632895774,
+          -0.8125236682843987,
+          0.623891426266826,
+          0.9081494921168949,
+          -1.3473178120513025,
+          1.370156660971171,
+          0.27056113292801465,
+          -0.03056157699746706,
+          1.0495476452928114,
+          -1.1762797381711738,
+          -1.2269988085606467,
+          -1.5046723164734694,
+          -0.8178360246282327,
+          0.7990659225913118,
+          -2.1206916569481122,
+          0.07392459674515713,
+          -0.6793671970942036,
+          -1.6882078758749948,
+          1.6499019126793286,
+          0.43635976814005023,
+          0.7638033601453714,
+          -1.5961487623695703,
+          -0.2045025349809791,
+          0.36047203087775953,
+          -0.7387603326899076,
+          -0.20878216274400355,
+          -0.6074502965680472,
+          -2.0488410222023634,
+          -0.385863882464443,
+          1.3353048956899565,
+          1.2544285505154857,
+          0.7068954131620294,
+          -0.7541186877441485,
+          -0.16564273594752116,
+          0.048914819051483094,
+          0.9460844308768709,
+          -1.551802373422302,
+          0.09467675728454095,
+          -0.18382169727488995,
+          -0.19851263388173454,
+          0.014666776038005848,
+          1.0135478659569725,
+          0.5797369129155597,
+          0.10733403663751524,
+          -2.2126677173911515,
+          -0.6986340928387388,
+          0.9269109951406314,
+          0.48123956702463,
+          -0.09712666713918501,
+          -0.5203797292305651,
+          0.33537990811402557,
+          3.2024459604289426,
+          -2.3244847097298025,
+          -0.25269111174616454,
+          0.010517705520362776,
+          -0.24102900255246273,
+          0.6685137854281802,
+          0.6148648760366514,
+          -0.3433716655541662,
+          0.2519010016024355,
+          0.1030562373663474,
+          0.7581712337809804,
+          -0.7589575510087816,
+          1.023506259624624,
+          -0.21864341172208784,
+          0.24938864993351087,
+          -0.9486482845457338,
+          -0.7721726027830287,
+          1.618246462080083,
+          -0.9776850027816669,
+          0.7166028743122074,
+          1.9385781931815846,
+          0.08434918172033849,
+          0.7863680232596304,
+          1.0128861872877974,
+          1.7466322271276942,
+          0.14781128267170107,
+          0.0750665927239678,
+          -1.1196161002355798,
+          0.8831336029107216,
+          2.3313907958516054,
+          0.9639846942638791,
+          -0.6566523478180295,
+          0.9329431387512227,
+          0.5358780987195985,
+          -0.6889335925811388,
+          0.4248978172847608,
+          -1.6533132622341826,
+          -0.8585572836561041,
+          0.3958149554985688,
+          0.5396942920526336,
+          -0.6366964802935309,
+          -0.33467164190096205,
+          1.523194520933679,
+          -0.1783807173312678,
+          -2.852596770724545,
+          -0.7321174073977247,
+          -0.03132586739221471,
+          0.8653372932221256,
+          -0.3824187006984534,
+          -0.356856612629616,
+          -3.1068907386020332,
+          -0.9524225124980791,
+          0.18179376037563438,
+          0.747733537507987
+        ]
+      },
+      "control_estimates": [],
+      "converged": true,
+      "cta_pls": null,
+      "effects": [],
+      "endogeneity": null,
+      "fimix": null,
+      "gsca": null,
+      "ipma": null,
+      "iterations": 5,
+      "mediation": {
+        "estimates": [],
+        "method_version": "pls_mediation_v1",
+        "tolerance": 1e-12,
+        "warnings": [
+          "Mediation classes are descriptive effect-decomposition labels; publication inference requires validated bootstrap or permutation intervals for the relevant indirect effect."
+        ]
+      },
+      "method_version": "cfa_ml_v1",
+      "mga": null,
+      "mga_permutation": null,
+      "micom": null,
+      "moderated_mediation": null,
+      "moderation": {
+        "estimates": [],
+        "method_version": "pls_two_stage_moderation_v1",
+        "moderator_score_levels": [
+          -1.0,
+          0.0,
+          1.0
+        ],
+        "warnings": []
+      },
+      "nca": null,
+      "nonlinear_effects": null,
+      "omitted_observations": 0,
+      "outer_estimates": [
+        {
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9789435134387036,
+          "weight": 0.3458825557063049
+        },
+        {
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9706910800942772,
+          "weight": 0.34296678706624656
+        },
+        {
+          "construct": "x",
+          "indicator": "x3",
+          "loading": 0.9642124404758423,
+          "weight": 0.3406777395900474
+        },
+        {
+          "construct": "m",
+          "indicator": "m1",
+          "loading": 0.9757336779578637,
+          "weight": 0.34431002092094537
+        },
+        {
+          "construct": "m",
+          "indicator": "m2",
+          "loading": 0.9735498350078773,
+          "weight": 0.34353940180759346
+        },
+        {
+          "construct": "m",
+          "indicator": "m3",
+          "loading": 0.9664500286445976,
+          "weight": 0.3410340723387506
+        },
+        {
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.965493989034705,
+          "weight": 0.3522031198512444
+        },
+        {
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9621042988376892,
+          "weight": 0.3509665922252916
+        },
+        {
+          "construct": "y",
+          "indicator": "y3",
+          "loading": 0.9399337503346941,
+          "weight": 0.34287899293032825
+        }
+      ],
+      "paths": [],
+      "pca": null,
+      "plsc": null,
+      "predict": null,
+      "r_squared": {},
+      "regression": null,
+      "segmentation": null,
+      "transforms": [
+        {
+          "indicator": "x1",
+          "mean": 0.031252566534999984,
+          "scale": 1.0731266850099488
+        },
+        {
+          "indicator": "x2",
+          "mean": -0.0018593376591666394,
+          "scale": 0.8952398109750718
+        },
+        {
+          "indicator": "x3",
+          "mean": -0.029619621887916628,
+          "scale": 0.8185252946323712
+        },
+        {
+          "indicator": "m1",
+          "mean": 0.07151448798374994,
+          "scale": 1.060314513666035
+        },
+        {
+          "indicator": "m2",
+          "mean": 0.05732794508083336,
+          "scale": 0.8997568028772924
+        },
+        {
+          "indicator": "m3",
+          "mean": 0.04684985334875003,
+          "scale": 0.8065230053567773
+        },
+        {
+          "indicator": "y1",
+          "mean": 0.023709862917083324,
+          "scale": 0.8835878606879656
+        },
+        {
+          "indicator": "y2",
+          "mean": 0.029433125274583374,
+          "scale": 0.7507781320983828
+        },
+        {
+          "indicator": "y3",
+          "mean": 0.03910939300833334,
+          "scale": 0.7206257733896834
+        }
+      ],
+      "used_observations": 240,
+      "warnings": [
+        "CB-SEM/CFA ML v1 is experimental; this run used the v0.7.1 direct maximum-likelihood optimizer for the supported simple reflective raw-data scope."
+      ],
+      "wpls": null
+    },
+    "assessment": {
+      "blindfolding": {
+        "constructs": [],
+        "settings": {
+          "missing_value_treatment": "indicator_mean_replacement",
+          "omission_distance": 7,
+          "selection": "preferred_7_then_smallest_valid_5_to_12"
+        }
+      },
+      "construct_quality": [
+        {
+          "ave": 0.943425735282229,
+          "construct": "x",
+          "cronbach_alpha": 0.969996735331309,
+          "normalized_weight_norm_squared": 0.3533222816246532,
+          "off_diagonal_denominator": 0.08321800566138997,
+          "off_diagonal_numerator": 0.6466777183753468,
+          "rho_a": 0.970091381678304,
+          "rho_a_indicator_count": 3,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [],
+          "rho_c": 0.9804020393863135,
+          "score_variance_before_normalization": 1.0000000000000004
+        },
+        {
+          "ave": 0.9446270498040629,
+          "construct": "m",
+          "cronbach_alpha": 0.9706820701737726,
+          "normalized_weight_norm_squared": 0.3528729495968531,
+          "off_diagonal_denominator": 0.08301012464203321,
+          "off_diagonal_numerator": 0.6471270504031469,
+          "rho_a": 0.9707227845230487,
+          "rho_a_indicator_count": 3,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [],
+          "rho_c": 0.9808345505866687,
+          "score_variance_before_normalization": 1.0000000000000004
+        },
+        {
+          "ave": 0.9137662599074505,
+          "construct": "y",
+          "cronbach_alpha": 0.9527419185682858,
+          "normalized_weight_norm_squared": 0.36479059028410044,
+          "off_diagonal_denominator": 0.08869003342375327,
+          "off_diagonal_numerator": 0.6352094097158997,
+          "rho_a": 0.9530800059001792,
+          "rho_a_indicator_count": 3,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [],
+          "rho_c": 0.9694979645723696,
+          "score_variance_before_normalization": 0.9999999999999998
+        }
+      ],
+      "cross_loadings": [
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9789435134387026
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "m",
+          "indicator": "x1",
+          "loading": 0.29383704965120766
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x1",
+          "loading": 0.32314898426972455
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9706910800942773
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "m",
+          "indicator": "x2",
+          "loading": 0.26213056473664476
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x2",
+          "loading": 0.31598464435993906
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x3",
+          "loading": 0.9642124404758432
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "m",
+          "indicator": "x3",
+          "loading": 0.292937854740056
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x3",
+          "loading": 0.3233589581839321
+        },
+        {
+          "assigned_construct": "m",
+          "construct": "x",
+          "indicator": "m1",
+          "loading": 0.2649792834641353
+        },
+        {
+          "assigned_construct": "m",
+          "construct": "m",
+          "indicator": "m1",
+          "loading": 0.9757336779578648
+        },
+        {
+          "assigned_construct": "m",
+          "construct": "y",
+          "indicator": "m1",
+          "loading": 0.4561367747862448
+        },
+        {
+          "assigned_construct": "m",
+          "construct": "x",
+          "indicator": "m2",
+          "loading": 0.2836483619714973
+        },
+        {
+          "assigned_construct": "m",
+          "construct": "m",
+          "indicator": "m2",
+          "loading": 0.9735498350078775
+        },
+        {
+          "assigned_construct": "m",
+          "construct": "y",
+          "indicator": "m2",
+          "loading": 0.44446483861856306
+        },
+        {
+          "assigned_construct": "m",
+          "construct": "x",
+          "indicator": "m3",
+          "loading": 0.30100564889257286
+        },
+        {
+          "assigned_construct": "m",
+          "construct": "m",
+          "indicator": "m3",
+          "loading": 0.9664500286445978
+        },
+        {
+          "assigned_construct": "m",
+          "construct": "y",
+          "indicator": "m3",
+          "loading": 0.4067798391986231
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y1",
+          "loading": 0.3385979640485197
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "m",
+          "indicator": "y1",
+          "loading": 0.454303819360976
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9654939890347042
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y2",
+          "loading": 0.3126109834539737
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "m",
+          "indicator": "y2",
+          "loading": 0.43808781426229443
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9621042988376887
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y3",
+          "loading": 0.2955379739294397
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "m",
+          "indicator": "y3",
+          "loading": 0.3928733615396459
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y3",
+          "loading": 0.9399337503346927
+        }
+      ],
+      "f_squared": [],
+      "formative_indicator_vif": [],
+      "fornell_larcker": {
+        "constructs": [
+          "x",
+          "m",
+          "y"
+        ],
+        "values": [
+          [
+            0.9713010528575725,
+            0.2913325934673477,
+            0.33030503374180237
+          ],
+          [
+            0.2913325934673477,
+            0.9719192609492122,
+            0.4484694323602027
+          ],
+          [
+            0.33030503374180237,
+            0.4484694323602027,
+            0.9559112196786115
+          ]
+        ]
+      },
+      "htmt": null,
+      "htmt_original": {
+        "absolute_correlations": false,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.30030532073260824
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.34345204706573407
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.30030532073260824
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.4659913376185935
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.34345204706573396
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.4659913376185935
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "m",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_original_method_version": "henseler_et_al_htmt_v1",
+      "htmt_plus": {
+        "absolute_correlations": true,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.30030532073260824
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.34345204706573407
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.30030532073260824
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.4659913376185935
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.34345204706573396
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.4659913376185935
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "m",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
+      "method_version": "pls_assessment_v7",
+      "model_fit": {
+        "estimated": {
+          "d_uls": 0.02504250669321778,
+          "srmr": 0.023590255376705293
+        },
+        "saturated": {
+          "d_uls": 0.02504250669321778,
+          "srmr": 0.023590255376705293
+        }
+      },
+      "r_squared": {},
+      "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
+      "structural_quality": [],
+      "structural_vif": [],
+      "warnings": []
+    }
+  }
+}

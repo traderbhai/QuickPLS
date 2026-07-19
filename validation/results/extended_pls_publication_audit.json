@@ -1,0 +1,253 @@
+{
+  "schema_version": 1,
+  "target": "v0.5 extended PLS publication audit",
+  "passed": true,
+  "reports": [
+    {
+      "path": "validation\\results\\mediation_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\mediation_r_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\mediation_published_example_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\mediation_metamorphic_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\mediation_randomization_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\moderation_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\moderation_r_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\moderation_published_formula_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\moderation_published_empirical_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\moderation_simulation_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\moderation_inference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\moderation_inference_qualification_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\moderation_coverage_qualification_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\higher_order_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\higher_order_metamorphic_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\higher_order_two_stage_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\higher_order_hybrid_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\higher_order_hybrid_guard_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\plsc_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\plsc_unsupported_guard_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\wpls_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\cca_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\cta_pls_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\endogeneity_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\nonlinear_effects_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\moderated_mediation_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\extended_pls_unsupported_guard_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\v05_extended_pls_evidence.json",
+      "present": true,
+      "passed": true
+    }
+  ],
+  "method_family_matrix": {
+    "mediation": true,
+    "moderation": true,
+    "higher_order": true,
+    "plsc_wpls_cca_cta": true,
+    "endogeneity_nonlinear_controls": true,
+    "moderated_mediation": true
+  },
+  "docs": [
+    {
+      "path": "docs\\methods\\PLS_MEDIATION_V1.md",
+      "present": true,
+      "bytes": 4514
+    },
+    {
+      "path": "docs\\methods\\PLS_TWO_STAGE_MODERATION_V1.md",
+      "present": true,
+      "bytes": 6129
+    },
+    {
+      "path": "docs\\methods\\PLS_MODERATED_MEDIATION_V1.md",
+      "present": true,
+      "bytes": 1953
+    },
+    {
+      "path": "docs\\methods\\PLS_HIGHER_ORDER_V1.md",
+      "present": true,
+      "bytes": 9160
+    },
+    {
+      "path": "docs\\methods\\PLSC_V1.md",
+      "present": true,
+      "bytes": 1768
+    },
+    {
+      "path": "docs\\methods\\PLS_WPLS_V1.md",
+      "present": true,
+      "bytes": 2074
+    },
+    {
+      "path": "docs\\methods\\PLS_CCA_V1.md",
+      "present": true,
+      "bytes": 1875
+    },
+    {
+      "path": "docs\\methods\\PLS_CTA_PLS_V1.md",
+      "present": true,
+      "bytes": 1758
+    },
+    {
+      "path": "docs\\methods\\PLS_GAUSSIAN_COPULA_ENDOGENEITY_V1.md",
+      "present": true,
+      "bytes": 1851
+    },
+    {
+      "path": "docs\\methods\\PLS_NONLINEAR_EFFECTS_V1.md",
+      "present": true,
+      "bytes": 1864
+    },
+    {
+      "path": "docs\\methods\\PLS_CONTROLS_V1.md",
+      "present": true,
+      "bytes": 1929
+    }
+  ],
+  "commands": [
+    {
+      "command": [
+        "cargo",
+        "run",
+        "-p",
+        "qpls-cli",
+        "--",
+        "evidence",
+        "v05-extended-pls"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "stdout_tail": "wrote D:\\QuickPLS\\validation/results/v05_extended_pls_evidence.json | artifacts_present=true artifacts_passed=true open_gates=0\n",
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.99s\n     Running `target\\debug\\qpls.exe evidence v05-extended-pls`\n"
+    },
+    {
+      "command": [
+        "npm.cmd",
+        "run",
+        "qpls:extended-pls:unsupported-guard"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "stdout_tail": "\n> quickpls@0.9.0-rc.1 qpls:extended-pls:unsupported-guard\n> python validation/extended_pls_unsupported_guard.py\n\nwrote D:\\QuickPLS\\validation\\results\\extended_pls_unsupported_guard_report.json | passed=True | methods=0\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "qpls-estimation"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 20 tests\ntest pls::tests::benchmark_target_shape_100k_300_100 ... ignored, release performance qualification\ntest pls::tests::mediation_classifier_covers_descriptive_effect_patterns ... ok\ntest pls::tests::cycles_and_constant_indicators_are_rejected ... ok\ntest pls::tests::execution_control_reports_progress_and_cancels_inside_iteration ... ok\ntest pls::tests::hybrid_higher_order_splits_component_indicator_blocks ... ok\ntest pls::tests::control_estimates_mirror_declared_structural_paths ... ok\ntest pls::tests::agrees_with_python_plspm_reference_fixture ... ok\ntest pls::tests::factor_single_item_and_preprocessing_modes_are_supported ... ok\ntest pls::tests::execution_rejects_wrong_dispatch_resampling_and_malformed_models ... ok\ntest pls::tests::iteration_limit_produces_no_completed_result ... ok\ntest pls::tests::reflective_path_model_converges_and_decomposes_effects ... ok\ntest pls::tests::indicator_order_does_not_change_paths ... ok\ntest pls::tests::three_construct_path_model_reports_indirect_only_mediation ... ok\ntest pls::tests::repeated_indicator_higher_order_expands_component_blocks ... ok\ntest pls::tests::two_stage_higher_order_uses_component_scores_as_indicators ... ok\ntest pls::tests::listwise_deletion_affine_scaling_and_construct_order_are_stable ... ok\ntest pls::tests::two_stage_moderation_generates_product_score_and_estimates_interaction_path ... ok\ntest pls::tests::plspredict_holdout_reports_leakage_free_prediction_metrics ... ok\ntest pls::tests::pca_weighting_and_formative_mode_are_executable ... ok\ntest pls::tests::unstandardized_mode_b_is_invariant_to_indicator_offsets ... ok\n\ntest result: ok. 19 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.01s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_estimation-4b8a1486bf525f96.exe)\n   Doc-tests qpls_estimation\n"
+    }
+  ],
+  "note": "This audit promotes the currently implemented v0.5 scope only; unsupported cases remain documented and guarded."
+}

@@ -1,0 +1,19 @@
+[package]
+name = "qpls-estimation"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+arrow.workspace = true
+faer.workspace = true
+qpls-core = { path = "../qpls-core" }
+qpls-data = { path = "../qpls-data" }
+serde.workspace = true
+statrs.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+approx = "0.5"
+chrono.workspace = true
+uuid.workspace = true

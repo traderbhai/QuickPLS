@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "target": "v0.4 assessment publication audit",
+  "passed": true,
+  "evidence": [
+    {
+      "path": "validation/results/v04_assessment_evidence.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation/results/rho_a_csem_comparison.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation/results/rho_a_primary_dijkstra_henseler_2015.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation/results/htmt_reference.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation/results/htmt_csem_comparison.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation/results/htmt_seminr_comparison.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation/results/assessment_csem_comparison.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation/results/assessment_published_satisfaction_comparison.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation/results/assessment_simulation_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation/results/blindfolding_python_comparison.json",
+      "present": true,
+      "passed": true
+    }
+  ],
+  "metric_matrix": {
+    "path": "validation\\results\\assessment_publication_metric_matrix.json",
+    "rows": 12,
+    "passed": true
+  },
+  "export_precision_check": {
+    "path": "validation\\results\\assessment_publication_export_check.csv",
+    "exists": true,
+    "has_alpha_or_quality_rows": false,
+    "has_supported_scope_warning": true
+  },
+  "commands": [
+    {
+      "command": [
+        "cargo",
+        "run",
+        "-p",
+        "qpls-cli",
+        "--",
+        "export",
+        "validation/results/pls_quickpls_path_mode_a.json",
+        "--format",
+        "csv",
+        "--output",
+        "validation\\results\\assessment_publication_export_check.csv",
+        "--include-experimental"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "stdout_tail": "wrote watermarked experimental export validation\\results\\assessment_publication_export_check.csv\n",
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.71s\n     Running `target\\debug\\qpls.exe export validation/results/pls_quickpls_path_mode_a.json --format csv --output validation\\results\\assessment_publication_export_check.csv --include-experimental`\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "qpls-assessment"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 35 tests\ntest tests::fit_measures_match_hand_calculated_triangle_residuals ... ok\ntest tests::htmt_matches_hand_calculated_absolute_correlation_ratio ... ok\ntest tests::htmt_original_and_plus_have_explicit_sign_semantics ... ok\ntest tests::htmt_plus_matches_ringle_2023_rounded_formula_examples ... ok\ntest tests::htmt_values_above_one_are_preserved ... ok\ntest tests::htmt_zero_monotrait_denominator_is_not_applicable ... ok\ntest tests::execution_control_reaches_new_structural_diagnostic_phase ... ok\ntest tests::execution_control_reports_progress_and_cancels_cross_loadings ... ok\ntest tests::cancellation_is_forwarded_into_reduced_effect_size_estimation ... ok\ntest tests::blindfolding_cancellation_and_no_valid_distance_are_explicit ... ok\ntest tests::effect_size_retains_an_isolated_source_measurement_block ... ok\ntest tests::blindfolding_reports_monotonic_nested_estimation_progress ... ok\ntest tests::rejects_dataset_and_result_mismatches ... ok\ntest tests::effect_size_reports_monotonic_fixed_score_progress ... ok\ntest tests::rho_a_canonicalizes_only_roundoff_boundary_excursions ... ok\ntest tests::reference_fixture_matches_csem_assessment ... ok\ntest tests::legacy_payload_without_new_assessment_fields_defaults_to_empty ... ok\ntest tests::rho_a_matches_dijkstra_henseler_2015_equation_3_fixture ... ok\ntest tests::rho_a_is_invariant_to_construct_orientation ... ok\ntest tests::formative_metrics_are_not_applicable_and_r2_is_reused_exactly ... ok\ntest tests::perfect_included_r_squared_produces_denominator_warning ... ok\ntest tests::rho_a_matches_independent_decimal_reference_and_metamorphics ... ok\ntest tests::rho_a_preserves_improper_values_and_reports_degenerate_inputs ... ok\ntest tests::rho_a_matches_three_and_two_indicator_hand_fixtures ... ok\ntest tests::rho_a_reports_constant_nonfinite_and_zero_score_inputs ... ok\ntest tests::standardized_alpha_matches_hand_calculation ... ok\ntest tests::vif_matches_auxiliary_regression_identity_and_flags_perfect_explanation ... ok\ntest tests::nested_vif_progress_is_monotonic_with_a_stable_phase_total ... ok\ntest tests::single_predictor_effect_size_uses_intercept_only_excluded_r_squared ... ok\ntest tests::cohen_f_squared_matches_reference_regressions_and_path_order_is_invariant ... ok\ntest tests::vif_cancels_during_large_correlation_preparation ... ok\ntest tests::rho_a_applicability_is_explicit_for_pca_and_formative_blocks ... ok\ntest tests::rho_a_is_invariant_to_positive_affine_data_and_recipe_reordering ... ok\ntest tests::rho_a_coordinate_checks_cover_all_preprocessing_modes_and_mismatch ... ok\ntest tests::htmt_matches_independent_corporate_reputation_reference ... ok\n\ntest result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.51s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_assessment-5631546faacd302f.exe)\n   Doc-tests qpls_assessment\n"
+    }
+  ]
+}

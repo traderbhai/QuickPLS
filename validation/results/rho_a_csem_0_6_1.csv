@@ -1,0 +1,3 @@
+construct,score_variance,weight_norm_squared,off_diagonal_numerator,off_diagonal_denominator,rho_a_manual,rho_a_csem,csem_version,inner_weighting,mode
+x,1,0.344023008093627,0.655976991906373,0.0788687713674814,0.984370317275809,0.984370317275809,0.6.1,path,modeA
+y,1,0.334013940620591,0.665986059379409,0.074376523002804,0.998983817134747,0.998983817134746,0.6.1,path,modeA

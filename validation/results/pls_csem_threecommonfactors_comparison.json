@@ -1,0 +1,258 @@
+{
+  "status": "passed",
+  "tolerance": 1e-06,
+  "source": {
+    "dataset": "cSEM::threecommonfactors",
+    "documentation": "validation/r-library/cSEM/examples/example_csem.R",
+    "population_path_values": {
+      "eta2~eta1": 0.6,
+      "eta3~eta1": 0.4,
+      "eta3~eta2": 0.35
+    }
+  },
+  "artifacts": {
+    "data": "validation\\fixtures\\csem_threecommonfactors.csv",
+    "recipe": "validation\\fixtures\\csem_threecommonfactors.recipe.json",
+    "csem": "validation\\results\\pls_csem_threecommonfactors_0_6_1.csv",
+    "quickpls": "validation\\results\\pls_quickpls_csem_threecommonfactors.json"
+  },
+  "compared_quantities": [
+    "path coefficients",
+    "loadings",
+    "weights"
+  ],
+  "max_abs_diff": 4.6318782143117687e-10,
+  "comparisons": [
+    {
+      "kind": "loading",
+      "source": "eta1",
+      "target": "",
+      "indicator": "y11",
+      "quickpls": 0.7941786768886586,
+      "csem": 0.794178676780145,
+      "difference": 1.0851364251607265e-10,
+      "abs_diff": 1.0851364251607265e-10,
+      "passed": true
+    },
+    {
+      "kind": "loading",
+      "source": "eta1",
+      "target": "",
+      "indicator": "y12",
+      "quickpls": 0.777408729632354,
+      "csem": 0.777408729709763,
+      "difference": -7.740907914666195e-11,
+      "abs_diff": 7.740907914666195e-11,
+      "passed": true
+    },
+    {
+      "kind": "loading",
+      "source": "eta1",
+      "target": "",
+      "indicator": "y13",
+      "quickpls": 0.8471141893306964,
+      "csem": 0.847114189359189,
+      "difference": -2.8492652681677555e-11,
+      "abs_diff": 2.8492652681677555e-11,
+      "passed": true
+    },
+    {
+      "kind": "loading",
+      "source": "eta2",
+      "target": "",
+      "indicator": "y21",
+      "quickpls": 0.6854449975871567,
+      "csem": 0.685444997700518,
+      "difference": -1.1336132033079593e-10,
+      "abs_diff": 1.1336132033079593e-10,
+      "passed": true
+    },
+    {
+      "kind": "loading",
+      "source": "eta2",
+      "target": "",
+      "indicator": "y22",
+      "quickpls": 0.8527780014682957,
+      "csem": 0.852778001473804,
+      "difference": -5.508260514375252e-12,
+      "abs_diff": 5.508260514375252e-12,
+      "passed": true
+    },
+    {
+      "kind": "loading",
+      "source": "eta2",
+      "target": "",
+      "indicator": "y23",
+      "quickpls": 0.8636517583184308,
+      "csem": 0.863651758240013,
+      "difference": 7.841782778683637e-11,
+      "abs_diff": 7.841782778683637e-11,
+      "passed": true
+    },
+    {
+      "kind": "loading",
+      "source": "eta3",
+      "target": "",
+      "indicator": "y31",
+      "quickpls": 0.8764462199282342,
+      "csem": 0.876446219986725,
+      "difference": -5.849076778474682e-11,
+      "abs_diff": 5.849076778474682e-11,
+      "passed": true
+    },
+    {
+      "kind": "loading",
+      "source": "eta3",
+      "target": "",
+      "indicator": "y32",
+      "quickpls": 0.7999164750786558,
+      "csem": 0.799916475254252,
+      "difference": -1.7559620424378863e-10,
+      "abs_diff": 1.7559620424378863e-10,
+      "passed": true
+    },
+    {
+      "kind": "loading",
+      "source": "eta3",
+      "target": "",
+      "indicator": "y33",
+      "quickpls": 0.8319296513383888,
+      "csem": 0.831929651119436,
+      "difference": 2.1895285584605517e-10,
+      "abs_diff": 2.1895285584605517e-10,
+      "passed": true
+    },
+    {
+      "kind": "path",
+      "source": "eta1",
+      "target": "eta2",
+      "indicator": "",
+      "quickpls": 0.5046062368797047,
+      "csem": 0.504606236872253,
+      "difference": 7.451705918981588e-12,
+      "abs_diff": 7.451705918981588e-12,
+      "passed": true
+    },
+    {
+      "kind": "path",
+      "source": "eta1",
+      "target": "eta3",
+      "indicator": "",
+      "quickpls": 0.35885568315751193,
+      "csem": 0.358855683178331,
+      "difference": -2.081906869122463e-11,
+      "abs_diff": 2.081906869122463e-11,
+      "passed": true
+    },
+    {
+      "kind": "path",
+      "source": "eta2",
+      "target": "eta3",
+      "indicator": "",
+      "quickpls": 0.2972680037184154,
+      "csem": 0.297268003681778,
+      "difference": 3.6637359812630166e-11,
+      "abs_diff": 3.6637359812630166e-11,
+      "passed": true
+    },
+    {
+      "kind": "weight",
+      "source": "eta1",
+      "target": "",
+      "indicator": "y11",
+      "quickpls": 0.3955563030477578,
+      "csem": 0.395556302849714,
+      "difference": 1.9804380357868467e-10,
+      "abs_diff": 1.9804380357868467e-10,
+      "passed": true
+    },
+    {
+      "kind": "weight",
+      "source": "eta1",
+      "target": "",
+      "indicator": "y12",
+      "quickpls": 0.3873286573207003,
+      "csem": 0.387328657449261,
+      "difference": -1.2856066211597295e-10,
+      "abs_diff": 1.2856066211597295e-10,
+      "passed": true
+    },
+    {
+      "kind": "weight",
+      "source": "eta1",
+      "target": "",
+      "indicator": "y13",
+      "quickpls": 0.4541830889134998,
+      "csem": 0.454183088981185,
+      "difference": -6.768519078548252e-11,
+      "abs_diff": 6.768519078548252e-11,
+      "passed": true
+    },
+    {
+      "kind": "weight",
+      "source": "eta2",
+      "target": "",
+      "indicator": "y21",
+      "quickpls": 0.3058098281298445,
+      "csem": 0.305809828298129,
+      "difference": -1.682845529593635e-10,
+      "abs_diff": 1.682845529593635e-10,
+      "passed": true
+    },
+    {
+      "kind": "weight",
+      "source": "eta2",
+      "target": "",
+      "indicator": "y22",
+      "quickpls": 0.44728981982411625,
+      "csem": 0.447289819860053,
+      "difference": -3.593675357294046e-11,
+      "abs_diff": 3.593675357294046e-11,
+      "passed": true
+    },
+    {
+      "kind": "weight",
+      "source": "eta2",
+      "target": "",
+      "indicator": "y23",
+      "quickpls": 0.4735071289207142,
+      "csem": 0.47350712875167,
+      "difference": 1.6904422306396327e-10,
+      "abs_diff": 1.6904422306396327e-10,
+      "passed": true
+    },
+    {
+      "kind": "weight",
+      "source": "eta3",
+      "target": "",
+      "indicator": "y31",
+      "quickpls": 0.43998254007320614,
+      "csem": 0.439982540222843,
+      "difference": -1.4963685845970076e-10,
+      "abs_diff": 1.4963685845970076e-10,
+      "passed": true
+    },
+    {
+      "kind": "weight",
+      "source": "eta3",
+      "target": "",
+      "indicator": "y32",
+      "quickpls": 0.3521182007134455,
+      "csem": 0.352118201031218,
+      "difference": -3.177724750003108e-10,
+      "abs_diff": 3.177724750003108e-10,
+      "passed": true
+    },
+    {
+      "kind": "weight",
+      "source": "eta3",
+      "target": "",
+      "indicator": "y33",
+      "quickpls": 0.3999302290252728,
+      "csem": 0.399930228562085,
+      "difference": 4.6318782143117687e-10,
+      "abs_diff": 4.6318782143117687e-10,
+      "passed": true
+    }
+  ]
+}

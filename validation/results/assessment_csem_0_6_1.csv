@@ -1,0 +1,14 @@
+metric,target,source,variant,value,csem_version,input
+r2,satisfaction,,csem_assess,0.788141244170983,0.6.1,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+r2,loyalty,,csem_assess,0.699791950807095,0.6.1,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+r2_adj,satisfaction,,csem_assess,0.741061520653424,0.6.1,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+r2_adj,loyalty,,csem_assess,0.669771145887804,0.6.1,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+structural_vif,satisfaction,comp,csem_assess,1.17244194066287,0.6.1,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+structural_vif,satisfaction,like,csem_assess,1.17244194066287,0.6.1,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+f_squared,satisfaction,comp,csem_assess_probe,2.54174571248251,0.6.1,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+f_squared,satisfaction,like,csem_assess_probe,2.60484204753743,0.6.1,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+f_squared,loyalty,satisfaction,csem_assess_probe,2.33102327765178,0.6.1,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+d_uls,,,estimated,2.01457513790795,0.6.1,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+d_uls,,,saturated,0.784423493946219,0.6.1,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+srmr,,,estimated,0.211585293434951,0.6.1,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+srmr,,,saturated,0.132028910465871,0.6.1,D:\QuickPLS\validation\fixtures\corporate_reputation.csv

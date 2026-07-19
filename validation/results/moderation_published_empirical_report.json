@@ -1,0 +1,43 @@
+{
+  "checks": {
+    "experimental_warning_present": true,
+    "independent_reference_max_delta": 2.220446049250313e-16,
+    "interaction_abs": 0.24310899915258952,
+    "interaction_effect_matches_path": 0.0,
+    "main_effect_wt_matches_slope_at_mean_hp": 0.0,
+    "moderator_high_hp_slope": -0.4276521756231416,
+    "moderator_low_hp_slope": -0.9138701739283207,
+    "moderator_mean_hp_slope": -0.6707611747757312,
+    "omitted_observations": 0,
+    "row_count": 32,
+    "simple_slope_reference_max_delta": 1.6653345369377348e-16,
+    "used_observations": 32
+  },
+  "dataset": {
+    "columns": {
+      "m": "hp",
+      "x": "wt",
+      "y": "mpg"
+    },
+    "documentation_reference": "Henderson and Velleman (1981), Building multiple regression models interactively.",
+    "name": "mtcars",
+    "rows": 32,
+    "source": "R datasets package; extracted from 1974 Motor Trend US magazine."
+  },
+  "kind": "pls_two_stage_moderation_published_empirical_mtcars_v1",
+  "model": "single-item two-stage moderation: mpg ~ wt + hp + wt_by_hp",
+  "note": "Published empirical-data contract fixture. It verifies QuickPLS' frozen single-item two-stage moderation implementation against independent standardized OLS; it is not a full inferential coverage study.",
+  "passed": true,
+  "quickpls_paths": {
+    "m->y": -0.3470564211217649,
+    "x->y": -0.6707611747757312,
+    "xm->y": 0.24310899915258952
+  },
+  "reference_paths": {
+    "m->y": -0.34705642112176466,
+    "x->y": -0.6707611747757312,
+    "xm->y": 0.24310899915258938
+  },
+  "schema_version": 1,
+  "tolerance": 1e-10
+}

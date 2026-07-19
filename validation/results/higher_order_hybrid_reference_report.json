@@ -1,0 +1,28 @@
+{
+  "checks": {
+    "baseline_hoc_to_y_abs": 0.9538995184017793,
+    "component_reorder_max_delta": 0.0,
+    "experimental_warning_present": true,
+    "hoc_indicators": [
+      "x2",
+      "z2"
+    ],
+    "independent_reference_max_delta": 1.3655743202889425e-14,
+    "permuted_hoc_half_drop_ratio": 0.807997317093897,
+    "permuted_hoc_half_hoc_to_y_abs": 0.7707482516457981,
+    "positive_affine_max_delta": 9.325873406851315e-15,
+    "row_reversal_max_delta": 4.440892098500626e-16
+  },
+  "kind": "hybrid_hoc_reference_metamorphic_v1",
+  "note": "Bounded deterministic hybrid HOC indicator-split screen; not a full Monte Carlo qualification.",
+  "passed": true,
+  "scenarios": [
+    "base_generated_signal",
+    "positive_affine_transform",
+    "row_reversal",
+    "component_reorder",
+    "permuted_hoc_indicator_half_degradation"
+  ],
+  "schema_version": 1,
+  "tolerance": 1e-06
+}

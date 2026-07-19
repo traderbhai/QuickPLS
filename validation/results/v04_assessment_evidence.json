@@ -1,0 +1,345 @@
+{
+  "all_listed_artifacts_present": true,
+  "artifacts": [
+    {
+      "bytes": 60,
+      "path": "validation/fixtures/simple_reflective.csv",
+      "present": true
+    },
+    {
+      "bytes": 924,
+      "path": "validation/fixtures/simple_reflective.recipe.json",
+      "present": true
+    },
+    {
+      "bytes": 270,
+      "path": "validation/fixtures/corporate_reputation.csv",
+      "present": true
+    },
+    {
+      "bytes": 191,
+      "path": "validation/fixtures/rho_a_reference.csv",
+      "present": true
+    },
+    {
+      "bytes": 1131,
+      "path": "validation/fixtures/rho_a_reference.recipe.json",
+      "present": true
+    },
+    {
+      "bytes": 1447,
+      "path": "validation/results/rho_a_reference.json",
+      "present": true
+    },
+    {
+      "bytes": 1652,
+      "path": "validation/results/rho_a_primary_dijkstra_henseler_2015.json",
+      "present": true
+    },
+    {
+      "bytes": 377,
+      "path": "validation/results/rho_a_csem_0_6_1.csv",
+      "present": true
+    },
+    {
+      "bytes": 10860,
+      "path": "validation/results/rho_a_quickpls_reference.json",
+      "present": true
+    },
+    {
+      "bytes": 966,
+      "path": "validation/results/rho_a_csem_comparison.json",
+      "present": true
+    },
+    {
+      "bytes": 19021,
+      "path": "validation/results/htmt_reference.json",
+      "present": true
+    },
+    {
+      "bytes": 3417,
+      "path": "validation/results/htmt_csem_0_6_1.csv",
+      "present": true
+    },
+    {
+      "bytes": 25582,
+      "path": "validation/results/htmt_quickpls_reference.json",
+      "present": true
+    },
+    {
+      "bytes": 13540,
+      "path": "validation/results/htmt_csem_comparison.json",
+      "present": true
+    },
+    {
+      "bytes": 1697,
+      "path": "validation/results/htmt_seminr_2_5_0.csv",
+      "present": true
+    },
+    {
+      "bytes": 6944,
+      "path": "validation/results/htmt_seminr_comparison.json",
+      "present": true
+    },
+    {
+      "bytes": 1311,
+      "path": "validation/results/htmt_published_ringle_2023.json",
+      "present": true
+    },
+    {
+      "bytes": 1530,
+      "path": "validation/results/assessment_csem_0_6_1.csv",
+      "present": true
+    },
+    {
+      "bytes": 25582,
+      "path": "validation/results/assessment_quickpls_reference.json",
+      "present": true
+    },
+    {
+      "bytes": 6004,
+      "path": "validation/results/assessment_csem_comparison.json",
+      "present": true
+    },
+    {
+      "bytes": 25582,
+      "path": "validation/results/blindfolding_quickpls_reference.json",
+      "present": true
+    },
+    {
+      "bytes": 601,
+      "path": "validation/results/blindfolding_python_reference.json",
+      "present": true
+    },
+    {
+      "bytes": 2082,
+      "path": "validation/results/blindfolding_python_comparison.json",
+      "present": true
+    },
+    {
+      "bytes": 44933,
+      "path": "validation/results/assessment_simulation.csv",
+      "present": true
+    },
+    {
+      "bytes": 44933,
+      "path": "validation/results/assessment_simulation_broken.csv",
+      "present": true
+    },
+    {
+      "bytes": 1957,
+      "path": "validation/results/assessment_simulation.recipe.json",
+      "present": true
+    },
+    {
+      "bytes": 1957,
+      "path": "validation/results/assessment_simulation_broken.recipe.json",
+      "present": true
+    },
+    {
+      "bytes": 55429,
+      "path": "validation/results/assessment_simulation_quickpls.json",
+      "present": true
+    },
+    {
+      "bytes": 56008,
+      "path": "validation/results/assessment_simulation_broken_quickpls.json",
+      "present": true
+    },
+    {
+      "bytes": 2107,
+      "path": "validation/results/assessment_simulation_report.json",
+      "present": true
+    },
+    {
+      "bytes": 14819,
+      "path": "validation/results/assessment_published_satisfaction.csv",
+      "present": true
+    },
+    {
+      "bytes": 3516,
+      "path": "validation/results/assessment_published_satisfaction_csem_0_6_1.csv",
+      "present": true
+    },
+    {
+      "bytes": 2967,
+      "path": "validation/results/assessment_published_satisfaction.recipe.json",
+      "present": true
+    },
+    {
+      "bytes": 106113,
+      "path": "validation/results/assessment_published_satisfaction_quickpls.json",
+      "present": true
+    },
+    {
+      "bytes": 16397,
+      "path": "validation/results/assessment_published_satisfaction_comparison.json",
+      "present": true
+    },
+    {
+      "bytes": 2636,
+      "path": "validation/results/external_reference_probe.json",
+      "present": true
+    },
+    {
+      "bytes": 61161,
+      "path": "validation/demo/quickpls_v04_demo.validation.json",
+      "present": true
+    }
+  ],
+  "assessment_method_version": "pls_assessment_v7",
+  "generated_at": "2026-07-18T22:39:45.163343300Z",
+  "htmt_original_method_version": "henseler_et_al_htmt_v1",
+  "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
+  "metrics": [
+    {
+      "evidence": [
+        "docs/methods/PLS_ASSESSMENT_V1.md",
+        "validation/fixtures/simple_reflective.csv",
+        "qpls-assessment::reference_fixture_matches_csem_assessment",
+        "qpls-core::statistics::alpha_matches_hand_calculated_fixture"
+      ],
+      "id": "cronbach_alpha",
+      "missing_evidence": [],
+      "status": "validated_reference_fixture",
+      "tolerance": "1e-6"
+    },
+    {
+      "evidence": [
+        "docs/methods/PLS_ASSESSMENT_V1.md",
+        "validation/fixtures/simple_reflective.csv",
+        "qpls-assessment::reference_fixture_matches_csem_assessment"
+      ],
+      "id": "rho_c",
+      "missing_evidence": [],
+      "status": "validated_reference_fixture",
+      "tolerance": "1e-6"
+    },
+    {
+      "evidence": [
+        "docs/methods/PLS_ASSESSMENT_V1.md",
+        "validation/fixtures/simple_reflective.csv",
+        "qpls-assessment::reference_fixture_matches_csem_assessment"
+      ],
+      "id": "ave",
+      "missing_evidence": [],
+      "status": "validated_reference_fixture",
+      "tolerance": "1e-6"
+    },
+    {
+      "evidence": [
+        "docs/methods/PLS_ASSESSMENT_V1.md",
+        "validation/fixtures/simple_reflective.csv",
+        "qpls-assessment::reference_fixture_matches_csem_assessment"
+      ],
+      "id": "cross_loadings",
+      "missing_evidence": [],
+      "status": "validated_reference_fixture",
+      "tolerance": "1e-6"
+    },
+    {
+      "evidence": [
+        "docs/methods/PLS_ASSESSMENT_V1.md",
+        "validation/fixtures/simple_reflective.csv",
+        "qpls-assessment::reference_fixture_matches_csem_assessment"
+      ],
+      "id": "fornell_larcker",
+      "missing_evidence": [],
+      "status": "validated_reference_fixture",
+      "tolerance": "1e-6"
+    },
+    {
+      "evidence": [
+        "docs/methods/PLS_ASSESSMENT_V1.md",
+        "validation/fixtures/simple_reflective.csv",
+        "qpls-assessment::reference_fixture_matches_csem_assessment"
+      ],
+      "id": "r_squared",
+      "missing_evidence": [],
+      "status": "validated_reference_fixture",
+      "tolerance": "1e-6"
+    },
+    {
+      "evidence": [
+        "docs/methods/PLS_RHO_A_V1.md",
+        "validation/fixtures/rho_a_reference.csv",
+        "validation/fixtures/rho_a_reference.recipe.json",
+        "validation/results/rho_a_reference.json",
+        "validation/results/rho_a_primary_dijkstra_henseler_2015.json",
+        "validation/results/rho_a_csem_0_6_1.csv",
+        "validation/results/rho_a_quickpls_reference.json",
+        "validation/results/rho_a_csem_comparison.json",
+        "validation/results/external_reference_probe.json",
+        "qpls-assessment::rho_a_matches_dijkstra_henseler_2015_equation_3_fixture",
+        "qpls-assessment::rho_a_matches_independent_decimal_reference_and_metamorphics",
+        "qpls-assessment::rho_a_matches_three_and_two_indicator_hand_fixtures"
+      ],
+      "id": "rho_a",
+      "missing_evidence": [],
+      "status": "fixture_covered_external_reference_open",
+      "tolerance": "1e-12 for committed Decimal fixtures; 1e-6 required for external engines"
+    },
+    {
+      "evidence": [
+        "docs/methods/PLS_HTMT_V1.md",
+        "validation/htmt_reference.py",
+        "validation/results/htmt_reference.json",
+        "validation/results/htmt_csem_0_6_1.csv",
+        "validation/results/htmt_quickpls_reference.json",
+        "validation/results/htmt_csem_comparison.json",
+        "validation/results/htmt_published_ringle_2023.json",
+        "validation/results/external_reference_probe.json",
+        "qpls-assessment::htmt_plus_matches_ringle_2023_rounded_formula_examples",
+        "qpls-assessment::htmt_matches_independent_corporate_reputation_reference"
+      ],
+      "id": "htmt_original",
+      "missing_evidence": [],
+      "status": "fixture_covered_external_reference_open",
+      "tolerance": "1e-12 for independent formula fixture; 5e-4 for rounded published appendix matrices; 1e-6 for external engines"
+    },
+    {
+      "evidence": [
+        "docs/methods/PLS_HTMT_V1.md",
+        "validation/htmt_reference.py",
+        "validation/results/htmt_reference.json",
+        "validation/results/htmt_csem_comparison.json documents that cSEM .absolute=TRUE is not equivalent to Ringle et al. HTMT+ for mixed-sign cross-block correlations",
+        "validation/results/htmt_seminr_2_5_0.csv",
+        "validation/results/htmt_seminr_comparison.json",
+        "validation/results/htmt_published_ringle_2023.json",
+        "validation/results/external_reference_probe.json",
+        "qpls-assessment::htmt_plus_matches_ringle_2023_rounded_formula_examples",
+        "qpls-assessment::htmt_matches_independent_corporate_reputation_reference"
+      ],
+      "id": "htmt_plus",
+      "missing_evidence": [],
+      "status": "fixture_covered_external_reference_open",
+      "tolerance": "1e-12 for independent formula fixture; 5e-4 for rounded published appendix matrices; 1e-6 for external engines"
+    },
+    {
+      "evidence": [
+        "docs/methods/PLS_ASSESSMENT_V4.md",
+        "validation/results/assessment_csem_0_6_1.csv",
+        "validation/results/assessment_quickpls_reference.json",
+        "validation/results/assessment_csem_comparison.json",
+        "validation/results/blindfolding_python_reference.json",
+        "validation/results/blindfolding_python_comparison.json",
+        "validation/results/assessment_simulation_report.json",
+        "validation/results/assessment_published_satisfaction_comparison.json",
+        "qpls-assessment focused unit and metamorphic tests"
+      ],
+      "id": "vif_adjusted_r2_f2_q2_srmr_duls",
+      "missing_evidence": [],
+      "status": "partially_covered_external_reference_gap",
+      "tolerance": "1e-6 for cSEM-equivalent R2, adjusted R2, structural VIF, fixed-score f2, SRMR, and d_ULS"
+    }
+  ],
+  "note": "Evidence traceability report only. Metrics with missing_evidence remain experimental and must not be presented as publication-validated.",
+  "open_metric_blockers": 0,
+  "open_registry_gates": [],
+  "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
+  "schema_version": 1,
+  "slice_id": "v0_4_assessment_reliability",
+  "slice_status": "experimental",
+  "stable_release_allowed": false,
+  "target": "v04-assessment"
+}

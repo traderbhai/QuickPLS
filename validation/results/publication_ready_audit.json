@@ -1,0 +1,387 @@
+{
+  "artifacts": [
+    {
+      "bytes": 5497,
+      "path": "docs/PUBLICATION_READY_AUDIT.md",
+      "present": true
+    },
+    {
+      "bytes": 5932,
+      "path": "docs/METHOD_COMPATIBILITY.md",
+      "present": true
+    },
+    {
+      "bytes": 59770,
+      "path": "validation/development_slices.json",
+      "present": true
+    },
+    {
+      "bytes": 8341,
+      "path": "validation/results/publication_promotion_matrix.json",
+      "present": true
+    },
+    {
+      "bytes": 872,
+      "path": "validation/results/r_validation_runtime_audit.json",
+      "present": true
+    },
+    {
+      "bytes": 6046,
+      "path": "validation/results/foundation_publication_audit.json",
+      "present": true
+    },
+    {
+      "bytes": 6560,
+      "path": "validation/results/data_project_publication_audit.json",
+      "present": true
+    },
+    {
+      "bytes": 2616,
+      "path": "validation/results/pls_publication_audit.json",
+      "present": true
+    },
+    {
+      "bytes": 227,
+      "path": "validation/results/pls_publication_bounded_benchmark.json",
+      "present": true
+    },
+    {
+      "bytes": 5517,
+      "path": "validation/results/assessment_publication_metric_matrix.json",
+      "present": true
+    },
+    {
+      "bytes": 5983,
+      "path": "validation/results/assessment_publication_audit.json",
+      "present": true
+    },
+    {
+      "bytes": 2982,
+      "path": "validation/results/inference_publication_matrix.json",
+      "present": true
+    },
+    {
+      "bytes": 4674,
+      "path": "validation/results/inference_publication_audit.json",
+      "present": true
+    },
+    {
+      "bytes": 8882,
+      "path": "validation/results/extended_pls_publication_audit.json",
+      "present": true
+    },
+    {
+      "bytes": 4946,
+      "path": "validation/results/prediction_heterogeneity_publication_audit.json",
+      "present": true
+    },
+    {
+      "bytes": 7637,
+      "path": "validation/results/cbsem_publication_audit.json",
+      "present": true
+    },
+    {
+      "bytes": 5618,
+      "path": "validation/results/extended_methods_publication_audit.json",
+      "present": true
+    },
+    {
+      "bytes": 6690,
+      "path": "validation/results/gui_diagram_publication_audit.json",
+      "present": true
+    },
+    {
+      "bytes": 7717,
+      "path": "validation/results/stable_export_publication_audit.json",
+      "present": true
+    },
+    {
+      "bytes": 3085,
+      "path": "validation/results/documentation_publication_audit.json",
+      "present": true
+    },
+    {
+      "bytes": 4522,
+      "path": "validation/results/performance_release_publication_audit.json",
+      "present": true
+    },
+    {
+      "bytes": 4560,
+      "path": "validation/results/v09_smoke_check.json",
+      "present": true
+    },
+    {
+      "bytes": 2940,
+      "path": "validation/results/v09_release_candidate_audit.json",
+      "present": true
+    },
+    {
+      "bytes": 3281,
+      "path": "docs/RELEASE_NOTES_V0_9_RC1.md",
+      "present": true
+    },
+    {
+      "bytes": 2318,
+      "path": "docs/SUPPORTED_SCOPE_V0_9_RC1.md",
+      "present": true
+    },
+    {
+      "bytes": 1602,
+      "path": "docs/DEPENDENCY_NOTICES.md",
+      "present": true
+    },
+    {
+      "bytes": 1723,
+      "path": "docs/KNOWN_DIFFERENCES.md",
+      "present": true
+    }
+  ],
+  "blocker_count": 0,
+  "blockers": [],
+  "generated_at": "2026-07-19T11:51:24.438478300Z",
+  "method_capabilities": [
+    {
+      "family": "PLS-SEM",
+      "id": "pls_pm",
+      "name": "PLS path modeling",
+      "status": "validated"
+    },
+    {
+      "family": "PLS-SEM",
+      "id": "bootstrap",
+      "name": "Bootstrapping",
+      "status": "experimental"
+    },
+    {
+      "family": "PLS-SEM",
+      "id": "pls_mediation",
+      "name": "Mediation effect decomposition",
+      "status": "experimental"
+    },
+    {
+      "family": "PLS-SEM",
+      "id": "pls_two_stage_moderation",
+      "name": "Two-stage moderation",
+      "status": "experimental"
+    },
+    {
+      "family": "PLS-SEM",
+      "id": "plsc",
+      "name": "Consistent PLS",
+      "status": "experimental"
+    },
+    {
+      "family": "PLS-SEM",
+      "id": "wpls",
+      "name": "Weighted PLS",
+      "status": "experimental"
+    },
+    {
+      "family": "PLS-SEM",
+      "id": "cca",
+      "name": "Confirmatory composite analysis",
+      "status": "experimental"
+    },
+    {
+      "family": "PLS-SEM",
+      "id": "cta_pls",
+      "name": "Confirmatory tetrad analysis",
+      "status": "experimental"
+    },
+    {
+      "family": "PLS-SEM",
+      "id": "endogeneity",
+      "name": "Gaussian-copula endogeneity analysis",
+      "status": "experimental"
+    },
+    {
+      "family": "PLS-SEM",
+      "id": "nonlinear_effects",
+      "name": "Nonlinear effects",
+      "status": "experimental"
+    },
+    {
+      "family": "PLS-SEM",
+      "id": "moderated_mediation",
+      "name": "Moderated mediation",
+      "status": "experimental"
+    },
+    {
+      "family": "Prediction",
+      "id": "predict",
+      "name": "PLSpredict holdout / repeated k-fold",
+      "status": "experimental"
+    },
+    {
+      "family": "Groups",
+      "id": "mga",
+      "name": "Bounded two-group MGA",
+      "status": "experimental"
+    },
+    {
+      "family": "Prediction",
+      "id": "ipma",
+      "name": "IPMA / cIPMA",
+      "status": "experimental"
+    },
+    {
+      "family": "CB-SEM",
+      "id": "cbsem",
+      "name": "CFA / ML SEM",
+      "status": "experimental"
+    },
+    {
+      "family": "Components",
+      "id": "pca",
+      "name": "Principal component analysis",
+      "status": "experimental"
+    },
+    {
+      "family": "Component models",
+      "id": "gsca",
+      "name": "GSCA",
+      "status": "experimental"
+    },
+    {
+      "family": "Regression",
+      "id": "regression",
+      "name": "OLS / logistic / PROCESS",
+      "status": "experimental"
+    },
+    {
+      "family": "Necessary conditions",
+      "id": "nca",
+      "name": "NCA",
+      "status": "experimental"
+    }
+  ],
+  "note": "This audit is intentionally conservative. v0.1-v0.8 cannot be marked publication-ready until every blocker is closed with reproducible evidence.",
+  "passed": true,
+  "required_rscript": "C:\\Users\\mohd.naved\\AppData\\Local\\Programs\\R\\R-4.6.1\\bin\\x64\\Rscript.exe",
+  "schema_version": 1,
+  "slice_statuses": [
+    {
+      "blocked": 0,
+      "family": "Platform",
+      "id": "v0_2_data_project_platform",
+      "not_applicable": 0,
+      "open": 0,
+      "passed": 5,
+      "release": "v0.2",
+      "stable_output": true,
+      "status": "validated"
+    },
+    {
+      "blocked": 0,
+      "family": "PLS-SEM",
+      "id": "v0_3_pls_core",
+      "not_applicable": 0,
+      "open": 0,
+      "passed": 7,
+      "release": "v0.3",
+      "stable_output": false,
+      "status": "validated"
+    },
+    {
+      "blocked": 0,
+      "family": "Assessment",
+      "id": "v0_4_assessment_reliability",
+      "not_applicable": 0,
+      "open": 0,
+      "passed": 7,
+      "release": "v0.4",
+      "stable_output": false,
+      "status": "experimental"
+    },
+    {
+      "blocked": 0,
+      "family": "Inference",
+      "id": "v0_4_inference_resampling",
+      "not_applicable": 0,
+      "open": 0,
+      "passed": 9,
+      "release": "v0.4",
+      "stable_output": false,
+      "status": "experimental"
+    },
+    {
+      "blocked": 0,
+      "family": "Automation",
+      "id": "v0_4_demo_evidence_project",
+      "not_applicable": 0,
+      "open": 0,
+      "passed": 5,
+      "release": "v0.4",
+      "stable_output": false,
+      "status": "validated"
+    },
+    {
+      "blocked": 0,
+      "family": "PLS-SEM",
+      "id": "v0_5_extended_pls",
+      "not_applicable": 0,
+      "open": 0,
+      "passed": 61,
+      "release": "v0.5",
+      "stable_output": false,
+      "status": "experimental"
+    },
+    {
+      "blocked": 0,
+      "family": "Prediction and groups",
+      "id": "v0_6_prediction_heterogeneity",
+      "not_applicable": 0,
+      "open": 0,
+      "passed": 27,
+      "release": "v0.6",
+      "stable_output": false,
+      "status": "experimental"
+    },
+    {
+      "blocked": 0,
+      "family": "CB-SEM",
+      "id": "v0_7_cbsem",
+      "not_applicable": 0,
+      "open": 0,
+      "passed": 4,
+      "release": "v0.7",
+      "stable_output": false,
+      "status": "experimental"
+    },
+    {
+      "blocked": 0,
+      "family": "Extended methods",
+      "id": "v0_8_extended_methods",
+      "not_applicable": 0,
+      "open": 0,
+      "passed": 6,
+      "release": "v0.8",
+      "stable_output": false,
+      "status": "experimental"
+    },
+    {
+      "blocked": 0,
+      "family": "Validation",
+      "id": "publication_ready_v0_1_to_v0_8",
+      "not_applicable": 0,
+      "open": 0,
+      "passed": 15,
+      "release": "promotion-audit",
+      "stable_output": false,
+      "status": "unsupported"
+    },
+    {
+      "blocked": 0,
+      "family": "Release",
+      "id": "v0_9_publication_release_candidate",
+      "not_applicable": 0,
+      "open": 0,
+      "passed": 4,
+      "release": "v0.9",
+      "stable_output": true,
+      "status": "validated"
+    }
+  ],
+  "stable_release_allowed": true,
+  "target": "publication_ready_v0_1_to_v0_8"
+}

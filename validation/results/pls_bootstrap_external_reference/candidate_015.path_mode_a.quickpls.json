@@ -1,0 +1,371 @@
+{
+  "schema_version": 1,
+  "id": "f3c0e26c-4f59-47c6-96c0-34bc4ceea90e",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "00000000-0000-0000-0000-000000000501",
+    "dataset_fingerprint": "v2:e566d3c7da59fdfa0732f3d42f61ba5957dccf79d315830cdb7d7aabef7c680f",
+    "method": "pls_pm",
+    "method_version": "pls_pm_v1+pls_assessment_v7",
+    "engine_version": "0.3.0-alpha.1",
+    "seed": 20260718,
+    "settings": {
+      "method": "pls_pm",
+      "weighting_scheme": "path",
+      "tolerance": 1e-7,
+      "max_iterations": 3000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260718,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion"
+    },
+    "started_at": "2026-07-18T19:14:56.370127400Z",
+    "completed_at": "2026-07-18T19:14:56.378239300Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.two_indicator_limited_information for construct 'x'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.two_indicator_limited_information for construct 'y'"
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "construct_scores": {
+        "x": [
+          -1.0368270131657673,
+          0.5039190532985696,
+          -0.4089330239525813,
+          -1.0368270131657673,
+          1.4747489436869765,
+          0.5039190532985696
+        ],
+        "y": [
+          -0.9179497063780584,
+          0.2712640114130004,
+          -0.4329354351542649,
+          -0.9179497063780584,
+          1.7263068250843812,
+          0.2712640114130004
+        ]
+      },
+      "converged": true,
+      "effects": [
+        {
+          "direct": 0.9799622151395604,
+          "indirect": 0.0,
+          "source": "x",
+          "target": "y",
+          "total": 0.9799622151395604
+        }
+      ],
+      "iterations": 4,
+      "method_version": "pls_pm_v1",
+      "omitted_observations": 0,
+      "outer_estimates": [
+        {
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9898275422521339,
+          "weight": 0.5200880447810542
+        },
+        {
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9885706026640232,
+          "weight": 0.4908122167219179
+        },
+        {
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9972244862758017,
+          "weight": 0.4949468407321178
+        },
+        {
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9973630409296463,
+          "weight": 0.5077658487776328
+        }
+      ],
+      "paths": [
+        {
+          "coefficient": 0.9799622151395604,
+          "source": "x",
+          "target": "y"
+        }
+      ],
+      "r_squared": {
+        "y": 0.9603259431012342
+      },
+      "transforms": [
+        {
+          "indicator": "x1",
+          "mean": 2.5,
+          "scale": 1.51657508881031
+        },
+        {
+          "indicator": "x2",
+          "mean": 3.8333333333333335,
+          "scale": 1.7224014243685084
+        },
+        {
+          "indicator": "y1",
+          "mean": 3.6666666666666665,
+          "scale": 1.8618986725025255
+        },
+        {
+          "indicator": "y2",
+          "mean": 3.1666666666666665,
+          "scale": 2.316606713852541
+        }
+      ],
+      "used_observations": 6,
+      "warnings": []
+    },
+    "assessment": {
+      "blindfolding": {
+        "constructs": [
+          {
+            "construct": "y",
+            "observation_sum_squares": 38.31728592698316,
+            "prediction_error_sum_squares": 17.70628094558942,
+            "q_squared": 0.5379035723111956
+          }
+        ],
+        "settings": {
+          "missing_value_treatment": "indicator_mean_replacement",
+          "omission_distance": 5,
+          "selection": "preferred_7_then_smallest_valid_5_to_12"
+        }
+      },
+      "construct_quality": [
+        {
+          "ave": 0.978515199926205,
+          "construct": "x",
+          "cronbach_alpha": 0.9780618586803078,
+          "normalized_weight_norm_squared": 0.5113882064076627,
+          "off_diagonal_denominator": 0.13032101852330802,
+          "off_diagonal_numerator": 0.48861179359233725,
+          "rho_a": 0.9805074459712022,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.9891409433434262,
+          "score_variance_before_normalization": 1.0
+        },
+        {
+          "ave": 0.994594855720234,
+          "construct": "y",
+          "cronbach_alpha": 0.9945663694040854,
+          "normalized_weight_norm_squared": 0.5027985323355743,
+          "off_diagonal_denominator": 0.12632057220311288,
+          "off_diagonal_numerator": 0.4972014676644257,
+          "rho_a": 0.9950532449510296,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.9972901041581069,
+          "score_variance_before_normalization": 1.0
+        }
+      ],
+      "cross_loadings": [
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9898275422521337
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x1",
+          "loading": 0.9966335286126433
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9885706026640232
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x2",
+          "loading": 0.9405328884503164
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y1",
+          "loading": 0.9646591450227695
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9972244862758016
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y2",
+          "loading": 0.9896435928822362
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9973630409296461
+        }
+      ],
+      "f_squared": [
+        {
+          "excluded_r_squared": 0.0,
+          "f_squared": 24.20538805879236,
+          "included_r_squared": 0.9603259431012342,
+          "source_construct": "x",
+          "target_construct": "y"
+        }
+      ],
+      "formative_indicator_vif": [],
+      "fornell_larcker": {
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "values": [
+          [
+            0.9891992721015341,
+            0.9799622151395606
+          ],
+          [
+            0.9799622151395606,
+            0.9972937660089097
+          ]
+        ]
+      },
+      "htmt": null,
+      "htmt_original": {
+        "absolute_correlations": false,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.9926053882051389
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.9926053882051389
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_original_method_version": "henseler_et_al_htmt_v1",
+      "htmt_plus": {
+        "absolute_correlations": true,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.9926053882051389
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.9926053882051389
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
+      "method_version": "pls_assessment_v7",
+      "model_fit": {
+        "estimated": {
+          "d_uls": 0.00457905016161435,
+          "srmr": 0.021398715292312177
+        },
+        "saturated": {
+          "d_uls": 0.0045790501616143515,
+          "srmr": 0.02139871529231218
+        }
+      },
+      "r_squared": {
+        "y": 0.9603259431012342
+      },
+      "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
+      "structural_quality": [
+        {
+          "adjusted_r_squared": 0.9504074288765427,
+          "construct": "y",
+          "predictor_count": 1,
+          "r_squared": 0.9603259431012342
+        }
+      ],
+      "structural_vif": [
+        {
+          "predictor_construct": "x",
+          "target_construct": "y",
+          "vif": 1.0
+        }
+      ],
+      "warnings": [
+        "rho_a.two_indicator_limited_information for construct 'x'",
+        "rho_a.two_indicator_limited_information for construct 'y'"
+      ]
+    }
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "schema_version": 2,
+  "id": "00000000-0000-0000-0000-000000000081",
+  "created_at": "2026-07-19T00:00:00Z",
+  "dataset_fingerprint": "v2:6ee7f9b51caf3ac7ba3508c19b425ec58ee94b294e0d68bc048733fe0f7add15",
+  "model": {
+    "id": "00000000-0000-0000-0000-000000000082",
+    "name": "IPMA reference",
+    "constructs": [
+      {
+        "id": "x",
+        "name": "X",
+        "short_name": "X",
+        "mode": "reflective",
+        "indicators": [
+          "x1"
+        ]
+      },
+      {
+        "id": "z",
+        "name": "Z",
+        "short_name": "Z",
+        "mode": "reflective",
+        "indicators": [
+          "z1"
+        ]
+      },
+      {
+        "id": "m",
+        "name": "M",
+        "short_name": "M",
+        "mode": "reflective",
+        "indicators": [
+          "m1"
+        ]
+      },
+      {
+        "id": "y",
+        "name": "Y",
+        "short_name": "Y",
+        "mode": "reflective",
+        "indicators": [
+          "y1"
+        ]
+      }
+    ],
+    "paths": [
+      {
+        "source": "x",
+        "target": "m"
+      },
+      {
+        "source": "z",
+        "target": "m"
+      },
+      {
+        "source": "x",
+        "target": "y"
+      },
+      {
+        "source": "z",
+        "target": "y"
+      },
+      {
+        "source": "m",
+        "target": "y"
+      }
+    ]
+  },
+  "settings": {
+    "method": "ipma",
+    "weighting_scheme": "path",
+    "tolerance": 1e-10,
+    "max_iterations": 3000,
+    "bootstrap_samples": 0,
+    "seed": 20260719,
+    "preprocessing": "standardized",
+    "missing_data": "listwise_deletion"
+  },
+  "metadata": {
+    "fixture": "independent_ipma_reference",
+    "ipma_targets": "y"
+  }
+}

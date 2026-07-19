@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v0.9.0-rc.1 release candidate",
+  "passed": true,
+  "version": "0.9.0-rc.1",
+  "version_checks": {
+    "package_json": true,
+    "package_lock": true,
+    "cargo_workspace": true,
+    "tauri": true
+  },
+  "artifact_checks": {
+    "publication_ready_current_and_passing": true,
+    "release_executable_exists": true,
+    "release_executable_newer_than_frontend": true,
+    "nsis_installer_exists": true,
+    "smoke_check_passing": true,
+    "stable_exports_readable": true,
+    "docs_present": true
+  },
+  "source_claim_checks": {
+    "release_notes_no_smartpls_equivalence_claim": true,
+    "supported_scope_states_no_project_import": true,
+    "release_notes_unsigned_installer": true
+  },
+  "nsis_installers": [
+    "target\\release\\bundle\\nsis\\QuickPLS_0.9.0-rc.1_x64-setup.exe"
+  ],
+  "required_docs": [
+    {
+      "path": "docs/RELEASE_NOTES_V0_9_RC1.md",
+      "present": true,
+      "bytes": 3281
+    },
+    {
+      "path": "docs/SUPPORTED_SCOPE_V0_9_RC1.md",
+      "present": true,
+      "bytes": 2318
+    },
+    {
+      "path": "docs/DEPENDENCY_NOTICES.md",
+      "present": true,
+      "bytes": 1602
+    },
+    {
+      "path": "docs/KNOWN_DIFFERENCES.md",
+      "present": true,
+      "bytes": 1723
+    }
+  ],
+  "required_exports": [
+    {
+      "path": "validation/results/v09_smoke_export.csv",
+      "present": true,
+      "bytes": 1372
+    },
+    {
+      "path": "validation/results/v09_smoke_export.html",
+      "present": true,
+      "bytes": 3924
+    },
+    {
+      "path": "validation/results/v09_smoke_export.xlsx",
+      "present": true,
+      "bytes": 6720
+    }
+  ],
+  "gate": {
+    "command": [
+      "cargo",
+      "run",
+      "-p",
+      "qpls-cli",
+      "--",
+      "gate",
+      "v0_9_publication_release_candidate"
+    ],
+    "returncode": 0,
+    "passed": true,
+    "elapsed_seconds": 2.4656,
+    "stdout_tail": "Publication exports, installer, manuals, and release qualification (v0.9) | Validated | gates passed/open/blocked: 4/0/0\nQuickPLS 0.9.0-rc.1 is complete as a Windows release candidate for the documented supported scope. The NSIS installer is intentionally unsigned for this RC; code signing remains a later packaging step.\npromotion gate: clear\nnext actions:\n  - Add a code-signing certificate and run a separate signing audit before public installer distribution.\n  - Run npm run qpls:v09:release-candidate before tagging or sharing an RC build.\n  - Do not expand public claims beyond docs/SUPPORTED_SCOPE_V0_9_RC1.md without a new audit artifact.\n",
+    "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.27s\n     Running `target\\debug\\qpls.exe gate v0_9_publication_release_candidate`\n"
+  },
+  "note": "The RC installer is intentionally unsigned; Windows SmartScreen warnings are documented in the release notes."
+}

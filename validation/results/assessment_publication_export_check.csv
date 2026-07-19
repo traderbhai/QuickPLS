@@ -1,0 +1,30 @@
+section,construct,indicator,source,target,metric,value
+metadata,,,,,result_id,98998d49-74e7-4fb8-a3d8-63f12471ba41
+metadata,,,,,recipe_id,00000000-0000-0000-0000-000000000001
+metadata,,,,,dataset_fingerprint,v2:9b814a8a22eace42776bc479c637de36bc973dfd8a7b3d5b3e60baba98803373
+metadata,,,,,method,PlsPm
+metadata,,,,,method_version,pls_pm_v1+pls_mediation_v1+pls_assessment_v7
+metadata,,,,,engine_version,0.3.0-alpha.1
+metadata,,,,,seed,20260718
+metadata,,,,,started_at,2026-07-19T10:20:47.101884900+00:00
+metadata,,,,,completed_at,2026-07-19T10:20:47.109654300+00:00
+metadata,,,,,export_scope,v0.3 validated estimator only; assessment and resampling are excluded
+metadata,,,,,export_scope,supplemental method export; values are validated only inside the documented QuickPLS v0.9.0-rc.1 supported scope
+scope_warning,,,,,publication_status,Validated for the documented QuickPLS v0.9.0-rc.1 supported scope where covered by publication audits; unsupported or unaudited payload fields remain outside the release scope.
+summary,,,,,converged,true
+summary,,,,,iterations,4
+summary,,,,,used_observations,6
+summary,,,,,omitted_observations,0
+outer_estimate,x,x1,,,weight,0.5230179262300994
+outer_estimate,x,x1,,,loading,0.9864954295126468
+outer_estimate,x,x2,,,weight,0.49156704893603526
+outer_estimate,x,x2,,,loading,0.9846982365244146
+outer_estimate,y,y1,,,weight,0.4961349327145746
+outer_estimate,y,y1,,,loading,0.9954396945354064
+outer_estimate,y,y2,,,weight,0.5083355778619224
+outer_estimate,y,y2,,,loading,0.9956564446247306
+path_coefficient,,,x,y,path_coefficient,0.9833789187934318
+effect,,,x,y,direct,0.9833789187934318
+effect,,,x,y,indirect,0.0
+effect,,,x,y,total,0.9833789187934318
+r_squared,y,,,,r_squared,0.967034097927339

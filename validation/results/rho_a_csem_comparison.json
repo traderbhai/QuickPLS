@@ -1,0 +1,31 @@
+{
+  "status": "passed",
+  "tolerance": 1e-06,
+  "sources": {
+    "csem": "validation/results/rho_a_csem_0_6_1.csv",
+    "quickpls": "validation/results/rho_a_quickpls_reference.json"
+  },
+  "comparisons": [
+    {
+      "construct": "x",
+      "quickpls_rho_a": 0.9843703172758091,
+      "csem_rho_a": 0.984370317275809,
+      "csem_manual_rho_a": 0.984370317275809,
+      "quickpls_minus_csem": 1.1102230246251565e-16,
+      "quickpls_minus_csem_manual": 1.1102230246251565e-16,
+      "abs_diff": 1.1102230246251565e-16,
+      "passed": true
+    },
+    {
+      "construct": "y",
+      "quickpls_rho_a": 0.9989838171347465,
+      "csem_rho_a": 0.998983817134746,
+      "csem_manual_rho_a": 0.998983817134747,
+      "quickpls_minus_csem": 4.440892098500626e-16,
+      "quickpls_minus_csem_manual": -5.551115123125783e-16,
+      "abs_diff": 4.440892098500626e-16,
+      "passed": true
+    }
+  ],
+  "max_abs_diff": 4.440892098500626e-16
+}

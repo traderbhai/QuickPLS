@@ -1,0 +1,905 @@
+{
+  "schema_version": 1,
+  "id": "96fc4e21-fce5-4f7a-a878-2a957ada7505",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "00000000-0000-0000-0000-000000000701",
+    "dataset_fingerprint": "v2:e86355576cf588944bac2664ef385e4477f5aa5307886b23a1c8d38096437f53",
+    "method": "pls_pm",
+    "method_version": "pls_pm_v1+pls_assessment_v7",
+    "engine_version": "0.3.0-alpha.1",
+    "seed": 20260718,
+    "settings": {
+      "method": "pls_pm",
+      "weighting_scheme": "path",
+      "tolerance": 1e-7,
+      "max_iterations": 3000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260718,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion"
+    },
+    "started_at": "2026-07-18T20:31:18.630719Z",
+    "completed_at": "2026-07-18T20:31:18.675377800Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.improper_above_one for construct 'like'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.two_indicator_limited_information for construct 'like'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.two_indicator_limited_information for construct 'satisfaction'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.two_indicator_limited_information for construct 'loyalty'"
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "construct_scores": {
+        "comp": [
+          1.0468434481225775,
+          -1.6234011275132527,
+          1.0014640836410897,
+          0.5903183300683056,
+          1.0014640836410897,
+          0.41573263713199454,
+          -0.26075753834007637,
+          1.0468434481225775,
+          -0.9922903165226694,
+          -1.1380916481961671,
+          0.04996624804069797,
+          -1.1380916481961671
+        ],
+        "like": [
+          -1.1844578534256116,
+          0.9829237287949907,
+          1.0852299622017003,
+          -1.2867640868323211,
+          1.0852299622017003,
+          0.5178080082948723,
+          -0.049613945611955666,
+          -1.1844578534256116,
+          -0.6170358995187837,
+          0.8526721019516409,
+          -1.054206226582262,
+          0.8526721019516409
+        ],
+        "loyalty": [
+          -0.28378965992023863,
+          0.3064720305544917,
+          1.1123462555506634,
+          -1.0896638849164102,
+          1.1123462555506634,
+          0.3064720305544917,
+          -0.49940219444168005,
+          -0.28378965992023863,
+          -1.6004072646752165,
+          1.1123462555506634,
+          -1.3052764194378517,
+          1.1123462555506634
+        ],
+        "satisfaction": [
+          0.23624384663646794,
+          -0.7479417927574687,
+          1.2596397388784695,
+          -0.7087315399094037,
+          1.2596397388784695,
+          0.7479417927574687,
+          -0.7087315399094037,
+          0.23624384663646794,
+          -1.7321274321514055,
+          0.7087315399094037,
+          -1.2596397388784695,
+          0.7087315399094037
+        ]
+      },
+      "converged": true,
+      "effects": [
+        {
+          "direct": 0.6782828676586663,
+          "indirect": 0.0,
+          "source": "comp",
+          "target": "satisfaction",
+          "total": 0.6782828676586663
+        },
+        {
+          "direct": 0.0,
+          "indirect": 0.603514041863521,
+          "source": "comp",
+          "target": "loyalty",
+          "total": 0.603514041863521
+        },
+        {
+          "direct": 0.8151174340853793,
+          "indirect": 0.0,
+          "source": "like",
+          "target": "satisfaction",
+          "total": 0.8151174340853793
+        },
+        {
+          "direct": 0.0,
+          "indirect": 0.7252649900127608,
+          "source": "like",
+          "target": "loyalty",
+          "total": 0.7252649900127608
+        },
+        {
+          "direct": 0.8897674858673101,
+          "indirect": 0.0,
+          "source": "satisfaction",
+          "target": "loyalty",
+          "total": 0.8897674858673101
+        }
+      ],
+      "iterations": 9,
+      "method_version": "pls_pm_v1",
+      "omitted_observations": 0,
+      "outer_estimates": [
+        {
+          "construct": "comp",
+          "indicator": "COMP1",
+          "loading": 0.9864631884489765,
+          "weight": 0.3074635063652691
+        },
+        {
+          "construct": "comp",
+          "indicator": "COMP2",
+          "loading": 0.9132297891179918,
+          "weight": 0.3547962313929423
+        },
+        {
+          "construct": "comp",
+          "indicator": "COMP3",
+          "loading": 0.9409290762387894,
+          "weight": 0.3960852002726282
+        },
+        {
+          "construct": "like",
+          "indicator": "LIKE1",
+          "loading": 0.9731029552680003,
+          "weight": 0.6766685611513641
+        },
+        {
+          "construct": "like",
+          "indicator": "LIKE2",
+          "loading": 0.9097203258432269,
+          "weight": 0.3754250770313324
+        },
+        {
+          "construct": "satisfaction",
+          "indicator": "CUSA1",
+          "loading": 0.8896138795991511,
+          "weight": 0.6545662120241517
+        },
+        {
+          "construct": "satisfaction",
+          "indicator": "CUSA2",
+          "loading": 0.8131805991105339,
+          "weight": 0.5136482758240257
+        },
+        {
+          "construct": "loyalty",
+          "indicator": "CUSL1",
+          "loading": 0.9664603775740815,
+          "weight": 0.5692954390553767
+        },
+        {
+          "construct": "loyalty",
+          "indicator": "CUSL2",
+          "loading": 0.951021931220146,
+          "weight": 0.4729633463260451
+        }
+      ],
+      "paths": [
+        {
+          "coefficient": 0.6782828676586663,
+          "source": "comp",
+          "target": "satisfaction"
+        },
+        {
+          "coefficient": 0.8151174340853793,
+          "source": "like",
+          "target": "satisfaction"
+        },
+        {
+          "coefficient": 0.8897674858673101,
+          "source": "satisfaction",
+          "target": "loyalty"
+        }
+      ],
+      "r_squared": {
+        "loyalty": 0.7916861789066344,
+        "satisfaction": 0.7410311866406964
+      },
+      "transforms": [
+        {
+          "indicator": "COMP1",
+          "mean": 4.916666666666667,
+          "scale": 2.108783937953269
+        },
+        {
+          "indicator": "COMP2",
+          "mean": 5.166666666666667,
+          "scale": 1.3371158468430429
+        },
+        {
+          "indicator": "COMP3",
+          "mean": 4.833333333333333,
+          "scale": 1.80067327475704
+        },
+        {
+          "indicator": "LIKE1",
+          "mean": 4.916666666666667,
+          "scale": 2.0207259421636903
+        },
+        {
+          "indicator": "LIKE2",
+          "mean": 4.333333333333333,
+          "scale": 1.6143297699232975
+        },
+        {
+          "indicator": "CUSA1",
+          "mean": 5.0,
+          "scale": 1.2792042981336627
+        },
+        {
+          "indicator": "CUSA2",
+          "mean": 5.5,
+          "scale": 1.087114613009218
+        },
+        {
+          "indicator": "CUSL1",
+          "mean": 4.833333333333333,
+          "scale": 1.1146408580454255
+        },
+        {
+          "indicator": "CUSL2",
+          "mean": 5.25,
+          "scale": 1.6025547785276542
+        }
+      ],
+      "used_observations": 12,
+      "warnings": []
+    },
+    "assessment": {
+      "blindfolding": {
+        "constructs": [
+          {
+            "construct": "satisfaction",
+            "observation_sum_squares": 37.37453302251548,
+            "prediction_error_sum_squares": 21.32326768461028,
+            "q_squared": 0.42947065929186223
+          },
+          {
+            "construct": "loyalty",
+            "observation_sum_squares": 40.06491866417256,
+            "prediction_error_sum_squares": 14.936432312341257,
+            "q_squared": 0.6271942434841897
+          }
+        ],
+        "settings": {
+          "missing_value_treatment": "indicator_mean_replacement",
+          "omission_distance": 7,
+          "selection": "preferred_7_then_smallest_valid_5_to_12"
+        }
+      },
+      "construct_quality": [
+        {
+          "ave": 0.8974819321363313,
+          "construct": "comp",
+          "cronbach_alpha": 0.9424564224460548,
+          "normalized_weight_norm_squared": 0.37729765943206794,
+          "off_diagonal_denominator": 0.09295858836896562,
+          "off_diagonal_numerator": 0.6227023405679321,
+          "rho_a": 0.9535845371764488,
+          "rho_a_indicator_count": 3,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [],
+          "rho_c": 0.9632845094777064,
+          "score_variance_before_normalization": 1.0000000000000004
+        },
+        {
+          "ave": 0.8872602164018114,
+          "construct": "like",
+          "cronbach_alpha": 0.8824297545739295,
+          "normalized_weight_norm_squared": 0.5988243301146394,
+          "off_diagonal_denominator": 0.12907096318298875,
+          "off_diagonal_numerator": 0.4011756698853607,
+          "rho_a": 1.1145637402199535,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.improper_above_one",
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.9401990761694458,
+          "score_variance_before_normalization": 0.9999999999999998
+        },
+        {
+          "ave": 0.7263377707726097,
+          "construct": "satisfaction",
+          "cronbach_alpha": 0.6278855111940376,
+          "normalized_weight_norm_squared": 0.692291477180641,
+          "off_diagonal_denominator": 0.2260834815680331,
+          "off_diagonal_numerator": 0.3077085228193591,
+          "rho_a": 0.6523019292196599,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.8412094871364356,
+          "score_variance_before_normalization": 1.0000000000000002
+        },
+        {
+          "ave": 0.9192441875411662,
+          "construct": "loyalty",
+          "cronbach_alpha": 0.9128882382890651,
+          "normalized_weight_norm_squared": 0.5477916238971847,
+          "off_diagonal_denominator": 0.1449974534174301,
+          "off_diagonal_numerator": 0.45220837610281556,
+          "rho_a": 0.935855942092865,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.9579205044803875,
+          "score_variance_before_normalization": 0.9999999999999999
+        }
+      ],
+      "cross_loadings": [
+        {
+          "assigned_construct": "comp",
+          "construct": "comp",
+          "indicator": "COMP1",
+          "loading": 0.9864631884489762
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "like",
+          "indicator": "COMP1",
+          "loading": -0.34473119354670845
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "satisfaction",
+          "indicator": "COMP1",
+          "loading": 0.32239328524980854
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "loyalty",
+          "indicator": "COMP1",
+          "loading": -0.08025498116589698
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "comp",
+          "indicator": "COMP2",
+          "loading": 0.9132297891179917
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "like",
+          "indicator": "COMP2",
+          "loading": -0.4152976340403118
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "satisfaction",
+          "indicator": "COMP2",
+          "loading": 0.3720243638818081
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "loyalty",
+          "indicator": "COMP2",
+          "loading": -0.04399548286126523
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "comp",
+          "indicator": "COMP3",
+          "loading": 0.9409290762387894
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "like",
+          "indicator": "COMP3",
+          "loading": -0.2359069933242935
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "satisfaction",
+          "indicator": "COMP3",
+          "loading": 0.4153182593173021
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "loyalty",
+          "indicator": "COMP3",
+          "loading": 0.0423966553977287
+        },
+        {
+          "assigned_construct": "like",
+          "construct": "comp",
+          "indicator": "LIKE1",
+          "loading": -0.30907506219994874
+        },
+        {
+          "assigned_construct": "like",
+          "construct": "like",
+          "indicator": "LIKE1",
+          "loading": 0.9731029552680002
+        },
+        {
+          "assigned_construct": "like",
+          "construct": "satisfaction",
+          "indicator": "LIKE1",
+          "loading": 0.6552888513612986
+        },
+        {
+          "assigned_construct": "like",
+          "construct": "loyalty",
+          "indicator": "LIKE1",
+          "loading": 0.8742178206838039
+        },
+        {
+          "assigned_construct": "like",
+          "construct": "comp",
+          "indicator": "LIKE2",
+          "loading": -0.3666142633400456
+        },
+        {
+          "assigned_construct": "like",
+          "construct": "like",
+          "indicator": "LIKE2",
+          "loading": 0.9097203258432268
+        },
+        {
+          "assigned_construct": "like",
+          "construct": "satisfaction",
+          "indicator": "LIKE2",
+          "loading": 0.3635633221018029
+        },
+        {
+          "assigned_construct": "like",
+          "construct": "loyalty",
+          "indicator": "LIKE2",
+          "loading": 0.6602906534197968
+        },
+        {
+          "assigned_construct": "satisfaction",
+          "construct": "comp",
+          "indicator": "CUSA1",
+          "loading": 0.5635348507976798
+        },
+        {
+          "assigned_construct": "satisfaction",
+          "construct": "like",
+          "indicator": "CUSA1",
+          "loading": 0.5129814178619498
+        },
+        {
+          "assigned_construct": "satisfaction",
+          "construct": "satisfaction",
+          "indicator": "CUSA1",
+          "loading": 0.8896138795991512
+        },
+        {
+          "assigned_construct": "satisfaction",
+          "construct": "loyalty",
+          "indicator": "CUSA1",
+          "loading": 0.7291999199956533
+        },
+        {
+          "assigned_construct": "satisfaction",
+          "construct": "comp",
+          "indicator": "CUSA2",
+          "loading": 0.05207367911159956
+        },
+        {
+          "assigned_construct": "satisfaction",
+          "construct": "like",
+          "indicator": "CUSA2",
+          "loading": 0.47527434697352633
+        },
+        {
+          "assigned_construct": "satisfaction",
+          "construct": "satisfaction",
+          "indicator": "CUSA2",
+          "loading": 0.8131805991105336
+        },
+        {
+          "assigned_construct": "satisfaction",
+          "construct": "loyalty",
+          "indicator": "CUSA2",
+          "loading": 0.8029966727051719
+        },
+        {
+          "assigned_construct": "loyalty",
+          "construct": "comp",
+          "indicator": "CUSL1",
+          "loading": 0.10454506545749723
+        },
+        {
+          "assigned_construct": "loyalty",
+          "construct": "like",
+          "indicator": "CUSL1",
+          "loading": 0.6977107837190027
+        },
+        {
+          "assigned_construct": "loyalty",
+          "construct": "satisfaction",
+          "indicator": "CUSL1",
+          "loading": 0.9246957233410882
+        },
+        {
+          "assigned_construct": "loyalty",
+          "construct": "loyalty",
+          "indicator": "CUSL1",
+          "loading": 0.9664603775740814
+        },
+        {
+          "assigned_construct": "loyalty",
+          "construct": "comp",
+          "indicator": "CUSL2",
+          "loading": -0.17550884496958724
+        },
+        {
+          "assigned_construct": "loyalty",
+          "construct": "like",
+          "indicator": "CUSL2",
+          "loading": 0.9350445880479281
+        },
+        {
+          "assigned_construct": "loyalty",
+          "construct": "satisfaction",
+          "indicator": "CUSL2",
+          "loading": 0.7682253410917395
+        },
+        {
+          "assigned_construct": "loyalty",
+          "construct": "loyalty",
+          "indicator": "CUSL2",
+          "loading": 0.9510219312201459
+        }
+      ],
+      "f_squared": [
+        {
+          "excluded_r_squared": 0.33628882596498244,
+          "f_squared": 1.5629000087904734,
+          "included_r_squared": 0.7410311866406964,
+          "source_construct": "comp",
+          "target_construct": "satisfaction"
+        },
+        {
+          "excluded_r_squared": 0.15651394066950008,
+          "f_squared": 2.2570951242697093,
+          "included_r_squared": 0.7410311866406964,
+          "source_construct": "like",
+          "target_construct": "satisfaction"
+        },
+        {
+          "excluded_r_squared": 0.0,
+          "f_squared": 3.800449604118217,
+          "included_r_squared": 0.7916861789066344,
+          "source_construct": "satisfaction",
+          "target_construct": "loyalty"
+        }
+      ],
+      "formative_indicator_vif": [],
+      "fornell_larcker": {
+        "constructs": [
+          "comp",
+          "like",
+          "satisfaction",
+          "loyalty"
+        ],
+        "values": [
+          [
+            0.9473552301731021,
+            -0.34677756568182966,
+            0.39561842812171955,
+            -0.02349222168593612
+          ],
+          [
+            -0.34677756568182966,
+            0.9419449115536489,
+            0.5799041523950166,
+            0.8394453842781868
+          ],
+          [
+            0.39561842812171955,
+            0.5799041523950166,
+            0.8522545222951943,
+            0.8897674858673102
+          ],
+          [
+            -0.02349222168593612,
+            0.8394453842781868,
+            0.8897674858673102,
+            0.9587722292292191
+          ]
+        ]
+      },
+      "htmt": null,
+      "htmt_original": {
+        "absolute_correlations": false,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": -0.39547481091308156
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.4626750656126671
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": -0.045506017957920385
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": -0.39547481091308156
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.7205790109897338
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.9180368929465503
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.4626750656126671
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.7205790109897338
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.1758675449897438
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": -0.045506017957920385
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.9180368929465503
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.1758675449897438
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "comp",
+          "like",
+          "satisfaction",
+          "loyalty"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_original_method_version": "henseler_et_al_htmt_v1",
+      "htmt_plus": {
+        "absolute_correlations": true,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.39547481091308156
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.5194489876554111
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.1561486213373319
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.39547481091308156
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.7205790109897338
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.9180368929465503
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.5194489876554111
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.7205790109897338
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.1758675449897438
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.15614862133733193
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.9180368929465503
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.1758675449897438
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "comp",
+          "like",
+          "satisfaction",
+          "loyalty"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
+      "method_version": "pls_assessment_v7",
+      "model_fit": {
+        "estimated": {
+          "d_uls": 1.9597339096384125,
+          "srmr": 0.20868551084445025
+        },
+        "saturated": {
+          "d_uls": 0.8729007223039599,
+          "srmr": 0.13927596285424448
+        }
+      },
+      "r_squared": {
+        "loyalty": 0.7916861789066344,
+        "satisfaction": 0.7410311866406964
+      },
+      "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
+      "structural_quality": [
+        {
+          "adjusted_r_squared": 0.6834825614497402,
+          "construct": "satisfaction",
+          "predictor_count": 2,
+          "r_squared": 0.7410311866406964
+        },
+        {
+          "adjusted_r_squared": 0.7708547967972978,
+          "construct": "loyalty",
+          "predictor_count": 1,
+          "r_squared": 0.7916861789066344
+        }
+      ],
+      "structural_vif": [
+        {
+          "predictor_construct": "comp",
+          "target_construct": "satisfaction",
+          "vif": 1.1366926056150508
+        },
+        {
+          "predictor_construct": "like",
+          "target_construct": "satisfaction",
+          "vif": 1.1366926056150508
+        },
+        {
+          "predictor_construct": "satisfaction",
+          "target_construct": "loyalty",
+          "vif": 1.0
+        }
+      ],
+      "warnings": [
+        "rho_a.improper_above_one for construct 'like'",
+        "rho_a.two_indicator_limited_information for construct 'like'",
+        "rho_a.two_indicator_limited_information for construct 'satisfaction'",
+        "rho_a.two_indicator_limited_information for construct 'loyalty'"
+      ]
+    }
+  }
+}

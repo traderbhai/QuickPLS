@@ -1,0 +1,427 @@
+#!/usr/bin/env python3
+"""Broader PLS bootstrap matched-resample evidence against cSEM.
+
+This development-only validation script checks the bundled corporate-reputation
+fixture against cSEM on identical resampled datasets. R/cSEM are not runtime
+dependencies of QuickPLS and must not be distributed with the app.
+"""
+
+from __future__ import annotations
+
+import csv
+import json
+import math
+import random
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+from typing import Iterable
+
+from r_runtime import find_rscript_optional
+
+ROOT = Path(__file__).resolve().parents[1]
+DATA = ROOT / "validation" / "fixtures" / "corporate_reputation.csv"
+RECIPE = ROOT / "validation" / "fixtures" / "corporate_reputation.recipe.json"
+RESULTS = ROOT / "validation" / "results"
+WORK = RESULTS / "pls_bootstrap_corporate_csem_reference"
+OUTPUT = RESULTS / "pls_bootstrap_corporate_csem_reference.json"
+VARIANT = "CORPORATE_PATH_MODE_A"
+TOLERANCE = 1.0e-6
+SUMMARY_TOLERANCE = 1.0e-6
+TARGET_ACCEPTED_REPLICATES = 8
+MAX_CANDIDATES = 32
+SEED = 2026071903
+PARAMETERS = [
+    ("path", "comp", "satisfaction", ""),
+    ("path", "like", "satisfaction", ""),
+    ("path", "satisfaction", "loyalty", ""),
+    ("loading", "comp", "", "COMP1"),
+    ("loading", "comp", "", "COMP2"),
+    ("loading", "comp", "", "COMP3"),
+    ("loading", "like", "", "LIKE1"),
+    ("loading", "like", "", "LIKE2"),
+    ("loading", "satisfaction", "", "CUSA1"),
+    ("loading", "satisfaction", "", "CUSA2"),
+    ("loading", "loyalty", "", "CUSL1"),
+    ("loading", "loyalty", "", "CUSL2"),
+    ("weight", "comp", "", "COMP1"),
+    ("weight", "comp", "", "COMP2"),
+    ("weight", "comp", "", "COMP3"),
+    ("weight", "like", "", "LIKE1"),
+    ("weight", "like", "", "LIKE2"),
+    ("weight", "satisfaction", "", "CUSA1"),
+    ("weight", "satisfaction", "", "CUSA2"),
+    ("weight", "loyalty", "", "CUSL1"),
+    ("weight", "loyalty", "", "CUSL2"),
+]
+
+
+def relative(path: Path) -> str:
+    return path.as_posix().removeprefix(ROOT.as_posix() + "/")
+
+
+def find_rscript() -> str | None:
+    found = find_rscript_optional()
+    return found[0] if found is not None else None
+
+
+def read_source_rows() -> list[dict[str, str]]:
+    with DATA.open("r", encoding="utf-8", newline="") as handle:
+        return list(csv.DictReader(handle))
+
+
+def write_resample(rows: list[dict[str, str]], indices: list[int], output: Path) -> None:
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with output.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        for index in indices:
+            writer.writerow(rows[index])
+
+
+def dataset_fingerprint(data: Path) -> str:
+    project = data.with_suffix(".fingerprint.qpls")
+    subprocess.run(
+        [
+            "cargo",
+            "run",
+            "-p",
+            "qpls-cli",
+            "--",
+            "import",
+            relative(data),
+            relative(project),
+            "--name",
+            data.stem,
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    completed = subprocess.run(
+        [
+            "cargo",
+            "run",
+            "-p",
+            "qpls-cli",
+            "--",
+            "inspect",
+            relative(project),
+            "--json",
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    report = json.loads(completed.stdout)
+    return str(report["datasets"][0]["fingerprint"])
+
+
+def write_recipe(fingerprint: str, output: Path) -> None:
+    recipe = json.loads(RECIPE.read_text(encoding="utf-8"))
+    recipe["dataset_fingerprint"] = fingerprint
+    recipe["id"] = "00000000-0000-0000-0000-000000000701"
+    recipe["metadata"] = {
+        "fixture": "Corporate-reputation PLS bootstrap cSEM matched-resample validation",
+        "source_recipe": relative(RECIPE),
+        "variant": VARIANT,
+    }
+    output.write_text(json.dumps(recipe, indent=2) + "\n", encoding="utf-8")
+
+
+def run_quickpls(data: Path, recipe: Path, output: Path) -> dict[tuple[str, str, str, str, str], float]:
+    subprocess.run(
+        [
+            "cargo",
+            "run",
+            "-p",
+            "qpls-cli",
+            "--",
+            "run",
+            relative(recipe),
+            "--data",
+            relative(data),
+            "--output",
+            relative(output),
+            "--allow-experimental",
+            "--bootstrap-samples",
+            "0",
+            "--workers",
+            "1",
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    envelope = json.loads(output.read_text(encoding="utf-8"))
+    estimation = envelope["payload"]["estimation"]
+    if not estimation["converged"]:
+        raise RuntimeError("QuickPLS estimator did not converge")
+    values: dict[tuple[str, str, str, str], float] = {}
+    for row in estimation["paths"]:
+        values[("path", row["source"], row["target"], "")] = float(row["coefficient"])
+    for row in estimation["outer_estimates"]:
+        values[("loading", row["construct"], "", row["indicator"])] = float(row["loading"])
+        values[("weight", row["construct"], "", row["indicator"])] = float(row["weight"])
+    return {(VARIANT, *key): values[key] for key in PARAMETERS}
+
+
+def run_csem(rscript: str, data: Path, output: Path) -> dict[tuple[str, str, str, str, str], float]:
+    completed = subprocess.run(
+        [
+            rscript,
+            "--vanilla",
+            str(ROOT / "validation" / "r_csem_reference.R"),
+            str(data),
+            str(output),
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise RuntimeError(
+            f"cSEM reference failed\nstdout:\n{completed.stdout}\n\nstderr:\n{completed.stderr}"
+        )
+    values: dict[tuple[str, str, str, str, str], float] = {}
+    with output.open("r", encoding="utf-8-sig", newline="") as handle:
+        for row in csv.DictReader(handle):
+            key = (row["kind"], row["source"], row["target"], row["indicator"])
+            if row["variant"] == VARIANT and key in PARAMETERS:
+                values[(VARIANT, *key)] = float(row["value"])
+    return {(VARIANT, *key): values[(VARIANT, *key)] for key in PARAMETERS}
+
+
+def sample_standard_error(values: list[float]) -> float:
+    if len(values) < 2:
+        raise ValueError("at least two values are required")
+    mean = sum(values) / len(values)
+    variance = sum((value - mean) ** 2 for value in values) / (len(values) - 1)
+    return math.sqrt(variance)
+
+
+def type7_quantile(values: Iterable[float], probability: float) -> float:
+    sorted_values = sorted(values)
+    if probability <= 0.0:
+        return sorted_values[0]
+    if probability >= 1.0:
+        return sorted_values[-1]
+    position = probability * (len(sorted_values) - 1)
+    lower = math.floor(position)
+    upper = math.ceil(position)
+    if lower == upper:
+        return sorted_values[lower]
+    fraction = position - lower
+    return sorted_values[lower] * (1.0 - fraction) + sorted_values[upper] * fraction
+
+
+def summarize(values: dict[tuple[str, str, str, str, str], list[float]]) -> list[dict[str, object]]:
+    rows = []
+    for key in values:
+        series = values[key]
+        rows.append(
+            {
+                "variant": key[0],
+                "kind": key[1],
+                "source": key[2],
+                "target": key[3],
+                "indicator": key[4],
+                "mean": sum(series) / len(series),
+                "sample_standard_error": sample_standard_error(series),
+                "percentile_2_5": type7_quantile(series, 0.025),
+                "percentile_97_5": type7_quantile(series, 0.975),
+            }
+        )
+    return rows
+
+
+def key_from_row(row: dict[str, object]) -> tuple[str, str, str, str, str]:
+    return (
+        str(row["variant"]),
+        str(row["kind"]),
+        str(row["source"]),
+        str(row["target"]),
+        str(row["indicator"]),
+    )
+
+
+def main() -> int:
+    rscript = find_rscript()
+    if rscript is None:
+        raise SystemExit("Rscript.exe was not found. Set QPLS_RSCRIPT to the full path.")
+    os.environ["R_LIBS_USER"] = str(ROOT / "validation" / "r-library")
+    if WORK.exists():
+        shutil.rmtree(WORK)
+    WORK.mkdir(parents=True, exist_ok=True)
+
+    source_rows = read_source_rows()
+    rng = random.Random(SEED)
+    accepted = []
+    skipped = []
+    parameter_keys = [(VARIANT, *key) for key in PARAMETERS]
+    quick_values = {key: [] for key in parameter_keys}
+    csem_values = {key: [] for key in parameter_keys}
+
+    for candidate_index in range(MAX_CANDIDATES):
+        indices = [rng.randrange(len(source_rows)) for _ in source_rows]
+        data_path = WORK / f"candidate_{candidate_index:03d}.csv"
+        csem_path = WORK / f"candidate_{candidate_index:03d}.csem.csv"
+        recipe_path = WORK / f"candidate_{candidate_index:03d}.recipe.json"
+        quick_path = WORK / f"candidate_{candidate_index:03d}.quickpls.json"
+        write_resample(source_rows, indices, data_path)
+        try:
+            fingerprint = dataset_fingerprint(data_path)
+            write_recipe(fingerprint, recipe_path)
+            csem = run_csem(rscript, data_path, csem_path)
+            quick = run_quickpls(data_path, recipe_path, quick_path)
+        except Exception as error:  # noqa: BLE001 - validation report keeps skip reason.
+            skipped.append(
+                {
+                    "candidate": candidate_index,
+                    "indices": indices,
+                    "reason": str(error).splitlines()[0],
+                }
+            )
+            continue
+
+        comparisons = []
+        candidate_passed = True
+        for key in parameter_keys:
+            difference = quick[key] - csem[key]
+            row = {
+                "variant": key[0],
+                "kind": key[1],
+                "source": key[2],
+                "target": key[3],
+                "indicator": key[4],
+                "quickpls": quick[key],
+                "csem": csem[key],
+                "difference": difference,
+                "abs_diff": abs(difference),
+                "passed": abs(difference) <= TOLERANCE,
+            }
+            candidate_passed = candidate_passed and bool(row["passed"])
+            comparisons.append(row)
+        if not candidate_passed:
+            skipped.append(
+                {
+                    "candidate": candidate_index,
+                    "indices": indices,
+                    "reason": "estimate_mismatch",
+                    "max_abs_diff": max(row["abs_diff"] for row in comparisons),
+                }
+            )
+            continue
+        for key in parameter_keys:
+            quick_values[key].append(quick[key])
+            csem_values[key].append(csem[key])
+        accepted.append(
+            {
+                "candidate": candidate_index,
+                "indices": indices,
+                "data": relative(data_path),
+                "recipe": relative(recipe_path),
+                "quickpls": relative(quick_path),
+                "csem": relative(csem_path),
+                "max_abs_diff": max(row["abs_diff"] for row in comparisons),
+                "comparisons": comparisons,
+            }
+        )
+        if len(accepted) >= TARGET_ACCEPTED_REPLICATES:
+            break
+
+    quick_summary = summarize(quick_values) if len(accepted) >= 2 else []
+    csem_summary = summarize(csem_values) if len(accepted) >= 2 else []
+    csem_summary_by_key = {key_from_row(row): row for row in csem_summary}
+    summary_comparisons = []
+    for quick_row in quick_summary:
+        key = key_from_row(quick_row)
+        csem_row = csem_summary_by_key[key]
+        metric_diffs = {
+            metric: float(quick_row[metric]) - float(csem_row[metric])
+            for metric in [
+                "mean",
+                "sample_standard_error",
+                "percentile_2_5",
+                "percentile_97_5",
+            ]
+        }
+        summary_comparisons.append(
+            {
+                "variant": key[0],
+                "kind": key[1],
+                "source": key[2],
+                "target": key[3],
+                "indicator": key[4],
+                "differences": metric_diffs,
+                "max_abs_diff": max(abs(value) for value in metric_diffs.values()),
+                "passed": all(abs(value) <= SUMMARY_TOLERANCE for value in metric_diffs.values()),
+            }
+        )
+
+    passed = (
+        len(accepted) == TARGET_ACCEPTED_REPLICATES
+        and all(row["passed"] for row in summary_comparisons)
+    )
+    report = {
+        "schema_version": 1,
+        "kind": "pls_bootstrap_corporate_csem_reference_v1",
+        "passed": passed,
+        "tolerance": TOLERANCE,
+        "summary_tolerance": SUMMARY_TOLERANCE,
+        "reference": {
+            "engine": "cSEM",
+            "runtime": "Rscript",
+            "rscript": rscript,
+            "package_scope": "development validation only; not distributed with QuickPLS",
+        },
+        "fixture": {
+            "source_data": relative(DATA),
+            "recipe": relative(RECIPE),
+            "resample_seed": SEED,
+            "target_accepted_replicates": TARGET_ACCEPTED_REPLICATES,
+            "max_candidates": MAX_CANDIDATES,
+            "variant": VARIANT,
+            "model_shape": {
+                "constructs": 4,
+                "indicators": 9,
+                "paths": 3,
+                "observations": len(source_rows),
+            },
+            "parameters": [
+                {
+                    "kind": key[0],
+                    "source": key[1],
+                    "target": key[2],
+                    "indicator": key[3],
+                }
+                for key in PARAMETERS
+            ],
+        },
+        "accepted_replicates": accepted,
+        "skipped_candidates": skipped,
+        "quickpls_summary": quick_summary,
+        "csem_summary": csem_summary,
+        "summary_comparisons": summary_comparisons,
+        "max_replicate_abs_diff": max(
+            (replicate["max_abs_diff"] for replicate in accepted),
+            default=None,
+        ),
+        "max_summary_abs_diff": max(
+            (row["max_abs_diff"] for row in summary_comparisons),
+            default=None,
+        ),
+        "note": "Matched-resample PLS integration fixture on the broader corporate-reputation model. This verifies estimator and aggregate bootstrap summary parity on identical resamples; it is not stochastic coverage qualification.",
+    }
+    OUTPUT.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    print(f"wrote {OUTPUT} | passed={passed} | accepted={len(accepted)}")
+    return 0 if passed else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

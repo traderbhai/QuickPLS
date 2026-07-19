@@ -1,0 +1,33 @@
+{
+  "schema_version": 2,
+  "id": "00000000-0000-0000-0000-000000000004",
+  "created_at": "2026-07-18T00:00:00Z",
+  "dataset_fingerprint": "v2:c2eb152879cba7004dbd7bfcbae9ec926f1b998fa028c93bb4b89bc143986c06",
+  "model": {
+    "id": "00000000-0000-0000-0000-000000000005",
+    "name": "rho_A cSEM reflective reference",
+    "constructs": [
+      { "id": "x", "name": "X", "short_name": "X", "mode": "reflective", "indicators": ["x1", "x2", "x3"] },
+      { "id": "y", "name": "Y", "short_name": "Y", "mode": "reflective", "indicators": ["y1", "y2", "y3"] }
+    ],
+    "paths": [{ "source": "x", "target": "y" }]
+  },
+  "settings": {
+    "method": "pls_pm",
+    "weighting_scheme": "path",
+    "tolerance": 1e-12,
+    "max_iterations": 3000,
+    "bootstrap_samples": 0,
+    "studentized_inner_samples": 0,
+    "permutation_samples": 0,
+    "workers": 1,
+    "confidence_level": 0.95,
+    "seed": 20260718,
+    "preprocessing": "standardized",
+    "missing_data": "listwise_deletion"
+  },
+  "metadata": {
+    "fixture": "cSEM 0.6.1 reflective Mode A rho_A reference",
+    "reference_script": "validation/rho_a_csem_reference.R"
+  }
+}

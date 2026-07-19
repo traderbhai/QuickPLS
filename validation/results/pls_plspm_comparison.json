@@ -1,0 +1,205 @@
+{
+  "status": "passed",
+  "tolerance": 1e-06,
+  "compared_quantities": [
+    "path coefficients",
+    "loadings"
+  ],
+  "excluded_quantities": [
+    "outer weights because python-plspm uses a different normalization convention"
+  ],
+  "artifacts": {
+    "plspm": "validation/results/pls_plspm_0_5_7.json",
+    "quickpls_path_mode_a": "validation/results/pls_quickpls_path_mode_a.json",
+    "quickpls_mode_b": "validation/results/pls_quickpls_mode_b.json",
+    "quickpls_factor": "validation/results/pls_quickpls_factor.json"
+  },
+  "variants": [
+    {
+      "variant": "PATH_MODE_A",
+      "status": "passed",
+      "max_abs_diff": 2.220446049250313e-16,
+      "comparisons": [
+        {
+          "kind": "loading",
+          "source": "x",
+          "target": "",
+          "indicator": "x1",
+          "quickpls": 0.9864954295126468,
+          "plspm": 0.9864954295126468,
+          "difference": 0.0,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "kind": "loading",
+          "source": "x",
+          "target": "",
+          "indicator": "x2",
+          "quickpls": 0.9846982365244146,
+          "plspm": 0.9846982365244145,
+          "difference": 1.1102230246251565e-16,
+          "abs_diff": 1.1102230246251565e-16,
+          "passed": true
+        },
+        {
+          "kind": "loading",
+          "source": "y",
+          "target": "",
+          "indicator": "y1",
+          "quickpls": 0.9954396945354063,
+          "plspm": 0.9954396945354063,
+          "difference": 0.0,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "kind": "loading",
+          "source": "y",
+          "target": "",
+          "indicator": "y2",
+          "quickpls": 0.9956564446247306,
+          "plspm": 0.9956564446247307,
+          "difference": -1.1102230246251565e-16,
+          "abs_diff": 1.1102230246251565e-16,
+          "passed": true
+        },
+        {
+          "kind": "path",
+          "source": "x",
+          "target": "y",
+          "indicator": "",
+          "quickpls": 0.9833789187934318,
+          "plspm": 0.983378918793432,
+          "difference": -2.220446049250313e-16,
+          "abs_diff": 2.220446049250313e-16,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "variant": "MODE_B",
+      "status": "passed",
+      "max_abs_diff": 7.848807492827348e-09,
+      "comparisons": [
+        {
+          "kind": "loading",
+          "source": "x",
+          "target": "",
+          "indicator": "x1",
+          "quickpls": 0.9999970317809972,
+          "plspm": 0.9999970317992685,
+          "difference": -1.827127338316359e-11,
+          "abs_diff": 1.827127338316359e-11,
+          "passed": true
+        },
+        {
+          "kind": "loading",
+          "source": "x",
+          "target": "",
+          "indicator": "x2",
+          "quickpls": 0.9436661723065172,
+          "plspm": 0.9436661698250831,
+          "difference": 2.4814340582324235e-09,
+          "abs_diff": 2.4814340582324235e-09,
+          "passed": true
+        },
+        {
+          "kind": "loading",
+          "source": "y",
+          "target": "",
+          "indicator": "y1",
+          "quickpls": 0.9936768808499947,
+          "plspm": 0.9936768730011872,
+          "difference": 7.848807492827348e-09,
+          "abs_diff": 7.848807492827348e-09,
+          "passed": true
+        },
+        {
+          "kind": "loading",
+          "source": "y",
+          "target": "",
+          "indicator": "y2",
+          "quickpls": 0.9970934760172118,
+          "plspm": 0.9970934813431538,
+          "difference": -5.32594202073966e-09,
+          "abs_diff": 5.32594202073966e-09,
+          "passed": true
+        },
+        {
+          "kind": "path",
+          "source": "x",
+          "target": "y",
+          "indicator": "",
+          "quickpls": 0.9984476221341367,
+          "plspm": 0.9984476221341336,
+          "difference": 3.1086244689504383e-15,
+          "abs_diff": 3.1086244689504383e-15,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "variant": "FACTOR",
+      "status": "passed",
+      "max_abs_diff": 1.7067680602167457e-11,
+      "comparisons": [
+        {
+          "kind": "loading",
+          "source": "x",
+          "target": "",
+          "indicator": "x1",
+          "quickpls": 0.9864954295266685,
+          "plspm": 0.9864954295126468,
+          "difference": 1.4021672711805877e-11,
+          "abs_diff": 1.4021672711805877e-11,
+          "passed": true
+        },
+        {
+          "kind": "loading",
+          "source": "x",
+          "target": "",
+          "indicator": "x2",
+          "quickpls": 0.984698236509496,
+          "plspm": 0.9846982365244145,
+          "difference": -1.491851087109808e-11,
+          "abs_diff": 1.491851087109808e-11,
+          "passed": true
+        },
+        {
+          "kind": "loading",
+          "source": "y",
+          "target": "",
+          "indicator": "y1",
+          "quickpls": 0.9954396945336412,
+          "plspm": 0.9954396945354063,
+          "difference": -1.7650325645490739e-12,
+          "abs_diff": 1.7650325645490739e-12,
+          "passed": true
+        },
+        {
+          "kind": "loading",
+          "source": "y",
+          "target": "",
+          "indicator": "y2",
+          "quickpls": 0.9956564446264534,
+          "plspm": 0.9956564446247307,
+          "difference": 1.7227330673108554e-12,
+          "abs_diff": 1.7227330673108554e-12,
+          "passed": true
+        },
+        {
+          "kind": "path",
+          "source": "x",
+          "target": "y",
+          "indicator": "",
+          "quickpls": 0.9833789188104995,
+          "plspm": 0.9833789187934319,
+          "difference": 1.7067680602167457e-11,
+          "abs_diff": 1.7067680602167457e-11,
+          "passed": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,220 @@
+{
+  "schema_version": 1,
+  "harness_version": "qpls_monte_carlo_v1",
+  "engine_versions": {
+    "pls": "pls_pm_v1",
+    "resampling": "indexed_resampling_v4"
+  },
+  "mode": "sensitivity",
+  "configuration": {
+    "simulations_per_scenario": 96,
+    "sample_size": 120,
+    "bootstrap_replicates": 399,
+    "studentized_inner_replicates": 0,
+    "workers": 1,
+    "confidence_level": 0.95,
+    "master_seed": 20260718041
+  },
+  "dgp": {
+    "description": "Bivariate generated as x~N(0,1), y=beta*x+sqrt(1-beta^2)*e with independent unit-variance e. Normal modes use e~N(0,1); sensitivity and studentized-sensitivity also include standardized t(3) errors.",
+    "variables": "Single-item reflective constructs x={x1}, y={y1}",
+    "evaluated_path": "x -> y; population PLS path equals beta",
+    "alternatives": [
+      0.35,
+      0.0
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "coverage_beta_0_35",
+      "error_distribution": "normal",
+      "true_path": 0.35,
+      "requested_simulations": 96,
+      "completed_simulations": 96,
+      "failed_simulations": 0,
+      "mean_estimate": 0.34812460315399957,
+      "bias": -0.00187539684600041,
+      "mean_usable_bootstrap_rate": 1.0,
+      "percentile": {
+        "available": 96,
+        "coverage_rate": 0.9375,
+        "exclusion_of_zero_rate": 0.96875
+      },
+      "bca": {
+        "available": 96,
+        "coverage_rate": 0.9375,
+        "exclusion_of_zero_rate": 0.9791666666666666
+      },
+      "studentized": {
+        "available": 0,
+        "coverage_rate": null,
+        "exclusion_of_zero_rate": null
+      },
+      "normal_reference_available": 96,
+      "normal_reference_type_i_rate": null,
+      "failures": []
+    },
+    {
+      "name": "null_beta_0",
+      "error_distribution": "normal",
+      "true_path": 0.0,
+      "requested_simulations": 96,
+      "completed_simulations": 96,
+      "failed_simulations": 0,
+      "mean_estimate": -0.001222579709324884,
+      "bias": -0.001222579709324884,
+      "mean_usable_bootstrap_rate": 1.0,
+      "percentile": {
+        "available": 96,
+        "coverage_rate": 0.96875,
+        "exclusion_of_zero_rate": 0.03125
+      },
+      "bca": {
+        "available": 96,
+        "coverage_rate": 0.96875,
+        "exclusion_of_zero_rate": 0.03125
+      },
+      "studentized": {
+        "available": 0,
+        "coverage_rate": null,
+        "exclusion_of_zero_rate": null
+      },
+      "normal_reference_available": 96,
+      "normal_reference_type_i_rate": 0.052083333333333336,
+      "failures": []
+    },
+    {
+      "name": "heavy_tail_coverage_beta_0_35",
+      "error_distribution": "standardized_t3",
+      "true_path": 0.35,
+      "requested_simulations": 96,
+      "completed_simulations": 96,
+      "failed_simulations": 0,
+      "mean_estimate": 0.35435071778229815,
+      "bias": 0.004350717782298175,
+      "mean_usable_bootstrap_rate": 1.0,
+      "percentile": {
+        "available": 96,
+        "coverage_rate": 0.9375,
+        "exclusion_of_zero_rate": 0.96875
+      },
+      "bca": {
+        "available": 96,
+        "coverage_rate": 0.9166666666666666,
+        "exclusion_of_zero_rate": 0.9375
+      },
+      "studentized": {
+        "available": 0,
+        "coverage_rate": null,
+        "exclusion_of_zero_rate": null
+      },
+      "normal_reference_available": 96,
+      "normal_reference_type_i_rate": null,
+      "failures": []
+    },
+    {
+      "name": "heavy_tail_null_beta_0",
+      "error_distribution": "standardized_t3",
+      "true_path": 0.0,
+      "requested_simulations": 96,
+      "completed_simulations": 96,
+      "failed_simulations": 0,
+      "mean_estimate": -0.006272212138269742,
+      "bias": -0.006272212138269742,
+      "mean_usable_bootstrap_rate": 1.0,
+      "percentile": {
+        "available": 96,
+        "coverage_rate": 0.875,
+        "exclusion_of_zero_rate": 0.125
+      },
+      "bca": {
+        "available": 96,
+        "coverage_rate": 0.8854166666666666,
+        "exclusion_of_zero_rate": 0.11458333333333333
+      },
+      "studentized": {
+        "available": 0,
+        "coverage_rate": null,
+        "exclusion_of_zero_rate": null
+      },
+      "normal_reference_available": 96,
+      "normal_reference_type_i_rate": 0.11458333333333333,
+      "failures": []
+    }
+  ],
+  "qualification": {
+    "evaluated": false,
+    "passed": null,
+    "minimum_simulations_per_scenario": 1000,
+    "thresholds": {
+      "coverage_lower": 0.925,
+      "coverage_upper": 0.975,
+      "type_i_lower": 0.025,
+      "type_i_upper": 0.075,
+      "maximum_absolute_bias": 0.03,
+      "minimum_bca_availability": 1.0,
+      "minimum_studentized_availability": 0.99,
+      "minimum_normal_reference_availability": 1.0,
+      "minimum_usable_bootstrap_rate": 0.99
+    },
+    "checks": [
+      {
+        "metric": "percentile_coverage",
+        "observed": 0.9375,
+        "passed": null
+      },
+      {
+        "metric": "bca_coverage",
+        "observed": 0.9375,
+        "passed": null
+      },
+      {
+        "metric": "percentile_type_i",
+        "observed": 0.03125,
+        "passed": null
+      },
+      {
+        "metric": "bca_type_i",
+        "observed": 0.03125,
+        "passed": null
+      },
+      {
+        "metric": "normal_reference_type_i",
+        "observed": 0.052083333333333336,
+        "passed": null
+      },
+      {
+        "metric": "absolute_bias",
+        "observed": 0.00187539684600041,
+        "passed": null
+      },
+      {
+        "metric": "alternative_bca_availability",
+        "observed": 1.0,
+        "passed": null
+      },
+      {
+        "metric": "null_bca_availability",
+        "observed": 1.0,
+        "passed": null
+      },
+      {
+        "metric": "null_normal_reference_availability",
+        "observed": 1.0,
+        "passed": null
+      },
+      {
+        "metric": "alternative_usable_bootstrap_rate",
+        "observed": 1.0,
+        "passed": null
+      },
+      {
+        "metric": "null_usable_bootstrap_rate",
+        "observed": 1.0,
+        "passed": null
+      }
+    ],
+    "note": "This mode is a deterministic harness check only. Its simulation count is insufficient for coverage or type-I qualification."
+  },
+  "elapsed_seconds": 6.6714312
+}

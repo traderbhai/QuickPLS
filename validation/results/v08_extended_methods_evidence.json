@@ -1,0 +1,50 @@
+{
+  "all_listed_artifacts_present": true,
+  "artifacts": [
+    {
+      "bytes": 1218,
+      "path": "docs/methods/PCA_V1.md",
+      "present": true
+    },
+    {
+      "bytes": 1082,
+      "path": "docs/methods/REGRESSION_OLS_V1.md",
+      "present": true
+    },
+    {
+      "bytes": 1081,
+      "path": "docs/methods/REGRESSION_LOGISTIC_V1.md",
+      "present": true
+    },
+    {
+      "bytes": 1226,
+      "path": "docs/methods/PROCESS_V1.md",
+      "present": true
+    },
+    {
+      "bytes": 916,
+      "path": "docs/methods/NCA_V1.md",
+      "present": true
+    },
+    {
+      "bytes": 1130,
+      "path": "docs/methods/GSCA_V1.md",
+      "present": true
+    },
+    {
+      "bytes": 1217,
+      "path": "validation/results/v08_extended_methods_reference_report.json",
+      "present": true
+    }
+  ],
+  "generated_at": "2026-07-19T11:50:17.843659Z",
+  "note": "v0.8 extended methods are validated only for the documented QuickPLS v0.9.0-rc.1 supported scope. Unsupported and unaudited shapes remain outside the release scope.",
+  "open_registry_gates": [],
+  "promotion_ready": true,
+  "schema_version": 1,
+  "slice_id": "v0_8_extended_methods",
+  "slice_status": "experimental",
+  "stable_release_allowed": false,
+  "target": "v08-extended-methods",
+  "validation_status": "passed"
+}

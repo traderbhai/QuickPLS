@@ -1,0 +1,39 @@
+{
+  "checks": {
+    "baseline_interaction_abs": 0.8706007801983375,
+    "construct_reorder_max_delta": 0.0,
+    "experimental_warning_present": true,
+    "independent_reference_max_delta": 4.835021272242557e-14,
+    "missing_data_omitted_observations": 3,
+    "missing_data_reference_max_delta": 4.490852134608758e-14,
+    "missing_data_used_observations": 117,
+    "permuted_moderator_drop_ratio": 0.045298523280278925,
+    "permuted_moderator_interaction_abs": 0.03943692970964339,
+    "positive_affine_max_delta": 8.049116928532385e-14,
+    "row_reversal_max_delta": 3.3306690738754696e-16,
+    "simple_slope_reference_max_delta": 6.050715484207103e-14
+  },
+  "kind": "pls_two_stage_moderation_reference_v1",
+  "note": "Independent single-item two-stage moderation fixture and bounded metamorphic screen; not a full publication-validation suite.",
+  "passed": true,
+  "quickpls_paths": {
+    "m->y": 0.25919099992708766,
+    "x->y": 0.3455479638717852,
+    "xm->y": 0.8706007801983375
+  },
+  "reference_paths": {
+    "m->y": 0.2591909999270742,
+    "x->y": 0.34554796387183356,
+    "xm->y": 0.8706007801983254
+  },
+  "scenarios": [
+    "base_generated_interaction_signal",
+    "positive_affine_transform",
+    "row_reversal",
+    "construct_reorder",
+    "missing_data_listwise_row_mapping",
+    "permuted_moderator_degradation"
+  ],
+  "schema_version": 1,
+  "tolerance": 1e-10
+}

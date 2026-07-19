@@ -1,0 +1,28 @@
+{
+  "checks": {
+    "estimate_count": true,
+    "guard": true,
+    "max_absolute_summary": true,
+    "max_delta_within_tolerance": true,
+    "method_version": true,
+    "payload_version": true
+  },
+  "deltas": {
+    "x::x1::x2::x3::x4::ab_cd_minus_ac_bd": 4.551914400963142e-15,
+    "x::x1::x2::x3::x4::ac_bd_minus_ad_bc": 4.9404924595819466e-14,
+    "x::x1::x2::x3::x4::ad_bc_minus_ab_cd": 4.4853010194856324e-14
+  },
+  "guard": {
+    "passed": true,
+    "run_stderr": "Error: cta_pls.tetrad_block_required: CTA-PLS requires at least one construct with four or more indicators\n",
+    "validation_codes": [
+      "method.experimental",
+      "cta_pls.tetrad_block_required"
+    ]
+  },
+  "kind": "cta_pls_reference_v1",
+  "max_delta": 4.9404924595819466e-14,
+  "passed": true,
+  "schema_version": 1,
+  "tolerance": 1e-10
+}

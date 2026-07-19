@@ -1,0 +1,18 @@
+{
+  "kind": "v06_group_methods_reference",
+  "sections": {
+    "groups": {
+      "micom_constructs": 3,
+      "max_mga_difference": 1.3959928789199458
+    },
+    "pos": {
+      "segments": 3,
+      "objective_improvement": 0.6792091948425426
+    },
+    "fimix": {
+      "classes": 3,
+      "bic": 331.8483502084654,
+      "entropy": 0.503739550450474
+    }
+  }
+}

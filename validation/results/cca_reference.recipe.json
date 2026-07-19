@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "id": "00000000-0000-0000-0000-000000000017",
+  "created_at": "2026-07-19T00:00:00Z",
+  "dataset_fingerprint": "v2:da6d5f2557259c19c2728f2d115bb50475ec1f6f9345b48a0250dfa7e6e98dec",
+  "model": {
+    "id": "00000000-0000-0000-0000-000000000018",
+    "name": "CCA composite residual reference",
+    "constructs": [
+      {
+        "id": "x",
+        "name": "X",
+        "short_name": "X",
+        "mode": "reflective",
+        "indicators": [
+          "x1",
+          "x2"
+        ]
+      },
+      {
+        "id": "z",
+        "name": "Z",
+        "short_name": "Z",
+        "mode": "reflective",
+        "indicators": [
+          "z1",
+          "z2"
+        ]
+      },
+      {
+        "id": "y",
+        "name": "Y",
+        "short_name": "Y",
+        "mode": "reflective",
+        "indicators": [
+          "y1",
+          "y2"
+        ]
+      }
+    ],
+    "paths": [
+      {
+        "source": "x",
+        "target": "z"
+      },
+      {
+        "source": "x",
+        "target": "y"
+      },
+      {
+        "source": "z",
+        "target": "y"
+      }
+    ]
+  },
+  "settings": {
+    "method": "cca",
+    "weighting_scheme": "path",
+    "tolerance": 1e-07,
+    "max_iterations": 3000,
+    "bootstrap_samples": 0,
+    "seed": 20260719,
+    "preprocessing": "standardized",
+    "missing_data": "listwise_deletion"
+  },
+  "metadata": {
+    "fixture": "independent_cca_reference"
+  }
+}

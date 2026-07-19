@@ -1,0 +1,1200 @@
+{
+  "schema_version": 1,
+  "id": "73140ae8-f388-462f-a78b-1a8fadfe9e21",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "00000000-0000-0000-0000-000000000059",
+    "dataset_fingerprint": "v2:d861c54c20475df864d8561e1809cb5f9c5c6572cf847270b53033907cdde4c7",
+    "method": "pls_pm",
+    "method_version": "pls_pm_v1+pls_mediation_v1+pls_two_stage_moderation_v1+pls_assessment_v7",
+    "engine_version": "0.3.0-alpha.1",
+    "seed": 20260719,
+    "settings": {
+      "method": "pls_pm",
+      "weighting_scheme": "path",
+      "tolerance": 1e-7,
+      "max_iterations": 3000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260719,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion"
+    },
+    "started_at": "2026-07-19T02:50:31.539599400Z",
+    "completed_at": "2026-07-19T02:50:31.598114100Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "3 observations were omitted listwise before two-stage product-score generation"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Two-stage moderation is experimental; validate interaction effects with bootstrap or permutation inference before publication."
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.single_indicator_not_identified for construct 'x'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Cronbach alpha is undefined for single-item construct 'x'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.single_indicator_not_identified for construct 'm'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Cronbach alpha is undefined for single-item construct 'm'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Reliability and AVE are not applicable to formative construct 'xm'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.single_indicator_not_identified for construct 'y'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Cronbach alpha is undefined for single-item construct 'y'"
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "construct_scores": {
+        "m": [
+          -0.025568609050517197,
+          -0.06209911425150048,
+          0.9668450950975263,
+          0.637978735323393,
+          0.39070894063856043,
+          -0.06851381991940816,
+          -1.029036846737644,
+          -0.8890433154755151,
+          -1.2073375846382994,
+          0.5574189165668929,
+          -1.0595406444105502,
+          -0.10140999549055031,
+          1.7896219253709162,
+          1.0593960076386126,
+          -1.0465904498589524,
+          1.6917855101783026,
+          1.2356168214909025,
+          0.4677188935103887,
+          0.4618814453032505,
+          -0.6477939942269777,
+          0.5935684372841538,
+          -0.11223979512075466,
+          -1.0881318268619506,
+          0.20491534732729838,
+          0.46657163069271945,
+          -1.5093356616189735,
+          1.9130260617793655,
+          0.6361064511742078,
+          0.38042372308617256,
+          -0.5263587650793978,
+          0.18090734613207457,
+          -0.47216393284811164,
+          0.6018243357119138,
+          0.835712185230662,
+          -1.414336991641169,
+          0.32992433890394657,
+          -0.464051445192847,
+          -0.4384681932632257,
+          0.15805638173368672,
+          0.5978355894829614,
+          0.08984364712027912,
+          -1.0003710892381865,
+          -0.4032527705739624,
+          0.025748053168309155,
+          0.9136134030521277,
+          0.8462882273826435,
+          -0.6309638892966174,
+          -0.5285994319096265,
+          -1.022523457085582,
+          2.151554422557323,
+          1.9545443344030726,
+          -1.2468118206855205,
+          -1.9722607226073492,
+          -1.4077659053536231,
+          -0.8041000614197577,
+          1.5435254450867484,
+          -0.7226143478791357,
+          -0.039607930784902046,
+          1.2349240673894242,
+          0.5778036585161374,
+          -1.752617608127355,
+          0.13107174383338943,
+          0.008663019654213263,
+          -0.49752939336890706,
+          -2.1111254657242755,
+          0.9761041077871171,
+          -1.365541714562352,
+          1.3624282673489536,
+          0.38282413422092826,
+          -0.27096937772754226,
+          -0.7492297797658418,
+          -0.403532163896996,
+          -0.10373637108276433,
+          -2.115777258463747,
+          -0.4264220906908913,
+          0.8339627804325291,
+          0.21871156967945016,
+          -0.5518488694928174,
+          -0.006876883546195611,
+          0.14913994476837264,
+          -1.2485375572101072,
+          -0.0900869533612987,
+          1.802916616474708,
+          1.0183815186431975,
+          1.0249000136106439,
+          0.8717142680186559,
+          -0.699799296060399,
+          -0.6206695155273371,
+          0.24184328123435833,
+          1.085595657377694,
+          -0.2929758013590629,
+          -0.7896881349846123,
+          -1.0812761035848066,
+          0.5823443003415074,
+          0.23438215375668875,
+          0.1565845432466615,
+          -0.3626079209122244,
+          2.125313481842059,
+          2.214136530942766,
+          -2.083533408860748,
+          -1.008356448253645,
+          0.17136417754901595,
+          -0.14755918091944667,
+          -0.09349262690419533,
+          0.07379756775767483,
+          1.985908037593572,
+          -1.0796511175232117,
+          1.3602482301606735,
+          0.49849609183118154,
+          0.1325531448207389,
+          -0.9236263287840372,
+          0.11102302268966789,
+          -1.1254543991381645,
+          1.134137451898699,
+          -0.25118169367775384,
+          -1.8885717331214102,
+          -0.3010674266963348
+        ],
+        "x": [
+          1.2919670035976978,
+          -0.15646895643945538,
+          -2.3968250752074276,
+          0.7070169335531943,
+          0.16021961040083432,
+          -0.37170440525807463,
+          0.27961224700083764,
+          -0.9105831707476033,
+          0.3463142217735302,
+          0.4252338313143635,
+          -0.09935623886997923,
+          -0.3292015855097156,
+          0.5179959421367374,
+          -2.297549819428364,
+          1.0124762797035818,
+          0.15699168509339487,
+          -0.46579679795141576,
+          -0.7922985688431978,
+          -0.9424265637204472,
+          0.5548331772787369,
+          0.6633568857279181,
+          -0.8095419936841721,
+          -0.015033269453137993,
+          -1.1056077523489538,
+          0.5745115293433665,
+          -0.6992149944103054,
+          0.08437642910649158,
+          -0.42548823601140184,
+          0.9203935589999951,
+          -0.5284440214363464,
+          -0.6294289202350665,
+          -0.08773674150113621,
+          3.1051418546099976,
+          0.8422896819365195,
+          1.7457599825256773,
+          -0.47827511500490527,
+          0.07552158753010937,
+          0.05507038835856867,
+          0.31739525450473394,
+          1.0514142858307327,
+          -0.849902034330933,
+          -0.06637159759881547,
+          -0.5829288066961911,
+          0.22441143680330117,
+          0.7455042059075603,
+          0.5652329868796598,
+          -0.08215111169053509,
+          0.05278835045364883,
+          2.8022964805383728,
+          -0.8998425401467235,
+          1.6036576517157157,
+          -0.4442312668277141,
+          0.3739408789871257,
+          -0.12232061671058034,
+          -1.0158724983713066,
+          0.18170208141540328,
+          0.21364031466069114,
+          -0.8626161594993182,
+          1.4810367385872993,
+          -0.4154307628761262,
+          -1.6127400082284993,
+          1.5087151504391458,
+          1.1083899453606765,
+          1.2579980308333334,
+          -0.4233484858071157,
+          0.08202671785121855,
+          -0.305934534916583,
+          -1.1921806290336938,
+          1.4081957926495803,
+          -0.8148424546261517,
+          -1.4292779482639122,
+          -0.5802138377244043,
+          -0.36474765096263273,
+          -1.1466480667962822,
+          -0.9210857761145655,
+          -0.4017395250374073,
+          -0.5195836179532253,
+          1.5287471326286428,
+          1.0179319107358091,
+          1.0512270202872653,
+          -0.4090566170917084,
+          -1.4845401900983282,
+          -0.7797174276097598,
+          0.39896228390124083,
+          1.6699421797287828,
+          0.5941719635250238,
+          0.5947231832582834,
+          -0.04228287982894565,
+          -1.2034382463423416,
+          1.1727625780863202,
+          -0.23756449708995922,
+          -0.38493070485506764,
+          0.735263974338808,
+          0.7394077815935649,
+          -0.5305335204786444,
+          0.6061146660193597,
+          0.9711360926882362,
+          0.2616788610425249,
+          -0.4146280188793115,
+          -1.6087228189134315,
+          -1.723621473455779,
+          -0.6276063498778033,
+          1.3256775272636347,
+          1.8515838991019073,
+          1.260146517689954,
+          -1.6989483861326475,
+          -0.5995956599974036,
+          0.4228628857971429,
+          0.31866429801149193,
+          0.1571856142531183,
+          0.3688919331760649,
+          -2.4439987965771723,
+          -0.891818373541347,
+          0.3911475894944862,
+          -1.5193595908701065,
+          0.020004133586594555,
+          -0.7603074517044328
+        ],
+        "xm": [
+          -0.13238298426938286,
+          -0.0889402024997761,
+          -2.453705411247298,
+          0.3595531515478732,
+          -0.03520104744011566,
+          -0.07293480041212735,
+          -0.3912056527068142,
+          0.7238454198989378,
+          -0.5237043114729419,
+          0.14205829138462617,
+          0.008162833072293237,
+          -0.06488912434889677,
+          0.8432169999854323,
+          -2.5722513563319347,
+          -1.1756245638584653,
+          0.17108378143718558,
+          -0.6836822518443885,
+          -0.47538908858301465,
+          -0.5411535885210133,
+          -0.464053002067155,
+          0.30131081552131656,
+          -0.00647968793252983,
+          -0.08219103773500178,
+          -0.3290395293599858,
+          0.17357805871953183,
+          0.9736287571570731,
+          0.06521446689569078,
+          -0.3738535993923128,
+          0.2569963580460152,
+          0.18384200886028532,
+          -0.2145267224036424,
+          -0.05671708325331833,
+          1.8002026497145607,
+          0.6164983727158578,
+          -2.6078973036741946,
+          -0.2591644522423904,
+          -0.13442767554573962,
+          -0.12335185901969416,
+          -0.04783530324649943,
+          0.5399392888042155,
+          -0.17640918102720218,
+          -0.03134255698328236,
+          0.14006072867616284,
+          -0.09294241650988992,
+          0.5933198327975427,
+          0.38728337427806386,
+          -0.04614024770763361,
+          -0.12716999148369457,
+          -3.010637208669545,
+          -2.066231409320355,
+          3.0863718922304986,
+          0.46402933745165137,
+          -0.8482679986260326,
+          0.07617362174236968,
+          0.7312791573539271,
+          0.18619007633928258,
+          -0.25569409661109666,
+          -0.06409434720913508,
+          1.7597763065425298,
+          -0.3427392968113441,
+          2.7734815473579935,
+          0.10213858808042106,
+          -0.089056637991342,
+          -0.7348422879862643,
+          0.8094029393073507,
+          -0.01745075811144106,
+          0.32571848878115317,
+          -1.7493817945388055,
+          0.4490084727172326,
+          0.1255592987812398,
+          0.9893873974274672,
+          0.13911291130302855,
+          -0.0603637314451133,
+          2.3665308608442825,
+          0.30031861396594023,
+          -0.43927631804824757,
+          -0.21429364062774145,
+          -0.9561153581060439,
+          -0.10592773569994358,
+          0.0605050390433439,
+          0.4201802170728122,
+          0.03708960268984664,
+          -1.527347895543129,
+          0.3140621552268784,
+          1.640429992883989,
+          0.427522874477171,
+          -0.5217417202912524,
+          -0.07214541316132975,
+          -0.3945714466371389,
+          1.1949520842431873,
+          -0.028086235616961372,
+          0.2100843316453156,
+          -0.9067139783411654,
+          0.3387497208092273,
+          -0.22517572172016642,
+          -0.0023688073502262674,
+          -0.45665919772417596,
+          0.4663430301946458,
+          -1.0317261226754026,
+          3.30730085955541,
+          1.6673602770180251,
+          -0.20810530715401546,
+          -0.2975983069530684,
+          -0.27472733786829606,
+          -0.004312221955073301,
+          -3.5274150786342213,
+          0.5590247209050803,
+          0.48570043271099056,
+          0.06261158091039237,
+          -0.07764125391814052,
+          -0.4450508441414771,
+          -0.37454900491210513,
+          0.9211430154050003,
+          0.35198590473901314,
+          0.2890022445996356,
+          -0.1372052849901416,
+          0.1337970486412776
+        ],
+        "y": [
+          0.43136330616422563,
+          -0.3670249012108807,
+          -2.6979122024516005,
+          0.8199529590799258,
+          0.24749735523715638,
+          -0.02439703856212757,
+          -0.3632088583506242,
+          -0.036376783541709014,
+          -0.7037184365074808,
+          0.3264982414012155,
+          0.0619566204635652,
+          -0.2339676599321382,
+          1.4976343245371053,
+          -2.761982694456546,
+          -1.177617207653666,
+          0.20760232993707384,
+          -0.22905760269132205,
+          -0.4480946580263129,
+          -0.7692548197065497,
+          -0.448935532191513,
+          0.8493431071852909,
+          -0.4415591812741679,
+          -0.2371780808298093,
+          -0.96505252535569,
+          0.6493296359711227,
+          0.31269674729926034,
+          0.6483226676633882,
+          -0.3147317448270303,
+          0.6493484256098427,
+          -0.2250695566910805,
+          -0.3062841840349916,
+          0.21644382578425858,
+          3.0050147912126874,
+          0.8967598041726232,
+          -1.828943373981986,
+          -0.10645116346895991,
+          -0.3974638153074784,
+          -0.18498758788062125,
+          0.10457967452588364,
+          0.9683215354422173,
+          -0.36915144051865045,
+          -0.5006630047087107,
+          -0.1593875466032357,
+          -0.21170620015462968,
+          1.089592204211261,
+          0.7027133571372531,
+          0.10058209289392546,
+          -0.41568384001644015,
+          -2.174738436242926,
+          -1.8462419466348319,
+          3.5622430988745557,
+          0.029079952820746116,
+          -1.3114562959937335,
+          -0.6211617439843578,
+          0.0969970977149127,
+          0.3071714156722113,
+          -0.34002439395545314,
+          -0.5023121477359027,
+          2.4274436646880138,
+          -0.6510193461066258,
+          1.676684574175439,
+          0.9040719297698363,
+          0.3478976897895199,
+          -0.4907597846187341,
+          -0.12214199660312165,
+          0.37087872832101576,
+          -0.22643314232304476,
+          -1.748010988214914,
+          1.1050723625046737,
+          -0.200805638899028,
+          -0.044371807408536856,
+          -0.0468083584986389,
+          -0.29713523039459533,
+          1.0939438258272938,
+          -0.3644782100862638,
+          -0.30114613162267806,
+          -0.05101136476192222,
+          -0.1642212069586449,
+          -0.02855215438610074,
+          0.6859171056400902,
+          -0.08069469889073859,
+          -0.8561381540733769,
+          -1.1068276265300367,
+          0.7626861913350612,
+          2.1649508595465465,
+          0.8183100897743174,
+          -0.45676775404757547,
+          -0.5494826321307494,
+          -0.34642541158371076,
+          2.2080336541905536,
+          -0.1872510673738855,
+          -0.16888602373429046,
+          -0.5625491324391476,
+          0.8558621877975026,
+          -0.24796706523183545,
+          0.39314100452856204,
+          -0.15260029619535787,
+          0.9867451268645641,
+          -0.6589350076110624,
+          1.721446521933557,
+          0.7892236777825957,
+          -0.28747922930983705,
+          0.26873449061561233,
+          0.07574506022751487,
+          0.09468012519309739,
+          -3.1591795587174913,
+          -0.11541545221855194,
+          1.0223601164249154,
+          0.30024482195717794,
+          0.15139792059131546,
+          -0.632221442825777,
+          -1.1921088183798687,
+          0.04907039255185875,
+          0.8637286268077958,
+          0.16148045905447936,
+          -0.5463851572930157,
+          -0.31478928395230465
+        ]
+      },
+      "control_estimates": [],
+      "converged": true,
+      "effects": [
+        {
+          "direct": 0.3535132776723121,
+          "indirect": 0.0,
+          "source": "x",
+          "target": "y",
+          "total": 0.3535132776723121
+        },
+        {
+          "direct": 0.2573193831112749,
+          "indirect": 0.0,
+          "source": "m",
+          "target": "y",
+          "total": 0.2573193831112749
+        },
+        {
+          "direct": 0.8901993918110658,
+          "indirect": 0.0,
+          "source": "xm",
+          "target": "y",
+          "total": 0.8901993918110658
+        }
+      ],
+      "iterations": 1,
+      "mediation": {
+        "estimates": [
+          {
+            "classification": "direct_only",
+            "direct": 0.3535132776723121,
+            "indirect": 0.0,
+            "source": "x",
+            "target": "y",
+            "total": 0.3535132776723121,
+            "variance_accounted_for": 0.0,
+            "warning": "direct-only structural effect; no mediated component exceeds tolerance"
+          },
+          {
+            "classification": "direct_only",
+            "direct": 0.2573193831112749,
+            "indirect": 0.0,
+            "source": "m",
+            "target": "y",
+            "total": 0.2573193831112749,
+            "variance_accounted_for": 0.0,
+            "warning": "direct-only structural effect; no mediated component exceeds tolerance"
+          },
+          {
+            "classification": "direct_only",
+            "direct": 0.8901993918110658,
+            "indirect": 0.0,
+            "source": "xm",
+            "target": "y",
+            "total": 0.8901993918110658,
+            "variance_accounted_for": 0.0,
+            "warning": "direct-only structural effect; no mediated component exceeds tolerance"
+          }
+        ],
+        "method_version": "pls_mediation_v1",
+        "tolerance": 1e-12,
+        "warnings": [
+          "Mediation classes are descriptive effect-decomposition labels; publication inference requires validated bootstrap or permutation intervals for the relevant indirect effect."
+        ]
+      },
+      "method_version": "pls_pm_v1",
+      "moderation": {
+        "estimates": [
+          {
+            "interaction": "x_by_m_to_y",
+            "interaction_effect": 0.8901993918110658,
+            "moderator": "m",
+            "moderator_main_effect": 0.2573193831112749,
+            "outcome": "y",
+            "predictor": "x",
+            "predictor_main_effect": 0.3535132776723121,
+            "product_construct": "xm",
+            "simple_slopes": [
+              {
+                "effect": -0.5366861141387537,
+                "moderator_score": -1.0
+              },
+              {
+                "effect": 0.3535132776723121,
+                "moderator_score": 0.0
+              },
+              {
+                "effect": 1.243712669483378,
+                "moderator_score": 1.0
+              }
+            ],
+            "warning": null
+          }
+        ],
+        "method_version": "pls_two_stage_moderation_v1",
+        "moderator_score_levels": [
+          -1.0,
+          0.0,
+          1.0
+        ],
+        "warnings": [
+          "Simple slopes use standardized stage-1 moderator scores at -1, 0, and +1; publication inference requires validated bootstrap or permutation intervals."
+        ]
+      },
+      "omitted_observations": 3,
+      "outer_estimates": [
+        {
+          "construct": "x",
+          "indicator": "x",
+          "loading": 1.0000000000000002,
+          "weight": 1.0000000000000007
+        },
+        {
+          "construct": "m",
+          "indicator": "m",
+          "loading": 1.0000000000000002,
+          "weight": 0.9999999999999998
+        },
+        {
+          "construct": "xm",
+          "indicator": "__qpls_interaction_x_by_m_to_y",
+          "loading": 1.0000000000000002,
+          "weight": 1.0000000000000002
+        },
+        {
+          "construct": "y",
+          "indicator": "y",
+          "loading": 1.0,
+          "weight": 1.0000000000000002
+        }
+      ],
+      "paths": [
+        {
+          "coefficient": 0.3535132776723121,
+          "source": "x",
+          "target": "y"
+        },
+        {
+          "coefficient": 0.2573193831112749,
+          "source": "m",
+          "target": "y"
+        },
+        {
+          "coefficient": 0.8901993918110658,
+          "source": "xm",
+          "target": "y"
+        }
+      ],
+      "r_squared": {
+        "y": 0.9654203805645482
+      },
+      "transforms": [
+        {
+          "indicator": "x",
+          "mean": -0.030638924076794857,
+          "scale": 0.9675190995907433
+        },
+        {
+          "indicator": "m",
+          "mean": -0.08002760840725646,
+          "scale": 0.9596231831487626
+        },
+        {
+          "indicator": "__qpls_interaction_x_by_m_to_y",
+          "mean": 0.09723924100221173,
+          "scale": 0.9840618183850582
+        },
+        {
+          "indicator": "y",
+          "mean": 0.06276126877305128,
+          "scale": 0.843303122330152
+        }
+      ],
+      "used_observations": 117,
+      "warnings": [
+        "3 observations were omitted listwise before two-stage product-score generation",
+        "Two-stage moderation is experimental; validate interaction effects with bootstrap or permutation inference before publication."
+      ]
+    },
+    "assessment": {
+      "blindfolding": {
+        "constructs": [
+          {
+            "construct": "y",
+            "observation_sum_squares": 140.63553934381017,
+            "prediction_error_sum_squares": 11.039027380057236,
+            "q_squared": 0.9215061325781227
+          }
+        ],
+        "settings": {
+          "missing_value_treatment": "indicator_mean_replacement",
+          "omission_distance": 7,
+          "selection": "preferred_7_then_smallest_valid_5_to_12"
+        }
+      },
+      "construct_quality": [
+        {
+          "ave": 1.0000000000000004,
+          "construct": "x",
+          "cronbach_alpha": null,
+          "normalized_weight_norm_squared": null,
+          "off_diagonal_denominator": null,
+          "off_diagonal_numerator": null,
+          "rho_a": null,
+          "rho_a_indicator_count": 1,
+          "rho_a_reason": "rho_a.single_indicator_not_identified",
+          "rho_a_status": "not_applicable",
+          "rho_a_warning_codes": [],
+          "rho_c": 1.0000000000000004,
+          "score_variance_before_normalization": null
+        },
+        {
+          "ave": 1.0000000000000004,
+          "construct": "m",
+          "cronbach_alpha": null,
+          "normalized_weight_norm_squared": null,
+          "off_diagonal_denominator": null,
+          "off_diagonal_numerator": null,
+          "rho_a": null,
+          "rho_a_indicator_count": 1,
+          "rho_a_reason": "rho_a.single_indicator_not_identified",
+          "rho_a_status": "not_applicable",
+          "rho_a_warning_codes": [],
+          "rho_c": 1.0000000000000004,
+          "score_variance_before_normalization": null
+        },
+        {
+          "ave": null,
+          "construct": "xm",
+          "cronbach_alpha": null,
+          "normalized_weight_norm_squared": null,
+          "off_diagonal_denominator": null,
+          "off_diagonal_numerator": null,
+          "rho_a": null,
+          "rho_a_indicator_count": 0,
+          "rho_a_reason": "rho_a.formative_not_applicable",
+          "rho_a_status": "not_applicable",
+          "rho_a_warning_codes": [],
+          "rho_c": null,
+          "score_variance_before_normalization": null
+        },
+        {
+          "ave": 1.0,
+          "construct": "y",
+          "cronbach_alpha": null,
+          "normalized_weight_norm_squared": null,
+          "off_diagonal_denominator": null,
+          "off_diagonal_numerator": null,
+          "rho_a": null,
+          "rho_a_indicator_count": 1,
+          "rho_a_reason": "rho_a.single_indicator_not_identified",
+          "rho_a_status": "not_applicable",
+          "rho_a_warning_codes": [],
+          "rho_c": 1.0,
+          "score_variance_before_normalization": null
+        }
+      ],
+      "cross_loadings": [
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x",
+          "loading": 0.9999999999999993
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "m",
+          "indicator": "x",
+          "loading": 0.09807751032119637
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "xm",
+          "indicator": "x",
+          "loading": 0.06426546497238445
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x",
+          "loading": 0.4359595999581241
+        },
+        {
+          "assigned_construct": "m",
+          "construct": "x",
+          "indicator": "m",
+          "loading": 0.09807751032119637
+        },
+        {
+          "assigned_construct": "m",
+          "construct": "m",
+          "indicator": "m",
+          "loading": 1.0000000000000002
+        },
+        {
+          "assigned_construct": "m",
+          "construct": "xm",
+          "indicator": "m",
+          "loading": -0.1670072507416131
+        },
+        {
+          "assigned_construct": "m",
+          "construct": "y",
+          "indicator": "m",
+          "loading": 0.14332133221263904
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y",
+          "loading": 0.4359595999581237
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "m",
+          "indicator": "y",
+          "loading": 0.14332133221263887
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "xm",
+          "indicator": "y",
+          "loading": 0.8699438842386468
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y",
+          "loading": 0.9999999999999999
+        }
+      ],
+      "f_squared": [
+        {
+          "excluded_r_squared": 0.842486959703398,
+          "f_squared": 3.5550831058341794,
+          "included_r_squared": 0.9654203805645482,
+          "source_construct": "x",
+          "target_construct": "y"
+        },
+        {
+          "excluded_r_squared": 0.9018410929853999,
+          "f_squared": 1.8386346818486157,
+          "included_r_squared": 0.9654203805645482,
+          "source_construct": "m",
+          "target_construct": "y"
+        },
+        {
+          "excluded_r_squared": 0.2002720142916664,
+          "f_squared": 22.127148267237246,
+          "included_r_squared": 0.9654203805645482,
+          "source_construct": "xm",
+          "target_construct": "y"
+        }
+      ],
+      "formative_indicator_vif": [],
+      "fornell_larcker": {
+        "constructs": [
+          "x",
+          "m",
+          "xm",
+          "y"
+        ],
+        "values": [
+          [
+            1.0000000000000002,
+            0.09807751032119633,
+            0.06426546497238443,
+            0.43595959995812394
+          ],
+          [
+            0.09807751032119633,
+            1.0000000000000002,
+            -0.16700725074161307,
+            0.14332133221263896
+          ],
+          [
+            0.06426546497238443,
+            -0.16700725074161307,
+            null,
+            0.8699438842386469
+          ],
+          [
+            0.43595959995812394,
+            0.14332133221263896,
+            0.8699438842386469,
+            1.0
+          ]
+        ]
+      },
+      "htmt": null,
+      "htmt_original": {
+        "absolute_correlations": false,
+        "cells": [
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "m",
+          "xm",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_original_method_version": "henseler_et_al_htmt_v1",
+      "htmt_plus": {
+        "absolute_correlations": true,
+        "cells": [
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "m",
+          "xm",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
+      "method_version": "pls_assessment_v7",
+      "model_fit": {
+        "estimated": {
+          "d_uls": 3.112302790129773e-31,
+          "srmr": 2.2775362383248605e-16
+        },
+        "saturated": {
+          "d_uls": 2.0106708619402742e-31,
+          "srmr": 1.83060593881747e-16
+        }
+      },
+      "r_squared": {
+        "y": 0.9654203805645482
+      },
+      "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
+      "structural_quality": [
+        {
+          "adjusted_r_squared": 0.9645023375706866,
+          "construct": "y",
+          "predictor_count": 3,
+          "r_squared": 0.9654203805645482
+        }
+      ],
+      "structural_vif": [
+        {
+          "predictor_construct": "x",
+          "target_construct": "y",
+          "vif": 1.0165798414718583
+        },
+        {
+          "predictor_construct": "m",
+          "target_construct": "y",
+          "vif": 1.0414282299457966
+        },
+        {
+          "predictor_construct": "xm",
+          "target_construct": "y",
+          "vif": 1.0356879686496923
+        }
+      ],
+      "warnings": [
+        "rho_a.single_indicator_not_identified for construct 'x'",
+        "Cronbach alpha is undefined for single-item construct 'x'",
+        "rho_a.single_indicator_not_identified for construct 'm'",
+        "Cronbach alpha is undefined for single-item construct 'm'",
+        "Reliability and AVE are not applicable to formative construct 'xm'",
+        "rho_a.single_indicator_not_identified for construct 'y'",
+        "Cronbach alpha is undefined for single-item construct 'y'"
+      ]
+    }
+  }
+}

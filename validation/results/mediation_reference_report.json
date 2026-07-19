@@ -1,0 +1,134 @@
+{
+  "differences": [
+    {
+      "abs_difference": 2.220446049250313e-16,
+      "actual": 0.9901865073516222,
+      "expected": 0.990186507351622,
+      "metric": "direct",
+      "pair": [
+        "x",
+        "m"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.0,
+      "expected": 0.0,
+      "metric": "indirect",
+      "pair": [
+        "x",
+        "m"
+      ]
+    },
+    {
+      "abs_difference": 2.220446049250313e-16,
+      "actual": 0.9901865073516222,
+      "expected": 0.990186507351622,
+      "metric": "total",
+      "pair": [
+        "x",
+        "m"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.0,
+      "expected": 0.0,
+      "metric": "variance_accounted_for",
+      "pair": [
+        "x",
+        "m"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.9992469855025514,
+      "expected": 0.9992469855025514,
+      "metric": "direct",
+      "pair": [
+        "m",
+        "y"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.0,
+      "expected": 0.0,
+      "metric": "indirect",
+      "pair": [
+        "m",
+        "y"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.9992469855025514,
+      "expected": 0.9992469855025514,
+      "metric": "total",
+      "pair": [
+        "m",
+        "y"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.0,
+      "expected": 0.0,
+      "metric": "variance_accounted_for",
+      "pair": [
+        "m",
+        "y"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.0,
+      "expected": 0.0,
+      "metric": "direct",
+      "pair": [
+        "x",
+        "y"
+      ]
+    },
+    {
+      "abs_difference": 2.220446049250313e-16,
+      "actual": 0.9894408825564084,
+      "expected": 0.9894408825564082,
+      "metric": "indirect",
+      "pair": [
+        "x",
+        "y"
+      ]
+    },
+    {
+      "abs_difference": 2.220446049250313e-16,
+      "actual": 0.9894408825564084,
+      "expected": 0.9894408825564082,
+      "metric": "total",
+      "pair": [
+        "x",
+        "y"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 1.0,
+      "expected": 1.0,
+      "metric": "variance_accounted_for",
+      "pair": [
+        "x",
+        "y"
+      ]
+    }
+  ],
+  "kind": "pls_mediation_reference_v1",
+  "max_abs_difference": 2.220446049250313e-16,
+  "method_version": "pls_mediation_v1",
+  "note": "Independent single-item mediation fixture; not a full publication-validation suite.",
+  "passed": true,
+  "quickpls_result": "validation/results/mediation_reference_quickpls.json",
+  "schema_version": 1,
+  "source_data": "validation/results/mediation_reference.csv",
+  "source_recipe": "validation/results/mediation_reference.recipe.json",
+  "tolerance": 1e-12
+}

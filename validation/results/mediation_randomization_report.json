@@ -1,0 +1,22 @@
+{
+  "checks": {
+    "independent_observed_indirect": 0.5941063619536083,
+    "independent_permuted_indirect": -6.38024250886577e-05,
+    "observed_independent_delta": 1.7430501486614958e-14,
+    "observed_indirect": 0.5941063619536258,
+    "permuted_drop_ratio": 0.00010739226033316815,
+    "permuted_independent_delta": 1.4249127051890742e-16,
+    "quickpls_permuted_indirect": -6.38024250885152e-05,
+    "randomization_exceedances": 0,
+    "randomization_p_value_two_sided": 0.005,
+    "randomization_permutations": 199,
+    "randomized_abs_max": 0.059187615260366505,
+    "randomized_abs_median": 0.0027279982646750325
+  },
+  "kind": "pls_mediation_indirect_randomization_v1",
+  "note": "Bounded independent randomization screen for the indirect effect; not a full formal indirect-effect permutation estimator.",
+  "passed": true,
+  "schema_version": 1,
+  "seed": 20260719,
+  "tolerance": 1e-10
+}

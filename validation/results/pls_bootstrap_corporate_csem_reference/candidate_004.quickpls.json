@@ -1,0 +1,920 @@
+{
+  "schema_version": 1,
+  "id": "104b82d5-8a2c-4e6e-bada-ce1a3f20a258",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "00000000-0000-0000-0000-000000000701",
+    "dataset_fingerprint": "v2:9ec1a0626b127794817aecdc8f0f0453dc4d72ea53cb49682eb185dea9ea7a1c",
+    "method": "pls_pm",
+    "method_version": "pls_pm_v1+pls_assessment_v7",
+    "engine_version": "0.3.0-alpha.1",
+    "seed": 20260718,
+    "settings": {
+      "method": "pls_pm",
+      "weighting_scheme": "path",
+      "tolerance": 1e-7,
+      "max_iterations": 3000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260718,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion"
+    },
+    "started_at": "2026-07-18T20:31:45.543499600Z",
+    "completed_at": "2026-07-18T20:31:45.612099400Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.improper_above_one for construct 'comp'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.improper_below_zero for construct 'like'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.two_indicator_limited_information for construct 'like'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.two_indicator_limited_information for construct 'satisfaction'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.improper_above_one for construct 'loyalty'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.two_indicator_limited_information for construct 'loyalty'"
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "construct_scores": {
+        "comp": [
+          1.5800704785697284,
+          -0.9928135924367405,
+          0.9479226478714039,
+          0.12513573056619548,
+          -0.6140051481332741,
+          -0.360665761738416,
+          -0.6140051481332741,
+          -0.9928135924367405,
+          -1.097336911527584,
+          1.5800704785697284,
+          0.9036298996582331,
+          -0.4651890808292597
+        ],
+        "like": [
+          -0.7837974335391278,
+          -0.47547697198950983,
+          0.6296372027643188,
+          0.1584923239965033,
+          1.4177667295251408,
+          1.1007820815321343,
+          1.4177667295251408,
+          -0.47547697198950983,
+          -0.004332093221694232,
+          -0.7837974335391278,
+          -1.8889116082929562,
+          -0.3126525547713122
+        ],
+        "loyalty": [
+          -0.11346038481339031,
+          -0.5327285482109628,
+          0.46861275028736554,
+          -0.5327285482109628,
+          1.469954048785694,
+          0.887880913684938,
+          1.469954048785694,
+          -0.5327285482109628,
+          0.46861275028736554,
+          -0.11346038481339031,
+          -1.1148016833117187,
+          -1.8251064142596691
+        ],
+        "satisfaction": [
+          0.5882254550990405,
+          -1.3298212678192978,
+          1.2017068855839084,
+          -0.28148473985660644,
+          1.0230805525768638,
+          0.7668517881060848,
+          1.0230805525768638,
+          -1.3298212678192978,
+          -0.4601110728636509,
+          0.5882254550990405,
+          -0.28148473985660644,
+          -1.508447600826342
+        ]
+      },
+      "converged": true,
+      "effects": [
+        {
+          "direct": 0.8222824879902646,
+          "indirect": 0.0,
+          "source": "comp",
+          "target": "satisfaction",
+          "total": 0.8222824879902646
+        },
+        {
+          "direct": 0.0,
+          "indirect": 0.6381193226445098,
+          "source": "comp",
+          "target": "loyalty",
+          "total": 0.6381193226445098
+        },
+        {
+          "direct": 0.8723968473756384,
+          "indirect": 0.0,
+          "source": "like",
+          "target": "satisfaction",
+          "total": 0.8723968473756384
+        },
+        {
+          "direct": 0.0,
+          "indirect": 0.6770097788232833,
+          "source": "like",
+          "target": "loyalty",
+          "total": 0.6770097788232833
+        },
+        {
+          "direct": 0.7760341877207346,
+          "indirect": 0.0,
+          "source": "satisfaction",
+          "target": "loyalty",
+          "total": 0.7760341877207346
+        }
+      ],
+      "iterations": 16,
+      "method_version": "pls_pm_v1",
+      "omitted_observations": 0,
+      "outer_estimates": [
+        {
+          "construct": "comp",
+          "indicator": "COMP1",
+          "loading": 0.9533579522211747,
+          "weight": 0.2896328781761135
+        },
+        {
+          "construct": "comp",
+          "indicator": "COMP2",
+          "loading": 0.9402354895286282,
+          "weight": 0.5770050769728086
+        },
+        {
+          "construct": "comp",
+          "indicator": "COMP3",
+          "loading": 0.8233800511943293,
+          "weight": 0.2202573903691293
+        },
+        {
+          "construct": "like",
+          "indicator": "LIKE1",
+          "loading": 0.9387501133362842,
+          "weight": 1.344238237491324
+        },
+        {
+          "construct": "like",
+          "indicator": "LIKE2",
+          "loading": 0.4921744475436184,
+          "weight": -0.532136113735844
+        },
+        {
+          "construct": "satisfaction",
+          "indicator": "CUSA1",
+          "loading": 0.8508261313882975,
+          "weight": 0.5312905035499126
+        },
+        {
+          "construct": "satisfaction",
+          "indicator": "CUSA2",
+          "loading": 0.8910305362834046,
+          "weight": 0.6149779765202121
+        },
+        {
+          "construct": "loyalty",
+          "indicator": "CUSL1",
+          "loading": 0.9597498760288539,
+          "weight": 0.6856623414143677
+        },
+        {
+          "construct": "loyalty",
+          "indicator": "CUSL2",
+          "loading": 0.8713209795405761,
+          "weight": 0.3924336276284777
+        }
+      ],
+      "paths": [
+        {
+          "coefficient": 0.8222824879902646,
+          "source": "comp",
+          "target": "satisfaction"
+        },
+        {
+          "coefficient": 0.8723968473756384,
+          "source": "like",
+          "target": "satisfaction"
+        },
+        {
+          "coefficient": 0.7760341877207346,
+          "source": "satisfaction",
+          "target": "loyalty"
+        }
+      ],
+      "r_squared": {
+        "loyalty": 0.6022290605113803,
+        "satisfaction": 0.8358402546864689
+      },
+      "transforms": [
+        {
+          "indicator": "COMP1",
+          "mean": 4.166666666666667,
+          "scale": 1.9462473604038075
+        },
+        {
+          "indicator": "COMP2",
+          "mean": 4.25,
+          "scale": 1.712255291076124
+        },
+        {
+          "indicator": "COMP3",
+          "mean": 4.416666666666667,
+          "scale": 1.5050420310248867
+        },
+        {
+          "indicator": "LIKE1",
+          "mean": 5.0,
+          "scale": 1.7056057308448835
+        },
+        {
+          "indicator": "LIKE2",
+          "mean": 4.5,
+          "scale": 1.6787441193290353
+        },
+        {
+          "indicator": "CUSA1",
+          "mean": 4.75,
+          "scale": 0.8660254037844386
+        },
+        {
+          "indicator": "CUSA2",
+          "mean": 5.0,
+          "scale": 1.4142135623730951
+        },
+        {
+          "indicator": "CUSL1",
+          "mean": 4.75,
+          "scale": 0.9653072991634227
+        },
+        {
+          "indicator": "CUSL2",
+          "mean": 5.0,
+          "scale": 1.348399724926484
+        }
+      ],
+      "used_observations": 12,
+      "warnings": []
+    },
+    "assessment": {
+      "blindfolding": {
+        "constructs": [
+          {
+            "construct": "satisfaction",
+            "observation_sum_squares": 34.85353577701959,
+            "prediction_error_sum_squares": 22.586341354858742,
+            "q_squared": 0.3519641307166639
+          },
+          {
+            "construct": "loyalty",
+            "observation_sum_squares": 34.502235539704635,
+            "prediction_error_sum_squares": 22.041787204834563,
+            "q_squared": 0.3611490136785711
+          }
+        ],
+        "settings": {
+          "missing_value_treatment": "indicator_mean_replacement",
+          "omission_distance": 7,
+          "selection": "preferred_7_then_smallest_valid_5_to_12"
+        }
+      },
+      "construct_quality": [
+        {
+          "ave": 0.823629623179089,
+          "construct": "comp",
+          "cronbach_alpha": 0.9080267021718558,
+          "normalized_weight_norm_squared": 0.4653353809851951,
+          "off_diagonal_denominator": 0.0963007915178489,
+          "off_diagonal_numerator": 0.5346646190148049,
+          "rho_a": 1.2022194185882455,
+          "rho_a_indicator_count": 3,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.improper_above_one"
+          ],
+          "rho_c": 0.9331175099352944,
+          "score_variance_before_normalization": 1.0
+        },
+        {
+          "ave": 0.5617437310518762,
+          "construct": "like",
+          "cronbach_alpha": 0.8649267110823744,
+          "normalized_weight_norm_squared": 2.090145282675669,
+          "off_diagonal_denominator": 1.0233588571539003,
+          "off_diagonal_numerator": -1.0901452826756686,
+          "rho_a": -4.6538177923870725,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.improper_below_zero",
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.7002410188987227,
+          "score_variance_before_normalization": 0.9999999999999998
+        },
+        {
+          "ave": 0.758920261221334,
+          "construct": "satisfaction",
+          "cronbach_alpha": 0.6838544165607903,
+          "normalized_weight_norm_squared": 0.6604675107672142,
+          "off_diagonal_denominator": 0.21350754582547996,
+          "off_diagonal_numerator": 0.3395324892327858,
+          "rho_a": 0.6936989335544065,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.8628757838043167,
+          "score_variance_before_normalization": 1.0
+        },
+        {
+          "ave": 0.8401600369624747,
+          "construct": "loyalty",
+          "cronbach_alpha": 0.822442107290734,
+          "normalized_weight_norm_squared": 0.6241369985274798,
+          "off_diagonal_denominator": 0.14480482077283025,
+          "off_diagonal_numerator": 0.37586300147252044,
+          "rho_a": 1.011128643343286,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.improper_above_one",
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.912953058981218,
+          "score_variance_before_normalization": 0.9999999999999999
+        }
+      ],
+      "cross_loadings": [
+        {
+          "assigned_construct": "comp",
+          "construct": "comp",
+          "indicator": "COMP1",
+          "loading": 0.9533579522211746
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "like",
+          "indicator": "COMP1",
+          "loading": -0.5353723531751017
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "satisfaction",
+          "indicator": "COMP1",
+          "loading": 0.284197377516506
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "loyalty",
+          "indicator": "COMP1",
+          "loading": -0.30045451658973554
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "comp",
+          "indicator": "COMP2",
+          "loading": 0.9402354895286282
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "like",
+          "indicator": "COMP2",
+          "loading": -0.24035094256547168
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "satisfaction",
+          "indicator": "COMP2",
+          "loading": 0.5661765176297329
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "loyalty",
+          "indicator": "COMP2",
+          "loading": -0.004455472115590533
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "comp",
+          "indicator": "COMP3",
+          "loading": 0.8233800511943293
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "like",
+          "indicator": "COMP3",
+          "loading": -0.5694331861137674
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "satisfaction",
+          "indicator": "COMP3",
+          "loading": 0.21612384494629322
+        },
+        {
+          "assigned_construct": "comp",
+          "construct": "loyalty",
+          "indicator": "COMP3",
+          "loading": -0.303616326363924
+        },
+        {
+          "assigned_construct": "like",
+          "construct": "comp",
+          "indicator": "LIKE1",
+          "loading": -0.6338856468737734
+        },
+        {
+          "assigned_construct": "like",
+          "construct": "like",
+          "indicator": "LIKE1",
+          "loading": 0.938750113336284
+        },
+        {
+          "assigned_construct": "like",
+          "construct": "satisfaction",
+          "indicator": "LIKE1",
+          "loading": 0.33939537160985
+        },
+        {
+          "assigned_construct": "like",
+          "construct": "loyalty",
+          "indicator": "LIKE1",
+          "loading": 0.7577236888202281
+        },
+        {
+          "assigned_construct": "like",
+          "construct": "comp",
+          "indicator": "LIKE2",
+          "loading": -0.8135631022311312
+        },
+        {
+          "assigned_construct": "like",
+          "construct": "like",
+          "indicator": "LIKE2",
+          "loading": 0.49217444754361844
+        },
+        {
+          "assigned_construct": "like",
+          "construct": "satisfaction",
+          "indicator": "LIKE2",
+          "loading": -0.13435456000412171
+        },
+        {
+          "assigned_construct": "like",
+          "construct": "loyalty",
+          "indicator": "LIKE2",
+          "loading": 0.42526142985824394
+        },
+        {
+          "assigned_construct": "satisfaction",
+          "construct": "comp",
+          "indicator": "CUSA1",
+          "loading": 0.48293766442420794
+        },
+        {
+          "assigned_construct": "satisfaction",
+          "construct": "like",
+          "indicator": "CUSA1",
+          "loading": 0.3475659570273605
+        },
+        {
+          "assigned_construct": "satisfaction",
+          "construct": "satisfaction",
+          "indicator": "CUSA1",
+          "loading": 0.8508261313882974
+        },
+        {
+          "assigned_construct": "satisfaction",
+          "construct": "loyalty",
+          "indicator": "CUSA1",
+          "loading": 0.5882202881997438
+        },
+        {
+          "assigned_construct": "satisfaction",
+          "construct": "comp",
+          "indicator": "CUSA2",
+          "loading": 0.32525117380042057
+        },
+        {
+          "assigned_construct": "satisfaction",
+          "construct": "like",
+          "indicator": "CUSA2",
+          "loading": 0.5578486878247931
+        },
+        {
+          "assigned_construct": "satisfaction",
+          "construct": "satisfaction",
+          "indicator": "CUSA2",
+          "loading": 0.8910305362834043
+        },
+        {
+          "assigned_construct": "satisfaction",
+          "construct": "loyalty",
+          "indicator": "CUSA2",
+          "loading": 0.7537153399014183
+        },
+        {
+          "assigned_construct": "loyalty",
+          "construct": "comp",
+          "indicator": "CUSL1",
+          "loading": 0.028117627182872303
+        },
+        {
+          "assigned_construct": "loyalty",
+          "construct": "like",
+          "indicator": "CUSL1",
+          "loading": 0.6821185227918053
+        },
+        {
+          "assigned_construct": "loyalty",
+          "construct": "satisfaction",
+          "indicator": "CUSL1",
+          "loading": 0.8525330476352979
+        },
+        {
+          "assigned_construct": "loyalty",
+          "construct": "loyalty",
+          "indicator": "CUSL1",
+          "loading": 0.959749876028854
+        },
+        {
+          "assigned_construct": "loyalty",
+          "construct": "comp",
+          "indicator": "CUSL2",
+          "loading": -0.4478343899873158
+        },
+        {
+          "assigned_construct": "loyalty",
+          "construct": "like",
+          "indicator": "CUSL2",
+          "loading": 0.8270473910720552
+        },
+        {
+          "assigned_construct": "loyalty",
+          "construct": "satisfaction",
+          "indicator": "CUSL2",
+          "loading": 0.4879408100247475
+        },
+        {
+          "assigned_construct": "loyalty",
+          "construct": "loyalty",
+          "indicator": "CUSL2",
+          "loading": 0.8713209795405761
+        }
+      ],
+      "f_squared": [
+        {
+          "excluded_r_squared": 0.27849172259083566,
+          "f_squared": 3.395159580877427,
+          "included_r_squared": 0.8358402546864689,
+          "source_construct": "comp",
+          "target_construct": "satisfaction"
+        },
+        {
+          "excluded_r_squared": 0.20848584633009937,
+          "f_squared": 3.8216092937898773,
+          "included_r_squared": 0.8358402546864689,
+          "source_construct": "like",
+          "target_construct": "satisfaction"
+        },
+        {
+          "excluded_r_squared": 0.0,
+          "f_squared": 1.5140096993652048,
+          "included_r_squared": 0.6022290605113803,
+          "source_construct": "satisfaction",
+          "target_construct": "loyalty"
+        }
+      ],
+      "formative_indicator_vif": [],
+      "fornell_larcker": {
+        "constructs": [
+          "comp",
+          "like",
+          "satisfaction",
+          "loyalty"
+        ],
+        "values": [
+          [
+            0.9075404250936093,
+            -0.4191670172244976,
+            0.4566025036397626,
+            -0.15646607615028427
+          ],
+          [
+            -0.4191670172244976,
+            0.7494956511227242,
+            0.5277231495688204,
+            0.7922641913586138
+          ],
+          [
+            0.4566025036397626,
+            0.5277231495688204,
+            0.8711602959394638,
+            0.7760341877207347
+          ],
+          [
+            -0.15646607615028427,
+            0.7922641913586138,
+            0.7760341877207347,
+            0.9166024421538896
+          ]
+        ]
+      },
+      "htmt": null,
+      "htmt_original": {
+        "absolute_correlations": false,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": -0.8753698091754214
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.5073706914922711
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": -0.33963571059372905
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": -0.8753698091754215
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.14408865929699724
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.8128669605481754
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.5073706914922711
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.14408865929699724
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.9605500334019882
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": -0.33963571059372905
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.8128669605481752
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.9605500334019882
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "comp",
+          "like",
+          "satisfaction",
+          "loyalty"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_original_method_version": "henseler_et_al_htmt_v1",
+      "htmt_plus": {
+        "absolute_correlations": true,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.8753698091754214
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.5524772105623805
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.408523120932393
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.8753698091754215
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.32107173110509757
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.8128669605481754
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.5524772105623805
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.32107173110509757
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.9605500334019882
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.40852312093239307
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.8128669605481752
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.9605500334019882
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "comp",
+          "like",
+          "satisfaction",
+          "loyalty"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
+      "method_version": "pls_assessment_v7",
+      "model_fit": {
+        "estimated": {
+          "d_uls": 4.740445046977108,
+          "srmr": 0.32456620783155776
+        },
+        "saturated": {
+          "d_uls": 2.7336379565508806,
+          "srmr": 0.2464700999017429
+        }
+      },
+      "r_squared": {
+        "loyalty": 0.6022290605113803,
+        "satisfaction": 0.8358402546864689
+      },
+      "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
+      "structural_quality": [
+        {
+          "adjusted_r_squared": 0.7993603112834621,
+          "construct": "satisfaction",
+          "predictor_count": 2,
+          "r_squared": 0.8358402546864689
+        },
+        {
+          "adjusted_r_squared": 0.5624519665625183,
+          "construct": "loyalty",
+          "predictor_count": 1,
+          "r_squared": 0.6022290605113803
+        }
+      ],
+      "structural_vif": [
+        {
+          "predictor_construct": "comp",
+          "target_construct": "satisfaction",
+          "vif": 1.213152006542723
+        },
+        {
+          "predictor_construct": "like",
+          "target_construct": "satisfaction",
+          "vif": 1.213152006542723
+        },
+        {
+          "predictor_construct": "satisfaction",
+          "target_construct": "loyalty",
+          "vif": 1.0
+        }
+      ],
+      "warnings": [
+        "rho_a.improper_above_one for construct 'comp'",
+        "rho_a.improper_below_zero for construct 'like'",
+        "rho_a.two_indicator_limited_information for construct 'like'",
+        "rho_a.two_indicator_limited_information for construct 'satisfaction'",
+        "rho_a.improper_above_one for construct 'loyalty'",
+        "rho_a.two_indicator_limited_information for construct 'loyalty'"
+      ]
+    }
+  }
+}

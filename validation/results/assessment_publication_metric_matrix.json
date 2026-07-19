@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "rows": [
+    {
+      "metric": "cronbach_alpha",
+      "formula_spec": "docs/methods/PLS_ASSESSMENT_V1.md or metric-specific v0.4 method docs",
+      "quickpls_field": "construct_quality[].cronbach_alpha",
+      "reference_source": "hand/cSEM",
+      "tolerance": "1e-6",
+      "evidence_file": "validation/results/assessment_csem_comparison.json",
+      "known_difference_or_unsupported_case": "standardized alpha convention documented",
+      "complete": true
+    },
+    {
+      "metric": "rho_a",
+      "formula_spec": "docs/methods/PLS_ASSESSMENT_V1.md or metric-specific v0.4 method docs",
+      "quickpls_field": "construct_quality[].rho_a",
+      "reference_source": "Dijkstra-Henseler/cSEM",
+      "tolerance": "1e-6",
+      "evidence_file": "validation/results/rho_a_csem_comparison.json",
+      "known_difference_or_unsupported_case": "two-indicator and improper values warn explicitly",
+      "complete": true
+    },
+    {
+      "metric": "rho_c",
+      "formula_spec": "docs/methods/PLS_ASSESSMENT_V1.md or metric-specific v0.4 method docs",
+      "quickpls_field": "construct_quality[].rho_c",
+      "reference_source": "cSEM",
+      "tolerance": "1e-6",
+      "evidence_file": "validation/results/assessment_csem_comparison.json",
+      "known_difference_or_unsupported_case": "formative not applicable",
+      "complete": true
+    },
+    {
+      "metric": "ave",
+      "formula_spec": "docs/methods/PLS_ASSESSMENT_V1.md or metric-specific v0.4 method docs",
+      "quickpls_field": "construct_quality[].ave",
+      "reference_source": "cSEM",
+      "tolerance": "1e-6",
+      "evidence_file": "validation/results/assessment_csem_comparison.json",
+      "known_difference_or_unsupported_case": "formative not applicable",
+      "complete": true
+    },
+    {
+      "metric": "htmt_original",
+      "formula_spec": "docs/methods/PLS_ASSESSMENT_V1.md or metric-specific v0.4 method docs",
+      "quickpls_field": "htmt_original",
+      "reference_source": "cSEM/hand",
+      "tolerance": "1e-6",
+      "evidence_file": "validation/results/htmt_csem_comparison.json",
+      "known_difference_or_unsupported_case": "signed original HTMT semantics",
+      "complete": true
+    },
+    {
+      "metric": "htmt_plus",
+      "formula_spec": "docs/methods/PLS_ASSESSMENT_V1.md or metric-specific v0.4 method docs",
+      "quickpls_field": "htmt_plus",
+      "reference_source": "seminr/Ringle examples",
+      "tolerance": "4 decimals for published examples",
+      "evidence_file": "validation/results/htmt_seminr_comparison.json",
+      "known_difference_or_unsupported_case": "cSEM absolute HTMT is documented non-equivalent for mixed signs",
+      "complete": true
+    },
+    {
+      "metric": "structural_vif",
+      "formula_spec": "docs/methods/PLS_ASSESSMENT_V1.md or metric-specific v0.4 method docs",
+      "quickpls_field": "structural_vif",
+      "reference_source": "cSEM/auxiliary regression",
+      "tolerance": "1e-6",
+      "evidence_file": "validation/results/assessment_csem_comparison.json",
+      "known_difference_or_unsupported_case": "perfect explanation warns",
+      "complete": true
+    },
+    {
+      "metric": "r_squared",
+      "formula_spec": "docs/methods/PLS_ASSESSMENT_V1.md or metric-specific v0.4 method docs",
+      "quickpls_field": "structural_quality[].r_squared",
+      "reference_source": "cSEM",
+      "tolerance": "1e-6",
+      "evidence_file": "validation/results/assessment_csem_comparison.json",
+      "known_difference_or_unsupported_case": "fixed-score contract",
+      "complete": true
+    },
+    {
+      "metric": "adjusted_r_squared",
+      "formula_spec": "docs/methods/PLS_ASSESSMENT_V1.md or metric-specific v0.4 method docs",
+      "quickpls_field": "structural_quality[].adjusted_r_squared",
+      "reference_source": "cSEM",
+      "tolerance": "1e-6",
+      "evidence_file": "validation/results/assessment_csem_comparison.json",
+      "known_difference_or_unsupported_case": "fixed-score contract",
+      "complete": true
+    },
+    {
+      "metric": "f_squared",
+      "formula_spec": "docs/methods/PLS_ASSESSMENT_V1.md or metric-specific v0.4 method docs",
+      "quickpls_field": "f_squared",
+      "reference_source": "fixed-score cSEM-compatible regression",
+      "tolerance": "1e-6",
+      "evidence_file": "validation/results/assessment_csem_comparison.json",
+      "known_difference_or_unsupported_case": "single predictor intercept-only exclusion documented",
+      "complete": true
+    },
+    {
+      "metric": "q_squared",
+      "formula_spec": "docs/methods/PLS_ASSESSMENT_V1.md or metric-specific v0.4 method docs",
+      "quickpls_field": "blindfolding",
+      "reference_source": "independent Python",
+      "tolerance": "1e-6",
+      "evidence_file": "validation/results/blindfolding_python_comparison.json",
+      "known_difference_or_unsupported_case": "omission-distance limitations documented",
+      "complete": true
+    },
+    {
+      "metric": "srmr_duls",
+      "formula_spec": "docs/methods/PLS_ASSESSMENT_V1.md or metric-specific v0.4 method docs",
+      "quickpls_field": "model_fit",
+      "reference_source": "cSEM/hand residuals",
+      "tolerance": "1e-6",
+      "evidence_file": "validation/results/assessment_csem_comparison.json",
+      "known_difference_or_unsupported_case": "correlation-residual fit convention",
+      "complete": true
+    }
+  ],
+  "passed": true
+}

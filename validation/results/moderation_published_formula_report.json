@@ -1,0 +1,114 @@
+{
+  "checks": {
+    "experimental_warning_present": true,
+    "independent_reference_max_delta": 2.220446049250313e-16,
+    "interaction_effect_matches_path": 0.0,
+    "main_effect_x_matches_slope_at_mean_m": 0.0,
+    "moderator_high_slope": 1.3163302476816132,
+    "moderator_low_slope": -0.5246107404999955,
+    "moderator_mean_slope": 0.39585975359080894,
+    "simple_slope_reference_max_delta": 4.440892098500626e-16
+  },
+  "kind": "pls_two_stage_moderation_published_formula_v1",
+  "note": "Fixed-table published-formula fixture; it is not a published empirical dataset replication.",
+  "passed": true,
+  "quickpls_paths": {
+    "m->y": -0.030083910846829837,
+    "x->y": 0.39585975359080894,
+    "xm->y": 0.9204704940908044
+  },
+  "reference_paths": {
+    "m->y": -0.030083910846829938,
+    "x->y": 0.39585975359080894,
+    "xm->y": 0.9204704940908046
+  },
+  "rows": [
+    {
+      "m": -1.7,
+      "x": -2.4,
+      "y": 2.65
+    },
+    {
+      "m": -0.8,
+      "x": -2.1,
+      "y": 0.8100000000000003
+    },
+    {
+      "m": 0.2,
+      "x": -1.8,
+      "y": -0.8400000000000001
+    },
+    {
+      "m": 1.1,
+      "x": -1.4,
+      "y": -1.815
+    },
+    {
+      "m": -1.3,
+      "x": -1.0,
+      "y": 0.9750000000000001
+    },
+    {
+      "m": -0.3,
+      "x": -0.7,
+      "y": -0.0025000000000000213
+    },
+    {
+      "m": 0.8,
+      "x": -0.3,
+      "y": -0.41
+    },
+    {
+      "m": 1.6,
+      "x": 0.0,
+      "y": -0.36000000000000004
+    },
+    {
+      "m": -1.5,
+      "x": 0.4,
+      "y": -2.7755575615628914e-17
+    },
+    {
+      "m": -0.6,
+      "x": 0.8,
+      "y": -0.020000000000000056
+    },
+    {
+      "m": 0.4,
+      "x": 1.1,
+      "y": 0.5900000000000001
+    },
+    {
+      "m": 1.3,
+      "x": 1.5,
+      "y": 1.6725
+    },
+    {
+      "m": -1.0,
+      "x": 1.9,
+      "y": -0.6849999999999998
+    },
+    {
+      "m": 0.1,
+      "x": 2.2,
+      "y": 0.8450000000000001
+    },
+    {
+      "m": 1.2,
+      "x": 2.5,
+      "y": 2.75
+    },
+    {
+      "m": 1.8,
+      "x": 2.8,
+      "y": 4.259999999999999
+    }
+  ],
+  "schema_version": 1,
+  "source_formula": "standard moderated regression y = b1*x + b2*m + b3*x*m + e",
+  "source_formula_reference": {
+    "aiken_west_1991": "Aiken & West provide the standard simple-slope interpretation for interactions.",
+    "baron_kenny_1986": "Baron & Kenny describe moderator effects through the interaction term in regression."
+  },
+  "tolerance": 1e-10
+}

@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "target": "v0.4 inference publication audit",
+  "passed": true,
+  "evidence": [
+    {
+      "path": "validation/results/monte_carlo_qualification.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation/results/monte_carlo_studentized_qualification.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation/results/studentized_worker_matrix.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation/results/studentized_release_stress.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation/results/studentized_supplied_reference.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation/results/pls_bootstrap_external_reference.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation/results/pls_bootstrap_corporate_csem_reference.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation/results/pls_bootstrap_plspm_external_reference.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation/results/v04_inference_qualification_quick.json",
+      "present": true,
+      "passed": true
+    }
+  ],
+  "inference_matrix": {
+    "path": "validation\\results\\inference_publication_matrix.json",
+    "rows": 5,
+    "passed": true
+  },
+  "cancellation_checks": {
+    "bootstrap_cancellation_latency": true,
+    "studentized_cancellation_latency_999x99": true
+  },
+  "commands": [
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "qpls-resampling"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 21 tests\ntest tests::bca_is_unavailable_for_degenerate_or_invalid_inputs ... ok\ntest tests::cancellation_discards_partial_results ... ok\ntest tests::bca_matches_hand_calculated_midrank_fixture ... ok\ntest tests::jackknife_rejects_invalid_plans_and_discards_cancelled_work ... ok\ntest tests::indexed_samples_are_repeatable_and_replicate_specific ... ok\ntest tests::indexed_permutations_are_bijections_and_replicate_specific ... ok\ntest tests::normal_reference_test_matches_standard_normal_probability ... ok\ntest tests::parameter_identity_cannot_collide_on_identifier_delimiters ... ok\ntest tests::jackknife_is_ordered_and_exactly_worker_invariant ... ok\ntest tests::permutation_regression_recovers_intercept_and_nuisance_coefficients ... ok\ntest tests::studentized_interval_matches_reversed_pivot_quantiles ... ok\ntest tests::type7_percentile_interpolates_at_requested_probability ... ok\ntest tests::invalid_studentized_plans_fail_before_nested_estimation ... ok\ntest tests::nested_infrastructure_failure_is_explicit_without_failing_primary_outcome ... ok\ntest tests::outputs_are_identical_across_worker_counts_and_progress_is_monotonic ... ok\ntest tests::generic_permutation_is_ordered_worker_invariant_and_cancellable ... ok\ntest tests::pls_jackknife_is_exactly_invariant_to_worker_count ... ok\ntest tests::missing_data_bootstrap_uses_the_fixed_complete_case_sample ... ok\ntest tests::pls_bootstrap_is_exactly_invariant_to_worker_count ... ok\ntest tests::pls_freedman_lane_permutation_is_exactly_worker_invariant ... ok\ntest tests::pls_bootstrap_carries_mediation_indirect_effect_inference ... ok\n\ntest result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.89s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_resampling-8fc6991cc6822aff.exe)\n   Doc-tests qpls_resampling\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "run",
+        "-p",
+        "qpls-cli",
+        "--",
+        "qualify",
+        "v04-inference"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "stdout_tail": "wrote analysis result D:\\QuickPLS\\target/qualification/v04-inference\\worker-1.json\nwrote analysis result D:\\QuickPLS\\target/qualification/v04-inference\\worker-2.json\nwrote analysis result D:\\QuickPLS\\target/qualification/v04-inference\\worker-4.json\nwrote D:\\QuickPLS\\validation/results/v04_inference_qualification_quick.json | qualification_passed=true\n",
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.71s\n     Running `target\\debug\\qpls.exe qualify v04-inference`\n"
+    }
+  ]
+}

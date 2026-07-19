@@ -1,0 +1,371 @@
+{
+  "schema_version": 1,
+  "id": "a3bf6fc7-e977-4719-9230-e8094595b80f",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "00000000-0000-0000-0000-000000000503",
+    "dataset_fingerprint": "v2:2fb7a47be663dc1004e6b0ff1ded2bf17ae0e1cfa3e9458a61f9a924a3d4ebe8",
+    "method": "pls_pm",
+    "method_version": "pls_pm_v1+pls_assessment_v7",
+    "engine_version": "0.3.0-alpha.1",
+    "seed": 20260718,
+    "settings": {
+      "method": "pls_pm",
+      "weighting_scheme": "factor",
+      "tolerance": 1e-12,
+      "max_iterations": 3000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260718,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion"
+    },
+    "started_at": "2026-07-18T19:16:01.721087900Z",
+    "completed_at": "2026-07-18T19:16:01.725729Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.two_indicator_limited_information for construct 'x'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.two_indicator_limited_information for construct 'y'"
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "construct_scores": {
+        "x": [
+          1.1233476020604325,
+          -1.032991923275026,
+          1.1233476020604325,
+          0.313195684370348,
+          -0.49390704194116125,
+          -1.032991923275026
+        ],
+        "y": [
+          1.0704468867364496,
+          -1.011770859813278,
+          1.0704468867364496,
+          0.5131808728108919,
+          -0.6305329266572354,
+          -1.011770859813278
+        ]
+      },
+      "converged": true,
+      "effects": [
+        {
+          "direct": 0.9934841653597475,
+          "indirect": 0.0,
+          "source": "x",
+          "target": "y",
+          "total": 0.9934841653597475
+        }
+      ],
+      "iterations": 6,
+      "method_version": "pls_pm_v1",
+      "omitted_observations": 0,
+      "outer_estimates": [
+        {
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9942686718567171,
+          "weight": 0.5085281062195665
+        },
+        {
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.994007769877174,
+          "weight": 0.4973667713767971
+        },
+        {
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9984933360955732,
+          "weight": 0.49845299953691874
+        },
+        {
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9985207208942476,
+          "weight": 0.5030421413345257
+        }
+      ],
+      "paths": [
+        {
+          "coefficient": 0.9934841653597475,
+          "source": "x",
+          "target": "y"
+        }
+      ],
+      "r_squared": {
+        "y": 0.9870107868205545
+      },
+      "transforms": [
+        {
+          "indicator": "x1",
+          "mean": 3.0,
+          "scale": 1.8973665961010275
+        },
+        {
+          "indicator": "x2",
+          "mean": 3.8333333333333335,
+          "scale": 1.8348478592697182
+        },
+        {
+          "indicator": "y1",
+          "mean": 4.5,
+          "scale": 2.4289915602982237
+        },
+        {
+          "indicator": "y2",
+          "mean": 3.8333333333333335,
+          "scale": 2.8577380332470415
+        }
+      ],
+      "used_observations": 6,
+      "warnings": []
+    },
+    "assessment": {
+      "blindfolding": {
+        "constructs": [
+          {
+            "construct": "y",
+            "observation_sum_squares": 18.226968629202183,
+            "prediction_error_sum_squares": 2.7619286240969703,
+            "q_squared": 0.8484702157399904
+          }
+        ],
+        "settings": {
+          "missing_value_treatment": "indicator_mean_replacement",
+          "omission_distance": 5,
+          "selection": "preferred_7_then_smallest_valid_5_to_12"
+        }
+      },
+      "construct_quality": [
+        {
+          "ave": 0.9883108192059565,
+          "construct": "x",
+          "cronbach_alpha": 0.9881740219995108,
+          "normalized_weight_norm_squared": 0.5059745400850377,
+          "off_diagonal_denominator": 0.12794209338821722,
+          "off_diagonal_numerator": 0.4940254599149623,
+          "rho_a": 0.9885376332783445,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.994121049444975,
+          "score_variance_before_normalization": 1.0
+        },
+        {
+          "ave": 0.9970162861412176,
+          "construct": "y",
+          "cronbach_alpha": 0.9970074197864804,
+          "normalized_weight_norm_squared": 0.5015067887057767,
+          "off_diagonal_denominator": 0.12574396793623221,
+          "off_diagonal_numerator": 0.4984932112942234,
+          "rho_a": 0.9970701625456242,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.9985059141079375,
+          "score_variance_before_normalization": 0.9999999999999997
+        }
+      ],
+      "cross_loadings": [
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9942686718567171
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x1",
+          "loading": 0.9984981083921916
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9940077698771741
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x2",
+          "loading": 0.9765827578120887
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y1",
+          "loading": 0.9874346137845104
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9984933360955732
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y2",
+          "loading": 0.9965256965199586
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9985207208942477
+        }
+      ],
+      "f_squared": [
+        {
+          "excluded_r_squared": 0.0,
+          "f_squared": 75.98695726869983,
+          "included_r_squared": 0.9870107868205545,
+          "source_construct": "x",
+          "target_construct": "y"
+        }
+      ],
+      "formative_indicator_vif": [],
+      "fornell_larcker": {
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "values": [
+          [
+            0.9941382294258463,
+            0.9934841653597477
+          ],
+          [
+            0.9934841653597477,
+            0.9985070285887915
+          ]
+        ]
+      },
+      "htmt": null,
+      "htmt_original": {
+        "absolute_correlations": false,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0007662566603575
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0007662566603575
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_original_method_version": "henseler_et_al_htmt_v1",
+      "htmt_plus": {
+        "absolute_correlations": true,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0007662566603575
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0007662566603575
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
+      "method_version": "pls_assessment_v7",
+      "model_fit": {
+        "estimated": {
+          "d_uls": 0.0008281319906403949,
+          "srmr": 0.00910017577105187
+        },
+        "saturated": {
+          "d_uls": 0.0008281319906403951,
+          "srmr": 0.00910017577105187
+        }
+      },
+      "r_squared": {
+        "y": 0.9870107868205545
+      },
+      "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
+      "structural_quality": [
+        {
+          "adjusted_r_squared": 0.9837634835256932,
+          "construct": "y",
+          "predictor_count": 1,
+          "r_squared": 0.9870107868205545
+        }
+      ],
+      "structural_vif": [
+        {
+          "predictor_construct": "x",
+          "target_construct": "y",
+          "vif": 1.0
+        }
+      ],
+      "warnings": [
+        "rho_a.two_indicator_limited_information for construct 'x'",
+        "rho_a.two_indicator_limited_information for construct 'y'"
+      ]
+    }
+  }
+}

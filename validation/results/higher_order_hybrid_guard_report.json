@@ -1,0 +1,22 @@
+{
+  "checks": {
+    "result_not_written": true,
+    "run_error_mentions_code": true,
+    "run_exit_nonzero": true,
+    "validation_code_present": true,
+    "validation_exit_nonzero": true
+  },
+  "expected_code": "higher_order.hybrid_component_indicators",
+  "kind": "hybrid_hoc_invalid_split_guard_v1",
+  "note": "Hybrid HOC is experimental; validation and execution must block components that cannot be split into lower-order and higher-order indicator blocks.",
+  "passed": true,
+  "run_stderr": "Error: higher_order.hybrid_component_indicators: Hybrid higher-order constructs require at least two indicators per component so indicators can be split between lower-order and higher-order blocks\n",
+  "schema_version": 1,
+  "validation_codes": [
+    "construct.single_item",
+    "higher_order.indicators.generated",
+    "construct.single_item",
+    "higher_order.hybrid_component_indicators",
+    "method.higher_order.experimental"
+  ]
+}

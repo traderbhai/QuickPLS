@@ -1,0 +1,32 @@
+[package]
+name = "quickpls-desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "quickpls_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+chrono.workspace = true
+qpls-assessment = { path = "../crates/qpls-assessment" }
+qpls-core = { path = "../crates/qpls-core" }
+qpls-data = { path = "../crates/qpls-data" }
+qpls-estimation = { path = "../crates/qpls-estimation" }
+qpls-project = { path = "../crates/qpls-project" }
+qpls-resampling = { path = "../crates/qpls-resampling" }
+qpls-runner = { path = "../crates/qpls-runner" }
+rust_xlsxwriter.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+uuid.workspace = true
+
+[dev-dependencies]
+calamine.workspace = true
+tempfile.workspace = true

@@ -1,0 +1,181 @@
+{
+  "classes_pass": true,
+  "differences": [
+    {
+      "abs_difference": 0.0,
+      "actual": 0.5046062368797047,
+      "expected": 0.5046062368797047,
+      "metric": "direct",
+      "pair": [
+        "eta1",
+        "eta2"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.0,
+      "expected": 0.0,
+      "metric": "indirect",
+      "pair": [
+        "eta1",
+        "eta2"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.5046062368797047,
+      "expected": 0.5046062368797047,
+      "metric": "total",
+      "pair": [
+        "eta1",
+        "eta2"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.0,
+      "expected": 0.0,
+      "metric": "variance_accounted_for",
+      "pair": [
+        "eta1",
+        "eta2"
+      ]
+    },
+    {
+      "actual": "direct_only",
+      "expected": "direct_only",
+      "metric": "mediation_class",
+      "pair": [
+        "eta1",
+        "eta2"
+      ],
+      "passed": true
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.35885568315751193,
+      "expected": 0.35885568315751193,
+      "metric": "direct",
+      "pair": [
+        "eta1",
+        "eta3"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.1500032887010917,
+      "expected": 0.1500032887010917,
+      "metric": "indirect",
+      "pair": [
+        "eta1",
+        "eta3"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.5088589718586036,
+      "expected": 0.5088589718586036,
+      "metric": "total",
+      "pair": [
+        "eta1",
+        "eta3"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.2947836178523212,
+      "expected": 0.2947836178523212,
+      "metric": "variance_accounted_for",
+      "pair": [
+        "eta1",
+        "eta3"
+      ]
+    },
+    {
+      "actual": "complementary_partial",
+      "expected": "complementary_partial",
+      "metric": "mediation_class",
+      "pair": [
+        "eta1",
+        "eta3"
+      ],
+      "passed": true
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.2972680037184154,
+      "expected": 0.2972680037184154,
+      "metric": "direct",
+      "pair": [
+        "eta2",
+        "eta3"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.0,
+      "expected": 0.0,
+      "metric": "indirect",
+      "pair": [
+        "eta2",
+        "eta3"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.2972680037184154,
+      "expected": 0.2972680037184154,
+      "metric": "total",
+      "pair": [
+        "eta2",
+        "eta3"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.0,
+      "expected": 0.0,
+      "metric": "variance_accounted_for",
+      "pair": [
+        "eta2",
+        "eta3"
+      ]
+    },
+    {
+      "actual": "direct_only",
+      "expected": "direct_only",
+      "metric": "mediation_class",
+      "pair": [
+        "eta2",
+        "eta3"
+      ],
+      "passed": true
+    }
+  ],
+  "kind": "pls_mediation_published_example_v1",
+  "max_abs_difference": 0.0,
+  "method_version": "pls_mediation_v1",
+  "nonzero_indirect_pairs": [
+    [
+      "eta1",
+      "eta3"
+    ]
+  ],
+  "note": "Documented cSEM example fixture; effects are independently decomposed from path coefficients already verified against cSEM.",
+  "passed": true,
+  "path_fixture_max_abs_diff": 4.6318782143117687e-10,
+  "path_tolerance": 1e-06,
+  "schema_version": 1,
+  "source": {
+    "dataset": "cSEM::threecommonfactors",
+    "documentation": "validation/r-library/cSEM/examples/example_csem.R",
+    "path_agreement_artifact": "validation/results/pls_csem_threecommonfactors_comparison.json",
+    "population_path_values": {
+      "eta2~eta1": 0.6,
+      "eta3~eta1": 0.4,
+      "eta3~eta2": 0.35
+    },
+    "quickpls_result": "validation/results/pls_quickpls_csem_threecommonfactors.json"
+  },
+  "tolerance": 1e-12
+}

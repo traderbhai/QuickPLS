@@ -1,0 +1,985 @@
+{
+  "schema_version": 1,
+  "id": "5e21eae1-8ddd-490f-8c17-3b91a37045fe",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "00000000-0000-0000-0000-000000000081",
+    "dataset_fingerprint": "v2:ff09118cd014895bda4ab89b71678ea54957cc7fdc8854191a6ede13c5c9b5ff",
+    "method": "pls_pm",
+    "method_version": "pls_pm_v1+pls_mediation_v1+pls_assessment_v7",
+    "engine_version": "0.3.0-alpha.1",
+    "seed": 20260719,
+    "settings": {
+      "method": "pls_pm",
+      "weighting_scheme": "path",
+      "tolerance": 1e-7,
+      "max_iterations": 3000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260719,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion"
+    },
+    "started_at": "2026-07-19T01:19:27.417443Z",
+    "completed_at": "2026-07-19T01:19:27.422456900Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Two-stage higher-order constructs are experimental; lower-order component scores are used as generated HOC indicators in stage 2."
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.single_indicator_not_identified for construct 'x'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Cronbach alpha is undefined for single-item construct 'x'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.single_indicator_not_identified for construct 'z'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Cronbach alpha is undefined for single-item construct 'z'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.two_indicator_limited_information for construct 'hoc'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.single_indicator_not_identified for construct 'y'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Cronbach alpha is undefined for single-item construct 'y'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Blindfolding Q-squared is unavailable for 'y' because a round failed: indicator is assigned more than once: __qpls_hoc_hoc_x"
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "construct_scores": {
+        "hoc": [
+          -2.1071344845745243,
+          -1.8613560371308904,
+          -1.6155775896872568,
+          -1.3697991422436233,
+          -1.1240206947999898,
+          -0.8782422473563561,
+          -0.6324637999127226,
+          -0.38668535246908897,
+          -0.14090690502545555,
+          0.10487154241817803,
+          0.3506499898618117,
+          0.5964284373054451,
+          -1.804993275120708,
+          -1.5592148276770743,
+          -1.3134363802334412,
+          -1.0676579327898075,
+          -0.8218794853461739,
+          -0.5761010379025404,
+          -0.3303225904589069,
+          -0.08454414301527326,
+          0.16123430442836018,
+          0.4070127518719938,
+          0.6527911993156275,
+          0.898569646759261,
+          -1.5028520656668922,
+          -1.257073618223259,
+          -1.0112951707796254,
+          -0.7655167233359916,
+          -0.5197382758923582,
+          -0.27395982844872463,
+          -0.028181381005091117,
+          0.21759706643854246,
+          0.4633755138821759,
+          0.7091539613258097,
+          0.9549324087694431,
+          1.2007108562130768,
+          -1.2007108562130766,
+          -0.9549324087694431,
+          -0.7091539613258097,
+          -0.4633755138821759,
+          -0.21759706643854246,
+          0.028181381005091096,
+          0.27395982844872463,
+          0.5197382758923582,
+          0.7655167233359916,
+          1.0112951707796254,
+          1.257073618223259,
+          1.5028520656668922,
+          -0.898569646759261,
+          -0.6527911993156275,
+          -0.4070127518719938,
+          -0.16123430442836023,
+          0.0845441430152732,
+          0.3303225904589069,
+          0.5761010379025404,
+          0.8218794853461739,
+          1.0676579327898075,
+          1.3134363802334412,
+          1.5592148276770743,
+          1.804993275120708,
+          -0.5964284373054451,
+          -0.3506499898618117,
+          -0.10487154241817809,
+          0.1409069050254555,
+          0.38668535246908897,
+          0.6324637999127226,
+          0.8782422473563561,
+          1.1240206947999898,
+          1.3697991422436233,
+          1.6155775896872568,
+          1.8613560371308904,
+          2.1071344845745243
+        ],
+        "x": [
+          -1.5821520559684294,
+          -1.2944880457923518,
+          -1.0068240356162734,
+          -0.7191600254401953,
+          -0.4314960152641171,
+          -0.14383200508803906,
+          0.14383200508803906,
+          0.4314960152641171,
+          0.7191600254401953,
+          1.0068240356162734,
+          1.2944880457923518,
+          1.5821520559684294,
+          -1.5821520559684294,
+          -1.2944880457923518,
+          -1.0068240356162734,
+          -0.7191600254401953,
+          -0.4314960152641171,
+          -0.14383200508803906,
+          0.14383200508803906,
+          0.4314960152641171,
+          0.7191600254401953,
+          1.0068240356162734,
+          1.2944880457923518,
+          1.5821520559684294,
+          -1.5821520559684294,
+          -1.2944880457923518,
+          -1.0068240356162734,
+          -0.7191600254401953,
+          -0.4314960152641171,
+          -0.14383200508803906,
+          0.14383200508803906,
+          0.4314960152641171,
+          0.7191600254401953,
+          1.0068240356162734,
+          1.2944880457923518,
+          1.5821520559684294,
+          -1.5821520559684294,
+          -1.2944880457923518,
+          -1.0068240356162734,
+          -0.7191600254401953,
+          -0.4314960152641171,
+          -0.14383200508803906,
+          0.14383200508803906,
+          0.4314960152641171,
+          0.7191600254401953,
+          1.0068240356162734,
+          1.2944880457923518,
+          1.5821520559684294,
+          -1.5821520559684294,
+          -1.2944880457923518,
+          -1.0068240356162734,
+          -0.7191600254401953,
+          -0.4314960152641171,
+          -0.14383200508803906,
+          0.14383200508803906,
+          0.4314960152641171,
+          0.7191600254401953,
+          1.0068240356162734,
+          1.2944880457923518,
+          1.5821520559684294,
+          -1.5821520559684294,
+          -1.2944880457923518,
+          -1.0068240356162734,
+          -0.7191600254401953,
+          -0.4314960152641171,
+          -0.14383200508803906,
+          0.14383200508803906,
+          0.4314960152641171,
+          0.7191600254401953,
+          1.0068240356162734,
+          1.2944880457923518,
+          1.5821520559684294
+        ],
+        "y": [
+          -2.079397642687045,
+          -1.8184709145857985,
+          -1.5575441864845523,
+          -1.2966174583833059,
+          -1.0356907302820595,
+          -0.7988125485495918,
+          -0.5378858204483453,
+          -0.2769590923470988,
+          -0.016032364245852603,
+          0.24489436385539376,
+          0.4817725455878616,
+          0.7426992736891079,
+          -1.8052442140829705,
+          -1.5443174859817241,
+          -1.2833907578804775,
+          -1.0465125761480099,
+          -0.7855858480467637,
+          -0.5246591199455172,
+          -0.2637323918442707,
+          -0.002805663743024357,
+          0.23407251798944353,
+          0.49499924609068974,
+          0.7559259741919361,
+          1.0168527022931824,
+          -1.531090785478896,
+          -1.2942126037464279,
+          -1.0332858756451815,
+          -0.7723591475439354,
+          -0.511432419442689,
+          -0.2505056913414425,
+          -0.013627509608974674,
+          0.2472992184922717,
+          0.5082259465935179,
+          0.7691526746947642,
+          1.0300794027960107,
+          1.2669575845284786,
+          -1.2809859032435997,
+          -1.0200591751423533,
+          -0.7591324470411072,
+          -0.49820571893986076,
+          -0.2613275372073929,
+          -0.0004008091061465091,
+          0.26052591899509986,
+          0.5214526470963461,
+          0.7823793751975926,
+          1.0192575569300604,
+          1.2801842850313068,
+          1.5411110131325534,
+          -1.0068324746395254,
+          -0.745905746538279,
+          -0.5090275648058111,
+          -0.2481008367045647,
+          0.01282589139668164,
+          0.27375261949792806,
+          0.5346793475991743,
+          0.7715575293316422,
+          1.0324842574328887,
+          1.293410985534135,
+          1.554337713635381,
+          1.8152644417366277,
+          -0.7567275924042294,
+          -0.49580086430298287,
+          -0.23487413620173644,
+          0.026052591899509883,
+          0.28697932000075616,
+          0.5238575017332239,
+          0.7847842298344705,
+          1.045710957935717,
+          1.3066376860369628,
+          1.5675644141382095,
+          1.8044425958706776,
+          2.0653693239719244
+        ],
+        "z": [
+          -1.8501803393479577,
+          -1.7667135571217338,
+          -1.6832467748955102,
+          -1.5997799926692866,
+          -1.516313210443063,
+          -1.4328464282168394,
+          -1.3493796459906156,
+          -1.265912863764392,
+          -1.1824460815381683,
+          -1.0989792993119447,
+          -1.015512517085721,
+          -0.9320457348594975,
+          -1.2937351245064665,
+          -1.2102683422802427,
+          -1.126801560054019,
+          -1.0433347778277957,
+          -0.959867995601572,
+          -0.8764012133753483,
+          -0.7929344311491247,
+          -0.7094676489229009,
+          -0.6260008666966773,
+          -0.5425340844704537,
+          -0.4590673022442301,
+          -0.3756005200180064,
+          -0.7372899096649755,
+          -0.6538231274387518,
+          -0.5703563452125282,
+          -0.4868895629863046,
+          -0.403422780760081,
+          -0.3199559985338573,
+          -0.23648921630763364,
+          -0.15302243408141,
+          -0.06955565185518636,
+          0.013911130371037302,
+          0.0973779125972609,
+          0.1808446948234846,
+          -0.1808446948234845,
+          -0.09737791259726086,
+          -0.013911130371037273,
+          0.06955565185518639,
+          0.15302243408141006,
+          0.2364892163076337,
+          0.3199559985338573,
+          0.403422780760081,
+          0.4868895629863046,
+          0.5703563452125282,
+          0.6538231274387518,
+          0.7372899096649755,
+          0.3756005200180064,
+          0.4590673022442301,
+          0.5425340844704537,
+          0.6260008666966773,
+          0.7094676489229009,
+          0.7929344311491247,
+          0.8764012133753483,
+          0.959867995601572,
+          1.0433347778277957,
+          1.126801560054019,
+          1.2102683422802427,
+          1.2937351245064665,
+          0.9320457348594975,
+          1.015512517085721,
+          1.0989792993119447,
+          1.1824460815381683,
+          1.265912863764392,
+          1.3493796459906156,
+          1.4328464282168394,
+          1.516313210443063,
+          1.5997799926692866,
+          1.6832467748955102,
+          1.7667135571217338,
+          1.8501803393479577
+        ]
+      },
+      "control_estimates": [],
+      "converged": true,
+      "effects": [
+        {
+          "direct": 0.9972415101314198,
+          "indirect": 0.0,
+          "source": "hoc",
+          "target": "y",
+          "total": 0.9972415101314198
+        }
+      ],
+      "iterations": 2,
+      "mediation": {
+        "estimates": [
+          {
+            "classification": "direct_only",
+            "direct": 0.9972415101314198,
+            "indirect": 0.0,
+            "source": "hoc",
+            "target": "y",
+            "total": 0.9972415101314198,
+            "variance_accounted_for": 0.0,
+            "warning": "direct-only structural effect; no mediated component exceeds tolerance"
+          }
+        ],
+        "method_version": "pls_mediation_v1",
+        "tolerance": 1e-12,
+        "warnings": [
+          "Mediation classes are descriptive effect-decomposition labels; publication inference requires validated bootstrap or permutation intervals for the relevant indirect effect."
+        ]
+      },
+      "method_version": "pls_pm_v1",
+      "moderation": {
+        "estimates": [],
+        "method_version": "pls_two_stage_moderation_v1",
+        "moderator_score_levels": [
+          -1.0,
+          0.0,
+          1.0
+        ],
+        "warnings": []
+      },
+      "omitted_observations": 0,
+      "outer_estimates": [
+        {
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9999999999999998,
+          "weight": 1.0000000000000004
+        },
+        {
+          "construct": "z",
+          "indicator": "z1",
+          "loading": 1.0000000000000002,
+          "weight": 1.0
+        },
+        {
+          "construct": "hoc",
+          "indicator": "__qpls_hoc_hoc_x",
+          "loading": 0.8543941499431702,
+          "weight": 0.6968451350687285
+        },
+        {
+          "construct": "hoc",
+          "indicator": "__qpls_hoc_hoc_z",
+          "loading": 0.7451768557610454,
+          "weight": 0.5429846486143003
+        },
+        {
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 1.0,
+          "weight": 1.0000000000000002
+        }
+      ],
+      "paths": [
+        {
+          "coefficient": 0.9972415101314198,
+          "source": "hoc",
+          "target": "y"
+        }
+      ],
+      "r_squared": {
+        "y": 0.9944906295291946
+      },
+      "transforms": [
+        {
+          "indicator": "x1",
+          "mean": 0.0,
+          "scale": 3.4762777567757044
+        },
+        {
+          "indicator": "z1",
+          "mean": -4.9343245538895844e-17,
+          "scale": 1.797122112524339
+        },
+        {
+          "indicator": "__qpls_hoc_hoc_x",
+          "mean": 0.0,
+          "scale": 1.0
+        },
+        {
+          "indicator": "__qpls_hoc_hoc_z",
+          "mean": 1.2335811384723961e-17,
+          "scale": 1.0
+        },
+        {
+          "indicator": "y1",
+          "mean": -0.00041666666666683046,
+          "scale": 2.0791277457382438
+        }
+      ],
+      "used_observations": 72,
+      "warnings": [
+        "Two-stage higher-order constructs are experimental; lower-order component scores are used as generated HOC indicators in stage 2."
+      ]
+    },
+    "assessment": {
+      "blindfolding": {
+        "constructs": [
+          {
+            "construct": "y",
+            "observation_sum_squares": null,
+            "prediction_error_sum_squares": null,
+            "q_squared": null
+          }
+        ],
+        "settings": {
+          "missing_value_treatment": "indicator_mean_replacement",
+          "omission_distance": 7,
+          "selection": "preferred_7_then_smallest_valid_5_to_12"
+        }
+      },
+      "construct_quality": [
+        {
+          "ave": 0.9999999999999996,
+          "construct": "x",
+          "cronbach_alpha": null,
+          "normalized_weight_norm_squared": null,
+          "off_diagonal_denominator": null,
+          "off_diagonal_numerator": null,
+          "rho_a": null,
+          "rho_a_indicator_count": 1,
+          "rho_a_reason": "rho_a.single_indicator_not_identified",
+          "rho_a_status": "not_applicable",
+          "rho_a_warning_codes": [],
+          "rho_c": 0.9999999999999996,
+          "score_variance_before_normalization": null
+        },
+        {
+          "ave": 1.0000000000000004,
+          "construct": "z",
+          "cronbach_alpha": null,
+          "normalized_weight_norm_squared": null,
+          "off_diagonal_denominator": null,
+          "off_diagonal_numerator": null,
+          "rho_a": null,
+          "rho_a_indicator_count": 1,
+          "rho_a_reason": "rho_a.single_indicator_not_identified",
+          "rho_a_status": "not_applicable",
+          "rho_a_warning_codes": [],
+          "rho_c": 1.0000000000000004,
+          "score_variance_before_normalization": null
+        },
+        {
+          "ave": 0.6426389549095152,
+          "construct": "hoc",
+          "cronbach_alpha": 0.449797127777781,
+          "normalized_weight_norm_squared": 0.7804254708997496,
+          "off_diagonal_denominator": 0.2863371138046017,
+          "off_diagonal_numerator": 0.21957452910025033,
+          "rho_a": 0.46705409818957283,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.7816542071584505,
+          "score_variance_before_normalization": 1.0
+        },
+        {
+          "ave": 1.0,
+          "construct": "y",
+          "cronbach_alpha": null,
+          "normalized_weight_norm_squared": null,
+          "off_diagonal_denominator": null,
+          "off_diagonal_numerator": null,
+          "rho_a": null,
+          "rho_a_indicator_count": 1,
+          "rho_a_reason": "rho_a.single_indicator_not_identified",
+          "rho_a_status": "not_applicable",
+          "rho_a_warning_codes": [],
+          "rho_c": 1.0,
+          "score_variance_before_normalization": null
+        }
+      ],
+      "cross_loadings": [
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 1.0
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "z",
+          "indicator": "x1",
+          "loading": 0.2901537184826629
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "hoc",
+          "indicator": "x1",
+          "loading": 0.8543941499431699
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x1",
+          "loading": 0.8904410744340493
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "x",
+          "indicator": "z1",
+          "loading": 0.29015371848266297
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "z",
+          "indicator": "z1",
+          "loading": 0.9999999999999999
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "hoc",
+          "indicator": "z1",
+          "loading": 0.7451768557610453
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "y",
+          "indicator": "z1",
+          "loading": 0.6938354156201814
+        },
+        {
+          "assigned_construct": "hoc",
+          "construct": "x",
+          "indicator": "__qpls_hoc_hoc_x",
+          "loading": 1.0
+        },
+        {
+          "assigned_construct": "hoc",
+          "construct": "z",
+          "indicator": "__qpls_hoc_hoc_x",
+          "loading": 0.29015371848266286
+        },
+        {
+          "assigned_construct": "hoc",
+          "construct": "hoc",
+          "indicator": "__qpls_hoc_hoc_x",
+          "loading": 0.85439414994317
+        },
+        {
+          "assigned_construct": "hoc",
+          "construct": "y",
+          "indicator": "__qpls_hoc_hoc_x",
+          "loading": 0.8904410744340497
+        },
+        {
+          "assigned_construct": "hoc",
+          "construct": "x",
+          "indicator": "__qpls_hoc_hoc_z",
+          "loading": 0.29015371848266286
+        },
+        {
+          "assigned_construct": "hoc",
+          "construct": "z",
+          "indicator": "__qpls_hoc_hoc_z",
+          "loading": 1.0
+        },
+        {
+          "assigned_construct": "hoc",
+          "construct": "hoc",
+          "indicator": "__qpls_hoc_hoc_z",
+          "loading": 0.7451768557610453
+        },
+        {
+          "assigned_construct": "hoc",
+          "construct": "y",
+          "indicator": "__qpls_hoc_hoc_z",
+          "loading": 0.6938354156201813
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y1",
+          "loading": 0.8904410744340493
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "z",
+          "indicator": "y1",
+          "loading": 0.6938354156201815
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "hoc",
+          "indicator": "y1",
+          "loading": 0.9972415101314193
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 1.0000000000000002
+        }
+      ],
+      "f_squared": [
+        {
+          "excluded_r_squared": 0.0,
+          "f_squared": 180.5089410485444,
+          "included_r_squared": 0.9944906295291946,
+          "source_construct": "hoc",
+          "target_construct": "y"
+        }
+      ],
+      "formative_indicator_vif": [],
+      "fornell_larcker": {
+        "constructs": [
+          "x",
+          "z",
+          "hoc",
+          "y"
+        ],
+        "values": [
+          [
+            0.9999999999999998,
+            0.29015371848266286,
+            0.85439414994317,
+            0.8904410744340497
+          ],
+          [
+            0.29015371848266286,
+            1.0000000000000002,
+            0.7451768557610453,
+            0.6938354156201813
+          ],
+          [
+            0.85439414994317,
+            0.7451768557610453,
+            0.8016476500991662,
+            0.9972415101314202
+          ],
+          [
+            0.8904410744340497,
+            0.6938354156201813,
+            0.9972415101314202,
+            1.0
+          ]
+        ]
+      },
+      "htmt": null,
+      "htmt_original": {
+        "absolute_correlations": false,
+        "cells": [
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "z",
+          "hoc",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_original_method_version": "henseler_et_al_htmt_v1",
+      "htmt_plus": {
+        "absolute_correlations": true,
+        "cells": [
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "z",
+          "hoc",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
+      "method_version": "pls_assessment_v7",
+      "model_fit": {
+        "estimated": {
+          "d_uls": 0.6387123821629883,
+          "srmr": 0.20635121874496537
+        },
+        "saturated": {
+          "d_uls": 0.6348084355151876,
+          "srmr": 0.20571962076496053
+        }
+      },
+      "r_squared": {
+        "y": 0.9944906295291946
+      },
+      "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
+      "structural_quality": [
+        {
+          "adjusted_r_squared": 0.9944119242367546,
+          "construct": "y",
+          "predictor_count": 1,
+          "r_squared": 0.9944906295291946
+        }
+      ],
+      "structural_vif": [
+        {
+          "predictor_construct": "hoc",
+          "target_construct": "y",
+          "vif": 1.0
+        }
+      ],
+      "warnings": [
+        "rho_a.single_indicator_not_identified for construct 'x'",
+        "Cronbach alpha is undefined for single-item construct 'x'",
+        "rho_a.single_indicator_not_identified for construct 'z'",
+        "Cronbach alpha is undefined for single-item construct 'z'",
+        "rho_a.two_indicator_limited_information for construct 'hoc'",
+        "rho_a.single_indicator_not_identified for construct 'y'",
+        "Cronbach alpha is undefined for single-item construct 'y'",
+        "Blindfolding Q-squared is unavailable for 'y' because a round failed: indicator is assigned more than once: __qpls_hoc_hoc_x"
+      ]
+    }
+  }
+}

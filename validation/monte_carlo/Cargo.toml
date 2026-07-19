@@ -1,0 +1,19 @@
+[package]
+name = "qpls-monte-carlo-validation"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[dependencies]
+chrono = { version = "0.4", features = ["serde"] }
+qpls-core = { path = "../../crates/qpls-core" }
+qpls-data = { path = "../../crates/qpls-data" }
+qpls-estimation = { path = "../../crates/qpls-estimation" }
+qpls-resampling = { path = "../../crates/qpls-resampling" }
+rand = "0.9"
+rand_chacha = "0.9"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.11", features = ["v4", "serde"] }

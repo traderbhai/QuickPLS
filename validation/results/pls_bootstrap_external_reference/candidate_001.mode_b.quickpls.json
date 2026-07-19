@@ -1,0 +1,400 @@
+{
+  "schema_version": 1,
+  "id": "54e29f44-c303-43ee-b805-25f218ce8ee6",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "00000000-0000-0000-0000-000000000502",
+    "dataset_fingerprint": "v2:adecb4386fc750b91058b2f7aa150406ad328fc258da2fc7daf978861a8c262b",
+    "method": "pls_pm",
+    "method_version": "pls_pm_v1+pls_assessment_v7",
+    "engine_version": "0.3.0-alpha.1",
+    "seed": 20260718,
+    "settings": {
+      "method": "pls_pm",
+      "weighting_scheme": "path",
+      "tolerance": 1e-12,
+      "max_iterations": 3000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260718,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion"
+    },
+    "started_at": "2026-07-18T19:12:54.427994400Z",
+    "completed_at": "2026-07-18T19:12:54.439914300Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Reliability and AVE are not applicable to formative construct 'x'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Reliability and AVE are not applicable to formative construct 'y'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Cohen f-squared is undefined for 'x -> y' because included R-squared is one within numerical tolerance"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Blindfolding cross-validated redundancy is not applicable to formative construct 'y'"
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "construct_scores": {
+        "x": [
+          -1.1898175767848471,
+          -1.1898175767848471,
+          0.19637765830430715,
+          1.2360240846211386,
+          0.7508557523399415,
+          0.19637765830430715
+        ],
+        "y": [
+          -1.1898175767848405,
+          -1.1898175767848405,
+          0.1963776583042627,
+          1.2360240846210901,
+          0.7508557523400655,
+          0.1963776583042627
+        ]
+      },
+      "converged": true,
+      "effects": [
+        {
+          "direct": 0.9999999999999998,
+          "indirect": 0.0,
+          "source": "x",
+          "target": "y",
+          "total": 0.9999999999999998
+        }
+      ],
+      "iterations": 31,
+      "method_version": "pls_pm_v1",
+      "omitted_observations": 0,
+      "outer_estimates": [
+        {
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9993816398616027,
+          "weight": 0.862342685900686
+        },
+        {
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.976763827165627,
+          "weight": 0.1414779587435329
+        },
+        {
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9966969917714413,
+          "weight": 0.38879419844261426
+        },
+        {
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9986739226699544,
+          "weight": 0.6133032795695375
+        }
+      ],
+      "paths": [
+        {
+          "coefficient": 0.9999999999999998,
+          "source": "x",
+          "target": "y"
+        }
+      ],
+      "r_squared": {
+        "y": 1.0
+      },
+      "transforms": [
+        {
+          "indicator": "x1",
+          "mean": 3.5,
+          "scale": 2.073644135332772
+        },
+        {
+          "indicator": "x2",
+          "mean": 4.166666666666667,
+          "scale": 2.041241452319315
+        },
+        {
+          "indicator": "y1",
+          "mean": 5.333333333333333,
+          "scale": 2.8047578623950176
+        },
+        {
+          "indicator": "y2",
+          "mean": 4.5,
+          "scale": 2.949576240750525
+        }
+      ],
+      "used_observations": 6,
+      "warnings": []
+    },
+    "assessment": {
+      "blindfolding": {
+        "constructs": [
+          {
+            "construct": "y",
+            "observation_sum_squares": null,
+            "prediction_error_sum_squares": null,
+            "q_squared": null
+          }
+        ],
+        "settings": {
+          "missing_value_treatment": "indicator_mean_replacement",
+          "omission_distance": 5,
+          "selection": "preferred_7_then_smallest_valid_5_to_12"
+        }
+      },
+      "construct_quality": [
+        {
+          "ave": null,
+          "construct": "x",
+          "cronbach_alpha": null,
+          "normalized_weight_norm_squared": null,
+          "off_diagonal_denominator": null,
+          "off_diagonal_numerator": null,
+          "rho_a": null,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": "rho_a.formative_not_applicable",
+          "rho_a_status": "not_applicable",
+          "rho_a_warning_codes": [],
+          "rho_c": null,
+          "score_variance_before_normalization": null
+        },
+        {
+          "ave": null,
+          "construct": "y",
+          "cronbach_alpha": null,
+          "normalized_weight_norm_squared": null,
+          "off_diagonal_denominator": null,
+          "off_diagonal_numerator": null,
+          "rho_a": null,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": "rho_a.formative_not_applicable",
+          "rho_a_status": "not_applicable",
+          "rho_a_warning_codes": [],
+          "rho_c": null,
+          "score_variance_before_normalization": null
+        }
+      ],
+      "cross_loadings": [
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9993816398616022
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x1",
+          "loading": 0.9993816398616009
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9767638271656272
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x2",
+          "loading": 0.9767638271656347
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y1",
+          "loading": 0.9966969917714465
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9966969917714412
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y2",
+          "loading": 0.9986739226699513
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9986739226699545
+        }
+      ],
+      "f_squared": [
+        {
+          "excluded_r_squared": 0.0,
+          "f_squared": null,
+          "included_r_squared": 1.0,
+          "source_construct": "x",
+          "target_construct": "y"
+        }
+      ],
+      "formative_indicator_vif": [
+        {
+          "construct": "x",
+          "indicator": "x1",
+          "vif": 16.18975903614449
+        },
+        {
+          "construct": "x",
+          "indicator": "x2",
+          "vif": 16.18975903614449
+        },
+        {
+          "construct": "y",
+          "indicator": "y1",
+          "vif": 57.03333333333369
+        },
+        {
+          "construct": "y",
+          "indicator": "y2",
+          "vif": 57.03333333333369
+        }
+      ],
+      "fornell_larcker": {
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "values": [
+          [
+            null,
+            1.0000000000000002
+          ],
+          [
+            1.0000000000000002,
+            null
+          ]
+        ]
+      },
+      "htmt": null,
+      "htmt_original": {
+        "absolute_correlations": false,
+        "cells": [
+          [
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_original_method_version": "henseler_et_al_htmt_v1",
+      "htmt_plus": {
+        "absolute_correlations": true,
+        "cells": [
+          [
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.formative_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
+      "method_version": "pls_assessment_v7",
+      "model_fit": {
+        "estimated": {
+          "d_uls": 0.00007151555525562167,
+          "srmr": 0.0026742392423943985
+        },
+        "saturated": {
+          "d_uls": 0.00007151555525562358,
+          "srmr": 0.002674239242394434
+        }
+      },
+      "r_squared": {
+        "y": 1.0
+      },
+      "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
+      "structural_quality": [
+        {
+          "adjusted_r_squared": 1.0,
+          "construct": "y",
+          "predictor_count": 1,
+          "r_squared": 1.0
+        }
+      ],
+      "structural_vif": [
+        {
+          "predictor_construct": "x",
+          "target_construct": "y",
+          "vif": 1.0
+        }
+      ],
+      "warnings": [
+        "Reliability and AVE are not applicable to formative construct 'x'",
+        "Reliability and AVE are not applicable to formative construct 'y'",
+        "Cohen f-squared is undefined for 'x -> y' because included R-squared is one within numerical tolerance",
+        "Blindfolding cross-validated redundancy is not applicable to formative construct 'y'"
+      ]
+    }
+  }
+}

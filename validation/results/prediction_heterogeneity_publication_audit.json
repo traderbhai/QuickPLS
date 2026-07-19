@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "target": "v0.6 prediction and heterogeneity publication audit",
+  "passed": true,
+  "evidence": [
+    {
+      "path": "validation\\results\\plspredict_holdout_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\ipma_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\mga_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\segmentation_recovery_simulation_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\v06_group_methods_reference_report.json",
+      "present": true,
+      "passed": true
+    }
+  ],
+  "coverage": {
+    "micom": true,
+    "permutation_mga": true,
+    "pls_pos": true,
+    "fimix": true
+  },
+  "docs": [
+    {
+      "path": "docs\\methods\\PLSPREDICT_HOLDOUT_V1.md",
+      "present": true,
+      "bytes": 6653
+    },
+    {
+      "path": "docs\\methods\\IPMA_V1.md",
+      "present": true,
+      "bytes": 1618
+    },
+    {
+      "path": "docs\\methods\\PLS_MGA_TWO_GROUP_V1.md",
+      "present": true,
+      "bytes": 1837
+    },
+    {
+      "path": "docs\\methods\\PLS_MGA_PERMUTATION_V1.md",
+      "present": true,
+      "bytes": 1094
+    },
+    {
+      "path": "docs\\methods\\MICOM_V1.md",
+      "present": true,
+      "bytes": 1410
+    },
+    {
+      "path": "docs\\methods\\FIMIX_PLS_V1.md",
+      "present": true,
+      "bytes": 1011
+    },
+    {
+      "path": "docs\\methods\\PLS_POS_V1.md",
+      "present": true,
+      "bytes": 1074
+    },
+    {
+      "path": "docs\\methods\\PLS_POS_BOUNDED_V1.md",
+      "present": true,
+      "bytes": 3047
+    }
+  ],
+  "commands": [
+    {
+      "command": [
+        "npm.cmd",
+        "run",
+        "qpls:v06:validate"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "stdout_tail": "\n> quickpls@0.9.0-rc.1 qpls:v06:validate\n> python validation/v06_group_methods_reference.py --section all\n\n{\n  \"kind\": \"v06_group_methods_reference\",\n  \"sections\": {\n    \"groups\": {\n      \"micom_constructs\": 3,\n      \"max_mga_difference\": 1.3959928789199458\n    },\n    \"pos\": {\n      \"segments\": 3,\n      \"objective_improvement\": 0.6792091948425426\n    },\n    \"fimix\": {\n      \"classes\": 3,\n      \"bic\": 331.8483502084654,\n      \"entropy\": 0.503739550450474\n    }\n  }\n}\n",
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.60s\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "qpls-estimation"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 20 tests\ntest pls::tests::benchmark_target_shape_100k_300_100 ... ignored, release performance qualification\ntest pls::tests::mediation_classifier_covers_descriptive_effect_patterns ... ok\ntest pls::tests::cycles_and_constant_indicators_are_rejected ... ok\ntest pls::tests::iteration_limit_produces_no_completed_result ... ok\ntest pls::tests::execution_control_reports_progress_and_cancels_inside_iteration ... ok\ntest pls::tests::hybrid_higher_order_splits_component_indicator_blocks ... ok\ntest pls::tests::control_estimates_mirror_declared_structural_paths ... ok\ntest pls::tests::agrees_with_python_plspm_reference_fixture ... ok\ntest pls::tests::factor_single_item_and_preprocessing_modes_are_supported ... ok\ntest pls::tests::execution_rejects_wrong_dispatch_resampling_and_malformed_models ... ok\ntest pls::tests::indicator_order_does_not_change_paths ... ok\ntest pls::tests::reflective_path_model_converges_and_decomposes_effects ... ok\ntest pls::tests::three_construct_path_model_reports_indirect_only_mediation ... ok\ntest pls::tests::repeated_indicator_higher_order_expands_component_blocks ... ok\ntest pls::tests::two_stage_higher_order_uses_component_scores_as_indicators ... ok\ntest pls::tests::listwise_deletion_affine_scaling_and_construct_order_are_stable ... ok\ntest pls::tests::two_stage_moderation_generates_product_score_and_estimates_interaction_path ... ok\ntest pls::tests::plspredict_holdout_reports_leakage_free_prediction_metrics ... ok\ntest pls::tests::pca_weighting_and_formative_mode_are_executable ... ok\ntest pls::tests::unstandardized_mode_b_is_invariant_to_indicator_offsets ... ok\n\ntest result: ok. 19 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.03s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.63s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_estimation-4b8a1486bf525f96.exe)\n   Doc-tests qpls_estimation\n"
+    }
+  ]
+}

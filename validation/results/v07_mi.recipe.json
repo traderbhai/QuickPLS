@@ -1,0 +1,77 @@
+{
+  "schema_version": 2,
+  "id": "00000000-0000-0000-0000-000000007530",
+  "created_at": "2026-07-19T00:00:00Z",
+  "dataset_fingerprint": "v2:d4a9646bf2a9d22a28ff299bce84e53432d53e049d2d8c06506d282a9d11596b",
+  "model": {
+    "id": "00000000-0000-0000-0000-000000008530",
+    "name": "v0.7 CB-SEM validation",
+    "constructs": [
+      {
+        "id": "x",
+        "name": "X",
+        "short_name": "X",
+        "mode": "reflective",
+        "indicators": [
+          "x1",
+          "x2",
+          "x3"
+        ]
+      },
+      {
+        "id": "m",
+        "name": "M",
+        "short_name": "M",
+        "mode": "reflective",
+        "indicators": [
+          "m1",
+          "m2",
+          "m3"
+        ]
+      },
+      {
+        "id": "y",
+        "name": "Y",
+        "short_name": "Y",
+        "mode": "reflective",
+        "indicators": [
+          "y1",
+          "y2",
+          "y3"
+        ]
+      }
+    ],
+    "paths": [
+      {
+        "source": "x",
+        "target": "m"
+      },
+      {
+        "source": "x",
+        "target": "y"
+      },
+      {
+        "source": "m",
+        "target": "y"
+      }
+    ]
+  },
+  "settings": {
+    "method": "cbsem",
+    "weighting_scheme": "path",
+    "tolerance": 1e-07,
+    "max_iterations": 3000,
+    "bootstrap_samples": 0,
+    "seed": 20260721,
+    "preprocessing": "standardized",
+    "missing_data": "listwise_deletion"
+  },
+  "metadata": {
+    "fixture": "cbsem_v07_reference",
+    "cbsem_model_type": "sem",
+    "cbsem_estimator": "ml",
+    "cbsem_input": "raw",
+    "cbsem_mean_structure": "false",
+    "cbsem_standardization": "std_all"
+  }
+}

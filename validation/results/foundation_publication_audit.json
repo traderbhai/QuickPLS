@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "target": "v0.1 foundation publication audit",
+  "passed": true,
+  "static_checks": {
+    "frontend_dist_configured": true,
+    "dev_url_is_dev_only_localhost": true,
+    "csp_only_self_ipc_and_data": true,
+    "capabilities_no_remote_urls": true,
+    "permissions_are_local_desktop_only": true
+  },
+  "source_findings": [],
+  "test_coverage": {
+    "cancellation_wins_before_commit_and_does_not_persist": true,
+    "desktop_runner_payload_matches_cli_serialized_artifact": true,
+    "valid_autosave_takes_precedence_and_can_be_discarded": true,
+    "previous_generation_recovers_a_corrupt_primary_archive": true,
+    "stale_autosave_does_not_replace_a_newer_explicit_save": true
+  },
+  "command_checks": [
+    {
+      "command": [
+        "npm.cmd",
+        "run",
+        "build"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "stdout_tail": "\n> quickpls@0.9.0-rc.1 build\n> tsc -b && vite build\n\n\u001b[36mvite v6.4.3 \u001b[32mbuilding for production...\u001b[36m\u001b[39m\ntransforming...\n\u001b[32m\u00e2\u0153\u201c\u001b[39m 1771 modules transformed.\nrendering chunks...\ncomputing gzip size...\n\u001b[2mdist/\u001b[22m\u001b[32mindex.html                 \u001b[39m\u001b[1m\u001b[2m  0.82 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m \u00e2\u201d\u201a gzip:   0.37 kB\u001b[22m\n\u001b[2mdist/\u001b[22m\u001b[35massets/flow-BnuhLJ6X.css   \u001b[39m\u001b[1m\u001b[2m 15.87 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m \u00e2\u201d\u201a gzip:   2.67 kB\u001b[22m\n\u001b[2mdist/\u001b[22m\u001b[35massets/index-BpRqPzNu.css  \u001b[39m\u001b[1m\u001b[2m 23.61 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m \u00e2\u201d\u201a gzip:   5.28 kB\u001b[22m\n\u001b[2mdist/\u001b[22m\u001b[36massets/tauri-C2YuZ8yv.js   \u001b[39m\u001b[1m\u001b[2m  0.32 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m \u00e2\u201d\u201a gzip:   0.19 kB\u001b[22m\n\u001b[2mdist/\u001b[22m\u001b[36massets/icons-B3ZUC2ji.js   \u001b[39m\u001b[1m\u001b[2m 20.33 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m \u00e2\u201d\u201a gzip:   4.20 kB\u001b[22m\n\u001b[2mdist/\u001b[22m\u001b[36massets/flow-Dp0IdUYB.js    \u001b[39m\u001b[1m\u001b[2m 83.72 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m \u00e2\u201d\u201a gzip:  25.69 kB\u001b[22m\n\u001b[2mdist/\u001b[22m\u001b[36massets/index-CwaSIBvX.js   \u001b[39m\u001b[1m\u001b[2m160.47 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m \u00e2\u201d\u201a gzip:  37.56 kB\u001b[22m\n\u001b[2mdist/\u001b[22m\u001b[36massets/vendor-CtbQ7rgw.js  \u001b[39m\u001b[1m\u001b[2m317.20 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m \u00e2\u201d\u201a gzip: 103.98 kB\u001b[22m\n\u001b[32m\u00e2\u0153\u201c built in 4.60s\u001b[39m\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "quickpls-desktop"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 7 tests\ntest desktop_job_tests::cancellation_wins_before_commit_and_does_not_persist ... ok\ntest desktop_job_tests::commit_checks_project_identity_and_read_only_state ... ok\ntest desktop_job_tests::completed_result_is_consumed_and_terminal_retention_is_bounded ... ok\ntest desktop_job_tests::desktop_runner_payload_matches_cli_serialized_artifact ... ok\ntest desktop_job_tests::xlsx_table_export_writes_readable_workbook ... ok\ntest desktop_job_tests::waiting_for_project_does_not_hold_the_job_registry ... ok\ntest desktop_job_tests::demo_project_contains_workspace_dataset_and_run ... ok\n\ntest result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.98s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": "   Compiling quickpls-desktop v0.9.0-rc.1 (D:\\QuickPLS\\src-tauri)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 52.05s\n     Running unittests src\\lib.rs (target\\debug\\deps\\quickpls_desktop_lib-1ea2f84bb6699edd.exe)\n     Running unittests src\\main.rs (target\\debug\\deps\\quickpls_desktop-7bb10cf6cf20095c.exe)\n   Doc-tests quickpls_desktop_lib\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "qpls-project"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 12 tests\ntest tests::legacy_raw_results_receive_a_typed_envelope_and_migration_warning ... ok\ntest tests::version_three_pls_payload_migrates_to_the_tagged_contract ... ok\ntest tests::malformed_current_pls_payload_is_rejected_before_save ... ok\ntest tests::truncated_archive_is_rejected ... ok\ntest tests::project_round_trip_preserves_arrow_dataset_and_manifest ... ok\ntest tests::version_one_archive_migrates_to_the_current_schema ... ok\ntest tests::changed_payload_is_rejected_by_its_manifest_checksum ... ok\ntest tests::valid_autosave_takes_precedence_and_can_be_discarded ... ok\ntest tests::permutation_pls_payload_round_trips_and_rejects_tampering ... ok\ntest tests::previous_generation_recovers_a_corrupt_primary_archive ... ok\ntest tests::stale_autosave_does_not_replace_a_newer_explicit_save ... ok\ntest tests::bootstrap_pls_payload_round_trips_with_recipe_provenance ... ok\n\ntest result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.07s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_project-0f82d3fc3509dfa9.exe)\n   Doc-tests qpls_project\n"
+    }
+  ],
+  "built_frontend_index": "D:\\QuickPLS\\dist\\index.html",
+  "note": "Allows dev-only localhost and Tauri IPC localhost; rejects runtime telemetry, activation, browser localStorage/sessionStorage, and remote computation hooks."
+}

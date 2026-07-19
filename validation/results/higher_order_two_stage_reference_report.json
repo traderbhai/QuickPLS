@@ -1,0 +1,27 @@
+{
+  "checks": {
+    "assessment_hoc_present": true,
+    "baseline_hoc_to_y_abs": 0.985289104586091,
+    "component_reorder_max_delta": 0.0,
+    "construct_reorder_max_delta": 0.0,
+    "experimental_warning_present": true,
+    "independent_reference_max_delta": 5.384581669432009e-14,
+    "permuted_component_drop_ratio": 0.6798816591266171,
+    "permuted_component_hoc_to_y_abs": 0.6698799911453706,
+    "positive_affine_max_delta": 3.8191672047105385e-14,
+    "row_reversal_max_delta": 6.661338147750939e-16
+  },
+  "kind": "two_stage_hoc_reference_metamorphic_v1",
+  "note": "Bounded deterministic two-stage HOC screen; not a full Monte Carlo qualification.",
+  "passed": true,
+  "scenarios": [
+    "base_generated_signal",
+    "positive_affine_transform",
+    "row_reversal",
+    "construct_reorder",
+    "component_reorder",
+    "permuted_component_degradation"
+  ],
+  "schema_version": 1,
+  "tolerance": 1e-06
+}

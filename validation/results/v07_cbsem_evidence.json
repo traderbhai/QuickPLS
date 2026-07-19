@@ -1,0 +1,45 @@
+{
+  "all_listed_artifacts_present": true,
+  "artifacts": [
+    {
+      "bytes": 1760,
+      "path": "docs/methods/CBSEM_ML_V1.md",
+      "present": true
+    },
+    {
+      "bytes": 1334,
+      "path": "docs/methods/CFA_ML_V1.md",
+      "present": true
+    },
+    {
+      "bytes": 1037,
+      "path": "docs/methods/CBSEM_FIT_V1.md",
+      "present": true
+    },
+    {
+      "bytes": 930,
+      "path": "docs/methods/CBSEM_MODIFICATION_INDICES_V1.md",
+      "present": true
+    },
+    {
+      "bytes": 887,
+      "path": "docs/methods/CBSEM_MULTIGROUP_INVARIANCE_V1.md",
+      "present": true
+    },
+    {
+      "bytes": 715,
+      "path": "validation/results/cbsem_v07_reference_report.json",
+      "present": true
+    }
+  ],
+  "generated_at": "2026-07-19T11:50:05.994406500Z",
+  "note": "v0.7 CB-SEM/CFA is an experimental beta. The current engine is a bounded ML-discrepancy and fit-diagnostics preview seeded by deterministic QuickPLS measurement/structural estimates; full-information SEM optimization and two-reference numerical validation remain later promotion requirements.",
+  "open_registry_gates": [],
+  "promotion_ready": true,
+  "schema_version": 1,
+  "slice_id": "v0_7_cbsem",
+  "slice_status": "experimental",
+  "stable_release_allowed": false,
+  "target": "v07-cbsem",
+  "validation_status": "passed"
+}

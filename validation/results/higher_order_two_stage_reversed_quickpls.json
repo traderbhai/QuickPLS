@@ -1,0 +1,1177 @@
+{
+  "schema_version": 1,
+  "id": "eaf7624c-a42a-460f-aa74-1b86d4d90c47",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "00000000-0000-0000-0000-000000000083",
+    "dataset_fingerprint": "v2:714ea028200c756529bb01be5a9b9de8f38a6b74f58fe1d11efa16e5919afce6",
+    "method": "pls_pm",
+    "method_version": "pls_pm_v1+pls_mediation_v1+pls_assessment_v7",
+    "engine_version": "0.3.0-alpha.1",
+    "seed": 20260719,
+    "settings": {
+      "method": "pls_pm",
+      "weighting_scheme": "path",
+      "tolerance": 1e-7,
+      "max_iterations": 3000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260719,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion"
+    },
+    "started_at": "2026-07-19T03:02:33.698574800Z",
+    "completed_at": "2026-07-19T03:02:33.704068600Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Two-stage higher-order constructs are experimental; lower-order component scores are used as generated HOC indicators in stage 2."
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.single_indicator_not_identified for construct 'x'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Cronbach alpha is undefined for single-item construct 'x'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.single_indicator_not_identified for construct 'z'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Cronbach alpha is undefined for single-item construct 'z'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.two_indicator_limited_information for construct 'hoc'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.single_indicator_not_identified for construct 'y'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Cronbach alpha is undefined for single-item construct 'y'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Blindfolding Q-squared is unavailable for 'y' because a round failed: indicator is assigned more than once: __qpls_hoc_hoc_x"
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "construct_scores": {
+        "hoc": [
+          -1.0023351234953328,
+          0.13102695387109906,
+          -0.10519555575031127,
+          -0.3911990129831805,
+          -0.18521035490642726,
+          0.6394047363592833,
+          1.237017052800003,
+          0.031298493549535344,
+          0.19565819461502057,
+          0.0691486002828682,
+          -0.7506839206526298,
+          0.48969139787995775,
+          -0.06404459978424065,
+          1.8064107528359394,
+          0.40963300771586575,
+          -0.2442304330133584,
+          1.5773325629533292,
+          -2.564045226150569,
+          0.3979510526325535,
+          -0.03392571478120119,
+          -0.7740262484044569,
+          0.34183497384441924,
+          -0.39790627673651763,
+          -0.24663032501134077,
+          -0.12891506290870894,
+          0.040767912372859004,
+          -1.2059690528664369,
+          -1.3610819575687823,
+          -0.6714377902983839,
+          2.0056309642961083,
+          1.115718713491939,
+          -0.8110976657679746,
+          -0.616090962564048,
+          0.3515376665973556,
+          0.12364408457893104,
+          -1.0251512038008306,
+          -0.7670789382331764,
+          0.07196502219253173,
+          0.6489305354772211,
+          -0.47096976053586936,
+          -0.8303862597711803,
+          2.152129942594983,
+          -0.4675260624859914,
+          1.746290586555915,
+          0.6655703456567962,
+          -0.5073825488334074,
+          -0.429807740226259,
+          -0.5060780450378406,
+          0.3818352142869806,
+          0.5116753782900719,
+          0.5090106611896931,
+          -0.4181148971313971,
+          1.1852865112203987,
+          0.07820103978260637,
+          0.03108483666301107,
+          0.33954641473922903,
+          0.20755361190542357,
+          -2.5550069595402323,
+          0.25717149398288514,
+          -0.9034678820991187,
+          -1.360943701480176,
+          1.1121802758949595,
+          -1.3531025667343504,
+          0.23371889630530138,
+          1.3415579850380293,
+          0.4980684871927802,
+          1.1081545780633388,
+          -0.17451836169109106,
+          -2.5056384282946875,
+          1.8465548864281827,
+          0.5397202788392347,
+          0.9309528206609523,
+          -0.7776958678635713,
+          1.557595744402844,
+          -0.44334972439428616,
+          -0.1250419624946126,
+          1.8455681509687893,
+          0.9691212597179308,
+          -1.1426757603246225,
+          0.6752935717223033,
+          -0.08112163213077733,
+          -0.7975103599260079,
+          -0.30089141814922116,
+          -1.37182951524296,
+          1.1649276848618795,
+          -1.1322776766342082,
+          -1.7515965268297218,
+          0.7290454605849113,
+          -2.191795334499535,
+          1.8700846521185088,
+          -0.36893761661229524,
+          -1.1127733919820009,
+          -1.2290489692792337,
+          2.4400871339339316,
+          0.9972990259133198,
+          -0.4753234117505438,
+          1.2107357302935757,
+          -0.5885415542443676,
+          -0.4056189680211184,
+          1.143269976562973,
+          -0.23065719021856218,
+          0.009251692454819894,
+          1.1751354633588738,
+          -0.2937655024450654,
+          -0.6560866708844869,
+          0.299950563998955,
+          -1.4447018224061547,
+          -0.4303790026281038,
+          -0.53402709953118,
+          -0.07517095316343647,
+          -0.06752352425621433,
+          1.4372673164482146,
+          -0.5292832124570779,
+          -0.16812529807232793,
+          0.7018910430059768,
+          -1.1731338155150977,
+          -0.4770118195603104,
+          0.4379402497071748,
+          -0.6239188476741905,
+          0.8036814450382239
+        ],
+        "x": [
+          -0.04159993861950411,
+          0.9843732941933254,
+          -1.6512077073014744,
+          -0.43359313516701126,
+          -1.640691587084277,
+          -0.3165754644576312,
+          1.1102109980989878,
+          -0.003323221350861638,
+          -0.08280502757115328,
+          -0.4603184307024367,
+          0.35935786550452986,
+          0.7332593510614338,
+          0.4501467309159348,
+          1.1648047250382225,
+          -0.6385960144417065,
+          0.9736979490609822,
+          1.1556467791927723,
+          -1.0925599835312803,
+          1.0042394007300823,
+          0.1880441608070614,
+          -1.7562227986393157,
+          0.053952983459667134,
+          -0.39578939156747295,
+          -0.8385104493949337,
+          0.3275625304858947,
+          -0.8445261741347692,
+          -1.802729062721047,
+          -1.2720297002735024,
+          0.07365733605112643,
+          1.2813062410915257,
+          1.3018665797932312,
+          -0.8729736246714463,
+          -0.6200598866927531,
+          0.6995488583963503,
+          -0.2805968182189267,
+          -0.6345401471221512,
+          -0.9715394241042773,
+          -0.17376099890133698,
+          0.07902135581107367,
+          -0.5294469489912895,
+          0.03673964112707278,
+          0.9594676125212168,
+          -0.697869661336097,
+          1.6016569538842838,
+          0.49144414798241676,
+          0.5016005087594717,
+          -0.20867832372966685,
+          -0.8991381527778836,
+          0.22074143131899088,
+          0.5224725256025573,
+          2.101830754821918,
+          0.7186285899573593,
+          1.398965604465502,
+          -0.22303857940102476,
+          -0.027041753903388987,
+          0.7587764605008659,
+          0.16267250435903693,
+          -1.7407291620406753,
+          -0.2278910817728525,
+          -0.010343918643549607,
+          0.05371078117936767,
+          0.4109050676155738,
+          -2.476737391687395,
+          0.22910021300465547,
+          0.49996067833351887,
+          -1.7038301491187704,
+          1.9938232926932813,
+          -0.546135854000246,
+          -1.6458943924496063,
+          0.31213884472338255,
+          0.7079231072996931,
+          0.7984008578703683,
+          -0.3154755012741686,
+          1.2517418618167702,
+          -0.023784216527342417,
+          0.677461324610257,
+          1.7870963574340841,
+          -0.7306046102270799,
+          -0.40849299123589294,
+          1.1326330538594702,
+          -0.4291311165357364,
+          -0.9001824410144197,
+          -0.35266844259399804,
+          -1.4267342231741877,
+          1.4753804195894664,
+          -0.29376647497374647,
+          -0.37495960666946765,
+          1.2317421285480765,
+          -1.5505874835572533,
+          1.5623518362089723,
+          0.2491037407326076,
+          -0.9794230916709877,
+          0.436235157995178,
+          1.6871921845137645,
+          2.9021716328863625,
+          -0.026020894526368393,
+          0.8383571641451785,
+          -0.5342015257888456,
+          -0.8168801661559444,
+          1.132196544275184,
+          0.1228149307876639,
+          -0.4314773294013759,
+          0.9739064007598078,
+          0.062141619816294555,
+          -0.5046008394953093,
+          -0.3513655997605556,
+          -0.6577400603362367,
+          -1.0593481429158598,
+          -0.7739188681886919,
+          0.645875724840154,
+          -0.7847651357481511,
+          0.20322656483353255,
+          -2.2680040388740847,
+          -0.2650181697745997,
+          0.4895334644411688,
+          -0.8664039226025039,
+          0.3973596064017766,
+          0.20943049368161665,
+          -2.379189255200858,
+          1.3764595748552575
+        ],
+        "y": [
+          -0.9621302001998073,
+          0.03623147823059394,
+          -0.2600466937575623,
+          -0.6002304229146115,
+          -0.16058207265449378,
+          0.691056693195176,
+          1.2637379293843298,
+          0.007366813134690142,
+          0.00980715740318512,
+          0.2377742231891794,
+          -0.4820397883402775,
+          0.8165809677509718,
+          -0.19550625615461875,
+          1.8355242592278724,
+          0.4232330324282725,
+          -0.3671735145836059,
+          1.643712517662024,
+          -2.334195560725353,
+          0.3523822205311172,
+          -0.019637094677108616,
+          -0.5026784254953973,
+          0.03255969876553497,
+          0.031165663581612407,
+          -0.25620375947005314,
+          0.07999831352600383,
+          -0.11561477515332001,
+          -1.2629775411445068,
+          -1.5915349095985936,
+          -0.7964905233314608,
+          2.296887227561325,
+          0.8695706112603221,
+          -1.002714108169213,
+          -0.48739689727443436,
+          0.3692019935985359,
+          0.3020772926220803,
+          -0.847550089269147,
+          -0.8184370485394464,
+          0.002332835601847633,
+          1.0030657886070802,
+          -0.4226496461656074,
+          -1.1048767185163655,
+          1.9049905925607082,
+          -0.4680331482188227,
+          1.2106275775502127,
+          0.7063748731694757,
+          -0.3055039346806006,
+          -0.4015412497850426,
+          -0.3486246388079216,
+          0.44377869970250994,
+          0.41279114880449813,
+          -0.04525021576953915,
+          -0.6665152887013506,
+          0.8889691868159741,
+          0.04312657426682917,
+          0.15755256876557436,
+          0.46845539771993905,
+          0.3297620979655852,
+          -2.674215388623961,
+          0.22542687184516874,
+          -1.098625483578662,
+          -1.2983442977583572,
+          1.327124201292347,
+          -1.338232204951068,
+          0.35224416110051754,
+          1.3800913028320791,
+          0.6612998993626743,
+          0.8187930178523842,
+          -0.07432486118099726,
+          -2.58539737511089,
+          1.7361077064030657,
+          0.6642199624082126,
+          1.0670235440400673,
+          -0.6983425954743532,
+          1.896878684040416,
+          -0.5771803787456583,
+          -0.13541200720129135,
+          1.687930438883935,
+          1.065265924135444,
+          -1.1710860515107557,
+          0.5078564971760908,
+          0.20939616817496998,
+          -0.9435312812980521,
+          -0.31217289374892165,
+          -1.5008247676433755,
+          1.275961092061024,
+          -1.1921090952236926,
+          -1.8877668070393512,
+          0.7527412035467846,
+          -2.025216862696396,
+          1.7899866121756625,
+          -0.3587729180878773,
+          -1.191878723613125,
+          -1.352276972651797,
+          2.2407401023661886,
+          0.8415437950923609,
+          -0.22312878323289667,
+          1.228673790535857,
+          -0.6171359429474635,
+          -0.34101823526886943,
+          1.1268606445158993,
+          -0.19810079618315754,
+          0.1717280125117755,
+          1.1350415296623473,
+          0.02069383088386535,
+          -0.6727298092469605,
+          0.3184942361773384,
+          -1.4112534769891256,
+          -0.6323452942653963,
+          -0.579516352682522,
+          -0.07546557518716673,
+          0.05614976356482331,
+          1.1502277903080198,
+          -0.41008371245900666,
+          -0.19715583167200845,
+          0.7351900375492586,
+          -1.245111186260943,
+          -0.4191473602482771,
+          0.5932321287192406,
+          -0.4800597574102405,
+          0.8364792184899958
+        ],
+        "z": [
+          -1.3571161980454822,
+          -0.6115977458653588,
+          1.184891581061111,
+          -0.19328411933563908,
+          1.065402853312034,
+          1.142266929976458,
+          0.8214359428931763,
+          0.04610214135230429,
+          0.3381963865185409,
+          0.46694458710356124,
+          -1.3311380048373185,
+          0.08840797624204726,
+          -0.45166508359946694,
+          1.5674142441257375,
+          1.0830225816123145,
+          -1.12362766405794,
+          1.2569711039496263,
+          -2.676788037271416,
+          -0.2572775602732687,
+          -0.19862854995501128,
+          0.3415924964178434,
+          0.43077857779675965,
+          -0.23305887404577647,
+          0.3336464927345159,
+          -0.4428662810364307,
+          0.7372328429534277,
+          -0.22020405723121533,
+          -0.8631415889487823,
+          -0.9909225937397311,
+          1.7499154971727704,
+          0.49867543010987686,
+          -0.42172177486906076,
+          -0.3550118916167256,
+          -0.0760972388944929,
+          0.397699872346352,
+          -0.910873378461286,
+          -0.281207899368967,
+          0.23989253790603163,
+          0.8366399357210657,
+          -0.22670220600388682,
+          -1.1816935948746354,
+          2.212564442436887,
+          -0.08617905883020074,
+          1.1319090429791083,
+          0.5273215597499016,
+          -1.108225157123898,
+          -0.42812691302376227,
+          0.022552106591613632,
+          0.35184695939934235,
+          0.2887986359036177,
+          -0.9878295992793911,
+          -1.1592950563290634,
+          0.5169342765146392,
+          0.2882611666685775,
+          0.06492237626428322,
+          -0.14047022806272005,
+          0.15685016124816817,
+          -2.1418368856508785,
+          0.5404767175055688,
+          -1.24513900554509,
+          -1.9314701247297577,
+          1.2118633698442658,
+          0.11889940027875805,
+          0.13961260511235252,
+          1.4583261422569873,
+          2.064275861568812,
+          -0.06952238259037945,
+          0.19804691725183057,
+          -2.14977766132249,
+          2.3103420938141483,
+          0.17823881011285167,
+          0.6481135954965217,
+          -0.8247123024665616,
+          1.152137422566085,
+          -0.5959360897400536,
+          -0.71950416213373,
+          1.1201867916324824,
+          1.9334165576408469,
+          -1.2561170475525982,
+          0.024026160137182805,
+          0.23332253953573973,
+          -0.38094091408339226,
+          -0.13321458283350232,
+          -0.7533640498683801,
+          0.4270995208812548,
+          -1.3341579736505773,
+          -2.1279640965577538,
+          0.018721872870976042,
+          -1.7911656002768408,
+          1.335340707676617,
+          -0.7126385917501463,
+          -0.7544720880871384,
+          -2.056785701993334,
+          2.0255462618941626,
+          -0.9554345696168914,
+          -0.6384938306160043,
+          1.004081861796927,
+          -0.38598982478015736,
+          0.09563125343199719,
+          0.6736508548477136,
+          -0.4190013564483626,
+          0.36059795669632305,
+          0.8454398901256592,
+          -0.4576566771869915,
+          -0.5035598298581949,
+          0.6993466155008865,
+          -1.4742614029366836,
+          0.2567034009481391,
+          -0.11714879844991526,
+          -0.6248555040306568,
+          0.5388225419730115,
+          1.830275531775403,
+          1.0936357055997337,
+          -0.019658552885349522,
+          0.5792530552793863,
+          -0.9293076441562902,
+          -0.9820725651480583,
+          0.4388037646438677,
+          1.051950801399392,
+          0.005632850769509927
+        ]
+      },
+      "control_estimates": [],
+      "converged": true,
+      "effects": [
+        {
+          "direct": 0.9852891045860911,
+          "indirect": 0.0,
+          "source": "hoc",
+          "target": "y",
+          "total": 0.9852891045860911
+        }
+      ],
+      "iterations": 2,
+      "mediation": {
+        "estimates": [
+          {
+            "classification": "direct_only",
+            "direct": 0.9852891045860911,
+            "indirect": 0.0,
+            "source": "hoc",
+            "target": "y",
+            "total": 0.9852891045860911,
+            "variance_accounted_for": 0.0,
+            "warning": "direct-only structural effect; no mediated component exceeds tolerance"
+          }
+        ],
+        "method_version": "pls_mediation_v1",
+        "tolerance": 1e-12,
+        "warnings": [
+          "Mediation classes are descriptive effect-decomposition labels; publication inference requires validated bootstrap or permutation intervals for the relevant indirect effect."
+        ]
+      },
+      "method_version": "pls_pm_v1",
+      "moderation": {
+        "estimates": [],
+        "method_version": "pls_two_stage_moderation_v1",
+        "moderator_score_levels": [
+          -1.0,
+          0.0,
+          1.0
+        ],
+        "warnings": []
+      },
+      "omitted_observations": 0,
+      "outer_estimates": [
+        {
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9999999999999999,
+          "weight": 1.0000000000000002
+        },
+        {
+          "construct": "z",
+          "indicator": "z1",
+          "loading": 0.9999999999999998,
+          "weight": 1.0000000000000002
+        },
+        {
+          "construct": "hoc",
+          "indicator": "__qpls_hoc_hoc_x",
+          "loading": 0.7040187436136761,
+          "weight": 0.580926218141614
+        },
+        {
+          "construct": "hoc",
+          "indicator": "__qpls_hoc_hoc_z",
+          "loading": 0.8199801073589417,
+          "weight": 0.7207699899882842
+        },
+        {
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 1.0000000000000002,
+          "weight": 1.0
+        }
+      ],
+      "paths": [
+        {
+          "coefficient": 0.9852891045860911,
+          "source": "hoc",
+          "target": "y"
+        }
+      ],
+      "r_squared": {
+        "y": 0.9707946196160608
+      },
+      "transforms": [
+        {
+          "indicator": "x1",
+          "mean": -0.08495475550906667,
+          "scale": 0.9436222017291348
+        },
+        {
+          "indicator": "z1",
+          "mean": -0.11286871852689999,
+          "scale": 0.924656688420165
+        },
+        {
+          "indicator": "__qpls_hoc_hoc_x",
+          "mean": 1.1102230246251566e-17,
+          "scale": 1.0000000000000002
+        },
+        {
+          "indicator": "__qpls_hoc_hoc_z",
+          "mean": -2.3136874360840665e-17,
+          "scale": 0.9999999999999999
+        },
+        {
+          "indicator": "y1",
+          "mean": -0.10700308042604163,
+          "scale": 0.74610356969138
+        }
+      ],
+      "used_observations": 120,
+      "warnings": [
+        "Two-stage higher-order constructs are experimental; lower-order component scores are used as generated HOC indicators in stage 2."
+      ]
+    },
+    "assessment": {
+      "blindfolding": {
+        "constructs": [
+          {
+            "construct": "y",
+            "observation_sum_squares": null,
+            "prediction_error_sum_squares": null,
+            "q_squared": null
+          }
+        ],
+        "settings": {
+          "missing_value_treatment": "indicator_mean_replacement",
+          "omission_distance": 7,
+          "selection": "preferred_7_then_smallest_valid_5_to_12"
+        }
+      },
+      "construct_quality": [
+        {
+          "ave": 0.9999999999999998,
+          "construct": "x",
+          "cronbach_alpha": null,
+          "normalized_weight_norm_squared": null,
+          "off_diagonal_denominator": null,
+          "off_diagonal_numerator": null,
+          "rho_a": null,
+          "rho_a_indicator_count": 1,
+          "rho_a_reason": "rho_a.single_indicator_not_identified",
+          "rho_a_status": "not_applicable",
+          "rho_a_warning_codes": [],
+          "rho_c": 0.9999999999999998,
+          "score_variance_before_normalization": null
+        },
+        {
+          "ave": 0.9999999999999996,
+          "construct": "z",
+          "cronbach_alpha": null,
+          "normalized_weight_norm_squared": null,
+          "off_diagonal_denominator": null,
+          "off_diagonal_numerator": null,
+          "rho_a": null,
+          "rho_a_indicator_count": 1,
+          "rho_a_reason": "rho_a.single_indicator_not_identified",
+          "rho_a_status": "not_applicable",
+          "rho_a_warning_codes": [],
+          "rho_c": 0.9999999999999996,
+          "score_variance_before_normalization": null
+        },
+        {
+          "ave": 0.5840048839118803,
+          "construct": "hoc",
+          "cronbach_alpha": 0.2917359717178847,
+          "normalized_weight_norm_squared": 0.8569846493920301,
+          "off_diagonal_denominator": 0.3506431364922305,
+          "off_diagonal_numerator": 0.14301535060796972,
+          "rho_a": 0.2995459128460562,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.7362581430766126,
+          "score_variance_before_normalization": 0.9999999999999996
+        },
+        {
+          "ave": 1.0000000000000004,
+          "construct": "y",
+          "cronbach_alpha": null,
+          "normalized_weight_norm_squared": null,
+          "off_diagonal_denominator": null,
+          "off_diagonal_numerator": null,
+          "rho_a": null,
+          "rho_a_indicator_count": 1,
+          "rho_a_reason": "rho_a.single_indicator_not_identified",
+          "rho_a_status": "not_applicable",
+          "rho_a_warning_codes": [],
+          "rho_c": 1.0000000000000004,
+          "score_variance_before_normalization": null
+        }
+      ],
+      "cross_loadings": [
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 1.0000000000000002
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "z",
+          "indicator": "x1",
+          "loading": 0.170779204436719
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "hoc",
+          "indicator": "x1",
+          "loading": 0.7040187436136754
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x1",
+          "loading": 0.6679002636854681
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "x",
+          "indicator": "z1",
+          "loading": 0.17077920443671904
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "z",
+          "indicator": "z1",
+          "loading": 0.9999999999999999
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "hoc",
+          "indicator": "z1",
+          "loading": 0.8199801073589411
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "y",
+          "indicator": "z1",
+          "loading": 0.8286809087559446
+        },
+        {
+          "assigned_construct": "hoc",
+          "construct": "x",
+          "indicator": "__qpls_hoc_hoc_x",
+          "loading": 1.0
+        },
+        {
+          "assigned_construct": "hoc",
+          "construct": "z",
+          "indicator": "__qpls_hoc_hoc_x",
+          "loading": 0.17077920443671912
+        },
+        {
+          "assigned_construct": "hoc",
+          "construct": "hoc",
+          "indicator": "__qpls_hoc_hoc_x",
+          "loading": 0.7040187436136758
+        },
+        {
+          "assigned_construct": "hoc",
+          "construct": "y",
+          "indicator": "__qpls_hoc_hoc_x",
+          "loading": 0.6679002636854686
+        },
+        {
+          "assigned_construct": "hoc",
+          "construct": "x",
+          "indicator": "__qpls_hoc_hoc_z",
+          "loading": 0.17077920443671912
+        },
+        {
+          "assigned_construct": "hoc",
+          "construct": "z",
+          "indicator": "__qpls_hoc_hoc_z",
+          "loading": 1.0
+        },
+        {
+          "assigned_construct": "hoc",
+          "construct": "hoc",
+          "indicator": "__qpls_hoc_hoc_z",
+          "loading": 0.8199801073589416
+        },
+        {
+          "assigned_construct": "hoc",
+          "construct": "y",
+          "indicator": "__qpls_hoc_hoc_z",
+          "loading": 0.8286809087559451
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y1",
+          "loading": 0.6679002636854685
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "z",
+          "indicator": "y1",
+          "loading": 0.8286809087559448
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "hoc",
+          "indicator": "y1",
+          "loading": 0.9852891045860906
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 1.0000000000000002
+        }
+      ],
+      "f_squared": [
+        {
+          "excluded_r_squared": 0.0,
+          "f_squared": 33.24026624046052,
+          "included_r_squared": 0.9707946196160608,
+          "source_construct": "hoc",
+          "target_construct": "y"
+        }
+      ],
+      "formative_indicator_vif": [],
+      "fornell_larcker": {
+        "constructs": [
+          "x",
+          "z",
+          "hoc",
+          "y"
+        ],
+        "values": [
+          [
+            0.9999999999999999,
+            0.17077920443671912,
+            0.7040187436136758,
+            0.6679002636854686
+          ],
+          [
+            0.17077920443671912,
+            0.9999999999999998,
+            0.8199801073589416,
+            0.8286809087559451
+          ],
+          [
+            0.7040187436136758,
+            0.8199801073589416,
+            0.7642021224204237,
+            0.9852891045860905
+          ],
+          [
+            0.6679002636854686,
+            0.8286809087559451,
+            0.9852891045860905,
+            1.0000000000000002
+          ]
+        ]
+      },
+      "htmt": null,
+      "htmt_original": {
+        "absolute_correlations": false,
+        "cells": [
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "z",
+          "hoc",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_original_method_version": "henseler_et_al_htmt_v1",
+      "htmt_plus": {
+        "absolute_correlations": true,
+        "cells": [
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "z",
+          "hoc",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
+      "method_version": "pls_assessment_v7",
+      "model_fit": {
+        "estimated": {
+          "d_uls": 0.8596413279449803,
+          "srmr": 0.23939386346144859
+        },
+        "saturated": {
+          "d_uls": 0.8585465404503667,
+          "srmr": 0.23924137608286836
+        }
+      },
+      "r_squared": {
+        "y": 0.9707946196160608
+      },
+      "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
+      "structural_quality": [
+        {
+          "adjusted_r_squared": 0.9705471163924682,
+          "construct": "y",
+          "predictor_count": 1,
+          "r_squared": 0.9707946196160608
+        }
+      ],
+      "structural_vif": [
+        {
+          "predictor_construct": "hoc",
+          "target_construct": "y",
+          "vif": 1.0
+        }
+      ],
+      "warnings": [
+        "rho_a.single_indicator_not_identified for construct 'x'",
+        "Cronbach alpha is undefined for single-item construct 'x'",
+        "rho_a.single_indicator_not_identified for construct 'z'",
+        "Cronbach alpha is undefined for single-item construct 'z'",
+        "rho_a.two_indicator_limited_information for construct 'hoc'",
+        "rho_a.single_indicator_not_identified for construct 'y'",
+        "Cronbach alpha is undefined for single-item construct 'y'",
+        "Blindfolding Q-squared is unavailable for 'y' because a round failed: indicator is assigned more than once: __qpls_hoc_hoc_x"
+      ]
+    }
+  }
+}

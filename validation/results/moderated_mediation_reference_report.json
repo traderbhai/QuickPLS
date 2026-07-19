@@ -1,0 +1,51 @@
+{
+  "checks": {
+    "has_experimental_warning": true,
+    "invalid_guard": true,
+    "method_version": true,
+    "payload_version": true,
+    "reference_delta": 4.674038933671909e-14,
+    "stage": true
+  },
+  "estimate": {
+    "conditional_indirect_effects": [
+      {
+        "first_stage_effect": -0.21766224292996217,
+        "indirect_effect": -0.17225944716332578,
+        "moderator_score": -1.0,
+        "second_stage_effect": 0.7914071124349951
+      },
+      {
+        "first_stage_effect": 0.5044714264115577,
+        "indirect_effect": 0.399242274882334,
+        "moderator_score": 0.0,
+        "second_stage_effect": 0.7914071124349951
+      },
+      {
+        "first_stage_effect": 1.2266050957530776,
+        "indirect_effect": 0.9707439969279938,
+        "moderator_score": 1.0,
+        "second_stage_effect": 0.7914071124349951
+      }
+    ],
+    "index_of_moderated_mediation": 0.5715017220456597,
+    "interaction": "x_by_w_to_m",
+    "mediator": "m",
+    "moderated_stage": "first_stage",
+    "moderator": "w",
+    "predictor": "x",
+    "target": "y",
+    "warning": null
+  },
+  "guard_checks": {
+    "result_not_written": true,
+    "run_error_mentions_code": true,
+    "run_exit_nonzero": true,
+    "validation_code_present": true,
+    "validation_exit_nonzero": true
+  },
+  "kind": "moderated_mediation_reference_v1",
+  "passed": true,
+  "schema_version": 1,
+  "tolerance": 1e-10
+}

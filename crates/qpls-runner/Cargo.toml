@@ -1,0 +1,16 @@
+[package]
+name = "qpls-runner"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+chrono.workspace = true
+qpls-assessment = { path = "../qpls-assessment" }
+qpls-core = { path = "../qpls-core" }
+qpls-data = { path = "../qpls-data" }
+qpls-estimation = { path = "../qpls-estimation" }
+qpls-resampling = { path = "../qpls-resampling" }
+serde_json.workspace = true
+thiserror.workspace = true
+

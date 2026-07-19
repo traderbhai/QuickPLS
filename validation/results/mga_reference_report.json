@@ -1,0 +1,113 @@
+{
+  "checks": {
+    "method_version": true,
+    "provenance_version": true,
+    "group_column": true,
+    "group_counts": true,
+    "independent_reference_path_agreement": true,
+    "path_difference_direction": true,
+    "p_values_available": true,
+    "warnings_present": true
+  },
+  "passed": true,
+  "max_path_delta": 3.3306690738754696e-16,
+  "path_deltas": {
+    "A.x->y": 0.0,
+    "A.z->y": 5.551115123125783e-17,
+    "B.x->y": 1.1102230246251565e-16,
+    "B.z->y": 3.3306690738754696e-16
+  },
+  "quickpls_comparisons": [
+    {
+      "coefficient_a": 0.9269899456146468,
+      "coefficient_b": -0.5790291529885401,
+      "difference": 1.5060190986031867,
+      "group_a": "A",
+      "group_b": "B",
+      "p_value_two_sided": 0.0,
+      "source": "x",
+      "standard_error": 0.041068517562936384,
+      "t_statistic": 36.67089020915482,
+      "target": "y",
+      "warning": null
+    },
+    {
+      "coefficient_a": 0.29488556537642496,
+      "coefficient_b": 0.8929331437720532,
+      "difference": -0.5980475783956283,
+      "group_a": "A",
+      "group_b": "B",
+      "p_value_two_sided": 0.0,
+      "source": "z",
+      "standard_error": 0.04106851756293638,
+      "t_statistic": -14.56219055092838,
+      "target": "y",
+      "warning": null
+    }
+  ],
+  "reference": {
+    "A": {
+      "paths": {
+        "x->y": 0.9269899456146468,
+        "z->y": 0.2948855653764249
+      },
+      "r_squared": {
+        "y": 0.9327984733342799
+      }
+    },
+    "B": {
+      "paths": {
+        "x->y": -0.5790291529885402,
+        "z->y": 0.8929331437720536
+      },
+      "r_squared": {
+        "y": 0.9237489745807117
+      }
+    }
+  },
+  "quickpls": {
+    "groups": [
+      {
+        "group": "A",
+        "observations": 90,
+        "paths": [
+          {
+            "coefficient": 0.9269899456146468,
+            "source": "x",
+            "target": "y"
+          },
+          {
+            "coefficient": 0.29488556537642496,
+            "source": "z",
+            "target": "y"
+          }
+        ],
+        "r_squared": {
+          "y": 0.9327984733342799
+        }
+      },
+      {
+        "group": "B",
+        "observations": 90,
+        "paths": [
+          {
+            "coefficient": -0.5790291529885401,
+            "source": "x",
+            "target": "y"
+          },
+          {
+            "coefficient": 0.8929331437720532,
+            "source": "z",
+            "target": "y"
+          }
+        ],
+        "r_squared": {
+          "y": 0.9237489745807118
+        }
+      }
+    ],
+    "warnings": [
+      "Bounded MGA is experimental; this preview compares two observed groups with approximate normal path-difference diagnostics and does not implement permutation MGA, MICOM, or publication-ready invariance testing."
+    ]
+  }
+}

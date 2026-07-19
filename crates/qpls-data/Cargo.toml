@@ -1,0 +1,21 @@
+[package]
+name = "qpls-data"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+ambers.workspace = true
+arrow.workspace = true
+calamine.workspace = true
+csv.workspace = true
+faer.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+uuid.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+rust_xlsxwriter.workspace = true

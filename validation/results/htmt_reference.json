@@ -1,0 +1,774 @@
+{
+  "schema_version": 1,
+  "method_versions": {
+    "htmt_plus": "ringle_et_al_htmt_plus_v1",
+    "htmt_original": "henseler_et_al_htmt_v1"
+  },
+  "source": "validation/fixtures/corporate_reputation.csv",
+  "correlation": "Pearson sample correlation on complete cases",
+  "fixtures": [
+    {
+      "name": "baseline",
+      "constructs": [
+        "comp",
+        "like",
+        "satisfaction",
+        "loyalty"
+      ],
+      "htmt_plus": [
+        [
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.4975017689305094,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.6138730929271498,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.13333903896654514,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "available",
+            "value": 0.4975017689305094,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.5436164388760399,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.9579766376208555,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "available",
+            "value": 0.6138730929271498,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.5436164388760399,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.1201635784458341,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "available",
+            "value": 0.13333903896654514,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.9579766376208555,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.1201635784458341,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          }
+        ]
+      ],
+      "htmt_original": [
+        [
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": -0.4975017689305094,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.6138730929271498,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": -0.020618908089415394,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "available",
+            "value": -0.4975017689305094,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.5436164388760399,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.9579766376208555,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "available",
+            "value": 0.6138730929271498,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.5436164388760399,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.1201635784458341,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "available",
+            "value": -0.020618908089415394,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.9579766376208555,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.1201635784458341,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          }
+        ]
+      ]
+    },
+    {
+      "name": "positive_affine",
+      "constructs": [
+        "comp",
+        "like",
+        "satisfaction",
+        "loyalty"
+      ],
+      "htmt_plus": [
+        [
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.49750176893050946,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.6138730929271498,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.13333903896654517,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "available",
+            "value": 0.49750176893050946,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.5436164388760398,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.9579766376208554,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "available",
+            "value": 0.6138730929271498,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.5436164388760398,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.120163578445834,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "available",
+            "value": 0.13333903896654517,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.9579766376208554,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.120163578445834,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          }
+        ]
+      ],
+      "htmt_original": [
+        [
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": -0.49750176893050946,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.6138730929271498,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": -0.0206189080894154,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "available",
+            "value": -0.49750176893050946,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.5436164388760398,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.9579766376208554,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "available",
+            "value": 0.6138730929271498,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.5436164388760398,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.120163578445834,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "available",
+            "value": -0.0206189080894154,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.9579766376208554,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.120163578445834,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          }
+        ]
+      ]
+    },
+    {
+      "name": "reverse_COMP1",
+      "constructs": [
+        "comp",
+        "like",
+        "satisfaction",
+        "loyalty"
+      ],
+      "htmt_plus": [
+        [
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.4975017689305094,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.6138730929271498,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.13333903896654514,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "available",
+            "value": 0.4975017689305094,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.5436164388760399,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.9579766376208555,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "available",
+            "value": 0.6138730929271498,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.5436164388760399,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.1201635784458341,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "available",
+            "value": 0.13333903896654514,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.9579766376208555,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.1201635784458341,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          }
+        ]
+      ],
+      "htmt_original": [
+        [
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "unavailable",
+            "value": null,
+            "reason": "htmt.original_nonpositive_monotrait_mean"
+          },
+          {
+            "status": "unavailable",
+            "value": null,
+            "reason": "htmt.original_nonpositive_monotrait_mean"
+          },
+          {
+            "status": "unavailable",
+            "value": null,
+            "reason": "htmt.original_nonpositive_monotrait_mean"
+          }
+        ],
+        [
+          {
+            "status": "unavailable",
+            "value": null,
+            "reason": "htmt.original_nonpositive_monotrait_mean"
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.5436164388760399,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.9579766376208555,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "unavailable",
+            "value": null,
+            "reason": "htmt.original_nonpositive_monotrait_mean"
+          },
+          {
+            "status": "available",
+            "value": 0.5436164388760399,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.1201635784458341,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "unavailable",
+            "value": null,
+            "reason": "htmt.original_nonpositive_monotrait_mean"
+          },
+          {
+            "status": "available",
+            "value": 0.9579766376208555,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.1201635784458341,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          }
+        ]
+      ]
+    },
+    {
+      "name": "permuted_constructs",
+      "constructs": [
+        "loyalty",
+        "satisfaction",
+        "like",
+        "comp"
+      ],
+      "htmt_plus": [
+        [
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.1201635784458341,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.9579766376208555,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.13333903896654514,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "available",
+            "value": 1.1201635784458341,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.5436164388760399,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.6138730929271498,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "available",
+            "value": 0.9579766376208555,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.5436164388760399,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.4975017689305094,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "available",
+            "value": 0.13333903896654514,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.6138730929271498,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.4975017689305094,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          }
+        ]
+      ],
+      "htmt_original": [
+        [
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.1201635784458341,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.9579766376208555,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": -0.020618908089415394,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "available",
+            "value": 1.1201635784458341,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.5436164388760399,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.6138730929271498,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "available",
+            "value": 0.9579766376208555,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.5436164388760399,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": -0.4975017689305094,
+            "reason": null
+          }
+        ],
+        [
+          {
+            "status": "available",
+            "value": -0.020618908089415394,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 0.6138730929271498,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": -0.4975017689305094,
+            "reason": null
+          },
+          {
+            "status": "available",
+            "value": 1.0,
+            "reason": null
+          }
+        ]
+      ]
+    }
+  ],
+  "metamorphic_checks": {
+    "positive_affine_htmt_plus_max_delta": 2.220446049250313e-16,
+    "positive_affine_original_max_delta": 2.220446049250313e-16,
+    "reverse_one_indicator_plus_max_delta": 0.0,
+    "reverse_one_indicator_original_has_unavailable": true
+  },
+  "note": "Independent formula fixture for current QuickPLS validation. This is not a second SEM-engine reference."
+}

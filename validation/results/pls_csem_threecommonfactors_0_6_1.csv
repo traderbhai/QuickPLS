@@ -1,0 +1,22 @@
+kind,source,target,indicator,value,reference,csem_version,input
+path,eta1,eta2,,0.504606236872253,cSEM threecommonfactors,0.6.1,D:\QuickPLS\validation\fixtures\csem_threecommonfactors.csv
+path,eta1,eta3,,0.358855683178331,cSEM threecommonfactors,0.6.1,D:\QuickPLS\validation\fixtures\csem_threecommonfactors.csv
+path,eta2,eta3,,0.297268003681778,cSEM threecommonfactors,0.6.1,D:\QuickPLS\validation\fixtures\csem_threecommonfactors.csv
+loading,eta1,,y11,0.794178676780145,cSEM threecommonfactors,0.6.1,D:\QuickPLS\validation\fixtures\csem_threecommonfactors.csv
+weight,eta1,,y11,0.395556302849714,cSEM threecommonfactors,0.6.1,D:\QuickPLS\validation\fixtures\csem_threecommonfactors.csv
+loading,eta1,,y12,0.777408729709763,cSEM threecommonfactors,0.6.1,D:\QuickPLS\validation\fixtures\csem_threecommonfactors.csv
+weight,eta1,,y12,0.387328657449261,cSEM threecommonfactors,0.6.1,D:\QuickPLS\validation\fixtures\csem_threecommonfactors.csv
+loading,eta1,,y13,0.847114189359189,cSEM threecommonfactors,0.6.1,D:\QuickPLS\validation\fixtures\csem_threecommonfactors.csv
+weight,eta1,,y13,0.454183088981185,cSEM threecommonfactors,0.6.1,D:\QuickPLS\validation\fixtures\csem_threecommonfactors.csv
+loading,eta2,,y21,0.685444997700518,cSEM threecommonfactors,0.6.1,D:\QuickPLS\validation\fixtures\csem_threecommonfactors.csv
+weight,eta2,,y21,0.305809828298129,cSEM threecommonfactors,0.6.1,D:\QuickPLS\validation\fixtures\csem_threecommonfactors.csv
+loading,eta2,,y22,0.852778001473804,cSEM threecommonfactors,0.6.1,D:\QuickPLS\validation\fixtures\csem_threecommonfactors.csv
+weight,eta2,,y22,0.447289819860053,cSEM threecommonfactors,0.6.1,D:\QuickPLS\validation\fixtures\csem_threecommonfactors.csv
+loading,eta2,,y23,0.863651758240013,cSEM threecommonfactors,0.6.1,D:\QuickPLS\validation\fixtures\csem_threecommonfactors.csv
+weight,eta2,,y23,0.47350712875167,cSEM threecommonfactors,0.6.1,D:\QuickPLS\validation\fixtures\csem_threecommonfactors.csv
+loading,eta3,,y31,0.876446219986725,cSEM threecommonfactors,0.6.1,D:\QuickPLS\validation\fixtures\csem_threecommonfactors.csv
+weight,eta3,,y31,0.439982540222843,cSEM threecommonfactors,0.6.1,D:\QuickPLS\validation\fixtures\csem_threecommonfactors.csv
+loading,eta3,,y32,0.799916475254252,cSEM threecommonfactors,0.6.1,D:\QuickPLS\validation\fixtures\csem_threecommonfactors.csv
+weight,eta3,,y32,0.352118201031218,cSEM threecommonfactors,0.6.1,D:\QuickPLS\validation\fixtures\csem_threecommonfactors.csv
+loading,eta3,,y33,0.831929651119436,cSEM threecommonfactors,0.6.1,D:\QuickPLS\validation\fixtures\csem_threecommonfactors.csv
+weight,eta3,,y33,0.399930228562085,cSEM threecommonfactors,0.6.1,D:\QuickPLS\validation\fixtures\csem_threecommonfactors.csv

@@ -1,0 +1,240 @@
+{
+  "schema_version": 1,
+  "harness_version": "qpls_monte_carlo_v1",
+  "engine_versions": {
+    "pls": "pls_pm_v1",
+    "resampling": "indexed_resampling_v4"
+  },
+  "mode": "studentized-sensitivity",
+  "configuration": {
+    "simulations_per_scenario": 4,
+    "sample_size": 100,
+    "bootstrap_replicates": 999,
+    "studentized_inner_replicates": 99,
+    "workers": 12,
+    "confidence_level": 0.95,
+    "master_seed": 20260718041
+  },
+  "dgp": {
+    "description": "Bivariate generated as x~N(0,1), y=beta*x+sqrt(1-beta^2)*e with independent unit-variance e. Normal modes use e~N(0,1); studentized-sensitivity also includes standardized t(3) errors.",
+    "variables": "Single-item reflective constructs x={x1}, y={y1}",
+    "evaluated_path": "x -> y; population PLS path equals beta",
+    "alternatives": [
+      0.35,
+      0.0
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "coverage_beta_0_35",
+      "error_distribution": "normal",
+      "true_path": 0.35,
+      "requested_simulations": 4,
+      "completed_simulations": 4,
+      "failed_simulations": 0,
+      "mean_estimate": 0.33480416635858723,
+      "bias": -0.015195833641412748,
+      "mean_usable_bootstrap_rate": 1.0,
+      "percentile": {
+        "available": 4,
+        "coverage_rate": 1.0,
+        "exclusion_of_zero_rate": 1.0
+      },
+      "bca": {
+        "available": 4,
+        "coverage_rate": 1.0,
+        "exclusion_of_zero_rate": 1.0
+      },
+      "studentized": {
+        "available": 4,
+        "coverage_rate": 1.0,
+        "exclusion_of_zero_rate": 0.75
+      },
+      "normal_reference_available": 4,
+      "normal_reference_type_i_rate": null,
+      "failures": []
+    },
+    {
+      "name": "null_beta_0",
+      "error_distribution": "normal",
+      "true_path": 0.0,
+      "requested_simulations": 4,
+      "completed_simulations": 4,
+      "failed_simulations": 0,
+      "mean_estimate": 0.0445325634277937,
+      "bias": 0.0445325634277937,
+      "mean_usable_bootstrap_rate": 1.0,
+      "percentile": {
+        "available": 4,
+        "coverage_rate": 1.0,
+        "exclusion_of_zero_rate": 0.0
+      },
+      "bca": {
+        "available": 4,
+        "coverage_rate": 1.0,
+        "exclusion_of_zero_rate": 0.0
+      },
+      "studentized": {
+        "available": 4,
+        "coverage_rate": 1.0,
+        "exclusion_of_zero_rate": 0.0
+      },
+      "normal_reference_available": 4,
+      "normal_reference_type_i_rate": 0.0,
+      "failures": []
+    },
+    {
+      "name": "heavy_tail_coverage_beta_0_35",
+      "error_distribution": "standardized_t3",
+      "true_path": 0.35,
+      "requested_simulations": 4,
+      "completed_simulations": 4,
+      "failed_simulations": 0,
+      "mean_estimate": 0.3976542083228687,
+      "bias": 0.04765420832286871,
+      "mean_usable_bootstrap_rate": 1.0,
+      "percentile": {
+        "available": 4,
+        "coverage_rate": 1.0,
+        "exclusion_of_zero_rate": 1.0
+      },
+      "bca": {
+        "available": 4,
+        "coverage_rate": 1.0,
+        "exclusion_of_zero_rate": 1.0
+      },
+      "studentized": {
+        "available": 4,
+        "coverage_rate": 1.0,
+        "exclusion_of_zero_rate": 1.0
+      },
+      "normal_reference_available": 4,
+      "normal_reference_type_i_rate": null,
+      "failures": []
+    },
+    {
+      "name": "heavy_tail_null_beta_0",
+      "error_distribution": "standardized_t3",
+      "true_path": 0.0,
+      "requested_simulations": 4,
+      "completed_simulations": 4,
+      "failed_simulations": 0,
+      "mean_estimate": -0.06275980914715526,
+      "bias": -0.06275980914715526,
+      "mean_usable_bootstrap_rate": 1.0,
+      "percentile": {
+        "available": 4,
+        "coverage_rate": 1.0,
+        "exclusion_of_zero_rate": 0.0
+      },
+      "bca": {
+        "available": 4,
+        "coverage_rate": 1.0,
+        "exclusion_of_zero_rate": 0.0
+      },
+      "studentized": {
+        "available": 4,
+        "coverage_rate": 1.0,
+        "exclusion_of_zero_rate": 0.0
+      },
+      "normal_reference_available": 4,
+      "normal_reference_type_i_rate": 0.0,
+      "failures": []
+    }
+  ],
+  "qualification": {
+    "evaluated": false,
+    "passed": null,
+    "minimum_simulations_per_scenario": 1000,
+    "thresholds": {
+      "coverage_lower": 0.925,
+      "coverage_upper": 0.975,
+      "type_i_lower": 0.025,
+      "type_i_upper": 0.075,
+      "maximum_absolute_bias": 0.03,
+      "minimum_bca_availability": 1.0,
+      "minimum_studentized_availability": 0.99,
+      "minimum_normal_reference_availability": 1.0,
+      "minimum_usable_bootstrap_rate": 0.99
+    },
+    "checks": [
+      {
+        "metric": "percentile_coverage",
+        "observed": 1.0,
+        "passed": null
+      },
+      {
+        "metric": "bca_coverage",
+        "observed": 1.0,
+        "passed": null
+      },
+      {
+        "metric": "percentile_type_i",
+        "observed": 0.0,
+        "passed": null
+      },
+      {
+        "metric": "bca_type_i",
+        "observed": 0.0,
+        "passed": null
+      },
+      {
+        "metric": "normal_reference_type_i",
+        "observed": 0.0,
+        "passed": null
+      },
+      {
+        "metric": "absolute_bias",
+        "observed": 0.015195833641412748,
+        "passed": null
+      },
+      {
+        "metric": "alternative_bca_availability",
+        "observed": 1.0,
+        "passed": null
+      },
+      {
+        "metric": "null_bca_availability",
+        "observed": 1.0,
+        "passed": null
+      },
+      {
+        "metric": "null_normal_reference_availability",
+        "observed": 1.0,
+        "passed": null
+      },
+      {
+        "metric": "alternative_usable_bootstrap_rate",
+        "observed": 1.0,
+        "passed": null
+      },
+      {
+        "metric": "null_usable_bootstrap_rate",
+        "observed": 1.0,
+        "passed": null
+      },
+      {
+        "metric": "studentized_coverage",
+        "observed": 1.0,
+        "passed": null
+      },
+      {
+        "metric": "studentized_type_i",
+        "observed": 0.0,
+        "passed": null
+      },
+      {
+        "metric": "alternative_studentized_availability",
+        "observed": 1.0,
+        "passed": null
+      },
+      {
+        "metric": "null_studentized_availability",
+        "observed": 1.0,
+        "passed": null
+      }
+    ],
+    "note": "This mode is a deterministic harness check only. Its simulation count is insufficient for coverage or type-I qualification."
+  },
+  "elapsed_seconds": 8.1079863
+}

@@ -1,0 +1,935 @@
+{
+  "schema_version": 1,
+  "id": "a6ab2ab9-0aec-4625-a4c7-9649c1954f95",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "00000000-0000-0000-0000-000000000063",
+    "dataset_fingerprint": "v2:90afe562bf568383ac4b26d4b874f363fda60659872b22b5654780fda5ecc2d1",
+    "method": "predict",
+    "method_version": "pls_pm_v1+plspredict_holdout_v1+pls_mediation_v1+pls_assessment_v7",
+    "engine_version": "0.3.0-alpha.1",
+    "seed": 20260719,
+    "settings": {
+      "method": "predict",
+      "weighting_scheme": "path",
+      "tolerance": 1e-7,
+      "max_iterations": 3000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260719,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion",
+      "case_weight_column": null
+    },
+    "started_at": "2026-07-19T05:39:23.113621700Z",
+    "completed_at": "2026-07-19T05:39:23.405488600Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "PLSpredict holdout v1 is experimental and must not be treated as publication-validated."
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.two_indicator_limited_information for construct 'x'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.two_indicator_limited_information for construct 'z'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.two_indicator_limited_information for construct 'y'"
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "cca": null,
+      "construct_scores": {
+        "x": [
+          -1.7103459115594282,
+          -1.6501106859397674,
+          -1.6092395892955496,
+          -1.5490043636758888,
+          -1.5425438332221897,
+          -1.5016727365779714,
+          -1.441437510958311,
+          -1.3812022853386505,
+          -1.3403311886944325,
+          -1.3338706582407334,
+          -1.2736354326210726,
+          -1.2327643359768545,
+          -1.1725291103571938,
+          -1.1122938847375332,
+          -1.1251974832592768,
+          -1.064962257639616,
+          -1.0047270320199557,
+          -0.9638559353757375,
+          -0.9036207097560769,
+          -0.8971601793023778,
+          -0.8562890826581597,
+          -0.7960538570384992,
+          -0.7358186314188385,
+          -0.6949475347746205,
+          -0.6884870043209215,
+          -0.6282517787012607,
+          -0.5873806820570426,
+          -0.5271454564373821,
+          -0.4669102308177214,
+          -0.47981382933946487,
+          -0.4195786037198042,
+          -0.35934337810014366,
+          -0.3184722814559256,
+          -0.25823705583626494,
+          -0.2517765253825659,
+          -0.21090542873834775,
+          -0.1506702031186871,
+          -0.09043497749902646,
+          -0.04956388085480847,
+          -0.04310335040110922,
+          0.017131875218551303,
+          0.058002971862769405,
+          0.11823819748243006,
+          0.17847342310209066,
+          0.16556982458034716,
+          0.22580505020000782,
+          0.28604027581966834,
+          0.3269113724638864,
+          0.38714659808354707,
+          0.3936071285372461,
+          0.43447822518146423,
+          0.494713450801125,
+          0.5549486764207856,
+          0.5958197730650039,
+          0.6022803035187029,
+          0.6625155291383633,
+          0.7033866257825814,
+          0.7636218514022419,
+          0.8238570770219026,
+          0.8109534785001591,
+          0.8711887041198196,
+          0.9314239297394804,
+          0.9722950263836985,
+          1.0325302520033592,
+          1.0389907824570583,
+          1.0798618791012766,
+          1.1400971047209374,
+          1.2003323303405977,
+          1.2412034269848158,
+          1.2476639574385147,
+          1.3078991830581754,
+          1.3487702797023935,
+          1.4090055053220543,
+          1.4692407309417148,
+          1.4563371324199712,
+          1.516572358039632,
+          1.5768075836592923,
+          1.6176786803035108,
+          1.6779139059231714,
+          1.6843744363768705
+        ],
+        "y": [
+          -1.8064397328849966,
+          -1.5591627296808241,
+          -1.311885726476652,
+          -1.7327388156110106,
+          -1.4854618124068382,
+          -1.2381848092026657,
+          -1.6449065426034923,
+          -1.4342394074726643,
+          -1.1869624042684919,
+          -1.5712056253295064,
+          -1.323928622125334,
+          -1.1132614869945057,
+          -0.865984483790333,
+          -1.27270621719116,
+          -1.0254292139869876,
+          -0.814762078856159,
+          -1.1990052999171739,
+          -0.9517282967130013,
+          -0.7044512935088288,
+          -1.1253043826431877,
+          -0.9005058917788274,
+          -0.6532288885746549,
+          -1.0374721096356696,
+          -0.8268049745048413,
+          -0.5795279713006688,
+          -0.3322509680964964,
+          -0.716494189157511,
+          -0.528305566366495,
+          -0.2810285631623224,
+          -0.665271784223337,
+          -0.4179947810191647,
+          -0.20732764588833624,
+          -0.591570866949351,
+          -0.3442938637451785,
+          -0.11949537288081825,
+          0.09117176225001006,
+          -0.2930714588110046,
+          -0.045794455606831964,
+          0.20148254759734038,
+          -0.21937054153701846,
+          0.027906461667154183,
+          0.25270495253151437,
+          -0.13153826852950048,
+          0.07912886660132798,
+          0.3264058698055005,
+          -0.05783735125551433,
+          0.18943965194865828,
+          0.4001067870794866,
+          0.6249052779438468,
+          0.24066205688283226,
+          0.4879390600870046,
+          0.698606195217833,
+          0.3143629741568184,
+          0.5616399773609909,
+          0.8089169805651631,
+          0.3655853790909922,
+          0.6128623822951647,
+          0.8601393854993374,
+          1.1074163887035096,
+          0.6865632995691507,
+          0.9338403027733232,
+          1.181117305977496,
+          0.7743955725766688,
+          0.9850627077074974,
+          1.2323397109116694,
+          0.8480964898506552,
+          1.0953734930548276,
+          1.3060406281856558,
+          0.9217974071246411,
+          1.1465958979890014,
+          1.3938729011931739,
+          1.604540036324002,
+          1.2202968152629876,
+          1.46757381846716,
+          1.7148508216713325,
+          1.2939977325369736,
+          1.5187962234013337,
+          1.7660732266055064,
+          1.3818300055444914,
+          1.5924971406753197
+        ],
+        "z": [
+          -0.6447271275465091,
+          0.4562311046078281,
+          1.557189336762165,
+          -0.8819439834242349,
+          0.2190142487301022,
+          1.1588867481581426,
+          -1.2193691035326222,
+          -0.17928833987392032,
+          0.9216698922804166,
+          -1.4565859594103483,
+          -0.3556277272560109,
+          0.5233673036763942,
+          1.6243255358307311,
+          -0.7539303158600333,
+          0.34702791629430374,
+          1.3871086799530057,
+          -0.9911471717377593,
+          -0.05127467230971877,
+          1.0496835598446181,
+          -1.389449760341782,
+          -0.2884915281874447,
+          0.8124667039668922,
+          -1.5657891477238721,
+          -0.6867941167914673,
+          0.41416411536286984,
+          1.5151223475172069,
+          -0.8631335041735578,
+          0.17694725948514392,
+          1.277905491639481,
+          -1.2614360927775803,
+          -0.16047786062324318,
+          0.8796029030354584,
+          -1.4986529486553064,
+          -0.39769471650096905,
+          0.7032635156533679,
+          1.582258546585773,
+          -0.7959973051049918,
+          0.3049609270493455,
+          1.4059191592036828,
+          -1.0332141609827177,
+          0.06774407117161953,
+          1.0076165705996598,
+          -1.370639281091105,
+          -0.330558517432403,
+          0.770399714721934,
+          -1.6078561369688305,
+          -0.5068979048144936,
+          0.3720971261179117,
+          1.473055358272249,
+          -0.905200493418516,
+          0.19575773873582103,
+          1.2358385023945226,
+          -1.1424173492962422,
+          -0.20254484986820145,
+          0.8984133822861355,
+          -1.5407199379002645,
+          -0.4397617057459274,
+          0.6611965264084096,
+          1.7621547585627466,
+          -0.83806429434995,
+          0.2628939378043872,
+          1.3638521699587243,
+          -1.0144036817320405,
+          0.025677081926661238,
+          1.1266353140809982,
+          -1.412706270336063,
+          -0.31174803818172586,
+          0.7283327254769757,
+          -1.6499231262137888,
+          -0.5489648940594519,
+          0.5519933380948853,
+          1.4309883690272904,
+          -0.9472674826634744,
+          0.15369074949086278,
+          1.2546489816451998,
+          -1.1844843385412005,
+          -0.08352610638686318,
+          0.8563463930411772,
+          -1.5219094586495872,
+          -0.4818286949908857
+        ]
+      },
+      "control_estimates": [],
+      "converged": true,
+      "cta_pls": null,
+      "effects": [
+        {
+          "direct": 0.9923604700616113,
+          "indirect": 0.0,
+          "source": "x",
+          "target": "y",
+          "total": 0.9923604700616113
+        },
+        {
+          "direct": 0.18141045770352407,
+          "indirect": 0.0,
+          "source": "z",
+          "target": "y",
+          "total": 0.18141045770352407
+        }
+      ],
+      "endogeneity": null,
+      "iterations": 2,
+      "mediation": {
+        "estimates": [
+          {
+            "classification": "direct_only",
+            "direct": 0.9923604700616113,
+            "indirect": 0.0,
+            "source": "x",
+            "target": "y",
+            "total": 0.9923604700616113,
+            "variance_accounted_for": 0.0,
+            "warning": "direct-only structural effect; no mediated component exceeds tolerance"
+          },
+          {
+            "classification": "direct_only",
+            "direct": 0.18141045770352407,
+            "indirect": 0.0,
+            "source": "z",
+            "target": "y",
+            "total": 0.18141045770352407,
+            "variance_accounted_for": 0.0,
+            "warning": "direct-only structural effect; no mediated component exceeds tolerance"
+          }
+        ],
+        "method_version": "pls_mediation_v1",
+        "tolerance": 1e-12,
+        "warnings": [
+          "Mediation classes are descriptive effect-decomposition labels; publication inference requires validated bootstrap or permutation intervals for the relevant indirect effect."
+        ]
+      },
+      "method_version": "plspredict_holdout_v1",
+      "moderated_mediation": null,
+      "moderation": {
+        "estimates": [],
+        "method_version": "pls_two_stage_moderation_v1",
+        "moderator_score_levels": [
+          -1.0,
+          0.0,
+          1.0
+        ],
+        "warnings": []
+      },
+      "nonlinear_effects": null,
+      "omitted_observations": 0,
+      "outer_estimates": [
+        {
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9998662637876746,
+          "weight": 0.5000550668318654
+        },
+        {
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9998662764184852,
+          "weight": 0.5000786809509832
+        },
+        {
+          "construct": "z",
+          "indicator": "z1",
+          "loading": 0.9988833197555298,
+          "weight": 0.5046966899615709
+        },
+        {
+          "construct": "z",
+          "indicator": "z2",
+          "loading": 0.9988458437909332,
+          "weight": 0.4964398640130379
+        },
+        {
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9999795796397648,
+          "weight": 0.5000334110276913
+        },
+        {
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9999795758494834,
+          "weight": 0.499987011644674
+        }
+      ],
+      "paths": [
+        {
+          "coefficient": 0.9923604700616113,
+          "source": "x",
+          "target": "y"
+        },
+        {
+          "coefficient": 0.18141045770352407,
+          "source": "z",
+          "target": "y"
+        }
+      ],
+      "plsc": null,
+      "predict": {
+        "benchmark": "training-mean construct-score benchmark fixed at zero; optional LM benchmark predicts target construct scores from predecessor indicators",
+        "method_version": "plspredict_holdout_v1",
+        "repeated_kfold": {
+          "assignment": "deterministic_complete_case_index_multiplier_modulo_5",
+          "cvpat": [
+            {
+              "comparison": "pls_vs_training_mean_benchmark",
+              "loss": "squared_error_difference_pls_minus_comparison",
+              "mean_loss_difference": -0.988095482692637,
+              "observations": 240,
+              "p_value_two_sided": 0.0,
+              "preferred_model": "pls",
+              "standard_error": 0.058892299458154544,
+              "t_statistic": -16.77800819094728,
+              "target": "y",
+              "warning": null
+            },
+            {
+              "comparison": "pls_vs_lm_benchmark",
+              "loss": "squared_error_difference_pls_minus_comparison",
+              "mean_loss_difference": 0.0004275767290449777,
+              "observations": 240,
+              "p_value_two_sided": 0.0,
+              "preferred_model": "lm_benchmark",
+              "standard_error": 0.00004402286104980558,
+              "t_statistic": 9.712606560514903,
+              "target": "y",
+              "warning": null
+            },
+            {
+              "comparison": "pls_vs_model_pair:drop_z_to_y",
+              "loss": "squared_error_difference_pls_minus_comparison",
+              "mean_loss_difference": -0.03351684748719472,
+              "observations": 240,
+              "p_value_two_sided": 0.0,
+              "preferred_model": "pls",
+              "standard_error": 0.002025242778994718,
+              "t_statistic": -16.549545484039044,
+              "target": "y",
+              "warning": null
+            }
+          ],
+          "folds": 5,
+          "method_version": "plspredict_repeated_kfold_v1",
+          "repeats": 3,
+          "targets": [
+            {
+              "construct": "y",
+              "mae_benchmark": 0.8578089723764932,
+              "mae_lm": 0.009499941307094919,
+              "mae_pls": 0.01911239862745818,
+              "predictor_count": 2,
+              "q_squared_predict": 0.9994271229494464,
+              "q_squared_predict_lm": 0.9998596031982023,
+              "rmse_benchmark": 0.9943147712799514,
+              "rmse_lm": 0.011781551842565737,
+              "rmse_pls": 0.023798775028644685
+            }
+          ],
+          "total_test_observations": 240,
+          "warnings": [
+            "Repeated k-fold PLSpredict and CVPAT are experimental; fold assignment is deterministic for reproducibility and is not yet a seeded randomized plan."
+          ]
+        },
+        "split": "deterministic_complete_case_modulo_4_test_rows",
+        "targets": [
+          {
+            "construct": "y",
+            "mae_benchmark": 0.8573371704141698,
+            "mae_lm": 0.009798070888047497,
+            "mae_pls": 0.019657572858174658,
+            "predictor_count": 2,
+            "q_squared_predict": 0.9994381755707546,
+            "q_squared_predict_lm": 0.9998476992984341,
+            "rmse_benchmark": 1.001737755346741,
+            "rmse_lm": 0.012362462707712166,
+            "rmse_pls": 0.023744025620161063
+          }
+        ],
+        "test_observations": 20,
+        "training_observations": 60,
+        "warnings": [
+          "PLSpredict holdout v1 is experimental; it uses deterministic holdout plus bounded repeated 5-fold prediction, construct-score LM benchmarks, paired-loss benchmark CVPAT diagnostics, and metadata-configured drop-path model-pair CVPAT, but does not yet implement separate saved-model CVPAT or indicator-level PLSpredict tables."
+        ]
+      },
+      "r_squared": {
+        "y": 0.999555881222533
+      },
+      "transforms": [
+        {
+          "indicator": "x1",
+          "mean": 4.080375,
+          "scale": 2.3241404801601364
+        },
+        {
+          "indicator": "x2",
+          "mean": 3.3199999999999994,
+          "scale": 1.859903359405836
+        },
+        {
+          "indicator": "z1",
+          "mean": 0.12500000000000006,
+          "scale": 0.663229536225219
+        },
+        {
+          "indicator": "z2",
+          "mean": 0.12837500000000002,
+          "scale": 0.46227545010756504
+        },
+        {
+          "indicator": "y1",
+          "mean": 5.7555000000000005,
+          "scale": 3.277844266888634
+        },
+        {
+          "indicator": "y2",
+          "mean": 5.526975,
+          "scale": 3.114004190850248
+        }
+      ],
+      "used_observations": 80,
+      "warnings": [
+        "PLSpredict holdout v1 is experimental and must not be treated as publication-validated."
+      ],
+      "wpls": null
+    },
+    "assessment": {
+      "blindfolding": {
+        "constructs": [
+          {
+            "construct": "y",
+            "observation_sum_squares": 185.2715552932809,
+            "prediction_error_sum_squares": 4.086000697531471,
+            "q_squared": 0.9779458822426172
+          }
+        ],
+        "settings": {
+          "missing_value_treatment": "indicator_mean_replacement",
+          "omission_distance": 7,
+          "selection": "preferred_7_then_smallest_valid_5_to_12"
+        }
+      },
+      "construct_quality": [
+        {
+          "ave": 0.9997325580898453,
+          "construct": "x",
+          "cronbach_alpha": 0.9997324865456843,
+          "normalized_weight_norm_squared": 0.5001337570058966,
+          "off_diagonal_denominator": 0.12506688716952868,
+          "off_diagonal_numerator": 0.4998662429941034,
+          "rho_a": 0.9997324882175205,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.9998662611612374,
+          "score_variance_before_normalization": 1.0
+        },
+        {
+          "ave": 0.9977304530721247,
+          "construct": "z",
+          "cronbach_alpha": 0.9977254452276763,
+          "normalized_weight_norm_squared": 0.5011712874394496,
+          "off_diagonal_denominator": 0.12555216456068688,
+          "off_diagonal_numerator": 0.4988287125605505,
+          "rho_a": 0.9979289065563053,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.9988639373619285,
+          "score_variance_before_normalization": 1.0
+        },
+        {
+          "ave": 0.9999591559063167,
+          "construct": "y",
+          "cronbach_alpha": 0.9999591542380957,
+          "normalized_weight_norm_squared": 0.5000204239573596,
+          "off_diagonal_denominator": 0.12501021111075347,
+          "off_diagonal_numerator": 0.4999795760426405,
+          "rho_a": 0.9999591606961885,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.9999795775360898,
+          "score_variance_before_normalization": 0.9999999999999998
+        }
+      ],
+      "cross_loadings": [
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9998662637876744
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "z",
+          "indicator": "x1",
+          "loading": -0.051455090328564594
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x1",
+          "loading": 0.9830693858657585
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9998662764184856
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "z",
+          "indicator": "x2",
+          "loading": -0.049257607773734766
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x2",
+          "loading": 0.983115809388046
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "x",
+          "indicator": "z1",
+          "loading": -0.04977959584765298
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "z",
+          "indicator": "z1",
+          "loading": 0.9988833197555297
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "y",
+          "indicator": "z1",
+          "loading": 0.13235668630626848
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "x",
+          "indicator": "z2",
+          "loading": -0.05084092300609879
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "z",
+          "indicator": "z2",
+          "loading": 0.9988458437909328
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "y",
+          "indicator": "z2",
+          "loading": 0.13019133403831076
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y1",
+          "loading": 0.9832804323385004
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "z",
+          "indicator": "y1",
+          "loading": 0.13126702303032992
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9999795796397648
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y2",
+          "loading": 0.9831275705230159
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "z",
+          "indicator": "y2",
+          "loading": 0.1315919230401173
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9999795758494833
+        }
+      ],
+      "f_squared": [
+        {
+          "excluded_r_squared": 0.017274409958651926,
+          "f_squared": 2211.753974615335,
+          "included_r_squared": 0.999555881222533,
+          "source_construct": "x",
+          "target_construct": "y"
+        },
+        {
+          "excluded_r_squared": 0.9667296005970806,
+          "f_squared": 73.91329142324676,
+          "included_r_squared": 0.999555881222533,
+          "source_construct": "z",
+          "target_construct": "y"
+        }
+      ],
+      "formative_indicator_vif": [],
+      "fornell_larcker": {
+        "constructs": [
+          "x",
+          "z",
+          "y"
+        ],
+        "values": [
+          [
+            0.9998662701030799,
+            -0.050363058155380204,
+            0.983224084630295
+          ],
+          [
+            -0.050363058155380204,
+            0.9988645819489871,
+            0.1314321496387106
+          ],
+          [
+            0.983224084630295,
+            0.1314321496387106,
+            0.9999795777446241
+          ]
+        ]
+      },
+      "htmt": null,
+      "htmt_original": {
+        "absolute_correlations": false,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": -0.050431595267188066
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.983375703332994
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": -0.050431595267188066
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.13157563517360146
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.983375703332994
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.13157563517360146
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "z",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_original_method_version": "henseler_et_al_htmt_v1",
+      "htmt_plus": {
+        "absolute_correlations": true,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.050431595267188066
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.983375703332994
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.050431595267188066
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.13157563517360146
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.983375703332994
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.13157563517360146
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "z",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
+      "method_version": "pls_assessment_v7",
+      "model_fit": {
+        "estimated": {
+          "d_uls": 0.000016060140622030844,
+          "srmr": 0.0008745104922464269
+        },
+        "saturated": {
+          "d_uls": 0.000016060140622030834,
+          "srmr": 0.0008745104922464266
+        }
+      },
+      "r_squared": {
+        "y": 0.999555881222533
+      },
+      "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
+      "structural_quality": [
+        {
+          "adjusted_r_squared": 0.9995443456698715,
+          "construct": "y",
+          "predictor_count": 2,
+          "r_squared": 0.999555881222533
+        }
+      ],
+      "structural_vif": [
+        {
+          "predictor_construct": "x",
+          "target_construct": "y",
+          "vif": 1.0025428875023037
+        },
+        {
+          "predictor_construct": "z",
+          "target_construct": "y",
+          "vif": 1.0025428875023037
+        }
+      ],
+      "warnings": [
+        "rho_a.two_indicator_limited_information for construct 'x'",
+        "rho_a.two_indicator_limited_information for construct 'z'",
+        "rho_a.two_indicator_limited_information for construct 'y'"
+      ]
+    }
+  }
+}

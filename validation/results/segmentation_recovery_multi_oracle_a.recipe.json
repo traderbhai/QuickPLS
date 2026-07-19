@@ -1,0 +1,66 @@
+{
+  "schema_version": 2,
+  "id": "00000000-0000-0000-0000-000000006611",
+  "created_at": "2026-07-19T00:00:00Z",
+  "dataset_fingerprint": "v2:459e859dd38f7c31e7a62bbf0015fffce83fd5eb4045e48beca2ad97c5a3fb87",
+  "model": {
+    "id": "00000000-0000-0000-0000-000000016611",
+    "name": "Segmentation recovery multi oracle_a",
+    "constructs": [
+      {
+        "id": "x",
+        "name": "X",
+        "short_name": "X",
+        "mode": "reflective",
+        "indicators": [
+          "x1",
+          "x2"
+        ]
+      },
+      {
+        "id": "z",
+        "name": "Z",
+        "short_name": "Z",
+        "mode": "reflective",
+        "indicators": [
+          "z1",
+          "z2"
+        ]
+      },
+      {
+        "id": "y",
+        "name": "Y",
+        "short_name": "Y",
+        "mode": "reflective",
+        "indicators": [
+          "y1",
+          "y2"
+        ]
+      }
+    ],
+    "paths": [
+      {
+        "source": "x",
+        "target": "y"
+      },
+      {
+        "source": "z",
+        "target": "y"
+      }
+    ]
+  },
+  "settings": {
+    "method": "pls_pm",
+    "weighting_scheme": "path",
+    "tolerance": 1e-07,
+    "max_iterations": 3000,
+    "bootstrap_samples": 0,
+    "seed": 20260719,
+    "preprocessing": "standardized",
+    "missing_data": "listwise_deletion"
+  },
+  "metadata": {
+    "fixture": "segmentation_recovery_simulation",
+    "oracle_segment": "Segmentation recovery multi oracle_a"
+  }
+}

@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "target": "documentation publication audit",
+  "passed": true,
+  "docs": [
+    {
+      "path": "docs/PUBLICATION_READY_AUDIT.md",
+      "present": true,
+      "bytes": 5497,
+      "mentions_validation": true,
+      "mentions_known_differences": true
+    },
+    {
+      "path": "docs/METHOD_COMPATIBILITY.md",
+      "present": true,
+      "bytes": 5932,
+      "mentions_validation": true,
+      "mentions_known_differences": false
+    },
+    {
+      "path": "docs/DELIVERY_STATUS.md",
+      "present": true,
+      "bytes": 49959,
+      "mentions_validation": true,
+      "mentions_known_differences": true
+    },
+    {
+      "path": "docs/DEVELOPMENT_LEDGER.md",
+      "present": true,
+      "bytes": 51829,
+      "mentions_validation": true,
+      "mentions_known_differences": true
+    },
+    {
+      "path": "docs/KNOWN_DIFFERENCES.md",
+      "present": true,
+      "bytes": 1723,
+      "mentions_validation": false,
+      "mentions_known_differences": true
+    },
+    {
+      "path": "docs/MONTE_CARLO_VALIDATION.md",
+      "present": true,
+      "bytes": 9085,
+      "mentions_validation": true,
+      "mentions_known_differences": false
+    }
+  ],
+  "method_docs": [
+    {
+      "path": "docs\\methods\\PLS_PM_V1.md",
+      "present": true,
+      "bytes": 3592,
+      "mentions_unsupported": true,
+      "mentions_validation": true
+    },
+    {
+      "path": "docs\\methods\\PLS_ASSESSMENT_V1.md",
+      "present": true,
+      "bytes": 1164,
+      "mentions_unsupported": false,
+      "mentions_validation": true
+    },
+    {
+      "path": "docs\\methods\\RESAMPLING_ENGINE_V4.md",
+      "present": true,
+      "bytes": 1998,
+      "mentions_unsupported": false,
+      "mentions_validation": true
+    },
+    {
+      "path": "docs\\methods\\PLS_MEDIATION_V1.md",
+      "present": true,
+      "bytes": 4514,
+      "mentions_unsupported": false,
+      "mentions_validation": true
+    },
+    {
+      "path": "docs\\methods\\PLSPREDICT_HOLDOUT_V1.md",
+      "present": true,
+      "bytes": 6653,
+      "mentions_unsupported": true,
+      "mentions_validation": true
+    },
+    {
+      "path": "docs\\methods\\CBSEM_ML_V1.md",
+      "present": true,
+      "bytes": 1760,
+      "mentions_unsupported": true,
+      "mentions_validation": true
+    },
+    {
+      "path": "docs\\methods\\PCA_V1.md",
+      "present": true,
+      "bytes": 1218,
+      "mentions_unsupported": true,
+      "mentions_validation": true
+    },
+    {
+      "path": "docs\\methods\\REGRESSION_OLS_V1.md",
+      "present": true,
+      "bytes": 1082,
+      "mentions_unsupported": true,
+      "mentions_validation": true
+    },
+    {
+      "path": "docs\\methods\\NCA_V1.md",
+      "present": true,
+      "bytes": 916,
+      "mentions_unsupported": true,
+      "mentions_validation": true
+    },
+    {
+      "path": "docs\\methods\\GSCA_V1.md",
+      "present": true,
+      "bytes": 1130,
+      "mentions_unsupported": true,
+      "mentions_validation": true
+    }
+  ]
+}

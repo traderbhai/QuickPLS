@@ -1,0 +1,36 @@
+{
+  "checks": {
+    "correlation_count": true,
+    "guard": true,
+    "max_delta_within_tolerance": true,
+    "method_version": true,
+    "payload_version": true
+  },
+  "deltas": {
+    "absolute_residual::x::y": 1.1102230246251565e-16,
+    "absolute_residual::x::z": 0.0,
+    "absolute_residual::z::y": 1.1102230246251565e-16,
+    "max_absolute_residual": 1.1102230246251565e-16,
+    "observed::x::y": 3.5083047578154947e-14,
+    "observed::x::z": 3.2085445411667024e-14,
+    "observed::z::y": 3.1086244689504383e-15,
+    "reproduced::x::y": 3.497202527569243e-14,
+    "reproduced::x::z": 3.2085445411667024e-14,
+    "reproduced::z::y": 2.9976021664879227e-15,
+    "residual::x::y": 1.1102230246251565e-16,
+    "residual::x::z": 0.0,
+    "residual::z::y": 1.1102230246251565e-16
+  },
+  "guard": {
+    "passed": true,
+    "validation_codes": [
+      "method.experimental",
+      "cca.pca_unsupported"
+    ]
+  },
+  "kind": "cca_reference_v1",
+  "max_delta": 3.5083047578154947e-14,
+  "passed": true,
+  "schema_version": 1,
+  "tolerance": 1e-10
+}

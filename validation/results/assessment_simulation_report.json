@@ -1,0 +1,68 @@
+{
+  "status": "passed",
+  "reference": "deterministic generated-data simulation with known reflective measurement and structural signal; broken-input comparator permutes exogenous blocks to verify degradation",
+  "seed": 20260718,
+  "artifacts": {
+    "data": "validation\\results\\assessment_simulation.csv",
+    "broken_data": "validation\\results\\assessment_simulation_broken.csv",
+    "recipe": "validation\\results\\assessment_simulation.recipe.json",
+    "broken_recipe": "validation\\results\\assessment_simulation_broken.recipe.json",
+    "quickpls": "validation\\results\\assessment_simulation_quickpls.json",
+    "broken_quickpls": "validation\\results\\assessment_simulation_broken_quickpls.json"
+  },
+  "checks": [
+    {
+      "id": "satisfaction_r2_signal",
+      "value": 0.6330901120758547,
+      "threshold": "> 0.55",
+      "passed": true
+    },
+    {
+      "id": "loyalty_r2_signal",
+      "value": 0.5274257463693862,
+      "threshold": "> 0.45",
+      "passed": true
+    },
+    {
+      "id": "satisfaction_q2_positive",
+      "value": 0.49922837659380004,
+      "threshold": "> 0.20",
+      "passed": true
+    },
+    {
+      "id": "loyalty_q2_positive",
+      "value": 0.40638731642181536,
+      "threshold": "> 0.20",
+      "passed": true
+    },
+    {
+      "id": "broken_satisfaction_r2_degrades",
+      "value": 0.6187024680888232,
+      "threshold": "> 0.35",
+      "passed": true
+    },
+    {
+      "id": "broken_satisfaction_q2_degrades",
+      "value": 0.5035239418779357,
+      "threshold": "> 0.35",
+      "passed": true
+    },
+    {
+      "id": "true_predictor_f2_present",
+      "value": 0.39886300526822815,
+      "threshold": "> 0.10",
+      "passed": true
+    },
+    {
+      "id": "fit_indices_finite_nonnegative",
+      "value": {
+        "estimated_srmr": 0.05536834202896078,
+        "estimated_d_uls": 0.2391209573248068,
+        "saturated_srmr": 0.05256746315563017,
+        "saturated_d_uls": 0.21554037824424577
+      },
+      "threshold": "all finite and >= 0",
+      "passed": true
+    }
+  ]
+}

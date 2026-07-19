@@ -1,0 +1,367 @@
+{
+  "schema_version": 1,
+  "id": "cf9fcde4-81ee-4449-91d8-ce771dc05bb9",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "00000000-0000-0000-0000-000000000504",
+    "dataset_fingerprint": "v2:adecb4386fc750b91058b2f7aa150406ad328fc258da2fc7daf978861a8c262b",
+    "method": "pls_pm",
+    "method_version": "pls_pm_v1+pls_assessment_v7",
+    "engine_version": "0.3.0-alpha.1",
+    "seed": 20260718,
+    "settings": {
+      "method": "pls_pm",
+      "weighting_scheme": "pca",
+      "tolerance": 1e-12,
+      "max_iterations": 3000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260718,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion"
+    },
+    "started_at": "2026-07-18T19:12:57.873877Z",
+    "completed_at": "2026-07-18T19:12:57.877950300Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.pca_weights_not_applicable for construct 'x'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.pca_weights_not_applicable for construct 'y'"
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "construct_scores": {
+        "x": [
+          -1.14252367266599,
+          -1.14252367266599,
+          0.08036878017780082,
+          1.3071191775053201,
+          0.8171906074710581,
+          0.08036878017780082
+        ],
+        "y": [
+          -1.1901568194569079,
+          -1.1901568194569079,
+          0.20405330714049497,
+          1.249710902088547,
+          0.7224961225442784,
+          0.20405330714049497
+        ]
+      },
+      "converged": true,
+      "effects": [
+        {
+          "direct": 0.9952603686671739,
+          "indirect": 0.0,
+          "source": "x",
+          "target": "y",
+          "total": 0.9952603686671739
+        }
+      ],
+      "iterations": 1,
+      "method_version": "pls_pm_v1",
+      "omitted_observations": 0,
+      "outer_estimates": [
+        {
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.992125005752434,
+          "weight": 0.5039687510151978
+        },
+        {
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9921250057524341,
+          "weight": 0.5039687510151977
+        },
+        {
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9977961785632707,
+          "weight": 0.5011043444964393
+        },
+        {
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9977961785632707,
+          "weight": 0.5011043444964394
+        }
+      ],
+      "paths": [
+        {
+          "coefficient": 0.9952603686671739,
+          "source": "x",
+          "target": "y"
+        }
+      ],
+      "r_squared": {
+        "y": 0.9905432014395197
+      },
+      "transforms": [
+        {
+          "indicator": "x1",
+          "mean": 3.5,
+          "scale": 2.073644135332772
+        },
+        {
+          "indicator": "x2",
+          "mean": 4.166666666666667,
+          "scale": 2.041241452319315
+        },
+        {
+          "indicator": "y1",
+          "mean": 5.333333333333333,
+          "scale": 2.8047578623950176
+        },
+        {
+          "indicator": "y2",
+          "mean": 4.5,
+          "scale": 2.949576240750525
+        }
+      ],
+      "used_observations": 6,
+      "warnings": []
+    },
+    "assessment": {
+      "blindfolding": {
+        "constructs": [
+          {
+            "construct": "y",
+            "observation_sum_squares": 21.53313030901943,
+            "prediction_error_sum_squares": 3.965038729341725,
+            "q_squared": 0.8158633383795147
+          }
+        ],
+        "settings": {
+          "missing_value_treatment": "indicator_mean_replacement",
+          "omission_distance": 5,
+          "selection": "preferred_7_then_smallest_valid_5_to_12"
+        }
+      },
+      "construct_quality": [
+        {
+          "ave": 0.9843120270392673,
+          "construct": "x",
+          "cronbach_alpha": 0.9840619920007265,
+          "normalized_weight_norm_squared": null,
+          "off_diagonal_denominator": null,
+          "off_diagonal_numerator": null,
+          "rho_a": null,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": "rho_a.pca_weights_not_applicable",
+          "rho_a_status": "not_applicable",
+          "rho_a_warning_codes": [],
+          "rho_c": 0.9920939989543176,
+          "score_variance_before_normalization": null
+        },
+        {
+          "ave": 0.9955972139554665,
+          "construct": "y",
+          "cronbach_alpha": 0.9955777437071756,
+          "normalized_weight_norm_squared": null,
+          "off_diagonal_denominator": null,
+          "off_diagonal_numerator": null,
+          "rho_a": null,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": "rho_a.pca_weights_not_applicable",
+          "rho_a_status": "not_applicable",
+          "rho_a_warning_codes": [],
+          "rho_c": 0.9977937501547185,
+          "score_variance_before_normalization": null
+        }
+      ],
+      "cross_loadings": [
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9921250057524339
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x1",
+          "loading": 0.9994828588850245
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9921250057524339
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x2",
+          "loading": 0.9753625390931545
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y1",
+          "loading": 0.9896567334667323
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9977961785632709
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y2",
+          "loading": 0.996477251596425
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9977961785632709
+        }
+      ],
+      "f_squared": [
+        {
+          "excluded_r_squared": 0.0,
+          "f_squared": 104.74403098517617,
+          "included_r_squared": 0.9905432014395197,
+          "source_construct": "x",
+          "target_construct": "y"
+        }
+      ],
+      "formative_indicator_vif": [],
+      "fornell_larcker": {
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "values": [
+          [
+            0.9921250057524341,
+            0.9952603686671742
+          ],
+          [
+            0.9952603686671742,
+            0.9977961785632707
+          ]
+        ]
+      },
+      "htmt": null,
+      "htmt_original": {
+        "absolute_correlations": false,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0055134681790758
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0055134681790758
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_original_method_version": "henseler_et_al_htmt_v1",
+      "htmt_plus": {
+        "absolute_correlations": true,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0055134681790758
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0055134681790758
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
+      "method_version": "pls_assessment_v7",
+      "model_fit": {
+        "estimated": {
+          "d_uls": 0.0009351439629074478,
+          "srmr": 0.00967028418872707
+        },
+        "saturated": {
+          "d_uls": 0.0009351439629074478,
+          "srmr": 0.00967028418872707
+        }
+      },
+      "r_squared": {
+        "y": 0.9905432014395197
+      },
+      "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
+      "structural_quality": [
+        {
+          "adjusted_r_squared": 0.9881790017993997,
+          "construct": "y",
+          "predictor_count": 1,
+          "r_squared": 0.9905432014395197
+        }
+      ],
+      "structural_vif": [
+        {
+          "predictor_construct": "x",
+          "target_construct": "y",
+          "vif": 1.0
+        }
+      ],
+      "warnings": [
+        "rho_a.pca_weights_not_applicable for construct 'x'",
+        "rho_a.pca_weights_not_applicable for construct 'y'"
+      ]
+    }
+  }
+}

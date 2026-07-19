@@ -1,0 +1,285 @@
+{
+  "all_listed_artifacts_passed": true,
+  "all_listed_artifacts_present": true,
+  "artifact_count": 27,
+  "artifacts": [
+    {
+      "description": "mediation independent equation fixture",
+      "file": "validation/results/mediation_reference_report.json",
+      "kind": "pls_mediation_reference_v1",
+      "max_delta": null,
+      "note": "Independent single-item mediation fixture; not a full publication-validation suite.",
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "mediation R base-lm second source",
+      "file": "validation/results/mediation_r_reference_report.json",
+      "kind": "pls_mediation_r_lm_reference_v1",
+      "max_delta": null,
+      "note": "Development-only second-source check using R base lm on the single-item standardized mediation fixture.",
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "mediation published/example decomposition",
+      "file": "validation/results/mediation_published_example_report.json",
+      "kind": "pls_mediation_published_example_v1",
+      "max_delta": null,
+      "note": "Documented cSEM example fixture; effects are independently decomposed from path coefficients already verified against cSEM.",
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "mediation metamorphic checks",
+      "file": "validation/results/mediation_metamorphic_report.json",
+      "kind": "pls_mediation_metamorphic_v1",
+      "max_delta": null,
+      "note": "Bounded deterministic simulation and metamorphic screen; not a full Monte Carlo qualification.",
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "mediation randomization screen",
+      "file": "validation/results/mediation_randomization_report.json",
+      "kind": "pls_mediation_indirect_randomization_v1",
+      "max_delta": null,
+      "note": "Bounded independent randomization screen for the indirect effect; not a full formal indirect-effect permutation estimator.",
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "moderation independent reference",
+      "file": "validation/results/moderation_reference_report.json",
+      "kind": "pls_two_stage_moderation_reference_v1",
+      "max_delta": null,
+      "note": "Independent single-item two-stage moderation fixture and bounded metamorphic screen; not a full publication-validation suite.",
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "moderation R base-lm second source",
+      "file": "validation/results/moderation_r_reference_report.json",
+      "kind": "pls_two_stage_moderation_r_lm_reference_v1",
+      "max_delta": null,
+      "note": "Development-only second-source check using R base lm on the single-item two-stage moderation fixture.",
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "moderation published-formula fixture",
+      "file": "validation/results/moderation_published_formula_report.json",
+      "kind": "pls_two_stage_moderation_published_formula_v1",
+      "max_delta": null,
+      "note": "Fixed-table published-formula fixture; it is not a published empirical dataset replication.",
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "moderation empirical-data fixture",
+      "file": "validation/results/moderation_published_empirical_report.json",
+      "kind": "pls_two_stage_moderation_published_empirical_mtcars_v1",
+      "max_delta": null,
+      "note": "Published empirical-data contract fixture. It verifies QuickPLS' frozen single-item two-stage moderation implementation against independent standardized OLS; it is not a full inferential coverage study.",
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "moderation bounded simulation",
+      "file": "validation/results/moderation_simulation_report.json",
+      "kind": "pls_two_stage_moderation_bounded_simulation_v1",
+      "max_delta": null,
+      "note": "Bounded deterministic recovery/null-signal screen; not a full bootstrap/permutation coverage qualification.",
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "moderation inference integration",
+      "file": "validation/results/moderation_inference_report.json",
+      "kind": "pls_two_stage_moderation_inference_v1",
+      "max_delta": null,
+      "note": "Bounded inference integration and worker-invariance check for the generated moderation product path; not a full coverage qualification.",
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "moderation inference qualification",
+      "file": "validation/results/moderation_inference_qualification_report.json",
+      "kind": "pls_two_stage_moderation_bounded_inference_qualification_v1",
+      "max_delta": null,
+      "note": "Bounded always-on permutation decision screen; not a final publication-scale Monte Carlo coverage qualification.",
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "moderation release-oriented coverage",
+      "file": "validation/results/moderation_coverage_qualification_report.json",
+      "kind": "pls_two_stage_moderation_release_coverage_qualification_v1",
+      "max_delta": null,
+      "note": "Heavier deterministic release-oriented permutation coverage screen for two-stage moderation. This remains bounded development evidence, not final publication-scale Monte Carlo validation.",
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "repeated-indicator HOC reference",
+      "file": "validation/results/higher_order_reference_report.json",
+      "kind": null,
+      "max_delta": null,
+      "note": null,
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "repeated-indicator HOC metamorphic checks",
+      "file": "validation/results/higher_order_metamorphic_report.json",
+      "kind": "repeated_indicator_hoc_metamorphic_v1",
+      "max_delta": null,
+      "note": "Bounded deterministic HOC metamorphic screen; not a full Monte Carlo qualification.",
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "two-stage HOC reference",
+      "file": "validation/results/higher_order_two_stage_reference_report.json",
+      "kind": "two_stage_hoc_reference_metamorphic_v1",
+      "max_delta": null,
+      "note": "Bounded deterministic two-stage HOC screen; not a full Monte Carlo qualification.",
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "hybrid HOC reference",
+      "file": "validation/results/higher_order_hybrid_reference_report.json",
+      "kind": "hybrid_hoc_reference_metamorphic_v1",
+      "max_delta": null,
+      "note": "Bounded deterministic hybrid HOC indicator-split screen; not a full Monte Carlo qualification.",
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "hybrid HOC invalid-split guard",
+      "file": "validation/results/higher_order_hybrid_guard_report.json",
+      "kind": "hybrid_hoc_invalid_split_guard_v1",
+      "max_delta": null,
+      "note": "Hybrid HOC is experimental; validation and execution must block components that cannot be split into lower-order and higher-order indicator blocks.",
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "PLSc independent reference",
+      "file": "validation/results/plsc_reference_report.json",
+      "kind": "plsc_reference_v1",
+      "max_delta": null,
+      "note": null,
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "PLSc unsupported guard",
+      "file": "validation/results/plsc_unsupported_guard_report.json",
+      "kind": "plsc_unsupported_guard_v1",
+      "max_delta": null,
+      "note": "Experimental PLSc must reject unsupported formative/PCA settings before estimation.",
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "Gaussian-copula endogeneity reference",
+      "file": "validation/results/endogeneity_reference_report.json",
+      "kind": "gaussian_copula_endogeneity_reference_v1",
+      "max_delta": null,
+      "note": null,
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "nonlinear effects reference",
+      "file": "validation/results/nonlinear_effects_reference_report.json",
+      "kind": "quadratic_nonlinear_effects_reference_v1",
+      "max_delta": null,
+      "note": null,
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "moderated mediation reference",
+      "file": "validation/results/moderated_mediation_reference_report.json",
+      "kind": "moderated_mediation_reference_v1",
+      "max_delta": null,
+      "note": null,
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "CTA-PLS reference",
+      "file": "validation/results/cta_pls_reference_report.json",
+      "kind": "cta_pls_reference_v1",
+      "max_delta": 4.9404924595819466e-14,
+      "note": null,
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "WPLS reference",
+      "file": "validation/results/wpls_reference_report.json",
+      "kind": "wpls_reference_v1",
+      "max_delta": 3.410605131648481e-13,
+      "note": null,
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "CCA reference",
+      "file": "validation/results/cca_reference_report.json",
+      "kind": "cca_reference_v1",
+      "max_delta": 3.5083047578154947e-14,
+      "note": null,
+      "passed": true,
+      "present": true,
+      "status": null
+    },
+    {
+      "description": "extended PLS unsupported guard",
+      "file": "validation/results/extended_pls_unsupported_guard_report.json",
+      "kind": "extended_pls_unsupported_guard_v1",
+      "max_delta": null,
+      "note": "No v0.5 extended PLS method ids are currently pending as unsupported; add future planned ids here until contracts and references are implemented.",
+      "passed": true,
+      "present": true,
+      "status": null
+    }
+  ],
+  "generated_at": "2026-07-19T11:49:17.546953600Z",
+  "note": "Traceability report for v0.5 extended PLS evidence. Passing artifacts support experimental preview promotion only; validated/publication-ready status still requires the registry gate to be clear and method-specific limitations to remain documented.",
+  "open_registry_gates": [],
+  "promotion_ready": true,
+  "schema_version": 1,
+  "slice_id": "v0_5_extended_pls",
+  "slice_status": "experimental",
+  "target": "v05-extended-pls"
+}

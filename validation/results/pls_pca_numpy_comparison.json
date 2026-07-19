@@ -1,0 +1,113 @@
+{
+  "status": "passed",
+  "tolerance": 1e-06,
+  "reference": "validation/results/pls_pca_numpy_reference.json",
+  "quickpls": "validation/results/pls_quickpls_pca.json",
+  "compared_quantities": [
+    "path coefficients",
+    "loadings",
+    "weights"
+  ],
+  "comparisons": [
+    {
+      "kind": "loading",
+      "source": "x",
+      "target": "",
+      "indicator": "x1",
+      "quickpls": 0.9856107606091623,
+      "numpy_reference": 0.9856107606091623,
+      "difference": 0.0,
+      "abs_diff": 0.0,
+      "passed": true
+    },
+    {
+      "kind": "loading",
+      "source": "x",
+      "target": "",
+      "indicator": "x2",
+      "quickpls": 0.9856107606091623,
+      "numpy_reference": 0.9856107606091623,
+      "difference": 0.0,
+      "abs_diff": 0.0,
+      "passed": true
+    },
+    {
+      "kind": "loading",
+      "source": "y",
+      "target": "",
+      "indicator": "y1",
+      "quickpls": 0.9955487277601801,
+      "numpy_reference": 0.9955487277601801,
+      "difference": 0.0,
+      "abs_diff": 0.0,
+      "passed": true
+    },
+    {
+      "kind": "loading",
+      "source": "y",
+      "target": "",
+      "indicator": "y2",
+      "quickpls": 0.9955487277601802,
+      "numpy_reference": 0.9955487277601802,
+      "difference": 0.0,
+      "abs_diff": 0.0,
+      "passed": true
+    },
+    {
+      "kind": "path",
+      "source": "x",
+      "target": "y",
+      "indicator": "",
+      "quickpls": 0.982300318297428,
+      "numpy_reference": 0.9823003182974279,
+      "difference": 1.1102230246251565e-16,
+      "abs_diff": 1.1102230246251565e-16,
+      "passed": true
+    },
+    {
+      "kind": "weight",
+      "source": "x",
+      "target": "",
+      "indicator": "x1",
+      "quickpls": 0.5072996561958923,
+      "numpy_reference": 0.5072996561958923,
+      "difference": 0.0,
+      "abs_diff": 0.0,
+      "passed": true
+    },
+    {
+      "kind": "weight",
+      "source": "x",
+      "target": "",
+      "indicator": "x2",
+      "quickpls": 0.5072996561958923,
+      "numpy_reference": 0.5072996561958923,
+      "difference": 0.0,
+      "abs_diff": 0.0,
+      "passed": true
+    },
+    {
+      "kind": "weight",
+      "source": "y",
+      "target": "",
+      "indicator": "y1",
+      "quickpls": 0.5022355873277216,
+      "numpy_reference": 0.5022355873277217,
+      "difference": -1.1102230246251565e-16,
+      "abs_diff": 1.1102230246251565e-16,
+      "passed": true
+    },
+    {
+      "kind": "weight",
+      "source": "y",
+      "target": "",
+      "indicator": "y2",
+      "quickpls": 0.5022355873277216,
+      "numpy_reference": 0.5022355873277216,
+      "difference": 0.0,
+      "abs_diff": 0.0,
+      "passed": true
+    }
+  ],
+  "max_abs_diff": 1.1102230246251565e-16
+}

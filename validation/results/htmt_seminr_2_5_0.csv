@@ -1,0 +1,17 @@
+variant,row,column,value,seminr_version,input
+htmt_plus,comp,comp,1,2.5.0,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+htmt_plus,comp,like,0.497501768930509,2.5.0,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+htmt_plus,comp,satisfaction,0.61387309292715,2.5.0,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+htmt_plus,comp,loyalty,0.133339038966545,2.5.0,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+htmt_plus,like,comp,0.497501768930509,2.5.0,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+htmt_plus,like,like,1,2.5.0,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+htmt_plus,like,satisfaction,0.54361643887604,2.5.0,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+htmt_plus,like,loyalty,0.957976637620855,2.5.0,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+htmt_plus,satisfaction,comp,0.61387309292715,2.5.0,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+htmt_plus,satisfaction,like,0.54361643887604,2.5.0,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+htmt_plus,satisfaction,satisfaction,1,2.5.0,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+htmt_plus,satisfaction,loyalty,1.12016357844583,2.5.0,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+htmt_plus,loyalty,comp,0.133339038966545,2.5.0,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+htmt_plus,loyalty,like,0.957976637620855,2.5.0,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+htmt_plus,loyalty,satisfaction,1.12016357844583,2.5.0,D:\QuickPLS\validation\fixtures\corporate_reputation.csv
+htmt_plus,loyalty,loyalty,1,2.5.0,D:\QuickPLS\validation\fixtures\corporate_reputation.csv

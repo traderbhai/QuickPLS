@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "source": {
+    "article": "Ringle, Sarstedt, Sinkovics, and Sinkovics (2023), Data in Brief 48, 109074",
+    "doi": "10.1016/j.dib.2023.109074",
+    "url": "https://www.sciencedirect.com/science/article/pii/S2352340923001920",
+    "section": "Appendix A.1, HTMT+ and HTMT2+ worked examples"
+  },
+  "method_version": "ringle_et_al_htmt_plus_v1",
+  "rounding_tolerance": 0.0015,
+  "fixtures": [
+    {
+      "name": "wave_2_htmt_plus",
+      "heterotrait_mean_abs": 0.424,
+      "left_monotrait_mean_abs": 0.509,
+      "right_monotrait_mean_abs": 0.452,
+      "reported_htmt_plus": 0.885
+    },
+    {
+      "name": "wave_3_htmt_plus",
+      "heterotrait_mean_abs": 0.384,
+      "left_monotrait_mean_abs": 0.473,
+      "right_monotrait_mean_abs": 0.418,
+      "reported_htmt_plus": 0.865
+    }
+  ],
+  "original_htmt_unavailable_examples": [
+    {
+      "name": "standard_htmt_negative_denominator_component",
+      "heterotrait_mean": 0.119,
+      "left_monotrait_mean": 0.064,
+      "right_monotrait_mean": -0.03,
+      "expected_status": "unavailable"
+    }
+  ],
+  "note": "The article reports rounded intermediate means and rounded HTMT+ values. This artifact therefore uses a 1.5e-3 input-rounding tolerance and is publication rounded-formula evidence, not raw-data reproduction."
+}

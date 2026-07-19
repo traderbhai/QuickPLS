@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "kind": "studentized_qualification_shard_status_v1",
+  "manifest": "validation/results/studentized_qualification_shards/smoke_manifest.json",
+  "mode": "studentized-qualification",
+  "total_shards": 8,
+  "status_counts": {
+    "missing": 8
+  },
+  "progress_by_scenario": {
+    "coverage_beta_0_35": {
+      "completed_simulations": 0,
+      "expected_simulations": 4,
+      "completion_rate": 0.0,
+      "elapsed_seconds": 0.0
+    },
+    "null_beta_0": {
+      "completed_simulations": 0,
+      "expected_simulations": 4,
+      "completion_rate": 0.0,
+      "elapsed_seconds": 0.0
+    },
+    "heavy_tail_coverage_beta_0_35": {
+      "completed_simulations": 0,
+      "expected_simulations": 4,
+      "completion_rate": 0.0,
+      "elapsed_seconds": 0.0
+    },
+    "heavy_tail_null_beta_0": {
+      "completed_simulations": 0,
+      "expected_simulations": 4,
+      "completion_rate": 0.0,
+      "elapsed_seconds": 0.0
+    }
+  },
+  "ready_to_aggregate": false,
+  "shards": [
+    {
+      "name": "coverage_beta_0_35_0000_0001",
+      "scenario": "coverage_beta_0_35",
+      "simulation_offset": 0,
+      "simulations": 2,
+      "output": "validation/results/studentized_qualification_shards/coverage_beta_0_35_0000_0001.json",
+      "status": "missing",
+      "completed_simulations": 0,
+      "failed_simulations": null,
+      "elapsed_seconds": null,
+      "message": null
+    },
+    {
+      "name": "coverage_beta_0_35_0002_0003",
+      "scenario": "coverage_beta_0_35",
+      "simulation_offset": 2,
+      "simulations": 2,
+      "output": "validation/results/studentized_qualification_shards/coverage_beta_0_35_0002_0003.json",
+      "status": "missing",
+      "completed_simulations": 0,
+      "failed_simulations": null,
+      "elapsed_seconds": null,
+      "message": null
+    },
+    {
+      "name": "null_beta_0_0000_0001",
+      "scenario": "null_beta_0",
+      "simulation_offset": 0,
+      "simulations": 2,
+      "output": "validation/results/studentized_qualification_shards/null_beta_0_0000_0001.json",
+      "status": "missing",
+      "completed_simulations": 0,
+      "failed_simulations": null,
+      "elapsed_seconds": null,
+      "message": null
+    },
+    {
+      "name": "null_beta_0_0002_0003",
+      "scenario": "null_beta_0",
+      "simulation_offset": 2,
+      "simulations": 2,
+      "output": "validation/results/studentized_qualification_shards/null_beta_0_0002_0003.json",
+      "status": "missing",
+      "completed_simulations": 0,
+      "failed_simulations": null,
+      "elapsed_seconds": null,
+      "message": null
+    },
+    {
+      "name": "heavy_tail_coverage_beta_0_35_0000_0001",
+      "scenario": "heavy_tail_coverage_beta_0_35",
+      "simulation_offset": 0,
+      "simulations": 2,
+      "output": "validation/results/studentized_qualification_shards/heavy_tail_coverage_beta_0_35_0000_0001.json",
+      "status": "missing",
+      "completed_simulations": 0,
+      "failed_simulations": null,
+      "elapsed_seconds": null,
+      "message": null
+    },
+    {
+      "name": "heavy_tail_coverage_beta_0_35_0002_0003",
+      "scenario": "heavy_tail_coverage_beta_0_35",
+      "simulation_offset": 2,
+      "simulations": 2,
+      "output": "validation/results/studentized_qualification_shards/heavy_tail_coverage_beta_0_35_0002_0003.json",
+      "status": "missing",
+      "completed_simulations": 0,
+      "failed_simulations": null,
+      "elapsed_seconds": null,
+      "message": null
+    },
+    {
+      "name": "heavy_tail_null_beta_0_0000_0001",
+      "scenario": "heavy_tail_null_beta_0",
+      "simulation_offset": 0,
+      "simulations": 2,
+      "output": "validation/results/studentized_qualification_shards/heavy_tail_null_beta_0_0000_0001.json",
+      "status": "missing",
+      "completed_simulations": 0,
+      "failed_simulations": null,
+      "elapsed_seconds": null,
+      "message": null
+    },
+    {
+      "name": "heavy_tail_null_beta_0_0002_0003",
+      "scenario": "heavy_tail_null_beta_0",
+      "simulation_offset": 2,
+      "simulations": 2,
+      "output": "validation/results/studentized_qualification_shards/heavy_tail_null_beta_0_0002_0003.json",
+      "status": "missing",
+      "completed_simulations": 0,
+      "failed_simulations": null,
+      "elapsed_seconds": null,
+      "message": null
+    }
+  ],
+  "actions": [
+    {
+      "name": "coverage_beta_0_35_0000_0001",
+      "action": "dry_run",
+      "elapsed_seconds": null
+    }
+  ]
+}

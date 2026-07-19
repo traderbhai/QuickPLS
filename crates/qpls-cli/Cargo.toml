@@ -1,0 +1,27 @@
+[package]
+name = "qpls-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "qpls"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+chrono.workspace = true
+clap.workspace = true
+qpls-assessment = { path = "../qpls-assessment" }
+qpls-core = { path = "../qpls-core" }
+qpls-data = { path = "../qpls-data" }
+qpls-estimation = { path = "../qpls-estimation" }
+qpls-project = { path = "../qpls-project" }
+qpls-resampling = { path = "../qpls-resampling" }
+qpls-runner = { path = "../qpls-runner" }
+rust_xlsxwriter.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+calamine.workspace = true
+tempfile.workspace = true

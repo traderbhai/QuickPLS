@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "kind": "studentized_worker_matrix_v1",
+  "passed": true,
+  "fixture": {
+    "recipe": "validation/fixtures/simple_reflective.recipe.json",
+    "data": "validation/fixtures/simple_reflective.csv",
+    "bootstrap_samples": 999,
+    "studentized_inner_samples": 99,
+    "workers": [
+      1,
+      2,
+      4,
+      12
+    ],
+    "detected_max_workers": 12
+  },
+  "runs": [
+    {
+      "workers": 1,
+      "output": "D:\\QuickPLS\\validation\\results\\studentized_worker_matrix\\studentized_worker_1.json",
+      "elapsed_seconds": 81.69241920000059,
+      "status": "completed",
+      "settings_workers": 1,
+      "usable_replicates": 998,
+      "studentized_method_version": "nested_studentized_v1",
+      "studentized_inner_replicates": 99,
+      "studentized_failure": null,
+      "studentized_parameter_count": 13,
+      "studentized_available_parameter_count": 4,
+      "studentized_unavailable_parameter_count": 9,
+      "payload_hash": "0e0384ce56eab8c1179e8da1517654fc54378e1526f24ee2afd6235b22049d7d",
+      "diagnostics_hash": "343487dda669220aa4920fbacbbaf02e40bd386820c49d2dcc4e18ecd90925ba"
+    },
+    {
+      "workers": 2,
+      "output": "D:\\QuickPLS\\validation\\results\\studentized_worker_matrix\\studentized_worker_2.json",
+      "elapsed_seconds": 38.13238909999927,
+      "status": "completed",
+      "settings_workers": 2,
+      "usable_replicates": 998,
+      "studentized_method_version": "nested_studentized_v1",
+      "studentized_inner_replicates": 99,
+      "studentized_failure": null,
+      "studentized_parameter_count": 13,
+      "studentized_available_parameter_count": 4,
+      "studentized_unavailable_parameter_count": 9,
+      "payload_hash": "0e0384ce56eab8c1179e8da1517654fc54378e1526f24ee2afd6235b22049d7d",
+      "diagnostics_hash": "343487dda669220aa4920fbacbbaf02e40bd386820c49d2dcc4e18ecd90925ba"
+    },
+    {
+      "workers": 4,
+      "output": "D:\\QuickPLS\\validation\\results\\studentized_worker_matrix\\studentized_worker_4.json",
+      "elapsed_seconds": 23.473999599998933,
+      "status": "completed",
+      "settings_workers": 4,
+      "usable_replicates": 998,
+      "studentized_method_version": "nested_studentized_v1",
+      "studentized_inner_replicates": 99,
+      "studentized_failure": null,
+      "studentized_parameter_count": 13,
+      "studentized_available_parameter_count": 4,
+      "studentized_unavailable_parameter_count": 9,
+      "payload_hash": "0e0384ce56eab8c1179e8da1517654fc54378e1526f24ee2afd6235b22049d7d",
+      "diagnostics_hash": "343487dda669220aa4920fbacbbaf02e40bd386820c49d2dcc4e18ecd90925ba"
+    },
+    {
+      "workers": 12,
+      "output": "D:\\QuickPLS\\validation\\results\\studentized_worker_matrix\\studentized_worker_12.json",
+      "elapsed_seconds": 12.247054200001003,
+      "status": "completed",
+      "settings_workers": 12,
+      "usable_replicates": 998,
+      "studentized_method_version": "nested_studentized_v1",
+      "studentized_inner_replicates": 99,
+      "studentized_failure": null,
+      "studentized_parameter_count": 13,
+      "studentized_available_parameter_count": 4,
+      "studentized_unavailable_parameter_count": 9,
+      "payload_hash": "0e0384ce56eab8c1179e8da1517654fc54378e1526f24ee2afd6235b22049d7d",
+      "diagnostics_hash": "343487dda669220aa4920fbacbbaf02e40bd386820c49d2dcc4e18ecd90925ba"
+    }
+  ],
+  "comparisons": [
+    {
+      "baseline_workers": 1,
+      "comparison_workers": 2,
+      "payload_equal": true,
+      "diagnostics_equal": true,
+      "max_payload_abs_difference": 0.0
+    },
+    {
+      "baseline_workers": 1,
+      "comparison_workers": 4,
+      "payload_equal": true,
+      "diagnostics_equal": true,
+      "max_payload_abs_difference": 0.0
+    },
+    {
+      "baseline_workers": 1,
+      "comparison_workers": 12,
+      "payload_equal": true,
+      "diagnostics_equal": true,
+      "max_payload_abs_difference": 0.0
+    }
+  ],
+  "performance": {
+    "min_elapsed_seconds": 12.247054200001003,
+    "max_elapsed_seconds": 81.69241920000059,
+    "max_to_min_elapsed_ratio": 6.670372962013502
+  },
+  "artifact_directory": "D:\\QuickPLS\\validation\\results\\studentized_worker_matrix",
+  "note": "Bounded worker-count and timing evidence for the 999x99 nested studentized bootstrap fixture; this does not replace broader coverage and stress qualification."
+}

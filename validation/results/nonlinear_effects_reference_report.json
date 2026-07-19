@@ -1,0 +1,46 @@
+{
+  "checks": {
+    "augmented_r2_delta": 2.353672812205332e-14,
+    "coefficient_delta": 9.43689570931383e-15,
+    "delta_r2_delta": 1.1102230246251565e-16,
+    "has_experimental_warning": true,
+    "linear_r2_delta": 2.3425705819590803e-14,
+    "method_version": true,
+    "p_values_in_range": true,
+    "payload_version": true,
+    "standard_error_delta": 1.519617764955683e-15,
+    "t_delta": 1.964650664376677e-12
+  },
+  "estimates": [
+    {
+      "augmented_r_squared": 0.8623238972497633,
+      "delta_r_squared": 0.489909373252463,
+      "linear_coefficient": 0.3803819720760112,
+      "linear_r_squared": 0.37241452399730035,
+      "p_value_two_sided": 0.0,
+      "quadratic_coefficient": 0.46790370266196557,
+      "source": "x",
+      "standard_error": 0.021481928517973453,
+      "t_statistic": 21.781270814232574,
+      "target": "y",
+      "warning": null
+    },
+    {
+      "augmented_r_squared": 0.8623238972497633,
+      "delta_r_squared": 0.489909373252463,
+      "linear_coefficient": 0.37311908894387313,
+      "linear_r_squared": 0.37241452399730035,
+      "p_value_two_sided": 0.879441746371985,
+      "quadratic_coefficient": 0.003962603021243959,
+      "source": "z",
+      "standard_error": 0.026075834018719397,
+      "t_statistic": 0.15196457449450224,
+      "target": "y",
+      "warning": null
+    }
+  ],
+  "kind": "quadratic_nonlinear_effects_reference_v1",
+  "passed": true,
+  "schema_version": 1,
+  "tolerance": 1e-06
+}

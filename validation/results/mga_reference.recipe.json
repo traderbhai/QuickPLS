@@ -1,0 +1,66 @@
+{
+  "schema_version": 2,
+  "id": "00000000-0000-0000-0000-000000000071",
+  "created_at": "2026-07-19T00:00:00Z",
+  "dataset_fingerprint": "v2:9eb741fb99873f99b9667037d701603437340692adab76baeaf7654af3a2a175",
+  "model": {
+    "id": "00000000-0000-0000-0000-000000000072",
+    "name": "MGA two-group reference",
+    "constructs": [
+      {
+        "id": "x",
+        "name": "X",
+        "short_name": "X",
+        "mode": "reflective",
+        "indicators": [
+          "x1",
+          "x2"
+        ]
+      },
+      {
+        "id": "z",
+        "name": "Z",
+        "short_name": "Z",
+        "mode": "reflective",
+        "indicators": [
+          "z1",
+          "z2"
+        ]
+      },
+      {
+        "id": "y",
+        "name": "Y",
+        "short_name": "Y",
+        "mode": "reflective",
+        "indicators": [
+          "y1",
+          "y2"
+        ]
+      }
+    ],
+    "paths": [
+      {
+        "source": "x",
+        "target": "y"
+      },
+      {
+        "source": "z",
+        "target": "y"
+      }
+    ]
+  },
+  "settings": {
+    "method": "mga",
+    "weighting_scheme": "path",
+    "tolerance": 1e-10,
+    "max_iterations": 3000,
+    "bootstrap_samples": 0,
+    "seed": 20260719,
+    "preprocessing": "standardized",
+    "missing_data": "listwise_deletion"
+  },
+  "metadata": {
+    "fixture": "independent_mga_reference",
+    "mga_group_column": "group"
+  }
+}

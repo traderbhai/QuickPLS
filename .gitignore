@@ -1,0 +1,16 @@
+node_modules/
+dist/
+target/
+.codex-artifacts/
+validation/.venv/
+validation/output/
+validation/r-library/
+.vite/
+__pycache__/
+*.pyc
+*.tsbuildinfo
+*.log
+*.qpls
+*.qpls.bak
+*.qplsr
+.DS_Store

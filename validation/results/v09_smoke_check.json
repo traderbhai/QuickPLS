@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v0.9.0-rc.1 deterministic desktop smoke check",
+  "passed": true,
+  "checklist": {
+    "release_executable_launches_without_dev_server": true,
+    "frontend_dist_configured": true,
+    "dev_server_is_local_only": true,
+    "validation_csv_fixture_available": true,
+    "simple_reflective_pls_run_saved": true,
+    "csv_export_readable": true,
+    "html_export_readable": true,
+    "xlsx_export_readable": true,
+    "diagram_estimates_require_saved_run": true,
+    "svg_diagram_export_available": true,
+    "browser_print_pdf_path_available": true,
+    "project_recovery_tests_exist": true
+  },
+  "launch_probe": {
+    "passed": true,
+    "path": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+    "started": true
+  },
+  "exports": {
+    "csv": "validation\\results\\v09_smoke_export.csv",
+    "html": "validation\\results\\v09_smoke_export.html",
+    "xlsx": "validation\\results\\v09_smoke_export.xlsx",
+    "svg": "desktop/report publication diagram export path verified by source and frontend tests",
+    "pdf": "browser print-to-PDF path verified by Reports workspace source"
+  },
+  "commands": [
+    {
+      "command": [
+        "cargo",
+        "run",
+        "-p",
+        "qpls-cli",
+        "--",
+        "run",
+        "validation/fixtures/simple_reflective.recipe.json",
+        "--data",
+        "validation/fixtures/simple_reflective.csv",
+        "--output",
+        "validation\\results\\v09_smoke_pls_result.json",
+        "--allow-experimental",
+        "--workers",
+        "1"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "elapsed_seconds": 2.3861,
+      "stdout_tail": "wrote analysis result validation\\results\\v09_smoke_pls_result.json\n",
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.00s\n     Running `target\\debug\\qpls.exe run validation/fixtures/simple_reflective.recipe.json --data validation/fixtures/simple_reflective.csv --output validation\\results\\v09_smoke_pls_result.json --allow-experimental --workers 1`\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "run",
+        "-p",
+        "qpls-cli",
+        "--",
+        "export",
+        "validation\\results\\v09_smoke_pls_result.json",
+        "--format",
+        "csv",
+        "--output",
+        "validation\\results\\v09_smoke_export.csv"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "elapsed_seconds": 1.9101,
+      "stdout_tail": "wrote v0.3 estimator-only export validation\\results\\v09_smoke_export.csv\n",
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.72s\n     Running `target\\debug\\qpls.exe export validation\\results\\v09_smoke_pls_result.json --format csv --output validation\\results\\v09_smoke_export.csv`\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "run",
+        "-p",
+        "qpls-cli",
+        "--",
+        "export",
+        "validation\\results\\v09_smoke_pls_result.json",
+        "--format",
+        "html",
+        "--output",
+        "validation\\results\\v09_smoke_export.html"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "elapsed_seconds": 1.8483,
+      "stdout_tail": "wrote v0.3 estimator-only export validation\\results\\v09_smoke_export.html\n",
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.67s\n     Running `target\\debug\\qpls.exe export validation\\results\\v09_smoke_pls_result.json --format html --output validation\\results\\v09_smoke_export.html`\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "run",
+        "-p",
+        "qpls-cli",
+        "--",
+        "export",
+        "validation\\results\\v09_smoke_pls_result.json",
+        "--format",
+        "xlsx",
+        "--output",
+        "validation\\results\\v09_smoke_export.xlsx"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "elapsed_seconds": 1.7756,
+      "stdout_tail": "wrote v0.3 estimator-only export validation\\results\\v09_smoke_export.xlsx\n",
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.58s\n     Running `target\\debug\\qpls.exe export validation\\results\\v09_smoke_pls_result.json --format xlsx --output validation\\results\\v09_smoke_export.xlsx`\n"
+    }
+  ],
+  "note": "GUI interaction is covered by source-level contract checks and frontend/desktop tests; this script avoids brittle pointer automation."
+}

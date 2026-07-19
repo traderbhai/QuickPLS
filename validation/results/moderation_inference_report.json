@@ -1,0 +1,24 @@
+{
+  "bootstrap_samples": 99,
+  "checks": {
+    "bca_lower": 0.7709688947305717,
+    "bca_parameter_present": true,
+    "bca_upper": 0.9669045595439716,
+    "bootstrap_original_matches_moderation_delta": 0.0,
+    "bootstrap_p_value_two_sided": 1.776835134634628e-57,
+    "bootstrap_parameter_present": true,
+    "bootstrap_usable_replicates": 99,
+    "independent_reference_delta": 1.2101430968414206e-14,
+    "permutation_p_value_two_sided": 0.01,
+    "permutation_parameter_present": true,
+    "simple_slope_reference_max_delta": 6.050715484207103e-14,
+    "worker_payload_invariant": true
+  },
+  "kind": "pls_two_stage_moderation_inference_v1",
+  "note": "Bounded inference integration and worker-invariance check for the generated moderation product path; not a full coverage qualification.",
+  "parameter": "[\"path\",[\"xm\",\"y\"]]",
+  "passed": true,
+  "permutation_samples": 99,
+  "schema_version": 1,
+  "tolerance": 1e-10
+}

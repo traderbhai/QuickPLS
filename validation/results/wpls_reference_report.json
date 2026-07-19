@@ -1,0 +1,36 @@
+{
+  "checks": {
+    "case_weight_column": true,
+    "guards": true,
+    "max_delta_within_tolerance": true,
+    "method_version": true,
+    "payload_version": true
+  },
+  "deltas": {
+    "effective_sample_size": 1.8474111129762605e-13,
+    "loading::x::x1": 3.3306690738754696e-16,
+    "loading::x::x2": 2.220446049250313e-16,
+    "loading::y::y1": 1.5543122344752192e-15,
+    "loading::y::y2": 1.4432899320127035e-15,
+    "path::x::y": 1.7541523789077473e-14,
+    "r2::y": 2.7533531010703882e-14,
+    "weight::x::x1": 9.2148511043888e-15,
+    "weight::x::x2": 8.992806499463768e-15,
+    "weight::y::y1": 5.329070518200751e-15,
+    "weight::y::y2": 3.6637359812630166e-15,
+    "weight_sum": 3.410605131648481e-13
+  },
+  "guards": {
+    "bad_weight_stderr": "Error: PLS estimation failed: numerical failure: case weights must be positive and finite\n",
+    "missing_weight_validation_codes": [
+      "method.experimental",
+      "wpls.case_weight_required"
+    ],
+    "passed": true
+  },
+  "kind": "wpls_reference_v1",
+  "max_delta": 3.410605131648481e-13,
+  "passed": true,
+  "schema_version": 1,
+  "tolerance": 1e-10
+}

@@ -1,0 +1,574 @@
+{
+  "schema_version": 1,
+  "id": "5a12bbdc-2b8c-4ea5-96dc-f682176315a4",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "00000000-0000-0000-0000-000000000055",
+    "dataset_fingerprint": "v2:db36acf8a41e6f36eeb2c01dc8405b1574ebcb7864c4142c774d0371ec15b1c1",
+    "method": "pls_pm",
+    "method_version": "pls_pm_v1+pls_mediation_v1+pls_assessment_v7",
+    "engine_version": "0.3.0-alpha.1",
+    "seed": 20260719,
+    "settings": {
+      "method": "pls_pm",
+      "weighting_scheme": "path",
+      "tolerance": 1e-7,
+      "max_iterations": 3000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260719,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion"
+    },
+    "started_at": "2026-07-19T02:46:26.915944600Z",
+    "completed_at": "2026-07-19T02:46:26.925598800Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.single_indicator_not_identified for construct 'x'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Cronbach alpha is undefined for single-item construct 'x'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.single_indicator_not_identified for construct 'm'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Cronbach alpha is undefined for single-item construct 'm'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "rho_a.single_indicator_not_identified for construct 'y'"
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Cronbach alpha is undefined for single-item construct 'y'"
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "construct_scores": {
+        "m": [
+          -1.1931657523000483,
+          -1.0366849979000419,
+          -0.7237234891000293,
+          -0.41076198030001654,
+          0.21516103730000877,
+          0.5281225461000214,
+          1.1540455637000466,
+          1.4670070725000595
+        ],
+        "x": [
+          -1.4288690166235207,
+          -1.0206207261596576,
+          -0.6123724356957946,
+          -0.20412414523193154,
+          0.20412414523193154,
+          0.6123724356957946,
+          1.0206207261596576,
+          1.4288690166235207
+        ],
+        "y": [
+          -1.2609579341425274,
+          -1.0342688673303877,
+          -0.694235267112178,
+          -0.3542016668939683,
+          0.21252100013638106,
+          0.5525546003545907,
+          1.11927726738494,
+          1.4593108676031497
+        ]
+      },
+      "control_estimates": [],
+      "converged": true,
+      "effects": [
+        {
+          "direct": 0.9901865073516222,
+          "indirect": 0.0,
+          "source": "x",
+          "target": "m",
+          "total": 0.9901865073516222
+        },
+        {
+          "direct": 0.0,
+          "indirect": 0.9894408825564084,
+          "source": "x",
+          "target": "y",
+          "total": 0.9894408825564084
+        },
+        {
+          "direct": 0.9992469855025514,
+          "indirect": 0.0,
+          "source": "m",
+          "target": "y",
+          "total": 0.9992469855025514
+        }
+      ],
+      "iterations": 1,
+      "mediation": {
+        "estimates": [
+          {
+            "classification": "direct_only",
+            "direct": 0.9901865073516222,
+            "indirect": 0.0,
+            "source": "x",
+            "target": "m",
+            "total": 0.9901865073516222,
+            "variance_accounted_for": 0.0,
+            "warning": "direct-only structural effect; no mediated component exceeds tolerance"
+          },
+          {
+            "classification": "indirect_only",
+            "direct": 0.0,
+            "indirect": 0.9894408825564084,
+            "source": "x",
+            "target": "y",
+            "total": 0.9894408825564084,
+            "variance_accounted_for": 1.0,
+            "warning": null
+          },
+          {
+            "classification": "direct_only",
+            "direct": 0.9992469855025514,
+            "indirect": 0.0,
+            "source": "m",
+            "target": "y",
+            "total": 0.9992469855025514,
+            "variance_accounted_for": 0.0,
+            "warning": "direct-only structural effect; no mediated component exceeds tolerance"
+          }
+        ],
+        "method_version": "pls_mediation_v1",
+        "tolerance": 1e-12,
+        "warnings": [
+          "Mediation classes are descriptive effect-decomposition labels; publication inference requires validated bootstrap or permutation intervals for the relevant indirect effect."
+        ]
+      },
+      "method_version": "pls_pm_v1",
+      "moderation": {
+        "estimates": [],
+        "method_version": "pls_two_stage_moderation_v1",
+        "moderator_score_levels": [
+          -1.0,
+          0.0,
+          1.0
+        ],
+        "warnings": []
+      },
+      "omitted_observations": 0,
+      "outer_estimates": [
+        {
+          "construct": "x",
+          "indicator": "x",
+          "loading": 1.0000000000000002,
+          "weight": 0.9999999999999999
+        },
+        {
+          "construct": "m",
+          "indicator": "m",
+          "loading": 1.0,
+          "weight": 1.0
+        },
+        {
+          "construct": "y",
+          "indicator": "y",
+          "loading": 1.0000000000000002,
+          "weight": 0.9999999999999999
+        }
+      ],
+      "paths": [
+        {
+          "coefficient": 0.9901865073516222,
+          "source": "x",
+          "target": "m"
+        },
+        {
+          "coefficient": 0.9992469855025514,
+          "source": "m",
+          "target": "y"
+        }
+      ],
+      "r_squared": {
+        "m": 0.980469319341204,
+        "y": 0.9984945380359359
+      },
+      "transforms": [
+        {
+          "indicator": "x",
+          "mean": 4.5,
+          "scale": 2.449489742783178
+        },
+        {
+          "indicator": "m",
+          "mean": 9.625,
+          "scale": 6.3905622377288305
+        },
+        {
+          "indicator": "y",
+          "mean": 14.125,
+          "scale": 8.822657519947473
+        }
+      ],
+      "used_observations": 8,
+      "warnings": []
+    },
+    "assessment": {
+      "blindfolding": {
+        "constructs": [
+          {
+            "construct": "m",
+            "observation_sum_squares": 12.738924787485457,
+            "prediction_error_sum_squares": 2.725934269649084,
+            "q_squared": 0.7860153572515787
+          },
+          {
+            "construct": "y",
+            "observation_sum_squares": 13.065360408503764,
+            "prediction_error_sum_squares": 2.607720445841581,
+            "q_squared": 0.8004096049165004
+          }
+        ],
+        "settings": {
+          "missing_value_treatment": "indicator_mean_replacement",
+          "omission_distance": 7,
+          "selection": "preferred_7_then_smallest_valid_5_to_12"
+        }
+      },
+      "construct_quality": [
+        {
+          "ave": 1.0000000000000004,
+          "construct": "x",
+          "cronbach_alpha": null,
+          "normalized_weight_norm_squared": null,
+          "off_diagonal_denominator": null,
+          "off_diagonal_numerator": null,
+          "rho_a": null,
+          "rho_a_indicator_count": 1,
+          "rho_a_reason": "rho_a.single_indicator_not_identified",
+          "rho_a_status": "not_applicable",
+          "rho_a_warning_codes": [],
+          "rho_c": 1.0000000000000004,
+          "score_variance_before_normalization": null
+        },
+        {
+          "ave": 1.0,
+          "construct": "m",
+          "cronbach_alpha": null,
+          "normalized_weight_norm_squared": null,
+          "off_diagonal_denominator": null,
+          "off_diagonal_numerator": null,
+          "rho_a": null,
+          "rho_a_indicator_count": 1,
+          "rho_a_reason": "rho_a.single_indicator_not_identified",
+          "rho_a_status": "not_applicable",
+          "rho_a_warning_codes": [],
+          "rho_c": 1.0,
+          "score_variance_before_normalization": null
+        },
+        {
+          "ave": 1.0000000000000004,
+          "construct": "y",
+          "cronbach_alpha": null,
+          "normalized_weight_norm_squared": null,
+          "off_diagonal_denominator": null,
+          "off_diagonal_numerator": null,
+          "rho_a": null,
+          "rho_a_indicator_count": 1,
+          "rho_a_reason": "rho_a.single_indicator_not_identified",
+          "rho_a_status": "not_applicable",
+          "rho_a_warning_codes": [],
+          "rho_c": 1.0000000000000004,
+          "score_variance_before_normalization": null
+        }
+      ],
+      "cross_loadings": [
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x",
+          "loading": 0.9999999999999998
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "m",
+          "indicator": "x",
+          "loading": 0.9901865073516221
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x",
+          "loading": 0.994863307923723
+        },
+        {
+          "assigned_construct": "m",
+          "construct": "x",
+          "indicator": "m",
+          "loading": 0.9901865073516221
+        },
+        {
+          "assigned_construct": "m",
+          "construct": "m",
+          "indicator": "m",
+          "loading": 0.9999999999999999
+        },
+        {
+          "assigned_construct": "m",
+          "construct": "y",
+          "indicator": "m",
+          "loading": 0.9992469855025513
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y",
+          "loading": 0.9948633079237231
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "m",
+          "indicator": "y",
+          "loading": 0.9992469855025512
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y",
+          "loading": 0.9999999999999998
+        }
+      ],
+      "f_squared": [
+        {
+          "excluded_r_squared": 0.0,
+          "f_squared": 50.20149253731358,
+          "included_r_squared": 0.980469319341204,
+          "source_construct": "x",
+          "target_construct": "m"
+        },
+        {
+          "excluded_r_squared": 0.0,
+          "f_squared": 663.2479344349791,
+          "included_r_squared": 0.9984945380359359,
+          "source_construct": "m",
+          "target_construct": "y"
+        }
+      ],
+      "formative_indicator_vif": [],
+      "fornell_larcker": {
+        "constructs": [
+          "x",
+          "m",
+          "y"
+        ],
+        "values": [
+          [
+            1.0000000000000002,
+            0.990186507351622,
+            0.9948633079237229
+          ],
+          [
+            0.990186507351622,
+            1.0,
+            0.9992469855025512
+          ],
+          [
+            0.9948633079237229,
+            0.9992469855025512,
+            1.0000000000000002
+          ]
+        ]
+      },
+      "htmt": null,
+      "htmt_original": {
+        "absolute_correlations": false,
+        "cells": [
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "m",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_original_method_version": "henseler_et_al_htmt_v1",
+      "htmt_plus": {
+        "absolute_correlations": true,
+        "cells": [
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "m",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
+      "method_version": "pls_assessment_v7",
+      "model_fit": {
+        "estimated": {
+          "d_uls": 0.000029402696864092402,
+          "srmr": 0.0022136958863739017
+        },
+        "saturated": {
+          "d_uls": 1.355854680848614e-31,
+          "srmr": 1.5032490816276445e-16
+        }
+      },
+      "r_squared": {
+        "m": 0.980469319341204,
+        "y": 0.9984945380359359
+      },
+      "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
+      "structural_quality": [
+        {
+          "adjusted_r_squared": 0.9772142058980713,
+          "construct": "m",
+          "predictor_count": 1,
+          "r_squared": 0.980469319341204
+        },
+        {
+          "adjusted_r_squared": 0.9982436277085919,
+          "construct": "y",
+          "predictor_count": 1,
+          "r_squared": 0.9984945380359359
+        }
+      ],
+      "structural_vif": [
+        {
+          "predictor_construct": "x",
+          "target_construct": "m",
+          "vif": 1.0
+        },
+        {
+          "predictor_construct": "m",
+          "target_construct": "y",
+          "vif": 1.0
+        }
+      ],
+      "warnings": [
+        "rho_a.single_indicator_not_identified for construct 'x'",
+        "Cronbach alpha is undefined for single-item construct 'x'",
+        "rho_a.single_indicator_not_identified for construct 'm'",
+        "Cronbach alpha is undefined for single-item construct 'm'",
+        "rho_a.single_indicator_not_identified for construct 'y'",
+        "Cronbach alpha is undefined for single-item construct 'y'"
+      ]
+    }
+  }
+}

@@ -1,0 +1,230 @@
+{
+  "all_listed_artifacts_present": true,
+  "artifacts": [
+    {
+      "bytes": 3592,
+      "path": "docs/methods/PLS_PM_V1.md",
+      "present": true
+    },
+    {
+      "bytes": 60,
+      "path": "validation/fixtures/simple_reflective.csv",
+      "present": true
+    },
+    {
+      "bytes": 924,
+      "path": "validation/fixtures/simple_reflective.recipe.json",
+      "present": true
+    },
+    {
+      "bytes": 1037,
+      "path": "validation/fixtures/simple_reflective.mode_b.recipe.json",
+      "present": true
+    },
+    {
+      "bytes": 1042,
+      "path": "validation/fixtures/simple_reflective.factor.recipe.json",
+      "present": true
+    },
+    {
+      "bytes": 1033,
+      "path": "validation/fixtures/simple_reflective.pca.recipe.json",
+      "present": true
+    },
+    {
+      "bytes": 82185,
+      "path": "validation/fixtures/csem_threecommonfactors.csv",
+      "present": true
+    },
+    {
+      "bytes": 1349,
+      "path": "validation/fixtures/csem_threecommonfactors.recipe.json",
+      "present": true
+    },
+    {
+      "bytes": 3644,
+      "path": "validation/results/pls_csem_0_6_1.csv",
+      "present": true
+    },
+    {
+      "bytes": 9889,
+      "path": "validation/results/pls_quickpls_path_mode_a.json",
+      "present": true
+    },
+    {
+      "bytes": 10513,
+      "path": "validation/results/pls_quickpls_mode_b.json",
+      "present": true
+    },
+    {
+      "bytes": 9879,
+      "path": "validation/results/pls_quickpls_factor.json",
+      "present": true
+    },
+    {
+      "bytes": 9668,
+      "path": "validation/results/pls_quickpls_pca.json",
+      "present": true
+    },
+    {
+      "bytes": 12987,
+      "path": "validation/results/pls_csem_comparison.json",
+      "present": true
+    },
+    {
+      "bytes": 2993,
+      "path": "validation/results/pls_plspm_0_5_7.json",
+      "present": true
+    },
+    {
+      "bytes": 6009,
+      "path": "validation/results/pls_plspm_comparison.json",
+      "present": true
+    },
+    {
+      "bytes": 802,
+      "path": "validation/results/pls_pca_numpy_reference.json",
+      "present": true
+    },
+    {
+      "bytes": 2808,
+      "path": "validation/results/pls_pca_numpy_comparison.json",
+      "present": true
+    },
+    {
+      "bytes": 2716,
+      "path": "validation/results/pls_csem_threecommonfactors_0_6_1.csv",
+      "present": true
+    },
+    {
+      "bytes": 63751,
+      "path": "validation/results/pls_quickpls_csem_threecommonfactors.json",
+      "present": true
+    },
+    {
+      "bytes": 7005,
+      "path": "validation/results/pls_csem_threecommonfactors_comparison.json",
+      "present": true
+    }
+  ],
+  "boundary_parity": {
+    "evidence": [
+      "qpls-runner::deterministic_payload_is_stable_across_runner_invocations",
+      "quickpls-desktop::desktop_runner_payload_matches_cli_serialized_artifact",
+      "qpls-cli::cli_analysis_payload_is_exactly_worker_invariant"
+    ],
+    "ignored_fields": [
+      "result id",
+      "started_at",
+      "completed_at"
+    ],
+    "numeric_tolerance": "1e-12",
+    "status": "passed"
+  },
+  "comparison_status": "passed",
+  "deterministic_tolerance": "1e-6",
+  "generated_at": "2026-07-18T17:14:28.255441900Z",
+  "note": "Evidence traceability report. PLS-PM v0.3 core is validated for the current documented scope; later PLS extensions remain separately gated.",
+  "open_blockers": [],
+  "open_registry_gates": [],
+  "references": {
+    "csem_0_6_1": {
+      "status": "passed",
+      "variants": [
+        {
+          "max_abs_diff": 2.534572551837755e-10,
+          "reference": "cSEM 0.6.1",
+          "status": "passed",
+          "variant": "PATH_MODE_A"
+        },
+        {
+          "max_abs_diff": 1.6384463230600945e-15,
+          "reference": "cSEM 0.6.1",
+          "status": "passed",
+          "variant": "MODE_B"
+        },
+        {
+          "max_abs_diff": 4.440892098500626e-16,
+          "reference": "cSEM 0.6.1",
+          "status": "passed",
+          "variant": "FACTOR"
+        },
+        {
+          "max_abs_diff": 1.3322676295501878e-15,
+          "reference": "cSEM 0.6.1",
+          "status": "passed",
+          "variant": "PCA"
+        }
+      ]
+    },
+    "numpy_pca_eigh": {
+      "compared_quantities": [
+        "path coefficients",
+        "loadings",
+        "weights"
+      ],
+      "max_abs_diff": 1.1102230246251563e-16,
+      "status": "passed",
+      "variant": "PCA"
+    },
+    "published_csem_threecommonfactors": {
+      "compared_quantities": [
+        "path coefficients",
+        "loadings",
+        "weights"
+      ],
+      "dataset": "cSEM::threecommonfactors",
+      "max_abs_diff": 4.6318782143117687e-10,
+      "population_path_values": {
+        "eta2~eta1": 0.6,
+        "eta3~eta1": 0.4,
+        "eta3~eta2": 0.35
+      },
+      "reference": "cSEM 0.6.1",
+      "status": "passed"
+    },
+    "python_plspm_0_5_7": {
+      "excluded_quantities": [
+        "outer weights because python-plspm uses a different normalization convention"
+      ],
+      "status": "passed",
+      "variants": [
+        {
+          "compared_quantities": [
+            "path coefficients",
+            "loadings"
+          ],
+          "max_abs_diff": 2.220446049250313e-16,
+          "reference": "python-plspm 0.5.7",
+          "status": "passed",
+          "variant": "PATH_MODE_A"
+        },
+        {
+          "compared_quantities": [
+            "path coefficients",
+            "loadings"
+          ],
+          "max_abs_diff": 7.848807492827348e-9,
+          "reference": "python-plspm 0.5.7",
+          "status": "passed",
+          "variant": "MODE_B"
+        },
+        {
+          "compared_quantities": [
+            "path coefficients",
+            "loadings"
+          ],
+          "max_abs_diff": 1.7067680602167457e-11,
+          "reference": "python-plspm 0.5.7",
+          "status": "passed",
+          "variant": "FACTOR"
+        }
+      ]
+    }
+  },
+  "schema_version": 1,
+  "slice_id": "v0_3_pls_core",
+  "slice_status": "validated",
+  "stable_release_allowed": false,
+  "target": "v03-pls"
+}

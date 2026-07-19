@@ -1,0 +1,53 @@
+{
+  "schema_version": 2,
+  "id": "00000000-0000-0000-0000-000000000601",
+  "created_at": "2026-07-18T00:00:00Z",
+  "dataset_fingerprint": "v2:fcb80734944fb36c082996aafeedbb69b2ed813ea4f35284358cf8a47c62f482",
+  "model": {
+    "id": "00000000-0000-0000-0000-000000000002",
+    "name": "Simple reflective reference",
+    "constructs": [
+      {
+        "id": "x",
+        "name": "X",
+        "short_name": "X",
+        "mode": "reflective",
+        "indicators": [
+          "x1",
+          "x2"
+        ]
+      },
+      {
+        "id": "y",
+        "name": "Y",
+        "short_name": "Y",
+        "mode": "reflective",
+        "indicators": [
+          "y1",
+          "y2"
+        ]
+      }
+    ],
+    "paths": [
+      {
+        "source": "x",
+        "target": "y"
+      }
+    ]
+  },
+  "settings": {
+    "method": "pls_pm",
+    "weighting_scheme": "path",
+    "tolerance": 1e-07,
+    "max_iterations": 3000,
+    "bootstrap_samples": 0,
+    "seed": 20260718,
+    "preprocessing": "standardized",
+    "missing_data": "listwise_deletion"
+  },
+  "metadata": {
+    "fixture": "PLS bootstrap python-plspm matched-resample validation",
+    "source_recipe": "validation/fixtures/simple_reflective.recipe.json",
+    "variant": "PATH_MODE_A"
+  }
+}

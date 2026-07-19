@@ -1,0 +1,196 @@
+{
+  "kind": "plspredict_holdout_reference_v1",
+  "passed": true,
+  "checks": {
+    "method_version": true,
+    "split_counts": true,
+    "target_shape": true,
+    "predictive_improvement": true,
+    "lm_benchmark_available": true,
+    "q2_threshold": true,
+    "kfold_plan": true,
+    "kfold_predictive_improvement": true,
+    "kfold_lm_benchmark_available": true,
+    "cvpat_present": true,
+    "cvpat_p_values_available": true,
+    "cvpat_benchmark_prefers_pls": true,
+    "model_pair_cvpat_present": true,
+    "model_pair_cvpat_prefers_full_pls": true,
+    "model_pair_cvpat_p_value_available": true,
+    "experimental_warning": true
+  },
+  "quickpls": {
+    "method_version": "plspredict_holdout_v1",
+    "predict": {
+      "benchmark": "training-mean construct-score benchmark fixed at zero; optional LM benchmark predicts target construct scores from predecessor indicators",
+      "method_version": "plspredict_holdout_v1",
+      "repeated_kfold": {
+        "assignment": "deterministic_complete_case_index_multiplier_modulo_5",
+        "cvpat": [
+          {
+            "comparison": "pls_vs_training_mean_benchmark",
+            "loss": "squared_error_difference_pls_minus_comparison",
+            "mean_loss_difference": -0.9839106489063981,
+            "observations": 192,
+            "p_value_two_sided": 0.0,
+            "preferred_model": "pls",
+            "standard_error": 0.0639564806459906,
+            "t_statistic": -15.384064898012472,
+            "target": "y",
+            "warning": null
+          },
+          {
+            "comparison": "pls_vs_lm_benchmark",
+            "loss": "squared_error_difference_pls_minus_comparison",
+            "mean_loss_difference": 2.4024494565940158e-05,
+            "observations": 192,
+            "p_value_two_sided": 0.0,
+            "preferred_model": "lm_benchmark",
+            "standard_error": 2.080254220990495e-06,
+            "t_statistic": 11.548826255716525,
+            "target": "y",
+            "warning": null
+          }
+        ],
+        "folds": 5,
+        "method_version": "plspredict_repeated_kfold_v1",
+        "repeats": 3,
+        "targets": [
+          {
+            "construct": "y",
+            "mae_benchmark": 0.8590935455551616,
+            "mae_lm": 0.0018660676458782776,
+            "mae_pls": 0.004550186205605154,
+            "predictor_count": 1,
+            "q_squared_predict": 0.999970884033817,
+            "q_squared_predict_lm": 0.9999953006768285,
+            "rmse_benchmark": 0.9919371437997985,
+            "rmse_lm": 0.002150313637344137,
+            "rmse_pls": 0.005352414717198988
+          }
+        ],
+        "total_test_observations": 192,
+        "warnings": [
+          "Repeated k-fold PLSpredict and CVPAT are experimental; fold assignment is deterministic for reproducibility and is not yet a seeded randomized plan."
+        ]
+      },
+      "split": "deterministic_complete_case_modulo_4_test_rows",
+      "targets": [
+        {
+          "construct": "y",
+          "mae_benchmark": 0.8576332262629094,
+          "mae_lm": 0.0018207265511180053,
+          "mae_pls": 0.003976441529575643,
+          "predictor_count": 1,
+          "q_squared_predict": 0.9999756167513036,
+          "q_squared_predict_lm": 0.9999955546861696,
+          "rmse_benchmark": 0.9939170666911477,
+          "rmse_lm": 0.0020955660860774183,
+          "rmse_pls": 0.004907902563807079
+        }
+      ],
+      "test_observations": 16,
+      "training_observations": 48,
+      "warnings": [
+        "PLSpredict holdout v1 is experimental; it uses deterministic holdout plus bounded repeated 5-fold prediction, construct-score LM benchmarks, paired-loss benchmark CVPAT diagnostics, and metadata-configured drop-path model-pair CVPAT, but does not yet implement separate saved-model CVPAT or indicator-level PLSpredict tables."
+      ]
+    }
+  },
+  "model_pair_quickpls": {
+    "method_version": "plspredict_holdout_v1",
+    "predict": {
+      "benchmark": "training-mean construct-score benchmark fixed at zero; optional LM benchmark predicts target construct scores from predecessor indicators",
+      "method_version": "plspredict_holdout_v1",
+      "repeated_kfold": {
+        "assignment": "deterministic_complete_case_index_multiplier_modulo_5",
+        "cvpat": [
+          {
+            "comparison": "pls_vs_training_mean_benchmark",
+            "loss": "squared_error_difference_pls_minus_comparison",
+            "mean_loss_difference": -0.988095482692637,
+            "observations": 240,
+            "p_value_two_sided": 0.0,
+            "preferred_model": "pls",
+            "standard_error": 0.058892299458154544,
+            "t_statistic": -16.77800819094728,
+            "target": "y",
+            "warning": null
+          },
+          {
+            "comparison": "pls_vs_lm_benchmark",
+            "loss": "squared_error_difference_pls_minus_comparison",
+            "mean_loss_difference": 0.0004275767290449777,
+            "observations": 240,
+            "p_value_two_sided": 0.0,
+            "preferred_model": "lm_benchmark",
+            "standard_error": 4.402286104980558e-05,
+            "t_statistic": 9.712606560514903,
+            "target": "y",
+            "warning": null
+          },
+          {
+            "comparison": "pls_vs_model_pair:drop_z_to_y",
+            "loss": "squared_error_difference_pls_minus_comparison",
+            "mean_loss_difference": -0.03351684748719472,
+            "observations": 240,
+            "p_value_two_sided": 0.0,
+            "preferred_model": "pls",
+            "standard_error": 0.002025242778994718,
+            "t_statistic": -16.549545484039044,
+            "target": "y",
+            "warning": null
+          }
+        ],
+        "folds": 5,
+        "method_version": "plspredict_repeated_kfold_v1",
+        "repeats": 3,
+        "targets": [
+          {
+            "construct": "y",
+            "mae_benchmark": 0.8578089723764932,
+            "mae_lm": 0.009499941307094919,
+            "mae_pls": 0.01911239862745818,
+            "predictor_count": 2,
+            "q_squared_predict": 0.9994271229494464,
+            "q_squared_predict_lm": 0.9998596031982023,
+            "rmse_benchmark": 0.9943147712799514,
+            "rmse_lm": 0.011781551842565737,
+            "rmse_pls": 0.023798775028644685
+          }
+        ],
+        "total_test_observations": 240,
+        "warnings": [
+          "Repeated k-fold PLSpredict and CVPAT are experimental; fold assignment is deterministic for reproducibility and is not yet a seeded randomized plan."
+        ]
+      },
+      "split": "deterministic_complete_case_modulo_4_test_rows",
+      "targets": [
+        {
+          "construct": "y",
+          "mae_benchmark": 0.8573371704141698,
+          "mae_lm": 0.009798070888047497,
+          "mae_pls": 0.019657572858174658,
+          "predictor_count": 2,
+          "q_squared_predict": 0.9994381755707546,
+          "q_squared_predict_lm": 0.9998476992984341,
+          "rmse_benchmark": 1.001737755346741,
+          "rmse_lm": 0.012362462707712166,
+          "rmse_pls": 0.023744025620161063
+        }
+      ],
+      "test_observations": 20,
+      "training_observations": 60,
+      "warnings": [
+        "PLSpredict holdout v1 is experimental; it uses deterministic holdout plus bounded repeated 5-fold prediction, construct-score LM benchmarks, paired-loss benchmark CVPAT diagnostics, and metadata-configured drop-path model-pair CVPAT, but does not yet implement separate saved-model CVPAT or indicator-level PLSpredict tables."
+      ]
+    }
+  },
+  "artifacts": {
+    "data": "validation\\results\\plspredict_holdout_reference.csv",
+    "recipe": "validation\\results\\plspredict_holdout_reference.recipe.json",
+    "quickpls": "validation\\results\\plspredict_holdout_reference_quickpls.json",
+    "model_pair_data": "validation\\results\\plspredict_model_pair_reference.csv",
+    "model_pair_recipe": "validation\\results\\plspredict_model_pair_reference.recipe.json",
+    "model_pair_quickpls": "validation\\results\\plspredict_model_pair_reference_quickpls.json"
+  }
+}

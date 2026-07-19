@@ -1,0 +1,139 @@
+{
+  "differences": [
+    {
+      "abs_difference": 3.3306690738754696e-16,
+      "actual": 0.9901865073516222,
+      "expected": 0.9901865073516218,
+      "metric": "direct",
+      "pair": [
+        "x",
+        "m"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.0,
+      "expected": 0,
+      "metric": "indirect",
+      "pair": [
+        "x",
+        "m"
+      ]
+    },
+    {
+      "abs_difference": 3.3306690738754696e-16,
+      "actual": 0.9901865073516222,
+      "expected": 0.9901865073516218,
+      "metric": "total",
+      "pair": [
+        "x",
+        "m"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.0,
+      "expected": 0,
+      "metric": "variance_accounted_for",
+      "pair": [
+        "x",
+        "m"
+      ]
+    },
+    {
+      "abs_difference": 1.1102230246251565e-16,
+      "actual": 0.9992469855025514,
+      "expected": 0.9992469855025515,
+      "metric": "direct",
+      "pair": [
+        "m",
+        "y"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.0,
+      "expected": 0,
+      "metric": "indirect",
+      "pair": [
+        "m",
+        "y"
+      ]
+    },
+    {
+      "abs_difference": 1.1102230246251565e-16,
+      "actual": 0.9992469855025514,
+      "expected": 0.9992469855025515,
+      "metric": "total",
+      "pair": [
+        "m",
+        "y"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.0,
+      "expected": 0,
+      "metric": "variance_accounted_for",
+      "pair": [
+        "m",
+        "y"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 0.0,
+      "expected": 0,
+      "metric": "direct",
+      "pair": [
+        "x",
+        "y"
+      ]
+    },
+    {
+      "abs_difference": 2.220446049250313e-16,
+      "actual": 0.9894408825564084,
+      "expected": 0.9894408825564082,
+      "metric": "indirect",
+      "pair": [
+        "x",
+        "y"
+      ]
+    },
+    {
+      "abs_difference": 2.220446049250313e-16,
+      "actual": 0.9894408825564084,
+      "expected": 0.9894408825564082,
+      "metric": "total",
+      "pair": [
+        "x",
+        "y"
+      ]
+    },
+    {
+      "abs_difference": 0.0,
+      "actual": 1.0,
+      "expected": 1,
+      "metric": "variance_accounted_for",
+      "pair": [
+        "x",
+        "y"
+      ]
+    }
+  ],
+  "kind": "pls_mediation_r_lm_reference_v1",
+  "max_abs_difference": 3.3306690738754696e-16,
+  "note": "Development-only second-source check using R base lm on the single-item standardized mediation fixture.",
+  "passed": true,
+  "quickpls_result": "validation/results/mediation_reference_quickpls.json",
+  "r_reference_output": "validation/results/mediation_r_reference_values.json",
+  "runtime": {
+    "command": "Rscript",
+    "path": "C:\\Users\\mohd.naved\\Documents\\PLS-Sem\\dist-desktop\\r-runtime\\bin\\Rscript.exe",
+    "reference": "R base lm",
+    "version": "Rscript (R) version 4.6.1 (2026-06-24)"
+  },
+  "schema_version": 1,
+  "source_data": "validation/results/mediation_reference.csv",
+  "tolerance": 1e-12
+}

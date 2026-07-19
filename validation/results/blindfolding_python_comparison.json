@@ -1,0 +1,68 @@
+{
+  "status": "passed",
+  "tolerance": 1e-06,
+  "reference": "independent NumPy implementation of the frozen QuickPLS blindfolding v4 contract",
+  "artifacts": {
+    "data": "validation\\fixtures\\corporate_reputation.csv",
+    "recipe": "validation\\fixtures\\corporate_reputation.recipe.json",
+    "quickpls": "validation\\results\\blindfolding_quickpls_reference.json",
+    "reference": "validation\\results\\blindfolding_python_reference.json"
+  },
+  "max_abs_diff": 1.0658141036401503e-14,
+  "comparisons": [
+    {
+      "construct": "satisfaction",
+      "field": "q_squared",
+      "quickpls": 0.43377335613439894,
+      "python_reference": 0.4337733561343987,
+      "difference": 2.220446049250313e-16,
+      "abs_diff": 2.220446049250313e-16,
+      "passed": true
+    },
+    {
+      "construct": "satisfaction",
+      "field": "prediction_error_sum_squares",
+      "quickpls": 21.00984200693393,
+      "python_reference": 21.00984200693394,
+      "difference": -1.0658141036401503e-14,
+      "abs_diff": 1.0658141036401503e-14,
+      "passed": true
+    },
+    {
+      "construct": "satisfaction",
+      "field": "observation_sum_squares",
+      "quickpls": 37.105004214391585,
+      "python_reference": 37.105004214391585,
+      "difference": 0.0,
+      "abs_diff": 0.0,
+      "passed": true
+    },
+    {
+      "construct": "loyalty",
+      "field": "q_squared",
+      "quickpls": 0.5152353456236289,
+      "python_reference": 0.5152353456236289,
+      "difference": 0.0,
+      "abs_diff": 0.0,
+      "passed": true
+    },
+    {
+      "construct": "loyalty",
+      "field": "prediction_error_sum_squares",
+      "quickpls": 15.98105270461094,
+      "python_reference": 15.98105270461094,
+      "difference": 0.0,
+      "abs_diff": 0.0,
+      "passed": true
+    },
+    {
+      "construct": "loyalty",
+      "field": "observation_sum_squares",
+      "quickpls": 32.96662114355239,
+      "python_reference": 32.96662114355239,
+      "difference": 0.0,
+      "abs_diff": 0.0,
+      "passed": true
+    }
+  ]
+}

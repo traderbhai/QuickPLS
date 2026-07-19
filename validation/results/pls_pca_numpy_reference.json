@@ -1,0 +1,38 @@
+{
+  "engine": "numpy-eigh",
+  "input": "validation/fixtures/simple_reflective.csv",
+  "outer": [
+    {
+      "construct": "x",
+      "indicator": "x1",
+      "loading": 0.9856107606091623,
+      "weight": 0.5072996561958923
+    },
+    {
+      "construct": "x",
+      "indicator": "x2",
+      "loading": 0.9856107606091623,
+      "weight": 0.5072996561958923
+    },
+    {
+      "construct": "y",
+      "indicator": "y1",
+      "loading": 0.9955487277601801,
+      "weight": 0.5022355873277217
+    },
+    {
+      "construct": "y",
+      "indicator": "y2",
+      "loading": 0.9955487277601802,
+      "weight": 0.5022355873277216
+    }
+  ],
+  "paths": [
+    {
+      "source": "x",
+      "target": "y",
+      "value": 0.9823003182974279
+    }
+  ],
+  "variant": "PCA"
+}

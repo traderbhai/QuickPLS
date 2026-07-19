@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "harness_version": "qpls_monte_carlo_v1",
+  "engine_versions": {
+    "pls": "pls_pm_v1",
+    "resampling": "indexed_resampling_v4"
+  },
+  "mode": "studentized-qualification",
+  "configuration": {
+    "simulations_per_scenario": 100,
+    "simulation_offset": 0,
+    "sample_size": 100,
+    "bootstrap_replicates": 999,
+    "studentized_inner_replicates": 99,
+    "workers": 12,
+    "confidence_level": 0.95,
+    "master_seed": 20260718041
+  },
+  "dgp": {
+    "description": "Bivariate generated as x~N(0,1), y=beta*x+sqrt(1-beta^2)*e with independent unit-variance e. Normal modes use e~N(0,1); sensitivity, studentized-sensitivity, and studentized-qualification also include standardized t(3) errors.",
+    "variables": "Single-item reflective constructs x={x1}, y={y1}",
+    "evaluated_path": "x -> y; population PLS path equals beta",
+    "alternatives": [
+      0.35,
+      0.0
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "coverage_beta_0_35",
+      "error_distribution": "normal",
+      "true_path": 0.35,
+      "requested_simulations": 100,
+      "completed_simulations": 100,
+      "failed_simulations": 0,
+      "mean_estimate": 0.34877796159648083,
+      "bias": -0.0012220384035191434,
+      "mean_usable_bootstrap_rate": 1.0,
+      "percentile": {
+        "available": 100,
+        "coverage_rate": 1.0,
+        "exclusion_of_zero_rate": 0.99
+      },
+      "bca": {
+        "available": 100,
+        "coverage_rate": 0.99,
+        "exclusion_of_zero_rate": 0.98
+      },
+      "studentized": {
+        "available": 100,
+        "coverage_rate": 1.0,
+        "exclusion_of_zero_rate": 0.94
+      },
+      "normal_reference_available": 100,
+      "normal_reference_type_i_rate": null,
+      "failures": []
+    }
+  ],
+  "qualification": {
+    "evaluated": false,
+    "passed": null,
+    "minimum_simulations_per_scenario": 1000,
+    "thresholds": {
+      "coverage_lower": 0.925,
+      "coverage_upper": 0.975,
+      "type_i_lower": 0.025,
+      "type_i_upper": 0.075,
+      "maximum_absolute_bias": 0.03,
+      "minimum_bca_availability": 1.0,
+      "minimum_studentized_availability": 0.99,
+      "minimum_normal_reference_availability": 1.0,
+      "minimum_usable_bootstrap_rate": 0.99
+    },
+    "checks": [],
+    "note": "Qualification was not evaluated for mode 'studentized-qualification': missing null scenario."
+  },
+  "elapsed_seconds": 53.3333178
+}

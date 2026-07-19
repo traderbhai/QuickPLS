@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "source": {
+    "article": "Dijkstra and Henseler (2015), Consistent Partial Least Squares Path Modeling",
+    "doi": "10.25300/MISQ/2015/39.2.02",
+    "url": "https://www.henseler.com/Dijkstra-Henseler-MISQ-2015.pdf",
+    "location": "Equation 3 and Appendix B"
+  },
+  "method_version": "dijkstra_henseler_rho_a_v1",
+  "formula": "rho_A = (w'w)^2 * [w'(S - diag(S))w] / [w'(ww' - diag(ww'))w]",
+  "tolerance": 1e-12,
+  "fixtures": [
+    {
+      "name": "equicorrelation_three_indicator_equation_3",
+      "covariance_matrix": [
+        [1.0, 0.5, 0.5],
+        [0.5, 1.0, 0.5],
+        [0.5, 0.5, 1.0]
+      ],
+      "incoming_weight_vector": [1.0, 1.0, 1.0],
+      "expected": {
+        "weight_norm_squared": 0.5,
+        "off_diagonal_numerator": 0.5,
+        "off_diagonal_denominator": 0.16666666666666666,
+        "rho_a": 0.75
+      }
+    },
+    {
+      "name": "unequal_signed_equation_3",
+      "covariance_matrix": [
+        [1.0, -0.4, 0.1],
+        [-0.4, 1.0, -0.2],
+        [0.1, -0.2, 1.0]
+      ],
+      "incoming_weight_vector": [0.7, -0.2, 0.5],
+      "expected": {
+        "weight_norm_squared": 0.7784431137724551,
+        "off_diagonal_numerator": 0.2215568862275449,
+        "off_diagonal_denominator": 0.3029868406898777,
+        "rho_a": 0.4431137724550898
+      }
+    }
+  ],
+  "note": "This fixture operationalizes the primary-paper Equation 3 expression using fixed covariance/correlation matrices and Mode A weight vectors normalized to unit score variance before applying the formula. It is equation-level primary-source evidence, separate from cSEM engine agreement and Decimal cross-checks."
+}

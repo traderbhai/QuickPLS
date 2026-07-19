@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "kind": "studentized_performance_benchmark_v1",
+  "profile": "release-stress",
+  "passed": true,
+  "fixture": {
+    "primary_recipe": "validation/fixtures/simple_reflective.recipe.json",
+    "primary_data": "validation/fixtures/simple_reflective.csv",
+    "detected_max_workers": 12
+  },
+  "plans": [
+    {
+      "name": "maximum_outer_inner_1999x999",
+      "fixture_label": "compact_reflective",
+      "recipe": "validation/fixtures/simple_reflective.recipe.json",
+      "data": "validation/fixtures/simple_reflective.csv",
+      "passed": true,
+      "output": "D:\\QuickPLS\\validation\\results\\studentized_performance\\maximum_outer_inner_1999x999.json",
+      "status": "completed",
+      "bootstrap_samples": 1999,
+      "studentized_inner_samples": 999,
+      "requested_inner_fits": 1997001,
+      "workers": 12,
+      "elapsed_seconds": 174.2497325000004,
+      "inner_fits_per_second": 11460.568526267296,
+      "peak_working_set_bytes": 61562880,
+      "result_file_bytes": 27160,
+      "usable_replicates": 1997,
+      "studentized_failure": null,
+      "studentized_parameter_count": 13,
+      "studentized_available_parameter_count": 4,
+      "studentized_unavailable_parameter_count": 9
+    },
+    {
+      "name": "broader_corporate_999x199",
+      "fixture_label": "corporate_reputation_4_constructs_9_indicators_3_paths",
+      "recipe": "validation/fixtures/corporate_reputation.recipe.json",
+      "data": "validation/fixtures/corporate_reputation.csv",
+      "passed": true,
+      "output": "D:\\QuickPLS\\validation\\results\\studentized_performance\\broader_corporate_999x199.json",
+      "status": "completed",
+      "bootstrap_samples": 999,
+      "studentized_inner_samples": 199,
+      "requested_inner_fits": 198801,
+      "workers": 12,
+      "elapsed_seconds": 695.0209808,
+      "inner_fits_per_second": 286.0359694050836,
+      "peak_working_set_bytes": 42991616,
+      "result_file_bytes": 77673,
+      "usable_replicates": 986,
+      "studentized_failure": null,
+      "studentized_parameter_count": 38,
+      "studentized_available_parameter_count": 33,
+      "studentized_unavailable_parameter_count": 5
+    }
+  ],
+  "artifact_directory": "D:\\QuickPLS\\validation\\results\\studentized_performance",
+  "note": "Nested studentized bootstrap performance evidence. The bounded profile is consumed by qpls qualify v04-inference; the release-stress profile records maximum outer-plus-inner and broader corporate model-shape stress evidence on documented local hardware."
+}

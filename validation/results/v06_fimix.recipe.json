@@ -1,0 +1,56 @@
+{
+  "schema_version": 2,
+  "id": "00000000-0000-0000-0000-000000000601",
+  "created_at": "2026-07-19T00:00:00Z",
+  "dataset_fingerprint": "v2:ab3c89398f3ee2eac71ad698ccb09b3677b7006d4aa0e2850e52123b5cd87189",
+  "model": {
+    "id": "00000000-0000-0000-0000-000000000602",
+    "name": "v0.6 group methods validation",
+    "constructs": [
+      {
+        "id": "x",
+        "name": "X",
+        "short_name": "X",
+        "mode": "reflective",
+        "indicators": [
+          "x1",
+          "x2"
+        ]
+      },
+      {
+        "id": "y",
+        "name": "Y",
+        "short_name": "Y",
+        "mode": "reflective",
+        "indicators": [
+          "y1",
+          "y2"
+        ]
+      }
+    ],
+    "paths": [
+      {
+        "source": "x",
+        "target": "y"
+      }
+    ]
+  },
+  "settings": {
+    "method": "predict",
+    "weighting_scheme": "path",
+    "tolerance": 1e-07,
+    "max_iterations": 3000,
+    "bootstrap_samples": 0,
+    "seed": 20260719,
+    "preprocessing": "standardized",
+    "missing_data": "listwise_deletion"
+  },
+  "metadata": {
+    "fixture": "v06_group_methods_reference",
+    "group_methods": "fimix",
+    "segment_count": "3",
+    "fimix_classes": "3",
+    "segment_starts": "6",
+    "minimum_segment_share": "0.10"
+  }
+}

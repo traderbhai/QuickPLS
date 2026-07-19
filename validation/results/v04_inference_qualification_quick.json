@@ -1,0 +1,2233 @@
+{
+  "checks": [
+    {
+      "evidence": {
+        "artifact_directory": "D:\\QuickPLS\\target/qualification/v04-inference",
+        "bootstrap_samples": 24,
+        "diagnostics_equal": true,
+        "passed": true,
+        "payload_equal": true,
+        "permutation_samples": 99,
+        "workers": [
+          1,
+          2,
+          4
+        ]
+      },
+      "id": "cli_worker_matrix_1_2_4",
+      "status": "passed"
+    },
+    {
+      "evidence": {
+        "cancel_requested_after_completed_replicates": 1,
+        "cancelled_result": true,
+        "elapsed_seconds_after_cancel_request": 0.0009597,
+        "error": "resampling was cancelled",
+        "passed": true,
+        "requested_replicates": 10000,
+        "threshold_seconds": 1.0,
+        "workers": 4
+      },
+      "id": "bootstrap_cancellation_latency",
+      "status": "passed"
+    },
+    {
+      "evidence": {
+        "cancel_requested_after_completed_inner_replicates": 1,
+        "cancelled_result": true,
+        "elapsed_seconds_after_cancel_request": 0.0002514,
+        "error": "resampling was cancelled",
+        "note": "Cancellation is requested only after nested studentized-inner progress is observed, proving the 999x99 path discards partial output from inside the nested phase.",
+        "passed": true,
+        "phase_trigger": "studentized_inner",
+        "requested_primary_replicates": 999,
+        "requested_studentized_inner_fits": 98901,
+        "requested_studentized_inner_replicates": 99,
+        "threshold_seconds": 1.0,
+        "workers": 4
+      },
+      "id": "studentized_cancellation_latency_999x99",
+      "status": "passed"
+    },
+    {
+      "evidence": {
+        "configuration": {
+          "bootstrap_replicates": 79,
+          "confidence_level": 0.95,
+          "master_seed": 20260718041,
+          "sample_size": 60,
+          "simulation_offset": 0,
+          "simulations_per_scenario": 8,
+          "studentized_inner_replicates": 0,
+          "workers": 1
+        },
+        "engine_versions": {
+          "pls": "pls_pm_v1",
+          "resampling": "indexed_resampling_v4"
+        },
+        "harness_version": "qpls_monte_carlo_v1",
+        "mode": "quick",
+        "note": "Quick Monte Carlo is an integration and determinism check only; it is not coverage qualification evidence.",
+        "path": "D:\\QuickPLS\\validation/results/monte_carlo_quick.json",
+        "qualification_evaluated": false,
+        "refreshed": false,
+        "scenario_count": 2,
+        "scenarios": [
+          {
+            "bca": {
+              "available": 8,
+              "coverage_rate": 0.875,
+              "exclusion_of_zero_rate": 0.5
+            },
+            "bias": -0.03078227770998021,
+            "completed_simulations": 8,
+            "error_distribution": "normal",
+            "failed_simulations": 0,
+            "name": "coverage_beta_0_35",
+            "percentile": {
+              "available": 8,
+              "coverage_rate": 0.75,
+              "exclusion_of_zero_rate": 0.5
+            }
+          },
+          {
+            "bca": {
+              "available": 8,
+              "coverage_rate": 1.0,
+              "exclusion_of_zero_rate": 0.0
+            },
+            "bias": 0.018743650112699062,
+            "completed_simulations": 8,
+            "error_distribution": "normal",
+            "failed_simulations": 0,
+            "name": "null_beta_0",
+            "percentile": {
+              "available": 8,
+              "coverage_rate": 1.0,
+              "exclusion_of_zero_rate": 0.0
+            }
+          }
+        ],
+        "usable": true
+      },
+      "id": "quick_monte_carlo_harness",
+      "status": "passed"
+    },
+    {
+      "evidence": {
+        "configuration": {
+          "bootstrap_replicates": 199,
+          "confidence_level": 0.95,
+          "master_seed": 20260718041,
+          "sample_size": 100,
+          "simulations_per_scenario": 32,
+          "workers": 1
+        },
+        "engine_versions": {
+          "pls": "pls_pm_v1",
+          "resampling": "indexed_resampling_v4"
+        },
+        "harness_version": "qpls_monte_carlo_v1",
+        "mode": "pilot",
+        "note": "Pilot Monte Carlo is an early-warning coverage/type-I screen only; it is not release qualification evidence.",
+        "path": "D:\\QuickPLS\\validation/results/monte_carlo_pilot.json",
+        "qualification_evaluated": false,
+        "refreshed": false,
+        "scenario_count": 2,
+        "scenarios": [
+          {
+            "bca": {
+              "available": 32,
+              "coverage_rate": 1.0,
+              "exclusion_of_zero_rate": 1.0
+            },
+            "bias": 0.0002672686948269609,
+            "completed_simulations": 32,
+            "error_distribution": null,
+            "failed_simulations": 0,
+            "name": "coverage_beta_0_35",
+            "percentile": {
+              "available": 32,
+              "coverage_rate": 1.0,
+              "exclusion_of_zero_rate": 1.0
+            }
+          },
+          {
+            "bca": {
+              "available": 32,
+              "coverage_rate": 1.0,
+              "exclusion_of_zero_rate": 0.0
+            },
+            "bias": 0.009942501399461814,
+            "completed_simulations": 32,
+            "error_distribution": null,
+            "failed_simulations": 0,
+            "name": "null_beta_0",
+            "percentile": {
+              "available": 32,
+              "coverage_rate": 1.0,
+              "exclusion_of_zero_rate": 0.0
+            }
+          }
+        ],
+        "usable": true
+      },
+      "id": "pilot_monte_carlo_harness",
+      "status": "passed"
+    },
+    {
+      "evidence": {
+        "configuration": {
+          "bootstrap_replicates": 399,
+          "confidence_level": 0.95,
+          "master_seed": 20260718041,
+          "sample_size": 120,
+          "simulations_per_scenario": 96,
+          "studentized_inner_replicates": 0,
+          "workers": 1
+        },
+        "engine_versions": {
+          "pls": "pls_pm_v1",
+          "resampling": "indexed_resampling_v4"
+        },
+        "harness_version": "qpls_monte_carlo_v1",
+        "mode": "sensitivity",
+        "note": "Sensitivity Monte Carlo is a stronger deterministic drift screen than pilot mode; it is still not release qualification evidence.",
+        "path": "D:\\QuickPLS\\validation/results/monte_carlo_sensitivity.json",
+        "qualification_evaluated": false,
+        "refreshed": false,
+        "scenario_count": 4,
+        "scenarios": [
+          {
+            "bca": {
+              "available": 96,
+              "coverage_rate": 0.9375,
+              "exclusion_of_zero_rate": 0.9791666666666666
+            },
+            "bias": -0.00187539684600041,
+            "completed_simulations": 96,
+            "error_distribution": "normal",
+            "failed_simulations": 0,
+            "name": "coverage_beta_0_35",
+            "percentile": {
+              "available": 96,
+              "coverage_rate": 0.9375,
+              "exclusion_of_zero_rate": 0.96875
+            }
+          },
+          {
+            "bca": {
+              "available": 96,
+              "coverage_rate": 0.96875,
+              "exclusion_of_zero_rate": 0.03125
+            },
+            "bias": -0.001222579709324884,
+            "completed_simulations": 96,
+            "error_distribution": "normal",
+            "failed_simulations": 0,
+            "name": "null_beta_0",
+            "percentile": {
+              "available": 96,
+              "coverage_rate": 0.96875,
+              "exclusion_of_zero_rate": 0.03125
+            }
+          },
+          {
+            "bca": {
+              "available": 96,
+              "coverage_rate": 0.9166666666666666,
+              "exclusion_of_zero_rate": 0.9375
+            },
+            "bias": 0.004350717782298175,
+            "completed_simulations": 96,
+            "error_distribution": "standardized_t3",
+            "failed_simulations": 0,
+            "name": "heavy_tail_coverage_beta_0_35",
+            "percentile": {
+              "available": 96,
+              "coverage_rate": 0.9375,
+              "exclusion_of_zero_rate": 0.96875
+            }
+          },
+          {
+            "bca": {
+              "available": 96,
+              "coverage_rate": 0.8854166666666666,
+              "exclusion_of_zero_rate": 0.11458333333333331
+            },
+            "bias": -0.006272212138269742,
+            "completed_simulations": 96,
+            "error_distribution": "standardized_t3",
+            "failed_simulations": 0,
+            "name": "heavy_tail_null_beta_0",
+            "percentile": {
+              "available": 96,
+              "coverage_rate": 0.875,
+              "exclusion_of_zero_rate": 0.125
+            }
+          }
+        ],
+        "usable": true
+      },
+      "id": "sensitivity_monte_carlo_harness",
+      "status": "passed"
+    },
+    {
+      "evidence": {
+        "configuration": {
+          "bootstrap_replicates": 999,
+          "confidence_level": 0.95,
+          "master_seed": 20260718041,
+          "sample_size": 100,
+          "simulations_per_scenario": 4,
+          "studentized_inner_replicates": 99,
+          "workers": 12
+        },
+        "elapsed_seconds": 5.1358131,
+        "engine_versions": {
+          "pls": "pls_pm_v1",
+          "resampling": "indexed_resampling_v4"
+        },
+        "harness_version": "qpls_monte_carlo_v1",
+        "mode": "studentized",
+        "note": "Bounded 999x99 studentized Monte Carlo pilot. It proves availability and early coverage/type-I plumbing only; full preregistered studentized qualification remains open.",
+        "path": "D:\\QuickPLS\\validation/results/monte_carlo_studentized.json",
+        "qualification_evaluated": false,
+        "studentized_scenarios": [
+          {
+            "bias": -0.015195833641412748,
+            "completed_simulations": 4,
+            "failed_simulations": 0,
+            "name": "coverage_beta_0_35",
+            "studentized": {
+              "available": 4,
+              "coverage_rate": 1.0,
+              "exclusion_of_zero_rate": 0.75
+            }
+          },
+          {
+            "bias": 0.0445325634277937,
+            "completed_simulations": 4,
+            "failed_simulations": 0,
+            "name": "null_beta_0",
+            "studentized": {
+              "available": 4,
+              "coverage_rate": 1.0,
+              "exclusion_of_zero_rate": 0.0
+            }
+          }
+        ],
+        "usable": true
+      },
+      "id": "studentized_monte_carlo_harness",
+      "status": "passed"
+    },
+    {
+      "evidence": {
+        "configuration": {
+          "bootstrap_replicates": 999,
+          "confidence_level": 0.95,
+          "master_seed": 20260718041,
+          "sample_size": 100,
+          "simulations_per_scenario": 4,
+          "studentized_inner_replicates": 99,
+          "workers": 12
+        },
+        "elapsed_seconds": 8.1079863,
+        "engine_versions": {
+          "pls": "pls_pm_v1",
+          "resampling": "indexed_resampling_v4"
+        },
+        "harness_version": "qpls_monte_carlo_v1",
+        "mode": "studentized-sensitivity",
+        "note": "Bounded normal/heavy-tail 999x99 studentized scenario-sensitivity pilot. Full preregistered studentized coverage remains open.",
+        "path": "D:\\QuickPLS\\validation/results/monte_carlo_studentized_sensitivity.json",
+        "qualification_evaluated": false,
+        "studentized_scenarios": [
+          {
+            "bias": -0.015195833641412748,
+            "completed_simulations": 4,
+            "error_distribution": "normal",
+            "failed_simulations": 0,
+            "name": "coverage_beta_0_35",
+            "studentized": {
+              "available": 4,
+              "coverage_rate": 1.0,
+              "exclusion_of_zero_rate": 0.75
+            }
+          },
+          {
+            "bias": 0.0445325634277937,
+            "completed_simulations": 4,
+            "error_distribution": "normal",
+            "failed_simulations": 0,
+            "name": "null_beta_0",
+            "studentized": {
+              "available": 4,
+              "coverage_rate": 1.0,
+              "exclusion_of_zero_rate": 0.0
+            }
+          },
+          {
+            "bias": 0.04765420832286871,
+            "completed_simulations": 4,
+            "error_distribution": "standardized_t3",
+            "failed_simulations": 0,
+            "name": "heavy_tail_coverage_beta_0_35",
+            "studentized": {
+              "available": 4,
+              "coverage_rate": 1.0,
+              "exclusion_of_zero_rate": 1.0
+            }
+          },
+          {
+            "bias": -0.06275980914715526,
+            "completed_simulations": 4,
+            "error_distribution": "standardized_t3",
+            "failed_simulations": 0,
+            "name": "heavy_tail_null_beta_0",
+            "studentized": {
+              "available": 4,
+              "coverage_rate": 1.0,
+              "exclusion_of_zero_rate": 0.0
+            }
+          }
+        ],
+        "usable": true
+      },
+      "id": "studentized_sensitivity_harness",
+      "status": "passed"
+    },
+    {
+      "evidence": {
+        "configuration": {
+          "bootstrap_replicates": 999,
+          "confidence_level": 0.95,
+          "master_seed": 20260718041,
+          "sample_size": 100,
+          "simulation_offset": 0,
+          "simulations_per_scenario": 1000,
+          "studentized_inner_replicates": 99,
+          "workers": 12
+        },
+        "engine_versions": {
+          "pls": "pls_pm_v1",
+          "resampling": "indexed_resampling_v4"
+        },
+        "harness_version": "qpls_monte_carlo_v1",
+        "mode": "studentized-qualification",
+        "note": "Full preregistered studentized Monte Carlo qualification evidence. This is only accepted when normal and heavy-tail scenarios both meet the configured thresholds.",
+        "passed": true,
+        "path": "D:\\QuickPLS\\validation/results/monte_carlo_studentized_qualification.json",
+        "qualification_evaluated": true,
+        "qualification_passed": true,
+        "required_studentized_checks_pass": true,
+        "scenario_count": 4,
+        "scenarios": [
+          {
+            "bias": -0.0054482725799746,
+            "completed_simulations": 1000,
+            "error_distribution": "normal",
+            "failed_simulations": 0,
+            "name": "coverage_beta_0_35",
+            "studentized": {
+              "available": 1000,
+              "coverage_rate": 0.964,
+              "exclusion_of_zero_rate": 0.928
+            }
+          },
+          {
+            "bias": 0.014542573600588748,
+            "completed_simulations": 1000,
+            "error_distribution": "standardized_t3",
+            "failed_simulations": 0,
+            "name": "heavy_tail_coverage_beta_0_35",
+            "studentized": {
+              "available": 1000,
+              "coverage_rate": 0.941,
+              "exclusion_of_zero_rate": 0.779
+            }
+          },
+          {
+            "bias": 0.00018893404539714555,
+            "completed_simulations": 1000,
+            "error_distribution": "standardized_t3",
+            "failed_simulations": 0,
+            "name": "heavy_tail_null_beta_0",
+            "studentized": {
+              "available": 1000,
+              "coverage_rate": 0.946,
+              "exclusion_of_zero_rate": 0.054
+            }
+          },
+          {
+            "bias": -0.0017488971293387835,
+            "completed_simulations": 1000,
+            "error_distribution": "normal",
+            "failed_simulations": 0,
+            "name": "null_beta_0",
+            "studentized": {
+              "available": 1000,
+              "coverage_rate": 0.97,
+              "exclusion_of_zero_rate": 0.03
+            }
+          }
+        ]
+      },
+      "id": "full_studentized_monte_carlo_qualification",
+      "status": "passed"
+    },
+    {
+      "evidence": {
+        "independent_python": {
+          "confidence": 0.8,
+          "lower": 6.5578947368421066,
+          "lower_pivot": -2.1750000000000003,
+          "original": 10.0,
+          "outer_standard_error": 2.0,
+          "upper": 14.35,
+          "upper_pivot": 1.721052631578947
+        },
+        "kind": "studentized_supplied_reference_v1",
+        "note": "R boot::boot.ci(type='stud') is recorded as a development comparison, but its endpoint interpolation is not equivalent to QuickPLS Type-7 pivot quantiles for this finite supplied-replicate fixture.",
+        "passed": true,
+        "path": "D:\\QuickPLS\\validation/results/studentized_supplied_reference.json",
+        "r_boot_ci_difference_from_type7": {
+          "lower_difference_from_type7": -2.2007254714499966,
+          "upper_difference_from_type7": 2.710152663915298
+        },
+        "r_boot_ci_stud": {
+          "confidence": 0.8,
+          "lower": 4.35716926539211,
+          "lower_pivot": null,
+          "original": 10.0,
+          "outer_standard_error": 2.0,
+          "upper": 17.0601526639153,
+          "upper_pivot": null
+        },
+        "r_type7": {
+          "confidence": 0.8,
+          "lower": 6.55789473684211,
+          "lower_pivot": -2.175,
+          "original": 10.0,
+          "outer_standard_error": 2.0,
+          "upper": 14.35,
+          "upper_pivot": 1.72105263157895
+        },
+        "r_type7_max_abs_difference": 3.552713678800501e-15,
+        "tolerance": 1e-12
+      },
+      "id": "studentized_supplied_reference",
+      "status": "passed"
+    },
+    {
+      "evidence": {
+        "available_parameter_count": 4,
+        "bootstrap_samples": 999,
+        "note": "Minimum 999x99 execution evidence on the bounded fixture. This does not replace preregistered coverage, sensitivity, worker-matrix, or performance qualification.",
+        "parameter_count": 13,
+        "passed": true,
+        "path": "D:\\QuickPLS\\validation/results/studentized_minimum_quickpls.json",
+        "studentized_failure": null,
+        "studentized_inner_samples": 99,
+        "studentized_method_version": "nested_studentized_v1",
+        "unavailable_parameter_count": 9,
+        "usable_replicates": 998
+      },
+      "id": "studentized_minimum_999x99_execution",
+      "status": "passed"
+    },
+    {
+      "evidence": {
+        "artifact_directory": "D:\\QuickPLS\\validation\\results\\studentized_worker_matrix",
+        "bootstrap_samples": 999,
+        "comparisons": [
+          {
+            "baseline_workers": 1,
+            "comparison_workers": 2,
+            "diagnostics_equal": true,
+            "max_payload_abs_difference": 0.0,
+            "payload_equal": true
+          },
+          {
+            "baseline_workers": 1,
+            "comparison_workers": 4,
+            "diagnostics_equal": true,
+            "max_payload_abs_difference": 0.0,
+            "payload_equal": true
+          },
+          {
+            "baseline_workers": 1,
+            "comparison_workers": 12,
+            "diagnostics_equal": true,
+            "max_payload_abs_difference": 0.0,
+            "payload_equal": true
+          }
+        ],
+        "detected_max_workers": 12,
+        "kind": "studentized_worker_matrix_v1",
+        "note": "Bounded 999x99 worker-matrix evidence with exact payload and diagnostics equality across workers 1, 2, 4, and the detected maximum worker count.",
+        "passed": true,
+        "path": "D:\\QuickPLS\\validation/results/studentized_worker_matrix.json",
+        "performance": {
+          "max_elapsed_seconds": 81.69241920000059,
+          "max_to_min_elapsed_ratio": 6.670372962013502,
+          "min_elapsed_seconds": 12.247054200001005
+        },
+        "studentized_inner_samples": 99,
+        "workers": [
+          1,
+          2,
+          4,
+          12
+        ]
+      },
+      "id": "studentized_worker_matrix_999x99",
+      "status": "passed"
+    },
+    {
+      "evidence": {
+        "artifact_directory": "D:\\QuickPLS\\validation\\results\\studentized_performance",
+        "fixture": {
+          "detected_max_workers": 12,
+          "primary_data": "validation/fixtures/simple_reflective.csv",
+          "primary_recipe": "validation/fixtures/simple_reflective.recipe.json"
+        },
+        "kind": "studentized_performance_benchmark_v1",
+        "note": "Bounded studentized performance benchmark consumed by v0.4 qualifier, including compact and broader corporate model-shape smoke plans. Full release stress still requires documented hardware and full-scale broader model shapes.",
+        "passed": true,
+        "path": "D:\\QuickPLS\\validation/results/studentized_performance.json",
+        "plans": [
+          {
+            "bootstrap_samples": 999,
+            "data": "validation/fixtures/simple_reflective.csv",
+            "elapsed_seconds": 8.703432900001644,
+            "fixture_label": "compact_reflective",
+            "inner_fits_per_second": 11363.447174962574,
+            "name": "minimum_999x99",
+            "output": "D:\\QuickPLS\\validation\\results\\studentized_performance\\minimum_999x99.json",
+            "passed": true,
+            "peak_working_set_bytes": 25178112,
+            "recipe": "validation/fixtures/simple_reflective.recipe.json",
+            "requested_inner_fits": 98901,
+            "result_file_bytes": 27022,
+            "status": "completed",
+            "studentized_available_parameter_count": 4,
+            "studentized_failure": null,
+            "studentized_inner_samples": 99,
+            "studentized_parameter_count": 13,
+            "studentized_unavailable_parameter_count": 9,
+            "usable_replicates": 998,
+            "workers": 12
+          },
+          {
+            "bootstrap_samples": 999,
+            "data": "validation/fixtures/simple_reflective.csv",
+            "elapsed_seconds": 17.887438899997505,
+            "fixture_label": "compact_reflective",
+            "inner_fits_per_second": 11114.000227278357,
+            "name": "default_inner_999x199",
+            "output": "D:\\QuickPLS\\validation\\results\\studentized_performance\\default_inner_999x199.json",
+            "passed": true,
+            "peak_working_set_bytes": 28041216,
+            "recipe": "validation/fixtures/simple_reflective.recipe.json",
+            "requested_inner_fits": 198801,
+            "result_file_bytes": 27024,
+            "status": "completed",
+            "studentized_available_parameter_count": 4,
+            "studentized_failure": null,
+            "studentized_inner_samples": 199,
+            "studentized_parameter_count": 13,
+            "studentized_unavailable_parameter_count": 9,
+            "usable_replicates": 998,
+            "workers": 12
+          },
+          {
+            "bootstrap_samples": 1999,
+            "data": "validation/fixtures/simple_reflective.csv",
+            "elapsed_seconds": 17.34720859999652,
+            "fixture_label": "compact_reflective",
+            "inner_fits_per_second": 11408.23313786863,
+            "name": "outer_stress_1999x99",
+            "output": "D:\\QuickPLS\\validation\\results\\studentized_performance\\outer_stress_1999x99.json",
+            "passed": true,
+            "peak_working_set_bytes": 32710656,
+            "recipe": "validation/fixtures/simple_reflective.recipe.json",
+            "requested_inner_fits": 197901,
+            "result_file_bytes": 27163,
+            "status": "completed",
+            "studentized_available_parameter_count": 4,
+            "studentized_failure": null,
+            "studentized_inner_samples": 99,
+            "studentized_parameter_count": 13,
+            "studentized_unavailable_parameter_count": 9,
+            "usable_replicates": 1997,
+            "workers": 12
+          },
+          {
+            "bootstrap_samples": 999,
+            "data": "validation/fixtures/simple_reflective.csv",
+            "elapsed_seconds": 85.98163580000255,
+            "fixture_label": "compact_reflective",
+            "inner_fits_per_second": 11607.141347268604,
+            "name": "maximum_inner_999x999",
+            "output": "D:\\QuickPLS\\validation\\results\\studentized_performance\\maximum_inner_999x999.json",
+            "passed": true,
+            "peak_working_set_bytes": 56385536,
+            "recipe": "validation/fixtures/simple_reflective.recipe.json",
+            "requested_inner_fits": 998001,
+            "result_file_bytes": 27033,
+            "status": "completed",
+            "studentized_available_parameter_count": 4,
+            "studentized_failure": null,
+            "studentized_inner_samples": 999,
+            "studentized_parameter_count": 13,
+            "studentized_unavailable_parameter_count": 9,
+            "usable_replicates": 998,
+            "workers": 12
+          },
+          {
+            "bootstrap_samples": 999,
+            "data": "validation/fixtures/corporate_reputation.csv",
+            "elapsed_seconds": 314.13670190000266,
+            "fixture_label": "corporate_reputation_4_constructs_9_indicators_3_paths",
+            "inner_fits_per_second": 314.8342724737799,
+            "name": "broader_corporate_999x99",
+            "output": "D:\\QuickPLS\\validation\\results\\studentized_performance\\broader_corporate_999x99.json",
+            "passed": true,
+            "peak_working_set_bytes": 37449728,
+            "recipe": "validation/fixtures/corporate_reputation.recipe.json",
+            "requested_inner_fits": 98901,
+            "result_file_bytes": 77667,
+            "status": "completed",
+            "studentized_available_parameter_count": 33,
+            "studentized_failure": null,
+            "studentized_inner_samples": 99,
+            "studentized_parameter_count": 38,
+            "studentized_unavailable_parameter_count": 5,
+            "usable_replicates": 986,
+            "workers": 12
+          }
+        ]
+      },
+      "id": "studentized_performance_benchmark",
+      "status": "passed"
+    },
+    {
+      "evidence": {
+        "artifact_directory": "D:\\QuickPLS\\validation\\results\\studentized_performance",
+        "fixture": {
+          "detected_max_workers": 12,
+          "primary_data": "validation/fixtures/simple_reflective.csv",
+          "primary_recipe": "validation/fixtures/simple_reflective.recipe.json"
+        },
+        "kind": "studentized_performance_benchmark_v1",
+        "note": "Release-stress studentized benchmark consumed by v0.4 qualifier, including maximum outer-plus-inner and broader corporate model-shape stress plans.",
+        "passed": true,
+        "path": "D:\\QuickPLS\\validation/results/studentized_release_stress.json",
+        "plans": [
+          {
+            "bootstrap_samples": 1999,
+            "data": "validation/fixtures/simple_reflective.csv",
+            "elapsed_seconds": 174.2497325000004,
+            "fixture_label": "compact_reflective",
+            "inner_fits_per_second": 11460.568526267296,
+            "name": "maximum_outer_inner_1999x999",
+            "output": "D:\\QuickPLS\\validation\\results\\studentized_performance\\maximum_outer_inner_1999x999.json",
+            "passed": true,
+            "peak_working_set_bytes": 61562880,
+            "recipe": "validation/fixtures/simple_reflective.recipe.json",
+            "requested_inner_fits": 1997001,
+            "result_file_bytes": 27160,
+            "status": "completed",
+            "studentized_available_parameter_count": 4,
+            "studentized_failure": null,
+            "studentized_inner_samples": 999,
+            "studentized_parameter_count": 13,
+            "studentized_unavailable_parameter_count": 9,
+            "usable_replicates": 1997,
+            "workers": 12
+          },
+          {
+            "bootstrap_samples": 999,
+            "data": "validation/fixtures/corporate_reputation.csv",
+            "elapsed_seconds": 695.0209808,
+            "fixture_label": "corporate_reputation_4_constructs_9_indicators_3_paths",
+            "inner_fits_per_second": 286.0359694050836,
+            "name": "broader_corporate_999x199",
+            "output": "D:\\QuickPLS\\validation\\results\\studentized_performance\\broader_corporate_999x199.json",
+            "passed": true,
+            "peak_working_set_bytes": 42991616,
+            "recipe": "validation/fixtures/corporate_reputation.recipe.json",
+            "requested_inner_fits": 198801,
+            "result_file_bytes": 77673,
+            "status": "completed",
+            "studentized_available_parameter_count": 33,
+            "studentized_failure": null,
+            "studentized_inner_samples": 199,
+            "studentized_parameter_count": 38,
+            "studentized_unavailable_parameter_count": 5,
+            "usable_replicates": 986,
+            "workers": 12
+          }
+        ],
+        "profile": "release-stress"
+      },
+      "id": "studentized_release_stress_benchmark",
+      "status": "passed"
+    },
+    {
+      "evidence": {
+        "accepted_replicates": 12,
+        "fixture": {
+          "max_candidates": 48,
+          "parameters": [
+            {
+              "indicator": "",
+              "kind": "path",
+              "source": "x",
+              "target": "y"
+            },
+            {
+              "indicator": "x1",
+              "kind": "loading",
+              "source": "x",
+              "target": ""
+            },
+            {
+              "indicator": "x2",
+              "kind": "loading",
+              "source": "x",
+              "target": ""
+            },
+            {
+              "indicator": "y1",
+              "kind": "loading",
+              "source": "y",
+              "target": ""
+            },
+            {
+              "indicator": "y2",
+              "kind": "loading",
+              "source": "y",
+              "target": ""
+            },
+            {
+              "indicator": "x1",
+              "kind": "weight",
+              "source": "x",
+              "target": ""
+            },
+            {
+              "indicator": "x2",
+              "kind": "weight",
+              "source": "x",
+              "target": ""
+            },
+            {
+              "indicator": "y1",
+              "kind": "weight",
+              "source": "y",
+              "target": ""
+            },
+            {
+              "indicator": "y2",
+              "kind": "weight",
+              "source": "y",
+              "target": ""
+            }
+          ],
+          "recipes": {
+            "FACTOR": "validation/fixtures/simple_reflective.factor.recipe.json",
+            "MODE_B": "validation/fixtures/simple_reflective.mode_b.recipe.json",
+            "PATH_MODE_A": "validation/fixtures/simple_reflective.recipe.json",
+            "PCA": "validation/fixtures/simple_reflective.pca.recipe.json"
+          },
+          "resample_seed": 2026071901,
+          "source_data": "validation/fixtures/simple_reflective.csv",
+          "target_accepted_replicates": 12,
+          "variants": [
+            "PATH_MODE_A",
+            "MODE_B",
+            "FACTOR",
+            "PCA"
+          ]
+        },
+        "kind": "pls_bootstrap_external_reference_v1",
+        "max_replicate_abs_diff": 2.8480473535097417e-10,
+        "max_summary_abs_diff": 2.2172585989466143e-10,
+        "note": "Fixed resample-index PLS integration fixture across path Mode A, Mode B, factorial, and PCA variants. This verifies estimator and aggregate bootstrap summary parity on matched resamples; it is not stochastic coverage qualification.",
+        "parameter_count_per_variant": 9,
+        "passed": true,
+        "path": "D:\\QuickPLS\\validation/results/pls_bootstrap_external_reference.json",
+        "reference": {
+          "engine": "cSEM",
+          "package_scope": "development validation only; not distributed with QuickPLS",
+          "rscript": "C:\\Users\\mohd.naved\\AppData\\Local\\Programs\\R\\R-4.6.1\\bin\\Rscript.exe",
+          "runtime": "Rscript"
+        },
+        "skipped_candidate_count": 10,
+        "summary_comparison_count": 36,
+        "summary_comparisons": [
+          {
+            "differences": {
+              "mean": -4.3819392558930295e-12,
+              "percentile_2_5": -1.4567569373014067e-11,
+              "percentile_97_5": 1.498801083243961e-14,
+              "sample_standard_error": 5.9849521172328216e-12
+            },
+            "indicator": "",
+            "kind": "path",
+            "max_abs_diff": 1.4567569373014067e-11,
+            "passed": true,
+            "source": "x",
+            "target": "y",
+            "variant": "PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": -3.303579632074616e-12,
+              "percentile_2_5": -7.748579555766355e-12,
+              "percentile_97_5": -4.1522341120980855e-14,
+              "sample_standard_error": 3.808599702975757e-12
+            },
+            "indicator": "x1",
+            "kind": "loading",
+            "max_abs_diff": 7.748579555766355e-12,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": 3.507083512488407e-12,
+              "percentile_2_5": 8.255729433415127e-12,
+              "percentile_97_5": -7.727152251391091e-14,
+              "sample_standard_error": -4.092978560243932e-12
+            },
+            "indicator": "x2",
+            "kind": "loading",
+            "max_abs_diff": 8.255729433415127e-12,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": 1.0746958878371517e-13,
+              "percentile_2_5": 8.759659664292486e-14,
+              "percentile_97_5": -9.403589018575077e-14,
+              "sample_standard_error": -8.033634521509293e-14
+            },
+            "indicator": "y1",
+            "kind": "loading",
+            "max_abs_diff": 1.0746958878371517e-13,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": -1.0169642905566435e-13,
+              "percentile_2_5": -8.593126210598713e-14,
+              "percentile_97_5": 9.348077867343819e-14,
+              "sample_standard_error": 6.393691999451169e-14
+            },
+            "indicator": "y2",
+            "kind": "loading",
+            "max_abs_diff": 1.0169642905566435e-13,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": -6.913825068011191e-11,
+              "percentile_2_5": 4.691802502065913e-13,
+              "percentile_97_5": -1.330614507466521e-10,
+              "sample_standard_error": -8.529841503263079e-11
+            },
+            "indicator": "x1",
+            "kind": "weight",
+            "max_abs_diff": 1.330614507466521e-10,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": 6.924294471133408e-11,
+              "percentile_2_5": 2.2172585989466143e-10,
+              "percentile_97_5": -4.690692279041286e-13,
+              "sample_standard_error": -8.391747713387687e-11
+            },
+            "indicator": "x2",
+            "kind": "weight",
+            "max_abs_diff": 2.2172585989466143e-10,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": 4.500011474561916e-12,
+              "percentile_2_5": 9.696876634990304e-11,
+              "percentile_97_5": -2.411293387183378e-12,
+              "sample_standard_error": -4.654290451308607e-11
+            },
+            "indicator": "y1",
+            "kind": "weight",
+            "max_abs_diff": 9.696876634990304e-11,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": -4.497402450454047e-12,
+              "percentile_2_5": 1.869482346705809e-11,
+              "percentile_97_5": -9.695511060670016e-11,
+              "sample_standard_error": -6.127485931844978e-11
+            },
+            "indicator": "y2",
+            "kind": "weight",
+            "max_abs_diff": 9.695511060670016e-11,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": 2.220446049250313e-16,
+              "percentile_2_5": 6.661338147750939e-16,
+              "percentile_97_5": 4.440892098500626e-16,
+              "sample_standard_error": -2.964208739575369e-16
+            },
+            "indicator": "",
+            "kind": "path",
+            "max_abs_diff": 6.661338147750939e-16,
+            "passed": true,
+            "source": "x",
+            "target": "y",
+            "variant": "MODE_B"
+          },
+          {
+            "differences": {
+              "mean": 2.55351295663786e-15,
+              "percentile_2_5": 1.2656542480726783e-14,
+              "percentile_97_5": 0.0,
+              "sample_standard_error": -4.2674197509029455e-15
+            },
+            "indicator": "x1",
+            "kind": "loading",
+            "max_abs_diff": 1.2656542480726783e-14,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "MODE_B"
+          },
+          {
+            "differences": {
+              "mean": 4.3298697960381105e-15,
+              "percentile_2_5": 2.0761170560490427e-14,
+              "percentile_97_5": 1.1102230246251563e-16,
+              "sample_standard_error": -5.5094817597023385e-15
+            },
+            "indicator": "x2",
+            "kind": "loading",
+            "max_abs_diff": 2.0761170560490427e-14,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "MODE_B"
+          },
+          {
+            "differences": {
+              "mean": 1.4432899320127037e-15,
+              "percentile_2_5": 7.438494264988549e-15,
+              "percentile_97_5": -2.220446049250313e-16,
+              "sample_standard_error": -2.770353391134961e-15
+            },
+            "indicator": "y1",
+            "kind": "loading",
+            "max_abs_diff": 7.438494264988549e-15,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "MODE_B"
+          },
+          {
+            "differences": {
+              "mean": 2.6645352591003757e-15,
+              "percentile_2_5": 1.2434497875801752e-14,
+              "percentile_97_5": 1.1102230246251563e-16,
+              "sample_standard_error": -3.913536161803677e-15
+            },
+            "indicator": "y2",
+            "kind": "loading",
+            "max_abs_diff": 1.2434497875801752e-14,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "MODE_B"
+          },
+          {
+            "differences": {
+              "mean": -2.6645352591003757e-14,
+              "percentile_2_5": 4.440892098500626e-16,
+              "percentile_97_5": -1.0302869668521453e-13,
+              "sample_standard_error": -3.47499806707674e-14
+            },
+            "indicator": "x1",
+            "kind": "weight",
+            "max_abs_diff": 1.0302869668521453e-13,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "MODE_B"
+          },
+          {
+            "differences": {
+              "mean": 2.8366198279172753e-14,
+              "percentile_2_5": 1.1191048088221579e-13,
+              "percentile_97_5": -2.775557561562891e-16,
+              "sample_standard_error": -3.8413716652030416e-14
+            },
+            "indicator": "x2",
+            "kind": "weight",
+            "max_abs_diff": 1.1191048088221579e-13,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "MODE_B"
+          },
+          {
+            "differences": {
+              "mean": -5.3956838996782614e-14,
+              "percentile_2_5": -8.881784197001252e-16,
+              "percentile_97_5": -1.7852386235972517e-13,
+              "sample_standard_error": -6.52811138479592e-14
+            },
+            "indicator": "y1",
+            "kind": "weight",
+            "max_abs_diff": 1.7852386235972517e-13,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "MODE_B"
+          },
+          {
+            "differences": {
+              "mean": 5.723199691942682e-14,
+              "percentile_2_5": 1.8451906669270107e-13,
+              "percentile_97_5": 7.771561172376097e-16,
+              "sample_standard_error": -6.94999613415348e-14
+            },
+            "indicator": "y2",
+            "kind": "weight",
+            "max_abs_diff": 1.8451906669270107e-13,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "MODE_B"
+          },
+          {
+            "differences": {
+              "mean": -1.1102230246251563e-16,
+              "percentile_2_5": 0.0,
+              "percentile_97_5": 1.1102230246251563e-16,
+              "sample_standard_error": -5.984795992119983e-17
+            },
+            "indicator": "",
+            "kind": "path",
+            "max_abs_diff": 1.1102230246251563e-16,
+            "passed": true,
+            "source": "x",
+            "target": "y",
+            "variant": "FACTOR"
+          },
+          {
+            "differences": {
+              "mean": 0.0,
+              "percentile_2_5": -3.3306690738754696e-16,
+              "percentile_97_5": 3.3306690738754696e-16,
+              "sample_standard_error": 1.7564075194265172e-16
+            },
+            "indicator": "x1",
+            "kind": "loading",
+            "max_abs_diff": 3.3306690738754696e-16,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "FACTOR"
+          },
+          {
+            "differences": {
+              "mean": 1.1102230246251563e-16,
+              "percentile_2_5": 3.3306690738754696e-16,
+              "percentile_97_5": -2.220446049250313e-16,
+              "sample_standard_error": -2.4286128663675302e-17
+            },
+            "indicator": "x2",
+            "kind": "loading",
+            "max_abs_diff": 3.3306690738754696e-16,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "FACTOR"
+          },
+          {
+            "differences": {
+              "mean": -1.1102230246251563e-16,
+              "percentile_2_5": 1.1102230246251563e-16,
+              "percentile_97_5": 1.1102230246251563e-16,
+              "sample_standard_error": 7.39425881635114e-17
+            },
+            "indicator": "y1",
+            "kind": "loading",
+            "max_abs_diff": 1.1102230246251563e-16,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "FACTOR"
+          },
+          {
+            "differences": {
+              "mean": -2.220446049250313e-16,
+              "percentile_2_5": 1.1102230246251563e-16,
+              "percentile_97_5": -2.220446049250313e-16,
+              "sample_standard_error": -2.6020852139652106e-18
+            },
+            "indicator": "y2",
+            "kind": "loading",
+            "max_abs_diff": 2.220446049250313e-16,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "FACTOR"
+          },
+          {
+            "differences": {
+              "mean": 2.220446049250313e-16,
+              "percentile_2_5": 1.1102230246251563e-16,
+              "percentile_97_5": 1.1102230246251563e-16,
+              "sample_standard_error": 2.2551405187698492e-17
+            },
+            "indicator": "x1",
+            "kind": "weight",
+            "max_abs_diff": 2.220446049250313e-16,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "FACTOR"
+          },
+          {
+            "differences": {
+              "mean": 5.551115123125783e-17,
+              "percentile_2_5": 5.551115123125783e-17,
+              "percentile_97_5": 1.1102230246251563e-16,
+              "sample_standard_error": 4.163336342344337e-17
+            },
+            "indicator": "x2",
+            "kind": "weight",
+            "max_abs_diff": 1.1102230246251563e-16,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "FACTOR"
+          },
+          {
+            "differences": {
+              "mean": -2.220446049250313e-16,
+              "percentile_2_5": 1.1102230246251563e-16,
+              "percentile_97_5": 0.0,
+              "sample_standard_error": -5.637851296924623e-18
+            },
+            "indicator": "y1",
+            "kind": "weight",
+            "max_abs_diff": 2.220446049250313e-16,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "FACTOR"
+          },
+          {
+            "differences": {
+              "mean": -1.1102230246251563e-16,
+              "percentile_2_5": -3.3306690738754696e-16,
+              "percentile_97_5": 0.0,
+              "sample_standard_error": 1.0364972768961421e-16
+            },
+            "indicator": "y2",
+            "kind": "weight",
+            "max_abs_diff": 3.3306690738754696e-16,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "FACTOR"
+          },
+          {
+            "differences": {
+              "mean": 0.0,
+              "percentile_2_5": 0.0,
+              "percentile_97_5": 0.0,
+              "sample_standard_error": -1.7520707107365752e-16
+            },
+            "indicator": "",
+            "kind": "path",
+            "max_abs_diff": 1.7520707107365752e-16,
+            "passed": true,
+            "source": "x",
+            "target": "y",
+            "variant": "PCA"
+          },
+          {
+            "differences": {
+              "mean": -1.1102230246251563e-16,
+              "percentile_2_5": 0.0,
+              "percentile_97_5": -4.440892098500626e-16,
+              "sample_standard_error": -8.023096076392733e-17
+            },
+            "indicator": "x1",
+            "kind": "loading",
+            "max_abs_diff": 4.440892098500626e-16,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "PCA"
+          },
+          {
+            "differences": {
+              "mean": 0.0,
+              "percentile_2_5": 0.0,
+              "percentile_97_5": 2.220446049250313e-16,
+              "sample_standard_error": -1.734723475976807e-18
+            },
+            "indicator": "x2",
+            "kind": "loading",
+            "max_abs_diff": 2.220446049250313e-16,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "PCA"
+          },
+          {
+            "differences": {
+              "mean": 2.220446049250313e-16,
+              "percentile_2_5": 3.3306690738754696e-16,
+              "percentile_97_5": 6.661338147750939e-16,
+              "sample_standard_error": -8.239936510889834e-18
+            },
+            "indicator": "y1",
+            "kind": "loading",
+            "max_abs_diff": 6.661338147750939e-16,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "PCA"
+          },
+          {
+            "differences": {
+              "mean": 0.0,
+              "percentile_2_5": 1.1102230246251563e-16,
+              "percentile_97_5": -2.220446049250313e-16,
+              "sample_standard_error": -3.621235256101585e-17
+            },
+            "indicator": "y2",
+            "kind": "loading",
+            "max_abs_diff": 2.220446049250313e-16,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "PCA"
+          },
+          {
+            "differences": {
+              "mean": -2.6645352591003757e-15,
+              "percentile_2_5": -7.771561172376096e-15,
+              "percentile_97_5": -4.440892098500626e-16,
+              "sample_standard_error": 2.5140479975593877e-15
+            },
+            "indicator": "x1",
+            "kind": "weight",
+            "max_abs_diff": 7.771561172376096e-15,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "PCA"
+          },
+          {
+            "differences": {
+              "mean": 2.55351295663786e-15,
+              "percentile_2_5": 8.326672684688674e-15,
+              "percentile_97_5": 2.220446049250313e-16,
+              "sample_standard_error": -2.7837974980737808e-15
+            },
+            "indicator": "x2",
+            "kind": "weight",
+            "max_abs_diff": 8.326672684688674e-15,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "PCA"
+          },
+          {
+            "differences": {
+              "mean": 5.551115123125784e-16,
+              "percentile_2_5": 1.0103029524088925e-14,
+              "percentile_97_5": -6.661338147750939e-16,
+              "sample_standard_error": -3.286433625238061e-15
+            },
+            "indicator": "y1",
+            "kind": "weight",
+            "max_abs_diff": 1.0103029524088925e-14,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "PCA"
+          },
+          {
+            "differences": {
+              "mean": -7.771561172376097e-16,
+              "percentile_2_5": -1.021405182655144e-14,
+              "percentile_97_5": 2.220446049250313e-16,
+              "sample_standard_error": 3.191457514928331e-15
+            },
+            "indicator": "y2",
+            "kind": "weight",
+            "max_abs_diff": 1.021405182655144e-14,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "PCA"
+          }
+        ],
+        "variants": [
+          "PATH_MODE_A",
+          "MODE_B",
+          "FACTOR",
+          "PCA"
+        ]
+      },
+      "id": "pls_bootstrap_external_reference",
+      "status": "passed"
+    },
+    {
+      "evidence": {
+        "accepted_replicates": 8,
+        "fixture": {
+          "max_candidates": 32,
+          "model_shape": {
+            "constructs": 4,
+            "indicators": 9,
+            "observations": 12,
+            "paths": 3
+          },
+          "parameters": [
+            {
+              "indicator": "",
+              "kind": "path",
+              "source": "comp",
+              "target": "satisfaction"
+            },
+            {
+              "indicator": "",
+              "kind": "path",
+              "source": "like",
+              "target": "satisfaction"
+            },
+            {
+              "indicator": "",
+              "kind": "path",
+              "source": "satisfaction",
+              "target": "loyalty"
+            },
+            {
+              "indicator": "COMP1",
+              "kind": "loading",
+              "source": "comp",
+              "target": ""
+            },
+            {
+              "indicator": "COMP2",
+              "kind": "loading",
+              "source": "comp",
+              "target": ""
+            },
+            {
+              "indicator": "COMP3",
+              "kind": "loading",
+              "source": "comp",
+              "target": ""
+            },
+            {
+              "indicator": "LIKE1",
+              "kind": "loading",
+              "source": "like",
+              "target": ""
+            },
+            {
+              "indicator": "LIKE2",
+              "kind": "loading",
+              "source": "like",
+              "target": ""
+            },
+            {
+              "indicator": "CUSA1",
+              "kind": "loading",
+              "source": "satisfaction",
+              "target": ""
+            },
+            {
+              "indicator": "CUSA2",
+              "kind": "loading",
+              "source": "satisfaction",
+              "target": ""
+            },
+            {
+              "indicator": "CUSL1",
+              "kind": "loading",
+              "source": "loyalty",
+              "target": ""
+            },
+            {
+              "indicator": "CUSL2",
+              "kind": "loading",
+              "source": "loyalty",
+              "target": ""
+            },
+            {
+              "indicator": "COMP1",
+              "kind": "weight",
+              "source": "comp",
+              "target": ""
+            },
+            {
+              "indicator": "COMP2",
+              "kind": "weight",
+              "source": "comp",
+              "target": ""
+            },
+            {
+              "indicator": "COMP3",
+              "kind": "weight",
+              "source": "comp",
+              "target": ""
+            },
+            {
+              "indicator": "LIKE1",
+              "kind": "weight",
+              "source": "like",
+              "target": ""
+            },
+            {
+              "indicator": "LIKE2",
+              "kind": "weight",
+              "source": "like",
+              "target": ""
+            },
+            {
+              "indicator": "CUSA1",
+              "kind": "weight",
+              "source": "satisfaction",
+              "target": ""
+            },
+            {
+              "indicator": "CUSA2",
+              "kind": "weight",
+              "source": "satisfaction",
+              "target": ""
+            },
+            {
+              "indicator": "CUSL1",
+              "kind": "weight",
+              "source": "loyalty",
+              "target": ""
+            },
+            {
+              "indicator": "CUSL2",
+              "kind": "weight",
+              "source": "loyalty",
+              "target": ""
+            }
+          ],
+          "recipe": "validation/fixtures/corporate_reputation.recipe.json",
+          "resample_seed": 2026071903,
+          "source_data": "validation/fixtures/corporate_reputation.csv",
+          "target_accepted_replicates": 8,
+          "variant": "CORPORATE_PATH_MODE_A"
+        },
+        "kind": "pls_bootstrap_corporate_csem_reference_v1",
+        "max_replicate_abs_diff": 3.079717186826869e-8,
+        "max_summary_abs_diff": 2.5416031668168415e-8,
+        "note": "Matched-resample PLS integration fixture on the broader corporate-reputation model. This verifies estimator and aggregate bootstrap summary parity on identical resamples; it is not stochastic coverage qualification.",
+        "parameter_count": 21,
+        "passed": true,
+        "path": "D:\\QuickPLS\\validation/results/pls_bootstrap_corporate_csem_reference.json",
+        "reference": {
+          "engine": "cSEM",
+          "package_scope": "development validation only; not distributed with QuickPLS",
+          "rscript": "C:\\Users\\mohd.naved\\AppData\\Local\\Programs\\R\\R-4.6.1\\bin\\Rscript.exe",
+          "runtime": "Rscript"
+        },
+        "skipped_candidate_count": 0,
+        "summary_comparison_count": 21,
+        "summary_comparisons": [
+          {
+            "differences": {
+              "mean": 7.39817984651836e-10,
+              "percentile_2_5": -1.2508171165492852e-9,
+              "percentile_97_5": -2.0484092200234727e-9,
+              "sample_standard_error": -7.611581642752441e-10
+            },
+            "indicator": "",
+            "kind": "path",
+            "max_abs_diff": 2.0484092200234727e-9,
+            "passed": true,
+            "source": "comp",
+            "target": "satisfaction",
+            "variant": "CORPORATE_PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": 1.6726823259816115e-9,
+              "percentile_2_5": 2.063621495906886e-9,
+              "percentile_97_5": 2.768723916801718e-9,
+              "sample_standard_error": 9.946256873671901e-10
+            },
+            "indicator": "",
+            "kind": "path",
+            "max_abs_diff": 2.768723916801718e-9,
+            "passed": true,
+            "source": "like",
+            "target": "satisfaction",
+            "variant": "CORPORATE_PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": 6.962086462891647e-10,
+              "percentile_2_5": 8.664647888068088e-10,
+              "percentile_97_5": 9.10813424681578e-10,
+              "sample_standard_error": -2.0713193660260032e-10
+            },
+            "indicator": "",
+            "kind": "path",
+            "max_abs_diff": 9.10813424681578e-10,
+            "passed": true,
+            "source": "satisfaction",
+            "target": "loyalty",
+            "variant": "CORPORATE_PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": 2.8176039279514953e-10,
+              "percentile_2_5": 2.094973194921579e-9,
+              "percentile_97_5": 1.1703304991783624e-11,
+              "sample_standard_error": -8.733473388922163e-10
+            },
+            "indicator": "COMP1",
+            "kind": "loading",
+            "max_abs_diff": 2.094973194921579e-9,
+            "passed": true,
+            "source": "comp",
+            "target": "",
+            "variant": "CORPORATE_PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": 1.0664229499468547e-9,
+              "percentile_2_5": 9.650321652898697e-9,
+              "percentile_97_5": -1.2943693894484907e-9,
+              "sample_standard_error": -3.7739082761611975e-9
+            },
+            "indicator": "COMP2",
+            "kind": "loading",
+            "max_abs_diff": 9.650321652898697e-9,
+            "passed": true,
+            "source": "comp",
+            "target": "",
+            "variant": "CORPORATE_PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": -2.8975355448324075e-10,
+              "percentile_2_5": 4.297685873844159e-9,
+              "percentile_97_5": -2.81680345715074e-10,
+              "sample_standard_error": -2.3206820770615973e-9
+            },
+            "indicator": "COMP3",
+            "kind": "loading",
+            "max_abs_diff": 4.297685873844159e-9,
+            "passed": true,
+            "source": "comp",
+            "target": "",
+            "variant": "CORPORATE_PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": 1.205857080854855e-9,
+              "percentile_2_5": 2.3663677684027107e-9,
+              "percentile_97_5": 8.028291365036465e-10,
+              "sample_standard_error": -7.83326452313826e-10
+            },
+            "indicator": "LIKE1",
+            "kind": "loading",
+            "max_abs_diff": 2.3663677684027107e-9,
+            "passed": true,
+            "source": "like",
+            "target": "",
+            "variant": "CORPORATE_PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": 1.0100142944224901e-9,
+              "percentile_2_5": 8.039406917959013e-9,
+              "percentile_97_5": -3.119318137123628e-10,
+              "sample_standard_error": -3.666290937509586e-9
+            },
+            "indicator": "LIKE2",
+            "kind": "loading",
+            "max_abs_diff": 8.039406917959013e-9,
+            "passed": true,
+            "source": "like",
+            "target": "",
+            "variant": "CORPORATE_PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": -2.278133792721348e-9,
+              "percentile_2_5": 2.169005308694238e-9,
+              "percentile_97_5": -2.994183678772799e-9,
+              "sample_standard_error": -1.1620296218317614e-9
+            },
+            "indicator": "CUSA1",
+            "kind": "loading",
+            "max_abs_diff": 2.994183678772799e-9,
+            "passed": true,
+            "source": "satisfaction",
+            "target": "",
+            "variant": "CORPORATE_PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": 3.3222787854114703e-9,
+              "percentile_2_5": 1.9237755499723622e-8,
+              "percentile_97_5": -1.0299330277518948e-9,
+              "sample_standard_error": -6.864446046306316e-9
+            },
+            "indicator": "CUSA2",
+            "kind": "loading",
+            "max_abs_diff": 1.9237755499723622e-8,
+            "passed": true,
+            "source": "satisfaction",
+            "target": "",
+            "variant": "CORPORATE_PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": -1.6259593671463788e-10,
+              "percentile_2_5": -1.766048751683513e-9,
+              "percentile_97_5": 1.6586421125452944e-10,
+              "sample_standard_error": 4.4905212708001846e-10
+            },
+            "indicator": "CUSL1",
+            "kind": "loading",
+            "max_abs_diff": 1.766048751683513e-9,
+            "passed": true,
+            "source": "loyalty",
+            "target": "",
+            "variant": "CORPORATE_PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": 3.450745245103803e-10,
+              "percentile_2_5": 8.194194212052253e-10,
+              "percentile_97_5": -4.899425309901062e-11,
+              "sample_standard_error": -8.44018840928662e-10
+            },
+            "indicator": "CUSL2",
+            "kind": "loading",
+            "max_abs_diff": 8.44018840928662e-10,
+            "passed": true,
+            "source": "loyalty",
+            "target": "",
+            "variant": "CORPORATE_PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": -1.075118216675719e-9,
+              "percentile_2_5": 1.6241344380496512e-9,
+              "percentile_97_5": 1.1648237929762216e-11,
+              "sample_standard_error": -4.338461534469928e-11
+            },
+            "indicator": "COMP1",
+            "kind": "weight",
+            "max_abs_diff": 1.6241344380496512e-9,
+            "passed": true,
+            "source": "comp",
+            "target": "",
+            "variant": "CORPORATE_PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": 2.5362756339575303e-9,
+              "percentile_2_5": 2.5416031668168415e-8,
+              "percentile_97_5": -1.0507708148033146e-8,
+              "sample_standard_error": -9.432616673854533e-9
+            },
+            "indicator": "COMP2",
+            "kind": "weight",
+            "max_abs_diff": 2.5416031668168415e-8,
+            "passed": true,
+            "source": "comp",
+            "target": "",
+            "variant": "CORPORATE_PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": -9.179779159040892e-10,
+              "percentile_2_5": 8.998864292619757e-9,
+              "percentile_97_5": -1.0369524572340085e-8,
+              "sample_standard_error": -7.769343501884407e-9
+            },
+            "indicator": "COMP3",
+            "kind": "weight",
+            "max_abs_diff": 1.0369524572340085e-8,
+            "passed": true,
+            "source": "comp",
+            "target": "",
+            "variant": "CORPORATE_PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": 3.559609274006448e-10,
+              "percentile_2_5": -8.487128777545648e-10,
+              "percentile_97_5": -1.3730169667880432e-8,
+              "sample_standard_error": -5.719735907128154e-9
+            },
+            "indicator": "LIKE1",
+            "kind": "weight",
+            "max_abs_diff": 1.3730169667880432e-8,
+            "passed": true,
+            "source": "like",
+            "target": "",
+            "variant": "CORPORATE_PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": 8.45562481144313e-10,
+              "percentile_2_5": 2.1754553825026335e-8,
+              "percentile_97_5": 8.871731682624783e-10,
+              "sample_standard_error": -9.166333525545411e-9
+            },
+            "indicator": "LIKE2",
+            "kind": "weight",
+            "max_abs_diff": 2.1754553825026335e-8,
+            "passed": true,
+            "source": "like",
+            "target": "",
+            "variant": "CORPORATE_PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": -4.1824597118989004e-9,
+              "percentile_2_5": 2.867717285859328e-9,
+              "percentile_97_5": -2.2659137011160624e-8,
+              "sample_standard_error": -8.352762710661654e-9
+            },
+            "indicator": "CUSA1",
+            "kind": "weight",
+            "max_abs_diff": 2.2659137011160624e-8,
+            "passed": true,
+            "source": "satisfaction",
+            "target": "",
+            "variant": "CORPORATE_PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": 4.9475546992638905e-9,
+              "percentile_2_5": 3.954308658293826e-9,
+              "percentile_97_5": -2.741356808222406e-9,
+              "sample_standard_error": -6.5640347254869455e-9
+            },
+            "indicator": "CUSA2",
+            "kind": "weight",
+            "max_abs_diff": 6.5640347254869455e-9,
+            "passed": true,
+            "source": "satisfaction",
+            "target": "",
+            "variant": "CORPORATE_PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": -2.601658888323754e-10,
+              "percentile_2_5": 5.269902292326377e-10,
+              "percentile_97_5": -1.519047221343328e-9,
+              "sample_standard_error": -1.429127621799253e-9
+            },
+            "indicator": "CUSL1",
+            "kind": "weight",
+            "max_abs_diff": 1.519047221343328e-9,
+            "passed": true,
+            "source": "loyalty",
+            "target": "",
+            "variant": "CORPORATE_PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": 3.7582953416048776e-10,
+              "percentile_2_5": 1.754546508081489e-9,
+              "percentile_97_5": 1.6300405469849008e-11,
+              "sample_standard_error": -1.254742129641606e-9
+            },
+            "indicator": "CUSL2",
+            "kind": "weight",
+            "max_abs_diff": 1.754546508081489e-9,
+            "passed": true,
+            "source": "loyalty",
+            "target": "",
+            "variant": "CORPORATE_PATH_MODE_A"
+          }
+        ]
+      },
+      "id": "pls_bootstrap_corporate_csem_reference",
+      "status": "passed"
+    },
+    {
+      "evidence": {
+        "accepted_replicates": 12,
+        "fixture": {
+          "max_candidates": 48,
+          "parameters": [
+            {
+              "indicator": "",
+              "kind": "path",
+              "source": "x",
+              "target": "y"
+            },
+            {
+              "indicator": "x1",
+              "kind": "loading",
+              "source": "x",
+              "target": ""
+            },
+            {
+              "indicator": "x2",
+              "kind": "loading",
+              "source": "x",
+              "target": ""
+            },
+            {
+              "indicator": "y1",
+              "kind": "loading",
+              "source": "y",
+              "target": ""
+            },
+            {
+              "indicator": "y2",
+              "kind": "loading",
+              "source": "y",
+              "target": ""
+            }
+          ],
+          "recipes": {
+            "FACTOR": "validation/fixtures/simple_reflective.factor.recipe.json",
+            "MODE_B": "validation/fixtures/simple_reflective.mode_b.recipe.json",
+            "PATH_MODE_A": "validation/fixtures/simple_reflective.recipe.json"
+          },
+          "resample_seed": 2026071902,
+          "source_data": "validation/fixtures/simple_reflective.csv",
+          "target_accepted_replicates": 12,
+          "variants": [
+            "PATH_MODE_A",
+            "MODE_B",
+            "FACTOR"
+          ]
+        },
+        "kind": "pls_bootstrap_plspm_external_reference_v1",
+        "max_replicate_abs_diff": 3.457392907524337e-7,
+        "max_summary_abs_diff": 3.457392894201661e-7,
+        "note": "Fixed resample-index PLS integration fixture against python-plspm across path Mode A, Mode B, and factorial variants. This verifies estimator and aggregate bootstrap summary parity on matched resamples; it is not stochastic coverage qualification.",
+        "parameter_count_per_variant": 5,
+        "passed": true,
+        "path": "D:\\QuickPLS\\validation/results/pls_bootstrap_plspm_external_reference.json",
+        "reference": {
+          "engine": "python-plspm",
+          "excluded_quantities": [
+            "outer weights because python-plspm uses a different normalization convention"
+          ],
+          "package_scope": "development validation only; not distributed with QuickPLS"
+        },
+        "skipped_candidate_count": 19,
+        "summary_comparison_count": 15,
+        "summary_comparisons": [
+          {
+            "differences": {
+              "mean": -1.2616241384932891e-11,
+              "percentile_2_5": -1.1102230246251563e-16,
+              "percentile_97_5": -5.551115123125784e-16,
+              "sample_standard_error": -4.7260650254399295e-12
+            },
+            "indicator": "",
+            "kind": "path",
+            "max_abs_diff": 1.2616241384932891e-11,
+            "passed": true,
+            "source": "x",
+            "target": "y",
+            "variant": "PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": -1.1976974967353726e-11,
+              "percentile_2_5": 1.1102230246251563e-16,
+              "percentile_97_5": 0.0,
+              "sample_standard_error": -5.471057634709453e-13
+            },
+            "indicator": "x1",
+            "kind": "loading",
+            "max_abs_diff": 1.1976974967353726e-11,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": 1.336064592294406e-11,
+              "percentile_2_5": -2.220446049250313e-16,
+              "percentile_97_5": 0.0,
+              "sample_standard_error": 3.0361997638284066e-12
+            },
+            "indicator": "x2",
+            "kind": "loading",
+            "max_abs_diff": 1.336064592294406e-11,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": 3.859135233597044e-13,
+              "percentile_2_5": -1.1102230246251563e-16,
+              "percentile_97_5": 0.0,
+              "sample_standard_error": 3.641410090127195e-13
+            },
+            "indicator": "y1",
+            "kind": "loading",
+            "max_abs_diff": 3.859135233597044e-13,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": -3.7569947153315297e-13,
+              "percentile_2_5": 2.220446049250313e-16,
+              "percentile_97_5": -1.1102230246251563e-16,
+              "sample_standard_error": -3.799950805405406e-13
+            },
+            "indicator": "y2",
+            "kind": "loading",
+            "max_abs_diff": 3.799950805405406e-13,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "PATH_MODE_A"
+          },
+          {
+            "differences": {
+              "mean": 1.2878587085651816e-14,
+              "percentile_2_5": 4.218847493575595e-15,
+              "percentile_97_5": 3.552713678800501e-15,
+              "sample_standard_error": 5.5504646018222914e-15
+            },
+            "indicator": "",
+            "kind": "path",
+            "max_abs_diff": 1.2878587085651816e-14,
+            "passed": true,
+            "source": "x",
+            "target": "y",
+            "variant": "MODE_B"
+          },
+          {
+            "differences": {
+              "mean": -2.9051446470695907e-8,
+              "percentile_2_5": -1.365252932927774e-7,
+              "percentile_97_5": 2.220446049250313e-16,
+              "sample_standard_error": 5.4107754748899957e-8
+            },
+            "indicator": "x1",
+            "kind": "loading",
+            "max_abs_diff": 1.365252932927774e-7,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "MODE_B"
+          },
+          {
+            "differences": {
+              "mean": -4.933813790852781e-8,
+              "percentile_2_5": -2.3646877977956393e-7,
+              "percentile_97_5": 2.4632748063524446e-9,
+              "sample_standard_error": 9.62763201661776e-8
+            },
+            "indicator": "x2",
+            "kind": "loading",
+            "max_abs_diff": 2.3646877977956393e-7,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "MODE_B"
+          },
+          {
+            "differences": {
+              "mean": -3.2153625539876884e-8,
+              "percentile_2_5": -1.960156826852355e-7,
+              "percentile_97_5": 7.436881777067583e-9,
+              "sample_standard_error": 8.08208204701455e-8
+            },
+            "indicator": "y1",
+            "kind": "loading",
+            "max_abs_diff": 1.960156826852355e-7,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "MODE_B"
+          },
+          {
+            "differences": {
+              "mean": -7.811102997745678e-8,
+              "percentile_2_5": -3.457392894201661e-7,
+              "percentile_97_5": -4.536208075833769e-10,
+              "sample_standard_error": 1.33425307441426e-7
+            },
+            "indicator": "y2",
+            "kind": "loading",
+            "max_abs_diff": 3.457392894201661e-7,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "MODE_B"
+          },
+          {
+            "differences": {
+              "mean": 1.7321188927610362e-10,
+              "percentile_2_5": 1.2661611759057223e-9,
+              "percentile_97_5": 2.8381741401517498e-12,
+              "sample_standard_error": -3.908911666572479e-10
+            },
+            "indicator": "",
+            "kind": "path",
+            "max_abs_diff": 1.2661611759057223e-9,
+            "passed": true,
+            "source": "x",
+            "target": "y",
+            "variant": "FACTOR"
+          },
+          {
+            "differences": {
+              "mean": 1.463988930083815e-10,
+              "percentile_2_5": 9.729632655108844e-10,
+              "percentile_97_5": 2.2606361227417437e-12,
+              "sample_standard_error": -2.286523140965224e-10
+            },
+            "indicator": "x1",
+            "kind": "loading",
+            "max_abs_diff": 9.729632655108844e-10,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "FACTOR"
+          },
+          {
+            "differences": {
+              "mean": -1.9138279849784112e-10,
+              "percentile_2_5": -1.2654168823900134e-9,
+              "percentile_97_5": -2.3931967518819874e-12,
+              "sample_standard_error": 3.589548693005984e-10
+            },
+            "indicator": "x2",
+            "kind": "loading",
+            "max_abs_diff": 1.2654168823900134e-9,
+            "passed": true,
+            "source": "x",
+            "target": "",
+            "variant": "FACTOR"
+          },
+          {
+            "differences": {
+              "mean": -8.06255062713035e-12,
+              "percentile_2_5": -1.1945111566546984e-10,
+              "percentile_97_5": -8.761880110341735e-13,
+              "sample_standard_error": 4.0118972380320805e-11
+            },
+            "indicator": "y1",
+            "kind": "loading",
+            "max_abs_diff": 1.1945111566546984e-10,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "FACTOR"
+          },
+          {
+            "differences": {
+              "mean": 6.695755061514319e-12,
+              "percentile_2_5": 1.0723555377012416e-10,
+              "percentile_97_5": 8.560929742884582e-13,
+              "sample_standard_error": -3.4039314769640505e-11
+            },
+            "indicator": "y2",
+            "kind": "loading",
+            "max_abs_diff": 1.0723555377012416e-10,
+            "passed": true,
+            "source": "y",
+            "target": "",
+            "variant": "FACTOR"
+          }
+        ],
+        "variants": [
+          "PATH_MODE_A",
+          "MODE_B",
+          "FACTOR"
+        ]
+      },
+      "id": "pls_bootstrap_plspm_external_reference",
+      "status": "passed"
+    },
+    {
+      "evidence": {
+        "engine_versions": {
+          "pls": "pls_pm_v1",
+          "resampling": "indexed_resampling_v4"
+        },
+        "harness_version": "qpls_monte_carlo_v1",
+        "mode": "qualification",
+        "passed": true,
+        "path": "D:\\QuickPLS\\validation/results/monte_carlo_qualification.json",
+        "qualification_evaluated": true,
+        "qualification_passed": true
+      },
+      "id": "full_monte_carlo_qualification",
+      "status": "passed"
+    }
+  ],
+  "generated_at": "2026-07-19T11:49:14.321479Z",
+  "note": "Automated checks passed. Promotion still requires human review of method scope, known differences, and remaining registry gates.",
+  "open_registry_gates": [],
+  "qualification_passed": true,
+  "schema_version": 1,
+  "slice_id": "v0_4_inference_resampling",
+  "slice_status": "experimental",
+  "stable_release_allowed": false,
+  "target": "v04-inference"
+}

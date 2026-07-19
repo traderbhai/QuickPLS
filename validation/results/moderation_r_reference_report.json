@@ -1,0 +1,70 @@
+{
+  "kind": "pls_two_stage_moderation_r_lm_reference_v1",
+  "max_abs_difference": 1.2212453270876722e-15,
+  "note": "Development-only second-source check using R base lm on the single-item two-stage moderation fixture.",
+  "passed": true,
+  "path_differences": [
+    {
+      "abs_difference": 1.1102230246251565e-16,
+      "actual": 0.25919099992708766,
+      "expected": 0.25919099992708755,
+      "pair": [
+        "m",
+        "y"
+      ]
+    },
+    {
+      "abs_difference": 3.885780586188048e-16,
+      "actual": 0.3455479638717852,
+      "expected": 0.3455479638717848,
+      "pair": [
+        "x",
+        "y"
+      ]
+    },
+    {
+      "abs_difference": 8.881784197001252e-16,
+      "actual": 0.8706007801983375,
+      "expected": 0.8706007801983384,
+      "pair": [
+        "xm",
+        "y"
+      ]
+    }
+  ],
+  "quickpls_result": "validation/results/moderation_r_reference_quickpls.json",
+  "r_reference_output": "validation/results/moderation_r_reference_values.json",
+  "runtime": {
+    "command": "Rscript",
+    "path": "C:\\Users\\mohd.naved\\Documents\\PLS-Sem\\dist-desktop\\r-runtime\\bin\\Rscript.exe",
+    "reference": "R base lm",
+    "version": "Rscript (R) version 4.6.1 (2026-06-24)"
+  },
+  "schema_version": 1,
+  "simple_slope_differences": [
+    {
+      "abs_difference": 1.2212453270876722e-15,
+      "actual": -0.5250528163265523,
+      "expected": -0.5250528163265535,
+      "moderator_score": -1.0
+    },
+    {
+      "abs_difference": 3.885780586188048e-16,
+      "actual": 0.3455479638717852,
+      "expected": 0.3455479638717848,
+      "moderator_score": 0.0
+    },
+    {
+      "abs_difference": 4.440892098500626e-16,
+      "actual": 1.2161487440701229,
+      "expected": 1.2161487440701233,
+      "moderator_score": 1.0
+    }
+  ],
+  "source_data": "validation/results/moderation_r_reference.csv",
+  "tolerance": 1e-10,
+  "used_observations": {
+    "quickpls": 120,
+    "r": 120
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "expected_code": "method.unsupported",
+  "kind": "extended_pls_unsupported_guard_v1",
+  "methods": [],
+  "note": "No v0.5 extended PLS method ids are currently pending as unsupported; add future planned ids here until contracts and references are implemented.",
+  "passed": true,
+  "results": [],
+  "schema_version": 1
+}

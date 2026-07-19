@@ -1,0 +1,65 @@
+{
+  "schema_version": 2,
+  "id": "00000000-0000-0000-0000-000000000007",
+  "created_at": "2026-07-19T00:00:00Z",
+  "dataset_fingerprint": "v2:f0607a94affa1be343b352f86e5dbf4323d4538d2d67b229ef2961940e431c54",
+  "model": {
+    "id": "00000000-0000-0000-0000-000000000008",
+    "name": "Quadratic nonlinear-effects reference",
+    "constructs": [
+      {
+        "id": "x",
+        "name": "X",
+        "short_name": "X",
+        "mode": "reflective",
+        "indicators": [
+          "x1",
+          "x2"
+        ]
+      },
+      {
+        "id": "z",
+        "name": "Z",
+        "short_name": "Z",
+        "mode": "reflective",
+        "indicators": [
+          "z1",
+          "z2"
+        ]
+      },
+      {
+        "id": "y",
+        "name": "Y",
+        "short_name": "Y",
+        "mode": "reflective",
+        "indicators": [
+          "y1",
+          "y2"
+        ]
+      }
+    ],
+    "paths": [
+      {
+        "source": "x",
+        "target": "y"
+      },
+      {
+        "source": "z",
+        "target": "y"
+      }
+    ]
+  },
+  "settings": {
+    "method": "nonlinear_effects",
+    "weighting_scheme": "path",
+    "tolerance": 1e-07,
+    "max_iterations": 3000,
+    "bootstrap_samples": 0,
+    "seed": 20260719,
+    "preprocessing": "standardized",
+    "missing_data": "listwise_deletion"
+  },
+  "metadata": {
+    "fixture": "independent_quadratic_nonlinear_reference"
+  }
+}

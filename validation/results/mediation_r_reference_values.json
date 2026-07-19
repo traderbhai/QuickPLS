@@ -1,0 +1,13 @@
+{
+  "runtime": "R base lm",
+  "paths": {
+    "x->m": 0.99018650735162184,
+    "m->y": 0.99924698550255153
+  },
+  "mediation": {
+    "x->m": {"direct": 0.99018650735162184, "indirect": 0, "total": 0.99018650735162184, "variance_accounted_for": 0},
+    "m->y": {"direct": 0.99924698550255153, "indirect": 0, "total": 0.99924698550255153, "variance_accounted_for": 0},
+    "x->y": {"direct": 0, "indirect": 0.98944088255640816, "total": 0.98944088255640816, "variance_accounted_for": 1}
+  }
+}
+

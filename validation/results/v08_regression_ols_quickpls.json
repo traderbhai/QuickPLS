@@ -1,0 +1,1013 @@
+{
+  "schema_version": 1,
+  "id": "7af5dc2f-869f-4d94-94e1-a29e487a62ce",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "00000000-0000-0000-0000-000000081835",
+    "dataset_fingerprint": "v2:b5f52a1093a0277acb29a8dd50958f7fd0180635d011a56a5fdff7d6979a76bb",
+    "method": "regression",
+    "method_version": "regression_ols_v1",
+    "engine_version": "0.9.0-rc.1",
+    "seed": 20260719,
+    "settings": {
+      "method": "regression",
+      "weighting_scheme": "path",
+      "tolerance": 1e-9,
+      "max_iterations": 3000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260719,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion",
+      "case_weight_column": null
+    },
+    "started_at": "2026-07-19T11:50:15.372758500Z",
+    "completed_at": "2026-07-19T11:50:15.374305900Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Regression/PROCESS v1 is validated for the documented QuickPLS v0.9.0-rc.1 supported scope; unsupported shapes remain blocked."
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "PLS assessment and PLS resampling engines are not applicable to standalone v0.8 methods."
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "cbsem": null,
+      "cca": null,
+      "construct_scores": {},
+      "control_estimates": [],
+      "converged": true,
+      "cta_pls": null,
+      "effects": [],
+      "endogeneity": null,
+      "fimix": null,
+      "gsca": null,
+      "ipma": null,
+      "iterations": 0,
+      "mediation": {
+        "estimates": [],
+        "method_version": "pls_mediation_v1",
+        "tolerance": 1e-12,
+        "warnings": []
+      },
+      "method_version": "regression_ols_v1",
+      "mga": null,
+      "mga_permutation": null,
+      "micom": null,
+      "moderated_mediation": null,
+      "moderation": {
+        "estimates": [],
+        "method_version": "pls_two_stage_moderation_v1",
+        "moderator_score_levels": [
+          -1.0,
+          0.0,
+          1.0
+        ],
+        "warnings": []
+      },
+      "nca": null,
+      "nonlinear_effects": null,
+      "omitted_observations": 0,
+      "outer_estimates": [],
+      "paths": [],
+      "pca": null,
+      "plsc": null,
+      "predict": null,
+      "r_squared": {},
+      "regression": {
+        "coefficients": [
+          {
+            "confidence_interval_lower": -0.07458628026570807,
+            "confidence_interval_upper": 0.09986483749393324,
+            "estimate": 0.012639278614112582,
+            "odds_ratio": null,
+            "p_value_two_sided": 0.7748889619516288,
+            "standard_error": 0.04410765014849165,
+            "statistic": 0.2865552477078584,
+            "term": "intercept"
+          },
+          {
+            "confidence_interval_lower": 0.06930031072106277,
+            "confidence_interval_upper": 0.4237278425502966,
+            "estimate": 0.2465140766356797,
+            "odds_ratio": null,
+            "p_value_two_sided": 0.006753125458096365,
+            "standard_error": 0.0896122981479335,
+            "statistic": 2.7508955994938336,
+            "term": "x"
+          },
+          {
+            "confidence_interval_lower": 0.5955617880201725,
+            "confidence_interval_upper": 1.0542692645042846,
+            "estimate": 0.8249155262622285,
+            "odds_ratio": null,
+            "p_value_two_sided": 5.8869353836144e-11,
+            "standard_error": 0.11597809835265731,
+            "statistic": 7.112683670272715,
+            "term": "m"
+          },
+          {
+            "confidence_interval_lower": -0.14803801764083052,
+            "confidence_interval_upper": 0.046703668467693735,
+            "estimate": -0.050667174586568386,
+            "odds_ratio": null,
+            "p_value_two_sided": 0.30529270392664953,
+            "standard_error": 0.04923785109842006,
+            "statistic": -1.029028957524797,
+            "term": "z"
+          }
+        ],
+        "controls": [
+          "z"
+        ],
+        "fit": {
+          "adjusted_r_squared": 0.7477775778843814,
+          "aic": -192.77275626595048,
+          "bic": -181.00618657551325,
+          "f_statistic": 138.36696160751123,
+          "log_likelihood": null,
+          "pseudo_r_squared": null,
+          "r_squared": 0.7532212272825602,
+          "rmse": 0.488192463680887
+        },
+        "method_version": "regression_ols_v1",
+        "observations": 140,
+        "outcome": "y",
+        "predictions": [
+          {
+            "fitted": 0.9450788273005157,
+            "observation": 0,
+            "probability": null,
+            "residual": -0.23767642783351572
+          },
+          {
+            "fitted": 0.6592176674960494,
+            "observation": 1,
+            "probability": null,
+            "residual": 0.1136116639649506
+          },
+          {
+            "fitted": 0.7911821260110244,
+            "observation": 2,
+            "probability": null,
+            "residual": -0.5482660312530244
+          },
+          {
+            "fitted": 0.36096366616103637,
+            "observation": 3,
+            "probability": null,
+            "residual": 0.4794525998689636
+          },
+          {
+            "fitted": -0.0484275298375149,
+            "observation": 4,
+            "probability": null,
+            "residual": 0.3458143012565149
+          },
+          {
+            "fitted": -1.2131877773132176,
+            "observation": 5,
+            "probability": null,
+            "residual": 0.3252752391762176
+          },
+          {
+            "fitted": -0.7210930103419593,
+            "observation": 6,
+            "probability": null,
+            "residual": -0.4651807075640406
+          },
+          {
+            "fitted": -0.9398832066603878,
+            "observation": 7,
+            "probability": null,
+            "residual": 0.1996223802803878
+          },
+          {
+            "fitted": -0.1495285632142061,
+            "observation": 8,
+            "probability": null,
+            "residual": -0.09414457874679391
+          },
+          {
+            "fitted": 0.769564426713477,
+            "observation": 9,
+            "probability": null,
+            "residual": -0.328005850544477
+          },
+          {
+            "fitted": 0.44243888274908577,
+            "observation": 10,
+            "probability": null,
+            "residual": 0.017014385672914245
+          },
+          {
+            "fitted": -0.9455032566962247,
+            "observation": 11,
+            "probability": null,
+            "residual": 0.05064018183122465
+          },
+          {
+            "fitted": -0.3781610880871829,
+            "observation": 12,
+            "probability": null,
+            "residual": -0.08969646085981708
+          },
+          {
+            "fitted": 0.4821863328870699,
+            "observation": 13,
+            "probability": null,
+            "residual": 0.42159657486193014
+          },
+          {
+            "fitted": 2.406143601927173,
+            "observation": 14,
+            "probability": null,
+            "residual": -1.2507021880571731
+          },
+          {
+            "fitted": 0.21790225957655643,
+            "observation": 15,
+            "probability": null,
+            "residual": 0.09383106417444356
+          },
+          {
+            "fitted": -0.11895077012097081,
+            "observation": 16,
+            "probability": null,
+            "residual": 0.3863804781589708
+          },
+          {
+            "fitted": 0.10267773735730451,
+            "observation": 17,
+            "probability": null,
+            "residual": -0.7308693049773045
+          },
+          {
+            "fitted": -0.4321104489710496,
+            "observation": 18,
+            "probability": null,
+            "residual": 0.01296335425804962
+          },
+          {
+            "fitted": -0.6241412206826696,
+            "observation": 19,
+            "probability": null,
+            "residual": -0.38486359007933035
+          },
+          {
+            "fitted": -0.3401451443748092,
+            "observation": 20,
+            "probability": null,
+            "residual": -0.04687434948119079
+          },
+          {
+            "fitted": 0.32923685217871457,
+            "observation": 21,
+            "probability": null,
+            "residual": 0.04735594735028542
+          },
+          {
+            "fitted": -0.3926240112150964,
+            "observation": 22,
+            "probability": null,
+            "residual": -0.1993794283569036
+          },
+          {
+            "fitted": 0.38734674121091167,
+            "observation": 23,
+            "probability": null,
+            "residual": -0.24165093527791168
+          },
+          {
+            "fitted": 0.5384411581993577,
+            "observation": 24,
+            "probability": null,
+            "residual": -0.7171409971143576
+          },
+          {
+            "fitted": -0.7823594501938661,
+            "observation": 25,
+            "probability": null,
+            "residual": 0.33531032649786613
+          },
+          {
+            "fitted": -0.7212131379242206,
+            "observation": 26,
+            "probability": null,
+            "residual": 0.3872454409732206
+          },
+          {
+            "fitted": -0.5377113232034492,
+            "observation": 27,
+            "probability": null,
+            "residual": 0.3299765073134492
+          },
+          {
+            "fitted": -0.8380930208643611,
+            "observation": 28,
+            "probability": null,
+            "residual": -0.31822348459663896
+          },
+          {
+            "fitted": -0.3224716953747553,
+            "observation": 29,
+            "probability": null,
+            "residual": -0.4032776431422447
+          },
+          {
+            "fitted": 0.44760122341807373,
+            "observation": 30,
+            "probability": null,
+            "residual": 0.46015608775892625
+          },
+          {
+            "fitted": -0.7976266424744352,
+            "observation": 31,
+            "probability": null,
+            "residual": -0.28195744954856483
+          },
+          {
+            "fitted": -0.7063301779785182,
+            "observation": 32,
+            "probability": null,
+            "residual": 0.7714716570105181
+          },
+          {
+            "fitted": -1.2580594029177308,
+            "observation": 33,
+            "probability": null,
+            "residual": 0.46488670598273074
+          },
+          {
+            "fitted": -0.6579563105954678,
+            "observation": 34,
+            "probability": null,
+            "residual": 0.01933875565646781
+          },
+          {
+            "fitted": -0.15142411813914414,
+            "observation": 35,
+            "probability": null,
+            "residual": -0.24627183822585585
+          },
+          {
+            "fitted": 0.3042971093973656,
+            "observation": 36,
+            "probability": null,
+            "residual": -0.1588438158143656
+          },
+          {
+            "fitted": -1.3782493312153412,
+            "observation": 37,
+            "probability": null,
+            "residual": -0.09192711862965885
+          },
+          {
+            "fitted": 0.5249749681102138,
+            "observation": 38,
+            "probability": null,
+            "residual": -0.6669149462082138
+          },
+          {
+            "fitted": 0.888764062158653,
+            "observation": 39,
+            "probability": null,
+            "residual": 0.08323988824734696
+          },
+          {
+            "fitted": 0.033846562623383016,
+            "observation": 40,
+            "probability": null,
+            "residual": 0.216899338179617
+          },
+          {
+            "fitted": 1.274774440198475,
+            "observation": 41,
+            "probability": null,
+            "residual": 0.649696714185525
+          },
+          {
+            "fitted": 0.2067780350122877,
+            "observation": 42,
+            "probability": null,
+            "residual": 0.6906533262997123
+          },
+          {
+            "fitted": -0.5701869622959481,
+            "observation": 43,
+            "probability": null,
+            "residual": 0.45229192743394814
+          },
+          {
+            "fitted": 1.0360605184542904,
+            "observation": 44,
+            "probability": null,
+            "residual": 0.8686790933227095
+          },
+          {
+            "fitted": 1.5340898144658135,
+            "observation": 45,
+            "probability": null,
+            "residual": 0.12564988542718658
+          },
+          {
+            "fitted": 0.11255353147822773,
+            "observation": 46,
+            "probability": null,
+            "residual": -0.18802674651822773
+          },
+          {
+            "fitted": 0.7142303517685846,
+            "observation": 47,
+            "probability": null,
+            "residual": -0.07905296768958459
+          },
+          {
+            "fitted": -0.9704128198869991,
+            "observation": 48,
+            "probability": null,
+            "residual": 0.8679556304859991
+          },
+          {
+            "fitted": -0.9461387468055025,
+            "observation": 49,
+            "probability": null,
+            "residual": 0.44962127309450245
+          },
+          {
+            "fitted": 0.9772035906483971,
+            "observation": 50,
+            "probability": null,
+            "residual": -0.38650779103939714
+          },
+          {
+            "fitted": -1.464445545205592,
+            "observation": 51,
+            "probability": null,
+            "residual": -0.4221710273414081
+          },
+          {
+            "fitted": 0.7120760278624745,
+            "observation": 52,
+            "probability": null,
+            "residual": 0.040979422259525555
+          },
+          {
+            "fitted": 1.306737560303422,
+            "observation": 53,
+            "probability": null,
+            "residual": 1.046644280784578
+          },
+          {
+            "fitted": -1.525582131699779,
+            "observation": 54,
+            "probability": null,
+            "residual": -0.2200750733962209
+          },
+          {
+            "fitted": 0.18764921191675155,
+            "observation": 55,
+            "probability": null,
+            "residual": -0.46700051012275157
+          },
+          {
+            "fitted": 0.8637277703612706,
+            "observation": 56,
+            "probability": null,
+            "residual": 0.7885771597757295
+          },
+          {
+            "fitted": 0.20526873700556414,
+            "observation": 57,
+            "probability": null,
+            "residual": -0.9640402280115642
+          },
+          {
+            "fitted": 1.2501151281537863,
+            "observation": 58,
+            "probability": null,
+            "residual": 0.7761739512572134
+          },
+          {
+            "fitted": 0.8892782127762853,
+            "observation": 59,
+            "probability": null,
+            "residual": 1.662586089552715
+          },
+          {
+            "fitted": -0.5432873006650105,
+            "observation": 60,
+            "probability": null,
+            "residual": -0.04873082387598948
+          },
+          {
+            "fitted": -0.86079103227979,
+            "observation": 61,
+            "probability": null,
+            "residual": -0.31673608693221
+          },
+          {
+            "fitted": 1.2669946292983028,
+            "observation": 62,
+            "probability": null,
+            "residual": 0.3669012940096972
+          },
+          {
+            "fitted": -1.55145132396249,
+            "observation": 63,
+            "probability": null,
+            "residual": 0.38421158590649007
+          },
+          {
+            "fitted": -1.1388335163797263,
+            "observation": 64,
+            "probability": null,
+            "residual": 0.4227993811687263
+          },
+          {
+            "fitted": -0.6364002064200209,
+            "observation": 65,
+            "probability": null,
+            "residual": 0.0037240025860209025
+          },
+          {
+            "fitted": 1.187604153072019,
+            "observation": 66,
+            "probability": null,
+            "residual": 0.10545353125798096
+          },
+          {
+            "fitted": -0.5897164927381809,
+            "observation": 67,
+            "probability": null,
+            "residual": 0.869818182288181
+          },
+          {
+            "fitted": 0.14216401012475421,
+            "observation": 68,
+            "probability": null,
+            "residual": -1.3605102036067542
+          },
+          {
+            "fitted": 0.1877757390833438,
+            "observation": 69,
+            "probability": null,
+            "residual": -0.2919340322333438
+          },
+          {
+            "fitted": -0.4425130965319209,
+            "observation": 70,
+            "probability": null,
+            "residual": -0.5184662594740792
+          },
+          {
+            "fitted": -1.0053891651406985,
+            "observation": 71,
+            "probability": null,
+            "residual": 0.06365322864369849
+          },
+          {
+            "fitted": -0.5426148146122868,
+            "observation": 72,
+            "probability": null,
+            "residual": -0.19773758159771326
+          },
+          {
+            "fitted": 0.5279927406827148,
+            "observation": 73,
+            "probability": null,
+            "residual": -0.6085200367937148
+          },
+          {
+            "fitted": -1.4100581251789792,
+            "observation": 74,
+            "probability": null,
+            "residual": -0.06744704433602089
+          },
+          {
+            "fitted": -0.5030992232835226,
+            "observation": 75,
+            "probability": null,
+            "residual": 0.4722252854405226
+          },
+          {
+            "fitted": 0.17190288325008926,
+            "observation": 76,
+            "probability": null,
+            "residual": -0.46696260455208927
+          },
+          {
+            "fitted": -1.110780542161827,
+            "observation": 77,
+            "probability": null,
+            "residual": 0.767806507539827
+          },
+          {
+            "fitted": 1.0151889206359122,
+            "observation": 78,
+            "probability": null,
+            "residual": -1.3443883961259122
+          },
+          {
+            "fitted": 0.6390530642342945,
+            "observation": 79,
+            "probability": null,
+            "residual": -0.43302939195829454
+          },
+          {
+            "fitted": -0.38056104299492,
+            "observation": 80,
+            "probability": null,
+            "residual": 0.039194792610920015
+          },
+          {
+            "fitted": -0.9412247763341213,
+            "observation": 81,
+            "probability": null,
+            "residual": 0.2784406018851213
+          },
+          {
+            "fitted": -0.4139471640509929,
+            "observation": 82,
+            "probability": null,
+            "residual": -0.3292567450640071
+          },
+          {
+            "fitted": -0.13760523712323025,
+            "observation": 83,
+            "probability": null,
+            "residual": -0.13016407096776977
+          },
+          {
+            "fitted": 0.66811197553494,
+            "observation": 84,
+            "probability": null,
+            "residual": -0.01527828313593993
+          },
+          {
+            "fitted": 1.0318267507065593,
+            "observation": 85,
+            "probability": null,
+            "residual": -0.18657466678055923
+          },
+          {
+            "fitted": -0.9155950294967337,
+            "observation": 86,
+            "probability": null,
+            "residual": 0.6108480947637336
+          },
+          {
+            "fitted": 1.234895514620326,
+            "observation": 87,
+            "probability": null,
+            "residual": -0.036988830036325915
+          },
+          {
+            "fitted": -0.627233481542116,
+            "observation": 88,
+            "probability": null,
+            "residual": 0.358678665033116
+          },
+          {
+            "fitted": 2.099624953669151,
+            "observation": 89,
+            "probability": null,
+            "residual": 0.9449694379098488
+          },
+          {
+            "fitted": 0.7320886019017917,
+            "observation": 90,
+            "probability": null,
+            "residual": 0.4113745846432083
+          },
+          {
+            "fitted": -0.9765674621967382,
+            "observation": 91,
+            "probability": null,
+            "residual": 0.4895496025617382
+          },
+          {
+            "fitted": -0.2837411630230615,
+            "observation": 92,
+            "probability": null,
+            "residual": 0.3124061393300615
+          },
+          {
+            "fitted": -0.3710599226136079,
+            "observation": 93,
+            "probability": null,
+            "residual": -0.664123934602392
+          },
+          {
+            "fitted": 0.3505635559670405,
+            "observation": 94,
+            "probability": null,
+            "residual": -0.07706819290204048
+          },
+          {
+            "fitted": -0.7948779795080697,
+            "observation": 95,
+            "probability": null,
+            "residual": 0.4307952447840697
+          },
+          {
+            "fitted": 0.6699789261296026,
+            "observation": 96,
+            "probability": null,
+            "residual": 0.1614260077103974
+          },
+          {
+            "fitted": -2.246736855519585,
+            "observation": 97,
+            "probability": null,
+            "residual": 0.05555721227958488
+          },
+          {
+            "fitted": -0.9903977178347791,
+            "observation": 98,
+            "probability": null,
+            "residual": -0.3663395561972209
+          },
+          {
+            "fitted": 0.9871303374549948,
+            "observation": 99,
+            "probability": null,
+            "residual": 0.23334482431000525
+          },
+          {
+            "fitted": 0.39897249961167913,
+            "observation": 100,
+            "probability": null,
+            "residual": 0.03443397281732086
+          },
+          {
+            "fitted": -0.5959972843498614,
+            "observation": 101,
+            "probability": null,
+            "residual": -0.10779815859313857
+          },
+          {
+            "fitted": 0.46712396774282705,
+            "observation": 102,
+            "probability": null,
+            "residual": 0.5977096037421729
+          },
+          {
+            "fitted": -0.6411844211614872,
+            "observation": 103,
+            "probability": null,
+            "residual": -0.09421347777951283
+          },
+          {
+            "fitted": 0.14062140953890329,
+            "observation": 104,
+            "probability": null,
+            "residual": -0.10824692907190328
+          },
+          {
+            "fitted": -1.4908509146590796,
+            "observation": 105,
+            "probability": null,
+            "residual": -0.19563964699692038
+          },
+          {
+            "fitted": 0.8644613334434617,
+            "observation": 106,
+            "probability": null,
+            "residual": 0.6781058209935384
+          },
+          {
+            "fitted": -1.450679627915982,
+            "observation": 107,
+            "probability": null,
+            "residual": 0.05933689674698184
+          },
+          {
+            "fitted": 0.11274328778145629,
+            "observation": 108,
+            "probability": null,
+            "residual": -0.12014729567045629
+          },
+          {
+            "fitted": -0.6457638347973854,
+            "observation": 109,
+            "probability": null,
+            "residual": -0.4174226188356146
+          },
+          {
+            "fitted": -0.4085308881340516,
+            "observation": 110,
+            "probability": null,
+            "residual": -0.18613200196794843
+          },
+          {
+            "fitted": -0.2469967856725876,
+            "observation": 111,
+            "probability": null,
+            "residual": -0.9335816585264123
+          },
+          {
+            "fitted": 0.6695776345769504,
+            "observation": 112,
+            "probability": null,
+            "residual": -0.4710042206239504
+          },
+          {
+            "fitted": -0.6963843906801795,
+            "observation": 113,
+            "probability": null,
+            "residual": 0.4243529513381795
+          },
+          {
+            "fitted": 0.1848978398707482,
+            "observation": 114,
+            "probability": null,
+            "residual": -0.3346023767997482
+          },
+          {
+            "fitted": 0.7081123486509558,
+            "observation": 115,
+            "probability": null,
+            "residual": 0.4971376664700441
+          },
+          {
+            "fitted": 0.2974400761529297,
+            "observation": 116,
+            "probability": null,
+            "residual": -0.5757094462499297
+          },
+          {
+            "fitted": 0.2616718425205185,
+            "observation": 117,
+            "probability": null,
+            "residual": -0.3347975731975185
+          },
+          {
+            "fitted": -0.19712933042078015,
+            "observation": 118,
+            "probability": null,
+            "residual": -0.31903575837221987
+          },
+          {
+            "fitted": -0.6478288645016153,
+            "observation": 119,
+            "probability": null,
+            "residual": -0.18284920593038478
+          },
+          {
+            "fitted": -0.366543713587078,
+            "observation": 120,
+            "probability": null,
+            "residual": -0.802090880059922
+          },
+          {
+            "fitted": -0.7097978626723034,
+            "observation": 121,
+            "probability": null,
+            "residual": 0.45157622321630336
+          },
+          {
+            "fitted": 1.5299332186941887,
+            "observation": 122,
+            "probability": null,
+            "residual": 0.43818786648781116
+          },
+          {
+            "fitted": -0.9779660588990862,
+            "observation": 123,
+            "probability": null,
+            "residual": -0.4249291082309139
+          },
+          {
+            "fitted": 0.02607874241267388,
+            "observation": 124,
+            "probability": null,
+            "residual": -0.22515811617967388
+          },
+          {
+            "fitted": 0.7627604175725994,
+            "observation": 125,
+            "probability": null,
+            "residual": -0.3152532359475994
+          },
+          {
+            "fitted": 0.2562374082423643,
+            "observation": 126,
+            "probability": null,
+            "residual": -0.10346206431036428
+          },
+          {
+            "fitted": 0.6963593604402687,
+            "observation": 127,
+            "probability": null,
+            "residual": 0.28759515842673133
+          },
+          {
+            "fitted": 0.4557397421967948,
+            "observation": 128,
+            "probability": null,
+            "residual": -0.0368592922767948
+          },
+          {
+            "fitted": 0.31174144088822564,
+            "observation": 129,
+            "probability": null,
+            "residual": -1.1379025739692257
+          },
+          {
+            "fitted": -0.44228347743814767,
+            "observation": 130,
+            "probability": null,
+            "residual": 0.36027685000214765
+          },
+          {
+            "fitted": -1.6900696553917502,
+            "observation": 131,
+            "probability": null,
+            "residual": -0.09987027138324978
+          },
+          {
+            "fitted": 1.2862835807268693,
+            "observation": 132,
+            "probability": null,
+            "residual": -0.5874031006838694
+          },
+          {
+            "fitted": -0.9470759746656023,
+            "observation": 133,
+            "probability": null,
+            "residual": -0.4412506809233976
+          },
+          {
+            "fitted": 0.6939243910210402,
+            "observation": 134,
+            "probability": null,
+            "residual": 0.4688135416249597
+          },
+          {
+            "fitted": 0.6115908435974015,
+            "observation": 135,
+            "probability": null,
+            "residual": 0.38721691436159855
+          },
+          {
+            "fitted": 0.0338223330939786,
+            "observation": 136,
+            "probability": null,
+            "residual": -0.07654704145497859
+          },
+          {
+            "fitted": -0.934057764077212,
+            "observation": 137,
+            "probability": null,
+            "residual": -0.030055464325787984
+          },
+          {
+            "fitted": -1.5479616793487487,
+            "observation": 138,
+            "probability": null,
+            "residual": -0.16548608669225118
+          },
+          {
+            "fitted": 1.2136364849634722,
+            "observation": 139,
+            "probability": null,
+            "residual": 0.06693321141152775
+          }
+        ],
+        "predictors": [
+          "x",
+          "m"
+        ],
+        "process": null,
+        "regression_type": "ols",
+        "warnings": [
+          "Regression/PROCESS v1 is validated for the documented QuickPLS v0.9.0-rc.1 supported scope; unsupported shapes remain blocked."
+        ]
+      },
+      "segmentation": null,
+      "transforms": [],
+      "used_observations": 140,
+      "warnings": [
+        "Regression/PROCESS v1 is validated for the documented QuickPLS v0.9.0-rc.1 supported scope; unsupported shapes remain blocked."
+      ],
+      "wpls": null
+    },
+    "assessment": {
+      "method_version": "assessment_not_applicable_v1",
+      "warnings": [
+        "PLS assessment is not applicable to standalone v0.8 methods."
+      ]
+    }
+  }
+}

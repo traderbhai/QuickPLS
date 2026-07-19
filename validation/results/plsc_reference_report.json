@@ -1,0 +1,37 @@
+{
+  "checks": {
+    "loading_delta": 0.0,
+    "method_version": true,
+    "path_delta": 4.574118861455645e-14,
+    "plsc_payload_version": true,
+    "r2_delta": 0.0,
+    "rho_a_delta": 7.771561172376096e-16
+  },
+  "kind": "plsc_reference_v1",
+  "passed": true,
+  "quickpls": {
+    "method_version": "plsc_v1",
+    "paths": [
+      {
+        "coefficient": 0.5345416989533425,
+        "source": "x",
+        "target": "y"
+      },
+      {
+        "coefficient": 0.5973690934120451,
+        "source": "z",
+        "target": "y"
+      }
+    ],
+    "r_squared": {
+      "y": 1.0
+    },
+    "rho_a": {
+      "x": 0.5722690825793687,
+      "y": 0.5726251955661182,
+      "z": 0.572484210385336
+    }
+  },
+  "schema_version": 1,
+  "tolerance": 1e-06
+}

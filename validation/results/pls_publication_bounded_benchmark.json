@@ -1,0 +1,6 @@
+{
+  "profile": "bounded_smoke",
+  "elapsed_seconds": 0.0744,
+  "command_passed": true,
+  "future_maximum_profile": "100000 rows, 300 indicators, 100 constructs, 10000 resamples remains in the release performance blocker"
+}

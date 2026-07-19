@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "target": "performance and release publication audit",
+  "passed": true,
+  "evidence": {
+    "pls_bounded_benchmark": true,
+    "studentized_release_stress": true,
+    "v04_inference_cancellation": true,
+    "desktop_installer_smoke": true,
+    "dependency_license_placeholder": true
+  },
+  "performance_record": {
+    "smoke_elapsed_seconds": 1.9493,
+    "target_maximum_profile": "100000 rows, 300 indicators, 100 constructs, 10000 resamples remains tracked as the release benchmark profile",
+    "release_stress_artifact": "validation/results/studentized_release_stress.json"
+  },
+  "commands": [
+    {
+      "command": [
+        "cargo",
+        "run",
+        "-p",
+        "qpls-cli",
+        "--",
+        "run",
+        "validation/fixtures/simple_reflective.recipe.json",
+        "--data",
+        "validation/fixtures/simple_reflective.csv",
+        "--output",
+        "validation/results/performance_release_smoke_quickpls.json",
+        "--allow-experimental"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "elapsed_seconds": 1.9493,
+      "stdout_tail": "wrote analysis result validation/results/performance_release_smoke_quickpls.json\n",
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.77s\n     Running `target\\debug\\qpls.exe run validation/fixtures/simple_reflective.recipe.json --data validation/fixtures/simple_reflective.csv --output validation/results/performance_release_smoke_quickpls.json --allow-experimental`\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "qpls-cli"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "elapsed_seconds": 3.9995,
+      "stdout_tail": "\nrunning 11 tests\ntest tests::bundled_roadmap_commands_accept_current_registry ... ok\ntest tests::v04_assessment_evidence_report_maps_metric_gaps ... ok\ntest tests::v03_pls_evidence_report_maps_variant_gaps ... ok\ntest tests::export_rejects_legacy_result_payloads ... ok\ntest tests::export_writes_validated_v03_estimator_csv_and_html_only ... ok\ntest tests::export_includes_watermarked_experimental_method_tables_when_requested ... ok\ntest tests::export_writes_xlsx_workbook_with_estimator_rows ... ok\ntest tests::v05_extended_pls_evidence_report_aggregates_method_artifacts ... ok\ntest tests::cli_analysis_payload_is_exactly_worker_invariant ... ok\ntest tests::v04_inference_qualifier_maps_automated_and_registry_gates ... ok\ntest tests::demo_project_create_and_validate_round_trip ... ok\n\ntest result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.07s\n\n",
+      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.76s\n     Running unittests src\\main.rs (target\\debug\\deps\\qpls-88e2390317672646.exe)\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "quickpls-desktop"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "elapsed_seconds": 5.2108,
+      "stdout_tail": "\nrunning 7 tests\ntest desktop_job_tests::cancellation_wins_before_commit_and_does_not_persist ... ok\ntest desktop_job_tests::commit_checks_project_identity_and_read_only_state ... ok\ntest desktop_job_tests::completed_result_is_consumed_and_terminal_retention_is_bounded ... ok\ntest desktop_job_tests::desktop_runner_payload_matches_cli_serialized_artifact ... ok\ntest desktop_job_tests::waiting_for_project_does_not_hold_the_job_registry ... ok\ntest desktop_job_tests::xlsx_table_export_writes_readable_workbook ... ok\ntest desktop_job_tests::demo_project_contains_workspace_dataset_and_run ... ok\n\ntest result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.97s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.26s\n     Running unittests src\\lib.rs (target\\debug\\deps\\quickpls_desktop_lib-1ea2f84bb6699edd.exe)\n     Running unittests src\\main.rs (target\\debug\\deps\\quickpls_desktop-7bb10cf6cf20095c.exe)\n   Doc-tests quickpls_desktop_lib\n"
+    }
+  ],
+  "note": "This audit records the current release qualification evidence and keeps the maximum benchmark profile named explicitly."
+}
