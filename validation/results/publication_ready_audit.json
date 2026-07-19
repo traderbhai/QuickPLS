@@ -11,7 +11,7 @@
       "present": true
     },
     {
-      "bytes": 59770,
+      "bytes": 70926,
       "path": "validation/development_slices.json",
       "present": true
     },
@@ -26,7 +26,7 @@
       "present": true
     },
     {
-      "bytes": 6046,
+      "bytes": 6036,
       "path": "validation/results/foundation_publication_audit.json",
       "present": true
     },
@@ -66,12 +66,12 @@
       "present": true
     },
     {
-      "bytes": 8882,
+      "bytes": 8877,
       "path": "validation/results/extended_pls_publication_audit.json",
       "present": true
     },
     {
-      "bytes": 4946,
+      "bytes": 4941,
       "path": "validation/results/prediction_heterogeneity_publication_audit.json",
       "present": true
     },
@@ -81,17 +81,17 @@
       "present": true
     },
     {
-      "bytes": 5618,
+      "bytes": 5613,
       "path": "validation/results/extended_methods_publication_audit.json",
       "present": true
     },
     {
-      "bytes": 6690,
+      "bytes": 7193,
       "path": "validation/results/gui_diagram_publication_audit.json",
       "present": true
     },
     {
-      "bytes": 7717,
+      "bytes": 7898,
       "path": "validation/results/stable_export_publication_audit.json",
       "present": true
     },
@@ -101,7 +101,7 @@
       "present": true
     },
     {
-      "bytes": 4522,
+      "bytes": 4523,
       "path": "validation/results/performance_release_publication_audit.json",
       "present": true
     },
@@ -111,7 +111,7 @@
       "present": true
     },
     {
-      "bytes": 2940,
+      "bytes": 2941,
       "path": "validation/results/v09_release_candidate_audit.json",
       "present": true
     },
@@ -138,7 +138,7 @@
   ],
   "blocker_count": 0,
   "blockers": [],
-  "generated_at": "2026-07-19T11:51:24.438478300Z",
+  "generated_at": "2026-07-19T14:39:00.539903100Z",
   "method_capabilities": [
     {
       "family": "PLS-SEM",
@@ -378,6 +378,39 @@
       "open": 0,
       "passed": 4,
       "release": "v0.9",
+      "stable_output": true,
+      "status": "validated"
+    },
+    {
+      "blocked": 0,
+      "family": "Product",
+      "id": "v0_9_1_diagram_ergonomics",
+      "not_applicable": 0,
+      "open": 0,
+      "passed": 6,
+      "release": "v0.9.1",
+      "stable_output": true,
+      "status": "validated"
+    },
+    {
+      "blocked": 0,
+      "family": "Product",
+      "id": "v0_9_2_smartpls_style_diagram",
+      "not_applicable": 0,
+      "open": 0,
+      "passed": 6,
+      "release": "v0.9.2",
+      "stable_output": true,
+      "status": "validated"
+    },
+    {
+      "blocked": 0,
+      "family": "Product",
+      "id": "v0_9_3_professional_sem_designer",
+      "not_applicable": 0,
+      "open": 0,
+      "passed": 6,
+      "release": "v0.9.3",
       "stable_output": true,
       "status": "validated"
     }

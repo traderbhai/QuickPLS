@@ -13,8 +13,9 @@ import {
 } from "@xyflow/react";
 import { create } from "zustand";
 import { initialEdges, initialNodes, sampleDataset } from "./data/sample";
+import { defaultDiagramLayout, layoutSmartplsModel } from "./domain/diagramGraph";
 import { layoutModel } from "./domain/modelLayout";
-import type { AnalysisMethodId, AnalysisRun, AnalysisUiSettings, ConstructData, Dataset, WorkspaceView } from "./types";
+import type { AnalysisMethodId, AnalysisRun, AnalysisUiSettings, ConstructData, Dataset, DiagramLayoutState, DiagramMode, DiagramOverlaySettings, DiagramToolMode, IndicatorSide, PublicationDiagramSettings, WorkspaceView } from "./types";
 
 type AlignTarget = "left" | "centerX" | "right" | "top" | "centerY" | "bottom";
 type DistributeAxis = "horizontal" | "vertical";
@@ -23,6 +24,7 @@ type PathRouting = "smoothstep" | "default" | "straight";
 interface HistorySnapshot {
   nodes: Array<Node<ConstructData>>;
   edges: Edge[];
+  diagramLayout: DiagramLayoutState;
 }
 
 interface WorkspaceState {
@@ -32,6 +34,11 @@ interface WorkspaceState {
   selectedNodeId: string | null;
   selectedEdgeId: string | null;
   selectedResultRunId: string | null;
+  diagramMode: DiagramMode;
+  diagramTool: DiagramToolMode;
+  diagramOverlaySettings: DiagramOverlaySettings;
+  publicationDiagramSettings: PublicationDiagramSettings;
+  diagramLayout: DiagramLayoutState;
   dataset: Dataset;
   runs: AnalysisRun[];
   analysisSettings: AnalysisUiSettings;
@@ -43,6 +50,11 @@ interface WorkspaceState {
   setSelectedNode: (id: string | null) => void;
   setSelectedEdge: (id: string | null) => void;
   setSelectedResultRun: (id: string | null) => void;
+  setDiagramMode: (mode: DiagramMode) => void;
+  setDiagramTool: (tool: DiagramToolMode) => void;
+  setDiagramOverlaySettings: (patch: Partial<DiagramOverlaySettings>) => void;
+  setPublicationDiagramSettings: (patch: Partial<PublicationDiagramSettings>) => void;
+  setDiagramViewport: (viewport: DiagramLayoutState["diagramViewport"]) => void;
   checkpoint: () => void;
   undo: () => void;
   redo: () => void;
@@ -51,6 +63,7 @@ interface WorkspaceState {
   onConnect: (connection: Connection) => void;
   reconnectPath: (edge: Edge, connection: Connection) => void;
   addPath: (source: string, target: string) => void;
+  addCovariance: (source: string, target: string) => void;
   addTwoStageInteraction: (predictor: string, moderator: string, outcome: string) => void;
   updateConstruct: (id: string, patch: Partial<ConstructData>) => void;
   updateEdge: (id: string, patch: Partial<Edge>) => void;
@@ -63,7 +76,10 @@ interface WorkspaceState {
   setSelectedPathRouting: (routing: PathRouting) => void;
   alignSelectedConstructs: (target: AlignTarget) => void;
   distributeSelectedConstructs: (axis: DistributeAxis) => void;
-  autoLayout: (direction?: "horizontal" | "vertical") => void;
+  autoLayout: (direction?: "horizontal" | "vertical" | "smartpls") => void;
+  moveIndicator: (constructId: string, indicator: string, position: XYPosition) => void;
+  setIndicatorSide: (constructId: string, indicator: string, side: IndicatorSide) => void;
+  resetIndicatorLayout: (constructId: string, indicator?: string) => void;
   assignIndicator: (constructId: string, indicator: string) => void;
   assignIndicators: (constructId: string, indicators: string[]) => void;
   unassignIndicator: (constructId: string, indicator: string) => void;
@@ -72,12 +88,29 @@ interface WorkspaceState {
   setAnalysisSettings: (patch: Partial<AnalysisUiSettings>) => void;
   setProjectMeta: (name: string, path: string | null) => void;
   resetProject: () => void;
-  loadProject: (project: { nodes: Array<Node<ConstructData>>; edges: Edge[]; dataset: Dataset; runs?: AnalysisRun[]; analysisSettings?: AnalysisUiSettings }) => void;
+  loadProject: (project: { nodes: Array<Node<ConstructData>>; edges: Edge[]; dataset: Dataset; runs?: AnalysisRun[]; analysisSettings?: AnalysisUiSettings; diagramMode?: DiagramMode; diagramOverlaySettings?: Partial<DiagramOverlaySettings>; publicationDiagramSettings?: Partial<PublicationDiagramSettings>; diagramLayout?: Partial<DiagramLayoutState> }) => void;
 }
 
 const supportedAnalysisMethods = new Set<AnalysisMethodId>(["pls_pm", "bootstrap", "plsc", "wpls", "cca", "cta_pls", "endogeneity", "nonlinear_effects", "moderated_mediation", "predict", "mga", "ipma", "cbsem", "pca", "gsca", "regression", "nca"]);
 
 const defaultAnalysisSettings: AnalysisUiSettings = { method: "pls_pm", bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 0, seed: 20260718, workers: 1, confidenceLevel: 0.95, caseWeightColumn: null, groupColumn: null, ipmaTargets: null, groupMethods: "micom,mga_permutation", groupPermutationSamples: 999, segmentCount: 2, segmentStarts: 10, minimumSegmentShare: 0.10, cbsemModelType: "sem", cbsemMeanStructure: false, cbsemStandardization: "std_all", cbsemGroupColumn: null, cbsemInvarianceSteps: "configural,metric,scalar", cbsemBootstrapSamples: 0, pcaVariables: null, pcaComponentRule: "kaiser", pcaComponents: 2, regressionType: "ols", regressionOutcome: null, regressionPredictors: null, regressionControls: null, robustSe: "hc3", processModel: "mediation", processX: null, processM: null, processW: null, ncaX: null, ncaY: null, ncaCeiling: "both", ncaPermutationSamples: 999 };
+const defaultDiagramOverlaySettings: DiagramOverlaySettings = { selectedRunId: null, mode: "model", precision: 3, showLoadings: true, showPathCoefficients: true, showPValues: false, showTValues: false, showRSquared: true, showWarnings: true, showWatermark: true };
+const defaultPublicationDiagramSettings: PublicationDiagramSettings = { mode: "smartpls_result", precision: 3, overlayMode: "paths_r2", aspectRatio: "wide", palette: "grayscale", layoutSource: "current_canvas", showLoadings: true, showPathCoefficients: true, showRSquared: true, showValidationWatermark: true, showUnsupportedWarning: true, showRunProvenance: true };
+
+const normalizeDiagramOverlaySettings = (settings?: Partial<DiagramOverlaySettings>): DiagramOverlaySettings => ({
+  ...defaultDiagramOverlaySettings,
+  ...settings,
+  precision: Math.min(6, Math.max(0, Math.trunc(settings?.precision ?? defaultDiagramOverlaySettings.precision))),
+  selectedRunId: typeof settings?.selectedRunId === "string" ? settings.selectedRunId : null,
+});
+
+const normalizePublicationDiagramSettings = (settings?: Partial<PublicationDiagramSettings>): PublicationDiagramSettings => ({
+  ...defaultPublicationDiagramSettings,
+  ...settings,
+  palette: settings?.palette === "monochrome" ? "grayscale" : settings?.palette ?? defaultPublicationDiagramSettings.palette,
+  layoutSource: settings?.layoutSource === "tidy_publication" ? "tidy_publication" : "current_canvas",
+  precision: Math.min(6, Math.max(0, Math.trunc(settings?.precision ?? defaultPublicationDiagramSettings.precision))),
+});
 
 const normalizeAnalysisSettings = (settings: Partial<AnalysisUiSettings>): AnalysisUiSettings => {
   const bootstrapSamples = Number.isFinite(settings.bootstrapSamples) ? Math.trunc(settings.bootstrapSamples!) : defaultAnalysisSettings.bootstrapSamples;
@@ -162,9 +195,12 @@ const normalizeAnalysisSettings = (settings: Partial<AnalysisUiSettings>): Analy
 };
 
 const historyPatch = (state: WorkspaceState) => ({
-  past: [...state.past.slice(-49), { nodes: state.nodes, edges: state.edges }],
+  past: [...state.past.slice(-49), { nodes: state.nodes, edges: state.edges, diagramLayout: state.diagramLayout }],
   future: [],
 });
+
+const syncedDiagramLayout = (nodes: Array<Node<ConstructData>>, edges: Edge[], existing?: Partial<DiagramLayoutState>) =>
+  defaultDiagramLayout(nodes, edges, existing);
 
 const constructSize = { width: 170, height: 118 };
 
@@ -224,6 +260,11 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   selectedNodeId: "satisfaction",
   selectedEdgeId: null,
   selectedResultRunId: null,
+  diagramMode: "sem",
+  diagramTool: "select",
+  diagramOverlaySettings: defaultDiagramOverlaySettings,
+  publicationDiagramSettings: defaultPublicationDiagramSettings,
+  diagramLayout: syncedDiagramLayout(initialNodes, initialEdges),
   dataset: sampleDataset,
   runs: [],
   analysisSettings: defaultAnalysisSettings,
@@ -234,7 +275,21 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   setView: (view) => set({ view }),
   setSelectedNode: (selectedNodeId) => set({ selectedNodeId, selectedEdgeId: null }),
   setSelectedEdge: (selectedEdgeId) => set({ selectedEdgeId, selectedNodeId: null }),
-  setSelectedResultRun: (selectedResultRunId) => set({ selectedResultRunId }),
+  setSelectedResultRun: (selectedResultRunId) => set((state) => ({ selectedResultRunId, diagramOverlaySettings: { ...state.diagramOverlaySettings, selectedRunId: selectedResultRunId } })),
+  setDiagramMode: (diagramMode) => set((state) => ({
+    diagramMode,
+    diagramTool: diagramMode === "smartpls_result" ? "select" : state.diagramTool,
+    diagramOverlaySettings: diagramMode === "smartpls_result"
+      ? { ...state.diagramOverlaySettings, mode: state.selectedResultRunId ? "paths_r2" : "model" }
+      : state.diagramOverlaySettings,
+  })),
+  setDiagramTool: (diagramTool) => set({ diagramTool }),
+  setDiagramOverlaySettings: (patch) => set((state) => {
+    const diagramOverlaySettings = normalizeDiagramOverlaySettings({ ...state.diagramOverlaySettings, ...patch });
+    return { diagramOverlaySettings, selectedResultRunId: diagramOverlaySettings.selectedRunId };
+  }),
+  setPublicationDiagramSettings: (patch) => set((state) => ({ publicationDiagramSettings: normalizePublicationDiagramSettings({ ...state.publicationDiagramSettings, ...patch }) })),
+  setDiagramViewport: (diagramViewport) => set((state) => ({ diagramLayout: { ...state.diagramLayout, diagramViewport } })),
   checkpoint: () => set((state) => historyPatch(state)),
   undo: () => set((state) => {
     const previous = state.past.at(-1);
@@ -242,8 +297,9 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     return {
       nodes: previous.nodes,
       edges: previous.edges,
+      diagramLayout: previous.diagramLayout,
       past: state.past.slice(0, -1),
-      future: [{ nodes: state.nodes, edges: state.edges }, ...state.future].slice(0, 50),
+      future: [{ nodes: state.nodes, edges: state.edges, diagramLayout: state.diagramLayout }, ...state.future].slice(0, 50),
       selectedNodeId: null,
       selectedEdgeId: null,
       selectedResultRunId: null,
@@ -255,20 +311,33 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     return {
       nodes: next.nodes,
       edges: next.edges,
-      past: [...state.past, { nodes: state.nodes, edges: state.edges }].slice(-50),
+      diagramLayout: next.diagramLayout,
+      past: [...state.past, { nodes: state.nodes, edges: state.edges, diagramLayout: state.diagramLayout }].slice(-50),
       future: state.future.slice(1),
       selectedNodeId: null,
       selectedEdgeId: null,
       selectedResultRunId: null,
     };
   }),
-  onNodesChange: (changes) => set((state) => ({
-    ...(changes.some((change) => change.type === "remove") ? historyPatch(state) : {}),
-    nodes: applyNodeChanges(changes, state.nodes),
-  })),
+  onNodesChange: (changes) => set((state) => {
+    const nodes = applyNodeChanges(changes, state.nodes);
+    const layout = syncedDiagramLayout(nodes, state.edges, {
+      ...state.diagramLayout,
+      constructLayouts: {
+        ...state.diagramLayout.constructLayouts,
+        ...Object.fromEntries(nodes.map((node) => [node.id, { ...(state.diagramLayout.constructLayouts[node.id] ?? {}), x: node.position.x, y: node.position.y }])),
+      },
+    });
+    return {
+      ...(changes.some((change) => change.type === "remove") ? historyPatch(state) : {}),
+      nodes,
+      diagramLayout: layout,
+    };
+  }),
   onEdgesChange: (changes) => set((state) => ({
     ...(changes.some((change) => change.type === "remove") ? historyPatch(state) : {}),
     edges: applyEdgeChanges(changes, state.edges),
+    diagramLayout: syncedDiagramLayout(state.nodes, applyEdgeChanges(changes, state.edges), state.diagramLayout),
   })),
   onConnect: (connection) => set((state) => {
     if (!connection.source || !connection.target || connection.source === connection.target) return state;
@@ -312,6 +381,18 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
         label: "Path",
         markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
       }, state.edges),
+    };
+  }),
+  addCovariance: (source, target) => set((state) => {
+    if (source === target) return state;
+    const [left, right] = [source, target].sort();
+    if (state.edges.some((edge) => edge.data?.role === "covariance" && [edge.source, edge.target].sort().join("\u0000") === `${left}\u0000${right}`)) return state;
+    const id = `covariance-${left}-${right}-${Date.now()}`;
+    return {
+      ...historyPatch(state),
+      selectedNodeId: null,
+      selectedEdgeId: id,
+      edges: [...state.edges, { id, source: left, target: right, type: "default", label: "Covariance", data: { role: "covariance" } }],
     };
   }),
   addTwoStageInteraction: (predictor, moderator, outcome) => set((state) => {
@@ -563,10 +644,67 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
       }),
     };
   }),
-  autoLayout: (direction = "horizontal") => set((state) => ({ ...historyPatch(state), nodes: layoutModel(state.nodes, state.edges, direction) })),
+  autoLayout: (direction = "horizontal") => set((state) => {
+    const nodes = direction === "smartpls" ? layoutSmartplsModel(state.nodes, state.edges) : layoutModel(state.nodes, state.edges, direction);
+    return { ...historyPatch(state), nodes, diagramLayout: syncedDiagramLayout(nodes, state.edges, state.diagramLayout) };
+  }),
+  moveIndicator: (constructId, indicator, position) => set((state) => {
+    const construct = state.nodes.find((node) => node.id === constructId);
+    if (!construct?.data.indicators.includes(indicator)) return state;
+    const constructIndicators = state.diagramLayout.indicatorLayouts[constructId] ?? {};
+    const current = constructIndicators[indicator] ?? { side: "free" as const, order: construct.data.indicators.indexOf(indicator) };
+    return {
+      diagramLayout: syncedDiagramLayout(state.nodes, state.edges, {
+        ...state.diagramLayout,
+        indicatorLayouts: {
+          ...state.diagramLayout.indicatorLayouts,
+          [constructId]: {
+            ...constructIndicators,
+            [indicator]: { ...current, side: "free", x: position.x, y: position.y, pinned: true },
+          },
+        },
+      }),
+    };
+  }),
+  setIndicatorSide: (constructId, indicator, side) => set((state) => {
+    const construct = state.nodes.find((node) => node.id === constructId);
+    if (!construct?.data.indicators.includes(indicator)) return state;
+    const constructIndicators = state.diagramLayout.indicatorLayouts[constructId] ?? {};
+    const current = constructIndicators[indicator] ?? { side, order: construct.data.indicators.indexOf(indicator) };
+    return {
+      ...historyPatch(state),
+      diagramLayout: syncedDiagramLayout(state.nodes, state.edges, {
+        ...state.diagramLayout,
+        indicatorLayouts: {
+          ...state.diagramLayout.indicatorLayouts,
+          [constructId]: {
+            ...constructIndicators,
+            [indicator]: { ...current, side, x: undefined, y: undefined, pinned: side === "free" },
+          },
+        },
+      }),
+    };
+  }),
+  resetIndicatorLayout: (constructId, indicator) => set((state) => {
+    const constructIndicators = { ...(state.diagramLayout.indicatorLayouts[constructId] ?? {}) };
+    if (indicator) delete constructIndicators[indicator];
+    else Object.keys(constructIndicators).forEach((key) => delete constructIndicators[key]);
+    return {
+      ...historyPatch(state),
+      diagramLayout: syncedDiagramLayout(state.nodes, state.edges, {
+        ...state.diagramLayout,
+        indicatorLayouts: { ...state.diagramLayout.indicatorLayouts, [constructId]: constructIndicators },
+      }),
+    };
+  }),
   assignIndicator: (constructId, indicator) => set((state) => {
     const target = state.nodes.find((node) => node.id === constructId);
     if (!target || target.data.indicators.includes(indicator)) return state;
+    const indicatorLayout = Object.fromEntries(Object.entries(state.diagramLayout.indicatorLayouts).map(([nodeId, indicators]) => {
+      const next = { ...indicators };
+      if (nodeId !== constructId) delete next[indicator];
+      return [nodeId, next];
+    }));
     return {
       ...historyPatch(state),
       nodes: state.nodes.map((node) => ({
@@ -578,12 +716,18 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
             : node.data.indicators.filter((item) => item !== indicator),
         },
       })),
+      diagramLayout: syncedDiagramLayout(state.nodes, state.edges, { ...state.diagramLayout, indicatorLayouts: indicatorLayout }),
     };
   }),
   assignIndicators: (constructId, indicators) => set((state) => {
     const target = state.nodes.find((node) => node.id === constructId);
     const unique = [...new Set(indicators)].filter((indicator) => state.dataset.columns.includes(indicator));
     if (!target || unique.length === 0) return state;
+    const indicatorLayout = Object.fromEntries(Object.entries(state.diagramLayout.indicatorLayouts).map(([nodeId, current]) => {
+      const next = { ...current };
+      if (nodeId !== constructId) unique.forEach((indicator) => delete next[indicator]);
+      return [nodeId, next];
+    }));
     return {
       ...historyPatch(state),
       nodes: state.nodes.map((node) => ({
@@ -595,6 +739,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
             : node.data.indicators.filter((item) => !unique.includes(item)),
         },
       })),
+      diagramLayout: syncedDiagramLayout(state.nodes, state.edges, { ...state.diagramLayout, indicatorLayouts: indicatorLayout }),
     };
   }),
   unassignIndicator: (constructId, indicator) => set((state) => ({
@@ -603,9 +748,21 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
       ...node,
       data: { ...node.data, indicators: node.data.indicators.filter((item) => item !== indicator) },
     } : node),
+    diagramLayout: syncedDiagramLayout(state.nodes, state.edges, {
+      ...state.diagramLayout,
+      indicatorLayouts: {
+        ...state.diagramLayout.indicatorLayouts,
+        [constructId]: Object.fromEntries(Object.entries(state.diagramLayout.indicatorLayouts[constructId] ?? {}).filter(([key]) => key !== indicator)),
+      },
+    }),
   })),
   setDataset: (dataset) => set({ dataset, view: "data" }),
-  addRun: (run) => set((state) => ({ runs: [run, ...state.runs], selectedResultRunId: run.result ? run.id : state.selectedResultRunId, view: "runs" })),
+  addRun: (run) => set((state) => ({
+    runs: [run, ...state.runs],
+    selectedResultRunId: run.result ? run.id : state.selectedResultRunId,
+    diagramOverlaySettings: run.result ? { ...state.diagramOverlaySettings, selectedRunId: run.id, mode: state.diagramOverlaySettings.mode === "model" ? "paths_r2" : state.diagramOverlaySettings.mode } : state.diagramOverlaySettings,
+    view: "runs",
+  })),
   setAnalysisSettings: (patch) => set((state) => ({ analysisSettings: normalizeAnalysisSettings({ ...state.analysisSettings, ...patch }) })),
   setProjectMeta: (projectName, projectPath) => set({ projectName, projectPath }),
   resetProject: () => set({
@@ -614,6 +771,11 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     selectedNodeId: "satisfaction",
     selectedEdgeId: null,
     selectedResultRunId: null,
+    diagramMode: "sem",
+    diagramTool: "select",
+    diagramOverlaySettings: defaultDiagramOverlaySettings,
+    publicationDiagramSettings: defaultPublicationDiagramSettings,
+    diagramLayout: syncedDiagramLayout(initialNodes, initialEdges),
     dataset: sampleDataset,
     runs: [],
     analysisSettings: defaultAnalysisSettings,
@@ -629,6 +791,11 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     dataset: project.dataset,
     runs: project.runs ?? [],
     analysisSettings: normalizeAnalysisSettings(project.analysisSettings ?? {}),
+    diagramMode: project.diagramMode ?? "sem",
+    diagramTool: "select",
+    diagramOverlaySettings: normalizeDiagramOverlaySettings({ ...project.diagramOverlaySettings, selectedRunId: null }),
+    publicationDiagramSettings: normalizePublicationDiagramSettings(project.publicationDiagramSettings),
+    diagramLayout: syncedDiagramLayout(project.nodes, project.edges, project.diagramLayout),
     selectedNodeId: project.nodes[0]?.id ?? null,
     selectedEdgeId: null,
     selectedResultRunId: null,

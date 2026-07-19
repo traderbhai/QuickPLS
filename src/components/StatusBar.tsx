@@ -7,9 +7,10 @@ export function StatusBar() {
   const edges = useWorkspace((state) => state.edges);
   const dataset = useWorkspace((state) => state.dataset);
   const issues = validateModel(nodes, edges);
+  const structuralPathCount = edges.filter((edge) => edge.data?.role !== "covariance").length;
   return <footer className="status-bar">
     <span className={issues.length ? "status warning" : "status valid"}>{issues.length ? <AlertTriangle size={15} /> : <CheckCircle2 size={15} />}{issues.length ? `${issues.length} model issues` : "Model structure valid"}</span>
-    <span><Database size={14} />{dataset.rows.length} rows</span><span>{nodes.length} constructs</span><span>{edges.length} paths</span>
+    <span><Database size={14} />{dataset.rows.length} rows</span><span>{nodes.length} constructs</span><span>{structuralPathCount} paths</span>
     <span className="status-spacer" /><span><WifiOff size={14} />Offline mode</span><span>Engine 0.1.0-alpha</span>
   </footer>;
 }

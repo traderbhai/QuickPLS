@@ -23,6 +23,10 @@ export function TopBar() {
   const projectPath = useWorkspace((state) => state.projectPath);
   const setProjectMeta = useWorkspace((state) => state.setProjectMeta);
   const analysisSettings = useWorkspace((state) => state.analysisSettings);
+  const diagramMode = useWorkspace((state) => state.diagramMode);
+  const diagramOverlaySettings = useWorkspace((state) => state.diagramOverlaySettings);
+  const publicationDiagramSettings = useWorkspace((state) => state.publicationDiagramSettings);
+  const diagramLayout = useWorkspace((state) => state.diagramLayout);
   const setAnalysisSettings = useWorkspace((state) => state.setAnalysisSettings);
   const runnableMethods = methods.filter((candidate) => candidate.status !== "unsupported");
   const selectedMethod = runnableMethods.find((candidate) => candidate.id === analysisSettings.method) ?? runnableMethods[0];
@@ -35,19 +39,19 @@ export function TopBar() {
   };
 
   const saveProject = async () => {
-    if (!isNativeDesktop()) { download("corporate-reputation.qpls.json", JSON.stringify({ schemaVersion: 1, nodes, edges, dataset, runs, analysisSettings }, null, 2), "application/json"); return; }
-    const saved = await saveNativeProject(projectPath, { nodes, edges, runs, analysisSettings, activeDatasetId: dataset.id });
+    if (!isNativeDesktop()) { download("corporate-reputation.qpls.json", JSON.stringify({ schemaVersion: 1, nodes, edges, dataset, runs, analysisSettings, diagramMode, diagramOverlaySettings, publicationDiagramSettings, diagramLayout }, null, 2), "application/json"); return; }
+    const saved = await saveNativeProject(projectPath, { nodes, edges, runs, analysisSettings, diagramMode, diagramOverlaySettings, publicationDiagramSettings, diagramLayout, activeDatasetId: dataset.id });
     if (saved) setProjectMeta(saved.name, saved.path);
   };
   const openProject = async (file?: File) => {
     if (!file) return;
-    const project = JSON.parse(await file.text()) as { schemaVersion: number; nodes: typeof nodes; edges: typeof edges; dataset: typeof dataset; runs?: typeof runs; analysisSettings?: typeof analysisSettings };
+    const project = JSON.parse(await file.text()) as { schemaVersion: number; nodes: typeof nodes; edges: typeof edges; dataset: typeof dataset; runs?: typeof runs; analysisSettings?: typeof analysisSettings; diagramMode?: typeof diagramMode; diagramOverlaySettings?: typeof diagramOverlaySettings; publicationDiagramSettings?: typeof publicationDiagramSettings; diagramLayout?: typeof diagramLayout };
     if (project.schemaVersion !== 1 || !Array.isArray(project.nodes) || !Array.isArray(project.edges)) throw new Error("Unsupported QuickPLS project");
     loadProject(project);
   };
   const loadNativeProjectSnapshot = (project: Awaited<ReturnType<typeof openNativeProject>>) => {
     if (!project) return;
-    const workspace = project.workspace as { nodes: typeof nodes; edges: typeof edges; runs?: typeof runs; analysisSettings?: typeof analysisSettings; activeDatasetId?: string } | null | undefined;
+    const workspace = project.workspace as { nodes: typeof nodes; edges: typeof edges; runs?: typeof runs; analysisSettings?: typeof analysisSettings; diagramMode?: typeof diagramMode; diagramOverlaySettings?: typeof diagramOverlaySettings; publicationDiagramSettings?: typeof publicationDiagramSettings; diagramLayout?: typeof diagramLayout; activeDatasetId?: string } | null | undefined;
     const activeDataset = project.datasets.find((candidate) => candidate.id === workspace?.activeDatasetId) ?? project.datasets[0] ?? dataset;
     if (workspace?.nodes && workspace?.edges) loadProject({ ...workspace, dataset: activeDataset });
     else if (project.datasets[0]) setDataset(project.datasets[0]);
@@ -65,7 +69,7 @@ export function TopBar() {
   };
   const newProjectCommand = async () => { resetProject(); if (isNativeDesktop()) await createNativeProject(); };
   const importDataCommand = async () => { if (!isNativeDesktop()) { inputRef.current?.click(); return; } const value = await importNativeDataset(); if (value) setDataset(value); };
-  const exportSummary = () => download("quickpls-foundation-summary.html", `<!doctype html><meta charset="utf-8"><title>QuickPLS foundation summary</title><h1>QuickPLS foundation summary</h1><p>Dataset: ${dataset.name}</p><p>Rows: ${dataset.rows.length}; constructs: ${nodes.length}; paths: ${edges.length}</p><p><strong>Release candidate:</strong> supported analyses are validated for the documented v0.9.0-rc.1 scope after a saved run is selected.</p>`, "text/html");
+  const exportSummary = () => download("quickpls-foundation-summary.html", `<!doctype html><meta charset="utf-8"><title>QuickPLS foundation summary</title><h1>QuickPLS foundation summary</h1><p>Dataset: ${dataset.name}</p><p>Rows: ${dataset.rows.length}; constructs: ${nodes.length}; paths: ${edges.length}</p><p><strong>Stable scope:</strong> supported analyses are validated for the documented v1.0.0 scope after a saved run is selected.</p>`, "text/html");
 
   const importCsv = (file?: File) => {
     if (!file) return;
@@ -88,6 +92,7 @@ export function TopBar() {
   const runAnalysis = async () => {
     if (!dataset.fingerprint) throw new Error("Import and save a dataset before running an analysis.");
     const createdAt = new Date().toISOString();
+    const structuralEdges = edges.filter((edge) => edge.data?.role !== "covariance");
     const controls = edges
       .filter((edge) => edge.data?.role === "control")
       .map((edge) => ({
@@ -96,7 +101,7 @@ export function TopBar() {
         label: typeof edge.data?.controlLabel === "string" && edge.data.controlLabel.trim() ? edge.data.controlLabel.trim() : null,
       }));
     const metadata = {
-      status: analysisSettings.method === "pls_pm" ? "validated_v0_9_supported_pls_scope" : analysisSettings.method === "cbsem" ? "validated_v0_9_supported_cbsem_scope" : ["pca", "gsca", "regression", "nca"].includes(analysisSettings.method) ? "validated_v0_9_supported_extended_methods_scope" : "validated_v0_9_supported_prediction_groups_scope",
+      status: analysisSettings.method === "pls_pm" ? "validated_v1_0_supported_pls_scope" : analysisSettings.method === "cbsem" ? "validated_v1_0_supported_cbsem_scope" : ["pca", "gsca", "regression", "nca"].includes(analysisSettings.method) ? "validated_v1_0_supported_extended_methods_scope" : "validated_v1_0_supported_prediction_groups_scope",
       ...(analysisSettings.groupColumn ? { mga_group_column: analysisSettings.groupColumn } : {}),
       ...(analysisSettings.ipmaTargets ? { ipma_targets: analysisSettings.ipmaTargets } : {}),
       ...(analysisSettings.method === "mga" && analysisSettings.groupMethods ? { group_methods: analysisSettings.groupMethods } : {}),
@@ -146,7 +151,7 @@ export function TopBar() {
         id: crypto.randomUUID(),
         name: projectName,
         constructs: nodes.map((node) => ({ id: node.id, name: node.data.label, short_name: node.data.shortName, mode: node.data.mode, indicators: node.data.indicators })),
-        paths: edges.map((edge) => ({ source: edge.source, target: edge.target })),
+        paths: structuralEdges.map((edge) => ({ source: edge.source, target: edge.target })),
         controls,
         higher_order_constructs: nodes.filter((node) => node.data.semantic === "higher_order" && node.data.higherOrder).map((node) => ({
           id: node.id,
@@ -181,7 +186,7 @@ export function TopBar() {
     const { estimation: result, assessment } = envelope.payload;
     const bootstrap = envelope.payload.kind === "pls_pm_v2" ? envelope.payload.bootstrap : envelope.payload.kind === "pls_pm_v3" ? envelope.payload.bootstrap ?? undefined : undefined;
     const permutation = envelope.payload.kind === "pls_pm_v3" ? envelope.payload.permutation ?? undefined : undefined;
-    addRun({ id: envelope.id, name: `${selectedMethod.name} run`, method: selectedMethod.name, createdAt: envelope.provenance.completed_at, seed: envelope.provenance.seed, status: "completed", warnings: ["Validated for the documented QuickPLS v0.9.0-rc.1 supported scope; unsupported shapes remain blocked or explicitly marked.", ...envelope.diagnostics.filter((item) => item.level === "warning").map((item) => item.message)], fingerprint: envelope.provenance.dataset_fingerprint.slice(0, 12), result, assessment, bootstrap, permutation });
+    addRun({ id: envelope.id, name: `${selectedMethod.name} run`, method: selectedMethod.name, createdAt: envelope.provenance.completed_at, seed: envelope.provenance.seed, status: "completed", warnings: ["Validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked or explicitly marked.", ...envelope.diagnostics.filter((item) => item.level === "warning").map((item) => item.message)], fingerprint: envelope.provenance.dataset_fingerprint.slice(0, 12), result, assessment, bootstrap, permutation });
   };
   const cancelAnalysis = async () => {
     if (!activeJob) return;
@@ -191,7 +196,7 @@ export function TopBar() {
   return <>
     <header className="title-bar">
       <Menu size={20} /><strong>QuickPLS</strong><span className="project-title">{projectName}.qpls</span>
-      <span className="alpha-mark">v0.9.0-rc.1</span>
+      <span className="alpha-mark">v1.0.0</span>
     </header>
     <div className="command-bar">
       <button className="icon-command" title="New project" onClick={() => { void newProjectCommand().catch((error) => window.alert(error)); }}><Plus size={17} /><span>New</span></button>

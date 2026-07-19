@@ -1,0 +1,50 @@
+name: Validation discrepancy
+description: Report a numerical difference from a documented reference or formula.
+title: "[Validation]: "
+labels: ["validation", "numerical"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for numerical differences. Include enough detail to reproduce the comparison.
+  - type: input
+    id: method
+    attributes:
+      label: Method or metric
+      placeholder: "PLS-PM Mode A, HTMT+, CB-SEM ML, OLS HC3, etc."
+    validations:
+      required: true
+  - type: input
+    id: quickpls_version
+    attributes:
+      label: QuickPLS version
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: input
+    id: reference
+    attributes:
+      label: Reference engine/formula/source
+      placeholder: "lavaan 0.x, cSEM, seminr, hand calculation, paper fixture"
+    validations:
+      required: true
+  - type: textarea
+    id: data_settings
+    attributes:
+      label: Data, model, and settings
+      description: Provide anonymized data or enough details to reproduce.
+    validations:
+      required: true
+  - type: textarea
+    id: discrepancy
+    attributes:
+      label: Observed discrepancy
+      description: Include QuickPLS value, reference value, absolute difference, and tolerance if known.
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Mention whether this may relate to a known difference.
+

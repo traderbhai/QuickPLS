@@ -1,0 +1,49 @@
+name: QuickPLS CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  test:
+    name: Windows build and tests
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Frontend tests
+        run: npm test -- --run
+
+      - name: Frontend build
+        run: npm run build
+
+      - name: Rust tests
+        run: |
+          cargo test -p qpls-core
+          cargo test -p qpls-data
+          cargo test -p qpls-project
+          cargo test -p qpls-estimation
+          cargo test -p qpls-assessment
+          cargo test -p qpls-resampling
+          cargo test -p qpls-runner
+          cargo test -p qpls-cli
+          cargo test -p quickpls-desktop
+
+      - name: v1.0 gate
+        run: cargo run -p qpls-cli -- gate v1_0_stable
+

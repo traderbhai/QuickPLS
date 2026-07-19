@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.0.0 desktop smoke and recovery audit",
+  "passed": true,
+  "checklist": {
+    "release_executable_launches_without_dev_server": true,
+    "nsis_installer_artifact_exists": true,
+    "validation_csv_fixture_available": true,
+    "simple_pls_run_saved": true,
+    "csv_export_readable": true,
+    "html_export_readable": true,
+    "xlsx_export_readable": true,
+    "svg_export_path_available": true,
+    "browser_print_pdf_documented_not_native_audited": true,
+    "autosave_recovery_tests_exist": true,
+    "diagram_layout_persistence_smoke_passed": true,
+    "diagram_estimates_block_stale_incompatible": true
+  },
+  "launch_probe": {
+    "passed": true,
+    "path": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+    "started": true
+  },
+  "nsis_installers": [
+    "target\\release\\bundle\\nsis\\QuickPLS_1.0.0_x64-setup.exe"
+  ],
+  "exports": {
+    "csv": "validation\\results\\v10_smoke_export.csv",
+    "html": "validation\\results\\v10_smoke_export.html",
+    "xlsx": "validation\\results\\v10_smoke_export.xlsx",
+    "svg": "desktop/report SVG export path verified by Reports workspace and frontend tests",
+    "pdf": "browser print-to-PDF path documented; native PDF is not part of v1.0 audited scope"
+  },
+  "commands": [
+    {
+      "command": [
+        "cargo",
+        "run",
+        "-p",
+        "qpls-cli",
+        "--",
+        "run",
+        "validation/fixtures/simple_reflective.recipe.json",
+        "--data",
+        "validation/fixtures/simple_reflective.csv",
+        "--output",
+        "validation\\results\\v10_smoke_pls_result.json",
+        "--allow-experimental",
+        "--workers",
+        "1"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "elapsed_seconds": 3.4664,
+      "stdout_tail": "wrote analysis result validation\\results\\v10_smoke_pls_result.json\n",
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.24s\n     Running `target\\debug\\qpls.exe run validation/fixtures/simple_reflective.recipe.json --data validation/fixtures/simple_reflective.csv --output validation\\results\\v10_smoke_pls_result.json --allow-experimental --workers 1`\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "run",
+        "-p",
+        "qpls-cli",
+        "--",
+        "export",
+        "validation\\results\\v10_smoke_pls_result.json",
+        "--format",
+        "csv",
+        "--output",
+        "validation\\results\\v10_smoke_export.csv"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "elapsed_seconds": 3.0495,
+      "stdout_tail": "wrote v0.3 estimator-only export validation\\results\\v10_smoke_export.csv\n",
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.79s\n     Running `target\\debug\\qpls.exe export validation\\results\\v10_smoke_pls_result.json --format csv --output validation\\results\\v10_smoke_export.csv`\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "run",
+        "-p",
+        "qpls-cli",
+        "--",
+        "export",
+        "validation\\results\\v10_smoke_pls_result.json",
+        "--format",
+        "html",
+        "--output",
+        "validation\\results\\v10_smoke_export.html"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "elapsed_seconds": 2.9818,
+      "stdout_tail": "wrote v0.3 estimator-only export validation\\results\\v10_smoke_export.html\n",
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.73s\n     Running `target\\debug\\qpls.exe export validation\\results\\v10_smoke_pls_result.json --format html --output validation\\results\\v10_smoke_export.html`\n"
+    },
+    {
+      "command": [
+        "cargo",
+        "run",
+        "-p",
+        "qpls-cli",
+        "--",
+        "export",
+        "validation\\results\\v10_smoke_pls_result.json",
+        "--format",
+        "xlsx",
+        "--output",
+        "validation\\results\\v10_smoke_export.xlsx"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "elapsed_seconds": 3.1784,
+      "stdout_tail": "wrote v0.3 estimator-only export validation\\results\\v10_smoke_export.xlsx\n",
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.90s\n     Running `target\\debug\\qpls.exe export validation\\results\\v10_smoke_pls_result.json --format xlsx --output validation\\results\\v10_smoke_export.xlsx`\n"
+    }
+  ],
+  "note": "Pointer-level designer coverage is inherited from the v0.9.3 Playwright visual smoke artifact to avoid brittle repeated GUI automation in the final release audit."
+}

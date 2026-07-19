@@ -1,0 +1,6 @@
+blank_issues_enabled: true
+contact_links:
+  - name: QuickPLS v1.0 supported scope
+    url: https://github.com/traderbhai/QuickPLS/blob/main/docs/V1_SUPPORTED_SCOPE.md
+    about: Check whether a method or workflow is inside the stable v1.0 scope.
+

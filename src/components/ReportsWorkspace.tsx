@@ -10,13 +10,16 @@ export function ReportsWorkspace() {
   const runs = useWorkspace((state) => state.runs);
   const nodes = useWorkspace((state) => state.nodes);
   const edges = useWorkspace((state) => state.edges);
+  const diagramLayout = useWorkspace((state) => state.diagramLayout);
+  const publicationDiagramSettings = useWorkspace((state) => state.publicationDiagramSettings);
+  const setPublicationDiagramSettings = useWorkspace((state) => state.setPublicationDiagramSettings);
   const [selectedRunId, setSelectedRunId] = useState(runs.at(0)?.id ?? "");
   const [comparisonRunId, setComparisonRunId] = useState(runs.at(1)?.id ?? runs.at(0)?.id ?? "");
   const selectedRun = useMemo(() => runs.find((run) => run.id === selectedRunId) ?? runs.at(0), [runs, selectedRunId]);
   const comparisonRun = useMemo(() => runs.find((run) => run.id === comparisonRunId) ?? runs.find((run) => run.id !== selectedRun?.id), [runs, comparisonRunId, selectedRun?.id]);
   const tables = useMemo(() => selectedRun ? runExportTables(selectedRun) : [], [selectedRun]);
   const comparisonRows = useMemo(() => compareRuns(selectedRun, comparisonRun), [selectedRun, comparisonRun]);
-  const diagramSvg = useMemo(() => publicationDiagramSvg(nodes, edges, selectedRun), [edges, nodes, selectedRun]);
+  const diagramSvg = useMemo(() => publicationDiagramSvg(nodes, edges, selectedRun, publicationDiagramSettings, diagramLayout), [diagramLayout, edges, nodes, publicationDiagramSettings, selectedRun]);
 
   const download = (name: string, contents: string, type: string) => {
     const url = URL.createObjectURL(new Blob([contents], { type }));
@@ -49,6 +52,27 @@ export function ReportsWorkspace() {
       <label>Compare with<select value={comparisonRun?.id ?? ""} onChange={(event) => setComparisonRunId(event.target.value)} disabled={runs.length < 2}>
         {runs.length > 1 ? runs.filter((run) => run.id !== selectedRun?.id).map((run) => <option key={run.id} value={run.id}>{run.name}</option>) : <option>Need two runs</option>}
       </select></label>
+      <label>Diagram mode<select value={publicationDiagramSettings.mode} onChange={(event) => setPublicationDiagramSettings({ mode: event.target.value as typeof publicationDiagramSettings.mode })}>
+        <option value="smartpls_result">SmartPLS-like</option>
+        <option value="publication">QuickPLS publication</option>
+        <option value="sem">SEM diagram</option>
+        <option value="compact">Compact</option>
+      </select></label>
+      <label>Diagram precision<select value={publicationDiagramSettings.precision} onChange={(event) => setPublicationDiagramSettings({ precision: Number(event.target.value) })}>
+        {[2, 3, 4, 5, 6].map((value) => <option key={value} value={value}>{value} decimals</option>)}
+      </select></label>
+      <label>Diagram palette<select value={publicationDiagramSettings.palette} onChange={(event) => setPublicationDiagramSettings({ palette: event.target.value as typeof publicationDiagramSettings.palette })}>
+        <option value="grayscale">Grayscale</option>
+        <option value="high_contrast">High contrast</option>
+        <option value="quickpls_color">QuickPLS color</option>
+      </select></label>
+      <label>Diagram layout<select value={publicationDiagramSettings.layoutSource} onChange={(event) => setPublicationDiagramSettings({ layoutSource: event.target.value as typeof publicationDiagramSettings.layoutSource })}>
+        <option value="current_canvas">Current canvas</option>
+        <option value="tidy_publication">Tidy publication</option>
+      </select></label>
+      <label>Loadings<input type="checkbox" checked={publicationDiagramSettings.showLoadings} onChange={(event) => setPublicationDiagramSettings({ showLoadings: event.target.checked })} /></label>
+      <label>Path coefficients<input type="checkbox" checked={publicationDiagramSettings.showPathCoefficients} onChange={(event) => setPublicationDiagramSettings({ showPathCoefficients: event.target.checked })} /></label>
+      <label>R²<input type="checkbox" checked={publicationDiagramSettings.showRSquared} onChange={(event) => setPublicationDiagramSettings({ showRSquared: event.target.checked })} /></label>
     </div>
     <div className="export-list">
       <button disabled={!tables.length} onClick={() => download("quickpls-result-tables.csv", tablesToCsv(tables), "text/csv")}><FileSpreadsheet /><span><strong>CSV tables</strong><small>Provenance and method tables</small></span></button>

@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "target": "web preview screen capture",
+  "passed": true,
+  "metrics": {
+    "quickpls": true,
+    "canvas": true,
+    "smartplsLatents": 4,
+    "smartplsIndicators": 9,
+    "gridVisible": false,
+    "minimapVisible": false,
+    "url": "http://127.0.0.1:1420/"
+  },
+  "errors": [],
+  "captures": [
+    "validation/results/screens/web_models_1440x900.png",
+    "validation/results/screens/web_data_1440x900.png",
+    "validation/results/screens/web_analyses_1440x900.png",
+    "validation/results/screens/web_runs_1440x900.png",
+    "validation/results/screens/web_groups_1440x900.png",
+    "validation/results/screens/web_reports_1440x900.png"
+  ]
+}

@@ -415,7 +415,7 @@ fn experimental_pls_export_rows(result: &AnalysisResult) -> Result<Vec<ExportRow
         "",
         "",
         "export_scope",
-        "supplemental method export; values are validated only inside the documented QuickPLS v0.9.0-rc.1 supported scope".into(),
+        "supplemental method export; values are validated only inside the documented QuickPLS v1.0.0 supported scope".into(),
     ));
     rows.push(row(
         "scope_warning",
@@ -424,7 +424,7 @@ fn experimental_pls_export_rows(result: &AnalysisResult) -> Result<Vec<ExportRow
         "",
         "",
         "publication_status",
-        "Validated for the documented QuickPLS v0.9.0-rc.1 supported scope where covered by publication audits; unsupported or unaudited payload fields remain outside the release scope.".into(),
+        "Validated for the documented QuickPLS v1.0.0 supported scope where covered by publication audits; unsupported or unaudited payload fields remain outside the release scope.".into(),
     ));
     push_scalar_estimate(estimation, "summary", "converged", "converged", &mut rows);
     push_scalar_estimate(estimation, "summary", "iterations", "iterations", &mut rows);
@@ -2379,7 +2379,7 @@ fn write_v08_extended_methods_evidence(output: Option<&Path>) -> Result<()> {
         "artifacts": artifact_status,
         "open_registry_gates": open_registry_gates.clone(),
         "promotion_ready": all_present && evidence_report_passed(&validation_report) && open_registry_gates.is_empty(),
-        "note": "v0.8 extended methods are validated only for the documented QuickPLS v0.9.0-rc.1 supported scope. Unsupported and unaudited shapes remain outside the release scope."
+        "note": "v0.8 extended methods are validated only for the documented QuickPLS v1.0.0 supported scope. Unsupported and unaudited shapes remain outside the release scope."
     });
     let target = output
         .map(PathBuf::from)
@@ -5117,7 +5117,7 @@ mod tests {
 
         let csv = fs::read_to_string(csv_path).unwrap();
         assert!(csv.contains("scope_warning"));
-        assert!(csv.contains("documented QuickPLS v0.9.0-rc.1 supported scope"));
+        assert!(csv.contains("documented QuickPLS v1.0.0 supported scope"));
         assert!(csv.contains("wpls,,,,,case_weight_column,case_wt"));
         assert!(csv.contains("wpls,,,,,effective_sample_size,"));
         assert!(xlsx_path.exists());

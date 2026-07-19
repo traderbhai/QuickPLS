@@ -37,8 +37,8 @@
       "present": true
     }
   ],
-  "generated_at": "2026-07-19T11:50:17.843659Z",
-  "note": "v0.8 extended methods are validated only for the documented QuickPLS v0.9.0-rc.1 supported scope. Unsupported and unaudited shapes remain outside the release scope.",
+  "generated_at": "2026-07-19T14:35:11.738239500Z",
+  "note": "v0.8 extended methods are validated only for the documented QuickPLS v1.0.0 supported scope. Unsupported and unaudited shapes remain outside the release scope.",
   "open_registry_gates": [],
   "promotion_ready": true,
   "schema_version": 1,

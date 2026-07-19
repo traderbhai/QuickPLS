@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "id": "628cc8b7-fe57-4565-b8c9-2b7b41f07005",
+  "id": "3fc08745-c6f9-4630-8950-0de85aa42d57",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000082363",
     "dataset_fingerprint": "v2:b5f52a1093a0277acb29a8dd50958f7fd0180635d011a56a5fdff7d6979a76bb",
     "method": "regression",
     "method_version": "regression_logistic_v1",
-    "engine_version": "0.9.0-rc.1",
+    "engine_version": "1.0.0",
     "seed": 20260719,
     "settings": {
       "method": "regression",
@@ -24,14 +24,14 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-07-19T11:50:15.510128600Z",
-    "completed_at": "2026-07-19T11:50:15.512346800Z"
+    "started_at": "2026-07-19T14:35:08.153601300Z",
+    "completed_at": "2026-07-19T14:35:08.155886800Z"
   },
   "diagnostics": [
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "Regression/PROCESS v1 is validated for the documented QuickPLS v0.9.0-rc.1 supported scope; unsupported shapes remain blocked."
+      "message": "Regression/PROCESS v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
     },
     {
       "code": "estimation.warning",
@@ -991,14 +991,14 @@
         "process": null,
         "regression_type": "logistic",
         "warnings": [
-          "Regression/PROCESS v1 is validated for the documented QuickPLS v0.9.0-rc.1 supported scope; unsupported shapes remain blocked."
+          "Regression/PROCESS v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
         ]
       },
       "segmentation": null,
       "transforms": [],
       "used_observations": 140,
       "warnings": [
-        "Regression/PROCESS v1 is validated for the documented QuickPLS v0.9.0-rc.1 supported scope; unsupported shapes remain blocked."
+        "Regression/PROCESS v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
       ],
       "wpls": null
     },

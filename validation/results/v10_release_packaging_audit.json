@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.0.0 release packaging audit",
+  "passed": true,
+  "version": "1.0.0",
+  "checks": {
+    "package_json_version": true,
+    "package_lock_version": true,
+    "cargo_workspace_version": true,
+    "tauri_version": true,
+    "frontend_build_exists": true,
+    "release_executable_exists": true,
+    "release_executable_newer_than_frontend": true,
+    "nsis_installer_exists": true,
+    "offline_launch_smoke_passed": true,
+    "docs_and_notices_present": true,
+    "signing_status_explicit": true,
+    "no_dev_server_runtime_dependency": true
+  },
+  "release_executable": {
+    "path": "target/release/quickpls-desktop.exe",
+    "present": true,
+    "bytes": 23522304
+  },
+  "nsis_installers": [
+    "target\\release\\bundle\\nsis\\QuickPLS_1.0.0_x64-setup.exe"
+  ],
+  "docs": [
+    {
+      "path": "docs/RELEASE_NOTES_V1_0.md",
+      "present": true,
+      "bytes": 1433
+    },
+    {
+      "path": "docs/INSTALLATION_V1_0.md",
+      "present": true,
+      "bytes": 745
+    },
+    {
+      "path": "docs/DEPENDENCY_NOTICES_V1_0.md",
+      "present": true,
+      "bytes": 1167
+    },
+    {
+      "path": "docs/V1_SUPPORTED_SCOPE.md",
+      "present": true,
+      "bytes": 2734
+    },
+    {
+      "path": "docs/VALIDATION_ARTIFACT_INDEX_V1_0.md",
+      "present": true,
+      "bytes": 1716
+    }
+  ],
+  "note": "The v1.0 installer is unsigned unless a certificate is provided and a separate signing audit is added."
+}

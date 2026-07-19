@@ -9,8 +9,8 @@ metadata,,,,,seed,20260718
 metadata,,,,,started_at,2026-07-19T10:20:47.101884900+00:00
 metadata,,,,,completed_at,2026-07-19T10:20:47.109654300+00:00
 metadata,,,,,export_scope,v0.3 validated estimator only; assessment and resampling are excluded
-metadata,,,,,export_scope,supplemental method export; values are validated only inside the documented QuickPLS v0.9.0-rc.1 supported scope
-scope_warning,,,,,publication_status,Validated for the documented QuickPLS v0.9.0-rc.1 supported scope where covered by publication audits; unsupported or unaudited payload fields remain outside the release scope.
+metadata,,,,,export_scope,supplemental method export; values are validated only inside the documented QuickPLS v1.0.0 supported scope
+scope_warning,,,,,publication_status,Validated for the documented QuickPLS v1.0.0 supported scope where covered by publication audits; unsupported or unaudited payload fields remain outside the release scope.
 summary,,,,,converged,true
 summary,,,,,iterations,4
 summary,,,,,used_observations,6

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { publicationDiagramSvg } from "./publicationDiagram";
+import { defaultDiagramLayout } from "./diagramGraph";
 import type { Edge, Node } from "@xyflow/react";
 import type { AnalysisRun, ConstructData, PlsResult } from "../types";
 
@@ -40,19 +41,39 @@ const run: AnalysisRun = {
 };
 
 describe("publication diagram SVG", () => {
-  it("renders path coefficients, loadings, R2, and supported-scope notice", () => {
+  it("renders SmartPLS-like path coefficients, loadings, R2, and supported-scope notice by default", () => {
     const svg = publicationDiagramSvg(nodes, edges, run);
     expect(svg).toContain("<svg");
     expect(svg).toContain("WPLS run publication diagram");
+    expect(svg).toContain("class=\"smartpls-latent\"");
+    expect(svg).toContain("class=\"smartpls-indicator\"");
     expect(svg).toContain("0.457");
-    expect(svg).toContain("R2 0.208");
+    expect(svg).toContain("R&#178; 0.208");
     expect(svg).toContain("0.910");
-    expect(svg).toContain("Validated for documented QuickPLS v0.9.0-rc.1 supported scope");
+    expect(svg).toContain("Validated for documented QuickPLS v1.0.0 supported scope");
+    expect(svg).not.toContain("Mode A");
+    expect(svg).not.toContain("Trash");
+  });
+
+  it("can still render the QuickPLS publication style", () => {
+    const svg = publicationDiagramSvg(nodes, edges, run, { mode: "publication", palette: "quickpls_color" });
+    expect(svg).toContain("class=\"latent reflective\"");
+    expect(svg).toContain("class=\"indicator reflective\"");
+    expect(svg).toContain("R&#178; 0.208");
   });
 
   it("escapes labels in model-only diagrams", () => {
     const svg = publicationDiagramSvg([{ ...nodes[0], data: { ...nodes[0].data, label: "A&B <test>" } }], [], undefined);
     expect(svg).toContain("A&amp;B &lt;test&gt;");
-    expect(svg).not.toContain("Validated for documented QuickPLS v0.9.0-rc.1 supported scope");
+    expect(svg).not.toContain("Validated for documented QuickPLS v1.0.0 supported scope");
+  });
+
+  it("exports the current canvas indicator layout when requested", () => {
+    const layout = defaultDiagramLayout(nodes, edges);
+    layout.indicatorLayouts.x.x1 = { side: "free", x: 25, y: 35, order: 0, pinned: true };
+    const svg = publicationDiagramSvg(nodes, edges, run, { layoutSource: "current_canvas" }, layout);
+    expect(svg).toContain('x="115" y="42" width="78" height="24"');
+    expect(svg).toContain("R&#178; 0.208");
+    expect(svg).not.toContain("RÂ²");
   });
 });

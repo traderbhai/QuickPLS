@@ -19,13 +19,17 @@ export function App() {
   const edges = useWorkspace((state) => state.edges);
   const runs = useWorkspace((state) => state.runs);
   const analysisSettings = useWorkspace((state) => state.analysisSettings);
+  const diagramMode = useWorkspace((state) => state.diagramMode);
+  const diagramOverlaySettings = useWorkspace((state) => state.diagramOverlaySettings);
+  const publicationDiagramSettings = useWorkspace((state) => state.publicationDiagramSettings);
+  const diagramLayout = useWorkspace((state) => state.diagramLayout);
   const dataset = useWorkspace((state) => state.dataset);
   const projectPath = useWorkspace((state) => state.projectPath);
   useEffect(() => {
     if (!projectPath || !isNativeDesktop()) return;
-    const timer = window.setTimeout(() => { void autosaveNativeProject(projectPath, { nodes, edges, runs, analysisSettings, activeDatasetId: dataset.id }).catch(() => undefined); }, 5000);
+    const timer = window.setTimeout(() => { void autosaveNativeProject(projectPath, { nodes, edges, runs, analysisSettings, diagramMode, diagramOverlaySettings, publicationDiagramSettings, diagramLayout, activeDatasetId: dataset.id }).catch(() => undefined); }, 5000);
     return () => window.clearTimeout(timer);
-  }, [projectPath, nodes, edges, runs, analysisSettings, dataset]);
+  }, [projectPath, nodes, edges, runs, analysisSettings, diagramMode, diagramOverlaySettings, publicationDiagramSettings, diagramLayout, dataset]);
   return <div className="app-shell">
     <TopBar />
     <div className="workspace-shell">

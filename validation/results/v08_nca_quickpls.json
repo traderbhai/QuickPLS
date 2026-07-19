@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "id": "ec026599-00ec-4915-a0c3-c3d23c540709",
+  "id": "25fccef9-5c77-4a81-840e-a0a1650c3c06",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000080623",
     "dataset_fingerprint": "v2:b5f52a1093a0277acb29a8dd50958f7fd0180635d011a56a5fdff7d6979a76bb",
     "method": "nca",
     "method_version": "nca_v1",
-    "engine_version": "0.9.0-rc.1",
+    "engine_version": "1.0.0",
     "seed": 20260719,
     "settings": {
       "method": "nca",
@@ -24,14 +24,14 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-07-19T11:50:15.802221Z",
-    "completed_at": "2026-07-19T11:50:15.849340Z"
+    "started_at": "2026-07-19T14:35:08.617598400Z",
+    "completed_at": "2026-07-19T14:35:08.686102600Z"
   },
   "diagnostics": [
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "NCA v1 is validated for the documented QuickPLS v0.9.0-rc.1 supported scope; unsupported shapes remain blocked."
+      "message": "NCA v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
     },
     {
       "code": "estimation.warning",
@@ -132,7 +132,7 @@
         "permutation_samples": 99,
         "usable_permutations": 99,
         "warnings": [
-          "NCA v1 is validated for the documented QuickPLS v0.9.0-rc.1 supported scope; unsupported shapes remain blocked."
+          "NCA v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
         ],
         "x": "x",
         "y": "y"
@@ -150,7 +150,7 @@
       "transforms": [],
       "used_observations": 140,
       "warnings": [
-        "NCA v1 is validated for the documented QuickPLS v0.9.0-rc.1 supported scope; unsupported shapes remain blocked."
+        "NCA v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
       ],
       "wpls": null
     },

@@ -237,6 +237,31 @@ Implemented as a Windows release candidate for the documented supported scope:
 
 The v0.9 RC installer is intentionally unsigned. Windows SmartScreen warnings are documented; code signing remains a later packaging task unless a certificate is provided.
 
+## v0.9.3 Professional SEM Designer
+
+Implemented for the designer scope:
+
+- The editable `sem` canvas, result diagram, publication preview, and SVG export now share the same academic SEM visual grammar.
+- Diagram layout metadata is persisted separately from the numerical recipe through `diagramVersion`, construct layouts, indicator layouts, edge layouts, viewport, and theme fields.
+- Indicators can be moved on the canvas and their positions persist. Dropping an indicator near another construct reassigns it while preserving single ownership.
+- Right-click menus provide direct canvas actions for constructs, indicators, paths, and the empty canvas, including rename, invert measurement model, align/reset indicators, route paths, mark controls, duplicate, and delete.
+- Result and publication modes are locked against accidental edits; edit mode remains draggable.
+- Reports can export the current canvas layout or a tidy publication layout, with SVG remaining the audited publication diagram format.
+
+`npm run qpls:v093:sem-designer` writes `validation/results/v093_sem_designer_audit.json`, browser-smoke screenshots under `validation/results/screens/v093/`, and gates `v0_9_3_professional_sem_designer`.
+
+## v1.0 Stable
+
+Implemented for the documented stable scope:
+
+- Version metadata is `1.0.0` in npm, Rust workspace, and Tauri release configuration.
+- `docs/V1_SUPPORTED_SCOPE.md`, `docs/V1_COMPATIBILITY_MATRIX.md`, `docs/V1_KNOWN_DIFFERENCES.md`, `docs/METHODOLOGY_MANUAL_V1_0.md`, `docs/VALIDATION_ARTIFACT_INDEX_V1_0.md`, `docs/RELEASE_NOTES_V1_0.md`, `docs/INSTALLATION_V1_0.md`, and `docs/DEPENDENCY_NOTICES_V1_0.md` define the stable release boundary.
+- `validation/v10_numerical_discrepancy_audit.py` aggregates method-family publication evidence and known-difference coverage for all v1.0-supported deterministic outputs.
+- `validation/v10_product_scope_audit.py` verifies UI/CLI/export status wording, provenance/warnings, experimental opt-in, stale diagram overlay blocking, and absence of SmartPLS equivalence/import/reverse-engineering claims.
+- `validation/v10_desktop_smoke_check.py`, `validation/v10_performance_audit.py`, and `validation/v10_release_packaging_audit.py` verify release launch, exports, recovery evidence, performance/reproducibility evidence, version metadata, release executable, NSIS installer, and explicit unsigned-installer status.
+
+`npm run qpls:v10:release` regenerates publication evidence, reruns the v0.9.3 designer gate, builds the desktop release, runs all v1.0 audits, and gates `v1_0_stable`.
+
 ## Later Releases
 
-v1.0 remains pending. Detailed scope and exit criteria are tracked in `DEVELOPMENT_LEDGER.md`.
+Post-v1 work includes signed installer verification when a certificate is available, native audited PDF/PNG export, polychoric/WLSMV and FIML estimators, SmartPLS project import if legally and technically scoped later, and expanded residual/error/caption recipe semantics.

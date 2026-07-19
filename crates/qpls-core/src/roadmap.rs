@@ -177,7 +177,7 @@ mod tests {
     #[test]
     fn registry_keeps_current_stage_explicit() {
         let registry = development_slice_registry().unwrap();
-        assert_eq!(registry.current_stage, "v0_9_publication_release_candidate");
+        assert_eq!(registry.current_stage, "v1_0_stable");
         assert!(
             registry
                 .slices

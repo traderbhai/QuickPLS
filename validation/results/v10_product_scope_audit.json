@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.0.0 product scope audit",
+  "passed": true,
+  "checks": {
+    "ui_version_label_v100": true,
+    "run_warning_v100_scope": true,
+    "diagram_watermark_v100_scope": true,
+    "report_tables_v100_scope": true,
+    "stable_exports_audited": true,
+    "experimental_exports_opt_in": true,
+    "report_surface_has_provenance_and_warning": true,
+    "diagram_estimates_selected_run_guard": true,
+    "v093_designer_audit_passed": true,
+    "v093_visual_smoke_passed": true,
+    "no_forbidden_source_or_doc_claims": true,
+    "docs_state_no_smartpls_import": true
+  },
+  "note": "Default product surfaces are constrained to the v1.0 supported scope; experimental or unsupported outputs remain opt-in, watermarked, or blocked."
+}

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "target": "v0.9.1 diagram visual smoke",
+  "passed": true,
+  "metrics": {
+    "latent": 4,
+    "indicators": 9,
+    "measurementEdges": 9,
+    "toolbarHasSem": true,
+    "helpButton": true
+  },
+  "errors": [],
+  "screenshot": "D:\\QuickPLS\\validation\\results\\v091_diagram_default_1440x900.png"
+}

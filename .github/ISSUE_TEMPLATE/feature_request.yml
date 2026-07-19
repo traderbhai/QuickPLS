@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest a new QuickPLS feature or method expansion.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or workflow
+      description: What research workflow would this improve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed feature
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - SEM designer
+        - PLS-SEM
+        - CB-SEM/CFA
+        - Data import
+        - Exports/reports
+        - Installer/distribution
+        - Other
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Link published methods, papers, software docs, or examples if relevant.
+

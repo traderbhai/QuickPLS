@@ -1,16 +1,16 @@
 section,construct,indicator,source,target,metric,value
-metadata,,,,,result_id,5ff85f59-2e02-4993-bb30-416b59062843
+metadata,,,,,result_id,158425fe-f105-415a-864b-28bc6ca473f5
 metadata,,,,,recipe_id,00000000-0000-0000-0000-000000007641
 metadata,,,,,dataset_fingerprint,v2:d4a9646bf2a9d22a28ff299bce84e53432d53e049d2d8c06506d282a9d11596b
 metadata,,,,,method,Cbsem
 metadata,,,,,method_version,pls_pm_v1+cfa_ml_v1+cbsem_fit_v1+cbsem_modification_indices_v1+cbsem_ml_v1+pls_mediation_v1+pls_assessment_v7
-metadata,,,,,engine_version,0.9.0-rc.1
+metadata,,,,,engine_version,1.0.0
 metadata,,,,,seed,20260721
-metadata,,,,,started_at,2026-07-19T11:49:37.506842500+00:00
-metadata,,,,,completed_at,2026-07-19T11:49:39.801929500+00:00
+metadata,,,,,started_at,2026-07-19T14:34:14.331762300+00:00
+metadata,,,,,completed_at,2026-07-19T14:34:17.659568200+00:00
 metadata,,,,,export_scope,v0.3 validated estimator only; assessment and resampling are excluded
-metadata,,,,,export_scope,supplemental method export; values are validated only inside the documented QuickPLS v0.9.0-rc.1 supported scope
-scope_warning,,,,,publication_status,Validated for the documented QuickPLS v0.9.0-rc.1 supported scope where covered by publication audits; unsupported or unaudited payload fields remain outside the release scope.
+metadata,,,,,export_scope,supplemental method export; values are validated only inside the documented QuickPLS v1.0.0 supported scope
+scope_warning,,,,,publication_status,Validated for the documented QuickPLS v1.0.0 supported scope where covered by publication audits; unsupported or unaudited payload fields remain outside the release scope.
 summary,,,,,converged,true
 summary,,,,,iterations,3
 summary,,,,,used_observations,180

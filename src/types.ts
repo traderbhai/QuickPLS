@@ -2,6 +2,54 @@ export type WorkspaceView = "data" | "models" | "analyses" | "runs" | "groups" |
 export type MeasurementMode = "reflective" | "formative";
 export type MethodStatus = "experimental" | "validated" | "unsupported";
 export type AnalysisMethodId = "pls_pm" | "bootstrap" | "plsc" | "wpls" | "cca" | "cta_pls" | "endogeneity" | "nonlinear_effects" | "moderated_mediation" | "predict" | "mga" | "ipma" | "cbsem" | "pca" | "gsca" | "regression" | "nca";
+export type DiagramMode = "compact" | "sem" | "publication" | "smartpls_result";
+export type DiagramOverlayMode = "model" | "loadings" | "paths_r2" | "significance" | "quality" | "cbsem_standardized" | "cbsem_residuals" | "modification_indices";
+export type DiagramToolMode = "select" | "pan" | "construct" | "indicator" | "path" | "covariance" | "residual" | "caption" | "measurement" | "interaction" | "higher_order";
+export type IndicatorSide = "left" | "right" | "top" | "bottom" | "free";
+export type EdgeRouteStyle = "straight" | "curved" | "orthogonal";
+
+export interface DiagramPoint {
+  x: number;
+  y: number;
+}
+
+export interface ConstructLayout {
+  x: number;
+  y: number;
+  width?: number;
+  height?: number;
+  pinned?: boolean;
+}
+
+export interface IndicatorLayout {
+  side: IndicatorSide;
+  x?: number;
+  y?: number;
+  order: number;
+  pinned?: boolean;
+}
+
+export interface EdgeLayout {
+  routing: EdgeRouteStyle;
+  bendPoints?: DiagramPoint[];
+  labelOffset?: DiagramPoint;
+  pinned?: boolean;
+}
+
+export interface DiagramViewport {
+  x: number;
+  y: number;
+  zoom: number;
+}
+
+export interface DiagramLayoutState {
+  diagramVersion: "sem_designer_v1";
+  constructLayouts: Record<string, ConstructLayout>;
+  indicatorLayouts: Record<string, Record<string, IndicatorLayout>>;
+  edgeLayouts: Record<string, EdgeLayout>;
+  diagramViewport?: DiagramViewport;
+  diagramTheme: "academic_grayscale" | "quickpls_color" | "high_contrast";
+}
 
 export interface AnalysisUiSettings {
   method: AnalysisMethodId;
@@ -57,6 +105,34 @@ export interface ConstructData {
   resultR2?: number;
 }
 
+export interface DiagramOverlaySettings {
+  selectedRunId: string | null;
+  mode: DiagramOverlayMode;
+  precision: number;
+  showLoadings: boolean;
+  showPathCoefficients: boolean;
+  showPValues: boolean;
+  showTValues: boolean;
+  showRSquared: boolean;
+  showWarnings: boolean;
+  showWatermark: boolean;
+}
+
+export interface PublicationDiagramSettings {
+  mode: DiagramMode;
+  precision: number;
+  overlayMode: DiagramOverlayMode;
+  aspectRatio: "wide" | "square" | "portrait";
+  palette: "color" | "monochrome" | "grayscale" | "high_contrast" | "quickpls_color";
+  layoutSource: "current_canvas" | "tidy_publication";
+  showLoadings: boolean;
+  showPathCoefficients: boolean;
+  showRSquared: boolean;
+  showValidationWatermark: boolean;
+  showUnsupportedWarning: boolean;
+  showRunProvenance: boolean;
+}
+
 export interface InteractionData {
   predictor: string;
   moderator: string;
@@ -78,7 +154,7 @@ export interface ControlData {
 }
 
 export interface PathEdgeData {
-  role?: "control";
+  role?: "control" | "covariance";
   controlLabel?: string | null;
 }
 
@@ -113,7 +189,7 @@ export interface NativeProjectSnapshot {
   recovered: boolean;
   recoverySource?: "autosave" | "backup" | null;
   datasets: Dataset[];
-  workspace?: { nodes: unknown[]; edges: unknown[]; runs?: AnalysisRun[]; analysisSettings?: AnalysisUiSettings; activeDatasetId?: string } | null;
+  workspace?: { nodes: unknown[]; edges: unknown[]; runs?: AnalysisRun[]; analysisSettings?: AnalysisUiSettings; diagramMode?: DiagramMode; diagramOverlaySettings?: Partial<DiagramOverlaySettings>; publicationDiagramSettings?: Partial<PublicationDiagramSettings>; diagramLayout?: Partial<DiagramLayoutState>; activeDatasetId?: string } | null;
 }
 
 export interface AnalysisRun {

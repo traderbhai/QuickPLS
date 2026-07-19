@@ -110,6 +110,68 @@ button { color: inherit; }
 .indicator-strip small { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; border: 1px solid #f0ca5b; background: #fff6d7; padding: 2px 3px; font-size: 7px; white-space: nowrap; }
 .indicator-strip small b { display: block; color: #32630d; font-size: 8px; line-height: 1.1; }
 .indicator-strip .empty-indicators { border-style: dashed; color: #967322; background: #fffaf0; }
+.latent-node { position: relative; width: 150px; height: 110px; padding: 18px 15px 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 2px solid #2d777a; border-radius: 999px / 74%; background: radial-gradient(circle at 50% 30%, #ffffff 0, #ffffff 42%, #eef8f8 100%); box-shadow: 0 8px 20px rgba(23, 45, 52, .11); color: #172126; text-align: center; transition: border-color .12s ease, box-shadow .12s ease, transform .12s ease; }
+.latent-node.selected { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(11,159,163,.17), 0 10px 24px rgba(23, 45, 52, .16); }
+.latent-node.drop-target { border-color: #d79a19; box-shadow: 0 0 0 4px rgba(239,179,61,.24), 0 10px 24px rgba(23, 45, 52, .15); }
+.latent-node.formative { border-color: #ba7a08; background: radial-gradient(circle at 50% 30%, #fff 0, #fff 42%, #fff3cb 100%); }
+.latent-node.interaction { border-style: dashed; }
+.latent-node .react-flow__handle { width: 10px; height: 10px; border: 2px solid white; background: #30474e; opacity: .72; }
+.latent-node:hover .react-flow__handle, .latent-node.selected .react-flow__handle { opacity: 1; background: var(--accent-dark); }
+.latent-title { max-width: 112px; border: 0; background: transparent; padding: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #172126; font-size: 12px; font-weight: 750; cursor: text; }
+.latent-short { color: #506167; font-size: 10px; font-weight: 650; }
+.latent-meta { color: #6d7a80; font-size: 8px; }
+.latent-badge { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); min-width: 48px; height: 19px; padding: 0 7px; display: grid; place-items: center; border: 1px solid #bddbdd; border-radius: 999px; background: white; color: #087f83; font-size: 8px; font-weight: 800; }
+.latent-r2 { position: absolute; right: -12px; bottom: 8px; min-width: 45px; padding: 4px 6px; border: 1px solid #80bd57; border-radius: 999px; background: #edf8e5; color: #32630d; font-size: 9px; font-weight: 800; }
+.latent-edit { width: 104px; height: 24px; border: 1px solid var(--accent); border-radius: 4px; text-align: center; font-size: 11px; font-weight: 700; }
+.indicator-node { width: 96px; height: 34px; display: grid; grid-template-columns: minmax(0,1fr) auto 18px; align-items: center; gap: 3px; padding: 0 5px 0 8px; border: 1.4px solid #c49116; border-radius: 4px; background: #fff8df; box-shadow: 0 2px 7px rgba(70, 52, 12, .08); font-size: 9px; cursor: grab; }
+.indicator-node.reflective { border-color: #c49116; background: #fff8df; }
+.indicator-node.formative { border-color: #0b8f92; background: #eaf8f8; }
+.indicator-node.selected { outline: 2px solid rgba(11,159,163,.20); }
+.indicator-node span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #2b363b; font-weight: 650; }
+.indicator-node b { color: #32630d; font-size: 8px; }
+.indicator-node button { width: 17px; height: 22px; border: 0; background: transparent; color: #7b6960; display: grid; place-items: center; cursor: pointer; }
+.indicator-node .react-flow__handle { width: 7px; height: 7px; opacity: .5; background: #5b666b; }
+.indicator-node:hover .react-flow__handle { opacity: 1; }
+.smartpls-result-canvas { background: #fff; }
+.smartpls-result-canvas .react-flow { background: #fff; }
+.smartpls-latent-node { width: 88px; height: 82px; display: flex; flex-direction: column; align-items: center; gap: 5px; color: #222; text-align: center; font-family: Arial, Inter, sans-serif; }
+.smartpls-result-canvas:not(.locked-result-canvas) .smartpls-latent-node { cursor: grab; }
+.smartpls-result-canvas:not(.locked-result-canvas) .smartpls-latent-node:active { cursor: grabbing; }
+.smartpls-latent-ellipse { width: 88px; height: 58px; display: grid; place-items: center; border: 1px solid #777; border-radius: 50%; background: #7d7d7d; color: #fff; }
+.smartpls-latent-node.selected .smartpls-latent-ellipse { outline: 1px solid #333; outline-offset: 2px; }
+.smartpls-latent-label { max-width: 118px; border: 0; background: transparent; padding: 0; overflow: hidden; text-overflow: ellipsis; color: #222; font-size: 10px; font-weight: 500; line-height: 1.15; white-space: normal; cursor: text; }
+.locked-result-canvas .smartpls-latent-label { cursor: default; }
+.smartpls-latent-edit { width: 118px; height: 21px; border: 1px solid #777; background: #fff; color: #222; text-align: center; font: 10px Arial, Inter, sans-serif; }
+.smartpls-r2 { font-size: 10px; font-weight: 700; color: #fff; }
+.smartpls-indicator-node { width: 78px; height: 24px; display: flex; align-items: center; justify-content: center; border: 1px solid #d2d2d2; border-radius: 0; background: #eeeeee; color: #222; font-family: Arial, Inter, sans-serif; font-size: 9px; font-weight: 600; cursor: grab; }
+.locked-result-canvas .smartpls-indicator-node { cursor: default; }
+.smartpls-indicator-node span { max-width: 68px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.smartpls-indicator-node.selected { outline: 1px solid #444; outline-offset: 1px; }
+.smartpls-hidden-handle { width: 1px !important; height: 1px !important; border: 0 !important; background: transparent !important; opacity: 0 !important; pointer-events: none !important; }
+.measurement-edge .react-flow__edge-path { stroke: #9c7a20; stroke-width: 1.15; }
+.measurement-edge.formative .react-flow__edge-path { stroke: #0c777b; }
+.structural-edge .react-flow__edge-path { stroke: #465961; stroke-width: 1.7; }
+.smartpls-result-canvas .react-flow__edge-text { font-family: Arial, Inter, sans-serif; font-size: 9px; fill: #222; font-weight: 500; }
+.smartpls-result-canvas .react-flow__edge-textbg { fill: #fff; fill-opacity: .85; }
+.smartpls-result-canvas .smartpls-structural-edge .react-flow__edge-path,
+.smartpls-result-canvas .smartpls-measurement-edge .react-flow__edge-path { stroke: #333; stroke-width: 1.05; }
+.smartpls-result-canvas .react-flow__edge.selected .react-flow__edge-path { stroke: #111; stroke-width: 1.3; }
+.control-edge .react-flow__edge-path { stroke: #7c8790; stroke-dasharray: 5 4; }
+.covariance-edge .react-flow__edge-path { stroke: #8d5798; stroke-width: 1.5; stroke-dasharray: 3 3; }
+.react-flow__edge.selected .react-flow__edge-path { stroke: var(--accent-dark); stroke-width: 2.4; }
+.diagram-help { position: absolute; right: 18px; top: 54px; z-index: 6; width: 235px; padding: 12px; display: flex; flex-direction: column; gap: 8px; border: 1px solid #c8d5d9; border-radius: 6px; background: rgba(255,255,255,.98); box-shadow: 0 14px 35px rgba(23, 45, 52, .15); font-size: 10px; }
+.diagram-help strong { font-size: 11px; }
+.diagram-help span { display: flex; align-items: center; gap: 7px; color: #4c5b61; line-height: 1.35; }
+.diagram-help i { width: 20px; height: 14px; display: inline-block; flex: 0 0 auto; }
+.legend-latent { border: 2px solid #2d777a; border-radius: 999px / 74%; background: #eef8f8; }
+.legend-indicator { border: 1px solid #c49116; border-radius: 3px; background: #fff8df; }
+.legend-path { border-top: 2px solid #465961; }
+.legend-covariance { border-top: 2px dashed #8d5798; }
+.diagram-context-menu { position: fixed; z-index: 12; min-width: 172px; padding: 5px; display: flex; flex-direction: column; gap: 2px; border: 1px solid #bfcbd0; border-radius: 4px; background: rgba(255,255,255,.99); box-shadow: 0 18px 40px rgba(23, 45, 52, .18); font-size: 10px; }
+.diagram-context-menu button { min-height: 27px; padding: 0 9px; border: 0; border-radius: 3px; background: transparent; text-align: left; cursor: pointer; }
+.diagram-context-menu button:hover { background: #edf5f5; color: var(--accent-dark); }
+.diagram-context-menu button.danger { color: #9c3d35; }
+.diagram-context-menu button.danger:hover { background: #fff0ee; color: #842e28; }
 .inspector { border-right: 0; border-left: 1px solid var(--border); padding-bottom: 20px; background: white; }
 .inspector.empty { display: grid; place-items: center; padding: 30px; color: var(--muted); font-size: 11px; text-align: center; }
 .inspector > label, .inspector fieldset { display: flex; flex-direction: column; gap: 6px; margin: 13px 15px 0; padding: 0; border: 0; font-size: 10px; font-weight: 650; }

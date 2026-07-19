@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "id": "0364d6bf-9965-4fe0-8be1-2c01e3649f6f",
+  "id": "f8ecc9fb-a3bb-405d-ad53-8e07fffd52aa",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000000601",
     "dataset_fingerprint": "v2:ab3c89398f3ee2eac71ad698ccb09b3677b7006d4aa0e2850e52123b5cd87189",
     "method": "predict",
     "method_version": "pls_pm_v1+plspredict_holdout_v1+pls_pos_v1+pls_mediation_v1+pls_assessment_v7",
-    "engine_version": "0.9.0-rc.1",
+    "engine_version": "1.0.0",
     "seed": 20260719,
     "settings": {
       "method": "predict",
@@ -24,8 +24,8 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-07-19T11:49:26.696549Z",
-    "completed_at": "2026-07-19T11:49:27.357646100Z"
+    "started_at": "2026-07-19T14:34:00.582781200Z",
+    "completed_at": "2026-07-19T14:34:01.766216900Z"
   },
   "diagnostics": [
     {

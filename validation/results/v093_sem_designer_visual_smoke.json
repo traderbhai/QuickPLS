@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "target": "v0.9.3 professional SEM designer visual smoke",
+  "passed": true,
+  "metrics": {
+    "academicLatents": 4,
+    "academicIndicators": 9,
+    "contextMenuCss": true,
+    "reportSvg": true,
+    "reportLayoutControl": true,
+    "draggedIndicatorMoved": true
+  },
+  "errors": [],
+  "screenshots": {
+    "default_canvas": "D:\\QuickPLS\\validation\\results\\screens\\v093\\v093_default_sem_canvas_1440x900.png",
+    "indicator_drag": "D:\\QuickPLS\\validation\\results\\screens\\v093\\v093_indicator_drag_1440x900.png",
+    "publication_preview": "D:\\QuickPLS\\validation\\results\\screens\\v093\\v093_publication_preview_1440x900.png"
+  }
+}

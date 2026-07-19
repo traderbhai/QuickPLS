@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "id": "6021ad9a-f012-444b-bb2a-371f175a306d",
+  "id": "9faf1755-9bcb-4b8c-92b2-2204d641dac0",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000080625",
     "dataset_fingerprint": "v2:b5f52a1093a0277acb29a8dd50958f7fd0180635d011a56a5fdff7d6979a76bb",
     "method": "pca",
     "method_version": "pca_v1",
-    "engine_version": "0.9.0-rc.1",
+    "engine_version": "1.0.0",
     "seed": 20260719,
     "settings": {
       "method": "pca",
@@ -24,14 +24,14 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-07-19T11:50:15.200469600Z",
-    "completed_at": "2026-07-19T11:50:15.205681300Z"
+    "started_at": "2026-07-19T14:35:07.782196200Z",
+    "completed_at": "2026-07-19T14:35:07.786451500Z"
   },
   "diagnostics": [
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "Standalone PCA v1 is validated for the documented QuickPLS v0.9.0-rc.1 supported scope; unsupported shapes remain blocked."
+      "message": "Standalone PCA v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
     },
     {
       "code": "estimation.warning",
@@ -2307,7 +2307,7 @@
           "z"
         ],
         "warnings": [
-          "Standalone PCA v1 is validated for the documented QuickPLS v0.9.0-rc.1 supported scope; unsupported shapes remain blocked."
+          "Standalone PCA v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
         ]
       },
       "plsc": null,
@@ -2318,7 +2318,7 @@
       "transforms": [],
       "used_observations": 140,
       "warnings": [
-        "Standalone PCA v1 is validated for the documented QuickPLS v0.9.0-rc.1 supported scope; unsupported shapes remain blocked."
+        "Standalone PCA v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
       ],
       "wpls": null
     },

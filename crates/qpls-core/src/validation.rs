@@ -66,7 +66,7 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
         issues.push(issue(
             "method.bootstrap.experimental",
             Severity::Warning,
-            "Bootstrap inference is validated only inside the documented QuickPLS v0.9.0-rc.1 supported scope",
+            "Bootstrap inference is validated only inside the documented QuickPLS v1.0.0 supported scope",
             Some(recipe.settings.bootstrap_samples.to_string()),
         ));
     }
@@ -108,7 +108,7 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
         issues.push(issue(
             "method.permutation.experimental",
             Severity::Warning,
-            "Permutation inference is validated only inside the documented QuickPLS v0.9.0-rc.1 supported scope",
+            "Permutation inference is validated only inside the documented QuickPLS v1.0.0 supported scope",
             Some(recipe.settings.permutation_samples.to_string()),
         ));
     }
@@ -133,7 +133,7 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
         MethodStatus::Experimental => issues.push(issue(
             "method.experimental",
             Severity::Warning,
-            "Selected method is available only inside the documented QuickPLS v0.9.0-rc.1 supported scope",
+            "Selected method is available only inside the documented QuickPLS v1.0.0 supported scope",
             Some(recipe.settings.method.to_string()),
         )),
         MethodStatus::Validated => {}
@@ -408,7 +408,7 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
         issues.push(issue(
             "cbsem.experimental",
             Severity::Warning,
-            "CB-SEM/CFA ML v1 is validated only for the documented QuickPLS v0.9.0-rc.1 bounded reflective ML scope",
+            "CB-SEM/CFA ML v1 is validated only for the documented QuickPLS v1.0.0 bounded reflective ML scope",
             None,
         ));
         if recipe.settings.case_weight_column.is_some() {
@@ -463,7 +463,7 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
         issues.push(issue(
             "pca.experimental",
             Severity::Warning,
-            "Standalone PCA v1 is validated only for the documented QuickPLS v0.9.0-rc.1 supported scope",
+            "Standalone PCA v1 is validated only for the documented QuickPLS v1.0.0 supported scope",
             None,
         ));
         let variables = metadata_list(recipe, "pca_variables")
@@ -490,7 +490,7 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
         issues.push(issue(
             "regression.experimental",
             Severity::Warning,
-            "Regression/PROCESS v1 is validated only for the documented QuickPLS v0.9.0-rc.1 supported scope",
+            "Regression/PROCESS v1 is validated only for the documented QuickPLS v1.0.0 supported scope",
             None,
         ));
         let regression_type = recipe
@@ -531,7 +531,7 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
         issues.push(issue(
             "nca.experimental",
             Severity::Warning,
-            "NCA v1 is validated only for the documented QuickPLS v0.9.0-rc.1 supported scope",
+            "NCA v1 is validated only for the documented QuickPLS v1.0.0 supported scope",
             None,
         ));
         if !recipe.metadata.contains_key("nca_x") || !recipe.metadata.contains_key("nca_y") {
@@ -734,7 +734,7 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
         issues.push(issue(
             "method.controls.experimental",
             Severity::Warning,
-            "Control-variable semantics are validated only inside the documented QuickPLS v0.9.0-rc.1 supported scope",
+            "Control-variable semantics are validated only inside the documented QuickPLS v1.0.0 supported scope",
             Some(format!("{} -> {}", control.source, control.target)),
         ));
     }
@@ -818,7 +818,7 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
             | HigherOrderMethod::Hybrid => issues.push(issue(
                 "method.higher_order.experimental",
                 Severity::Warning,
-                "Higher-order construct semantics are validated only inside the documented QuickPLS v0.9.0-rc.1 supported scope",
+                "Higher-order construct semantics are validated only inside the documented QuickPLS v1.0.0 supported scope",
                 Some(higher_order.id.clone()),
             )),
         }
@@ -878,7 +878,7 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
             InteractionMethod::TwoStageProductScore => issues.push(issue(
                 "method.moderation.experimental",
                 Severity::Warning,
-                "Two-stage moderation is validated only inside the documented QuickPLS v0.9.0-rc.1 supported scope",
+                "Two-stage moderation is validated only inside the documented QuickPLS v1.0.0 supported scope",
                 Some(interaction.id.clone()),
             )),
         }

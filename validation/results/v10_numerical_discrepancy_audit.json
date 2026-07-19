@@ -1,0 +1,282 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.0.0 numerical discrepancy audit",
+  "passed": true,
+  "tolerance": 1e-06,
+  "checks": {
+    "publication_ready_audit_passed": true,
+    "known_differences_documented": true,
+    "compatibility_matrix_present": true,
+    "all_specs_present": true,
+    "all_primary_artifacts_pass": true,
+    "reference_artifacts_recorded": true,
+    "no_unexplained_discrepancies": true
+  },
+  "method_families": [
+    {
+      "family": "PLS core",
+      "specification": {
+        "path": "docs/methods/PLS_PM_V1.md",
+        "present": true,
+        "bytes": 3592
+      },
+      "primary_evidence": {
+        "path": "validation/results/pls_publication_audit.json",
+        "present": true,
+        "bytes": 2616,
+        "passed": true
+      },
+      "reference_evidence": [
+        {
+          "path": "validation/results/pls_csem_comparison.json",
+          "present": true,
+          "bytes": 12987,
+          "passed_or_optional": true
+        },
+        {
+          "path": "validation/results/pls_plspm_comparison.json",
+          "present": true,
+          "bytes": 6009,
+          "passed_or_optional": true
+        },
+        {
+          "path": "validation/results/pls_pca_numpy_comparison.json",
+          "present": true,
+          "bytes": 2808,
+          "passed_or_optional": true
+        }
+      ],
+      "tolerance": 1e-06,
+      "unexplained_discrepancy_above_tolerance": false
+    },
+    {
+      "family": "Assessment",
+      "specification": {
+        "path": "docs/methods/PLS_ASSESSMENT_V1.md",
+        "present": true,
+        "bytes": 1164
+      },
+      "primary_evidence": {
+        "path": "validation/results/assessment_publication_audit.json",
+        "present": true,
+        "bytes": 5983,
+        "passed": true
+      },
+      "reference_evidence": [
+        {
+          "path": "validation/results/assessment_publication_metric_matrix.json",
+          "present": true,
+          "bytes": 5517,
+          "passed_or_optional": true
+        },
+        {
+          "path": "validation/results/rho_a_csem_comparison.json",
+          "present": true,
+          "bytes": 966,
+          "passed_or_optional": true
+        },
+        {
+          "path": "validation/results/htmt_seminr_comparison.json",
+          "present": true,
+          "bytes": 6944,
+          "passed_or_optional": true
+        }
+      ],
+      "tolerance": 1e-06,
+      "unexplained_discrepancy_above_tolerance": false
+    },
+    {
+      "family": "Inference",
+      "specification": {
+        "path": "docs/methods/RESAMPLING_ENGINE_V4.md",
+        "present": true,
+        "bytes": 1998
+      },
+      "primary_evidence": {
+        "path": "validation/results/inference_publication_audit.json",
+        "present": true,
+        "bytes": 4674,
+        "passed": true
+      },
+      "reference_evidence": [
+        {
+          "path": "validation/results/inference_publication_matrix.json",
+          "present": true,
+          "bytes": 2982,
+          "passed_or_optional": true
+        },
+        {
+          "path": "validation/results/monte_carlo_qualification.json",
+          "present": true,
+          "bytes": 3866,
+          "passed_or_optional": true
+        },
+        {
+          "path": "validation/results/studentized_release_stress.json",
+          "present": true,
+          "bytes": 2592,
+          "passed_or_optional": true
+        }
+      ],
+      "tolerance": 1e-06,
+      "unexplained_discrepancy_above_tolerance": false
+    },
+    {
+      "family": "Extended PLS",
+      "specification": {
+        "path": "docs/methods/PLS_MEDIATION_V1.md",
+        "present": true,
+        "bytes": 4514
+      },
+      "primary_evidence": {
+        "path": "validation/results/extended_pls_publication_audit.json",
+        "present": true,
+        "bytes": 8877,
+        "passed": true
+      },
+      "reference_evidence": [
+        {
+          "path": "validation/results/mediation_reference_report.json",
+          "present": true,
+          "bytes": 2893,
+          "passed_or_optional": true
+        },
+        {
+          "path": "validation/results/moderation_reference_report.json",
+          "present": true,
+          "bytes": 1422,
+          "passed_or_optional": true
+        },
+        {
+          "path": "validation/results/plsc_reference_report.json",
+          "present": true,
+          "bytes": 782,
+          "passed_or_optional": true
+        }
+      ],
+      "tolerance": 1e-06,
+      "unexplained_discrepancy_above_tolerance": false
+    },
+    {
+      "family": "Prediction and heterogeneity",
+      "specification": {
+        "path": "docs/methods/PLSPREDICT_HOLDOUT_V1.md",
+        "present": true,
+        "bytes": 6653
+      },
+      "primary_evidence": {
+        "path": "validation/results/prediction_heterogeneity_publication_audit.json",
+        "present": true,
+        "bytes": 4941,
+        "passed": true
+      },
+      "reference_evidence": [
+        {
+          "path": "validation/results/v06_groups_quickpls.json",
+          "present": true,
+          "bytes": 33859,
+          "passed_or_optional": true
+        },
+        {
+          "path": "validation/results/v06_fimix_quickpls.json",
+          "present": true,
+          "bytes": 67512,
+          "passed_or_optional": true
+        },
+        {
+          "path": "validation/results/v06_pos_quickpls.json",
+          "present": true,
+          "bytes": 42668,
+          "passed_or_optional": true
+        }
+      ],
+      "tolerance": 1e-06,
+      "unexplained_discrepancy_above_tolerance": false
+    },
+    {
+      "family": "CB-SEM/CFA",
+      "specification": {
+        "path": "docs/methods/CBSEM_ML_V1.md",
+        "present": true,
+        "bytes": 1760
+      },
+      "primary_evidence": {
+        "path": "validation/results/cbsem_publication_audit.json",
+        "present": true,
+        "bytes": 7637,
+        "passed": true
+      },
+      "reference_evidence": [
+        {
+          "path": "validation/results/cbsem_publication_audit.json",
+          "present": true,
+          "bytes": 7637,
+          "passed_or_optional": true
+        },
+        {
+          "path": "validation/results/cbsem_lavaan_reference_report.json",
+          "present": true,
+          "bytes": 88738,
+          "passed_or_optional": true
+        },
+        {
+          "path": "validation/results/lavaan_one_factor_cfa_reference.json",
+          "present": true,
+          "bytes": 2136,
+          "passed_or_optional": true
+        },
+        {
+          "path": "validation/results/lavaan_latent_regression_sem_reference.json",
+          "present": true,
+          "bytes": 6916,
+          "passed_or_optional": true
+        }
+      ],
+      "tolerance": 1e-06,
+      "unexplained_discrepancy_above_tolerance": false
+    },
+    {
+      "family": "Extended methods",
+      "specification": {
+        "path": "docs/methods/PCA_V1.md",
+        "present": true,
+        "bytes": 1218
+      },
+      "primary_evidence": {
+        "path": "validation/results/extended_methods_publication_audit.json",
+        "present": true,
+        "bytes": 5613,
+        "passed": true
+      },
+      "reference_evidence": [
+        {
+          "path": "validation/results/v08_extended_methods_reference_report.json",
+          "present": true,
+          "bytes": 1217,
+          "passed_or_optional": true
+        },
+        {
+          "path": "validation/results/v08_pca_quickpls.json",
+          "present": true,
+          "bytes": 60654,
+          "passed_or_optional": true
+        },
+        {
+          "path": "validation/results/v08_regression_ols_quickpls.json",
+          "present": true,
+          "bytes": 30001,
+          "passed_or_optional": true
+        },
+        {
+          "path": "validation/results/v08_nca_quickpls.json",
+          "present": true,
+          "bytes": 4606,
+          "passed_or_optional": true
+        }
+      ],
+      "tolerance": 1e-06,
+      "unexplained_discrepancy_above_tolerance": false
+    }
+  ],
+  "note": "Documented differences are allowed only when listed in docs/V1_KNOWN_DIFFERENCES.md; this audit does not tune against undocumented SmartPLS behavior."
+}

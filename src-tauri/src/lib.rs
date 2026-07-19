@@ -787,7 +787,7 @@ fn demo_workspace(dataset: &Dataset, result: &AnalysisResult) -> Value {
             "createdAt": result.provenance.completed_at,
             "seed": result.provenance.seed,
             "status": "completed",
-            "warnings": ["Validated for the documented QuickPLS v0.9.0-rc.1 supported scope."],
+            "warnings": ["Validated for the documented QuickPLS v1.0.0 supported scope."],
             "fingerprint": result.provenance.dataset_fingerprint.chars().take(12).collect::<String>(),
             "result": estimation,
             "assessment": assessment,
@@ -976,7 +976,7 @@ mod desktop_job_tests {
             title: "WPLS weights".into(),
             status: "validated_scope".into(),
             warning: Some(
-                "Validated for the documented QuickPLS v0.9.0-rc.1 supported scope; unsupported shapes remain blocked."
+                "Validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
                     .into(),
             ),
             columns: vec!["Metric".into(), "Value".into()],

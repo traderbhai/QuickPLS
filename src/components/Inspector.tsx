@@ -27,7 +27,17 @@ export function Inspector() {
     const source = nodes.find((item) => item.id === edge.source);
     const target = nodes.find((item) => item.id === edge.target);
     const isControl = edge.data?.role === "control";
+    const isCovariance = edge.data?.role === "covariance";
     const controlLabel = typeof edge.data?.controlLabel === "string" ? edge.data.controlLabel : "";
+    if (isCovariance) return <aside className="inspector">
+      <div className="inspector-tabs"><button onClick={() => setSelectedNode(source?.id ?? null)}>Construct</button><button className="active">Covariance</button><button onClick={() => setSelectedNode(null)}>Model</button></div>
+      <div className="path-heading"><Network size={16} /><div><strong>Covariance display</strong><span>{source?.data.shortName} &lt;-&gt; {target?.data.shortName}</span></div></div>
+      <label>Left construct<input value={source?.data.label ?? edge.source} readOnly /></label>
+      <label>Right construct<input value={target?.data.label ?? edge.target} readOnly /></label>
+      <label>Display label<input value={String(edge.label ?? "")} onChange={(event) => updateEdge(edge.id, { label: event.target.value })} /></label>
+      <div className="inspector-actions"><button className="secondary-button danger" onClick={removeSelection}><Trash2 size={14} />Delete</button></div>
+      <div className="method-note"><strong>Visual covariance</strong><p>This arc is excluded from PLS recipe paths. CB-SEM covariance estimation remains controlled by the supported method settings and engine schema.</p></div>
+    </aside>;
     return <aside className="inspector">
       <div className="inspector-tabs"><button onClick={() => setSelectedNode(source?.id ?? null)}>Construct</button><button className="active">Path</button><button onClick={() => setSelectedNode(null)}>Model</button></div>
       <div className="path-heading"><Network size={16} /><div><strong>Structural path</strong><span>{source?.data.shortName} -&gt; {target?.data.shortName}</span></div></div>

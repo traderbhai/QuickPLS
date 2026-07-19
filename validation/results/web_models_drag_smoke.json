@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "target": "editable SmartPLS-like canvas drag smoke",
+  "passed": true,
+  "before": {
+    "x": 547.9156494140625,
+    "y": 351.12713623046875,
+    "width": 76.0579833984375,
+    "height": 70.8721923828125
+  },
+  "after": {
+    "x": 660.2740478515625,
+    "y": 415.94927978515625,
+    "width": 76.0579833984375,
+    "height": 70.8721923828125
+  },
+  "dx": 112.3583984375,
+  "dy": 64.8221435546875,
+  "errors": [],
+  "screenshot": "validation/results/screens/web_models_drag_smoke_1440x900.png"
+}

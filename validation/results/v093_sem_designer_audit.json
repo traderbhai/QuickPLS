@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "target": "v0.9.3 professional SEM designer audit",
+  "passed": true,
+  "checks": {
+    "layout_types": {
+      "DiagramLayoutState": true,
+      "diagramVersion": true,
+      "constructLayouts": true,
+      "indicatorLayouts": true,
+      "edgeLayouts": true,
+      "layoutSource": true
+    },
+    "graph_layout": {
+      "defaultDiagramLayout": true,
+      "indicatorPositionsForConstruct": true,
+      "layoutSource": true,
+      "current_canvas": true,
+      "tidy_publication": true
+    },
+    "store_layout": {
+      "diagramLayout": true,
+      "moveIndicator": true,
+      "setIndicatorSide": true,
+      "resetIndicatorLayout": true,
+      "syncedDiagramLayout": true
+    },
+    "canvas_editing": {
+      "diagram-context-menu": true,
+      "nearestConstructForIndicator": true,
+      "onNodeDragStop": true,
+      "Residual/error node placeholder": true,
+      "Right-click opens object actions": true
+    },
+    "topbar_save_load": {
+      "diagramLayout": true,
+      "publicationDiagramSettings": true
+    },
+    "autosave": {
+      "diagramLayout": true,
+      "autosaveNativeProject": true
+    },
+    "publication_export": {
+      "layoutSource": true,
+      "DiagramLayoutState": true,
+      "buildDiagramGraph(nodes, edges, options.mode": true
+    },
+    "reports": {
+      "Current canvas": true,
+      "Tidy publication": true,
+      "diagramLayout": true
+    },
+    "styles": {
+      "diagram-context-menu": true,
+      "cursor: grab": true,
+      "locked-result-canvas": true
+    },
+    "store_tests": {
+      "persists and resets indicator layout": true
+    },
+    "graph_tests": {
+      "persisted free indicator positions": true,
+      "current canvas positions": true
+    },
+    "svg_tests": {
+      "current canvas indicator layout": true
+    },
+    "smoke": {
+      "v093_default_sem_canvas_1440x900.png": true,
+      "draggedIndicatorMoved": true
+    }
+  },
+  "note": "Verifies unified academic SEM styling, persistent layout metadata, editable indicator movement, context menus, save/load plumbing, and current-canvas publication export."
+}

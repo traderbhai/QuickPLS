@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "id": "80fe217b-bf94-4fd2-bec8-52c246661aef",
+  "id": "831789db-9165-461b-b910-c9e9616cede5",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000080731",
     "dataset_fingerprint": "v2:b5f52a1093a0277acb29a8dd50958f7fd0180635d011a56a5fdff7d6979a76bb",
     "method": "gsca",
     "method_version": "pls_pm_v1+gsca_v1+pls_mediation_v1+pls_assessment_v7",
-    "engine_version": "0.9.0-rc.1",
+    "engine_version": "1.0.0",
     "seed": 20260719,
     "settings": {
       "method": "gsca",
@@ -24,14 +24,14 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-07-19T11:50:15.991274300Z",
-    "completed_at": "2026-07-19T11:50:15.995463900Z"
+    "started_at": "2026-07-19T14:35:09.094870100Z",
+    "completed_at": "2026-07-19T14:35:09.101578800Z"
   },
   "diagnostics": [
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "GSCA v1 is validated for the documented QuickPLS v0.9.0-rc.1 supported scope; unsupported shapes remain blocked."
+      "message": "GSCA v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
     },
     {
       "code": "estimation.warning",
@@ -551,7 +551,7 @@
       ],
       "used_observations": 140,
       "warnings": [
-        "GSCA v1 is validated for the documented QuickPLS v0.9.0-rc.1 supported scope; unsupported shapes remain blocked."
+        "GSCA v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
       ],
       "wpls": null
     },

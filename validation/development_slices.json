@@ -2,7 +2,7 @@
   "schema_version": 1,
   "program": "QuickPLS accelerated method-slice registry",
   "active_goal": "Complete QuickPLS as a free, proprietary, fully offline Windows desktop application that is first ready in all sense before unrestricted research use.",
-  "current_stage": "v0_9_publication_release_candidate",
+  "current_stage": "v1_0_stable",
   "policy": {
     "promotion_order": ["unsupported", "experimental", "validated"],
     "deterministic_tolerance": 0.000001,
@@ -338,22 +338,98 @@
       ]
     },
     {
+      "id": "v0_9_1_diagram_ergonomics",
+      "release": "v0.9.1",
+      "family": "Product",
+      "name": "SmartPLS-level SEM diagram ergonomics",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 12,
+      "summary": "The model editor now uses a SEM-native visual graph with latent ovals, visible indicator nodes, measurement arrows, covariance display arcs, structured result overlays, compatible-run stale blocking, publication SVG export, and legacy project defaults while preserving engine recipe compatibility.",
+      "gates": [
+        {"track": "product", "name": "SEM-native visual graph", "status": "passed", "evidence": "src/domain/diagramGraph.ts derives latent, indicator, measurement, structural, and covariance display graph elements from existing construct/path state."},
+        {"track": "product", "name": "Direct editor ergonomics", "status": "passed", "evidence": "src/components/ModelCanvas.tsx, src/components/LatentNode.tsx, and src/components/IndicatorNode.tsx provide SEM mode, visible indicators, drag/drop assignment, path and covariance tools, keyboard shortcuts, inline construct rename, and diagram legend."},
+        {"track": "product", "name": "Result overlay contract", "status": "passed", "evidence": "diagram overlay settings, compatible-run checks, and src/domain/diagramGraph.test.ts verify numeric overlays are hidden until a compatible completed run is selected."},
+        {"track": "product", "name": "Publication SVG parity", "status": "passed", "evidence": "src/domain/publicationDiagram.ts renders SEM-native SVG using the derived graph; Reports workspace previews and exports the same SVG with publication settings."},
+        {"track": "automation", "name": "Diagram tests, visual smoke, and audit", "status": "passed", "evidence": "npm test -- --run, npm run build, validation/gui_diagram_publication_audit.py, validation/v091_diagram_visual_smoke.mjs, validation/results/v091_diagram_visual_smoke.json, validation/results/v091_diagram_default_1440x900.png, and cargo run -p qpls-cli -- gate v0_9_1_diagram_ergonomics."},
+        {"track": "documentation", "name": "Compatibility note", "status": "passed", "evidence": "docs/DIAGRAM_ERGONOMICS_V0_9_1.md documents visual-editor changes, defaults, compatibility, and limits."}
+      ],
+      "next_actions": [
+        "Use visual desktop smoke testing before packaging the next public build.",
+        "Keep covariance arcs as visual annotations until CB-SEM covariance recipe semantics are separately implemented and validated."
+      ]
+    },
+    {
+      "id": "v0_9_2_smartpls_style_diagram",
+      "release": "v0.9.2",
+      "family": "Product",
+      "name": "SmartPLS-like SEM result diagram",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 13,
+      "summary": "QuickPLS now has a dedicated SmartPLS-like result/publication diagram mode with grey latent ovals, outside indicator rectangles, direct arrows, measurement values, structural path coefficients, R2 inside endogenous constructs, non-editing result behavior, and matching SVG export while preserving existing model recipes and the interactive editor.",
+      "gates": [
+        {"track": "product", "name": "Dedicated SmartPLS-like result mode", "status": "passed", "evidence": "src/types.ts adds smartpls_result; src/components/ModelCanvas.tsx exposes Result diagram and Arrange like SmartPLS while keeping Edit model separate."},
+        {"track": "product", "name": "SmartPLS-aware layout and overlay contract", "status": "passed", "evidence": "src/domain/diagramGraph.ts implements smartplsLayout with left predictors, middle mediators, right outcomes, outside indicators, measurement labels, path coefficients, stale-run blocking, and pre-run warnings."},
+        {"track": "product", "name": "Paper-style rendering", "status": "passed", "evidence": "src/components/LatentNode.tsx, src/components/IndicatorNode.tsx, and src/styles.css render grey latent ovals, light grey indicator rectangles, direct dark arrows, hidden editor affordances, and corrected R² text."},
+        {"track": "product", "name": "Publication SVG export parity", "status": "passed", "evidence": "src/domain/publicationDiagram.ts and src/components/ReportsWorkspace.tsx default SVG export to SmartPLS-like grayscale with controls for precision, loadings, paths, R², and palette variants."},
+        {"track": "automation", "name": "Unit and visual smoke evidence", "status": "passed", "evidence": "npm test -- --run covers graph layout and SVG content; validation/v092_smartpls_diagram_audit.py and validation/v092_smartpls_diagram_visual_smoke.mjs write validation/results/v092_smartpls_diagram_audit.json and validation/results/v092_smartpls_diagram_visual_smoke.json."},
+        {"track": "documentation", "name": "Visual compatibility note", "status": "passed", "evidence": "docs/SMARTPLS_STYLE_DIAGRAM_V0_9_2.md documents that v0.9.2 changes only the result/publication visual layer and not the numerical recipe format."}
+      ],
+      "next_actions": [
+        "Use screenshot comparison against representative research-paper layouts before public demo recordings.",
+        "Keep exact SmartPLS branding and undocumented behavior out of QuickPLS; this is a familiar academic SEM visual grammar, not a clone."
+      ]
+    },
+    {
+      "id": "v0_9_3_professional_sem_designer",
+      "release": "v0.9.3",
+      "family": "Product",
+      "name": "Professional SEM designer",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 14,
+      "summary": "QuickPLS now uses one professional academic SEM visual grammar across editable canvas, result diagram, publication preview, and SVG export. The designer adds persistent layout metadata, editable indicator positions, right-click object actions, locked result/publication modes, and current-canvas export parity without changing the validated statistical recipe.",
+      "gates": [
+        {"track": "product", "name": "Unified academic SEM canvas", "status": "passed", "evidence": "src/components/ModelCanvas.tsx keeps sem as the editable academic canvas, locks only result/publication views, and uses the derived SEM graph for all diagram modes."},
+        {"track": "product", "name": "Persistent designer layout metadata", "status": "passed", "evidence": "src/types.ts adds DiagramLayoutState with constructLayouts, indicatorLayouts, edgeLayouts, viewport, and theme; src/store.ts normalizes and persists diagramLayout separately from the numerical model recipe."},
+        {"track": "product", "name": "Editable indicator and object workflows", "status": "passed", "evidence": "src/components/ModelCanvas.tsx routes indicator node drags into moveIndicator, supports drop-near-construct reassignment, and exposes right-click menus for construct, indicator, edge, and canvas actions."},
+        {"track": "product", "name": "Current-canvas publication export parity", "status": "passed", "evidence": "src/domain/publicationDiagram.ts accepts DiagramLayoutState and layoutSource; Reports workspace defaults to Current canvas with optional Tidy publication."},
+        {"track": "automation", "name": "Unit, build, audit, and browser smoke evidence", "status": "passed", "evidence": "npm test -- --run, npm run build, validation/v093_sem_designer_audit.py, validation/v093_sem_designer_visual_smoke.mjs, and validation/results/screens/v093/ verify layout persistence, draggable indicators, context menus, export parity, and screenshots."},
+        {"track": "documentation", "name": "Designer compatibility note", "status": "passed", "evidence": "docs/PROFESSIONAL_SEM_DESIGNER_V0_9_3.md documents the saved layout metadata, unchanged statistical recipe, result/publication lock behavior, export rules, and placeholder limits."}
+      ],
+      "next_actions": [
+        "Use the v0.9.3 screenshots for iterative visual comparison against representative SmartPLS and AMOS diagrams.",
+        "Implement residual/error and caption recipe semantics only through a separate CB-SEM visual-spec gate."
+      ]
+    },
+    {
       "id": "v1_0_stable",
       "release": "v1.0",
       "family": "Release",
       "name": "Stable all-method release",
-      "status": "unsupported",
-      "stable_output": false,
+      "status": "validated",
+      "stable_output": true,
       "owner_track": "release",
-      "priority": 12,
-      "summary": "v1.0 is blocked until every supported method is validated and all known numerical discrepancies are resolved or documented.",
+      "priority": 15,
+      "summary": "QuickPLS 1.0.0 Stable is complete for the documented supported scope. Unsupported and post-v1 features remain blocked or explicitly watermarked; the unsigned Windows installer is documented until a signing certificate and separate signing audit are added.",
       "gates": [
-        {"track": "validation", "name": "No unexplained numerical discrepancies", "status": "open", "evidence": "many method families pending"},
-        {"track": "documentation", "name": "Compatibility matrix and known differences published", "status": "open", "evidence": "matrix exists but is incomplete"},
-        {"track": "release", "name": "Stable installer and offline launch", "status": "open", "evidence": "not qualified"}
+        {"track": "documentation", "name": "Supported v1.0 scope frozen", "status": "passed", "evidence": "docs/V1_SUPPORTED_SCOPE.md, docs/METHODOLOGY_MANUAL_V1_0.md, docs/RELEASE_NOTES_V1_0.md, and docs/VALIDATION_ARTIFACT_INDEX_V1_0.md define the exact stable scope and validation evidence."},
+        {"track": "validation", "name": "No unexplained numerical discrepancies", "status": "passed", "evidence": "validation/v10_numerical_discrepancy_audit.py writes validation/results/v10_numerical_discrepancy_audit.json and aggregates publication artifacts, method specs, references, tolerances, and known-difference coverage for all v1.0-supported method families."},
+        {"track": "documentation", "name": "Compatibility matrix and known differences published", "status": "passed", "evidence": "docs/V1_COMPATIBILITY_MATRIX.md and docs/V1_KNOWN_DIFFERENCES.md publish method status, bounded supported shapes, unsupported/post-v1 cases, and documented numerical convention differences."},
+        {"track": "product", "name": "Product scope enforcement", "status": "passed", "evidence": "validation/v10_product_scope_audit.py writes validation/results/v10_product_scope_audit.json and verifies UI labels, CLI/export scope, report provenance/warnings, SEM designer overlay guards, and absence of SmartPLS equivalence/import/reverse-engineering claims."},
+        {"track": "product", "name": "Desktop smoke and recovery", "status": "passed", "evidence": "validation/v10_desktop_smoke_check.py writes validation/results/v10_desktop_smoke_check.json and verifies release executable launch without dev server, simple PLS run, CSV/HTML/XLSX/SVG export paths, browser print-to-PDF documentation, autosave/recovery evidence, and v0.9.3 designer layout smoke evidence."},
+        {"track": "release", "name": "Performance and reproducibility", "status": "passed", "evidence": "validation/v10_performance_audit.py writes validation/results/v10_performance_audit.json and verifies practical release benchmark evidence, bootstrap/resampling throughput, cancellation latency, peak memory records, deterministic rerun evidence, worker-count reproducibility, and diagram responsiveness smoke evidence."},
+        {"track": "release", "name": "Stable installer and offline launch", "status": "passed", "evidence": "validation/v10_release_packaging_audit.py writes validation/results/v10_release_packaging_audit.json and verifies version metadata 1.0.0, production frontend build, release executable, NSIS installer, offline launch smoke, dependency notices, release notes, and explicit unsigned-installer status."},
+        {"track": "documentation", "name": "Documentation and dependency notices", "status": "passed", "evidence": "docs/INSTALLATION_V1_0.md and docs/DEPENDENCY_NOTICES_V1_0.md document Windows install/portable launch, unsigned installer behavior, offline operation, validation-only R/Rscript status, and distributed dependency notices."}
       ],
       "next_actions": [
-        "Do not target v1.0 calendar dates until v0.7 and v0.8 numerical gates have passed."
+        "Add a code-signing certificate and a separate signature verification gate before broad public installer distribution.",
+        "Keep native PDF/PNG, polychoric/WLSMV, SmartPLS project import, and expanded CB-SEM residual/caption semantics post-v1 until independently implemented and audited.",
+        "Do not broaden stable claims without a new method specification, reference evidence, product audit, and registry gate."
       ]
     }
   ]

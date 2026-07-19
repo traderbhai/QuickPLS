@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "id": "91d0ea94-b60c-4a83-b4c1-dedd5e286b6e",
+  "id": "55b27c43-d4a8-4fcd-a250-fb68d874c399",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000007639",
     "dataset_fingerprint": "v2:d4a9646bf2a9d22a28ff299bce84e53432d53e049d2d8c06506d282a9d11596b",
     "method": "cbsem",
     "method_version": "pls_pm_v1+cfa_ml_v1+cbsem_fit_v1+cbsem_modification_indices_v1+cbsem_ml_v1+pls_mediation_v1+pls_assessment_v7",
-    "engine_version": "0.9.0-rc.1",
+    "engine_version": "1.0.0",
     "seed": 20260721,
     "settings": {
       "method": "cbsem",
@@ -24,8 +24,8 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-07-19T11:49:39.951639Z",
-    "completed_at": "2026-07-19T11:49:42.195184100Z"
+    "started_at": "2026-07-19T14:34:17.816029200Z",
+    "completed_at": "2026-07-19T14:34:21.265695300Z"
   },
   "diagnostics": [
     {

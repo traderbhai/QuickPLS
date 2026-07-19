@@ -1,0 +1,9 @@
+QuickPLS 1.0.0 release artifact SHA-256 checksums
+
+4BCB8C4D4646CB8E123BA5AD4E64588C593185C2AB9E8402444506D646A22C77  QuickPLS_1.0.0_x64-setup.exe
+A8F67A597E76D8A795C5DD390BA1EDB4D7D77B8E81B7352C814B2DC6583BEDB4  quickpls-desktop.exe
+
+Artifacts:
+- target/release/bundle/nsis/QuickPLS_1.0.0_x64-setup.exe
+- target/release/quickpls-desktop.exe
+

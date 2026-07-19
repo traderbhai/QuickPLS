@@ -103,7 +103,7 @@ def main():
         "path": str(export_csv.relative_to(ROOT)),
         "exists": export_csv.exists(),
         "has_alpha_or_quality_rows": "construct_quality" in export_text or "rho_a" in export_text,
-        "has_supported_scope_warning": "QuickPLS v0.9.0-rc.1 supported scope" in export_text,
+        "has_supported_scope_warning": "QuickPLS v1.0.0 supported scope" in export_text,
     }
     cargo = run(["cargo", "test", "-p", "qpls-assessment"])
     passed = all(item["passed"] for item in evidence) and all(row["complete"] for row in matrix_rows) and export_command["passed"] and export_precision["exists"] and export_precision["has_supported_scope_warning"] and cargo["passed"]

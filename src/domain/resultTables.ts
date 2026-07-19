@@ -9,7 +9,7 @@ export interface ResultTable {
   rows: string[][];
 }
 
-const SCOPE_WARNING = "Validated for the documented QuickPLS v0.9.0-rc.1 supported scope. Unsupported shapes remain blocked or explicitly marked.";
+const SCOPE_WARNING = "Validated for the documented QuickPLS v1.0.0 supported scope. Unsupported shapes remain blocked or explicitly marked.";
 
 export function methodResultTables(result: PlsResult): ResultTable[] {
   const tables: ResultTable[] = [];

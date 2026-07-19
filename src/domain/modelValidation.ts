@@ -11,6 +11,7 @@ export function validateModel(nodes: Array<Node<ConstructData>>, edges: Edge[]):
   const nodeIds = new Set(nodes.map((node) => node.id));
   const indicatorOwners = new Map<string, string>();
   const structuralPaths = new Set<string>();
+  const structuralEdges = edges.filter((edge) => edge.data?.role !== "covariance");
 
   for (const node of nodes) {
     if (!node.data.label.trim()) issues.push({ code: "construct.empty_name", subject: node.id });
@@ -22,14 +23,14 @@ export function validateModel(nodes: Array<Node<ConstructData>>, edges: Edge[]):
     }
   }
 
-  for (const edge of edges) {
+  for (const edge of structuralEdges) {
     if (edge.source === edge.target) issues.push({ code: "path.self", subject: edge.id });
     if (!nodeIds.has(edge.source) || !nodeIds.has(edge.target)) issues.push({ code: "path.unknown_construct", subject: edge.id });
     const identity = JSON.stringify([edge.source, edge.target]);
     if (structuralPaths.has(identity)) issues.push({ code: "path.duplicate", subject: edge.id });
     structuralPaths.add(identity);
   }
-  if (containsDirectedCycle(nodeIds, edges)) issues.push({ code: "path.cycle", subject: "model" });
+  if (containsDirectedCycle(nodeIds, structuralEdges)) issues.push({ code: "path.cycle", subject: "model" });
   return issues;
 }
 

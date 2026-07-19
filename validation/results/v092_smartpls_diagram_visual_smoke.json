@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "target": "v0.9.2 SmartPLS-like diagram visual smoke",
+  "passed": true,
+  "metrics": {
+    "smartplsLatents": 4,
+    "smartplsIndicators": 9,
+    "smartplsMeasurementEdges": 9,
+    "smartplsStructuralEdges": 5,
+    "gridVisible": false,
+    "minimapVisible": false,
+    "deleteButtons": 0,
+    "warning": true,
+    "modeOption": true
+  },
+  "errors": [],
+  "screenshot": "D:\\QuickPLS\\validation\\results\\v092_smartpls_result_1440x900.png"
+}

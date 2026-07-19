@@ -49,7 +49,7 @@ def main():
     export_check = {
         "path": str(export_path.relative_to(ROOT)),
         "exists": export_path.exists(),
-        "contains_scope_warning": "QuickPLS v0.9.0-rc.1 supported scope" in export_text,
+        "contains_scope_warning": "QuickPLS v1.0.0 supported scope" in export_text,
         "contains_stable_scope_note": "v0.3 validated estimator only" in export_text,
         "contains_assessment_rows": "assessment" in export_text.lower(),
     }

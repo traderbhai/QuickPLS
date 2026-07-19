@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "id": "af0f7b2f-9ba8-48e2-8b43-614dc441061d",
+  "id": "2ea746d9-44b5-451e-91ab-925bd4ff3178",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000000601",
     "dataset_fingerprint": "v2:a22bfbef9909ddb70ced8749f6c139739083f3e34c146e10bf340eb5b3ced049",
     "method": "mga",
     "method_version": "pls_pm_v1+pls_mga_two_group_v1+pls_mga_permutation_v1+micom_v1+pls_mediation_v1+pls_assessment_v7",
-    "engine_version": "0.9.0-rc.1",
+    "engine_version": "1.0.0",
     "seed": 20260719,
     "settings": {
       "method": "mga",
@@ -24,8 +24,8 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-07-19T11:49:26.206843Z",
-    "completed_at": "2026-07-19T11:49:26.561239500Z"
+    "started_at": "2026-07-19T14:33:59.941929Z",
+    "completed_at": "2026-07-19T14:34:00.336153400Z"
   },
   "diagnostics": [
     {

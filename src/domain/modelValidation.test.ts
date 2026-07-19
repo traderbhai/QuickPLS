@@ -30,4 +30,8 @@ describe("validateModel", () => {
     const cycle = [...edges, { id: "y-x", source: "y", target: "x" }];
     expect(validateModel(nodes, cycle)).toContainEqual({ code: "path.cycle", subject: "model" });
   });
+
+  it("ignores visual covariance arcs for structural validation", () => {
+    expect(validateModel(nodes, [...edges, { id: "cov", source: "y", target: "x", data: { role: "covariance" } }])).toEqual([]);
+  });
 });

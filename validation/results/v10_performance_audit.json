@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.0.0 performance and reproducibility audit",
+  "passed": true,
+  "checks": {
+    "import_and_base_run_smoke": true,
+    "base_pls_benchmark_recorded": true,
+    "resampling_throughput_recorded": true,
+    "cancellation_latency_recorded": true,
+    "peak_memory_recorded": true,
+    "report_export_generation_smoke": true,
+    "diagram_responsiveness_smoke": true,
+    "deterministic_rerun_evidence": true,
+    "worker_count_reproducibility": true
+  },
+  "artifacts": {
+    "performance_release_publication_audit": {
+      "path": "validation/results/performance_release_publication_audit.json",
+      "present": true,
+      "bytes": 4523
+    },
+    "pls_bounded_benchmark": {
+      "path": "validation/results/pls_publication_bounded_benchmark.json",
+      "present": true,
+      "bytes": 227
+    },
+    "studentized_release_stress": {
+      "path": "validation/results/studentized_release_stress.json",
+      "present": true,
+      "bytes": 2592
+    },
+    "v04_inference_qualification": {
+      "path": "validation/results/v04_inference_qualification_quick.json",
+      "present": true,
+      "bytes": 77932
+    },
+    "v093_designer_visual_smoke": {
+      "path": "validation/results/v093_sem_designer_visual_smoke.json",
+      "present": true,
+      "bytes": 674
+    },
+    "desktop_smoke": {
+      "path": "validation/results/v10_desktop_smoke_check.json",
+      "present": true,
+      "bytes": 4725
+    }
+  },
+  "maximum_profile": "The full 100000 rows / 300 indicators / 100 constructs / 10000 resamples benchmark remains a named maximum benchmark profile, not a quick release-gate runtime."
+}

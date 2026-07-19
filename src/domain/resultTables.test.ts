@@ -212,7 +212,7 @@ describe("result export tables", () => {
       "ipma_indicators",
     ]);
     expect(tables.every((table) => table.status === "experimental")).toBe(true);
-    expect(tables[0].warning).toContain("Validated for the documented QuickPLS v0.9.0-rc.1 supported scope");
+    expect(tables[0].warning).toContain("Validated for the documented QuickPLS v1.0.0 supported scope");
     expect(tables[0].rows[0]).toEqual(["WEIGHT", "135.250000", "111.1250", "weighted sample covariance"]);
   });
 
@@ -242,6 +242,6 @@ describe("result export tables", () => {
     expect(csv).toContain("weighted sample covariance");
     const html = tablesToHtml(tables);
     expect(html).toContain("<title>QuickPLS export</title>");
-    expect(html).toContain("Validated for the documented QuickPLS v0.9.0-rc.1 supported scope");
+    expect(html).toContain("Validated for the documented QuickPLS v1.0.0 supported scope");
   });
 });

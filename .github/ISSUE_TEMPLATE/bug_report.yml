@@ -1,0 +1,57 @@
+name: Bug report
+description: Report a reproducible QuickPLS problem.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please do not upload confidential research data. Use a minimal anonymized fixture when possible.
+  - type: input
+    id: version
+    attributes:
+      label: QuickPLS version
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Data import
+        - SEM designer
+        - PLS-SEM
+        - CB-SEM/CFA
+        - Regression/PROCESS
+        - NCA/GSCA/PCA
+        - Reports/export
+        - Installer/launch
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List exact steps, inputs, and settings.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: Minimal files or screenshots
+      description: Attach anonymized files/screenshots if safe.
+

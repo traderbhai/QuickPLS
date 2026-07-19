@@ -20,14 +20,14 @@
     {
       "path": "docs/DELIVERY_STATUS.md",
       "present": true,
-      "bytes": 49959,
+      "bytes": 52690,
       "mentions_validation": true,
       "mentions_known_differences": true
     },
     {
       "path": "docs/DEVELOPMENT_LEDGER.md",
       "present": true,
-      "bytes": 51829,
+      "bytes": 53232,
       "mentions_validation": true,
       "mentions_known_differences": true
     },

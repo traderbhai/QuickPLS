@@ -29,7 +29,7 @@
   },
   "benchmark": {
     "profile": "bounded_smoke",
-    "elapsed_seconds": 0.0744,
+    "elapsed_seconds": 0.0832,
     "command_passed": true,
     "future_maximum_profile": "100000 rows, 300 indicators, 100 constructs, 10000 resamples remains in the release performance blocker"
   },
@@ -47,9 +47,9 @@
       ],
       "returncode": 0,
       "passed": true,
-      "elapsed_seconds": 2.3233,
+      "elapsed_seconds": 3.3757,
       "stdout_tail": "",
-      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.15s\n"
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.18s\n"
     },
     {
       "command": [
@@ -63,7 +63,7 @@
       ],
       "returncode": 0,
       "passed": true,
-      "elapsed_seconds": 0.0442,
+      "elapsed_seconds": 0.0838,
       "stdout_tail": "wrote v0.3 estimator-only export validation\\results\\pls_publication_stable_export.csv\n",
       "stderr_tail": ""
     },
@@ -80,7 +80,7 @@
       ],
       "returncode": 0,
       "passed": true,
-      "elapsed_seconds": 0.0744,
+      "elapsed_seconds": 0.0832,
       "stdout_tail": "wrote analysis result validation/results/pls_publication_benchmark_quickpls.json\n",
       "stderr_tail": ""
     }

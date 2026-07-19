@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "target": "v0.9.2 SmartPLS-like result diagram audit",
+  "passed": true,
+  "checks": {
+    "types": {
+      "smartpls_result": true,
+      "showLoadings": true,
+      "showPathCoefficients": true,
+      "showRSquared": true,
+      "high_contrast": true,
+      "quickpls_color": true
+    },
+    "graph": {
+      "smartplsLayout": true,
+      "SMARTPLS_LATENT_WIDTH": true,
+      "Run or select a compatible result to show estimates.": true,
+      "smartpls-measurement-edge": true,
+      "smartpls-structural-edge": true
+    },
+    "canvas": {
+      "Result diagram": true,
+      "Arrange like SmartPLS": true,
+      "nodesDraggable={!resultDiagramMode}": true,
+      "smartpls-result-canvas": true
+    },
+    "latent_node": {
+      "smartpls-latent-node": true,
+      "smartpls-r2": true,
+      "R\u00b2": true
+    },
+    "indicator_node": {
+      "smartpls-indicator-node": true,
+      "displayMode === \"smartpls_result\"": true
+    },
+    "svg_export": {
+      "smartpls-latent": true,
+      "smartpls-indicator": true,
+      "R&#178;": true,
+      "showLoadings": true,
+      "showPathCoefficients": true,
+      "showRSquared": true
+    },
+    "reports": {
+      "SmartPLS-like": true,
+      "QuickPLS publication": true,
+      "Loadings": true,
+      "Path coefficients": true,
+      "R\u00b2": true
+    },
+    "styles": {
+      "smartpls-result-canvas": true,
+      "smartpls-latent-ellipse": true,
+      "smartpls-indicator-node": true,
+      "smartpls-measurement-edge": true
+    },
+    "tests": {
+      "SmartPLS-like": true,
+      "R&#178; 0.208": true,
+      "not.toContain(\"Mode A\")": true
+    },
+    "smoke": {
+      "smartpls_result": true,
+      "v092_smartpls_result_1440x900.png": true
+    }
+  },
+  "note": "This audit verifies the dedicated paper-style result diagram mode, SVG export support, result-overlay contract, and absence of editor artifacts in result mode."
+}

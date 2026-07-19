@@ -26,17 +26,20 @@ def main():
     build = run(["npm.cmd" if __import__("os").name == "nt" else "npm", "run", "build"])
     desktop = run(["cargo", "test", "-p", "quickpls-desktop"])
     canvas_source = ROOT / "src" / "components" / "ModelCanvas.tsx"
+    diagram_graph = ROOT / "src" / "domain" / "diagramGraph.ts"
     reports = ROOT / "src" / "components" / "ReportsWorkspace.tsx"
     diagram = ROOT / "src" / "domain" / "publicationDiagram.ts"
     topbar = ROOT / "src" / "components" / "TopBar.tsx"
     source_checks = {
-        "react_flow_canvas": contains(canvas_source, ["ReactFlow", "fitView", "onNodesChange", "onEdgesChange"]),
-        "diagram_exports": contains(reports, ["publicationDiagramSvg", "quickpls-publication-diagram.svg", "Print / PDF", "XLSX workbook"]),
-        "diagram_estimate_visibility": contains(diagram, ["run ?", "Validated for documented QuickPLS v0.9.0-rc.1 supported scope", "result?.paths", "outer_estimates"]),
-        "run_estimate_binding": contains(topbar, ["addRun", "selectedMethod.name", "validated for the documented v0.9.0-rc.1 scope", "unsupported shapes remain blocked"]),
+        "react_flow_canvas": contains(canvas_source, ["ReactFlow", "buildDiagramGraph", "Diagram result overlay", "Result diagram", "Draw covariance display arc"]),
+        "derived_sem_graph": contains(diagram_graph, ["indicatorNodeId", "measurement-edge reflective", "measurement-edge formative", "Selected run does not match the current model"]),
+        "diagram_exports": contains(reports, ["publicationDiagramSvg", "quickpls-publication-diagram.svg", "Print / PDF", "Diagram precision", "Diagram palette"]),
+        "diagram_estimate_visibility": contains(diagram, ["buildDiagramGraph", "Validated for documented QuickPLS v1.0.0 supported scope", "class=\"latent", "class=\"indicator"]),
+        "run_estimate_binding": contains(topbar, ["addRun", "selectedMethod.name", "unsupported shapes remain blocked", "structuralEdges"]),
     }
     test_files = {
         "publication_diagram_test": (ROOT / "src" / "domain" / "publicationDiagram.test.ts").exists(),
+        "diagram_graph_test": (ROOT / "src" / "domain" / "diagramGraph.test.ts").exists(),
         "model_layout_test": (ROOT / "src" / "domain" / "modelLayout.test.ts").exists(),
         "result_tables_test": (ROOT / "src" / "domain" / "resultTables.test.ts").exists(),
         "store_test": (ROOT / "src" / "store.test.ts").exists(),

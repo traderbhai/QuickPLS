@@ -38,7 +38,7 @@
       "returncode": 0,
       "passed": true,
       "stdout_tail": "wrote v0.3 estimator-only export validation/results/stable_export_publication.csv\n",
-      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.24s\n     Running `target\\debug\\qpls.exe export validation/results/pls_quickpls_path_mode_a.json --format csv --output validation/results/stable_export_publication.csv`\n"
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.39s\n     Running `target\\debug\\qpls.exe export validation/results/pls_quickpls_path_mode_a.json --format csv --output validation/results/stable_export_publication.csv`\n"
     },
     {
       "command": [
@@ -57,7 +57,7 @@
       "returncode": 0,
       "passed": true,
       "stdout_tail": "wrote v0.3 estimator-only export validation/results/stable_export_publication.html\n",
-      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.95s\n     Running `target\\debug\\qpls.exe export validation/results/pls_quickpls_path_mode_a.json --format html --output validation/results/stable_export_publication.html`\n"
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.81s\n     Running `target\\debug\\qpls.exe export validation/results/pls_quickpls_path_mode_a.json --format html --output validation/results/stable_export_publication.html`\n"
     },
     {
       "command": [
@@ -76,7 +76,7 @@
       "returncode": 0,
       "passed": true,
       "stdout_tail": "wrote v0.3 estimator-only export validation/results/stable_export_publication.xlsx\n",
-      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.79s\n     Running `target\\debug\\qpls.exe export validation/results/pls_quickpls_path_mode_a.json --format xlsx --output validation/results/stable_export_publication.xlsx`\n"
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.50s\n     Running `target\\debug\\qpls.exe export validation/results/pls_quickpls_path_mode_a.json --format xlsx --output validation/results/stable_export_publication.xlsx`\n"
     },
     {
       "command": [
@@ -87,8 +87,8 @@
       ],
       "returncode": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 11 tests\ntest tests::bundled_roadmap_commands_accept_current_registry ... ok\ntest tests::v04_assessment_evidence_report_maps_metric_gaps ... ok\ntest tests::v03_pls_evidence_report_maps_variant_gaps ... ok\ntest tests::export_rejects_legacy_result_payloads ... ok\ntest tests::export_writes_validated_v03_estimator_csv_and_html_only ... ok\ntest tests::export_writes_xlsx_workbook_with_estimator_rows ... ok\ntest tests::export_includes_watermarked_experimental_method_tables_when_requested ... ok\ntest tests::v05_extended_pls_evidence_report_aggregates_method_artifacts ... ok\ntest tests::cli_analysis_payload_is_exactly_worker_invariant ... ok\ntest tests::v04_inference_qualifier_maps_automated_and_registry_gates ... ok\ntest tests::demo_project_create_and_validate_round_trip ... ok\n\ntest result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.09s\n\n",
-      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.75s\n     Running unittests src\\main.rs (target\\debug\\deps\\qpls-88e2390317672646.exe)\n"
+      "stdout_tail": "\nrunning 11 tests\ntest tests::bundled_roadmap_commands_accept_current_registry ... ok\ntest tests::v04_assessment_evidence_report_maps_metric_gaps ... ok\ntest tests::v03_pls_evidence_report_maps_variant_gaps ... ok\ntest tests::export_rejects_legacy_result_payloads ... ok\ntest tests::export_writes_validated_v03_estimator_csv_and_html_only ... ok\ntest tests::export_includes_watermarked_experimental_method_tables_when_requested ... ok\ntest tests::export_writes_xlsx_workbook_with_estimator_rows ... ok\ntest tests::v05_extended_pls_evidence_report_aggregates_method_artifacts ... ok\ntest tests::cli_analysis_payload_is_exactly_worker_invariant ... ok\ntest tests::v04_inference_qualifier_maps_automated_and_registry_gates ... ok\ntest tests::demo_project_create_and_validate_round_trip ... ok\n\ntest result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.20s\n\n",
+      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.68s\n     Running unittests src\\main.rs (target\\debug\\deps\\qpls-97e75bff208793f3.exe)\n"
     },
     {
       "command": [
@@ -99,8 +99,8 @@
       ],
       "returncode": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 7 tests\ntest desktop_job_tests::cancellation_wins_before_commit_and_does_not_persist ... ok\ntest desktop_job_tests::commit_checks_project_identity_and_read_only_state ... ok\ntest desktop_job_tests::completed_result_is_consumed_and_terminal_retention_is_bounded ... ok\ntest desktop_job_tests::desktop_runner_payload_matches_cli_serialized_artifact ... ok\ntest desktop_job_tests::waiting_for_project_does_not_hold_the_job_registry ... ok\ntest desktop_job_tests::xlsx_table_export_writes_readable_workbook ... ok\ntest desktop_job_tests::demo_project_contains_workspace_dataset_and_run ... ok\n\ntest result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.99s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
-      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.80s\n     Running unittests src\\lib.rs (target\\debug\\deps\\quickpls_desktop_lib-1ea2f84bb6699edd.exe)\n     Running unittests src\\main.rs (target\\debug\\deps\\quickpls_desktop-7bb10cf6cf20095c.exe)\n   Doc-tests quickpls_desktop_lib\n"
+      "stdout_tail": "\nrunning 7 tests\ntest desktop_job_tests::cancellation_wins_before_commit_and_does_not_persist ... ok\ntest desktop_job_tests::completed_result_is_consumed_and_terminal_retention_is_bounded ... ok\ntest desktop_job_tests::commit_checks_project_identity_and_read_only_state ... ok\ntest desktop_job_tests::desktop_runner_payload_matches_cli_serialized_artifact ... ok\ntest desktop_job_tests::waiting_for_project_does_not_hold_the_job_registry ... ok\ntest desktop_job_tests::xlsx_table_export_writes_readable_workbook ... ok\ntest desktop_job_tests::demo_project_contains_workspace_dataset_and_run ... ok\n\ntest result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.63s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 8.38s\n     Running unittests src\\lib.rs (target\\debug\\deps\\quickpls_desktop_lib-6fd99ccd0aebba08.exe)\n     Running unittests src\\main.rs (target\\debug\\deps\\quickpls_desktop-361acc4412441d6c.exe)\n   Doc-tests quickpls_desktop_lib\n"
     },
     {
       "command": [
@@ -111,7 +111,7 @@
       ],
       "returncode": 0,
       "passed": true,
-      "stdout_tail": "\n> quickpls@0.9.0-rc.1 test\n> vitest run --run\n\n\n\u001b[1m\u001b[7m\u001b[36m RUN \u001b[39m\u001b[27m\u001b[22m \u001b[36mv2.1.9 \u001b[39m\u001b[90mD:/QuickPLS\u001b[39m\n\n \u001b[32m\u00e2\u0153\u201c\u001b[39m src/domain/inference.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 5\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m\u00e2\u0153\u201c\u001b[39m src/domain/runComparison.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 6\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m\u00e2\u0153\u201c\u001b[39m src/domain/publicationDiagram.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 7\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m\u00e2\u0153\u201c\u001b[39m src/domain/modelLayout.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 8\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m\u00e2\u0153\u201c\u001b[39m src/domain/modelValidation.test.ts \u001b[2m(\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 9\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m\u00e2\u0153\u201c\u001b[39m src/domain/resultTables.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 8\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m\u00e2\u0153\u201c\u001b[39m src/store.test.ts \u001b[2m(\u001b[22m\u001b[2m22 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 20\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m7 passed\u001b[39m\u001b[22m\u001b[90m (7)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m37 passed\u001b[39m\u001b[22m\u001b[90m (37)\u001b[39m\n\u001b[2m   Start at \u001b[22m 17:21:05\n\u001b[2m   Duration \u001b[22m 3.59s\u001b[2m (transform 778ms, setup 0ms, collect 1.93s, tests 63ms, environment 2ms, prepare 4.87s)\u001b[22m\n\n",
+      "stdout_tail": "\n> quickpls@1.0.0 test\n> vitest run --run\n\n\n\u001b[1m\u001b[7m\u001b[36m RUN \u001b[39m\u001b[27m\u001b[22m \u001b[36mv2.1.9 \u001b[39m\u001b[90mD:/QuickPLS\u001b[39m\n\n \u001b[32m\u00e2\u0153\u201c\u001b[39m src/domain/runComparison.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 6\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m\u00e2\u0153\u201c\u001b[39m src/domain/inference.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 7\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m\u00e2\u0153\u201c\u001b[39m src/domain/modelLayout.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 7\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m\u00e2\u0153\u201c\u001b[39m src/domain/resultTables.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 11\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m\u00e2\u0153\u201c\u001b[39m src/domain/modelValidation.test.ts \u001b[2m(\u001b[22m\u001b[2m6 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 8\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m\u00e2\u0153\u201c\u001b[39m src/domain/publicationDiagram.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 8\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m\u00e2\u0153\u201c\u001b[39m src/domain/diagramGraph.test.ts \u001b[2m(\u001b[22m\u001b[2m11 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 23\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m\u00e2\u0153\u201c\u001b[39m src/store.test.ts \u001b[2m(\u001b[22m\u001b[2m25 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[90m 28\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m8 passed\u001b[39m\u001b[22m\u001b[90m (8)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m54 passed\u001b[39m\u001b[22m\u001b[90m (54)\u001b[39m\n\u001b[2m   Start at \u001b[22m 20:08:09\n\u001b[2m   Duration \u001b[22m 5.65s\u001b[2m (transform 965ms, setup 0ms, collect 4.37s, tests 99ms, environment 3ms, prepare 5.58s)\u001b[22m\n\n",
       "stderr_tail": ""
     }
   ],

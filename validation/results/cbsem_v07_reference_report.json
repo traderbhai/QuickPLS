@@ -31,7 +31,7 @@
       ]
     },
     "export": {
-      "export_bytes": 38389
+      "export_bytes": 38374
     },
     "guard": {
       "guard_code": "cbsem.reflective_only"

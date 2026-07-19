@@ -1554,7 +1554,7 @@ fn estimate_standalone_pca(
         prepared.used,
         prepared.omitted,
         vec![
-            "Standalone PCA v1 is validated for the documented QuickPLS v0.9.0-rc.1 supported scope; unsupported shapes remain blocked."
+            "Standalone PCA v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
                 .into(),
         ],
     );
@@ -1627,7 +1627,7 @@ fn estimate_regression_method(
         prepared.used,
         prepared.omitted,
         vec![
-            "Regression/PROCESS v1 is validated for the documented QuickPLS v0.9.0-rc.1 supported scope; unsupported shapes remain blocked."
+            "Regression/PROCESS v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
                 .into(),
         ],
     );
@@ -1693,7 +1693,7 @@ fn estimate_nca_method(
         prepared.used,
         prepared.omitted,
         vec![
-            "NCA v1 is validated for the documented QuickPLS v0.9.0-rc.1 supported scope; unsupported shapes remain blocked."
+            "NCA v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
                 .into(),
         ],
     );
@@ -2967,7 +2967,7 @@ fn apply_gsca(
         ],
     });
     result.warnings.push(
-        "GSCA v1 is validated for the documented QuickPLS v0.9.0-rc.1 supported scope; unsupported shapes remain blocked."
+        "GSCA v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
             .into(),
     );
     Ok(())
@@ -5356,7 +5356,7 @@ fn apply_ipma(
         }
     }
     let warnings = vec![
-        "IPMA is validated for the documented QuickPLS v0.9.0-rc.1 supported scope; importance uses fixed PLS total effects and performance uses 0-100 min-max scaled standardized scores, while broader cIPMA remains unsupported.".into(),
+        "IPMA is validated for the documented QuickPLS v1.0.0 supported scope; importance uses fixed PLS total effects and performance uses 0-100 min-max scaled standardized scores, while broader cIPMA remains unsupported.".into(),
     ];
     result.method_version = IPMA_METHOD_VERSION.into();
     result.ipma = Some(IpmaAnalysis {

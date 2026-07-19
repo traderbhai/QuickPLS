@@ -251,8 +251,11 @@ describe("model editor state", () => {
       result: minimalResult,
     });
     expect(useWorkspace.getState().selectedResultRunId).toBe("run-1");
+    expect(useWorkspace.getState().diagramOverlaySettings.selectedRunId).toBe("run-1");
+    expect(useWorkspace.getState().diagramOverlaySettings.mode).toBe("paths_r2");
     useWorkspace.getState().setSelectedResultRun(null);
     expect(useWorkspace.getState().selectedResultRunId).toBeNull();
+    expect(useWorkspace.getState().diagramOverlaySettings.selectedRunId).toBeNull();
     useWorkspace.getState().setSelectedResultRun("run-1");
     useWorkspace.getState().loadProject({
       nodes: useWorkspace.getState().nodes,
@@ -262,6 +265,49 @@ describe("model editor state", () => {
     });
     expect(useWorkspace.getState().runs).toHaveLength(1);
     expect(useWorkspace.getState().selectedResultRunId).toBeNull();
+    expect(useWorkspace.getState().diagramOverlaySettings.selectedRunId).toBeNull();
+  });
+
+  it("stores covariance display arcs separately from structural path validation", () => {
+    const before = useWorkspace.getState().edges.length;
+    useWorkspace.getState().addCovariance("competence", "likeability");
+    let state = useWorkspace.getState();
+    expect(state.edges).toHaveLength(before + 1);
+    expect(state.edges.at(-1)?.data).toEqual({ role: "covariance" });
+    useWorkspace.getState().addCovariance("likeability", "competence");
+    expect(useWorkspace.getState().edges).toHaveLength(before + 1);
+    useWorkspace.getState().undo();
+    state = useWorkspace.getState();
+    expect(state.edges).toHaveLength(before);
+  });
+
+  it("loads legacy projects with SEM diagram defaults", () => {
+    const current = useWorkspace.getState();
+    current.loadProject({ nodes: current.nodes, edges: current.edges, dataset: current.dataset });
+    const state = useWorkspace.getState();
+    expect(state.diagramMode).toBe("sem");
+    expect(state.diagramTool).toBe("select");
+    expect(state.publicationDiagramSettings.mode).toBe("smartpls_result");
+    expect(state.publicationDiagramSettings.palette).toBe("grayscale");
+    expect(state.publicationDiagramSettings.layoutSource).toBe("current_canvas");
+    expect(state.diagramLayout.diagramVersion).toBe("sem_designer_v1");
+    expect(state.diagramLayout.constructLayouts.competence).toMatchObject({ x: state.nodes.find((node) => node.id === "competence")?.position.x });
+  });
+
+  it("persists and resets indicator layout independently from the engine model", () => {
+    const originalIndicators = useWorkspace.getState().nodes.find((node) => node.id === "competence")?.data.indicators;
+    useWorkspace.getState().checkpoint();
+    useWorkspace.getState().moveIndicator("competence", "COMP1", { x: 42, y: 57 });
+    let state = useWorkspace.getState();
+    expect(state.diagramLayout.indicatorLayouts.competence.COMP1).toMatchObject({ side: "free", x: 42, y: 57, pinned: true });
+    expect(state.nodes.find((node) => node.id === "competence")?.data.indicators).toEqual(originalIndicators);
+    useWorkspace.getState().undo();
+    state = useWorkspace.getState();
+    expect(state.diagramLayout.indicatorLayouts.competence.COMP1.side).not.toBe("free");
+    useWorkspace.getState().setIndicatorSide("competence", "COMP1", "right");
+    expect(useWorkspace.getState().diagramLayout.indicatorLayouts.competence.COMP1).toMatchObject({ side: "right", x: undefined, y: undefined });
+    useWorkspace.getState().resetIndicatorLayout("competence", "COMP1");
+    expect(useWorkspace.getState().diagramLayout.indicatorLayouts.competence.COMP1.side).not.toBe("free");
   });
 
   it("aligns selected constructs and supports undo", () => {

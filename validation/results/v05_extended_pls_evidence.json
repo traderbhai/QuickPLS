@@ -274,7 +274,7 @@
       "status": null
     }
   ],
-  "generated_at": "2026-07-19T11:49:17.546953600Z",
+  "generated_at": "2026-07-19T14:33:46.412007600Z",
   "note": "Traceability report for v0.5 extended PLS evidence. Passing artifacts support experimental preview promotion only; validated/publication-ready status still requires the registry gate to be clear and method-specific limitations to remain documented.",
   "open_registry_gates": [],
   "promotion_ready": true,

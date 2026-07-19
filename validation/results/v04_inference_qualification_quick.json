@@ -21,7 +21,7 @@
       "evidence": {
         "cancel_requested_after_completed_replicates": 1,
         "cancelled_result": true,
-        "elapsed_seconds_after_cancel_request": 0.0009597,
+        "elapsed_seconds_after_cancel_request": 0.0016408,
         "error": "resampling was cancelled",
         "passed": true,
         "requested_replicates": 10000,
@@ -35,7 +35,7 @@
       "evidence": {
         "cancel_requested_after_completed_inner_replicates": 1,
         "cancelled_result": true,
-        "elapsed_seconds_after_cancel_request": 0.0002514,
+        "elapsed_seconds_after_cancel_request": 0.0003626,
         "error": "resampling was cancelled",
         "note": "Cancellation is requested only after nested studentized-inner progress is observed, proving the 999x99 path discards partial output from inside the nested phase.",
         "passed": true,
@@ -2221,7 +2221,7 @@
       "status": "passed"
     }
   ],
-  "generated_at": "2026-07-19T11:49:14.321479Z",
+  "generated_at": "2026-07-19T14:33:40.605993900Z",
   "note": "Automated checks passed. Promotion still requires human review of method scope, known differences, and remaining registry gates.",
   "open_registry_gates": [],
   "qualification_passed": true,
