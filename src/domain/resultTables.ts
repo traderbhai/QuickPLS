@@ -9,7 +9,8 @@ export interface ResultTable {
   rows: string[][];
 }
 
-const SCOPE_WARNING = "Validated for the documented QuickPLS v1.0.0 supported scope. Unsupported shapes remain blocked or explicitly marked.";
+const SCOPE_WARNING = "Validated for the documented QuickPLS supported scope. Unsupported shapes remain blocked or explicitly marked.";
+const EXPERIMENTAL_WARNING = "Experimental output. Use only with explicit method-status warnings and watermarked exports.";
 
 export function methodResultTables(result: PlsResult): ResultTable[] {
   const tables: ResultTable[] = [];
@@ -17,24 +18,24 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "plsc_reliability",
       title: "PLSc reliabilities",
-      status: "experimental",
-      warning: warnings(result.plsc.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.plsc.warnings),
       columns: ["Construct", "rho_A"],
       rows: result.plsc.reliabilities.map((row) => [row.construct, formatNumber(row.rho_a, 6)]),
     });
     tables.push({
       id: "plsc_correlations",
       title: "PLSc corrected construct correlations",
-      status: "experimental",
-      warning: warnings(result.plsc.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.plsc.warnings),
       columns: ["Left", "Right", "Original", "Corrected"],
       rows: result.plsc.construct_correlations.map((row) => [row.left, row.right, formatNumber(row.original, 6), formatNumber(row.corrected, 6)]),
     });
     tables.push({
       id: "plsc_paths",
       title: "PLSc corrected paths",
-      status: "experimental",
-      warning: warnings(result.plsc.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.plsc.warnings),
       columns: ["Source", "Target", "Coefficient"],
       rows: result.plsc.corrected_paths.map((row) => [row.source, row.target, formatNumber(row.coefficient, 6)]),
     });
@@ -44,8 +45,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "wpls_weights",
       title: "WPLS case-weight metadata",
-      status: "experimental",
-      warning: warnings(result.wpls.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.wpls.warnings),
       columns: ["Weight column", "Weight sum", "Effective sample size", "Covariance"],
       rows: [[result.wpls.case_weight_column, formatNumber(result.wpls.weight_sum, 6), formatNumber(result.wpls.effective_sample_size, 4), formatLabel(result.wpls.covariance)]],
     });
@@ -74,8 +75,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "plspredict_holdout",
       title: "PLSpredict holdout metrics",
-      status: "experimental",
-      warning: warnings(result.predict.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.predict.warnings),
       columns: ["Construct", "Predictors", "RMSE PLS", "MAE PLS", "RMSE benchmark", "MAE benchmark", "Q2 predict", "RMSE LM", "MAE LM", "Q2 LM"],
       rows: result.predict.targets.map((row) => [
         row.construct,
@@ -93,8 +94,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "plspredict_split",
       title: "PLSpredict holdout split",
-      status: "experimental",
-      warning: warnings(result.predict.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.predict.warnings),
       columns: ["Split", "Training observations", "Test observations", "Benchmark"],
       rows: [[formatLabel(result.predict.split), String(result.predict.training_observations), String(result.predict.test_observations), result.predict.benchmark]],
     });
@@ -102,8 +103,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
       tables.push({
         id: "plspredict_repeated_kfold",
         title: "PLSpredict repeated k-fold metrics",
-        status: "experimental",
-        warning: warnings(result.predict.repeated_kfold.warnings),
+        status: "validated",
+        warning: scopeWarnings(result.predict.repeated_kfold.warnings),
         columns: ["Construct", "Predictors", "RMSE PLS", "MAE PLS", "RMSE benchmark", "MAE benchmark", "Q2 predict", "RMSE LM", "MAE LM", "Q2 LM"],
         rows: result.predict.repeated_kfold.targets.map((row) => [
           row.construct,
@@ -121,8 +122,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
       tables.push({
         id: "plspredict_repeated_kfold_plan",
         title: "PLSpredict repeated k-fold plan",
-        status: "experimental",
-        warning: warnings(result.predict.repeated_kfold.warnings),
+        status: "validated",
+        warning: scopeWarnings(result.predict.repeated_kfold.warnings),
         columns: ["Folds", "Repeats", "Total test observations", "Assignment"],
         rows: [[String(result.predict.repeated_kfold.folds), String(result.predict.repeated_kfold.repeats), String(result.predict.repeated_kfold.total_test_observations), formatLabel(result.predict.repeated_kfold.assignment)]],
       });
@@ -130,8 +131,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
         tables.push({
           id: "cvpat",
           title: "CVPAT paired loss comparisons",
-          status: "experimental",
-          warning: warnings(result.predict.repeated_kfold.warnings),
+          status: "validated",
+          warning: scopeWarnings(result.predict.repeated_kfold.warnings),
           columns: ["Target", "Comparison", "Mean loss diff", "SE", "t", "p", "Observations", "Preferred", "Warning"],
           rows: result.predict.repeated_kfold.cvpat.map((row) => [
             row.target,
@@ -172,35 +173,39 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "pca_components",
       title: "PCA components",
-      status: "experimental",
-      warning: warnings(result.pca.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.pca.warnings),
       columns: ["Component", "Eigenvalue", "Explained variance", "Cumulative variance"],
       rows: result.pca.components.map((row) => [row.component, formatNumber(row.eigenvalue, 6), formatNumber(row.explained_variance, 6), formatNumber(row.cumulative_variance, 6)]),
     });
     tables.push({
       id: "pca_loadings",
       title: "PCA loadings",
-      status: "experimental",
-      warning: warnings(result.pca.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.pca.warnings),
       columns: ["Variable", "Component", "Loading", "Weight"],
       rows: result.pca.loadings.map((row) => [row.variable, row.component, formatNumber(row.loading, 6), formatNumber(row.weight, 6)]),
     });
   }
 
   if (result.regression) {
+    const regressionStatus = result.regression.regression_type === "ols" ? "validated" : "experimental";
+    const regressionWarning = regressionStatus === "validated"
+      ? scopeWarnings(result.regression.warnings)
+      : experimentalWarnings(result.regression.warnings);
     tables.push({
       id: "regression_coefficients",
       title: "Regression coefficients",
-      status: "experimental",
-      warning: warnings(result.regression.warnings),
+      status: regressionStatus,
+      warning: regressionWarning,
       columns: ["Term", "Estimate", "SE", "Statistic", "p", "Lower", "Upper", "Odds ratio"],
       rows: result.regression.coefficients.map((row) => [row.term, formatNumber(row.estimate, 6), formatNumber(row.standard_error, 6), formatNumber(row.statistic, 4), formatPValue(row.p_value_two_sided), formatNumber(row.confidence_interval_lower, 6), formatNumber(row.confidence_interval_upper, 6), row.odds_ratio == null ? "N/A" : formatNumber(row.odds_ratio, 6)]),
     });
     tables.push({
       id: "regression_fit",
       title: "Regression fit",
-      status: "experimental",
-      warning: warnings(result.regression.warnings),
+      status: regressionStatus,
+      warning: regressionWarning,
       columns: ["Metric", "Value"],
       rows: [
         ["Type", formatLabel(result.regression.regression_type)],
@@ -218,7 +223,7 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
         id: "process_effects",
         title: "PROCESS-style effects",
         status: "experimental",
-        warning: warnings(result.regression.process.warnings),
+        warning: experimentalWarnings(result.regression.process.warnings),
         columns: ["Effect", "Estimate", "Lower", "Upper"],
         rows: result.regression.process.effects.map((row) => [formatLabel(row.effect), formatNumber(row.estimate, 6), row.lower_percentile == null ? "N/A" : formatNumber(row.lower_percentile, 6), row.upper_percentile == null ? "N/A" : formatNumber(row.upper_percentile, 6)]),
       });
@@ -229,16 +234,16 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "nca_ceilings",
       title: "NCA ceiling effects",
-      status: "experimental",
-      warning: warnings(result.nca.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.nca.warnings),
       columns: ["Ceiling", "Effect size", "Permutation p"],
       rows: result.nca.ceilings.map((row) => [formatLabel(row.ceiling), formatNumber(row.effect_size, 6), formatPValue(row.permutation_p_value)]),
     });
     tables.push({
       id: "nca_bottlenecks",
       title: "NCA bottleneck table",
-      status: "experimental",
-      warning: warnings(result.nca.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.nca.warnings),
       columns: ["Outcome %", "Required X %"],
       rows: result.nca.bottlenecks.map((row) => [formatNumber(row.outcome_percent, 1), formatNumber(row.required_x_percent, 4)]),
     });
@@ -445,8 +450,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "ipma_constructs",
       title: "IPMA construct importance-performance",
-      status: "experimental",
-      warning: warnings(result.ipma.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.ipma.warnings),
       columns: ["Target", "Construct", "Importance", "Performance", "Score mean"],
       rows: result.ipma.constructs.map((row) => [
         row.target,
@@ -459,8 +464,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "ipma_indicators",
       title: "IPMA indicator performance",
-      status: "experimental",
-      warning: warnings(result.ipma.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.ipma.warnings),
       columns: ["Target", "Construct", "Indicator", "Construct importance", "Loading", "Performance", "Score mean"],
       rows: result.ipma.indicators.map((row) => [
         row.target,
@@ -600,12 +605,13 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
 
 export function runExportTables(run: AnalysisRun): ResultTable[] {
   if (!run.result) return [];
+  const runStatus = resultScopeStatus(run.result);
   return [
     {
       id: "run_provenance",
       title: "Run provenance",
-      status: run.result.method_version === "pls_pm_v1" ? "validated" : "experimental",
-      warning: run.result.method_version === "pls_pm_v1" ? null : SCOPE_WARNING,
+      status: runStatus,
+      warning: runStatus === "validated" ? null : EXPERIMENTAL_WARNING,
       columns: ["Field", "Value"],
       rows: [
         ["Run", run.name],
@@ -644,7 +650,38 @@ ${table.rows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>
 }
 
 function warnings(values: string[]) {
+  return experimentalWarnings(values);
+}
+
+function scopeWarnings(values: string[]) {
   return values.length ? `${SCOPE_WARNING} ${values.join(" ")}` : SCOPE_WARNING;
+}
+
+function experimentalWarnings(values: string[]) {
+  return values.length ? `${EXPERIMENTAL_WARNING} ${values.join(" ")}` : EXPERIMENTAL_WARNING;
+}
+
+function resultScopeStatus(result: PlsResult): ResultTable["status"] {
+  if (
+    result.cca ||
+    result.cta_pls ||
+    result.segmentation ||
+    result.mga ||
+    result.micom ||
+    result.mga_permutation ||
+    result.fimix ||
+    result.cbsem ||
+    result.endogeneity ||
+    result.nonlinear_effects ||
+    result.moderated_mediation ||
+    result.gsca ||
+    (result.regression && result.regression.regression_type !== "ols")
+  ) {
+    return "experimental";
+  }
+  if (result.method_version.startsWith("pls_pm_v1") || result.method_version === "pca_v1" || result.method_version === "plsc_v1" || result.method_version === "wpls_case_weighted_v1" || result.method_version === "plspredict_holdout_v1" || result.method_version === "ipma_v1" || result.method_version === "nca_v1") return "validated";
+  if (result.regression?.regression_type === "ols") return "validated";
+  return "experimental";
 }
 
 function formatNumber(value: number, digits: number) {

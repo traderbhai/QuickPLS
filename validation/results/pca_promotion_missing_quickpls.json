@@ -1,0 +1,220 @@
+{
+  "schema_version": 1,
+  "id": "31d990fb-c9ff-4f48-a83d-531a6e9774fc",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "00000000-0000-0000-0000-000000122259",
+    "dataset_fingerprint": "v2:0341c27af4c3a95cf1879c90f436d53239c58ae882be78e3ee5c42c2ccd3664d",
+    "method": "pca",
+    "method_version": "pca_v1",
+    "engine_version": "1.0.0",
+    "seed": 20260721,
+    "settings": {
+      "method": "pca",
+      "weighting_scheme": "path",
+      "tolerance": 1e-12,
+      "max_iterations": 10000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260721,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion",
+      "case_weight_column": null
+    },
+    "started_at": "2026-07-21T06:37:50.793029100Z",
+    "completed_at": "2026-07-21T06:37:50.793870200Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Standalone PCA v1 is validated for the documented QuickPLS v1.2 supported scope; unsupported shapes remain blocked."
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "PLS assessment and PLS resampling engines are not applicable to standalone v0.8 methods."
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "cbsem": null,
+      "cca": null,
+      "construct_scores": {},
+      "control_estimates": [],
+      "converged": true,
+      "cta_pls": null,
+      "effects": [],
+      "endogeneity": null,
+      "fimix": null,
+      "gsca": null,
+      "ipma": null,
+      "iterations": 0,
+      "mediation": {
+        "estimates": [],
+        "method_version": "pls_mediation_v1",
+        "tolerance": 1e-12,
+        "warnings": []
+      },
+      "method_version": "pca_v1",
+      "mga": null,
+      "mga_permutation": null,
+      "micom": null,
+      "moderated_mediation": null,
+      "moderation": {
+        "estimates": [],
+        "method_version": "pls_two_stage_moderation_v1",
+        "moderator_score_levels": [
+          -1.0,
+          0.0,
+          1.0
+        ],
+        "warnings": []
+      },
+      "nca": null,
+      "nonlinear_effects": null,
+      "omitted_observations": 1,
+      "outer_estimates": [],
+      "paths": [],
+      "pca": {
+        "component_rule": "fixed",
+        "components": [
+          {
+            "component": "PC1",
+            "cumulative_variance": 0.9803921703301821,
+            "eigenvalue": 2.9411765109905463,
+            "explained_variance": 0.9803921703301821
+          },
+          {
+            "component": "PC2",
+            "cumulative_variance": 0.9991456419421471,
+            "eigenvalue": 0.05626041483589472,
+            "explained_variance": 0.018753471611964907
+          }
+        ],
+        "loadings": [
+          {
+            "component": "PC1",
+            "loading": 0.9919689110359511,
+            "variable": "a",
+            "weight": 0.5784122961705079
+          },
+          {
+            "component": "PC1",
+            "loading": 0.9814084550182587,
+            "variable": "b",
+            "weight": 0.5722545451101224
+          },
+          {
+            "component": "PC1",
+            "loading": 0.9970013214371232,
+            "variable": "c",
+            "weight": 0.5813466704467889
+          },
+          {
+            "component": "PC2",
+            "loading": -0.12236951621689506,
+            "variable": "a",
+            "weight": -0.515907424624605
+          },
+          {
+            "component": "PC2",
+            "loading": 0.1918065604963858,
+            "variable": "b",
+            "weight": 0.8086526098248289
+          },
+          {
+            "component": "PC2",
+            "loading": -0.06705490054637363,
+            "variable": "c",
+            "weight": -0.2827021150269316
+          }
+        ],
+        "method_version": "pca_v1",
+        "observations": 5,
+        "retained_components": 2,
+        "scores": [
+          {
+            "component": "PC1",
+            "observation": 0,
+            "score": -1.9871319669814258
+          },
+          {
+            "component": "PC1",
+            "observation": 1,
+            "score": -1.3464584058444826
+          },
+          {
+            "component": "PC1",
+            "observation": 2,
+            "score": 0.136677091570581
+          },
+          {
+            "component": "PC1",
+            "observation": 3,
+            "score": 0.9373006606199559
+          },
+          {
+            "component": "PC1",
+            "observation": 4,
+            "score": 2.2596126206353717
+          },
+          {
+            "component": "PC2",
+            "observation": 0,
+            "score": 0.16680284833311815
+          },
+          {
+            "component": "PC2",
+            "observation": 1,
+            "score": 0.04590813497411747
+          },
+          {
+            "component": "PC2",
+            "observation": 2,
+            "score": -0.2940086283921123
+          },
+          {
+            "component": "PC2",
+            "observation": 3,
+            "score": -0.1888780660322465
+          },
+          {
+            "component": "PC2",
+            "observation": 4,
+            "score": 0.27017571111712374
+          }
+        ],
+        "variables": [
+          "a",
+          "b",
+          "c"
+        ],
+        "warnings": [
+          "Standalone PCA v1 is validated for the documented QuickPLS v1.2 supported scope; unsupported shapes remain blocked."
+        ]
+      },
+      "plsc": null,
+      "predict": null,
+      "r_squared": {},
+      "regression": null,
+      "segmentation": null,
+      "transforms": [],
+      "used_observations": 5,
+      "warnings": [
+        "Standalone PCA v1 is validated for the documented QuickPLS v1.2 supported scope; unsupported shapes remain blocked."
+      ],
+      "wpls": null
+    },
+    "assessment": {
+      "method_version": "assessment_not_applicable_v1",
+      "warnings": [
+        "PLS assessment is not applicable to standalone v0.8 methods."
+      ]
+    }
+  }
+}

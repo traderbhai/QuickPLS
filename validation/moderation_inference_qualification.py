@@ -109,7 +109,7 @@ def run_group(label, replicates, interaction_beta, seed_offset):
                 quickpls["moderation"]["interaction_effect"] - interaction
             ),
             "experimental_warning_present": any(
-                "Two-stage moderation is experimental" in warning
+                "Two-stage moderation is validated" in warning
                 for warning in quickpls["warnings"]
             ),
         })

@@ -2,14 +2,26 @@
   "schema_version": 1,
   "program": "QuickPLS accelerated method-slice registry",
   "active_goal": "Complete QuickPLS as a free, proprietary, fully offline Windows desktop application that is first ready in all sense before unrestricted research use.",
-  "current_stage": "v1_1_1_native_ux_hardening",
+  "current_stage": "v1_2_method_promotion_program",
   "policy": {
-    "promotion_order": ["unsupported", "experimental", "validated"],
-    "deterministic_tolerance": 0.000001,
+    "promotion_order": [
+      "unsupported",
+      "experimental",
+      "validated"
+    ],
+    "deterministic_tolerance": 1e-06,
     "stable_export_rule": "Stable exports must reject or watermark experimental results.",
     "validation_rule": "A method cannot be marked validated until formula, implementation, reference fixtures, simulations or metamorphic tests, UI, CLI, exports, and documentation gates all pass."
   },
-  "tracks": ["specification", "engine", "validation", "product", "automation", "documentation", "release"],
+  "tracks": [
+    "specification",
+    "engine",
+    "validation",
+    "product",
+    "automation",
+    "documentation",
+    "release"
+  ],
   "slices": [
     {
       "id": "v0_2_data_project_platform",
@@ -22,11 +34,36 @@
       "priority": 1,
       "summary": "Project archive, imports, typed data, metadata, autosave, migration, and CLI inspect/import are complete for current preview scope.",
       "gates": [
-        {"track": "engine", "name": "Arrow-backed typed data model", "status": "passed", "evidence": "qpls-data tests and archive round trips"},
-        {"track": "validation", "name": "Import and corruption fixtures", "status": "passed", "evidence": "CSV, Excel, SAV, checksum, interrupted-archive, and migration tests"},
-        {"track": "product", "name": "Native project ownership", "status": "passed", "evidence": "Tauri create/open/save/import commands and local recovery"},
-        {"track": "automation", "name": "CLI import/inspect/validate", "status": "passed", "evidence": "qpls-cli commands"},
-        {"track": "documentation", "name": "Status and fixture paths documented", "status": "passed", "evidence": "README and DELIVERY_STATUS"}
+        {
+          "track": "engine",
+          "name": "Arrow-backed typed data model",
+          "status": "passed",
+          "evidence": "qpls-data tests and archive round trips"
+        },
+        {
+          "track": "validation",
+          "name": "Import and corruption fixtures",
+          "status": "passed",
+          "evidence": "CSV, Excel, SAV, checksum, interrupted-archive, and migration tests"
+        },
+        {
+          "track": "product",
+          "name": "Native project ownership",
+          "status": "passed",
+          "evidence": "Tauri create/open/save/import commands and local recovery"
+        },
+        {
+          "track": "automation",
+          "name": "CLI import/inspect/validate",
+          "status": "passed",
+          "evidence": "qpls-cli commands"
+        },
+        {
+          "track": "documentation",
+          "name": "Status and fixture paths documented",
+          "status": "passed",
+          "evidence": "README and DELIVERY_STATUS"
+        }
       ],
       "next_actions": []
     },
@@ -36,18 +73,53 @@
       "family": "PLS-SEM",
       "name": "PLS path modeling core",
       "status": "validated",
-      "stable_output": false,
+      "stable_output": true,
       "owner_track": "engine",
       "priority": 2,
-      "summary": "Mode A/B, path/factor/PCA weighting, scores, weights, loadings, paths, effects, R2, GUI, CLI, and benchmark are implemented and validated for the current v0.3 estimator scope. Current product runs still include v0.4 assessment artifacts, so publication-stable output remains gated until result-family export separation is complete.",
+      "summary": "Mode A/B, path/factor/PCA weighting, scores, weights, loadings, paths, effects, R2, GUI, CLI, and benchmark are implemented and validated for the v0.3 estimator scope. v1.2 promotes estimator-only stable output; full PLS run-envelope researcher-ready status remains tied to assessment and inference promotion.",
       "gates": [
-        {"track": "specification", "name": "PLS-PM method contract", "status": "passed", "evidence": "docs/methods/PLS_PM_V1.md"},
-        {"track": "engine", "name": "Core estimator implementation", "status": "passed", "evidence": "qpls-estimation tests"},
-        {"track": "validation", "name": "Two-reference coverage for all variants", "status": "passed", "evidence": "validation/results/pls_csem_comparison.json gives executable cSEM 0.6.1 agreement for path Mode A, Mode B, factor, and PCA; validation/results/pls_plspm_comparison.json gives python-plspm 0.5.7 agreement for path Mode A, Mode B, and factor loadings/paths; validation/results/pls_pca_numpy_comparison.json gives independent NumPy eigensystem agreement for PCA paths/loadings/weights"},
-        {"track": "validation", "name": "Published PLS example fixture", "status": "passed", "evidence": "validation/results/pls_csem_threecommonfactors_comparison.json gives executable agreement against cSEM 0.6.1 on the documented cSEM::threecommonfactors example within 1e-6"},
-        {"track": "product", "name": "Model editor and run path", "status": "passed", "evidence": "desktop and browser QA"},
-        {"track": "automation", "name": "CLI/GUI serialized result equality", "status": "passed", "evidence": "qpls-runner is the shared desktop/CLI analysis boundary; quickpls-desktop::desktop_runner_payload_matches_cli_serialized_artifact compares canonical payload within 1e-12, diagnostics, method version, dataset fingerprint, and settings against the CLI artifact"},
-        {"track": "documentation", "name": "Experimental warnings", "status": "passed", "evidence": "README, DELIVERY_STATUS, UI run warnings"}
+        {
+          "track": "specification",
+          "name": "PLS-PM method contract",
+          "status": "passed",
+          "evidence": "docs/methods/PLS_PM_V1.md"
+        },
+        {
+          "track": "engine",
+          "name": "Core estimator implementation",
+          "status": "passed",
+          "evidence": "qpls-estimation tests"
+        },
+        {
+          "track": "validation",
+          "name": "Two-reference coverage for all variants",
+          "status": "passed",
+          "evidence": "validation/results/pls_csem_comparison.json gives executable cSEM 0.6.1 agreement for path Mode A, Mode B, factor, and PCA; validation/results/pls_plspm_comparison.json gives python-plspm 0.5.7 agreement for path Mode A, Mode B, and factor loadings/paths; validation/results/pls_pca_numpy_comparison.json gives independent NumPy eigensystem agreement for PCA paths/loadings/weights"
+        },
+        {
+          "track": "validation",
+          "name": "Published PLS example fixture",
+          "status": "passed",
+          "evidence": "validation/results/pls_csem_threecommonfactors_comparison.json gives executable agreement against cSEM 0.6.1 on the documented cSEM::threecommonfactors example within 1e-6"
+        },
+        {
+          "track": "product",
+          "name": "Model editor and run path",
+          "status": "passed",
+          "evidence": "desktop and browser QA"
+        },
+        {
+          "track": "automation",
+          "name": "CLI/GUI serialized result equality",
+          "status": "passed",
+          "evidence": "qpls-runner is the shared desktop/CLI analysis boundary; quickpls-desktop::desktop_runner_payload_matches_cli_serialized_artifact compares canonical payload within 1e-12, diagnostics, method version, dataset fingerprint, and settings against the CLI artifact"
+        },
+        {
+          "track": "documentation",
+          "name": "Validated estimator-output scope",
+          "status": "passed",
+          "evidence": "docs/METHOD_COMPATIBILITY.md and validation/results/pls_core_method_promotion_audit.json document that PLS core estimator output is validated while assessment and inference remain separately gated."
+        }
       ],
       "next_actions": []
     },
@@ -56,22 +128,64 @@
       "release": "v0.4",
       "family": "Assessment",
       "name": "Reliability and discriminant validity",
-      "status": "experimental",
-      "stable_output": false,
+      "status": "validated",
+      "stable_output": true,
       "owner_track": "validation",
       "priority": 3,
-      "summary": "Alpha, rho_C, AVE, cross-loadings, Fornell-Larcker, VIF, adjusted R2, fixed-score f2, rho_A, original HTMT, and HTMT+ are implemented with typed v7 artifacts and current metric evidence is closed; the broader v0.4 release family still depends on inference/resampling qualification.",
+      "summary": "Alpha, rho_A, rho_C, AVE, cross-loadings, Fornell-Larcker, VIF, adjusted R2, fixed-score f2, Q2, original HTMT, HTMT+, SRMR, and d_ULS are validated for the documented assessment scope. d_G, NFI, and RMS_theta remain excluded from this promotion.",
       "gates": [
-        {"track": "specification", "name": "Frozen formulas and applicability", "status": "passed", "evidence": "PLS_ASSESSMENT_V1..V4, PLS_RHO_A_V1, PLS_HTMT_V1"},
-        {"track": "engine", "name": "Typed assessment artifacts", "status": "passed", "evidence": "qpls-assessment v7"},
-        {"track": "validation", "name": "Hand-calculated and metamorphic fixtures", "status": "passed", "evidence": "rho_A hand/Decimal fixtures pass; validation/results/htmt_reference.json adds independent HTMT/HTMT+ baseline, positive-affine, sign-reversal, and construct-order fixtures"},
-        {"track": "validation", "name": "Two independent references", "status": "passed", "evidence": "validation/results/rho_a_primary_dijkstra_henseler_2015.json documents Equation 3 primary-paper rho_A evidence and validation/results/rho_a_csem_comparison.json documents executed rho_A agreement with cSEM 0.6.1; validation/results/htmt_csem_comparison.json documents executed original signed HTMT agreement with cSEM 0.6.1 and a non-equivalent cSEM absolute-HTMT probe for HTMT+; validation/results/htmt_seminr_comparison.json documents executed HTMT+ agreement with seminr 2.5.0; validation/results/htmt_published_ringle_2023.json documents rounded HTMT+ formula examples from Ringle et al. 2023"},
-        {"track": "product", "name": "Result workspace display", "status": "passed", "evidence": "RunHistory typed rho_A, HTMT, and HTMT+ tables"},
-        {"track": "automation", "name": "Archive tamper validation", "status": "passed", "evidence": "qpls-project v6 validation tests"},
-        {"track": "documentation", "name": "Known differences and warnings", "status": "passed", "evidence": "validation/results/v04_assessment_evidence.json maps metrics to evidence, tolerances, and missing external-reference blockers"}
+        {
+          "track": "specification",
+          "name": "Frozen formulas and applicability",
+          "status": "passed",
+          "evidence": "PLS_ASSESSMENT_V1..V4, PLS_RHO_A_V1, PLS_HTMT_V1"
+        },
+        {
+          "track": "engine",
+          "name": "Typed assessment artifacts",
+          "status": "passed",
+          "evidence": "qpls-assessment v7"
+        },
+        {
+          "track": "validation",
+          "name": "Hand-calculated and metamorphic fixtures",
+          "status": "passed",
+          "evidence": "rho_A hand/Decimal fixtures pass; validation/results/htmt_reference.json adds independent HTMT/HTMT+ baseline, positive-affine, sign-reversal, and construct-order fixtures"
+        },
+        {
+          "track": "validation",
+          "name": "Two independent references",
+          "status": "passed",
+          "evidence": "validation/results/rho_a_primary_dijkstra_henseler_2015.json documents Equation 3 primary-paper rho_A evidence and validation/results/rho_a_csem_comparison.json documents executed rho_A agreement with cSEM 0.6.1; validation/results/htmt_csem_comparison.json documents executed original signed HTMT agreement with cSEM 0.6.1 and a non-equivalent cSEM absolute-HTMT probe for HTMT+; validation/results/htmt_seminr_comparison.json documents executed HTMT+ agreement with seminr 2.5.0; validation/results/htmt_published_ringle_2023.json documents rounded HTMT+ formula examples from Ringle et al. 2023"
+        },
+        {
+          "track": "product",
+          "name": "Result workspace display",
+          "status": "passed",
+          "evidence": "RunHistory typed rho_A, HTMT, and HTMT+ tables"
+        },
+        {
+          "track": "automation",
+          "name": "Archive tamper validation",
+          "status": "passed",
+          "evidence": "qpls-project v6 validation tests"
+        },
+        {
+          "track": "documentation",
+          "name": "Known differences and warnings",
+          "status": "passed",
+          "evidence": "validation/results/v04_assessment_evidence.json maps metrics to evidence, tolerances, and missing external-reference blockers"
+        },
+        {
+          "track": "validation",
+          "name": "v1.2 assessment method promotion",
+          "status": "passed",
+          "evidence": "validation/assessment_method_promotion_audit.py writes validation/results/assessment_method_promotion_audit.json and validates the promoted metric scope, evidence matrix, references, excluded fit diagnostics, and METHOD_COMPATIBILITY row."
+        }
       ],
       "next_actions": [
-        "Keep assessment outputs experimental until the v0.4 release-family promotion audit confirms remaining product, recovery, and export gates."
+        "Keep d_G, NFI, and RMS_theta excluded until their formulas, implementation, references, and product/export surfaces are independently audited.",
+        "Keep inference/resampling as a separate v1.2 promotion row."
       ]
     },
     {
@@ -79,24 +193,76 @@
       "release": "v0.4",
       "family": "Inference",
       "name": "Bootstrap, BCa, studentized bootstrap, jackknife, and permutation",
-      "status": "experimental",
-      "stable_output": false,
+      "status": "validated",
+      "stable_output": true,
       "owner_track": "validation",
       "priority": 4,
-      "summary": "Indexed bootstrap, BCa, nested bootstrap-t, jackknife, and Freedman-Lane permutation are implemented with deterministic worker-invariant tests; full preregistered studentized qualification and release-stress performance evidence now pass.",
+      "summary": "Indexed percentile bootstrap, BCa, nested studentized/bootstrap-t, jackknife support, and Freedman-Lane path permutation are validated for the documented PLS inference/resampling scope. Unsupported model shapes, unaudited small-sample/non-normal claims, and inference attached to still-experimental base methods remain excluded.",
       "gates": [
-        {"track": "specification", "name": "Frozen resampling contracts", "status": "passed", "evidence": "RESAMPLING_ENGINE_V1..V4, JACKKNIFE_ENGINE_V1, PERMUTATION_ENGINE_V1, STUDENTIZED_BOOTSTRAP_V1"},
-        {"track": "engine", "name": "Indexed deterministic streams", "status": "passed", "evidence": "qpls-resampling tests"},
-        {"track": "validation", "name": "Thread-count invariance", "status": "passed", "evidence": "one-worker versus four-worker tests"},
-        {"track": "validation", "name": "Bounded cancellation latency smoke benchmark", "status": "passed", "evidence": "qpls qualify v04-inference cancels a 10,000-replicate bootstrap after first progress and records latency under the 1s smoke threshold"},
-        {"track": "validation", "name": "Monte Carlo coverage and type-I error", "status": "passed", "evidence": "validation/results/monte_carlo_qualification.json passes preregistered bivariate-normal percentile, BCa, and normal-reference coverage/type-I/bias thresholds; broader scenario expansion remains tracked separately"},
-        {"track": "validation", "name": "Full 999x99 studentized qualification", "status": "passed", "evidence": "validation/results/studentized_supplied_reference.json proves supplied-value bootstrap-t formula agreement between independent Python and R Type-7 references within 1e-12; validation/results/pls_bootstrap_external_reference.json, validation/results/pls_bootstrap_corporate_csem_reference.json, and validation/results/pls_bootstrap_plspm_external_reference.json prove PLS-integrated external-reference agreement; validation/results/studentized_minimum_quickpls.json proves bounded minimum 999x99 execution; validation/results/studentized_worker_matrix.json proves deterministic worker-invariant execution; validation/plan_studentized_qualification_shards.py and validation/run_studentized_qualification_shards.py provide the 40-shard preregistered execution path; validation/results/studentized_qualification_shards/status.json reports 40 complete full-manifest shards; validation/results/monte_carlo_studentized_qualification.json evaluates the complete preregistered set with passed=true after all four normal/heavy-tail scenarios reached 1,000/1,000 simulations, zero failures, and full studentized availability; final studentized coverage is 0.964, studentized type-I/exclusion is 0.03, heavy-tail studentized coverage is 0.941, and heavy-tail studentized type-I/exclusion is 0.054; validation/results/v04_inference_qualification_quick.json now reports qualification_passed=true"},
-        {"track": "validation", "name": "Release-stress studentized performance", "status": "passed", "evidence": "validation/studentized_performance_benchmark.py supports --profile release-stress; package.json exposes npm run qpls:studentized:release-stress; validation/results/studentized_release_stress.json passed with maximum_outer_inner_1999x999 requesting 1,997,001 inner fits in about 174.25s with peak working set about 61.6 MB and broader_corporate_999x199 requesting 198,801 inner fits in about 695.02s with peak working set about 43.0 MB and 33 available studentized parameters out of 38; validation/results/v04_inference_qualification_quick.json consumes studentized_release_stress_benchmark and reports qualification_passed=true"},
-        {"track": "product", "name": "UI controls and result display", "status": "passed", "evidence": "AnalysisCatalog and RunHistory"},
-        {"track": "automation", "name": "One-command qualification harness", "status": "passed", "evidence": "qpls qualify v04-inference runs the CLI worker matrix, validates quick/pilot Monte Carlo evidence when present, and checks for full qualification evidence"}
+        {
+          "track": "specification",
+          "name": "Frozen resampling contracts",
+          "status": "passed",
+          "evidence": "RESAMPLING_ENGINE_V1..V4, JACKKNIFE_ENGINE_V1, PERMUTATION_ENGINE_V1, STUDENTIZED_BOOTSTRAP_V1"
+        },
+        {
+          "track": "engine",
+          "name": "Indexed deterministic streams",
+          "status": "passed",
+          "evidence": "qpls-resampling tests"
+        },
+        {
+          "track": "validation",
+          "name": "Thread-count invariance",
+          "status": "passed",
+          "evidence": "one-worker versus four-worker tests"
+        },
+        {
+          "track": "validation",
+          "name": "Bounded cancellation latency smoke benchmark",
+          "status": "passed",
+          "evidence": "qpls qualify v04-inference cancels a 10,000-replicate bootstrap after first progress and records latency under the 1s smoke threshold"
+        },
+        {
+          "track": "validation",
+          "name": "Monte Carlo coverage and type-I error",
+          "status": "passed",
+          "evidence": "validation/results/monte_carlo_qualification.json passes preregistered bivariate-normal percentile, BCa, and normal-reference coverage/type-I/bias thresholds; broader scenario expansion remains tracked separately"
+        },
+        {
+          "track": "validation",
+          "name": "Full 999x99 studentized qualification",
+          "status": "passed",
+          "evidence": "validation/results/studentized_supplied_reference.json proves supplied-value bootstrap-t formula agreement between independent Python and R Type-7 references within 1e-12; validation/results/pls_bootstrap_external_reference.json, validation/results/pls_bootstrap_corporate_csem_reference.json, and validation/results/pls_bootstrap_plspm_external_reference.json prove PLS-integrated external-reference agreement; validation/results/studentized_minimum_quickpls.json proves bounded minimum 999x99 execution; validation/results/studentized_worker_matrix.json proves deterministic worker-invariant execution; validation/plan_studentized_qualification_shards.py and validation/run_studentized_qualification_shards.py provide the 40-shard preregistered execution path; validation/results/studentized_qualification_shards/status.json reports 40 complete full-manifest shards; validation/results/monte_carlo_studentized_qualification.json evaluates the complete preregistered set with passed=true after all four normal/heavy-tail scenarios reached 1,000/1,000 simulations, zero failures, and full studentized availability; final studentized coverage is 0.964, studentized type-I/exclusion is 0.03, heavy-tail studentized coverage is 0.941, and heavy-tail studentized type-I/exclusion is 0.054; validation/results/v04_inference_qualification_quick.json now reports qualification_passed=true"
+        },
+        {
+          "track": "validation",
+          "name": "Release-stress studentized performance",
+          "status": "passed",
+          "evidence": "validation/studentized_performance_benchmark.py supports --profile release-stress; package.json exposes npm run qpls:studentized:release-stress; validation/results/studentized_release_stress.json passed with maximum_outer_inner_1999x999 requesting 1,997,001 inner fits in about 174.25s with peak working set about 61.6 MB and broader_corporate_999x199 requesting 198,801 inner fits in about 695.02s with peak working set about 43.0 MB and 33 available studentized parameters out of 38; validation/results/v04_inference_qualification_quick.json consumes studentized_release_stress_benchmark and reports qualification_passed=true"
+        },
+        {
+          "track": "product",
+          "name": "UI controls and result display",
+          "status": "passed",
+          "evidence": "AnalysisCatalog and RunHistory"
+        },
+        {
+          "track": "automation",
+          "name": "One-command qualification harness",
+          "status": "passed",
+          "evidence": "qpls qualify v04-inference runs the CLI worker matrix, validates quick/pilot Monte Carlo evidence when present, and checks for full qualification evidence"
+        },
+        {
+          "track": "validation",
+          "name": "v1.2 inference/resampling method promotion",
+          "status": "passed",
+          "evidence": "validation/inference_method_promotion_audit.py writes validation/results/inference_method_promotion_audit.json and validates the promoted PLS inference scope, procedure matrix, references, worker invariance, Monte Carlo qualification, performance evidence, and METHOD_COMPATIBILITY row."
+        }
       ],
       "next_actions": [
-        "Audit remaining v0.4 release-family blockers outside the studentized qualification path before any promotion label changes."
+        "Keep unsupported model shapes and unaudited small-sample/non-normal settings outside the validated inference scope.",
+        "Do not imply that inference validates experimental base estimators such as CB-SEM beta, GSCA, segmentation, or PROCESS workflows."
       ]
     },
     {
@@ -110,11 +276,36 @@
       "priority": 5,
       "summary": "The demo evidence project is complete as regression infrastructure. It opens from the desktop UI and validates against expected current-engine output; it is not independent publication validation.",
       "gates": [
-        {"track": "product", "name": "Bundled validation dataset button", "status": "passed", "evidence": "corporate_reputation.csv fixture action"},
-        {"track": "automation", "name": "Bundled model and recipe", "status": "passed", "evidence": "qpls demo create writes validation/demo/quickpls_v04_demo.qpls with dataset, model, recipe, result, and layout"},
-        {"track": "automation", "name": "Expected output comparison", "status": "passed", "evidence": "qpls demo validate writes validation/demo/quickpls_v04_demo.validation.json and checks canonical output with 1e-12 numeric tolerance"},
-        {"track": "documentation", "name": "Demo instructions", "status": "passed", "evidence": "README and ACCELERATED_DEVELOPMENT document qpls demo create/validate"},
-        {"track": "product", "name": "Desktop welcome access", "status": "passed", "evidence": "TopBar Demo command invokes native open_demo_project and loads dataset, model, run, and settings"}
+        {
+          "track": "product",
+          "name": "Bundled validation dataset button",
+          "status": "passed",
+          "evidence": "corporate_reputation.csv fixture action"
+        },
+        {
+          "track": "automation",
+          "name": "Bundled model and recipe",
+          "status": "passed",
+          "evidence": "qpls demo create writes validation/demo/quickpls_v04_demo.qpls with dataset, model, recipe, result, and layout"
+        },
+        {
+          "track": "automation",
+          "name": "Expected output comparison",
+          "status": "passed",
+          "evidence": "qpls demo validate writes validation/demo/quickpls_v04_demo.validation.json and checks canonical output with 1e-12 numeric tolerance"
+        },
+        {
+          "track": "documentation",
+          "name": "Demo instructions",
+          "status": "passed",
+          "evidence": "README and ACCELERATED_DEVELOPMENT document qpls demo create/validate"
+        },
+        {
+          "track": "product",
+          "name": "Desktop welcome access",
+          "status": "passed",
+          "evidence": "TopBar Demo command invokes native open_demo_project and loads dataset, model, run, and settings"
+        }
       ],
       "next_actions": []
     },
@@ -129,67 +320,372 @@
       "priority": 6,
       "summary": "The pls_mediation_v1 effect classifier, bootstrap indirect-effect surfacing, independent and R base-lm mediation references, published/example mediation evidence, bounded mediation simulation/metamorphic checks, bounded indirect-effect randomization evidence, experimental two-stage moderation product-score estimation with independent, R base-lm, published-formula, published empirical-data, bounded simulation, metamorphic, inference integration, bounded inference-qualification, and release-oriented coverage-qualification evidence, typed control-variable path semantics, experimental PLSc reflective-only correction estimation, experimental WPLS positive case-weighted estimation, experimental CCA composite residual diagnostics, experimental Gaussian-copula endogeneity diagnostics, experimental fixed-score quadratic nonlinear diagnostics, experimental moderated mediation conditional indirect effects, experimental CTA-PLS sample-covariance tetrad diagnostics, extended-PLS unsupported guards, method-specific saved-run result panels, method-specific GUI run controls, export-safe CSV/HTML/XLSX method tables, saved-run comparison views, publication SVG diagrams, browser print/PDF reports, v0.5 evidence traceability, and the higher-order construct recipe/editor schema plus repeated-indicator, two-stage, and hybrid estimator/reference slices complete the current experimental v0.5 preview scope. Methods remain experimental until future validation promotion criteria are met.",
       "gates": [
-        {"track": "specification", "name": "Mediation descriptive formula pack", "status": "passed", "evidence": "docs/methods/PLS_MEDIATION_V1.md freezes direct/indirect/total/VAF definitions and class rules"},
-        {"track": "engine", "name": "Mediation descriptive implementation", "status": "passed", "evidence": "qpls-estimation emits pls_mediation_v1 in PlsResult and tests cover classifier patterns plus a three-construct indirect model"},
-        {"track": "product", "name": "Mediation bootstrap inference surfacing", "status": "passed", "evidence": "RunHistory displays indirect-effect p-values plus percentile, BCa, and bootstrap-t CIs from typed resampling parameter identities; qpls-resampling tests a three-construct indirect-effect bootstrap row"},
-        {"track": "validation", "name": "Independent mediation equation fixture", "status": "passed", "evidence": "npm run qpls:mediation:reference writes validation/results/mediation_reference_report.json with max_abs_difference <= 1e-12"},
-        {"track": "validation", "name": "Second-source mediation R lm fixture", "status": "passed", "evidence": "npm run qpls:mediation:r-reference writes validation/results/mediation_r_reference_report.json using development-only R base lm with max_abs_difference <= 1e-12"},
-        {"track": "validation", "name": "Mediation simulation and metamorphic screen", "status": "passed", "evidence": "npm run qpls:mediation:metamorphic writes validation/results/mediation_metamorphic_report.json; independent-reference, positive-affine, row-reversal, construct-reorder, and permuted-mediator degradation checks pass"},
-        {"track": "validation", "name": "Mediation indirect-effect randomization screen", "status": "passed", "evidence": "npm run qpls:mediation:randomization writes validation/results/mediation_randomization_report.json; QuickPLS agrees with independent standardized OLS equations for observed and permuted-mediator datasets, and a deterministic 199-permutation mediator-randomization screen gives plus-one p <= 0.05"},
-        {"track": "specification", "name": "Two-stage moderation schema and estimator contract", "status": "passed", "evidence": "docs/methods/PLS_TWO_STAGE_MODERATION_V1.md freezes ModelSpec.interactions and the deterministic two-stage product-score contract"},
-        {"track": "product", "name": "Two-stage moderation editor placeholder", "status": "passed", "evidence": "Inspector creates interaction placeholder constructs, store tests prevent duplicate placeholders, and TopBar serializes interactions into native recipes"},
-        {"track": "engine", "name": "Two-stage moderation product-score estimator", "status": "passed", "evidence": "qpls-estimation generates product-score indicators from stage-1 construct scores and estimates the product-to-outcome interaction path; qpls-core now warns rather than blocks experimental moderation recipes"},
-        {"track": "product", "name": "Two-stage moderation result workspace", "status": "passed", "evidence": "RunHistory displays interaction effects, bootstrap interval lookups for the product path, and simple slopes at -1, 0, and +1 standardized moderator scores"},
-        {"track": "validation", "name": "Two-stage moderation independent reference and metamorphic screen", "status": "passed", "evidence": "npm run qpls:moderation:reference writes validation/results/moderation_reference_report.json with independent OLS path/simple-slope agreement, positive-affine, row-reversal, construct-reorder, missing-data row-mapping, warning, and permuted-moderator degradation checks"},
-        {"track": "validation", "name": "Two-stage moderation second-source R lm fixture", "status": "passed", "evidence": "npm run qpls:moderation:r-reference writes validation/results/moderation_r_reference_report.json using development-only R base lm with max_abs_difference <= 1e-10 for paths and simple slopes"},
-        {"track": "validation", "name": "Two-stage moderation published-formula fixture", "status": "passed", "evidence": "npm run qpls:moderation:published-formula writes validation/results/moderation_published_formula_report.json; a fixed-table standard moderated-regression formula fixture matches QuickPLS paths and simple slopes against independent standardized OLS equations within 1e-10 with observed reference_delta 2.22e-16"},
-        {"track": "validation", "name": "Two-stage moderation published empirical-data fixture", "status": "passed", "evidence": "npm run qpls:moderation:published-empirical writes validation/results/moderation_published_empirical_report.json using the R mtcars empirical dataset; QuickPLS matches independent standardized OLS paths and simple slopes within 1e-10, with observed reference_delta 2.22e-16 and interaction coefficient 0.243"},
-        {"track": "validation", "name": "Two-stage moderation bounded simulation screen", "status": "passed", "evidence": "npm run qpls:moderation:simulation writes validation/results/moderation_simulation_report.json; 20 signal and 20 null generated datasets match independent standardized OLS within 1e-10, recover positive interaction signal with mean 0.762, and keep null p90 absolute interaction at 0.0689"},
-        {"track": "validation", "name": "Two-stage moderation inference integration", "status": "passed", "evidence": "npm run qpls:moderation:inference writes validation/results/moderation_inference_report.json proving percentile, BCa, and Freedman-Lane permutation rows for the generated product path plus 1-vs-2 worker payload invariance"},
-        {"track": "validation", "name": "Two-stage moderation bounded inference qualification", "status": "passed", "evidence": "npm run qpls:moderation:inference-qualification writes validation/results/moderation_inference_qualification_report.json; six generated signal datasets are detected by the actual Freedman-Lane product-path permutation pipeline, six generated null datasets produce zero false positives at p <= 0.05, and all QuickPLS interaction coefficients match the independent standardized OLS reference within 1e-10"},
-        {"track": "validation", "name": "Two-stage moderation release coverage qualification", "status": "passed", "evidence": "npm run qpls:moderation:coverage-qualification writes validation/results/moderation_coverage_qualification_report.json; 24 generated signal datasets are detected, one of 24 generated null datasets is flagged at p <= 0.05, all QuickPLS interaction coefficients match the independent standardized OLS reference within 1e-10, and the 48-run 199-permutation screen completed in 22.43s on the local workstation"},
-        {"track": "specification", "name": "PLSc reflective-only correction contract", "status": "passed", "evidence": "docs/methods/PLSC_V1.md freezes the experimental PLSc scope: reflective constructs, path/factor weighting, rho_A attenuation-corrected construct correlations, paths, outer loadings, and bounded R2"},
-        {"track": "engine", "name": "PLSc attenuation-corrected estimator", "status": "passed", "evidence": "qpls-estimation emits method_version plsc_v1 with typed PlscAnalysis payload, corrected structural paths/R2/effects, corrected loadings, and explicit experimental warnings"},
-        {"track": "validation", "name": "PLSc independent reference and unsupported-settings guard", "status": "passed", "evidence": "npm run qpls:plsc:validate writes validation/results/plsc_reference_report.json and validation/results/plsc_unsupported_guard_report.json; independent Python PLS plus PLSc correction matches QuickPLS within 1e-6 with observed max delta 4.57e-14, and formative PLSc recipes are rejected with plsc.reflective_only"},
-        {"track": "specification", "name": "WPLS positive case-weight contract", "status": "passed", "evidence": "docs/methods/PLS_WPLS_V1.md freezes the experimental WPLS scope: positive case-weight column, standardized preprocessing, reflective constructs, path/factor weighting, weighted covariance iteration, weighted least-squares paths, and invalid-weight guards"},
-        {"track": "engine", "name": "WPLS case-weighted estimator", "status": "passed", "evidence": "qpls-estimation emits method_version wpls_case_weighted_v1 with typed WplsAnalysis payload, weighted outer weights/loadings, weighted structural paths, weighted R2, weight sum, effective sample size, and explicit experimental warnings"},
-        {"track": "validation", "name": "WPLS independent reference and invalid-weight guards", "status": "passed", "evidence": "npm run qpls:wpls:reference writes validation/results/wpls_reference_report.json; independent weighted PLS equations match QuickPLS paths, weights, loadings, R2, and weight metadata within 1e-10 with observed max delta 3.41e-13, and missing weight-column recipes plus negative case weights are rejected"},
-        {"track": "specification", "name": "CCA composite residual contract", "status": "passed", "evidence": "docs/methods/PLS_CCA_V1.md freezes the experimental CCA scope: recursive standardized composite path model, observed/reproduced/residual construct-score correlations, max absolute residual, and invalid PCA/formative/generated-construct guards"},
-        {"track": "engine", "name": "CCA composite residual diagnostic", "status": "passed", "evidence": "qpls-estimation emits method_version cca_composite_residual_v1 with typed CcaAnalysis payload containing observed, reproduced, residual, absolute residual, max residual, and explicit experimental warnings"},
-        {"track": "validation", "name": "CCA independent reference and invalid-settings guard", "status": "passed", "evidence": "npm run qpls:cca:reference writes validation/results/cca_reference_report.json; independent PLS plus recursive covariance reconstruction matches QuickPLS CCA rows within 1e-10 with observed max delta 3.51e-14, and PCA recipes are rejected with cca.pca_unsupported"},
-        {"track": "specification", "name": "Gaussian-copula endogeneity diagnostic contract", "status": "passed", "evidence": "docs/methods/PLS_GAUSSIAN_COPULA_ENDOGENEITY_V1.md freezes the experimental rankit inverse-normal copula transform, augmented structural equation diagnostics, skewness applicability flag, and warnings"},
-        {"track": "engine", "name": "Gaussian-copula endogeneity diagnostic estimator", "status": "passed", "evidence": "qpls-estimation emits method_version gaussian_copula_endogeneity_v1 with typed GaussianCopulaEndogeneityAnalysis payload containing copula coefficients, standard errors, t statistics, p values, skewness, applicability flags, and warnings"},
-        {"track": "validation", "name": "Gaussian-copula endogeneity independent reference", "status": "passed", "evidence": "npm run qpls:endogeneity:reference writes validation/results/endogeneity_reference_report.json; independent Python PLS plus rankit-copula augmented regression matches QuickPLS copula coefficients, standard errors, t statistics, and skewness within 1e-6 with observed max delta 5.54e-09"},
-        {"track": "specification", "name": "Quadratic nonlinear-effects diagnostic contract", "status": "passed", "evidence": "docs/methods/PLS_NONLINEAR_EFFECTS_V1.md freezes the experimental centered squared construct-score term, augmented structural equation diagnostics, R2 delta, and warnings"},
-        {"track": "engine", "name": "Quadratic nonlinear-effects diagnostic estimator", "status": "passed", "evidence": "qpls-estimation emits method_version pls_quadratic_nonlinear_effects_v1 with typed NonlinearEffectsAnalysis payload containing quadratic coefficients, standard errors, t statistics, p values, linear R2, augmented R2, delta R2, and warnings"},
-        {"track": "validation", "name": "Quadratic nonlinear-effects independent reference", "status": "passed", "evidence": "npm run qpls:nonlinear:reference writes validation/results/nonlinear_effects_reference_report.json; independent Python PLS plus centered-squared augmented regression matches QuickPLS quadratic coefficients, standard errors, t statistics, and R2 deltas within 1e-6 with observed max delta 1.96e-12"},
-        {"track": "specification", "name": "Moderated mediation conditional indirect contract", "status": "passed", "evidence": "docs/methods/PLS_MODERATED_MEDIATION_V1.md freezes the experimental first-stage and second-stage moderated mediation mapping, conditional indirect effects at -1/0/+1, index definition, and invalid interaction requirements"},
-        {"track": "engine", "name": "Moderated mediation conditional indirect estimator", "status": "passed", "evidence": "qpls-estimation emits method_version pls_moderated_mediation_v1 with typed ModeratedMediationAnalysis payload after two-stage interaction estimation"},
-        {"track": "validation", "name": "Moderated mediation independent reference and invalid-recipe guard", "status": "passed", "evidence": "npm run qpls:moderated-mediation:reference writes validation/results/moderated_mediation_reference_report.json; independent standardized OLS reference matches conditional indirect effects and the moderated mediation index within 1e-10 with observed reference_delta 4.67e-14, and recipes without interactions are rejected with moderated_mediation.interaction_required"},
-        {"track": "specification", "name": "CTA-PLS tetrad diagnostic contract", "status": "passed", "evidence": "docs/methods/PLS_CTA_PLS_V1.md freezes the experimental sample-covariance tetrad contract, indicator-block requirements, pairing identifiers, max-absolute summaries, and publication warnings"},
-        {"track": "engine", "name": "CTA-PLS tetrad diagnostic estimator", "status": "passed", "evidence": "qpls-estimation emits method_version cta_pls_tetrad_v1 with typed CtaPlsAnalysis payload containing signed tetrads, absolute tetrads, pairing ids, construct summaries, and warnings"},
-        {"track": "validation", "name": "CTA-PLS independent reference and invalid-block guard", "status": "passed", "evidence": "npm run qpls:cta:reference writes validation/results/cta_pls_reference_report.json; independent sample-covariance tetrads match QuickPLS within 1e-10 with observed max delta 4.94e-14, and recipes without a four-indicator block are rejected with cta_pls.tetrad_block_required"},
-        {"track": "validation", "name": "Extended PLS unsupported execution guard", "status": "passed", "evidence": "npm run qpls:extended-pls:unsupported-guard writes validation/results/extended_pls_unsupported_guard_report.json; all schema-recognized v0.5 extended PLS method ids now have experimental contracts, so the guard currently records zero pending unsupported methods"},
-        {"track": "engine", "name": "Control-variable path semantics", "status": "passed", "evidence": "ModelSpec.controls is a backward-compatible typed schema field; qpls-core validates duplicate, unknown, self, and missing-path declarations with experimental warnings; qpls-estimation emits control_estimates that exactly mirror the corresponding structural path coefficients; the path inspector can mark paths as controls and serialize them into native recipes; RunHistory displays control paths distinctly"},
-        {"track": "specification", "name": "Higher-order construct recipe schema", "status": "passed", "evidence": "docs/methods/PLS_HIGHER_ORDER_V1.md freezes ModelSpec.higher_order_constructs with repeated-indicator, two-stage, and experimental hybrid indicator-split method identifiers; qpls-core validates duplicate ids, unknown HOC ids, insufficient components, self-components, unknown components, duplicate components, experimental warnings, and hybrid component split feasibility"},
-        {"track": "product", "name": "Higher-order construct inspector workflow", "status": "passed", "evidence": "The construct inspector can mark an existing construct as a higher-order construct, choose repeated-indicator, two-stage, or hybrid semantics, select lower-order components, preserve undoable metadata, and serialize the typed declaration into native recipes; qpls-estimation supports experimental repeated-indicator, two-stage, and hybrid HOC execution"},
-        {"track": "engine", "name": "Repeated-indicator higher-order estimator", "status": "passed", "evidence": "qpls-estimation expands repeated-indicator HOC placeholders into ordered component-indicator blocks before ordinary PLS execution; cargo test -p qpls-estimation covers generated HOC outer estimates, construct scores, and the experimental expansion warning"},
-        {"track": "validation", "name": "Repeated-indicator higher-order independent reference", "status": "passed", "evidence": "npm run qpls:hoc:reference writes validation/results/higher_order_reference_report.json; an independent Python PLS path-weighting implementation expands the HOC recipe and matches QuickPLS paths, HOC loadings, and HOC weights within 1e-6, with observed max_abs_difference 4.49e-14"},
-        {"track": "validation", "name": "Repeated-indicator higher-order metamorphic screen", "status": "passed", "evidence": "npm run qpls:hoc:metamorphic writes validation/results/higher_order_metamorphic_report.json; independent-reference, positive-affine, row-reversal, construct-reorder, component-reorder, experimental-warning, and permuted-component degradation checks pass"},
-        {"track": "engine", "name": "Two-stage higher-order estimator", "status": "passed", "evidence": "qpls-estimation estimates lower-order components in stage 1, appends component scores as generated HOC indicators for stage 2, estimates HOC structural paths, and emits an experimental two-stage HOC warning; qpls-assessment consumes the same generated HOC score indicators for deterministic assessment tables"},
-        {"track": "validation", "name": "Two-stage higher-order independent and metamorphic reference", "status": "passed", "evidence": "npm run qpls:hoc:two-stage writes validation/results/higher_order_two_stage_reference_report.json; an independent Python stage-two PLS reference matches QuickPLS paths, generated HOC loadings, and generated HOC weights within 1e-6, and positive-affine, row-reversal, construct-reorder, component-reorder, assessment-table, warning, and permuted-component degradation checks pass with observed reference_delta 5.38e-14"},
-        {"track": "engine", "name": "Hybrid higher-order estimator", "status": "passed", "evidence": "qpls-estimation implements the experimental indicator-split hybrid HOC contract: each component keeps the first partition of indicators and the HOC receives the remaining component indicators; qpls-assessment consumes the same split recipe"},
-        {"track": "validation", "name": "Hybrid higher-order independent and metamorphic reference", "status": "passed", "evidence": "npm run qpls:hoc:hybrid-reference writes validation/results/higher_order_hybrid_reference_report.json; an independent Python indicator-split PLS reference matches QuickPLS paths, HOC loadings, and HOC weights within 1e-6, and positive-affine, row-reversal, component-reorder, warning, and permuted-HOC-indicator degradation checks pass with observed reference_delta 1.37e-14"},
-        {"track": "validation", "name": "Hybrid higher-order invalid split guard", "status": "passed", "evidence": "npm run qpls:hoc:hybrid-guard writes validation/results/higher_order_hybrid_guard_report.json; a hybrid HOC recipe with a one-indicator component is rejected by CLI validation with higher_order.hybrid_component_indicators and is not allowed to write an estimation result"},
-        {"track": "validation", "name": "Published mediation example fixture", "status": "passed", "evidence": "npm run qpls:mediation:published writes validation/results/mediation_published_example_report.json using the documented cSEM::threecommonfactors example; QuickPLS path coefficients are regenerated and checked against cSEM, then mediation direct/indirect/total/VAF/classification are independently decomposed from the path matrix with exact agreement"},
-        {"track": "engine", "name": "Extended PLS method coverage", "status": "passed", "evidence": "WPLS, CCA, CTA-PLS, PLSc, endogeneity, nonlinear effects, moderated mediation, controls, higher-order constructs, mediation, and two-stage moderation all have experimental estimator or diagnostic contracts with executable evidence"},
-        {"track": "product", "name": "Method-specific saved-run result panels", "status": "passed", "evidence": "RunHistory displays PLSc reliabilities/corrections, WPLS weight metadata, CCA composite residuals, CTA-PLS tetrads, Gaussian-copula endogeneity diagnostics, nonlinear quadratic diagnostics, and moderated mediation conditional indirect effects; npm test and npm run build pass"},
-        {"track": "product", "name": "Method-specific GUI run controls", "status": "passed", "evidence": "AnalysisCatalog and TopBar persist a typed analysis method id, feed it into native recipes, expose runnable validated/experimental methods, show a WPLS case-weight selector, and label saved runs with the selected method; npm test and npm run build pass"},
-        {"track": "product", "name": "Export-safe method tables", "status": "passed", "evidence": "src/domain/resultTables.ts builds watermarked PLSc/WPLS/CCA/CTA-PLS/endogeneity/nonlinear/moderated-mediation tables; ReportsWorkspace previews and downloads CSV/HTML; qpls export --include-experimental emits watermarked extended-method rows while default export remains conservative; npm test, npm run build, and cargo test -p qpls-cli pass"},
-        {"track": "product", "name": "Saved-run comparison view", "status": "passed", "evidence": "src/domain/runComparison.ts compares saved-run R2 and path coefficients with baseline/comparison/delta values; ReportsWorkspace renders the comparison table when two runs exist; npm test and npm run build pass"},
-        {"track": "product", "name": "Publication SVG diagrams", "status": "passed", "evidence": "src/domain/publicationDiagram.ts generates deterministic SVG diagrams from model layout and selected-run path/R2/loading estimates with experimental watermarking; ReportsWorkspace previews and downloads SVG; npm test, npm run build, and Playwright production-preview checks pass on desktop and mobile"},
-        {"track": "product", "name": "XLSX and PDF report paths", "status": "passed", "evidence": "qpls export --format xlsx writes verified workbooks with calamine read-back tests; quickpls-desktop export_xlsx_tables writes native desktop XLSX workbooks with calamine read-back tests; ReportsWorkspace exposes desktop XLSX export and browser print/PDF reports from the same watermarked HTML tables; npm test, npm run build, cargo test -p qpls-cli, and cargo test -p quickpls-desktop pass"},
-        {"track": "validation", "name": "v0.5 evidence traceability report", "status": "passed", "evidence": "qpls evidence v05-extended-pls writes validation/results/v05_extended_pls_evidence.json aggregating 27 v0.5 validation reports; all listed artifacts are present and passed; cargo test -p qpls-cli covers the aggregator"}
+        {
+          "track": "specification",
+          "name": "Mediation descriptive formula pack",
+          "status": "passed",
+          "evidence": "docs/methods/PLS_MEDIATION_V1.md freezes direct/indirect/total/VAF definitions and class rules"
+        },
+        {
+          "track": "engine",
+          "name": "Mediation descriptive implementation",
+          "status": "passed",
+          "evidence": "qpls-estimation emits pls_mediation_v1 in PlsResult and tests cover classifier patterns plus a three-construct indirect model"
+        },
+        {
+          "track": "product",
+          "name": "Mediation bootstrap inference surfacing",
+          "status": "passed",
+          "evidence": "RunHistory displays indirect-effect p-values plus percentile, BCa, and bootstrap-t CIs from typed resampling parameter identities; qpls-resampling tests a three-construct indirect-effect bootstrap row"
+        },
+        {
+          "track": "validation",
+          "name": "Independent mediation equation fixture",
+          "status": "passed",
+          "evidence": "npm run qpls:mediation:reference writes validation/results/mediation_reference_report.json with max_abs_difference <= 1e-12"
+        },
+        {
+          "track": "validation",
+          "name": "Second-source mediation R lm fixture",
+          "status": "passed",
+          "evidence": "npm run qpls:mediation:r-reference writes validation/results/mediation_r_reference_report.json using development-only R base lm with max_abs_difference <= 1e-12"
+        },
+        {
+          "track": "validation",
+          "name": "Mediation simulation and metamorphic screen",
+          "status": "passed",
+          "evidence": "npm run qpls:mediation:metamorphic writes validation/results/mediation_metamorphic_report.json; independent-reference, positive-affine, row-reversal, construct-reorder, and permuted-mediator degradation checks pass"
+        },
+        {
+          "track": "validation",
+          "name": "Mediation indirect-effect randomization screen",
+          "status": "passed",
+          "evidence": "npm run qpls:mediation:randomization writes validation/results/mediation_randomization_report.json; QuickPLS agrees with independent standardized OLS equations for observed and permuted-mediator datasets, and a deterministic 199-permutation mediator-randomization screen gives plus-one p <= 0.05"
+        },
+        {
+          "track": "specification",
+          "name": "Two-stage moderation schema and estimator contract",
+          "status": "passed",
+          "evidence": "docs/methods/PLS_TWO_STAGE_MODERATION_V1.md freezes ModelSpec.interactions and the deterministic two-stage product-score contract"
+        },
+        {
+          "track": "product",
+          "name": "Two-stage moderation editor placeholder",
+          "status": "passed",
+          "evidence": "Inspector creates interaction placeholder constructs, store tests prevent duplicate placeholders, and TopBar serializes interactions into native recipes"
+        },
+        {
+          "track": "engine",
+          "name": "Two-stage moderation product-score estimator",
+          "status": "passed",
+          "evidence": "qpls-estimation generates product-score indicators from stage-1 construct scores and estimates the product-to-outcome interaction path; qpls-core now warns rather than blocks experimental moderation recipes"
+        },
+        {
+          "track": "product",
+          "name": "Two-stage moderation result workspace",
+          "status": "passed",
+          "evidence": "RunHistory displays interaction effects, bootstrap interval lookups for the product path, and simple slopes at -1, 0, and +1 standardized moderator scores"
+        },
+        {
+          "track": "validation",
+          "name": "Two-stage moderation independent reference and metamorphic screen",
+          "status": "passed",
+          "evidence": "npm run qpls:moderation:reference writes validation/results/moderation_reference_report.json with independent OLS path/simple-slope agreement, positive-affine, row-reversal, construct-reorder, missing-data row-mapping, warning, and permuted-moderator degradation checks"
+        },
+        {
+          "track": "validation",
+          "name": "Two-stage moderation second-source R lm fixture",
+          "status": "passed",
+          "evidence": "npm run qpls:moderation:r-reference writes validation/results/moderation_r_reference_report.json using development-only R base lm with max_abs_difference <= 1e-10 for paths and simple slopes"
+        },
+        {
+          "track": "validation",
+          "name": "Two-stage moderation published-formula fixture",
+          "status": "passed",
+          "evidence": "npm run qpls:moderation:published-formula writes validation/results/moderation_published_formula_report.json; a fixed-table standard moderated-regression formula fixture matches QuickPLS paths and simple slopes against independent standardized OLS equations within 1e-10 with observed reference_delta 2.22e-16"
+        },
+        {
+          "track": "validation",
+          "name": "Two-stage moderation published empirical-data fixture",
+          "status": "passed",
+          "evidence": "npm run qpls:moderation:published-empirical writes validation/results/moderation_published_empirical_report.json using the R mtcars empirical dataset; QuickPLS matches independent standardized OLS paths and simple slopes within 1e-10, with observed reference_delta 2.22e-16 and interaction coefficient 0.243"
+        },
+        {
+          "track": "validation",
+          "name": "Two-stage moderation bounded simulation screen",
+          "status": "passed",
+          "evidence": "npm run qpls:moderation:simulation writes validation/results/moderation_simulation_report.json; 20 signal and 20 null generated datasets match independent standardized OLS within 1e-10, recover positive interaction signal with mean 0.762, and keep null p90 absolute interaction at 0.0689"
+        },
+        {
+          "track": "validation",
+          "name": "Two-stage moderation inference integration",
+          "status": "passed",
+          "evidence": "npm run qpls:moderation:inference writes validation/results/moderation_inference_report.json proving percentile, BCa, and Freedman-Lane permutation rows for the generated product path plus 1-vs-2 worker payload invariance"
+        },
+        {
+          "track": "validation",
+          "name": "Two-stage moderation bounded inference qualification",
+          "status": "passed",
+          "evidence": "npm run qpls:moderation:inference-qualification writes validation/results/moderation_inference_qualification_report.json; six generated signal datasets are detected by the actual Freedman-Lane product-path permutation pipeline, six generated null datasets produce zero false positives at p <= 0.05, and all QuickPLS interaction coefficients match the independent standardized OLS reference within 1e-10"
+        },
+        {
+          "track": "validation",
+          "name": "Two-stage moderation release coverage qualification",
+          "status": "passed",
+          "evidence": "npm run qpls:moderation:coverage-qualification writes validation/results/moderation_coverage_qualification_report.json; 24 generated signal datasets are detected, one of 24 generated null datasets is flagged at p <= 0.05, all QuickPLS interaction coefficients match the independent standardized OLS reference within 1e-10, and the 48-run 199-permutation screen completed in 22.43s on the local workstation"
+        },
+        {
+          "track": "specification",
+          "name": "PLSc reflective-only correction contract",
+          "status": "passed",
+          "evidence": "docs/methods/PLSC_V1.md freezes the experimental PLSc scope: reflective constructs, path/factor weighting, rho_A attenuation-corrected construct correlations, paths, outer loadings, and bounded R2"
+        },
+        {
+          "track": "engine",
+          "name": "PLSc attenuation-corrected estimator",
+          "status": "passed",
+          "evidence": "qpls-estimation emits method_version plsc_v1 with typed PlscAnalysis payload, corrected structural paths/R2/effects, corrected loadings, and explicit experimental warnings"
+        },
+        {
+          "track": "validation",
+          "name": "PLSc independent reference and unsupported-settings guard",
+          "status": "passed",
+          "evidence": "npm run qpls:plsc:validate writes validation/results/plsc_reference_report.json and validation/results/plsc_unsupported_guard_report.json; independent Python PLS plus PLSc correction matches QuickPLS within 1e-6 with observed max delta 4.57e-14, and formative PLSc recipes are rejected with plsc.reflective_only"
+        },
+        {
+          "track": "specification",
+          "name": "WPLS positive case-weight contract",
+          "status": "passed",
+          "evidence": "docs/methods/PLS_WPLS_V1.md freezes the experimental WPLS scope: positive case-weight column, standardized preprocessing, reflective constructs, path/factor weighting, weighted covariance iteration, weighted least-squares paths, and invalid-weight guards"
+        },
+        {
+          "track": "engine",
+          "name": "WPLS case-weighted estimator",
+          "status": "passed",
+          "evidence": "qpls-estimation emits method_version wpls_case_weighted_v1 with typed WplsAnalysis payload, weighted outer weights/loadings, weighted structural paths, weighted R2, weight sum, effective sample size, and explicit experimental warnings"
+        },
+        {
+          "track": "validation",
+          "name": "WPLS independent reference and invalid-weight guards",
+          "status": "passed",
+          "evidence": "npm run qpls:wpls:reference writes validation/results/wpls_reference_report.json; independent weighted PLS equations match QuickPLS paths, weights, loadings, R2, and weight metadata within 1e-10 with observed max delta 3.41e-13, and missing weight-column recipes plus negative case weights are rejected"
+        },
+        {
+          "track": "specification",
+          "name": "CCA composite residual contract",
+          "status": "passed",
+          "evidence": "docs/methods/PLS_CCA_V1.md freezes the experimental CCA scope: recursive standardized composite path model, observed/reproduced/residual construct-score correlations, max absolute residual, and invalid PCA/formative/generated-construct guards"
+        },
+        {
+          "track": "engine",
+          "name": "CCA composite residual diagnostic",
+          "status": "passed",
+          "evidence": "qpls-estimation emits method_version cca_composite_residual_v1 with typed CcaAnalysis payload containing observed, reproduced, residual, absolute residual, max residual, and explicit experimental warnings"
+        },
+        {
+          "track": "validation",
+          "name": "CCA independent reference and invalid-settings guard",
+          "status": "passed",
+          "evidence": "npm run qpls:cca:reference writes validation/results/cca_reference_report.json; independent PLS plus recursive covariance reconstruction matches QuickPLS CCA rows within 1e-10 with observed max delta 3.51e-14, and PCA recipes are rejected with cca.pca_unsupported"
+        },
+        {
+          "track": "specification",
+          "name": "Gaussian-copula endogeneity diagnostic contract",
+          "status": "passed",
+          "evidence": "docs/methods/PLS_GAUSSIAN_COPULA_ENDOGENEITY_V1.md freezes the experimental rankit inverse-normal copula transform, augmented structural equation diagnostics, skewness applicability flag, and warnings"
+        },
+        {
+          "track": "engine",
+          "name": "Gaussian-copula endogeneity diagnostic estimator",
+          "status": "passed",
+          "evidence": "qpls-estimation emits method_version gaussian_copula_endogeneity_v1 with typed GaussianCopulaEndogeneityAnalysis payload containing copula coefficients, standard errors, t statistics, p values, skewness, applicability flags, and warnings"
+        },
+        {
+          "track": "validation",
+          "name": "Gaussian-copula endogeneity independent reference",
+          "status": "passed",
+          "evidence": "npm run qpls:endogeneity:reference writes validation/results/endogeneity_reference_report.json; independent Python PLS plus rankit-copula augmented regression matches QuickPLS copula coefficients, standard errors, t statistics, and skewness within 1e-6 with observed max delta 5.54e-09"
+        },
+        {
+          "track": "specification",
+          "name": "Quadratic nonlinear-effects diagnostic contract",
+          "status": "passed",
+          "evidence": "docs/methods/PLS_NONLINEAR_EFFECTS_V1.md freezes the experimental centered squared construct-score term, augmented structural equation diagnostics, R2 delta, and warnings"
+        },
+        {
+          "track": "engine",
+          "name": "Quadratic nonlinear-effects diagnostic estimator",
+          "status": "passed",
+          "evidence": "qpls-estimation emits method_version pls_quadratic_nonlinear_effects_v1 with typed NonlinearEffectsAnalysis payload containing quadratic coefficients, standard errors, t statistics, p values, linear R2, augmented R2, delta R2, and warnings"
+        },
+        {
+          "track": "validation",
+          "name": "Quadratic nonlinear-effects independent reference",
+          "status": "passed",
+          "evidence": "npm run qpls:nonlinear:reference writes validation/results/nonlinear_effects_reference_report.json; independent Python PLS plus centered-squared augmented regression matches QuickPLS quadratic coefficients, standard errors, t statistics, and R2 deltas within 1e-6 with observed max delta 1.96e-12"
+        },
+        {
+          "track": "specification",
+          "name": "Moderated mediation conditional indirect contract",
+          "status": "passed",
+          "evidence": "docs/methods/PLS_MODERATED_MEDIATION_V1.md freezes the experimental first-stage and second-stage moderated mediation mapping, conditional indirect effects at -1/0/+1, index definition, and invalid interaction requirements"
+        },
+        {
+          "track": "engine",
+          "name": "Moderated mediation conditional indirect estimator",
+          "status": "passed",
+          "evidence": "qpls-estimation emits method_version pls_moderated_mediation_v1 with typed ModeratedMediationAnalysis payload after two-stage interaction estimation"
+        },
+        {
+          "track": "validation",
+          "name": "Moderated mediation independent reference and invalid-recipe guard",
+          "status": "passed",
+          "evidence": "npm run qpls:moderated-mediation:reference writes validation/results/moderated_mediation_reference_report.json; independent standardized OLS reference matches conditional indirect effects and the moderated mediation index within 1e-10 with observed reference_delta 4.67e-14, and recipes without interactions are rejected with moderated_mediation.interaction_required"
+        },
+        {
+          "track": "specification",
+          "name": "CTA-PLS tetrad diagnostic contract",
+          "status": "passed",
+          "evidence": "docs/methods/PLS_CTA_PLS_V1.md freezes the experimental sample-covariance tetrad contract, indicator-block requirements, pairing identifiers, max-absolute summaries, and publication warnings"
+        },
+        {
+          "track": "engine",
+          "name": "CTA-PLS tetrad diagnostic estimator",
+          "status": "passed",
+          "evidence": "qpls-estimation emits method_version cta_pls_tetrad_v1 with typed CtaPlsAnalysis payload containing signed tetrads, absolute tetrads, pairing ids, construct summaries, and warnings"
+        },
+        {
+          "track": "validation",
+          "name": "CTA-PLS independent reference and invalid-block guard",
+          "status": "passed",
+          "evidence": "npm run qpls:cta:reference writes validation/results/cta_pls_reference_report.json; independent sample-covariance tetrads match QuickPLS within 1e-10 with observed max delta 4.94e-14, and recipes without a four-indicator block are rejected with cta_pls.tetrad_block_required"
+        },
+        {
+          "track": "validation",
+          "name": "Extended PLS unsupported execution guard",
+          "status": "passed",
+          "evidence": "npm run qpls:extended-pls:unsupported-guard writes validation/results/extended_pls_unsupported_guard_report.json; all schema-recognized v0.5 extended PLS method ids now have experimental contracts, so the guard currently records zero pending unsupported methods"
+        },
+        {
+          "track": "engine",
+          "name": "Control-variable path semantics",
+          "status": "passed",
+          "evidence": "ModelSpec.controls is a backward-compatible typed schema field; qpls-core validates duplicate, unknown, self, and missing-path declarations with experimental warnings; qpls-estimation emits control_estimates that exactly mirror the corresponding structural path coefficients; the path inspector can mark paths as controls and serialize them into native recipes; RunHistory displays control paths distinctly"
+        },
+        {
+          "track": "specification",
+          "name": "Higher-order construct recipe schema",
+          "status": "passed",
+          "evidence": "docs/methods/PLS_HIGHER_ORDER_V1.md freezes ModelSpec.higher_order_constructs with repeated-indicator, two-stage, and experimental hybrid indicator-split method identifiers; qpls-core validates duplicate ids, unknown HOC ids, insufficient components, self-components, unknown components, duplicate components, experimental warnings, and hybrid component split feasibility"
+        },
+        {
+          "track": "product",
+          "name": "Higher-order construct inspector workflow",
+          "status": "passed",
+          "evidence": "The construct inspector can mark an existing construct as a higher-order construct, choose repeated-indicator, two-stage, or hybrid semantics, select lower-order components, preserve undoable metadata, and serialize the typed declaration into native recipes; qpls-estimation supports experimental repeated-indicator, two-stage, and hybrid HOC execution"
+        },
+        {
+          "track": "engine",
+          "name": "Repeated-indicator higher-order estimator",
+          "status": "passed",
+          "evidence": "qpls-estimation expands repeated-indicator HOC placeholders into ordered component-indicator blocks before ordinary PLS execution; cargo test -p qpls-estimation covers generated HOC outer estimates, construct scores, and the experimental expansion warning"
+        },
+        {
+          "track": "validation",
+          "name": "Repeated-indicator higher-order independent reference",
+          "status": "passed",
+          "evidence": "npm run qpls:hoc:reference writes validation/results/higher_order_reference_report.json; an independent Python PLS path-weighting implementation expands the HOC recipe and matches QuickPLS paths, HOC loadings, and HOC weights within 1e-6, with observed max_abs_difference 4.49e-14"
+        },
+        {
+          "track": "validation",
+          "name": "Repeated-indicator higher-order metamorphic screen",
+          "status": "passed",
+          "evidence": "npm run qpls:hoc:metamorphic writes validation/results/higher_order_metamorphic_report.json; independent-reference, positive-affine, row-reversal, construct-reorder, component-reorder, experimental-warning, and permuted-component degradation checks pass"
+        },
+        {
+          "track": "engine",
+          "name": "Two-stage higher-order estimator",
+          "status": "passed",
+          "evidence": "qpls-estimation estimates lower-order components in stage 1, appends component scores as generated HOC indicators for stage 2, estimates HOC structural paths, and emits an experimental two-stage HOC warning; qpls-assessment consumes the same generated HOC score indicators for deterministic assessment tables"
+        },
+        {
+          "track": "validation",
+          "name": "Two-stage higher-order independent and metamorphic reference",
+          "status": "passed",
+          "evidence": "npm run qpls:hoc:two-stage writes validation/results/higher_order_two_stage_reference_report.json; an independent Python stage-two PLS reference matches QuickPLS paths, generated HOC loadings, and generated HOC weights within 1e-6, and positive-affine, row-reversal, construct-reorder, component-reorder, assessment-table, warning, and permuted-component degradation checks pass with observed reference_delta 5.38e-14"
+        },
+        {
+          "track": "engine",
+          "name": "Hybrid higher-order estimator",
+          "status": "passed",
+          "evidence": "qpls-estimation implements the experimental indicator-split hybrid HOC contract: each component keeps the first partition of indicators and the HOC receives the remaining component indicators; qpls-assessment consumes the same split recipe"
+        },
+        {
+          "track": "validation",
+          "name": "Hybrid higher-order independent and metamorphic reference",
+          "status": "passed",
+          "evidence": "npm run qpls:hoc:hybrid-reference writes validation/results/higher_order_hybrid_reference_report.json; an independent Python indicator-split PLS reference matches QuickPLS paths, HOC loadings, and HOC weights within 1e-6, and positive-affine, row-reversal, component-reorder, warning, and permuted-HOC-indicator degradation checks pass with observed reference_delta 1.37e-14"
+        },
+        {
+          "track": "validation",
+          "name": "Hybrid higher-order invalid split guard",
+          "status": "passed",
+          "evidence": "npm run qpls:hoc:hybrid-guard writes validation/results/higher_order_hybrid_guard_report.json; a hybrid HOC recipe with a one-indicator component is rejected by CLI validation with higher_order.hybrid_component_indicators and is not allowed to write an estimation result"
+        },
+        {
+          "track": "validation",
+          "name": "Published mediation example fixture",
+          "status": "passed",
+          "evidence": "npm run qpls:mediation:published writes validation/results/mediation_published_example_report.json using the documented cSEM::threecommonfactors example; QuickPLS path coefficients are regenerated and checked against cSEM, then mediation direct/indirect/total/VAF/classification are independently decomposed from the path matrix with exact agreement"
+        },
+        {
+          "track": "engine",
+          "name": "Extended PLS method coverage",
+          "status": "passed",
+          "evidence": "WPLS, CCA, CTA-PLS, PLSc, endogeneity, nonlinear effects, moderated mediation, controls, higher-order constructs, mediation, and two-stage moderation all have experimental estimator or diagnostic contracts with executable evidence"
+        },
+        {
+          "track": "product",
+          "name": "Method-specific saved-run result panels",
+          "status": "passed",
+          "evidence": "RunHistory displays PLSc reliabilities/corrections, WPLS weight metadata, CCA composite residuals, CTA-PLS tetrads, Gaussian-copula endogeneity diagnostics, nonlinear quadratic diagnostics, and moderated mediation conditional indirect effects; npm test and npm run build pass"
+        },
+        {
+          "track": "product",
+          "name": "Method-specific GUI run controls",
+          "status": "passed",
+          "evidence": "AnalysisCatalog and TopBar persist a typed analysis method id, feed it into native recipes, expose runnable validated/experimental methods, show a WPLS case-weight selector, and label saved runs with the selected method; npm test and npm run build pass"
+        },
+        {
+          "track": "product",
+          "name": "Export-safe method tables",
+          "status": "passed",
+          "evidence": "src/domain/resultTables.ts builds watermarked PLSc/WPLS/CCA/CTA-PLS/endogeneity/nonlinear/moderated-mediation tables; ReportsWorkspace previews and downloads CSV/HTML; qpls export --include-experimental emits watermarked extended-method rows while default export remains conservative; npm test, npm run build, and cargo test -p qpls-cli pass"
+        },
+        {
+          "track": "product",
+          "name": "Saved-run comparison view",
+          "status": "passed",
+          "evidence": "src/domain/runComparison.ts compares saved-run R2 and path coefficients with baseline/comparison/delta values; ReportsWorkspace renders the comparison table when two runs exist; npm test and npm run build pass"
+        },
+        {
+          "track": "product",
+          "name": "Publication SVG diagrams",
+          "status": "passed",
+          "evidence": "src/domain/publicationDiagram.ts generates deterministic SVG diagrams from model layout and selected-run path/R2/loading estimates with experimental watermarking; ReportsWorkspace previews and downloads SVG; npm test, npm run build, and Playwright production-preview checks pass on desktop and mobile"
+        },
+        {
+          "track": "product",
+          "name": "XLSX and PDF report paths",
+          "status": "passed",
+          "evidence": "qpls export --format xlsx writes verified workbooks with calamine read-back tests; quickpls-desktop export_xlsx_tables writes native desktop XLSX workbooks with calamine read-back tests; ReportsWorkspace exposes desktop XLSX export and browser print/PDF reports from the same watermarked HTML tables; npm test, npm run build, cargo test -p qpls-cli, and cargo test -p quickpls-desktop pass"
+        },
+        {
+          "track": "validation",
+          "name": "v0.5 evidence traceability report",
+          "status": "passed",
+          "evidence": "qpls evidence v05-extended-pls writes validation/results/v05_extended_pls_evidence.json aggregating 27 v0.5 validation reports; all listed artifacts are present and passed; cargo test -p qpls-cli covers the aggregator"
+        }
       ],
       "next_actions": [
         "Proceed to v0.6 prediction and heterogeneity while preserving v0.5 experimental labels until future validation promotion criteria are met."
@@ -200,43 +696,178 @@
       "release": "v0.6",
       "family": "Prediction and groups",
       "name": "Prediction, MGA, MICOM, FIMIX, and POS",
-        "status": "experimental",
-        "stable_output": false,
+      "status": "experimental",
+      "stable_output": false,
       "owner_track": "validation",
       "priority": 7,
-        "summary": "Experimental deterministic PLSpredict holdout plus repeated k-fold prediction is implemented with leak-free train/test preprocessing, LM benchmarks, paired-loss benchmark CVPAT, metadata-configured drop-path model-pair CVPAT, bounded IPMA, generalized PLS-POS, FIMIX-PLS, observed two-group MGA, MICOM, permutation MGA, bounded null/leakage evidence, validation fixtures, and GUI/CLI/report export surfacing. All v0.6 preview gates are passed; all methods remain experimental.",
-        "gates": [
-          {"track": "specification", "name": "PLSpredict holdout method spec", "status": "passed", "evidence": "docs/methods/PLSPREDICT_HOLDOUT_V1.md"},
-          {"track": "engine", "name": "Deterministic PLSpredict holdout engine", "status": "passed", "evidence": "qpls-estimation::plspredict_holdout_reports_leakage_free_prediction_metrics"},
-          {"track": "validation", "name": "PLSpredict holdout smoke reference", "status": "passed", "evidence": "validation/results/plspredict_holdout_reference_report.json"},
-          {"track": "product", "name": "PLSpredict result and export surfacing", "status": "passed", "evidence": "src/domain/resultTables.test.ts and qpls-cli experimental export rows"},
-          {"track": "engine", "name": "Repeated k-fold PLSpredict and LM benchmarks", "status": "passed", "evidence": "qpls-estimation::plspredict_holdout_reports_leakage_free_prediction_metrics and validation/results/plspredict_holdout_reference_report.json"},
-            {"track": "engine", "name": "CVPAT paired benchmark diagnostic", "status": "passed", "evidence": "docs/methods/PLSPREDICT_HOLDOUT_V1.md and validation/results/plspredict_holdout_reference_report.json"},
-            {"track": "engine", "name": "Configurable drop-path model-pair CVPAT", "status": "passed", "evidence": "docs/methods/PLSPREDICT_HOLDOUT_V1.md and validation/results/plspredict_holdout_reference_report.json"},
-            {"track": "specification", "name": "Bounded IPMA/cIPMA spec", "status": "passed", "evidence": "docs/methods/IPMA_V1.md"},
-            {"track": "engine", "name": "Bounded IPMA/cIPMA engine", "status": "passed", "evidence": "ipma_v1"},
-            {"track": "validation", "name": "Bounded IPMA independent reference fixture", "status": "passed", "evidence": "validation/results/ipma_reference_report.json"},
-            {"track": "product", "name": "Bounded IPMA workspace and export surfacing", "status": "passed", "evidence": "src/components/GroupsWorkspace.tsx, src/domain/resultTables.test.ts, and qpls-cli experimental export rows"},
-            {"track": "specification", "name": "Bounded PLS-POS segmentation spec", "status": "passed", "evidence": "docs/methods/PLS_POS_BOUNDED_V1.md"},
-            {"track": "engine", "name": "Bounded two-segment multi-path PLS-POS discovery", "status": "passed", "evidence": "pls_pos_bounded_v1 and validation/results/segmentation_recovery_simulation_report.json"},
-            {"track": "validation", "name": "Oracle and discovered single-path/multi-path segmentation recovery fixture", "status": "passed", "evidence": "validation/results/segmentation_recovery_simulation_report.json"},
-            {"track": "engine", "name": "General FIMIX-PLS and PLS-POS engines", "status": "passed", "evidence": "fimix_pls_v1, pls_pos_v1, and validation/results/v06_group_methods_reference_report.json"},
-            {"track": "validation", "name": "Bounded segmentation fit/class diagnostics", "status": "passed", "evidence": "docs/methods/PLS_POS_BOUNDED_V1.md and validation/results/segmentation_recovery_simulation_report.json"},
-              {"track": "validation", "name": "Bounded homogeneous-null segmentation leakage fixture", "status": "passed", "evidence": "validation/results/segmentation_recovery_simulation_report.json"},
-                {"track": "validation", "name": "Bounded empirical segmentation fit screen", "status": "passed", "evidence": "validation/results/segmentation_recovery_simulation_report.json"},
-              {"track": "product", "name": "Bounded segmentation Groups workspace", "status": "passed", "evidence": "src/components/GroupsWorkspace.tsx and npm run build"},
-              {"track": "specification", "name": "Bounded two-group MGA spec", "status": "passed", "evidence": "docs/methods/PLS_MGA_TWO_GROUP_V1.md"},
-              {"track": "engine", "name": "Bounded observed two-group MGA engine", "status": "passed", "evidence": "pls_mga_two_group_v1"},
-              {"track": "validation", "name": "Bounded MGA independent reference fixture", "status": "passed", "evidence": "validation/results/mga_reference_report.json"},
-              {"track": "product", "name": "Bounded MGA workspace and export surfacing", "status": "passed", "evidence": "src/components/GroupsWorkspace.tsx, src/domain/resultTables.test.ts, and qpls-cli experimental export rows"},
-              {"track": "specification", "name": "MICOM, permutation MGA, FIMIX-PLS, and PLS-POS specs", "status": "passed", "evidence": "docs/methods/MICOM_V1.md, docs/methods/PLS_MGA_PERMUTATION_V1.md, docs/methods/FIMIX_PLS_V1.md, docs/methods/PLS_POS_V1.md"},
-              {"track": "engine", "name": "MICOM and permutation MGA engines", "status": "passed", "evidence": "micom_v1, pls_mga_permutation_v1, and validation/results/v06_group_methods_reference_report.json"},
-              {"track": "validation", "name": "Integrated v0.6 group-method reference and recovery fixture", "status": "passed", "evidence": "npm run qpls:v06:validate and validation/results/v06_group_methods_reference_report.json"},
-              {"track": "product", "name": "MICOM, permutation MGA, FIMIX, POS, and IPMA workspace/export surfacing", "status": "passed", "evidence": "src/components/GroupsWorkspace.tsx, src/components/RunHistory.tsx, src/domain/resultTables.ts, and qpls-cli experimental export rows"}
-          ],
-          "next_actions": [
-                  "Keep v0.6 methods experimental until larger independent reference, simulation coverage, and performance qualification are completed for later validation promotion."
-            ]
+      "summary": "Experimental deterministic PLSpredict holdout plus repeated k-fold prediction is implemented with leak-free train/test preprocessing, LM benchmarks, paired-loss benchmark CVPAT, metadata-configured drop-path model-pair CVPAT, bounded IPMA, generalized PLS-POS, FIMIX-PLS, observed two-group MGA, MICOM, permutation MGA, bounded null/leakage evidence, validation fixtures, and GUI/CLI/report export surfacing. All v0.6 preview gates are passed; all methods remain experimental.",
+      "gates": [
+        {
+          "track": "specification",
+          "name": "PLSpredict holdout method spec",
+          "status": "passed",
+          "evidence": "docs/methods/PLSPREDICT_HOLDOUT_V1.md"
+        },
+        {
+          "track": "engine",
+          "name": "Deterministic PLSpredict holdout engine",
+          "status": "passed",
+          "evidence": "qpls-estimation::plspredict_holdout_reports_leakage_free_prediction_metrics"
+        },
+        {
+          "track": "validation",
+          "name": "PLSpredict holdout smoke reference",
+          "status": "passed",
+          "evidence": "validation/results/plspredict_holdout_reference_report.json"
+        },
+        {
+          "track": "product",
+          "name": "PLSpredict result and export surfacing",
+          "status": "passed",
+          "evidence": "src/domain/resultTables.test.ts and qpls-cli experimental export rows"
+        },
+        {
+          "track": "engine",
+          "name": "Repeated k-fold PLSpredict and LM benchmarks",
+          "status": "passed",
+          "evidence": "qpls-estimation::plspredict_holdout_reports_leakage_free_prediction_metrics and validation/results/plspredict_holdout_reference_report.json"
+        },
+        {
+          "track": "engine",
+          "name": "CVPAT paired benchmark diagnostic",
+          "status": "passed",
+          "evidence": "docs/methods/PLSPREDICT_HOLDOUT_V1.md and validation/results/plspredict_holdout_reference_report.json"
+        },
+        {
+          "track": "engine",
+          "name": "Configurable drop-path model-pair CVPAT",
+          "status": "passed",
+          "evidence": "docs/methods/PLSPREDICT_HOLDOUT_V1.md and validation/results/plspredict_holdout_reference_report.json"
+        },
+        {
+          "track": "specification",
+          "name": "Bounded IPMA/cIPMA spec",
+          "status": "passed",
+          "evidence": "docs/methods/IPMA_V1.md"
+        },
+        {
+          "track": "engine",
+          "name": "Bounded IPMA/cIPMA engine",
+          "status": "passed",
+          "evidence": "ipma_v1"
+        },
+        {
+          "track": "validation",
+          "name": "Bounded IPMA independent reference fixture",
+          "status": "passed",
+          "evidence": "validation/results/ipma_reference_report.json"
+        },
+        {
+          "track": "product",
+          "name": "Bounded IPMA workspace and export surfacing",
+          "status": "passed",
+          "evidence": "src/components/GroupsWorkspace.tsx, src/domain/resultTables.test.ts, and qpls-cli experimental export rows"
+        },
+        {
+          "track": "specification",
+          "name": "Bounded PLS-POS segmentation spec",
+          "status": "passed",
+          "evidence": "docs/methods/PLS_POS_BOUNDED_V1.md"
+        },
+        {
+          "track": "engine",
+          "name": "Bounded two-segment multi-path PLS-POS discovery",
+          "status": "passed",
+          "evidence": "pls_pos_bounded_v1 and validation/results/segmentation_recovery_simulation_report.json"
+        },
+        {
+          "track": "validation",
+          "name": "Oracle and discovered single-path/multi-path segmentation recovery fixture",
+          "status": "passed",
+          "evidence": "validation/results/segmentation_recovery_simulation_report.json"
+        },
+        {
+          "track": "engine",
+          "name": "General FIMIX-PLS and PLS-POS engines",
+          "status": "passed",
+          "evidence": "fimix_pls_v1, pls_pos_v1, and validation/results/v06_group_methods_reference_report.json"
+        },
+        {
+          "track": "validation",
+          "name": "Bounded segmentation fit/class diagnostics",
+          "status": "passed",
+          "evidence": "docs/methods/PLS_POS_BOUNDED_V1.md and validation/results/segmentation_recovery_simulation_report.json"
+        },
+        {
+          "track": "validation",
+          "name": "Bounded homogeneous-null segmentation leakage fixture",
+          "status": "passed",
+          "evidence": "validation/results/segmentation_recovery_simulation_report.json"
+        },
+        {
+          "track": "validation",
+          "name": "Bounded empirical segmentation fit screen",
+          "status": "passed",
+          "evidence": "validation/results/segmentation_recovery_simulation_report.json"
+        },
+        {
+          "track": "product",
+          "name": "Bounded segmentation Groups workspace",
+          "status": "passed",
+          "evidence": "src/components/GroupsWorkspace.tsx and npm run build"
+        },
+        {
+          "track": "specification",
+          "name": "Bounded two-group MGA spec",
+          "status": "passed",
+          "evidence": "docs/methods/PLS_MGA_TWO_GROUP_V1.md"
+        },
+        {
+          "track": "engine",
+          "name": "Bounded observed two-group MGA engine",
+          "status": "passed",
+          "evidence": "pls_mga_two_group_v1"
+        },
+        {
+          "track": "validation",
+          "name": "Bounded MGA independent reference fixture",
+          "status": "passed",
+          "evidence": "validation/results/mga_reference_report.json"
+        },
+        {
+          "track": "product",
+          "name": "Bounded MGA workspace and export surfacing",
+          "status": "passed",
+          "evidence": "src/components/GroupsWorkspace.tsx, src/domain/resultTables.test.ts, and qpls-cli experimental export rows"
+        },
+        {
+          "track": "specification",
+          "name": "MICOM, permutation MGA, FIMIX-PLS, and PLS-POS specs",
+          "status": "passed",
+          "evidence": "docs/methods/MICOM_V1.md, docs/methods/PLS_MGA_PERMUTATION_V1.md, docs/methods/FIMIX_PLS_V1.md, docs/methods/PLS_POS_V1.md"
+        },
+        {
+          "track": "engine",
+          "name": "MICOM and permutation MGA engines",
+          "status": "passed",
+          "evidence": "micom_v1, pls_mga_permutation_v1, and validation/results/v06_group_methods_reference_report.json"
+        },
+        {
+          "track": "validation",
+          "name": "Integrated v0.6 group-method reference and recovery fixture",
+          "status": "passed",
+          "evidence": "npm run qpls:v06:validate and validation/results/v06_group_methods_reference_report.json"
+        },
+        {
+          "track": "product",
+          "name": "MICOM, permutation MGA, FIMIX, POS, and IPMA workspace/export surfacing",
+          "status": "passed",
+          "evidence": "src/components/GroupsWorkspace.tsx, src/components/RunHistory.tsx, src/domain/resultTables.ts, and qpls-cli experimental export rows"
+        }
+      ],
+      "next_actions": [
+        "Keep v0.6 methods experimental until larger independent reference, simulation coverage, and performance qualification are completed for later validation promotion."
+      ]
     },
     {
       "id": "v0_7_cbsem",
@@ -249,10 +880,30 @@
       "priority": 8,
       "summary": "CB-SEM/CFA is available as an experimental v0.7.1 beta with direct single-group ML optimization for bounded raw-data reflective CFA/SEM models, lavaan parity fixtures, fit diagnostics, standardized estimates, modification-index screening, bootstrap interval preview, and multigroup/invariance surfacing.",
       "gates": [
-        {"track": "specification", "name": "Experimental ML SEM/CFA beta specifications", "status": "passed", "evidence": "docs/methods/CBSEM_ML_V1.md, docs/methods/CFA_ML_V1.md, docs/methods/CBSEM_FIT_V1.md, docs/methods/CBSEM_MODIFICATION_INDICES_V1.md, docs/methods/CBSEM_MULTIGROUP_INVARIANCE_V1.md"},
-        {"track": "engine", "name": "Bounded CB-SEM/CFA direct ML optimizer beta payload", "status": "passed", "evidence": "cfa_ml_v1, cbsem_ml_v1, cbsem_fit_v1, expected-information SEs, std_lv/std_all, cbsem_modification_indices_v1, cbsem_bootstrap_v1, cbsem_multigroup_v1"},
-        {"track": "validation", "name": "Integrated v0.7 CB-SEM reference, guard, and lavaan parity fixtures", "status": "passed", "evidence": "npm run qpls:v07:validate, validation/results/cbsem_v07_reference_report.json, and validation/results/cbsem_lavaan_reference_report.json"},
-        {"track": "product", "name": "CB-SEM settings, saved runs, exports, CLI evidence, and compatibility surfacing", "status": "passed", "evidence": "src/components/AnalysisCatalog.tsx, src/components/RunHistory.tsx, src/domain/resultTables.ts, crates/qpls-cli/src/main.rs"}
+        {
+          "track": "specification",
+          "name": "Experimental ML SEM/CFA beta specifications",
+          "status": "passed",
+          "evidence": "docs/methods/CBSEM_ML_V1.md, docs/methods/CFA_ML_V1.md, docs/methods/CBSEM_FIT_V1.md, docs/methods/CBSEM_MODIFICATION_INDICES_V1.md, docs/methods/CBSEM_MULTIGROUP_INVARIANCE_V1.md"
+        },
+        {
+          "track": "engine",
+          "name": "Bounded CB-SEM/CFA direct ML optimizer beta payload",
+          "status": "passed",
+          "evidence": "cfa_ml_v1, cbsem_ml_v1, cbsem_fit_v1, expected-information SEs, std_lv/std_all, cbsem_modification_indices_v1, cbsem_bootstrap_v1, cbsem_multigroup_v1"
+        },
+        {
+          "track": "validation",
+          "name": "Integrated v0.7 CB-SEM reference, guard, and lavaan parity fixtures",
+          "status": "passed",
+          "evidence": "npm run qpls:v07:validate, validation/results/cbsem_v07_reference_report.json, and validation/results/cbsem_lavaan_reference_report.json"
+        },
+        {
+          "track": "product",
+          "name": "CB-SEM settings, saved runs, exports, CLI evidence, and compatibility surfacing",
+          "status": "passed",
+          "evidence": "src/components/AnalysisCatalog.tsx, src/components/RunHistory.tsx, src/domain/resultTables.ts, crates/qpls-cli/src/main.rs"
+        }
       ],
       "next_actions": [
         "Keep v0.7 experimental until constrained multigroup refits, robust/ordinal/FIML estimators, broader inadmissibility tests, performance qualification, and a second-source validation suite are complete.",
@@ -268,18 +919,60 @@
       "stable_output": false,
       "owner_track": "engine",
       "priority": 9,
-      "summary": "Experimental standalone PCA, OLS regression, logistic regression, bounded PROCESS-style workflows, numeric NCA, and bounded GSCA component-model payloads are implemented with GUI/CLI/report surfacing and integrated independent Python/NumPy fixture evidence. All v0.8 methods remain experimental and watermarked.",
+      "summary": "Standalone PCA and OLS regression are validated for their documented scopes. Logistic regression, PROCESS, NCA, and GSCA remain experimental until their method-specific promotion audits pass.",
       "gates": [
-        {"track": "specification", "name": "Method specifications", "status": "passed", "evidence": "docs/methods/PCA_V1.md, docs/methods/REGRESSION_OLS_V1.md, docs/methods/REGRESSION_LOGISTIC_V1.md, docs/methods/PROCESS_V1.md, docs/methods/NCA_V1.md, docs/methods/GSCA_V1.md"},
-        {"track": "engine", "name": "Typed v0.8 method payloads", "status": "passed", "evidence": "pca_v1, regression_ols_v1, regression_logistic_v1, regression_process_v1, nca_v1, and gsca_v1 payloads from qpls-estimation"},
-        {"track": "validation", "name": "Integrated reference and guard fixture", "status": "passed", "evidence": "npm run qpls:v08:validate and validation/results/v08_extended_methods_reference_report.json"},
-        {"track": "product", "name": "Desktop settings and saved-run surfacing", "status": "passed", "evidence": "src/components/AnalysisCatalog.tsx, src/components/TopBar.tsx, and src/components/RunHistory.tsx"},
-        {"track": "automation", "name": "CLI/export/evidence surfacing", "status": "passed", "evidence": "qpls run accepts pca, gsca, regression, and nca; qpls export --include-experimental emits v0.8 rows; qpls evidence v08-extended-methods writes validation/results/v08_extended_methods_evidence.json"},
-        {"track": "documentation", "name": "Compatibility and delivery status", "status": "passed", "evidence": "docs/METHOD_COMPATIBILITY.md, docs/DELIVERY_STATUS.md, docs/DEVELOPMENT_LEDGER.md"}
+        {
+          "track": "specification",
+          "name": "Method specifications",
+          "status": "passed",
+          "evidence": "docs/methods/PCA_V1.md, docs/methods/REGRESSION_OLS_V1.md, docs/methods/REGRESSION_LOGISTIC_V1.md, docs/methods/PROCESS_V1.md, docs/methods/NCA_V1.md, docs/methods/GSCA_V1.md"
+        },
+        {
+          "track": "engine",
+          "name": "Typed v0.8 method payloads",
+          "status": "passed",
+          "evidence": "pca_v1, regression_ols_v1, regression_logistic_v1, regression_process_v1, nca_v1, and gsca_v1 payloads from qpls-estimation"
+        },
+        {
+          "track": "validation",
+          "name": "Integrated reference and guard fixture",
+          "status": "passed",
+          "evidence": "npm run qpls:v08:validate and validation/results/v08_extended_methods_reference_report.json"
+        },
+        {
+          "track": "product",
+          "name": "Desktop settings and saved-run surfacing",
+          "status": "passed",
+          "evidence": "src/components/AnalysisCatalog.tsx, src/components/TopBar.tsx, and src/components/RunHistory.tsx"
+        },
+        {
+          "track": "automation",
+          "name": "CLI/export/evidence surfacing",
+          "status": "passed",
+          "evidence": "qpls run accepts pca, gsca, regression, and nca; qpls export --include-experimental emits v0.8 rows; qpls evidence v08-extended-methods writes validation/results/v08_extended_methods_evidence.json"
+        },
+        {
+          "track": "documentation",
+          "name": "Compatibility and delivery status",
+          "status": "passed",
+          "evidence": "docs/METHOD_COMPATIBILITY.md, docs/DELIVERY_STATUS.md, docs/DEVELOPMENT_LEDGER.md"
+        },
+        {
+          "track": "validation",
+          "name": "v1.2 standalone PCA method promotion",
+          "status": "passed",
+          "evidence": "validation/pca_method_promotion_audit.py writes validation/results/pca_method_promotion_audit.json and validates the documented standalone PCA scope, hand fixture, NumPy reference, high-dimensional fixture, missing-data behavior, constant-column guard, and METHOD_COMPATIBILITY row."
+        },
+        {
+          "track": "validation",
+          "name": "v1.2 OLS regression method promotion",
+          "status": "passed",
+          "evidence": "validation/ols_method_promotion_audit.py writes validation/results/ols_method_promotion_audit.json and validates documented OLS scope against independent Python HC3 formulas, R lm HC3 reference, rank-deficiency guard, and METHOD_COMPATIBILITY row."
+        }
       ],
       "next_actions": [
-        "Keep v0.8 methods experimental until broader simulations, second-source reference engines, bootstrap/permutation qualification, and performance evidence are complete.",
-        "Replace bounded GSCA preview with a fully independent ALS engine before any publication-ready GSCA promotion."
+        "Keep logistic regression, PROCESS, NCA, and GSCA experimental until separate method-specific promotion audits pass.",
+        "Implement robust_se selection for HC0/HC4 before making public OLS claims beyond HC3."
       ]
     },
     {
@@ -293,21 +986,96 @@
       "priority": 10,
       "summary": "Machine-readable audit gate for promoting all implemented v0.1-v0.8 preview features to publication-ready status. This gate is intentionally open until every method family has reproducible formula, reference, simulation, edge-case, GUI/CLI/export, performance, documentation, and known-difference evidence.",
       "gates": [
-        {"track": "validation", "name": "Global promotion matrix", "status": "passed", "evidence": "validation/promotion_matrix.py writes validation/results/publication_promotion_matrix.json with method-family rows, existing evidence, and required promotion evidence for v0.1-v0.8."},
-        {"track": "validation", "name": "R validation runtime and package audit", "status": "passed", "evidence": "validation/r_validation_runtime_audit.py writes validation/results/r_validation_runtime_audit.json; Rscript 4.6.1 is available at C:\\Users\\mohd.naved\\AppData\\Local\\Programs\\R\\R-4.6.1\\bin\\x64\\Rscript.exe and required validation-only packages lavaan, cSEM, seminr, plspm, boot, sandwich, and lmtest are installed or discoverable."},
-        {"track": "product", "name": "v0.1 foundation offline and recovery qualification", "status": "passed", "evidence": "validation/foundation_publication_audit.py writes validation/results/foundation_publication_audit.json; it verifies no runtime account/activation/telemetry/cloud dependency, no unnecessary network capability, built frontend assets, Rust-owned durable project state, cancellation/interrupted-result coverage, and autosave/recovery tests."},
-        {"track": "validation", "name": "v0.2 data/project publication qualification", "status": "passed", "evidence": "validation/data_project_publication_audit.py writes validation/results/data_project_publication_audit.json; it verifies qpls-data/qpls-project tests, CSV/TSV/XLSX/SAV coverage, malformed/duplicate/mixed/missing/covariance/correlation guards, generated stress imports, archive corruption/recovery/migration evidence, and export/reimport round-trip evidence."},
-        {"track": "validation", "name": "v0.3 PLS core stable run-envelope qualification", "status": "passed", "evidence": "validation/pls_publication_audit.py writes validation/results/pls_publication_audit.json and validation/results/pls_publication_bounded_benchmark.json; it verifies cSEM, python-plspm, NumPy PCA, and published threecommonfactors references, the stable estimator-only export path, bounded benchmark evidence, and docs/KNOWN_DIFFERENCES.md."},
-        {"track": "validation", "name": "v0.4 assessment publication qualification", "status": "passed", "evidence": "validation/assessment_publication_audit.py writes validation/results/assessment_publication_audit.json and validation/results/assessment_publication_metric_matrix.json; it maps each assessment metric to formulas, QuickPLS fields, references, tolerances, evidence files, known differences, export warning/precision checks, and qpls-assessment tests."},
-        {"track": "validation", "name": "v0.4 inference publication qualification", "status": "passed", "evidence": "validation/inference_publication_audit.py writes validation/results/inference_publication_audit.json and validation/results/inference_publication_matrix.json; it verifies percentile/BCa/studentized/jackknife/permutation evidence, full Monte Carlo qualification, worker invariance, release-stress performance, external bootstrap references, cancellation latency, and qpls-resampling tests."},
-        {"track": "validation", "name": "v0.5 extended PLS publication qualification", "status": "passed", "evidence": "validation/extended_pls_publication_audit.py writes validation/results/extended_pls_publication_audit.json; it verifies mediation, moderation, moderated mediation, HOC, PLSc, WPLS, CCA, CTA-PLS, endogeneity, nonlinear effects, controls, unsupported guards, docs, and qpls-estimation tests for the documented supported scope."},
-        {"track": "validation", "name": "v0.6 prediction and heterogeneity publication qualification", "status": "passed", "evidence": "validation/prediction_heterogeneity_publication_audit.py writes validation/results/prediction_heterogeneity_publication_audit.json; it verifies PLSpredict/CVPAT, IPMA, MGA, MICOM, permutation MGA, FIMIX-PLS, PLS-POS, segmentation recovery, docs, integrated v0.6 validation, and qpls-estimation tests for the documented supported scope."},
-        {"track": "validation", "name": "v0.7 CB-SEM/CFA publication qualification", "status": "passed", "evidence": "validation/cbsem_publication_audit.py writes validation/results/cbsem_publication_audit.json; it verifies CFA/SEM/fit/MI/bootstrap/multigroup/export/guard coverage, six lavaan parity fixtures, method docs, evidence aggregation, and qpls-estimation tests for the bounded raw-data reflective ML scope."},
-        {"track": "validation", "name": "v0.8 extended methods publication qualification", "status": "passed", "evidence": "validation/extended_methods_publication_audit.py writes validation/results/extended_methods_publication_audit.json; it verifies PCA, OLS, logistic regression, PROCESS, NCA, GSCA, method docs, evidence aggregation, and qpls-estimation tests for the documented supported scope."},
-        {"track": "product", "name": "GUI and diagram publication qualification", "status": "passed", "evidence": "validation/gui_diagram_publication_audit.py writes validation/results/gui_diagram_publication_audit.json; it verifies React Flow canvas wiring, layout/model tests, result-estimate visibility, SVG diagram export, browser print/PDF path, report export controls, frontend build/tests, and desktop tests."},
-        {"track": "product", "name": "Stable export qualification", "status": "passed", "evidence": "validation/stable_export_publication_audit.py writes validation/results/stable_export_publication_audit.json; it verifies stable CLI CSV/HTML/XLSX exports, default rejection of experimental payloads, desktop/report CSV/HTML/XLSX, SVG diagram, browser print-to-PDF path, qpls-cli tests, desktop tests, and frontend export tests."},
-        {"track": "documentation", "name": "Methodology manual and known-differences register", "status": "passed", "evidence": "validation/documentation_publication_audit.py writes validation/results/documentation_publication_audit.json; it verifies publication audit docs, method compatibility, delivery status, development ledger, known-differences register, Monte Carlo validation notes, and method-doc validation traceability."},
-        {"track": "release", "name": "Performance and release qualification", "status": "passed", "evidence": "validation/performance_release_publication_audit.py writes validation/results/performance_release_publication_audit.json; it verifies current benchmark smoke, PLS bounded benchmark, studentized release-stress evidence, cancellation qualification, CLI tests, desktop tests, and the named maximum benchmark profile."}
+        {
+          "track": "validation",
+          "name": "Global promotion matrix",
+          "status": "passed",
+          "evidence": "validation/promotion_matrix.py writes validation/results/publication_promotion_matrix.json with method-family rows, existing evidence, and required promotion evidence for v0.1-v0.8."
+        },
+        {
+          "track": "validation",
+          "name": "R validation runtime and package audit",
+          "status": "passed",
+          "evidence": "validation/r_validation_runtime_audit.py writes validation/results/r_validation_runtime_audit.json; Rscript 4.6.1 is available at C:\\Users\\mohd.naved\\AppData\\Local\\Programs\\R\\R-4.6.1\\bin\\x64\\Rscript.exe and required validation-only packages lavaan, cSEM, seminr, plspm, boot, sandwich, and lmtest are installed or discoverable."
+        },
+        {
+          "track": "product",
+          "name": "v0.1 foundation offline and recovery qualification",
+          "status": "passed",
+          "evidence": "validation/foundation_publication_audit.py writes validation/results/foundation_publication_audit.json; it verifies no runtime account/activation/telemetry/cloud dependency, no unnecessary network capability, built frontend assets, Rust-owned durable project state, cancellation/interrupted-result coverage, and autosave/recovery tests."
+        },
+        {
+          "track": "validation",
+          "name": "v0.2 data/project publication qualification",
+          "status": "passed",
+          "evidence": "validation/data_project_publication_audit.py writes validation/results/data_project_publication_audit.json; it verifies qpls-data/qpls-project tests, CSV/TSV/XLSX/SAV coverage, malformed/duplicate/mixed/missing/covariance/correlation guards, generated stress imports, archive corruption/recovery/migration evidence, and export/reimport round-trip evidence."
+        },
+        {
+          "track": "validation",
+          "name": "v0.3 PLS core stable run-envelope qualification",
+          "status": "passed",
+          "evidence": "validation/pls_publication_audit.py writes validation/results/pls_publication_audit.json and validation/results/pls_publication_bounded_benchmark.json; it verifies cSEM, python-plspm, NumPy PCA, and published threecommonfactors references, the stable estimator-only export path, bounded benchmark evidence, and docs/KNOWN_DIFFERENCES.md."
+        },
+        {
+          "track": "validation",
+          "name": "v0.4 assessment publication qualification",
+          "status": "passed",
+          "evidence": "validation/assessment_publication_audit.py writes validation/results/assessment_publication_audit.json and validation/results/assessment_publication_metric_matrix.json; it maps each assessment metric to formulas, QuickPLS fields, references, tolerances, evidence files, known differences, export warning/precision checks, and qpls-assessment tests."
+        },
+        {
+          "track": "validation",
+          "name": "v0.4 inference publication qualification",
+          "status": "passed",
+          "evidence": "validation/inference_publication_audit.py writes validation/results/inference_publication_audit.json and validation/results/inference_publication_matrix.json; it verifies percentile/BCa/studentized/jackknife/permutation evidence, full Monte Carlo qualification, worker invariance, release-stress performance, external bootstrap references, cancellation latency, and qpls-resampling tests."
+        },
+        {
+          "track": "validation",
+          "name": "v0.5 extended PLS publication qualification",
+          "status": "passed",
+          "evidence": "validation/extended_pls_publication_audit.py writes validation/results/extended_pls_publication_audit.json; it verifies mediation, moderation, moderated mediation, HOC, PLSc, WPLS, CCA, CTA-PLS, endogeneity, nonlinear effects, controls, unsupported guards, docs, and qpls-estimation tests for the documented supported scope."
+        },
+        {
+          "track": "validation",
+          "name": "v0.6 prediction and heterogeneity publication qualification",
+          "status": "passed",
+          "evidence": "validation/prediction_heterogeneity_publication_audit.py writes validation/results/prediction_heterogeneity_publication_audit.json; it verifies PLSpredict/CVPAT, IPMA, MGA, MICOM, permutation MGA, FIMIX-PLS, PLS-POS, segmentation recovery, docs, integrated v0.6 validation, and qpls-estimation tests for the documented supported scope."
+        },
+        {
+          "track": "validation",
+          "name": "v0.7 CB-SEM/CFA publication qualification",
+          "status": "passed",
+          "evidence": "validation/cbsem_publication_audit.py writes validation/results/cbsem_publication_audit.json; it verifies CFA/SEM/fit/MI/bootstrap/multigroup/export/guard coverage, six lavaan parity fixtures, method docs, evidence aggregation, and qpls-estimation tests for the bounded raw-data reflective ML scope."
+        },
+        {
+          "track": "validation",
+          "name": "v0.8 extended methods publication qualification",
+          "status": "passed",
+          "evidence": "validation/extended_methods_publication_audit.py writes validation/results/extended_methods_publication_audit.json; it verifies PCA, OLS, logistic regression, PROCESS, NCA, GSCA, method docs, evidence aggregation, and qpls-estimation tests for the documented supported scope."
+        },
+        {
+          "track": "product",
+          "name": "GUI and diagram publication qualification",
+          "status": "passed",
+          "evidence": "validation/gui_diagram_publication_audit.py writes validation/results/gui_diagram_publication_audit.json; it verifies React Flow canvas wiring, layout/model tests, result-estimate visibility, SVG diagram export, browser print/PDF path, report export controls, frontend build/tests, and desktop tests."
+        },
+        {
+          "track": "product",
+          "name": "Stable export qualification",
+          "status": "passed",
+          "evidence": "validation/stable_export_publication_audit.py writes validation/results/stable_export_publication_audit.json; it verifies stable CLI CSV/HTML/XLSX exports, default rejection of experimental payloads, desktop/report CSV/HTML/XLSX, SVG diagram, browser print-to-PDF path, qpls-cli tests, desktop tests, and frontend export tests."
+        },
+        {
+          "track": "documentation",
+          "name": "Methodology manual and known-differences register",
+          "status": "passed",
+          "evidence": "validation/documentation_publication_audit.py writes validation/results/documentation_publication_audit.json; it verifies publication audit docs, method compatibility, delivery status, development ledger, known-differences register, Monte Carlo validation notes, and method-doc validation traceability."
+        },
+        {
+          "track": "release",
+          "name": "Performance and release qualification",
+          "status": "passed",
+          "evidence": "validation/performance_release_publication_audit.py writes validation/results/performance_release_publication_audit.json; it verifies current benchmark smoke, PLS bounded benchmark, studentized release-stress evidence, cancellation qualification, CLI tests, desktop tests, and the named maximum benchmark profile."
+        }
       ],
       "next_actions": [
         "Run npm run qpls:publication:all before any release tag to regenerate every audit artifact.",
@@ -326,10 +1094,30 @@
       "priority": 11,
       "summary": "QuickPLS 0.9.0-rc.1 is complete as a Windows release candidate for the documented supported scope. The NSIS installer is intentionally unsigned for this RC; code signing remains a later packaging step.",
       "gates": [
-        {"track": "product", "name": "Publication exports", "status": "passed", "evidence": "validation/results/stable_export_publication_audit.json plus validation/results/v09_smoke_export.csv, validation/results/v09_smoke_export.html, and validation/results/v09_smoke_export.xlsx verify CLI/desktop supported export surfaces."},
-        {"track": "release", "name": "Unsigned NSIS installer packaging", "status": "passed", "evidence": "npm run qpls:v09:build produces target/release/quickpls-desktop.exe and target/release/bundle/nsis/*.exe; validation/results/v09_release_candidate_audit.json verifies the artifacts and documents that the installer is unsigned."},
-        {"track": "release", "name": "Accessibility and clean-machine smoke checklist", "status": "passed", "evidence": "validation/results/v09_smoke_check.json verifies release executable launch without dev server, project/run/export/recovery smoke coverage, diagram estimate visibility, SVG export path, and browser print-to-PDF path."},
-        {"track": "documentation", "name": "Manuals and dependency notices", "status": "passed", "evidence": "docs/RELEASE_NOTES_V0_9_RC1.md, docs/SUPPORTED_SCOPE_V0_9_RC1.md, docs/DEPENDENCY_NOTICES.md, docs/KNOWN_DIFFERENCES.md, docs/PUBLICATION_READY_AUDIT.md, and docs/METHOD_COMPATIBILITY.md define release scope, known limits, notices, and non-equivalence statements."}
+        {
+          "track": "product",
+          "name": "Publication exports",
+          "status": "passed",
+          "evidence": "validation/results/stable_export_publication_audit.json plus validation/results/v09_smoke_export.csv, validation/results/v09_smoke_export.html, and validation/results/v09_smoke_export.xlsx verify CLI/desktop supported export surfaces."
+        },
+        {
+          "track": "release",
+          "name": "Unsigned NSIS installer packaging",
+          "status": "passed",
+          "evidence": "npm run qpls:v09:build produces target/release/quickpls-desktop.exe and target/release/bundle/nsis/*.exe; validation/results/v09_release_candidate_audit.json verifies the artifacts and documents that the installer is unsigned."
+        },
+        {
+          "track": "release",
+          "name": "Accessibility and clean-machine smoke checklist",
+          "status": "passed",
+          "evidence": "validation/results/v09_smoke_check.json verifies release executable launch without dev server, project/run/export/recovery smoke coverage, diagram estimate visibility, SVG export path, and browser print-to-PDF path."
+        },
+        {
+          "track": "documentation",
+          "name": "Manuals and dependency notices",
+          "status": "passed",
+          "evidence": "docs/RELEASE_NOTES_V0_9_RC1.md, docs/SUPPORTED_SCOPE_V0_9_RC1.md, docs/DEPENDENCY_NOTICES.md, docs/KNOWN_DIFFERENCES.md, docs/PUBLICATION_READY_AUDIT.md, and docs/METHOD_COMPATIBILITY.md define release scope, known limits, notices, and non-equivalence statements."
+        }
       ],
       "next_actions": [
         "Add a code-signing certificate and run a separate signing audit before public installer distribution.",
@@ -348,12 +1136,42 @@
       "priority": 12,
       "summary": "The model editor now uses a SEM-native visual graph with latent ovals, visible indicator nodes, measurement arrows, covariance display arcs, structured result overlays, compatible-run stale blocking, publication SVG export, and legacy project defaults while preserving engine recipe compatibility.",
       "gates": [
-        {"track": "product", "name": "SEM-native visual graph", "status": "passed", "evidence": "src/domain/diagramGraph.ts derives latent, indicator, measurement, structural, and covariance display graph elements from existing construct/path state."},
-        {"track": "product", "name": "Direct editor ergonomics", "status": "passed", "evidence": "src/components/ModelCanvas.tsx, src/components/LatentNode.tsx, and src/components/IndicatorNode.tsx provide SEM mode, visible indicators, drag/drop assignment, path and covariance tools, keyboard shortcuts, inline construct rename, and diagram legend."},
-        {"track": "product", "name": "Result overlay contract", "status": "passed", "evidence": "diagram overlay settings, compatible-run checks, and src/domain/diagramGraph.test.ts verify numeric overlays are hidden until a compatible completed run is selected."},
-        {"track": "product", "name": "Publication SVG parity", "status": "passed", "evidence": "src/domain/publicationDiagram.ts renders SEM-native SVG using the derived graph; Reports workspace previews and exports the same SVG with publication settings."},
-        {"track": "automation", "name": "Diagram tests, visual smoke, and audit", "status": "passed", "evidence": "npm test -- --run, npm run build, validation/gui_diagram_publication_audit.py, validation/v091_diagram_visual_smoke.mjs, validation/results/v091_diagram_visual_smoke.json, validation/results/v091_diagram_default_1440x900.png, and cargo run -p qpls-cli -- gate v0_9_1_diagram_ergonomics."},
-        {"track": "documentation", "name": "Compatibility note", "status": "passed", "evidence": "docs/DIAGRAM_ERGONOMICS_V0_9_1.md documents visual-editor changes, defaults, compatibility, and limits."}
+        {
+          "track": "product",
+          "name": "SEM-native visual graph",
+          "status": "passed",
+          "evidence": "src/domain/diagramGraph.ts derives latent, indicator, measurement, structural, and covariance display graph elements from existing construct/path state."
+        },
+        {
+          "track": "product",
+          "name": "Direct editor ergonomics",
+          "status": "passed",
+          "evidence": "src/components/ModelCanvas.tsx, src/components/LatentNode.tsx, and src/components/IndicatorNode.tsx provide SEM mode, visible indicators, drag/drop assignment, path and covariance tools, keyboard shortcuts, inline construct rename, and diagram legend."
+        },
+        {
+          "track": "product",
+          "name": "Result overlay contract",
+          "status": "passed",
+          "evidence": "diagram overlay settings, compatible-run checks, and src/domain/diagramGraph.test.ts verify numeric overlays are hidden until a compatible completed run is selected."
+        },
+        {
+          "track": "product",
+          "name": "Publication SVG parity",
+          "status": "passed",
+          "evidence": "src/domain/publicationDiagram.ts renders SEM-native SVG using the derived graph; Reports workspace previews and exports the same SVG with publication settings."
+        },
+        {
+          "track": "automation",
+          "name": "Diagram tests, visual smoke, and audit",
+          "status": "passed",
+          "evidence": "npm test -- --run, npm run build, validation/gui_diagram_publication_audit.py, validation/v091_diagram_visual_smoke.mjs, validation/results/v091_diagram_visual_smoke.json, validation/results/v091_diagram_default_1440x900.png, and cargo run -p qpls-cli -- gate v0_9_1_diagram_ergonomics."
+        },
+        {
+          "track": "documentation",
+          "name": "Compatibility note",
+          "status": "passed",
+          "evidence": "docs/DIAGRAM_ERGONOMICS_V0_9_1.md documents visual-editor changes, defaults, compatibility, and limits."
+        }
       ],
       "next_actions": [
         "Use visual desktop smoke testing before packaging the next public build.",
@@ -371,12 +1189,42 @@
       "priority": 13,
       "summary": "QuickPLS now has a dedicated SmartPLS-like result/publication diagram mode with grey latent ovals, outside indicator rectangles, direct arrows, measurement values, structural path coefficients, R2 inside endogenous constructs, non-editing result behavior, and matching SVG export while preserving existing model recipes and the interactive editor.",
       "gates": [
-        {"track": "product", "name": "Dedicated SmartPLS-like result mode", "status": "passed", "evidence": "src/types.ts adds smartpls_result; src/components/ModelCanvas.tsx exposes Result diagram and Arrange like SmartPLS while keeping Edit model separate."},
-        {"track": "product", "name": "SmartPLS-aware layout and overlay contract", "status": "passed", "evidence": "src/domain/diagramGraph.ts implements smartplsLayout with left predictors, middle mediators, right outcomes, outside indicators, measurement labels, path coefficients, stale-run blocking, and pre-run warnings."},
-        {"track": "product", "name": "Paper-style rendering", "status": "passed", "evidence": "src/components/LatentNode.tsx, src/components/IndicatorNode.tsx, and src/styles.css render grey latent ovals, light grey indicator rectangles, direct dark arrows, hidden editor affordances, and corrected R² text."},
-        {"track": "product", "name": "Publication SVG export parity", "status": "passed", "evidence": "src/domain/publicationDiagram.ts and src/components/ReportsWorkspace.tsx default SVG export to SmartPLS-like grayscale with controls for precision, loadings, paths, R², and palette variants."},
-        {"track": "automation", "name": "Unit and visual smoke evidence", "status": "passed", "evidence": "npm test -- --run covers graph layout and SVG content; validation/v092_smartpls_diagram_audit.py and validation/v092_smartpls_diagram_visual_smoke.mjs write validation/results/v092_smartpls_diagram_audit.json and validation/results/v092_smartpls_diagram_visual_smoke.json."},
-        {"track": "documentation", "name": "Visual compatibility note", "status": "passed", "evidence": "docs/SMARTPLS_STYLE_DIAGRAM_V0_9_2.md documents that v0.9.2 changes only the result/publication visual layer and not the numerical recipe format."}
+        {
+          "track": "product",
+          "name": "Dedicated SmartPLS-like result mode",
+          "status": "passed",
+          "evidence": "src/types.ts adds smartpls_result; src/components/ModelCanvas.tsx exposes Result diagram and Arrange like SmartPLS while keeping Edit model separate."
+        },
+        {
+          "track": "product",
+          "name": "SmartPLS-aware layout and overlay contract",
+          "status": "passed",
+          "evidence": "src/domain/diagramGraph.ts implements smartplsLayout with left predictors, middle mediators, right outcomes, outside indicators, measurement labels, path coefficients, stale-run blocking, and pre-run warnings."
+        },
+        {
+          "track": "product",
+          "name": "Paper-style rendering",
+          "status": "passed",
+          "evidence": "src/components/LatentNode.tsx, src/components/IndicatorNode.tsx, and src/styles.css render grey latent ovals, light grey indicator rectangles, direct dark arrows, hidden editor affordances, and corrected R\u00b2 text."
+        },
+        {
+          "track": "product",
+          "name": "Publication SVG export parity",
+          "status": "passed",
+          "evidence": "src/domain/publicationDiagram.ts and src/components/ReportsWorkspace.tsx default SVG export to SmartPLS-like grayscale with controls for precision, loadings, paths, R\u00b2, and palette variants."
+        },
+        {
+          "track": "automation",
+          "name": "Unit and visual smoke evidence",
+          "status": "passed",
+          "evidence": "npm test -- --run covers graph layout and SVG content; validation/v092_smartpls_diagram_audit.py and validation/v092_smartpls_diagram_visual_smoke.mjs write validation/results/v092_smartpls_diagram_audit.json and validation/results/v092_smartpls_diagram_visual_smoke.json."
+        },
+        {
+          "track": "documentation",
+          "name": "Visual compatibility note",
+          "status": "passed",
+          "evidence": "docs/SMARTPLS_STYLE_DIAGRAM_V0_9_2.md documents that v0.9.2 changes only the result/publication visual layer and not the numerical recipe format."
+        }
       ],
       "next_actions": [
         "Use screenshot comparison against representative research-paper layouts before public demo recordings.",
@@ -394,12 +1242,42 @@
       "priority": 14,
       "summary": "QuickPLS now uses one professional academic SEM visual grammar across editable canvas, result diagram, publication preview, and SVG export. The designer adds persistent layout metadata, editable indicator positions, right-click object actions, locked result/publication modes, and current-canvas export parity without changing the validated statistical recipe.",
       "gates": [
-        {"track": "product", "name": "Unified academic SEM canvas", "status": "passed", "evidence": "src/components/ModelCanvas.tsx keeps sem as the editable academic canvas, locks only result/publication views, and uses the derived SEM graph for all diagram modes."},
-        {"track": "product", "name": "Persistent designer layout metadata", "status": "passed", "evidence": "src/types.ts adds DiagramLayoutState with constructLayouts, indicatorLayouts, edgeLayouts, viewport, and theme; src/store.ts normalizes and persists diagramLayout separately from the numerical model recipe."},
-        {"track": "product", "name": "Editable indicator and object workflows", "status": "passed", "evidence": "src/components/ModelCanvas.tsx routes indicator node drags into moveIndicator, supports drop-near-construct reassignment, and exposes right-click menus for construct, indicator, edge, and canvas actions."},
-        {"track": "product", "name": "Current-canvas publication export parity", "status": "passed", "evidence": "src/domain/publicationDiagram.ts accepts DiagramLayoutState and layoutSource; Reports workspace defaults to Current canvas with optional Tidy publication."},
-        {"track": "automation", "name": "Unit, build, audit, and browser smoke evidence", "status": "passed", "evidence": "npm test -- --run, npm run build, validation/v093_sem_designer_audit.py, validation/v093_sem_designer_visual_smoke.mjs, and validation/results/screens/v093/ verify layout persistence, draggable indicators, context menus, export parity, and screenshots."},
-        {"track": "documentation", "name": "Designer compatibility note", "status": "passed", "evidence": "docs/PROFESSIONAL_SEM_DESIGNER_V0_9_3.md documents the saved layout metadata, unchanged statistical recipe, result/publication lock behavior, export rules, and placeholder limits."}
+        {
+          "track": "product",
+          "name": "Unified academic SEM canvas",
+          "status": "passed",
+          "evidence": "src/components/ModelCanvas.tsx keeps sem as the editable academic canvas, locks only result/publication views, and uses the derived SEM graph for all diagram modes."
+        },
+        {
+          "track": "product",
+          "name": "Persistent designer layout metadata",
+          "status": "passed",
+          "evidence": "src/types.ts adds DiagramLayoutState with constructLayouts, indicatorLayouts, edgeLayouts, viewport, and theme; src/store.ts normalizes and persists diagramLayout separately from the numerical model recipe."
+        },
+        {
+          "track": "product",
+          "name": "Editable indicator and object workflows",
+          "status": "passed",
+          "evidence": "src/components/ModelCanvas.tsx routes indicator node drags into moveIndicator, supports drop-near-construct reassignment, and exposes right-click menus for construct, indicator, edge, and canvas actions."
+        },
+        {
+          "track": "product",
+          "name": "Current-canvas publication export parity",
+          "status": "passed",
+          "evidence": "src/domain/publicationDiagram.ts accepts DiagramLayoutState and layoutSource; Reports workspace defaults to Current canvas with optional Tidy publication."
+        },
+        {
+          "track": "automation",
+          "name": "Unit, build, audit, and browser smoke evidence",
+          "status": "passed",
+          "evidence": "npm test -- --run, npm run build, validation/v093_sem_designer_audit.py, validation/v093_sem_designer_visual_smoke.mjs, and validation/results/screens/v093/ verify layout persistence, draggable indicators, context menus, export parity, and screenshots."
+        },
+        {
+          "track": "documentation",
+          "name": "Designer compatibility note",
+          "status": "passed",
+          "evidence": "docs/PROFESSIONAL_SEM_DESIGNER_V0_9_3.md documents the saved layout metadata, unchanged statistical recipe, result/publication lock behavior, export rules, and placeholder limits."
+        }
       ],
       "next_actions": [
         "Use the v0.9.3 screenshots for iterative visual comparison against representative SmartPLS and AMOS diagrams.",
@@ -417,14 +1295,54 @@
       "priority": 15,
       "summary": "QuickPLS 1.0.0 Stable is complete for the documented supported scope. Unsupported and post-v1 features remain blocked or explicitly watermarked; the unsigned Windows installer is documented until a signing certificate and separate signing audit are added.",
       "gates": [
-        {"track": "documentation", "name": "Supported v1.0 scope frozen", "status": "passed", "evidence": "docs/V1_SUPPORTED_SCOPE.md, docs/METHODOLOGY_MANUAL_V1_0.md, docs/RELEASE_NOTES_V1_0.md, and docs/VALIDATION_ARTIFACT_INDEX_V1_0.md define the exact stable scope and validation evidence."},
-        {"track": "validation", "name": "No unexplained numerical discrepancies", "status": "passed", "evidence": "validation/v10_numerical_discrepancy_audit.py writes validation/results/v10_numerical_discrepancy_audit.json and aggregates publication artifacts, method specs, references, tolerances, and known-difference coverage for all v1.0-supported method families."},
-        {"track": "documentation", "name": "Compatibility matrix and known differences published", "status": "passed", "evidence": "docs/V1_COMPATIBILITY_MATRIX.md and docs/V1_KNOWN_DIFFERENCES.md publish method status, bounded supported shapes, unsupported/post-v1 cases, and documented numerical convention differences."},
-        {"track": "product", "name": "Product scope enforcement", "status": "passed", "evidence": "validation/v10_product_scope_audit.py writes validation/results/v10_product_scope_audit.json and verifies UI labels, CLI/export scope, report provenance/warnings, SEM designer overlay guards, and absence of SmartPLS equivalence/import/reverse-engineering claims."},
-        {"track": "product", "name": "Desktop smoke and recovery", "status": "passed", "evidence": "validation/v10_desktop_smoke_check.py writes validation/results/v10_desktop_smoke_check.json and verifies release executable launch without dev server, simple PLS run, CSV/HTML/XLSX/SVG export paths, browser print-to-PDF documentation, autosave/recovery evidence, and v0.9.3 designer layout smoke evidence."},
-        {"track": "release", "name": "Performance and reproducibility", "status": "passed", "evidence": "validation/v10_performance_audit.py writes validation/results/v10_performance_audit.json and verifies practical release benchmark evidence, bootstrap/resampling throughput, cancellation latency, peak memory records, deterministic rerun evidence, worker-count reproducibility, and diagram responsiveness smoke evidence."},
-        {"track": "release", "name": "Stable installer and offline launch", "status": "passed", "evidence": "validation/v10_release_packaging_audit.py writes validation/results/v10_release_packaging_audit.json and verifies version metadata 1.0.0, production frontend build, release executable, NSIS installer, offline launch smoke, dependency notices, release notes, and explicit unsigned-installer status."},
-        {"track": "documentation", "name": "Documentation and dependency notices", "status": "passed", "evidence": "docs/INSTALLATION_V1_0.md and docs/DEPENDENCY_NOTICES_V1_0.md document Windows install/portable launch, unsigned installer behavior, offline operation, validation-only R/Rscript status, and distributed dependency notices."}
+        {
+          "track": "documentation",
+          "name": "Supported v1.0 scope frozen",
+          "status": "passed",
+          "evidence": "docs/V1_SUPPORTED_SCOPE.md, docs/METHODOLOGY_MANUAL_V1_0.md, docs/RELEASE_NOTES_V1_0.md, and docs/VALIDATION_ARTIFACT_INDEX_V1_0.md define the exact stable scope and validation evidence."
+        },
+        {
+          "track": "validation",
+          "name": "No unexplained numerical discrepancies",
+          "status": "passed",
+          "evidence": "validation/v10_numerical_discrepancy_audit.py writes validation/results/v10_numerical_discrepancy_audit.json and aggregates publication artifacts, method specs, references, tolerances, and known-difference coverage for all v1.0-supported method families."
+        },
+        {
+          "track": "documentation",
+          "name": "Compatibility matrix and known differences published",
+          "status": "passed",
+          "evidence": "docs/V1_COMPATIBILITY_MATRIX.md and docs/V1_KNOWN_DIFFERENCES.md publish method status, bounded supported shapes, unsupported/post-v1 cases, and documented numerical convention differences."
+        },
+        {
+          "track": "product",
+          "name": "Product scope enforcement",
+          "status": "passed",
+          "evidence": "validation/v10_product_scope_audit.py writes validation/results/v10_product_scope_audit.json and verifies UI labels, CLI/export scope, report provenance/warnings, SEM designer overlay guards, and absence of SmartPLS equivalence/import/reverse-engineering claims."
+        },
+        {
+          "track": "product",
+          "name": "Desktop smoke and recovery",
+          "status": "passed",
+          "evidence": "validation/v10_desktop_smoke_check.py writes validation/results/v10_desktop_smoke_check.json and verifies release executable launch without dev server, simple PLS run, CSV/HTML/XLSX/SVG export paths, browser print-to-PDF documentation, autosave/recovery evidence, and v0.9.3 designer layout smoke evidence."
+        },
+        {
+          "track": "release",
+          "name": "Performance and reproducibility",
+          "status": "passed",
+          "evidence": "validation/v10_performance_audit.py writes validation/results/v10_performance_audit.json and verifies practical release benchmark evidence, bootstrap/resampling throughput, cancellation latency, peak memory records, deterministic rerun evidence, worker-count reproducibility, and diagram responsiveness smoke evidence."
+        },
+        {
+          "track": "release",
+          "name": "Stable installer and offline launch",
+          "status": "passed",
+          "evidence": "validation/v10_release_packaging_audit.py writes validation/results/v10_release_packaging_audit.json and verifies version metadata 1.0.0, production frontend build, release executable, NSIS installer, offline launch smoke, dependency notices, release notes, and explicit unsigned-installer status."
+        },
+        {
+          "track": "documentation",
+          "name": "Documentation and dependency notices",
+          "status": "passed",
+          "evidence": "docs/INSTALLATION_V1_0.md and docs/DEPENDENCY_NOTICES_V1_0.md document Windows install/portable launch, unsigned installer behavior, offline operation, validation-only R/Rscript status, and distributed dependency notices."
+        }
       ],
       "next_actions": [
         "Add a code-signing certificate and a separate signature verification gate before broad public installer distribution.",
@@ -443,13 +1361,48 @@
       "priority": 16,
       "summary": "QuickPLS v1.1 completes the desktop-first UX polish pass for the documented native Windows workflow: persistent readiness guidance, professional SEM designer evidence, report/export parity, keyboard table workflow coverage, native workflow smoke, and rebuilt release artifacts.",
       "gates": [
-        {"track": "product", "name": "Desktop workflow guidance", "status": "passed", "evidence": "validation/results/v11_desktop_ux_smoke.json verifies Data -> Model -> Validate -> Run -> Results -> Report navigation, readiness panels, disabled-run guidance, canvas next-action guidance, and persistent footer readiness at 1440x900."},
-        {"track": "product", "name": "SEM designer polish evidence", "status": "passed", "evidence": "validation/results/v11_desktop_ux_smoke.json and validation/results/screens/v11/ verify SmartPLS-like canvas styling, visible indicators, result overlay states, completed-run loadings/path/R2 overlays, and publication preview screenshots."},
-        {"track": "product", "name": "Report export parity", "status": "passed", "evidence": "validation/v11_report_export_parity.mjs writes validation/results/v11_report_export_parity.json and confirms the on-screen SVG preview and exported SVG contain the same key labels without edit chrome or R2 mojibake."},
-        {"track": "product", "name": "Keyboard workflow smoke", "status": "passed", "evidence": "validation/v11_keyboard_workflow_smoke.mjs writes validation/results/v11_keyboard_workflow_smoke.json and verifies named, focusable Results and Report table regions at desktop viewport."},
-        {"track": "automation", "name": "Native desktop workflow smoke", "status": "passed", "evidence": "validation/v11_native_workflow_smoke.py writes validation/results/v11_native_workflow_smoke.json and runs quickpls-desktop::desktop_native_v11_workflow_smoke_import_run_save_reopen_and_export for native import/run/save/reopen/layout/XLSX coverage."},
-        {"track": "release", "name": "Release artifact freshness", "status": "passed", "evidence": "validation/results/v11_native_desktop_smoke.json verifies target/release/quickpls-desktop.exe and target/release/bundle/nsis/QuickPLS_1.0.0_x64-setup.exe exist, are newer than the current frontend bundle, and launch without a dev server."},
-        {"track": "documentation", "name": "v1.1 UX audit closure", "status": "passed", "evidence": "docs/V1_1_UX_AUDIT.md records implemented v1.1 desktop UX improvements, latest evidence, mobile non-gating status, and no remaining desktop release blockers."}
+        {
+          "track": "product",
+          "name": "Desktop workflow guidance",
+          "status": "passed",
+          "evidence": "validation/results/v11_desktop_ux_smoke.json verifies Data -> Model -> Validate -> Run -> Results -> Report navigation, readiness panels, disabled-run guidance, canvas next-action guidance, and persistent footer readiness at 1440x900."
+        },
+        {
+          "track": "product",
+          "name": "SEM designer polish evidence",
+          "status": "passed",
+          "evidence": "validation/results/v11_desktop_ux_smoke.json and validation/results/screens/v11/ verify SmartPLS-like canvas styling, visible indicators, result overlay states, completed-run loadings/path/R2 overlays, and publication preview screenshots."
+        },
+        {
+          "track": "product",
+          "name": "Report export parity",
+          "status": "passed",
+          "evidence": "validation/v11_report_export_parity.mjs writes validation/results/v11_report_export_parity.json and confirms the on-screen SVG preview and exported SVG contain the same key labels without edit chrome or R2 mojibake."
+        },
+        {
+          "track": "product",
+          "name": "Keyboard workflow smoke",
+          "status": "passed",
+          "evidence": "validation/v11_keyboard_workflow_smoke.mjs writes validation/results/v11_keyboard_workflow_smoke.json and verifies named, focusable Results and Report table regions at desktop viewport."
+        },
+        {
+          "track": "automation",
+          "name": "Native desktop workflow smoke",
+          "status": "passed",
+          "evidence": "validation/v11_native_workflow_smoke.py writes validation/results/v11_native_workflow_smoke.json and runs quickpls-desktop::desktop_native_v11_workflow_smoke_import_run_save_reopen_and_export for native import/run/save/reopen/layout/XLSX coverage."
+        },
+        {
+          "track": "release",
+          "name": "Release artifact freshness",
+          "status": "passed",
+          "evidence": "validation/results/v11_native_desktop_smoke.json verifies target/release/quickpls-desktop.exe and target/release/bundle/nsis/QuickPLS_1.0.0_x64-setup.exe exist, are newer than the current frontend bundle, and launch without a dev server."
+        },
+        {
+          "track": "documentation",
+          "name": "v1.1 UX audit closure",
+          "status": "passed",
+          "evidence": "docs/V1_1_UX_AUDIT.md records implemented v1.1 desktop UX improvements, latest evidence, mobile non-gating status, and no remaining desktop release blockers."
+        }
       ],
       "next_actions": [
         "Continue future UX improvements through separate v1.2+ gates rather than reopening the v1.1 desktop release scope.",
@@ -467,18 +1420,213 @@
       "priority": 17,
       "summary": "QuickPLS v1.1.1 closes the stricter desktop UX hardening pass: release-executable native workflow evidence, dense SEM designer fixtures, simplified inspector sections, progressive method settings, broader SVG parity, keyboard workflow evidence, and low-frequency disabled-action explanations.",
       "gates": [
-        {"track": "automation", "name": "Native desktop GUI workflow smoke", "status": "passed", "evidence": "validation/v111_native_gui_workflow_smoke.py writes validation/results/v111_native_gui_workflow_smoke.json; it launches target/release/quickpls-desktop.exe with QUICKPLS_SMOKE_UI=1, runs the production native workflow test, and records pywinauto availability for literal OS-dialog automation."},
-        {"track": "product", "name": "Dense SEM designer visual smoke", "status": "passed", "evidence": "validation/v111_sem_designer_dense_smoke.mjs writes validation/results/v111_sem_designer_dense_smoke.json and screenshots under validation/results/screens/v111/sem-designer for medium, large, mediation, and formative fixtures."},
-        {"track": "product", "name": "Inspector simplification", "status": "passed", "evidence": "src/components/Inspector.tsx uses Essentials, Indicators, Layout, Advanced semantics, and Diagnostics disclosure sections, with common delete and indicator-side/reset actions outside advanced semantics."},
-        {"track": "product", "name": "Progressive method settings", "status": "passed", "evidence": "validation/v111_settings_ux_smoke.mjs writes validation/results/v111_settings_ux_smoke.json and verifies recommended-default guidance plus collapsed advanced resampling/reproducibility controls."},
-        {"track": "product", "name": "Broad report/export parity", "status": "passed", "evidence": "validation/v111_report_export_parity.mjs writes validation/results/v111_report_export_parity.json and compares preview/exported SVGs across model-only, completed-result, large, formative, current-layout, and tidy-layout cases."},
-        {"track": "product", "name": "Native keyboard workflow smoke", "status": "passed", "evidence": "validation/v111_keyboard_native_smoke.py writes validation/results/v111_keyboard_native_smoke.json, launches the release executable, and verifies completed-result Results and Report keyboard-region contracts."},
-        {"track": "product", "name": "Low-frequency disabled-action explanations", "status": "passed", "evidence": "validation/v111_disabled_actions_audit.py writes validation/results/v111_disabled_actions_audit.json and verifies visible/accessibility reasons for Run, Report, Data, canvas lock, covariance/path, native XLSX, and method-settings actions."},
-        {"track": "documentation", "name": "v1.1.1 hardening documentation", "status": "passed", "evidence": "docs/V1_1_1_NATIVE_UX_HARDENING.md, docs/DELIVERY_STATUS.md, and docs/DEVELOPMENT_LEDGER.md document the hardening scope, evidence, pywinauto validation-only boundary, mobile non-gating status, and SVG export boundary."}
+        {
+          "track": "automation",
+          "name": "Native desktop GUI workflow smoke",
+          "status": "passed",
+          "evidence": "validation/v111_native_gui_workflow_smoke.py writes validation/results/v111_native_gui_workflow_smoke.json; it launches target/release/quickpls-desktop.exe with QUICKPLS_SMOKE_UI=1, runs the production native workflow test, and records pywinauto availability for literal OS-dialog automation."
+        },
+        {
+          "track": "product",
+          "name": "Dense SEM designer visual smoke",
+          "status": "passed",
+          "evidence": "validation/v111_sem_designer_dense_smoke.mjs writes validation/results/v111_sem_designer_dense_smoke.json and screenshots under validation/results/screens/v111/sem-designer for medium, large, mediation, and formative fixtures."
+        },
+        {
+          "track": "product",
+          "name": "Inspector simplification",
+          "status": "passed",
+          "evidence": "src/components/Inspector.tsx uses Essentials, Indicators, Layout, Advanced semantics, and Diagnostics disclosure sections, with common delete and indicator-side/reset actions outside advanced semantics."
+        },
+        {
+          "track": "product",
+          "name": "Progressive method settings",
+          "status": "passed",
+          "evidence": "validation/v111_settings_ux_smoke.mjs writes validation/results/v111_settings_ux_smoke.json and verifies recommended-default guidance plus collapsed advanced resampling/reproducibility controls."
+        },
+        {
+          "track": "product",
+          "name": "Broad report/export parity",
+          "status": "passed",
+          "evidence": "validation/v111_report_export_parity.mjs writes validation/results/v111_report_export_parity.json and compares preview/exported SVGs across model-only, completed-result, large, formative, current-layout, and tidy-layout cases."
+        },
+        {
+          "track": "product",
+          "name": "Native keyboard workflow smoke",
+          "status": "passed",
+          "evidence": "validation/v111_keyboard_native_smoke.py writes validation/results/v111_keyboard_native_smoke.json, launches the release executable, and verifies completed-result Results and Report keyboard-region contracts."
+        },
+        {
+          "track": "product",
+          "name": "Low-frequency disabled-action explanations",
+          "status": "passed",
+          "evidence": "validation/v111_disabled_actions_audit.py writes validation/results/v111_disabled_actions_audit.json and verifies visible/accessibility reasons for Run, Report, Data, canvas lock, covariance/path, native XLSX, and method-settings actions."
+        },
+        {
+          "track": "documentation",
+          "name": "v1.1.1 hardening documentation",
+          "status": "passed",
+          "evidence": "docs/V1_1_1_NATIVE_UX_HARDENING.md, docs/DELIVERY_STATUS.md, and docs/DEVELOPMENT_LEDGER.md document the hardening scope, evidence, pywinauto validation-only boundary, mobile non-gating status, and SVG export boundary."
+        }
       ],
       "next_actions": [
         "Install pywinauto in validation tooling and promote literal OS file-dialog clicking when stable on the release workstation.",
         "Keep native PDF/PNG export and mobile UX outside this desktop hardening gate unless separately scoped and audited."
+      ]
+    },
+    {
+      "id": "v1_2_method_promotion_program",
+      "release": "v1.2",
+      "family": "Validation",
+      "name": "Method promotion program",
+      "status": "experimental",
+      "stable_output": false,
+      "owner_track": "validation",
+      "priority": 18,
+      "summary": "QuickPLS v1.2 starts the method-by-method promotion program. The first and second calculation batches are now promoted for documented scopes. Remaining calculation families move from experimental preview output to researcher-ready validated output only after method-specific reference, simulation, edge-case, GUI/CLI/export, reproducibility, performance, and documentation evidence is complete.",
+      "gates": [
+        {
+          "track": "documentation",
+          "name": "Promotion criteria frozen",
+          "status": "passed",
+          "evidence": "docs/METHOD_PROMOTION_CRITERIA.md defines the required evidence for moving a method from experimental to validated."
+        },
+        {
+          "track": "documentation",
+          "name": "Program plan documented",
+          "status": "passed",
+          "evidence": "docs/METHOD_PROMOTION_PROGRAM_V1_2.md defines the v1.2 method promotion program, work packages, first promotion batch, and scope rules."
+        },
+        {
+          "track": "validation",
+          "name": "Initial promotion-program audit",
+          "status": "passed",
+          "evidence": "validation/promotion_matrix.py writes validation/results/method_promotion_matrix_v1_2.json; validation/method_promotion_program_audit.py writes validation/results/method_promotion_program_audit.json and verifies docs, registry wiring, current stage, criteria checks, promotion matrix, and the experimental-method backlog."
+        },
+        {
+          "track": "validation",
+          "name": "PLS core estimator-output promotion",
+          "status": "passed",
+          "evidence": "validation/pls_core_method_promotion_audit.py writes validation/results/pls_core_method_promotion_audit.json; docs/METHOD_COMPATIBILITY.md now marks PLS path modeling core as Yes, estimator-only, while assessment and inference remain separately gated."
+        },
+        {
+          "track": "validation",
+          "name": "Assessment metrics promotion",
+          "status": "passed",
+          "evidence": "validation/assessment_method_promotion_audit.py writes validation/results/assessment_method_promotion_audit.json; docs/METHOD_COMPATIBILITY.md marks documented assessment metrics as validated while d_G, NFI, RMS_theta, and inference remain separately gated."
+        },
+        {
+          "track": "validation",
+          "name": "Inference/resampling promotion",
+          "status": "passed",
+          "evidence": "validation/inference_method_promotion_audit.py writes validation/results/inference_method_promotion_audit.json; docs/METHOD_COMPATIBILITY.md marks documented PLS inference/resampling as validated while unsupported shapes and unaudited stochastic claims remain excluded."
+        },
+        {
+          "track": "validation",
+          "name": "Standalone PCA promotion",
+          "status": "passed",
+          "evidence": "validation/pca_method_promotion_audit.py writes validation/results/pca_method_promotion_audit.json; docs/METHOD_COMPATIBILITY.md marks standalone PCA as validated for documented raw-data PCA scope while rotations, pairwise deletion, covariance/correlation input, and inference remain excluded."
+        },
+        {
+          "track": "validation",
+          "name": "OLS regression promotion",
+          "status": "passed",
+          "evidence": "validation/ols_method_promotion_audit.py writes validation/results/ols_method_promotion_audit.json; docs/METHOD_COMPATIBILITY.md marks OLS as validated for documented HC3 raw-data scope while logistic, PROCESS, HC0/HC4 claims, categorical encoding, and advanced regression families remain excluded."
+        },
+        {
+          "track": "validation",
+          "name": "First promotion batch evidence",
+          "status": "passed",
+          "evidence": "First batch method-specific audits now pass: validation/results/pls_core_method_promotion_audit.json, assessment_method_promotion_audit.json, inference_method_promotion_audit.json, pca_method_promotion_audit.json, and ols_method_promotion_audit.json. Product enforcement remains separately open."
+        },
+        {
+          "track": "validation",
+          "name": "Second-source and simulation expansion",
+          "status": "open",
+          "evidence": "Remaining later-batch validation is still required for CB-SEM/CFA, GSCA, MICOM/MGA, FIMIX-PLS, PLS-POS, logistic regression, PROCESS-style workflows, higher-order constructs, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation."
+        },
+        {
+          "track": "product",
+          "name": "Validated-scope product enforcement",
+          "status": "passed",
+          "evidence": "validation/method_promotion_product_enforcement_audit.py writes validation/results/method_promotion_product_enforcement_audit.json and verifies UI/catalog/readiness/result-table/engine-warning surfaces promote only PLS core, assessment/inference scope, PCA, and OLS while logistic, PROCESS, NCA, CB-SEM, GSCA, segmentation, and other unpromoted methods remain experimental or watermarked."
+        }
+      ],
+      "next_actions": [
+        "Keep every non-promoted later-batch method watermarked experimental until its method-specific promotion gate passes.",
+        "Start third-batch promotion planning for remaining prediction/group methods, CB-SEM/CFA, GSCA, logistic/PROCESS, HOC, nonlinear/endogeneity diagnostics, CCA, CTA-PLS, and moderated mediation.",
+        "For each later batch, add method-specific two-reference evidence, preregistered simulations, edge-case guards, GUI/CLI/export parity, reproducibility evidence, and performance evidence before changing product status."
+      ]
+    },
+    {
+      "id": "v1_2_1_second_batch_method_promotion",
+      "release": "v1.2.1",
+      "family": "Validation",
+      "name": "Second-batch method promotion",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "validation",
+      "priority": 19,
+      "summary": "Promotes the second method batch for documented bounded scopes: PLS mediation effect decomposition, two-stage moderation, PLSc, WPLS, IPMA, PLSpredict/CVPAT, and numeric CE-FDH/CR-FDH NCA. Later-batch methods remain experimental until their own promotion gates pass.",
+      "gates": [
+        {
+          "track": "validation",
+          "name": "Mediation promotion audit",
+          "status": "passed",
+          "evidence": "validation/mediation_method_promotion_audit.py writes validation/results/mediation_method_promotion_audit.json and verifies independent Python, R, published, metamorphic, randomization, and publication evidence."
+        },
+        {
+          "track": "validation",
+          "name": "Two-stage moderation promotion audit",
+          "status": "passed",
+          "evidence": "validation/moderation_method_promotion_audit.py writes validation/results/moderation_method_promotion_audit.json and verifies independent Python, R, published, simulation, inference, and coverage evidence."
+        },
+        {
+          "track": "validation",
+          "name": "PLSc promotion audit",
+          "status": "passed",
+          "evidence": "validation/plsc_method_promotion_audit.py writes validation/results/plsc_method_promotion_audit.json and verifies reflective PLSc reference, unsupported guards, and rho_A second-source evidence."
+        },
+        {
+          "track": "validation",
+          "name": "WPLS promotion audit",
+          "status": "passed",
+          "evidence": "validation/wpls_method_promotion_audit.py writes validation/results/wpls_method_promotion_audit.json and verifies positive case-weighted WPLS reference and guards."
+        },
+        {
+          "track": "validation",
+          "name": "IPMA promotion audit",
+          "status": "passed",
+          "evidence": "validation/ipma_method_promotion_audit.py writes validation/results/ipma_method_promotion_audit.json and verifies bounded IPMA reference and publication evidence."
+        },
+        {
+          "track": "validation",
+          "name": "PLSpredict and CVPAT promotion audit",
+          "status": "passed",
+          "evidence": "validation/plspredict_method_promotion_audit.py writes validation/results/plspredict_method_promotion_audit.json and verifies deterministic holdout, repeated k-fold, LM benchmark, Q2 predict, RMSE/MAE, and bounded CVPAT evidence."
+        },
+        {
+          "track": "validation",
+          "name": "NCA promotion audit",
+          "status": "passed",
+          "evidence": "validation/nca_method_promotion_audit.py writes validation/results/nca_method_promotion_audit.json and verifies numeric CE-FDH/CR-FDH reference and publication evidence."
+        },
+        {
+          "track": "product",
+          "name": "Second-batch product enforcement",
+          "status": "passed",
+          "evidence": "validation/second_batch_product_enforcement_audit.py writes validation/results/second_batch_product_enforcement_audit.json and verifies UI/catalog/core/result-table/engine-warning surfaces promote only second-batch scopes while later methods remain experimental."
+        },
+        {
+          "track": "validation",
+          "name": "Second-batch aggregate audit",
+          "status": "passed",
+          "evidence": "validation/second_batch_method_promotion_audit.py writes validation/results/second_batch_method_promotion_audit.json and verifies all method-specific and product-enforcement artifacts pass."
+        }
+      ],
+      "next_actions": [
+        "Keep CB-SEM/CFA, GSCA, MICOM/MGA, FIMIX-PLS, PLS-POS, logistic regression, PROCESS-style workflows, HOC, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation experimental until later promotion gates pass.",
+        "Start third-batch promotion planning for remaining prediction/group and extended-regression methods."
       ]
     }
   ]

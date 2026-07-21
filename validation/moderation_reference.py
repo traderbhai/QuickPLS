@@ -329,7 +329,7 @@ def main():
         "permuted_moderator_interaction_abs": broken_interaction,
         "permuted_moderator_drop_ratio": broken_interaction / baseline_interaction,
         "experimental_warning_present": any(
-            "Two-stage moderation is experimental" in warning for warning in base["warnings"]
+            "Two-stage moderation is validated" in warning for warning in base["warnings"]
         ),
     }
     passed = (

@@ -83,7 +83,7 @@ def main():
         "moderator_mean_slope": interaction["simple_slopes"][1]["effect"],
         "moderator_high_slope": interaction["simple_slopes"][2]["effect"],
         "experimental_warning_present": any(
-            "Two-stage moderation is experimental" in warning for warning in result["warnings"]
+            "Two-stage moderation is validated" in warning for warning in result["warnings"]
         ),
     }
     passed = (

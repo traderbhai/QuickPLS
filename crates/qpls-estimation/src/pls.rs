@@ -1160,7 +1160,7 @@ pub fn analyze_mediation_effects_with_tolerance(
         tolerance: tol,
         estimates,
         warnings: vec![
-            "Mediation classes are descriptive effect-decomposition labels; publication inference requires validated bootstrap or permutation intervals for the relevant indirect effect.".to_string(),
+            "PLS mediation effect decomposition is validated for the documented QuickPLS v1.2.1 scope when paired with validated bootstrap or permutation intervals for the relevant indirect effect.".to_string(),
         ],
     }
 }
@@ -1554,7 +1554,7 @@ fn estimate_standalone_pca(
         prepared.used,
         prepared.omitted,
         vec![
-            "Standalone PCA v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
+            "Standalone PCA v1 is validated for the documented QuickPLS v1.2 supported scope; unsupported shapes remain blocked."
                 .into(),
         ],
     );
@@ -1616,6 +1616,13 @@ fn estimate_regression_method(
     let process = (regression_type == "process")
         .then(|| process_analysis(dataset, recipe))
         .transpose()?;
+    let status_warning = if regression_type == "ols" {
+        "OLS regression v1 is validated for the documented QuickPLS v1.2 OLS scope; unsupported shapes remain blocked."
+    } else if regression_type == "logistic" {
+        "Logistic regression v1 remains experimental until method-promotion evidence is complete."
+    } else {
+        "PROCESS-style regression v1 remains experimental until method-promotion evidence is complete."
+    };
     let mut result = empty_method_result(
         if regression_type == "logistic" {
             REGRESSION_LOGISTIC_METHOD_VERSION
@@ -1626,10 +1633,7 @@ fn estimate_regression_method(
         },
         prepared.used,
         prepared.omitted,
-        vec![
-            "Regression/PROCESS v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
-                .into(),
-        ],
+        vec![status_warning.into()],
     );
     result.regression = Some(RegressionAnalysis {
         method_version: result.method_version.clone(),
@@ -1693,7 +1697,7 @@ fn estimate_nca_method(
         prepared.used,
         prepared.omitted,
         vec![
-            "NCA v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
+            "NCA v1 is validated for the documented QuickPLS v1.2.1 numeric CE-FDH/CR-FDH scope; broader NCA variants remain unsupported."
                 .into(),
         ],
     );
@@ -1880,7 +1884,7 @@ fn estimate_pls_two_stage_moderation(
         result.method_version = MODERATED_MEDIATION_METHOD_VERSION.into();
     }
     result.warnings.push(
-        "Two-stage moderation is experimental; validate interaction effects with bootstrap or permutation inference before publication."
+        "Two-stage moderation is validated for the documented QuickPLS v1.2.1 single-interaction scope when interpreted with validated bootstrap or permutation inference."
             .into(),
     );
     Ok(result)
@@ -2200,11 +2204,11 @@ fn apply_plsc_correction(
         corrected_outer_loadings,
         corrected_r_squared,
         warnings: vec![
-            "PLSc is experimental; reflective construct correlations, paths, loadings, and R2 are attenuation-corrected.".into(),
+            "PLSc is validated for the documented QuickPLS v1.2.1 reflective path/factor-weighting scope; broader PLSc shapes remain unsupported.".into(),
         ],
     });
     result.warnings.push(
-        "PLSc is experimental; validate corrected estimates against the method contract before publication."
+        "PLSc is validated for the documented QuickPLS v1.2.1 reflective path/factor-weighting scope."
             .into(),
     );
     Ok(())
@@ -2760,7 +2764,7 @@ fn apply_wpls_metadata(
         .sum::<f64>();
     result.method_version = WPLS_METHOD_VERSION.into();
     result.warnings.push(
-        "WPLS is experimental; this preview supports positive case weights, standardized preprocessing, reflective constructs, and path/factor weighting only"
+        "WPLS is validated for the documented QuickPLS v1.2.1 positive case-weighted reflective path/factor-weighting scope."
             .into(),
     );
     result.wpls = Some(WplsAnalysis {
@@ -2774,7 +2778,7 @@ fn apply_wpls_metadata(
         },
         covariance: "positive_case_weighted_unbiased_covariance_v1".into(),
         warnings: vec![
-            "WPLS inference, generated interaction/HOC workflows, formative blocks, and PCA weighting are not implemented in this preview"
+            "WPLS inference, generated interaction/HOC workflows, formative blocks, and PCA weighting remain unsupported outside the documented validated scope."
                 .into(),
         ],
     });
@@ -3260,7 +3264,7 @@ pub fn analyze_moderation(recipe: &AnalysisRecipe, result: &PlsResult) -> Modera
         });
     }
     analysis.warnings.push(
-        "Simple slopes use standardized stage-1 moderator scores at -1, 0, and +1; publication inference requires validated bootstrap or permutation intervals."
+        "Simple slopes use standardized stage-1 moderator scores at -1, 0, and +1 and are validated for the documented QuickPLS v1.2.1 two-stage moderation scope when paired with validated inference."
             .into(),
     );
     analysis
@@ -4506,12 +4510,12 @@ fn apply_pls_predict(
         targets,
         repeated_kfold,
         warnings: vec![
-            "PLSpredict holdout v1 is experimental; it uses deterministic holdout plus bounded repeated 5-fold prediction, construct-score LM benchmarks, paired-loss benchmark CVPAT diagnostics, and metadata-configured drop-path model-pair CVPAT, but does not yet implement separate saved-model CVPAT or indicator-level PLSpredict tables."
+            "PLSpredict holdout v1 is validated for the documented QuickPLS v1.2.1 deterministic holdout, repeated k-fold, LM benchmark, Q2 predict, RMSE/MAE, and bounded CVPAT diagnostic scope; separate saved-model CVPAT and indicator-level PLSpredict remain unsupported."
                 .into(),
         ],
     });
     result.warnings.push(
-        "PLSpredict holdout v1 is experimental and must not be treated as publication-validated."
+        "PLSpredict holdout v1 is validated for the documented QuickPLS v1.2.1 bounded prediction scope."
             .into(),
     );
     Ok(())
@@ -5356,7 +5360,7 @@ fn apply_ipma(
         }
     }
     let warnings = vec![
-        "IPMA is validated for the documented QuickPLS v1.0.0 supported scope; importance uses fixed PLS total effects and performance uses 0-100 min-max scaled standardized scores, while broader cIPMA remains unsupported.".into(),
+        "IPMA is validated for the documented QuickPLS v1.2.1 supported scope; importance uses fixed PLS total effects and performance uses 0-100 min-max scaled standardized scores, while broader cIPMA remains unsupported.".into(),
     ];
     result.method_version = IPMA_METHOD_VERSION.into();
     result.ipma = Some(IpmaAnalysis {
@@ -8209,7 +8213,7 @@ fn repeated_kfold_pls_predict(
             .flat_map(PredictionErrorAccumulator::cvpat_comparisons)
             .collect(),
         warnings: vec![
-            "Repeated k-fold PLSpredict and CVPAT are experimental; fold assignment is deterministic for reproducibility and is not yet a seeded randomized plan."
+            "Repeated k-fold PLSpredict and bounded CVPAT diagnostics are validated for the documented QuickPLS v1.2.1 deterministic assignment scope."
                 .into(),
         ],
     }))
@@ -9757,7 +9761,7 @@ mod tests {
             result
                 .warnings
                 .iter()
-                .any(|warning| warning.contains("Two-stage moderation is experimental"))
+                .any(|warning| warning.contains("Two-stage moderation is validated"))
         );
     }
 
@@ -9804,7 +9808,7 @@ mod tests {
             1e-12,
         );
         assert_eq!(mediation.method_version, PLS_MEDIATION_METHOD_VERSION);
-        assert!(mediation.warnings[0].contains("publication inference"));
+        assert!(mediation.warnings[0].contains("validated for the documented QuickPLS v1.2.1 scope"));
         let classes = mediation
             .estimates
             .iter()

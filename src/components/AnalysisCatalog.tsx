@@ -1,7 +1,7 @@
 import { CheckCircle2, Clock3, LockKeyhole } from "lucide-react";
 import { methods } from "../data/sample";
 import { analysisReadiness } from "../domain/analysisReadiness";
-import { isSelectableAnalysisMethod, methodStatusDescription, methodStatusLabel } from "../domain/methodStatus";
+import { effectiveMethodStatus, effectiveMethodStatusLabel, isSelectableAnalysisMethod, methodStatusDescription, methodStatusLabel } from "../domain/methodStatus";
 import { isNativeDesktop } from "../services/projectService";
 import { useWorkspace } from "../store";
 import type { AnalysisMethodId, MethodDefinition } from "../types";
@@ -10,11 +10,12 @@ import { ReadinessPanel } from "./ReadinessPanel";
 const runnableMethods = methods.filter(isSelectableAnalysisMethod);
 
 function MethodStatusPill({ method }: { method: MethodDefinition }) {
+  const settings = useWorkspace((state) => state.analysisSettings);
   const selectable = isSelectableAnalysisMethod(method);
-  const effectiveStatus = selectable ? method.status : "unsupported";
-  return <span className={`status-text ${effectiveStatus}`} title={methodStatusDescription(method)}>
+  const effectiveStatus = selectable ? effectiveMethodStatus(method, settings) : "unsupported";
+  return <span className={`status-text ${effectiveStatus}`} title={methodStatusDescription(method, settings)}>
     {effectiveStatus === "validated" ? <CheckCircle2 size={15} /> : effectiveStatus === "experimental" ? <Clock3 size={15} /> : <LockKeyhole size={15} />}
-    {selectable ? methodStatusLabel(method.status) : "Configured elsewhere"}
+    {selectable ? methodStatusLabel(effectiveStatus) : "Configured elsewhere"}
   </span>;
 }
 
@@ -33,7 +34,7 @@ export function AnalysisCatalog() {
     <div className="analysis-settings">
       <div><strong>Analysis setup</strong><span className={readiness.canRun ? "status-text validated" : "status-text experimental"}>{readiness.canRun ? <CheckCircle2 size={14} /> : <Clock3 size={14} />}{readiness.canRun ? "ready" : "needs attention"}</span></div>
       <label>Run method<select value={settings.method} onChange={(event) => setSettings({ method: event.target.value as AnalysisMethodId })}>
-        {runnableMethods.map((method) => <option key={method.id} value={method.id}>{method.name} | {methodStatusLabel(method.status)}</option>)}
+        {runnableMethods.map((method) => <option key={method.id} value={method.id}>{method.name} | {method.id === "regression" ? "OLS validated; logistic/PROCESS experimental" : methodStatusLabel(method.status)}</option>)}
       </select></label>
       <p className="settings-guidance">Recommended defaults are applied automatically. Open advanced settings only when you need resampling, worker, or reproducibility controls.</p>
       {settings.method === "wpls" && <label>Case weight column<select value={settings.caseWeightColumn ?? ""} onChange={(event) => setSettings({ caseWeightColumn: event.target.value || null })}>
@@ -94,7 +95,7 @@ export function AnalysisCatalog() {
         <option value="ols">OLS</option>
         <option value="logistic">Logistic</option>
         <option value="process">PROCESS-style</option>
-      </select></label>}
+      </select><span className={`setting-status ${effectiveMethodStatus(methods.find((method) => method.id === "regression"), settings)}`}>{effectiveMethodStatusLabel(methods.find((method) => method.id === "regression"), settings)} scope</span></label>}
       {settings.method === "regression" && <label>Outcome<select value={settings.regressionOutcome ?? ""} onChange={(event) => setSettings({ regressionOutcome: event.target.value || null })}>
         <option value="">Select outcome</option>
         {columns.map((column) => <option key={column} value={column}>{column}</option>)}
@@ -150,7 +151,7 @@ export function AnalysisCatalog() {
     </div>
     <div className="method-table"><div className="method-table-head"><span>Method</span><span>Family</span><span>Status</span></div>{methods.map((method) => {
       const selectable = isSelectableAnalysisMethod(method);
-      return <button type="button" className={`method-row ${settings.method === method.id ? "selected" : ""}`} key={method.id} disabled={!selectable} title={methodStatusDescription(method)} onClick={() => { if (selectable) setSettings({ method: method.id }); }}>
+      return <button type="button" className={`method-row ${settings.method === method.id ? "selected" : ""}`} key={method.id} disabled={!selectable} title={methodStatusDescription(method, settings)} onClick={() => { if (selectable) setSettings({ method: method.id }); }}>
         <strong>{method.name}</strong><span>{method.family}</span><MethodStatusPill method={method} />
       </button>;
     })}</div>

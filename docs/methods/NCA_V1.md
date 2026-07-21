@@ -1,6 +1,6 @@
 # NCA_V1
 
-Status: experimental v0.8 preview.
+Status: validated for the documented QuickPLS v1.2.1 numeric X/Y CE-FDH and CR-FDH scope.
 
 `nca_v1` provides numeric necessary condition analysis for selected X/Y pairs.
 
@@ -24,4 +24,4 @@ Status: experimental v0.8 preview.
 
 ## Validation
 
-`npm run qpls:nca:reference` compares CE-FDH effect size and bottleneck monotonicity against an independent Python fixture. Later promotion requires broader null screens and optional R NCA package comparison if available.
+`npm run qpls:nca:reference` compares CE-FDH/CR-FDH effect size and bottleneck monotonicity against an independent Python fixture. Broader NCA variants, nonnumeric variables, categorical handling, and unsupported ceiling methods remain outside the promoted scope.

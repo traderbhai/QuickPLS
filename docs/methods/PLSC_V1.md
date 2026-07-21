@@ -1,6 +1,6 @@
 # PLSc v1
 
-Status: experimental; reflective-only attenuation correction is implemented and validation-gated.
+Status: validated for the documented QuickPLS v1.2.1 reflective path/factor-weighting PLSc scope.
 
 `AnalysisMethod::Plsc` and the catalog id `plsc` run through the ordinary PLS estimator first, then apply a consistent PLS correction contract for reflective constructs. The current implementation reports `method_version = "plsc_v1"` and stores a typed `plsc` payload with rho_A reliabilities, original and corrected construct correlations, corrected paths, corrected outer loadings, corrected R2, and warnings.
 
@@ -21,4 +21,4 @@ Validation evidence:
 - `npm run qpls:plsc:reference` writes `validation/results/plsc_reference_report.json` and compares QuickPLS against an independent Python PLS + PLSc correction fixture within `1e-6`; the current observed max delta is `4.57e-14`.
 - `npm run qpls:plsc:unsupported-guard` writes `validation/results/plsc_unsupported_guard_report.json` and proves unsupported formative PLSc recipes are rejected before execution.
 
-Publication status: validated for the documented QuickPLS v0.9.0-rc.1 supported PLSc scope. Broader estimator shapes, inadmissibility diagnostics, and unsupported settings remain outside scope until a later audit expands this contract.
+Publication status: validated for the documented QuickPLS v1.2.1 supported PLSc scope. Broader estimator shapes, inadmissibility diagnostics, and unsupported settings remain outside scope until a later audit expands this contract.

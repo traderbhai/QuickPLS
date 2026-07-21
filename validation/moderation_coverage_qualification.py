@@ -121,7 +121,7 @@ def run_group(label, replicates, n, interaction_beta, permutation_samples, worke
             ),
             "elapsed_seconds": quickpls["elapsed_seconds"],
             "experimental_warning_present": any(
-                "Two-stage moderation is experimental" in warning
+                "Two-stage moderation is validated" in warning
                 for warning in quickpls["warnings"]
             ),
         })

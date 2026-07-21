@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "target": "v1_2_1_second_batch_method_promotion",
+  "method_id": "nca",
+  "promoted_scope": "Numeric X/Y NCA with CE-FDH and CR-FDH ceilings, deterministic permutation p values, and bottleneck tables.",
+  "passed": true,
+  "reports": [
+    {
+      "path": "validation\\results\\v08_extended_methods_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\extended_methods_publication_audit.json",
+      "present": true,
+      "passed": true
+    }
+  ],
+  "docs": [
+    {
+      "path": "docs\\methods\\NCA_V1.md",
+      "present": true,
+      "bytes": 1013
+    }
+  ],
+  "checks": [],
+  "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."
+}

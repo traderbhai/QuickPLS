@@ -1,6 +1,6 @@
 # PLSpredict Holdout v1
 
-Status: validated for the documented QuickPLS v0.9.0-rc.1 supported prediction scope. Broader PLSpredict variants outside this contract remain unsupported.
+Status: validated for the documented QuickPLS v1.2.1 supported prediction scope. Broader PLSpredict variants outside this contract remain unsupported.
 
 `plspredict_holdout_v1` is the first QuickPLS v0.6 prediction slice. It provides deterministic, leak-free complete-case holdout and bounded repeated k-fold prediction for endogenous construct scores produced by the existing PLS-PM estimator.
 
@@ -43,7 +43,7 @@ QuickPLS also computes an optional linear-model benchmark for the same target co
 
 ## CVPAT
 
-The repeated k-fold payload includes an experimental CVPAT-style paired squared-loss comparison for each endogenous target:
+The repeated k-fold payload includes a bounded validated CVPAT-style paired squared-loss comparison for each endogenous target:
 
 - `pls_vs_training_mean_benchmark`: paired loss difference is `SE_pls - SE_mean`, where `SE_mean` is the squared test construct score under the training-mean benchmark fixed at zero.
 - `pls_vs_lm_benchmark`: paired loss difference is `SE_pls - SE_lm` when the LM benchmark is available.
@@ -70,7 +70,7 @@ Multiple paths may be separated by commas, semicolons, or new lines. QuickPLS gr
 
 The emitted comparison id is `pls_vs_model_pair:drop_<sources>_to_<target>`. The paired loss difference is `SE_full_pls - SE_reduced_model`, so negative values favor the full PLS model.
 
-This model-pair contract is still experimental and limited to dropping direct structural paths within the same model. It does not yet support comparing separate saved model diagrams, alternative hypotheses, seeded/random fold plans, or multiple-comparison adjustment.
+This model-pair contract is validated only for dropping direct structural paths within the same model. It does not yet support comparing separate saved model diagrams, alternative hypotheses, seeded/random fold plans, or multiple-comparison adjustment.
 
 ## Reported Metrics
 
@@ -87,10 +87,10 @@ For each endogenous construct:
 
 ## Warnings
 
-All outputs are marked experimental. Stable publication exports must continue to reject these results unless the user explicitly includes experimental output.
+Outputs are validated only for the documented deterministic holdout, repeated k-fold, LM benchmark, Q2 predict, RMSE/MAE, and bounded CVPAT scope. Unsupported prediction variants remain blocked or explicitly watermarked.
 
 ## Validation Evidence
 
-- `validation/plspredict_holdout_reference.py` generates the bounded independent reference fixture for holdout prediction, repeated k-fold prediction, LM benchmarks, Q2-predict checks, CVPAT-style paired loss checks, model-pair drop-path comparisons, and experimental warning propagation.
+- `validation/plspredict_holdout_reference.py` generates the bounded independent reference fixture for holdout prediction, repeated k-fold prediction, LM benchmarks, Q2-predict checks, CVPAT-style paired loss checks, model-pair drop-path comparisons, and validated-scope warning propagation.
 - `validation/results/plspredict_holdout_reference_report.json` records the current passing v1 evidence and is consumed by the v0.6 prediction and heterogeneity publication audit.
 - Broader publication promotion remains limited to the documented supported scope above; unsupported prediction, grouping, and saved-model comparison cases must remain blocked or explicitly experimental.

@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "target": "assessment_metrics_promotion",
+  "passed": true,
+  "status": "validated",
+  "scope_decision": {
+    "stable_output_scope": "documented PLS assessment metrics",
+    "promoted_metrics": [
+      "adjusted_r_squared",
+      "ave",
+      "cronbach_alpha",
+      "f_squared",
+      "htmt_original",
+      "htmt_plus",
+      "q_squared",
+      "r_squared",
+      "rho_a",
+      "rho_c",
+      "srmr_duls",
+      "structural_vif"
+    ],
+    "excluded_from_this_promotion": [
+      "NFI",
+      "RMS_theta",
+      "d_G"
+    ],
+    "exclusion_reason": "d_G, NFI, and RMS_theta are not included in the v1.2 assessment promotion because the current assessment scope covers correlation-residual SRMR/d_ULS and documented reliability/validity/quality metrics only."
+  },
+  "required_files": {
+    "assessment_publication_audit": true,
+    "metric_matrix": true,
+    "assessment_evidence": true,
+    "rho_a_primary": true,
+    "rho_a_csem": true,
+    "htmt_reference": true,
+    "htmt_csem": true,
+    "htmt_seminr": true,
+    "htmt_published": true,
+    "assessment_csem": true,
+    "assessment_published": true,
+    "assessment_simulation": true,
+    "blindfolding_python": true,
+    "method_spec": true,
+    "rho_a_spec": true,
+    "htmt_spec": true,
+    "known_differences": true,
+    "method_compatibility": true
+  },
+  "artifact_status": {
+    "assessment_publication_audit": true,
+    "metric_matrix": true,
+    "assessment_evidence": true,
+    "rho_a_primary": true,
+    "rho_a_csem": true,
+    "htmt_reference": true,
+    "htmt_csem": true,
+    "htmt_seminr": true,
+    "htmt_published": true,
+    "assessment_csem": true,
+    "assessment_published": true,
+    "assessment_simulation": true,
+    "blindfolding_python": true
+  },
+  "metric_rows": 12,
+  "missing_promoted_metrics": [],
+  "extra_incomplete_rows": [],
+  "checks": {
+    "all_required_files_present": true,
+    "all_result_artifacts_pass": true,
+    "metric_matrix_passed": true,
+    "promoted_metrics_complete": true,
+    "no_incomplete_metric_rows": true,
+    "excluded_fit_documented": true,
+    "method_compatibility_updated": true
+  },
+  "note": "This promotes documented assessment calculations only. It does not add d_G, NFI, RMS_theta, new fit-index conventions, or inference/resampling claims."
+}

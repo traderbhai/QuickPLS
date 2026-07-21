@@ -1,5 +1,6 @@
 import type { Edge, Node } from "@xyflow/react";
 import { methods } from "../data/sample";
+import { effectiveMethodStatus } from "./methodStatus";
 import type { AnalysisUiSettings, ConstructData, Dataset, WorkspaceView } from "../types";
 import { validateModel, type ModelIssue } from "./modelValidation";
 
@@ -37,7 +38,7 @@ export function analysisReadiness({ dataset, nodes, edges, settings, nativeDeskt
     indicatorItem(nodes, issues),
     modelIssueItem(issues),
     sampleSizeItem(dataset, nodes),
-    methodItem(settings, method?.name ?? settings.method, method?.status ?? "unsupported"),
+    methodItem(settings, method?.name ?? settings.method, effectiveMethodStatus(method, settings)),
   ];
   const blockers = items.filter((item) => item.status === "blocked");
   const warnings = items.filter((item) => item.status === "warning");
@@ -158,7 +159,7 @@ function methodItem(settings: AnalysisUiSettings, methodName: string, methodStat
   return {
     id: "method",
     label: "Method",
-    detail: `${methodName} is ${methodStatus === "validated" ? "validated for the documented v1.0 scope" : "available with experimental watermarking"}.`,
+    detail: `${methodName} is ${methodStatus === "validated" ? "validated for the documented supported scope" : "available with experimental watermarking"}.`,
     status: methodStatus === "validated" ? "ready" : "warning",
   };
 }

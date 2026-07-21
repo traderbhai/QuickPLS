@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "target": "v1_2_1_second_batch_method_promotion",
+  "method_id": "wpls",
+  "promoted_scope": "Positive case-weighted reflective WPLS with standardized preprocessing and path/factor weighting.",
+  "passed": true,
+  "reports": [
+    {
+      "path": "validation\\results\\wpls_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\extended_pls_publication_audit.json",
+      "present": true,
+      "passed": true
+    }
+  ],
+  "docs": [
+    {
+      "path": "docs\\methods\\PLS_WPLS_V1.md",
+      "present": true,
+      "bytes": 2118
+    }
+  ],
+  "checks": [],
+  "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."
+}

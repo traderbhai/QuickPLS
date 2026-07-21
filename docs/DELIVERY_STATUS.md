@@ -278,3 +278,35 @@ Implemented as a stricter desktop UX hardening milestone on top of v1.1:
 - `validation/v111_disabled_actions_audit.py` verifies low-frequency disabled actions have visible or accessible reasons across Run, Report, Data, canvas lock, covariance/path, native-only XLSX, and settings surfaces.
 
 `npm run qpls:v111:release` runs the hardening suite and gates `v1_1_1_native_ux_hardening`. Mobile remains non-gating. SVG remains the audited publication export; native PDF/PNG remains post-v1 unless separately implemented and audited.
+
+## v1.2 Method Promotion Program
+
+Started as the next development milestone:
+
+- Added the active registry slice `v1_2_method_promotion_program`.
+- Added `docs/METHOD_PROMOTION_CRITERIA.md` to define the evidence required before an experimental calculation can become researcher-ready.
+- Added `docs/METHOD_PROMOTION_PROGRAM_V1_2.md` to define the work packages, first promotion batch, and product-enforcement rules.
+- Added `validation/method_promotion_program_audit.py`, which writes `validation/results/method_promotion_program_audit.json` and verifies that the promotion framework is wired into docs, registry, and the current method backlog.
+- Updated `validation/promotion_matrix.py`, which writes `validation/results/method_promotion_matrix_v1_2.json` with first-batch promotion rows and later-batch backlog summaries.
+- Added `validation/pls_core_method_promotion_audit.py`, which promotes deterministic PLS core estimator-only output while keeping assessment and inference separately gated.
+- Added `validation/assessment_method_promotion_audit.py`, which promotes documented assessment metrics while keeping d_G, NFI, RMS_theta, and inference separately gated.
+- Added `validation/inference_method_promotion_audit.py`, which promotes documented PLS inference/resampling procedures while excluding unsupported shapes and unaudited stochastic claims.
+- Added `validation/pca_method_promotion_audit.py`, which promotes standalone PCA for documented raw-data PCA scope while excluding rotations, pairwise deletion, covariance/correlation input, and inference.
+- Added `validation/ols_method_promotion_audit.py`, which promotes documented OLS regression with HC3 standard errors while keeping logistic, PROCESS, HC0/HC4 claims, and advanced regression families excluded.
+- Added `validation/method_promotion_product_enforcement_audit.py`, which verifies product-facing status enforcement across the method catalog, readiness panel, top bar, run workspace, result/export tables, and newly generated engine warnings.
+- Added npm aliases `qpls:promotion:pls-core`, `qpls:promotion:assessment`, `qpls:promotion:inference`, `qpls:promotion:pca`, `qpls:promotion:ols`, `qpls:promotion:product-enforcement`, `qpls:promotion:program`, `qpls:promotion:gate`, and `qpls:v12:method-promotion`.
+
+The setup gates are passed, and the full first calculation batch is now promoted for documented scopes: PLS core estimator-only output, documented assessment metrics, documented PLS inference/resampling, standalone PCA, and OLS regression. Product labels and exports now enforce this bounded scope: PCA and OLS can appear as validated, while logistic regression, PROCESS, NCA, CB-SEM, GSCA, segmentation, and other unpromoted methods remain experimental or watermarked. The milestone intentionally remains open for second-source and simulation expansion.
+
+## v1.2.1 Second-Batch Method Promotion
+
+Implemented as a bounded method-promotion milestone:
+
+- Added `v1_2_1_second_batch_method_promotion` to the registry.
+- Added method-specific promotion audits for mediation, two-stage moderation, PLSc, WPLS, IPMA, PLSpredict/CVPAT, and NCA.
+- Added `validation/second_batch_product_enforcement_audit.py` and `validation/second_batch_method_promotion_audit.py`.
+- Updated product-facing statuses so PLSc, WPLS, PLSpredict, IPMA, and NCA are validated only for documented scopes.
+- Updated engine warning text and result/export table status for promoted second-batch payloads.
+- Added method-scope aliases `MEDIATION_V1.md`, `TWO_STAGE_MODERATION_V1.md`, and `PLSPREDICT_V1.md`.
+
+Later-batch methods remain experimental: CB-SEM/CFA, GSCA, MICOM/MGA, FIMIX-PLS, PLS-POS, logistic regression, PROCESS-style workflows, higher-order constructs, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation.

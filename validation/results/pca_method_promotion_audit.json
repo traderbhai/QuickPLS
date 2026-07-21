@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "target": "pca_method_promotion",
+  "passed": true,
+  "status": "validated",
+  "scope_decision": {
+    "stable_output_scope": "standardized numeric raw-data PCA with listwise deletion, deterministic sign orientation, fixed/Kaiser/variance-threshold retention, eigenvalues, loadings, weights, and scores",
+    "excluded_from_this_promotion": [
+      "rotation methods",
+      "pairwise deletion",
+      "covariance/correlation-only input",
+      "PCA inference or component-score uncertainty",
+      "nonnumeric variables"
+    ]
+  },
+  "checks": {
+    "integrated_v08_numpy_reference": {
+      "path": "validation/results/v08_extended_methods_reference_report.json",
+      "passed": true,
+      "max_abs_difference": 6.661338147750939e-16,
+      "retained_components": 3
+    },
+    "hand_two_variable_fixture": {
+      "passed": true,
+      "expected_eigenvalues": [
+        1.5
+      ],
+      "observed_eigenvalues": [
+        1.5000000000000004
+      ],
+      "max_abs_difference": 4.440892098500626e-16,
+      "output": "validation\\results\\pca_promotion_hand_quickpls.json"
+    },
+    "high_dimensional_numpy_reference": {
+      "passed": true,
+      "max_abs_difference": 2.2969265378591786e-10,
+      "component_max_abs_difference": 1.7763568394002505e-15,
+      "loading_max_abs_difference": 1.6530193880370803e-10,
+      "weight_max_abs_difference": 2.2969265378591786e-10,
+      "variables": 20,
+      "observations": 30,
+      "output": "validation\\results\\pca_promotion_high_dimensional_quickpls.json"
+    },
+    "missing_data_listwise_fixture": {
+      "passed": true,
+      "max_abs_difference": 1.795230630818878e-13,
+      "component_max_abs_difference": 8.881784197001252e-16,
+      "loading_max_abs_difference": 4.2577052994374753e-14,
+      "weight_max_abs_difference": 1.795230630818878e-13,
+      "observations": 5,
+      "output": "validation\\results\\pca_promotion_missing_quickpls.json"
+    },
+    "constant_column_guard": {
+      "passed": true,
+      "failed": true,
+      "stdout_tail": "",
+      "stderr_tail": "Error: PLS estimation failed: constant indicator: constant\n"
+    }
+  },
+  "docs": {
+    "method_spec": true,
+    "known_differences": true,
+    "method_compatibility_updated": true
+  }
+}

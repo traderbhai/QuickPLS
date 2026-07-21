@@ -1,6 +1,6 @@
 # PLS Mediation v1
 
-Status: experimental descriptive slice.
+Status: validated for the documented QuickPLS v1.2.1 PLS mediation effect-decomposition scope.
 
 Method version: `pls_mediation_v1`
 
@@ -67,4 +67,4 @@ The saved-run mediation table reads the `indirect_effect` row for each source-ta
 
 ## Warnings
 
-All `pls_mediation_v1` estimates remain experimental until the broader v0.5 gate is promoted. The current randomization screen is bounded validation evidence, not a general-purpose inferential estimator for arbitrary mediation models. Public export surfaces must keep the experimental label unless the broader gate is passed.
+`pls_mediation_v1` estimates are validated only for the documented PLS path-effect decomposition scope. Publication interpretation of indirect effects requires the relevant validated bootstrap or permutation interval. PROCESS-style observed-variable mediation, moderated mediation, and unsupported model shapes remain outside this scope.

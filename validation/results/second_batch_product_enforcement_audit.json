@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "target": "v1_2_1_second_batch_method_promotion",
+  "passed": true,
+  "checks": [
+    {
+      "name": "desktop_catalog_promotes_second_batch",
+      "passed": true,
+      "detail": "Selectable second-batch methods are validated in the desktop method catalog."
+    },
+    {
+      "name": "core_registry_promotes_second_batch",
+      "passed": true,
+      "detail": "Core method registry promotes second-batch method ids."
+    },
+    {
+      "name": "result_tables_promote_second_batch",
+      "passed": true,
+      "detail": "Report/export tables mark promoted payloads validated and route run provenance through scope detection."
+    },
+    {
+      "name": "engine_warnings_promoted_scope",
+      "passed": true,
+      "detail": "Newly generated result warnings use bounded validated-scope language."
+    },
+    {
+      "name": "later_methods_stay_experimental",
+      "passed": true,
+      "detail": "Unpromoted methods remain experimental in compatibility docs."
+    }
+  ]
+}

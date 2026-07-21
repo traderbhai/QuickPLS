@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "target": "v1_2_1_second_batch_method_promotion",
+  "method_id": "ipma",
+  "promoted_scope": "Bounded IPMA/cIPMA using PLS total effects as importance and 0-100 standardized score performance.",
+  "passed": true,
+  "reports": [
+    {
+      "path": "validation\\results\\ipma_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\prediction_heterogeneity_publication_audit.json",
+      "present": true,
+      "passed": true
+    }
+  ],
+  "docs": [
+    {
+      "path": "docs\\methods\\IPMA_V1.md",
+      "present": true,
+      "bytes": 1687
+    }
+  ],
+  "checks": [],
+  "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."
+}

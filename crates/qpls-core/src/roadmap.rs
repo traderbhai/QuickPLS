@@ -177,20 +177,22 @@ mod tests {
     #[test]
     fn registry_keeps_current_stage_explicit() {
         let registry = development_slice_registry().unwrap();
-        assert_eq!(registry.current_stage, "v1_1_1_native_ux_hardening");
+        assert_eq!(registry.current_stage, "v1_2_method_promotion_program");
         assert!(
             registry
                 .slices
                 .iter()
                 .any(|slice| slice.id == "v0_4_assessment_reliability"
-                    && slice.status == SliceStatus::Experimental)
+                    && slice.status == SliceStatus::Validated
+                    && slice.stable_output)
         );
         assert!(
             registry
                 .slices
                 .iter()
                 .any(|slice| slice.id == "v0_4_inference_resampling"
-                    && slice.status == SliceStatus::Experimental)
+                    && slice.status == SliceStatus::Validated
+                    && slice.stable_output)
         );
         assert!(
             registry
@@ -212,6 +214,13 @@ mod tests {
                 .iter()
                 .any(|slice| slice.id == "publication_ready_v0_1_to_v0_8"
                     && slice.status == SliceStatus::Unsupported)
+        );
+        assert!(
+            registry
+                .slices
+                .iter()
+                .any(|slice| slice.id == "v1_2_method_promotion_program"
+                    && slice.status == SliceStatus::Experimental)
         );
     }
 

@@ -1,6 +1,7 @@
 import { AlertTriangle, CheckCircle2, Play } from "lucide-react";
 import { methods } from "../data/sample";
 import { analysisReadiness } from "../domain/analysisReadiness";
+import { effectiveMethodStatus } from "../domain/methodStatus";
 import { isNativeDesktop } from "../services/projectService";
 import { useWorkspace } from "../store";
 import { ReadinessPanel } from "./ReadinessPanel";
@@ -14,6 +15,7 @@ export function RunWorkspace() {
   const setView = useWorkspace((state) => state.setView);
   const readiness = analysisReadiness({ dataset, nodes, edges, settings, nativeDesktop: isNativeDesktop() });
   const method = methods.find((candidate) => candidate.id === settings.method);
+  const methodStatus = effectiveMethodStatus(method, settings);
 
   return <section className="workspace-page run-workspace">
     <div className="page-heading"><div><h1>Run analysis</h1><p>Review readiness, launch the selected method, then inspect the saved result.</p></div></div>
@@ -21,7 +23,7 @@ export function RunWorkspace() {
     <div className="run-launch-card">
       <div>
         <strong>{method?.name ?? settings.method}</strong>
-        <span>{method?.status === "validated" ? "Validated for the documented v1.0 scope" : "Runs with explicit method-status warnings where available"}</span>
+        <span>{methodStatus === "validated" ? "Validated for the documented supported scope" : "Runs with explicit method-status warnings where available"}</span>
       </div>
       <div className="run-action-stack">
         <button className="run-button large" disabled={!readiness.canRun} title={readiness.canRun ? `Run ${method?.name ?? settings.method}` : readiness.blockers[0]?.detail ?? readiness.summary} onClick={() => window.dispatchEvent(new CustomEvent("quickpls:run-analysis"))}>

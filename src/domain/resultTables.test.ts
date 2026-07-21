@@ -211,9 +211,93 @@ describe("result export tables", () => {
       "ipma_constructs",
       "ipma_indicators",
     ]);
-    expect(tables.every((table) => table.status === "experimental")).toBe(true);
-    expect(tables[0].warning).toContain("Validated for the documented QuickPLS v1.0.0 supported scope");
+    expect(tables.some((table) => table.status === "validated")).toBe(true);
+    expect(tables.some((table) => table.status === "experimental")).toBe(true);
+    expect(tables.find((table) => table.id === "wpls_weights")?.status).toBe("validated");
+    expect(tables.find((table) => table.id === "plspredict_holdout")?.status).toBe("validated");
+    expect(tables.find((table) => table.id === "ipma_constructs")?.status).toBe("validated");
+    expect(tables.find((table) => table.id === "cca_residuals")?.status).toBe("experimental");
+    expect(tables[0].warning).toContain("Validated for the documented QuickPLS supported scope");
     expect(tables[0].rows[0]).toEqual(["WEIGHT", "135.250000", "111.1250", "weighted sample covariance"]);
+  });
+
+  it("marks promoted PCA and OLS tables as validated while PROCESS remains experimental", () => {
+    const pcaTables = methodResultTables({
+      ...result,
+      method_version: "pca_v1",
+      wpls: undefined,
+      cca: undefined,
+      cta_pls: undefined,
+      predict: undefined,
+      segmentation: undefined,
+      mga: undefined,
+      ipma: undefined,
+      pca: {
+        method_version: "pca_v1",
+        component_rule: "fixed",
+        retained_components: 1,
+        observations: 4,
+        variables: ["x1", "x2"],
+        components: [{ component: "PC1", eigenvalue: 1.8, explained_variance: 0.9, cumulative_variance: 0.9 }],
+        loadings: [{ variable: "x1", component: "PC1", loading: 0.95, weight: 0.71 }],
+        scores: [{ observation: 0, component: "PC1", score: 1.2 }],
+        warnings: ["Standalone PCA v1 is validated for the documented QuickPLS v1.2 supported scope."],
+      },
+    });
+    expect(pcaTables.every((table) => table.status === "validated")).toBe(true);
+    expect(pcaTables[0].warning).toContain("Validated for the documented QuickPLS supported scope");
+
+    const olsTables = methodResultTables({
+      ...result,
+      method_version: "regression_ols_v1",
+      wpls: undefined,
+      cca: undefined,
+      cta_pls: undefined,
+      predict: undefined,
+      segmentation: undefined,
+      mga: undefined,
+      ipma: undefined,
+      regression: {
+        method_version: "regression_ols_v1",
+        regression_type: "ols",
+        outcome: "y",
+        predictors: ["x"],
+        controls: [],
+        observations: 10,
+        coefficients: [{ term: "x", estimate: 2, standard_error: 0.1, statistic: 20, p_value_two_sided: 0.00001, confidence_interval_lower: 1.8, confidence_interval_upper: 2.2, odds_ratio: null }],
+        fit: { r_squared: 0.8, adjusted_r_squared: 0.78, aic: 12, bic: 13 },
+        predictions: [{ observation: 0, fitted: 1.5, residual: 0.1 }],
+        process: null,
+        warnings: ["OLS regression v1 is validated for the documented QuickPLS v1.2 OLS scope."],
+      },
+    });
+    expect(olsTables.every((table) => table.status === "validated")).toBe(true);
+
+    const processTables = methodResultTables({
+      ...result,
+      method_version: "regression_process_v1",
+      wpls: undefined,
+      cca: undefined,
+      cta_pls: undefined,
+      predict: undefined,
+      segmentation: undefined,
+      mga: undefined,
+      ipma: undefined,
+      regression: {
+        method_version: "regression_process_v1",
+        regression_type: "process",
+        outcome: "y",
+        predictors: ["x"],
+        controls: [],
+        observations: 10,
+        coefficients: [{ term: "x", estimate: 2, standard_error: 0.1, statistic: 20, p_value_two_sided: 0.00001, confidence_interval_lower: 1.8, confidence_interval_upper: 2.2, odds_ratio: null }],
+        fit: { r_squared: 0.8, adjusted_r_squared: 0.78, aic: 12, bic: 13 },
+        predictions: [{ observation: 0, fitted: 1.5, residual: 0.1 }],
+        process: { method_version: "regression_process_v1", model: "mediation", effects: [{ effect: "indirect", estimate: 0.2, lower_percentile: 0.1, upper_percentile: 0.3 }], simple_slopes: [], warnings: ["PROCESS-style regression v1 remains experimental."] },
+        warnings: ["PROCESS-style regression v1 remains experimental."],
+      },
+    });
+    expect(processTables.every((table) => table.status === "experimental")).toBe(true);
   });
 
   it("exports run provenance plus escaped CSV and HTML tables", () => {
@@ -242,6 +326,7 @@ describe("result export tables", () => {
     expect(csv).toContain("weighted sample covariance");
     const html = tablesToHtml(tables);
     expect(html).toContain("<title>QuickPLS export</title>");
-    expect(html).toContain("Validated for the documented QuickPLS v1.0.0 supported scope");
+    expect(html).toContain("Experimental output");
+    expect(html).toContain("Validated for the documented QuickPLS supported scope");
   });
 });

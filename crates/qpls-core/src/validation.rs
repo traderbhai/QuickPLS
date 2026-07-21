@@ -143,7 +143,7 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
             issues.push(issue(
                 "plsc.pca_unsupported",
                 Severity::Error,
-                "PLSc requires path or factor weighting in this experimental release",
+                "PLSc requires path or factor weighting in the documented validated scope",
                 None,
             ));
         }
@@ -156,7 +156,7 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
             issues.push(issue(
                 "plsc.reflective_only",
                 Severity::Error,
-                "PLSc is limited to reflective constructs in this experimental release",
+                "PLSc is limited to reflective constructs in the documented validated scope",
                 None,
             ));
         }
@@ -166,7 +166,7 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
             issues.push(issue(
                 "wpls.pca_unsupported",
                 Severity::Error,
-                "WPLS requires path or factor weighting in this experimental release",
+                "WPLS requires path or factor weighting in the documented validated scope",
                 None,
             ));
         }
@@ -196,7 +196,7 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
             issues.push(issue(
                 "wpls.reflective_only",
                 Severity::Error,
-                "WPLS is limited to reflective constructs in this experimental release",
+                "WPLS is limited to reflective constructs in the documented validated scope",
                 None,
             ));
         }
@@ -460,12 +460,6 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
         }
     }
     if recipe.settings.method == crate::AnalysisMethod::Pca {
-        issues.push(issue(
-            "pca.experimental",
-            Severity::Warning,
-            "Standalone PCA v1 is validated only for the documented QuickPLS v1.0.0 supported scope",
-            None,
-        ));
         let variables = metadata_list(recipe, "pca_variables")
             .or_else(|| metadata_list(recipe, "pca.variables"))
             .unwrap_or_default();
@@ -487,17 +481,19 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
         }
     }
     if recipe.settings.method == crate::AnalysisMethod::Regression {
-        issues.push(issue(
-            "regression.experimental",
-            Severity::Warning,
-            "Regression/PROCESS v1 is validated only for the documented QuickPLS v1.0.0 supported scope",
-            None,
-        ));
         let regression_type = recipe
             .metadata
             .get("regression_type")
             .map(String::as_str)
             .unwrap_or("ols");
+        if regression_type != "ols" {
+            issues.push(issue(
+                "regression.experimental",
+                Severity::Warning,
+                "Only OLS regression is validated for the documented QuickPLS v1.2 scope; logistic regression and PROCESS-style workflows remain experimental",
+                Some(regression_type.to_owned()),
+            ));
+        }
         if !matches!(regression_type, "ols" | "logistic" | "process") {
             issues.push(issue(
                 "regression.type",
@@ -528,12 +524,6 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
         }
     }
     if recipe.settings.method == crate::AnalysisMethod::Nca {
-        issues.push(issue(
-            "nca.experimental",
-            Severity::Warning,
-            "NCA v1 is validated only for the documented QuickPLS v1.0.0 supported scope",
-            None,
-        ));
         if !recipe.metadata.contains_key("nca_x") || !recipe.metadata.contains_key("nca_y") {
             issues.push(issue(
                 "nca.variables_required",
@@ -1018,14 +1008,12 @@ mod tests {
     }
 
     #[test]
-    fn plspredict_holdout_is_experimental_and_rejects_unsupported_shapes() {
+    fn plspredict_holdout_is_validated_and_rejects_unsupported_shapes() {
         let mut recipe = valid_recipe();
         recipe.settings.method = crate::AnalysisMethod::Predict;
         let issues = validate_recipe(&recipe);
-        assert!(issues.iter().any(|item| {
-            item.code == "method.experimental" && item.severity == Severity::Warning
-        }));
-        assert_eq!(method_status("predict"), MethodStatus::Experimental);
+        assert!(!issues.iter().any(|item| item.code == "method.experimental"));
+        assert_eq!(method_status("predict"), MethodStatus::Validated);
 
         recipe.model.paths.clear();
         let issues = validate_recipe(&recipe);
@@ -1064,9 +1052,8 @@ mod tests {
         let mut recipe = valid_recipe();
         recipe.settings.method = crate::AnalysisMethod::Ipma;
         let issues = validate_recipe(&recipe);
-        assert!(issues.iter().any(|item| {
-            item.code == "method.experimental" && item.severity == Severity::Warning
-        }));
+        assert!(!issues.iter().any(|item| item.code == "method.experimental"));
+        assert_eq!(method_status("ipma"), MethodStatus::Validated);
         recipe.model.paths.clear();
         let issues = validate_recipe(&recipe);
         assert!(issues.iter().any(|item| {

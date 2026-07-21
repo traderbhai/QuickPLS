@@ -27,31 +27,31 @@ pub const METHOD_CAPABILITIES: &[MethodCapability] = &[
         id: "bootstrap",
         family: "PLS-SEM",
         name: "Bootstrapping",
-        status: MethodStatus::Experimental,
+        status: MethodStatus::Validated,
     },
     MethodCapability {
         id: "pls_mediation",
         family: "PLS-SEM",
         name: "Mediation effect decomposition",
-        status: MethodStatus::Experimental,
+        status: MethodStatus::Validated,
     },
     MethodCapability {
         id: "pls_two_stage_moderation",
         family: "PLS-SEM",
         name: "Two-stage moderation",
-        status: MethodStatus::Experimental,
+        status: MethodStatus::Validated,
     },
     MethodCapability {
         id: "plsc",
         family: "PLS-SEM",
         name: "Consistent PLS",
-        status: MethodStatus::Experimental,
+        status: MethodStatus::Validated,
     },
     MethodCapability {
         id: "wpls",
         family: "PLS-SEM",
         name: "Weighted PLS",
-        status: MethodStatus::Experimental,
+        status: MethodStatus::Validated,
     },
     MethodCapability {
         id: "cca",
@@ -87,7 +87,7 @@ pub const METHOD_CAPABILITIES: &[MethodCapability] = &[
         id: "predict",
         family: "Prediction",
         name: "PLSpredict holdout / repeated k-fold",
-        status: MethodStatus::Experimental,
+        status: MethodStatus::Validated,
     },
     MethodCapability {
         id: "mga",
@@ -99,7 +99,7 @@ pub const METHOD_CAPABILITIES: &[MethodCapability] = &[
         id: "ipma",
         family: "Prediction",
         name: "IPMA / cIPMA",
-        status: MethodStatus::Experimental,
+        status: MethodStatus::Validated,
     },
     MethodCapability {
         id: "cbsem",
@@ -111,7 +111,7 @@ pub const METHOD_CAPABILITIES: &[MethodCapability] = &[
         id: "pca",
         family: "Components",
         name: "Principal component analysis",
-        status: MethodStatus::Experimental,
+        status: MethodStatus::Validated,
     },
     MethodCapability {
         id: "gsca",
@@ -129,7 +129,7 @@ pub const METHOD_CAPABILITIES: &[MethodCapability] = &[
         id: "nca",
         family: "Necessary conditions",
         name: "NCA",
-        status: MethodStatus::Experimental,
+        status: MethodStatus::Validated,
     },
 ];
 

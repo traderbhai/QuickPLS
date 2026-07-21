@@ -1,6 +1,6 @@
 # WPLS v1
 
-Status: validated for the documented QuickPLS v0.9.0-rc.1 supported WPLS scope. Broader weighted estimators outside this contract remain unsupported.
+Status: validated for the documented QuickPLS v1.2.1 supported WPLS scope. Broader weighted estimators outside this contract remain unsupported.
 
 `AnalysisMethod::Wpls` runs a case-weighted PLS estimator using an explicit `settings.case_weight_column`. The current result reports `method_version = "wpls_case_weighted_v1"` and stores a typed `wpls` payload with the weight column, weight sum, effective sample size, covariance convention, and warnings.
 
@@ -30,4 +30,4 @@ Validation evidence:
 - The reference script independently implements weighted standardization, weighted covariance, weighted score iteration, weighted path estimation, weighted loadings, weighted R2, weight-sum metadata, effective sample size, missing-weight recipe validation, and negative-weight runtime rejection.
 - Current observed max delta is `3.41e-13`.
 
-Publication status: experimental. Treat WPLS output as a checked estimator preview until broader references, simulations, inference behavior, UI/report review, and release-family promotion are complete.
+Publication status: validated for the documented QuickPLS v1.2.1 positive case-weighted reflective path/factor-weighting scope. WPLS inference, generated interaction/HOC workflows, formative blocks, and PCA weighting remain outside the promoted scope.

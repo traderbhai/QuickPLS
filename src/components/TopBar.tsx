@@ -3,7 +3,7 @@ import Papa from "papaparse";
 import { useEffect, useRef, useState } from "react";
 import { methods } from "../data/sample";
 import { analysisReadiness } from "../domain/analysisReadiness";
-import { isSelectableAnalysisMethod, methodStatusDescription, methodStatusLabel } from "../domain/methodStatus";
+import { effectiveMethodStatus, isSelectableAnalysisMethod, methodStatusDescription, methodStatusLabel } from "../domain/methodStatus";
 import { useWorkspace } from "../store";
 import type { AnalysisMethodId, Dataset, JobSnapshot } from "../types";
 import { cancelNativePlsJob, createNativeProject, dismissNativePlsJob, getNativePlsJob, getNativePlsJobResult, importNativeDataset, isNativeDesktop, openNativeDemoProject, openNativeProject, saveNativeProject, startNativePlsJob } from "../services/projectService";
@@ -218,12 +218,12 @@ export function TopBar() {
       <span className="command-separator" />
       <button className="icon-command" aria-label="Reset project" title="Reset project" onClick={resetProject}><RotateCcw size={17} /><span>Reset</span></button>
       <div className="command-spacer" />
-      <div className="method-picker" title={selectedMethod ? methodStatusDescription(selectedMethod) : undefined}>
+      <div className="method-picker" title={selectedMethod ? methodStatusDescription(selectedMethod, analysisSettings) : undefined}>
         <select className="method-select" aria-label="Analysis method" value={analysisSettings.method} onChange={(event) => setAnalysisSettings({ method: event.target.value as AnalysisMethodId })}>
           {runnableMethods.map((candidate) => <option key={candidate.id} value={candidate.id}>{candidate.name}</option>)}
           <option disabled>GSCA (planned)</option>
         </select>
-        {selectedMethod ? <span className={`status-text ${selectedMethod.status}`}>{methodStatusLabel(selectedMethod.status)}</span> : null}
+        {selectedMethod ? <span className={`status-text ${effectiveMethodStatus(selectedMethod, analysisSettings)}`}>{methodStatusLabel(effectiveMethodStatus(selectedMethod, analysisSettings))}</span> : null}
       </div>
       <button className="run-button" aria-label={activeJob ? "Cancel active analysis" : `Run ${selectedMethod.name}`} aria-describedby={!activeJob && !canRun ? "run-disabled-reason" : undefined} disabled={!activeJob && !canRun} title={activeJob ? "Cancel the active analysis" : canRun ? `Run ${selectedMethod.name}` : readiness.blockers[0]?.detail ?? readiness.summary} onClick={() => { void (activeJob ? cancelAnalysis() : runAnalysis()).catch((error) => { setActiveJob(null); window.alert(error); }); }}>
         {activeJob ? <Square size={14} fill="currentColor" /> : <Play size={16} fill="currentColor" />}

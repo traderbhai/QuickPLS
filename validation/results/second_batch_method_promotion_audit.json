@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "target": "v1_2_1_second_batch_method_promotion",
+  "passed": true,
+  "artifacts": [
+    {
+      "path": "validation\\results\\mediation_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\moderation_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\plsc_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\wpls_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\ipma_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\plspredict_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\nca_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\second_batch_product_enforcement_audit.json",
+      "present": true,
+      "passed": true
+    }
+  ],
+  "registry_gate_present": true,
+  "registry_gate_all_passed": true,
+  "note": "Second-batch promotion is bounded to the documented scopes; later-batch methods remain experimental."
+}

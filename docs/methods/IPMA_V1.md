@@ -1,6 +1,6 @@
 # IPMA / cIPMA V1
 
-`ipma_v1` is validated for the documented QuickPLS v0.9.0-rc.1 supported scope. Broader cIPMA extensions outside this contract remain unsupported.
+`ipma_v1` is validated for the documented QuickPLS v1.2.1 supported scope. Broader cIPMA extensions outside this contract remain unsupported.
 
 ## Scope
 
@@ -17,7 +17,7 @@
 - This is a bounded IPMA/cIPMA preview.
 - It does not use scale metadata or explicit theoretical minimum/maximum values.
 - Case-weighted IPMA, generated interaction constructs, and higher-order constructs are blocked in this preview.
-- All output remains watermarked as experimental.
+- Output is validated only for the documented fixed-total-effect importance and 0-100 standardized-score performance scope.
 
 ## Validation Evidence
 

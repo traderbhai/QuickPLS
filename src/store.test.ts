@@ -24,13 +24,16 @@ describe("model editor state", () => {
     for (const method of []) {
       expect(unsupported.has(method)).toBe(true);
     }
-    expect(methods.find((method) => method.id === "wpls")?.status).toBe("experimental");
+    expect(methods.find((method) => method.id === "wpls")?.status).toBe("validated");
     expect(methods.find((method) => method.id === "cca")?.status).toBe("experimental");
-    expect(methods.find((method) => method.id === "plsc")?.status).toBe("experimental");
+    expect(methods.find((method) => method.id === "plsc")?.status).toBe("validated");
     expect(methods.find((method) => method.id === "endogeneity")?.status).toBe("experimental");
     expect(methods.find((method) => method.id === "nonlinear_effects")?.status).toBe("experimental");
     expect(methods.find((method) => method.id === "moderated_mediation")?.status).toBe("experimental");
     expect(methods.find((method) => method.id === "cta_pls")?.status).toBe("experimental");
+    expect(methods.find((method) => method.id === "predict")?.status).toBe("validated");
+    expect(methods.find((method) => method.id === "ipma")?.status).toBe("validated");
+    expect(methods.find((method) => method.id === "nca")?.status).toBe("validated");
   });
 
   it("supports undo and redo for construct creation", () => {

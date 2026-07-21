@@ -1,6 +1,6 @@
 # PLS Two-Stage Moderation v1
 
-Status: experimental implementation. Publication validation is not complete.
+Status: validated for the documented QuickPLS v1.2.1 single-interaction two-stage moderation scope.
 
 Planned method version: `pls_two_stage_moderation_v1`
 
@@ -33,7 +33,7 @@ For missing data, stage 1 uses the ordinary model-wide complete-case rows. Stage
 
 ## Current Evidence
 
-`npm run qpls:moderation:reference` writes `validation/results/moderation_reference_report.json`. The script computes the single-item two-stage contract independently with standardized multiple regression, then checks QuickPLS path and simple-slope output against that reference. It also verifies positive-affine invariance, row-order invariance, construct-order invariance, complete-case missing-data row mapping, experimental warning persistence, and interaction-signal degradation after moderator permutation.
+`npm run qpls:moderation:reference` writes `validation/results/moderation_reference_report.json`. The script computes the single-item two-stage contract independently with standardized multiple regression, then checks QuickPLS path and simple-slope output against that reference. It also verifies positive-affine invariance, row-order invariance, construct-order invariance, complete-case missing-data row mapping, validated-scope warning persistence, and interaction-signal degradation after moderator permutation.
 
 `npm run qpls:moderation:r-reference` writes `validation/results/moderation_r_reference_report.json`. The script runs development-only R base `lm` on the same single-item fixture, using standardized `x`, `m`, `y`, and the standardized product of `x*m`, then compares paths and simple slopes with QuickPLS.
 
@@ -51,9 +51,9 @@ For missing data, stage 1 uses the ordinary model-wide complete-case rows. Stage
 
 ## Gate Behavior
 
-`qpls-core` validates interaction metadata and returns warnings with codes `method.moderation.experimental` and, when applicable, `interaction.product_indicator.generated`. Generated product constructs may start without dataset indicators because the estimator supplies the product-score indicator between stage 1 and stage 2.
+`qpls-core` validates interaction metadata and, when applicable, returns `interaction.product_indicator.generated`. Generated product constructs may start without dataset indicators because the estimator supplies the product-score indicator between stage 1 and stage 2.
 
-The validation gate remains open while the broader v0.5 extended-method family is incomplete. Two-stage moderation itself remains experimental until the release-family audit decides whether the bounded qualification evidence is sufficient for the preview label.
+The v1.2.1 promotion gate validates this bounded two-stage moderation scope. Moderated mediation, multiple unqualified interaction systems, higher-order generated constructs, and unsupported weighting/preprocessing combinations remain outside the promoted scope.
 
 ## Compatibility
 
