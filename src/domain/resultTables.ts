@@ -189,7 +189,7 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
   }
 
   if (result.regression) {
-    const regressionStatus = result.regression.regression_type === "ols" ? "validated" : "experimental";
+    const regressionStatus = regressionScopeStatus(result.regression);
     const regressionWarning = regressionStatus === "validated"
       ? scopeWarnings(result.regression.warnings)
       : experimentalWarnings(result.regression.warnings);
@@ -222,8 +222,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
       tables.push({
         id: "process_effects",
         title: "PROCESS-style effects",
-        status: "experimental",
-        warning: experimentalWarnings(result.regression.process.warnings),
+        status: regressionStatus,
+        warning: regressionStatus === "validated" ? scopeWarnings(result.regression.process.warnings) : experimentalWarnings(result.regression.process.warnings),
         columns: ["Effect", "Estimate", "Lower", "Upper"],
         rows: result.regression.process.effects.map((row) => [formatLabel(row.effect), formatNumber(row.estimate, 6), row.lower_percentile == null ? "N/A" : formatNumber(row.lower_percentile, 6), row.upper_percentile == null ? "N/A" : formatNumber(row.upper_percentile, 6)]),
       });
@@ -269,11 +269,12 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
   }
 
   if (result.segmentation) {
+    const segmentationStatus = result.segmentation.method_version === "pls_pos_v1" ? "validated" : "experimental";
     tables.push({
       id: "segmentation_summary",
       title: "PLS-POS bounded segmentation summary",
-      status: "experimental",
-      warning: warnings(result.segmentation.warnings),
+      status: segmentationStatus,
+      warning: segmentationStatus === "validated" ? scopeWarnings(result.segmentation.warnings) : warnings(result.segmentation.warnings),
       columns: ["Algorithm", "Requested", "Selected", "Observations", "Objective", "Pooled objective", "Improvement", "Min share", "Imbalance", "Max path separation", "Assignment"],
       rows: [[
         formatLabel(result.segmentation.algorithm),
@@ -292,8 +293,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "segmentation_segments",
       title: "PLS-POS bounded segment paths",
-      status: "experimental",
-      warning: warnings(result.segmentation.warnings),
+      status: segmentationStatus,
+      warning: segmentationStatus === "validated" ? scopeWarnings(result.segmentation.warnings) : warnings(result.segmentation.warnings),
       columns: ["Segment", "Observations", "Share", "Source", "Target", "Path coefficient", "R2"],
       rows: result.segmentation.segments.flatMap((segment) => segment.paths.map((path) => [
         formatLabel(segment.segment),
@@ -309,8 +310,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
       tables.push({
         id: "segmentation_memberships",
         title: "PLS-POS bounded segment memberships",
-        status: "experimental",
-        warning: warnings(result.segmentation.warnings),
+        status: segmentationStatus,
+        warning: segmentationStatus === "validated" ? scopeWarnings(result.segmentation.warnings) : warnings(result.segmentation.warnings),
         columns: ["Observation", "Segment"],
         rows: result.segmentation.memberships.map((membership) => [
           String(membership.observation),
@@ -324,8 +325,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "mga_summary",
       title: "MGA two-group summary",
-      status: "experimental",
-      warning: warnings(result.mga.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.mga.warnings),
       columns: ["Group column", "Groups", "Comparisons", "Method version"],
       rows: [[
         result.mga.group_column,
@@ -337,8 +338,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "mga_paths",
       title: "MGA group paths",
-      status: "experimental",
-      warning: warnings(result.mga.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.mga.warnings),
       columns: ["Group", "Observations", "Source", "Target", "Path coefficient", "R2"],
       rows: result.mga.groups.flatMap((group) => group.paths.map((path) => [
         group.group,
@@ -352,8 +353,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "mga_comparisons",
       title: "MGA path comparisons",
-      status: "experimental",
-      warning: warnings(result.mga.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.mga.warnings),
       columns: ["Source", "Target", "Group A", "Coefficient A", "Group B", "Coefficient B", "Difference", "SE", "t", "p", "Warning"],
       rows: result.mga.comparisons.map((comparison) => [
         comparison.source,
@@ -375,8 +376,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "micom_constructs",
       title: "MICOM measurement invariance",
-      status: "experimental",
-      warning: warnings(result.micom.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.micom.warnings),
       columns: ["Construct", "Configural", "Composition corr", "Composition p", "Mean diff", "Mean p", "Variance diff", "Variance p", "Partial", "Full"],
       rows: result.micom.constructs.map((row) => [
         row.construct,
@@ -397,8 +398,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "mga_permutation",
       title: "Permutation MGA path differences",
-      status: "experimental",
-      warning: warnings(result.mga_permutation.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.mga_permutation.warnings),
       columns: ["Source", "Target", "Original difference", "Empirical p", "Percentile rank"],
       rows: result.mga_permutation.comparisons.map((row) => [
         row.source,
@@ -414,8 +415,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "fimix_summary",
       title: "FIMIX-PLS class summary",
-      status: "experimental",
-      warning: warnings(result.fimix.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.fimix.warnings),
       columns: ["Classes", "Starts", "Iterations", "Log likelihood", "AIC", "BIC", "CAIC", "Entropy"],
       rows: [[
         String(result.fimix.classes),
@@ -431,8 +432,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "fimix_paths",
       title: "FIMIX-PLS class paths",
-      status: "experimental",
-      warning: warnings(result.fimix.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.fimix.warnings),
       columns: ["Class", "Observations", "Share", "Source", "Target", "Path coefficient", "R2"],
       rows: result.fimix.classes_summary.flatMap((item) => item.paths.map((path) => [
         item.class,
@@ -661,26 +662,29 @@ function experimentalWarnings(values: string[]) {
   return values.length ? `${EXPERIMENTAL_WARNING} ${values.join(" ")}` : EXPERIMENTAL_WARNING;
 }
 
+function regressionScopeStatus(regression: NonNullable<PlsResult["regression"]>): ResultTable["status"] {
+  if (regression.regression_type === "ols" || regression.regression_type === "logistic") return "validated";
+  if (regression.regression_type === "process" && regression.process?.model !== "moderated_mediation") return "validated";
+  return "experimental";
+}
+
 function resultScopeStatus(result: PlsResult): ResultTable["status"] {
   if (
     result.cca ||
     result.cta_pls ||
-    result.segmentation ||
-    result.mga ||
-    result.micom ||
-    result.mga_permutation ||
-    result.fimix ||
+    (result.segmentation && result.segmentation.method_version !== "pls_pos_v1") ||
     result.cbsem ||
     result.endogeneity ||
     result.nonlinear_effects ||
     result.moderated_mediation ||
     result.gsca ||
-    (result.regression && result.regression.regression_type !== "ols")
+    (result.regression && regressionScopeStatus(result.regression) !== "validated")
   ) {
     return "experimental";
   }
-  if (result.method_version.startsWith("pls_pm_v1") || result.method_version === "pca_v1" || result.method_version === "plsc_v1" || result.method_version === "wpls_case_weighted_v1" || result.method_version === "plspredict_holdout_v1" || result.method_version === "ipma_v1" || result.method_version === "nca_v1") return "validated";
-  if (result.regression?.regression_type === "ols") return "validated";
+  if (result.method_version.startsWith("pls_pm_v1") || result.method_version === "pca_v1" || result.method_version === "plsc_v1" || result.method_version === "wpls_case_weighted_v1" || result.method_version === "plspredict_holdout_v1" || result.method_version === "ipma_v1" || result.method_version === "nca_v1" || result.method_version === "regression_logistic_v1" || result.method_version === "regression_process_v1") return "validated";
+  if (result.mga || result.micom || result.mga_permutation || result.fimix || result.segmentation) return "validated";
+  if (result.regression && regressionScopeStatus(result.regression) === "validated") return "validated";
   return "experimental";
 }
 

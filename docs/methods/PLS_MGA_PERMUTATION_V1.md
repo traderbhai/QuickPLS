@@ -1,6 +1,8 @@
 # PLS MGA Permutation v1
 
-`pls_mga_permutation_v1` is an experimental QuickPLS v0.6 permutation-based MGA payload emitted from `AnalysisMethod::Mga` when recipe metadata contains `group_methods = "mga_permutation"` and `mga_group_column` names a two-group observed column.
+Status: validated for the documented QuickPLS v1.2.2 two-group permutation MGA scope.
+
+`pls_mga_permutation_v1` is a permutation-based MGA payload emitted from `AnalysisMethod::Mga` when recipe metadata contains `group_methods = "mga_permutation"` and `mga_group_column` names a two-group observed column.
 
 ## Scope
 
@@ -12,8 +14,8 @@
 
 ## Unsupported
 
-Case weights, generated interactions, higher-order constructs, covariance/correlation-only data, more than two groups, too-small groups, and publication-ready group-difference claims are unsupported in this preview.
+Case weights, generated interactions, higher-order constructs, covariance/correlation-only data, more than two groups, too-small groups, and broader group-difference claims outside this contract are unsupported.
 
 ## Validation
 
-`npm run qpls:mga:permutation-reference` and `npm run qpls:v06:validate` write `validation/results/v06_group_methods_reference_report.json`.
+`npm run qpls:mga:permutation-reference`, `npm run qpls:v06:validate`, and `npm run qpls:promotion:mga-permutation` write the reference and promotion artifacts. Promotion is limited to this documented scope.

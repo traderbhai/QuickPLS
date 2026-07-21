@@ -104,7 +104,7 @@ const result: PlsResult = {
     },
   },
   segmentation: {
-    method_version: "pls_pos_bounded_v1",
+    method_version: "pls_pos_v1",
     algorithm: "deterministic_two_segment_multi_path_alignment_sse_scan",
     requested_segments: 2,
     selected_segments: 2,
@@ -221,7 +221,7 @@ describe("result export tables", () => {
     expect(tables[0].rows[0]).toEqual(["WEIGHT", "135.250000", "111.1250", "weighted sample covariance"]);
   });
 
-  it("marks promoted PCA and OLS tables as validated while PROCESS remains experimental", () => {
+  it("marks promoted PCA, OLS, logistic, and bounded PROCESS tables as validated", () => {
     const pcaTables = methodResultTables({
       ...result,
       method_version: "pca_v1",
@@ -273,6 +273,32 @@ describe("result export tables", () => {
     });
     expect(olsTables.every((table) => table.status === "validated")).toBe(true);
 
+    const logisticTables = methodResultTables({
+      ...result,
+      method_version: "regression_logistic_v1",
+      wpls: undefined,
+      cca: undefined,
+      cta_pls: undefined,
+      predict: undefined,
+      segmentation: undefined,
+      mga: undefined,
+      ipma: undefined,
+      regression: {
+        method_version: "regression_logistic_v1",
+        regression_type: "logistic",
+        outcome: "y",
+        predictors: ["x"],
+        controls: [],
+        observations: 10,
+        coefficients: [{ term: "x", estimate: 2, standard_error: 0.1, statistic: 20, p_value_two_sided: 0.00001, confidence_interval_lower: 1.8, confidence_interval_upper: 2.2, odds_ratio: 7.389 }],
+        fit: { pseudo_r_squared: 0.8, aic: 12, bic: 13 },
+        predictions: [{ observation: 0, fitted: 0.8, probability: 0.8 }],
+        process: null,
+        warnings: ["Logistic regression v1 is validated for the documented QuickPLS v1.2.2 binary numeric complete-case scope."],
+      },
+    });
+    expect(logisticTables.every((table) => table.status === "validated")).toBe(true);
+
     const processTables = methodResultTables({
       ...result,
       method_version: "regression_process_v1",
@@ -293,11 +319,37 @@ describe("result export tables", () => {
         coefficients: [{ term: "x", estimate: 2, standard_error: 0.1, statistic: 20, p_value_two_sided: 0.00001, confidence_interval_lower: 1.8, confidence_interval_upper: 2.2, odds_ratio: null }],
         fit: { r_squared: 0.8, adjusted_r_squared: 0.78, aic: 12, bic: 13 },
         predictions: [{ observation: 0, fitted: 1.5, residual: 0.1 }],
-        process: { method_version: "regression_process_v1", model: "mediation", effects: [{ effect: "indirect", estimate: 0.2, lower_percentile: 0.1, upper_percentile: 0.3 }], simple_slopes: [], warnings: ["PROCESS-style regression v1 remains experimental."] },
-        warnings: ["PROCESS-style regression v1 remains experimental."],
+        process: { method_version: "regression_process_v1", model: "mediation", effects: [{ effect: "indirect", estimate: 0.2, lower_percentile: 0.1, upper_percentile: 0.3 }], simple_slopes: [], warnings: ["PROCESS v1 reports bounded deterministic mediation/moderation effects validated for the documented QuickPLS v1.2.2 scope."] },
+        warnings: ["PROCESS-style regression v1 is validated for the documented QuickPLS v1.2.2 bounded mediation/moderation workflow scope."],
       },
     });
-    expect(processTables.every((table) => table.status === "experimental")).toBe(true);
+    expect(processTables.every((table) => table.status === "validated")).toBe(true);
+
+    const moderatedMediationTables = methodResultTables({
+      ...result,
+      method_version: "regression_process_v1",
+      wpls: undefined,
+      cca: undefined,
+      cta_pls: undefined,
+      predict: undefined,
+      segmentation: undefined,
+      mga: undefined,
+      ipma: undefined,
+      regression: {
+        method_version: "regression_process_v1",
+        regression_type: "process",
+        outcome: "y",
+        predictors: ["x"],
+        controls: [],
+        observations: 10,
+        coefficients: [{ term: "x", estimate: 2, standard_error: 0.1, statistic: 20, p_value_two_sided: 0.00001, confidence_interval_lower: 1.8, confidence_interval_upper: 2.2, odds_ratio: null }],
+        fit: { r_squared: 0.8, adjusted_r_squared: 0.78, aic: 12, bic: 13 },
+        predictions: [{ observation: 0, fitted: 1.5, residual: 0.1 }],
+        process: { method_version: "regression_process_v1", model: "moderated_mediation", effects: [{ effect: "conditional_indirect", estimate: 0.2, lower_percentile: null, upper_percentile: null }], simple_slopes: [], warnings: ["Moderated mediation remains experimental."] },
+        warnings: ["PROCESS moderated mediation remains experimental."],
+      },
+    });
+    expect(moderatedMediationTables.every((table) => table.status === "experimental")).toBe(true);
   });
 
   it("exports run provenance plus escaped CSV and HTML tables", () => {

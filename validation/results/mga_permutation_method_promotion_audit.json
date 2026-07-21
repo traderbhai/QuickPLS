@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "target": "v1_2_2_group_prediction_regression_promotion",
+  "method_id": "mga_permutation",
+  "promoted_scope": "Two observed groups with group-specific PLS re-estimation, deterministic label permutation, empirical p values, and MICOM warning enforcement.",
+  "passed": true,
+  "reports": [
+    {
+      "path": "validation\\results\\mga_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\v06_group_methods_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\prediction_heterogeneity_publication_audit.json",
+      "present": true,
+      "passed": true
+    }
+  ],
+  "docs": [
+    {
+      "path": "docs\\methods\\PLS_MGA_PERMUTATION_V1.md",
+      "present": true,
+      "bytes": 1216
+    },
+    {
+      "path": "docs\\methods\\PLS_MGA_TWO_GROUP_V1.md",
+      "present": true,
+      "bytes": 1837
+    }
+  ],
+  "checks": [
+    {
+      "name": "permutation_fixture_present",
+      "passed": true,
+      "detail": "v06 integrated report covers permutation MGA path-difference output."
+    },
+    {
+      "name": "micom_warning_policy_present",
+      "passed": true,
+      "detail": "Engine emits a warning when permutation MGA runs without passing MICOM partial invariance."
+    }
+  ],
+  "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."
+}

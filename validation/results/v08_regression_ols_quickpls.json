@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "id": "26aacf28-b409-40f4-afea-c7ea54dec7c1",
+  "id": "1cab9ed0-27c4-4da8-87d0-ff811550a19a",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000081835",
@@ -24,14 +24,14 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-07-19T14:35:07.981647600Z",
-    "completed_at": "2026-07-19T14:35:07.983216600Z"
+    "started_at": "2026-07-21T06:58:01.514994500Z",
+    "completed_at": "2026-07-21T06:58:01.517174Z"
   },
   "diagnostics": [
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "Regression/PROCESS v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
+      "message": "OLS regression v1 is validated for the documented QuickPLS v1.2 OLS scope; unsupported shapes remain blocked."
     },
     {
       "code": "estimation.warning",
@@ -992,14 +992,14 @@
         "process": null,
         "regression_type": "ols",
         "warnings": [
-          "Regression/PROCESS v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
+          "OLS regression v1 is validated for the documented QuickPLS v1.2 OLS scope; unsupported shapes remain blocked."
         ]
       },
       "segmentation": null,
       "transforms": [],
       "used_observations": 140,
       "warnings": [
-        "Regression/PROCESS v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
+        "OLS regression v1 is validated for the documented QuickPLS v1.2 OLS scope; unsupported shapes remain blocked."
       ],
       "wpls": null
     },

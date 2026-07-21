@@ -23,9 +23,9 @@
     "first_batch_rows": 5,
     "first_batch_promotion_ready": 5
   },
-  "method_rows": 26,
-  "experimental_or_not_stable_rows": 14,
-  "validated_method_rows": 12,
+  "method_rows": 27,
+  "experimental_or_not_stable_rows": 10,
+  "validated_method_rows": 17,
   "promotion_slice_passed_gates": [
     "Promotion criteria frozen",
     "Program plan documented",
@@ -39,7 +39,7 @@
     "Validated-scope product enforcement"
   ],
   "promotion_slice_open_gates": [
-    "Second-source and simulation expansion"
+    "Later high-risk method expansion"
   ],
   "initial_priority": [
     "PLS core stable run envelope",

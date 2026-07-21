@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "id": "831789db-9165-461b-b910-c9e9616cede5",
+  "id": "f88c0430-acea-4fba-a913-831b0330e90e",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000080731",
@@ -24,8 +24,8 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-07-19T14:35:09.094870100Z",
-    "completed_at": "2026-07-19T14:35:09.101578800Z"
+    "started_at": "2026-07-21T06:58:02.805089100Z",
+    "completed_at": "2026-07-21T06:58:02.811434200Z"
   },
   "diagnostics": [
     {
@@ -454,7 +454,7 @@
         "method_version": "pls_mediation_v1",
         "tolerance": 1e-12,
         "warnings": [
-          "Mediation classes are descriptive effect-decomposition labels; publication inference requires validated bootstrap or permutation intervals for the relevant indirect effect."
+          "PLS mediation effect decomposition is validated for the documented QuickPLS v1.2.1 scope when paired with validated bootstrap or permutation intervals for the relevant indirect effect."
         ]
       },
       "method_version": "gsca_v1",

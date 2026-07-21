@@ -92,8 +92,8 @@ pub const METHOD_CAPABILITIES: &[MethodCapability] = &[
     MethodCapability {
         id: "mga",
         family: "Groups",
-        name: "Bounded two-group MGA",
-        status: MethodStatus::Experimental,
+        name: "MICOM / permutation MGA",
+        status: MethodStatus::Validated,
     },
     MethodCapability {
         id: "ipma",
@@ -123,7 +123,7 @@ pub const METHOD_CAPABILITIES: &[MethodCapability] = &[
         id: "regression",
         family: "Regression",
         name: "OLS / logistic / PROCESS",
-        status: MethodStatus::Experimental,
+        status: MethodStatus::Validated,
     },
     MethodCapability {
         id: "nca",

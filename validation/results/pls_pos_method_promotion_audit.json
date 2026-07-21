@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "target": "v1_2_2_group_prediction_regression_promotion",
+  "method_id": "pls_pos",
+  "promoted_scope": "Deterministic PLS-POS with 2-5 segments, deterministic starts, minimum segment-share guard, objective history, memberships, segment paths, and segment R2.",
+  "passed": true,
+  "reports": [
+    {
+      "path": "validation\\results\\segmentation_recovery_simulation_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\v06_group_methods_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\prediction_heterogeneity_publication_audit.json",
+      "present": true,
+      "passed": true
+    }
+  ],
+  "docs": [
+    {
+      "path": "docs\\methods\\PLS_POS_V1.md",
+      "present": true,
+      "bytes": 1214
+    }
+  ],
+  "checks": [
+    {
+      "name": "segment_recovery_present",
+      "passed": true,
+      "detail": "Recovery and null-screen evidence is present in segmentation recovery artifacts."
+    },
+    {
+      "name": "legacy_bounded_not_promoted",
+      "passed": true,
+      "detail": "Compatibility keeps pls_pos_bounded_v1 readable but outside the promoted v1.2.2 PLS-POS scope."
+    }
+  ],
+  "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."
+}

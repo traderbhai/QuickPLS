@@ -283,3 +283,28 @@ Promoted scopes:
 - Numeric X/Y CE-FDH and CR-FDH NCA.
 
 Later-batch methods remain experimental until separate method-specific promotion gates pass.
+
+## v1.2.2 Group, Prediction, And Regression Promotion Note
+
+Evidence added:
+
+- `validation/micom_method_promotion_audit.py`
+- `validation/mga_permutation_method_promotion_audit.py`
+- `validation/pls_pos_method_promotion_audit.py`
+- `validation/fimix_pls_method_promotion_audit.py`
+- `validation/logistic_method_promotion_audit.py`
+- `validation/process_method_promotion_audit.py`
+- `validation/third_batch_product_enforcement_audit.py`
+- `validation/third_batch_method_promotion_audit.py`
+- `validation/development_slices.json` slice `v1_2_2_group_prediction_regression_promotion`
+
+Promoted scopes:
+
+- Two-group MICOM.
+- Two-group permutation MGA.
+- Deterministic 2-5 segment PLS-POS.
+- Bounded deterministic 2-3 class FIMIX-PLS.
+- Binary numeric complete-case logistic regression.
+- Bounded PROCESS-style mediation and moderation.
+
+Remaining later-batch methods remain experimental: CB-SEM/CFA, GSCA, higher-order constructs, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation.

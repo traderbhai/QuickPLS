@@ -35,8 +35,9 @@ def main() -> int:
         check(
             "regression_status_is_setting_aware",
             contains("src/domain/methodStatus.ts", 'method.id === "regression"')
-            and contains("src/domain/methodStatus.ts", '(settings?.regressionType ?? "ols") === "ols" ? "validated" : "experimental"'),
-            "Regression status is validated only for OLS and experimental for logistic/PROCESS.",
+            and contains("src/domain/methodStatus.ts", 'regressionType === "ols" || regressionType === "logistic"')
+            and contains("src/domain/methodStatus.ts", '(settings?.processModel ?? "mediation") !== "moderated_mediation"'),
+            "Regression status is setting-aware: OLS/logistic/bounded PROCESS are validated while PROCESS moderated mediation remains experimental.",
         ),
         check(
             "analysis_readiness_uses_effective_status",
@@ -57,17 +58,18 @@ def main() -> int:
             and contains("src/domain/resultTables.ts", 'result.method_version === "plspredict_holdout_v1"')
             and contains("src/domain/resultTables.ts", 'result.method_version === "ipma_v1"')
             and contains("src/domain/resultTables.ts", 'result.method_version === "nca_v1"')
-            and contains("src/domain/resultTables.ts", 'result.regression?.regression_type === "ols"')
-            and contains("src/domain/resultTables.ts", 'result.regression.regression_type === "ols" ? "validated" : "experimental"')
-            and contains("src/domain/resultTables.ts", "(result.regression && result.regression.regression_type !== \"ols\")"),
-            "Export table status promotes first- and second-batch validated scopes while leaving logistic/PROCESS variants experimental.",
+            and contains("src/domain/resultTables.ts", 'result.method_version === "regression_logistic_v1"')
+            and contains("src/domain/resultTables.ts", 'result.method_version === "regression_process_v1"')
+            and contains("src/domain/resultTables.ts", 'regression.regression_type === "ols" || regression.regression_type === "logistic"')
+            and contains("src/domain/resultTables.ts", 'regression.process?.model !== "moderated_mediation"'),
+            "Export table status promotes first-, second-, and eligible third-batch validated scopes while leaving PROCESS moderated mediation experimental.",
         ),
         check(
             "engine_warnings_do_not_overclaim_regression_nca",
-            contains("crates/qpls-estimation/src/pls.rs", "Logistic regression v1 remains experimental")
-            and contains("crates/qpls-estimation/src/pls.rs", "PROCESS-style regression v1 remains experimental")
+            contains("crates/qpls-estimation/src/pls.rs", "Logistic regression v1 is validated for the documented QuickPLS v1.2.2 binary numeric complete-case scope")
+            and contains("crates/qpls-estimation/src/pls.rs", "PROCESS-style regression v1 is validated for the documented QuickPLS v1.2.2 bounded mediation/moderation workflow scope")
             and contains("crates/qpls-estimation/src/pls.rs", "NCA v1 is validated for the documented QuickPLS v1.2.1 numeric CE-FDH/CR-FDH scope"),
-            "Newly generated run warnings keep logistic and PROCESS experimental while treating NCA as validated only for the documented v1.2.1 numeric scope.",
+            "Newly generated run warnings promote logistic and bounded PROCESS only for documented scopes while treating NCA as validated only for the documented v1.2.1 numeric scope.",
         ),
         check(
             "core_validation_does_not_warn_pca_experimental",
@@ -80,8 +82,9 @@ def main() -> int:
             "compatibility_docs_match_promoted_scope",
             contains("docs/METHOD_COMPATIBILITY.md", "| Components | Standalone PCA | Validated")
             and contains("docs/METHOD_COMPATIBILITY.md", "| Regression | OLS regression | Validated")
-            and contains("docs/METHOD_COMPATIBILITY.md", "| Regression | Logistic and PROCESS | Experimental"),
-            "Compatibility matrix separates validated PCA/OLS from experimental logistic/PROCESS.",
+            and contains("docs/METHOD_COMPATIBILITY.md", "| Regression | Logistic regression | Validated")
+            and contains("docs/METHOD_COMPATIBILITY.md", "| Regression | PROCESS-style workflows | Validated"),
+            "Compatibility matrix separates validated PCA/OLS from later-batch regression scopes.",
         ),
     ]
     passed = all(item["passed"] for item in checks)
@@ -93,7 +96,7 @@ def main() -> int:
                 "target": "v1_2_method_promotion_program",
                 "passed": passed,
                 "checks": checks,
-                "note": "Validated product surfaces are constrained to the first and second promoted method batches; unpromoted methods remain experimental or watermarked.",
+                "note": "Validated product surfaces are constrained to the first, second, and eligible third promoted method batches; unpromoted methods remain experimental or watermarked.",
             },
             indent=2,
         )

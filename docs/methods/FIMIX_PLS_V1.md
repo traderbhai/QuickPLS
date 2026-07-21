@@ -1,6 +1,8 @@
 # FIMIX-PLS v1
 
-`fimix_pls_v1` is an experimental QuickPLS v0.6 latent-class segmentation preview emitted from `AnalysisMethod::Predict` when recipe metadata contains `group_methods = "fimix"` or `fimix_classes`.
+Status: validated for the documented QuickPLS v1.2.2 bounded deterministic 2-3 class FIMIX-PLS scope.
+
+`fimix_pls_v1` is a latent-class segmentation payload emitted from `AnalysisMethod::Predict` when recipe metadata contains `group_methods = "fimix"` or `fimix_classes`.
 
 ## Scope
 
@@ -11,8 +13,8 @@
 
 ## Unsupported
 
-Case weights, generated interactions, higher-order constructs, covariance/correlation-only data, too-small samples, singular segment fits, random-start EM qualification, and publication-ready FIMIX-PLS claims are unsupported in this preview.
+Case weights, generated interactions, higher-order constructs, covariance/correlation-only data, too-small samples, singular segment fits, random-start EM qualification, and unrestricted FIMIX-PLS claims outside this deterministic contract are unsupported.
 
 ## Validation
 
-`npm run qpls:fimix:recovery` and `npm run qpls:v06:validate` write `validation/results/v06_group_methods_reference_report.json`.
+`npm run qpls:fimix:recovery`, `npm run qpls:v06:validate`, and `npm run qpls:promotion:fimix-pls` write the recovery and promotion artifacts. Known difference: QuickPLS promotes only this bounded deterministic score-space segmentation scope, not blanket full EM/FIMIX parity.

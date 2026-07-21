@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "id": "2ea746d9-44b5-451e-91ab-925bd4ff3178",
+  "id": "9ffcec8d-59f8-4874-8fe2-96d202e53954",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000000601",
@@ -24,24 +24,24 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-07-19T14:33:59.941929Z",
-    "completed_at": "2026-07-19T14:34:00.336153400Z"
+    "started_at": "2026-07-21T06:57:58.926894400Z",
+    "completed_at": "2026-07-21T06:57:59.409805300Z"
   },
   "diagnostics": [
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "Bounded MGA is experimental; this preview compares two observed groups with approximate normal path-difference diagnostics. MICOM and permutation MGA are emitted as separate experimental v0.6 payloads when requested."
+      "message": "Two-group MGA v1 is validated for the documented QuickPLS v1.2.2 group-specific estimate and permutation-workflow scope; approximate normal path-difference diagnostics remain descriptive."
     },
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "MICOM v1 is experimental; compositional invariance uses deterministic construct-score permutation diagnostics and requires external validation before publication use."
+      "message": "MICOM v1 is validated for the documented QuickPLS v1.2.2 two-group configural, compositional, mean, and variance permutation scope."
     },
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "Permutation MGA v1 is experimental; it re-estimates group-specific PLS models under deterministic group-label permutations and is not publication-validated."
+      "message": "Permutation MGA v1 is validated for the documented QuickPLS v1.2.2 two-group deterministic group-label permutation scope."
     }
   ],
   "payload": {
@@ -467,7 +467,7 @@
         "method_version": "pls_mediation_v1",
         "tolerance": 1e-12,
         "warnings": [
-          "Mediation classes are descriptive effect-decomposition labels; publication inference requires validated bootstrap or permutation intervals for the relevant indirect effect."
+          "PLS mediation effect decomposition is validated for the documented QuickPLS v1.2.1 scope when paired with validated bootstrap or permutation intervals for the relevant indirect effect."
         ]
       },
       "method_version": "pls_mga_two_group_v1",
@@ -543,7 +543,7 @@
         ],
         "method_version": "pls_mga_two_group_v1",
         "warnings": [
-          "Bounded MGA is experimental; this preview compares two observed groups with approximate normal path-difference diagnostics. MICOM and permutation MGA are emitted as separate experimental v0.6 payloads when requested."
+          "Two-group MGA v1 is validated for the documented QuickPLS v1.2.2 group-specific estimate and permutation-workflow scope; approximate normal path-difference diagnostics remain descriptive."
         ]
       },
       "mga_permutation": {
@@ -568,7 +568,7 @@
         "permutation_samples": 99,
         "usable_permutations": 99,
         "warnings": [
-          "Permutation MGA v1 is experimental; it re-estimates group-specific PLS models under deterministic group-label permutations and is not publication-validated."
+          "Permutation MGA v1 is validated for the documented QuickPLS v1.2.2 two-group deterministic group-label permutation scope."
         ]
       },
       "micom": {
@@ -625,7 +625,7 @@
         "permutation_samples": 99,
         "usable_permutations": 99,
         "warnings": [
-          "MICOM v1 is experimental; compositional invariance uses deterministic construct-score permutation diagnostics and requires external validation before publication use."
+          "MICOM v1 is validated for the documented QuickPLS v1.2.2 two-group configural, compositional, mean, and variance permutation scope."
         ]
       },
       "moderated_mediation": null,
@@ -734,9 +734,9 @@
       ],
       "used_observations": 120,
       "warnings": [
-        "Bounded MGA is experimental; this preview compares two observed groups with approximate normal path-difference diagnostics. MICOM and permutation MGA are emitted as separate experimental v0.6 payloads when requested.",
-        "MICOM v1 is experimental; compositional invariance uses deterministic construct-score permutation diagnostics and requires external validation before publication use.",
-        "Permutation MGA v1 is experimental; it re-estimates group-specific PLS models under deterministic group-label permutations and is not publication-validated."
+        "Two-group MGA v1 is validated for the documented QuickPLS v1.2.2 group-specific estimate and permutation-workflow scope; approximate normal path-difference diagnostics remain descriptive.",
+        "MICOM v1 is validated for the documented QuickPLS v1.2.2 two-group configural, compositional, mean, and variance permutation scope.",
+        "Permutation MGA v1 is validated for the documented QuickPLS v1.2.2 two-group deterministic group-label permutation scope."
       ],
       "wpls": null
     },

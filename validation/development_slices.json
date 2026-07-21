@@ -1483,7 +1483,7 @@
       "stable_output": false,
       "owner_track": "validation",
       "priority": 18,
-      "summary": "QuickPLS v1.2 starts the method-by-method promotion program. The first and second calculation batches are now promoted for documented scopes. Remaining calculation families move from experimental preview output to researcher-ready validated output only after method-specific reference, simulation, edge-case, GUI/CLI/export, reproducibility, performance, and documentation evidence is complete.",
+      "summary": "QuickPLS v1.2 starts the method-by-method promotion program. The first, second, and group/prediction/regression calculation batches are now promoted for documented scopes. Remaining calculation families move from experimental preview output to researcher-ready validated output only after method-specific reference, simulation, edge-case, GUI/CLI/export, reproducibility, performance, and documentation evidence is complete.",
       "gates": [
         {
           "track": "documentation",
@@ -1541,20 +1541,20 @@
         },
         {
           "track": "validation",
-          "name": "Second-source and simulation expansion",
+          "name": "Later high-risk method expansion",
           "status": "open",
-          "evidence": "Remaining later-batch validation is still required for CB-SEM/CFA, GSCA, MICOM/MGA, FIMIX-PLS, PLS-POS, logistic regression, PROCESS-style workflows, higher-order constructs, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation."
+          "evidence": "Remaining later-batch validation is still required for CB-SEM/CFA, GSCA, higher-order constructs, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation."
         },
         {
           "track": "product",
           "name": "Validated-scope product enforcement",
           "status": "passed",
-          "evidence": "validation/method_promotion_product_enforcement_audit.py writes validation/results/method_promotion_product_enforcement_audit.json and verifies UI/catalog/readiness/result-table/engine-warning surfaces promote only PLS core, assessment/inference scope, PCA, and OLS while logistic, PROCESS, NCA, CB-SEM, GSCA, segmentation, and other unpromoted methods remain experimental or watermarked."
+          "evidence": "validation/method_promotion_product_enforcement_audit.py writes validation/results/method_promotion_product_enforcement_audit.json and verifies UI/catalog/readiness/result-table/engine-warning surfaces promote only method scopes cleared by v1.2, v1.2.1, and v1.2.2 while CB-SEM, GSCA, HOC, nonlinear/endogeneity, CCA, CTA-PLS, and moderated mediation remain experimental or watermarked."
         }
       ],
       "next_actions": [
         "Keep every non-promoted later-batch method watermarked experimental until its method-specific promotion gate passes.",
-        "Start third-batch promotion planning for remaining prediction/group methods, CB-SEM/CFA, GSCA, logistic/PROCESS, HOC, nonlinear/endogeneity diagnostics, CCA, CTA-PLS, and moderated mediation.",
+        "Start later-batch promotion planning for CB-SEM/CFA, GSCA, HOC, nonlinear/endogeneity diagnostics, CCA, CTA-PLS, and moderated mediation.",
         "For each later batch, add method-specific two-reference evidence, preregistered simulations, edge-case guards, GUI/CLI/export parity, reproducibility evidence, and performance evidence before changing product status."
       ]
     },
@@ -1625,8 +1625,73 @@
         }
       ],
       "next_actions": [
-        "Keep CB-SEM/CFA, GSCA, MICOM/MGA, FIMIX-PLS, PLS-POS, logistic regression, PROCESS-style workflows, HOC, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation experimental until later promotion gates pass.",
-        "Start third-batch promotion planning for remaining prediction/group and extended-regression methods."
+        "Third-batch group/prediction/regression promotion is tracked by v1_2_2_group_prediction_regression_promotion.",
+        "Keep CB-SEM/CFA, GSCA, HOC, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation experimental until later promotion gates pass."
+      ]
+    },
+    {
+      "id": "v1_2_2_group_prediction_regression_promotion",
+      "release": "v1.2.2",
+      "family": "Validation",
+      "name": "Group, prediction, and regression promotion",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "validation",
+      "priority": 20,
+      "summary": "Promotes MICOM, two-group permutation MGA, deterministic PLS-POS, bounded deterministic FIMIX-PLS, binary logistic regression, and bounded PROCESS mediation/moderation for documented scopes. CB-SEM/CFA, GSCA, HOC, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation remain experimental.",
+      "gates": [
+        {
+          "track": "validation",
+          "name": "MICOM promotion audit",
+          "status": "passed",
+          "evidence": "validation/micom_method_promotion_audit.py writes validation/results/micom_method_promotion_audit.json and verifies the two-group MICOM reference, publication audit, unsupported guards, and product/export scope."
+        },
+        {
+          "track": "validation",
+          "name": "Permutation MGA promotion audit",
+          "status": "passed",
+          "evidence": "validation/mga_permutation_method_promotion_audit.py writes validation/results/mga_permutation_method_promotion_audit.json and verifies two-group PLS re-estimation, deterministic label permutation, MICOM warning policy, and reference evidence."
+        },
+        {
+          "track": "validation",
+          "name": "PLS-POS promotion audit",
+          "status": "passed",
+          "evidence": "validation/pls_pos_method_promotion_audit.py writes validation/results/pls_pos_method_promotion_audit.json and verifies deterministic 2-5 segment PLS-POS recovery, null-screen, and unsupported-shape evidence."
+        },
+        {
+          "track": "validation",
+          "name": "FIMIX-PLS promotion audit",
+          "status": "passed",
+          "evidence": "validation/fimix_pls_method_promotion_audit.py writes validation/results/fimix_pls_method_promotion_audit.json and verifies bounded deterministic 2-3 class segmentation evidence and the no-full-EM-parity known difference."
+        },
+        {
+          "track": "validation",
+          "name": "Logistic regression promotion audit",
+          "status": "passed",
+          "evidence": "validation/logistic_method_promotion_audit.py writes validation/results/logistic_method_promotion_audit.json and verifies binary numeric IRLS reference, R glm scope, edge guards, and product/export evidence."
+        },
+        {
+          "track": "validation",
+          "name": "PROCESS promotion audit",
+          "status": "passed",
+          "evidence": "validation/process_method_promotion_audit.py writes validation/results/process_method_promotion_audit.json and verifies bounded mediation/moderation OLS component references while excluding moderated mediation."
+        },
+        {
+          "track": "product",
+          "name": "Third-batch product enforcement",
+          "status": "passed",
+          "evidence": "validation/third_batch_product_enforcement_audit.py writes validation/results/third_batch_product_enforcement_audit.json and verifies UI/catalog/core/result-table/engine-warning surfaces promote only v1.2.2 scopes while later methods remain experimental."
+        },
+        {
+          "track": "validation",
+          "name": "Third-batch aggregate audit",
+          "status": "passed",
+          "evidence": "validation/third_batch_method_promotion_audit.py writes validation/results/third_batch_method_promotion_audit.json and verifies all method-specific and product-enforcement artifacts pass."
+        }
+      ],
+      "next_actions": [
+        "Keep CB-SEM/CFA, GSCA, higher-order constructs, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation experimental until later promotion gates pass.",
+        "Start the next promotion batch with the highest-risk numerical families only after second-source and simulation evidence is complete."
       ]
     }
   ]

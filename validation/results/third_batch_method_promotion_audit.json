@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "target": "v1_2_2_group_prediction_regression_promotion",
+  "passed": true,
+  "artifacts": [
+    {
+      "path": "validation\\results\\micom_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\mga_permutation_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\pls_pos_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\fimix_pls_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\logistic_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\process_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\third_batch_product_enforcement_audit.json",
+      "present": true,
+      "passed": true
+    }
+  ],
+  "registry_gate_present": true,
+  "registry_gate_all_passed": true,
+  "note": "Third-batch promotion is bounded to documented scopes; CB-SEM/CFA, GSCA, HOC, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation remain experimental."
+}

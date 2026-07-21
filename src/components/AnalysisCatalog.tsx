@@ -34,7 +34,7 @@ export function AnalysisCatalog() {
     <div className="analysis-settings">
       <div><strong>Analysis setup</strong><span className={readiness.canRun ? "status-text validated" : "status-text experimental"}>{readiness.canRun ? <CheckCircle2 size={14} /> : <Clock3 size={14} />}{readiness.canRun ? "ready" : "needs attention"}</span></div>
       <label>Run method<select value={settings.method} onChange={(event) => setSettings({ method: event.target.value as AnalysisMethodId })}>
-        {runnableMethods.map((method) => <option key={method.id} value={method.id}>{method.name} | {method.id === "regression" ? "OLS validated; logistic/PROCESS experimental" : methodStatusLabel(method.status)}</option>)}
+        {runnableMethods.map((method) => <option key={method.id} value={method.id}>{method.name} | {method.id === "regression" ? "OLS/logistic/bounded PROCESS validated" : method.id === "mga" ? "MICOM/permutation MGA validated" : methodStatusLabel(method.status)}</option>)}
       </select></label>
       <p className="settings-guidance">Recommended defaults are applied automatically. Open advanced settings only when you need resampling, worker, or reproducibility controls.</p>
       {settings.method === "wpls" && <label>Case weight column<select value={settings.caseWeightColumn ?? ""} onChange={(event) => setSettings({ caseWeightColumn: event.target.value || null })}>

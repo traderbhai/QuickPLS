@@ -32,7 +32,9 @@ describe("model editor state", () => {
     expect(methods.find((method) => method.id === "moderated_mediation")?.status).toBe("experimental");
     expect(methods.find((method) => method.id === "cta_pls")?.status).toBe("experimental");
     expect(methods.find((method) => method.id === "predict")?.status).toBe("validated");
+    expect(methods.find((method) => method.id === "mga")?.status).toBe("validated");
     expect(methods.find((method) => method.id === "ipma")?.status).toBe("validated");
+    expect(methods.find((method) => method.id === "regression")?.status).toBe("validated");
     expect(methods.find((method) => method.id === "nca")?.status).toBe("validated");
   });
 

@@ -1,6 +1,8 @@
 # PLS-POS v1
 
-`pls_pos_v1` is an experimental QuickPLS v0.6 generalized PLS-POS preview emitted from `AnalysisMethod::Predict` when recipe metadata contains `segment_count`.
+Status: validated for the documented QuickPLS v1.2.2 deterministic 2-5 segment PLS-POS scope.
+
+`pls_pos_v1` is a generalized PLS-POS payload emitted from `AnalysisMethod::Predict` when recipe metadata contains `segment_count`.
 
 ## Scope
 
@@ -12,8 +14,8 @@
 
 ## Unsupported
 
-Case weights, generated interactions, higher-order constructs, covariance/correlation-only data, too-small samples, singular segment fits, and publication-ready PLS-POS claims are unsupported in this preview.
+Case weights, generated interactions, higher-order constructs, covariance/correlation-only data, too-small samples, singular segment fits, and unrestricted PLS-POS claims outside this deterministic contract are unsupported.
 
 ## Validation
 
-`npm run qpls:pos:recovery` and `npm run qpls:v06:validate` write `validation/results/v06_group_methods_reference_report.json`.
+`npm run qpls:pos:recovery`, `npm run qpls:v06:validate`, and `npm run qpls:promotion:pls-pos` write the recovery and promotion artifacts. Promotion is limited to this documented scope.

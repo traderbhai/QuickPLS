@@ -309,4 +309,15 @@ Implemented as a bounded method-promotion milestone:
 - Updated engine warning text and result/export table status for promoted second-batch payloads.
 - Added method-scope aliases `MEDIATION_V1.md`, `TWO_STAGE_MODERATION_V1.md`, and `PLSPREDICT_V1.md`.
 
-Later-batch methods remain experimental: CB-SEM/CFA, GSCA, MICOM/MGA, FIMIX-PLS, PLS-POS, logistic regression, PROCESS-style workflows, higher-order constructs, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation.
+## v1.2.2 Group, Prediction, And Regression Promotion
+
+Implemented as a bounded method-promotion milestone:
+
+- Added `v1_2_2_group_prediction_regression_promotion` to the registry.
+- Added method-specific promotion audits for MICOM, permutation MGA, PLS-POS, FIMIX-PLS, logistic regression, and bounded PROCESS mediation/moderation.
+- Added `validation/third_batch_product_enforcement_audit.py` and `validation/third_batch_method_promotion_audit.py`.
+- Updated product-facing statuses so MGA/MICOM, FIMIX-PLS, PLS-POS, logistic regression, and bounded PROCESS are validated only for documented scopes.
+- Updated engine warning text and result/export table status for promoted third-batch payloads.
+- Updated method docs and compatibility notes while keeping moderated mediation, CB-SEM/CFA, GSCA, HOC, nonlinear effects, endogeneity, CCA, and CTA-PLS experimental.
+
+Remaining later-batch methods remain experimental: CB-SEM/CFA, GSCA, higher-order constructs, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation.

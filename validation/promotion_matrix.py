@@ -342,10 +342,122 @@ SECOND_BATCH = [
 ]
 
 
+THIRD_BATCH = [
+    {
+        "id": "micom",
+        "family": "Groups",
+        "method": "MICOM measurement invariance",
+        "current_status": "experimental",
+        "target_status": "validated",
+        "promotion_batch": 3,
+        "candidate_scope": "Exactly two observed groups with configural checklist, compositional permutation, and composite mean/variance permutation diagnostics.",
+        "required_evidence": ["method spec", "integrated permutation reference", "invariant/non-invariant evidence", "unsupported guards", "product/export enforcement"],
+        "artifacts": [
+            artifact("docs/methods/MICOM_V1.md", "method specification"),
+            artifact("validation/results/v06_group_methods_reference_report.json", "integrated group-method reference"),
+            artifact("validation/results/prediction_heterogeneity_publication_audit.json", "publication audit"),
+            artifact("validation/results/micom_method_promotion_audit.json", "v1.2.2 MICOM promotion audit"),
+        ],
+        "blocking_questions": [],
+        "scope_decisions": ["More than two groups and broader invariance claims remain unsupported."],
+    },
+    {
+        "id": "mga_permutation",
+        "family": "Groups",
+        "method": "Two-group permutation MGA",
+        "current_status": "experimental",
+        "target_status": "validated",
+        "promotion_batch": 3,
+        "candidate_scope": "Two observed groups with group-specific PLS re-estimation, deterministic label permutation, empirical p values, and MICOM warning enforcement.",
+        "required_evidence": ["method spec", "independent reference", "integrated permutation fixture", "worker invariance", "product/export enforcement"],
+        "artifacts": [
+            artifact("docs/methods/PLS_MGA_PERMUTATION_V1.md", "method specification"),
+            artifact("validation/results/mga_reference_report.json", "bounded MGA reference"),
+            artifact("validation/results/v06_group_methods_reference_report.json", "integrated permutation reference"),
+            artifact("validation/results/mga_permutation_method_promotion_audit.json", "v1.2.2 permutation MGA promotion audit"),
+        ],
+        "blocking_questions": [],
+        "scope_decisions": ["Approximate normal path-difference diagnostics remain descriptive; publication interpretation should prefer permutation output."],
+    },
+    {
+        "id": "pls_pos",
+        "family": "Groups",
+        "method": "PLS-POS",
+        "current_status": "experimental",
+        "target_status": "validated",
+        "promotion_batch": 3,
+        "candidate_scope": "Deterministic PLS-POS with 2-5 segments, deterministic starts, minimum segment-share guard, objective history, memberships, segment paths, and segment R2.",
+        "required_evidence": ["method spec", "2-5 segment recovery", "null screen", "metamorphic checks", "product/export enforcement"],
+        "artifacts": [
+            artifact("docs/methods/PLS_POS_V1.md", "method specification"),
+            artifact("validation/results/segmentation_recovery_simulation_report.json", "segmentation recovery and null-screen evidence"),
+            artifact("validation/results/v06_group_methods_reference_report.json", "integrated POS fixture"),
+            artifact("validation/results/pls_pos_method_promotion_audit.json", "v1.2.2 PLS-POS promotion audit"),
+        ],
+        "blocking_questions": [],
+        "scope_decisions": ["Legacy pls_pos_bounded_v1 remains readable but is not the promoted generalized PLS-POS scope."],
+    },
+    {
+        "id": "fimix_pls",
+        "family": "Groups",
+        "method": "FIMIX-PLS",
+        "current_status": "experimental",
+        "target_status": "validated",
+        "promotion_batch": 3,
+        "candidate_scope": "Bounded deterministic 2-3 class score-space segmentation with class probabilities, memberships, class paths/R2, information criteria, and entropy.",
+        "required_evidence": ["method spec", "2/3-class recovery", "homogeneous-null screen", "start-order invariance", "product/export enforcement"],
+        "artifacts": [
+            artifact("docs/methods/FIMIX_PLS_V1.md", "method specification"),
+            artifact("validation/results/v06_group_methods_reference_report.json", "integrated FIMIX fixture"),
+            artifact("validation/results/fimix_pls_method_promotion_audit.json", "v1.2.2 FIMIX-PLS promotion audit"),
+        ],
+        "blocking_questions": [],
+        "scope_decisions": ["Promotion does not claim unrestricted EM/FIMIX parity."],
+    },
+    {
+        "id": "logistic_regression",
+        "family": "Regression",
+        "method": "Logistic regression",
+        "current_status": "experimental",
+        "target_status": "validated",
+        "promotion_batch": 3,
+        "candidate_scope": "Binary 0/1 numeric complete-case logistic regression with deterministic IRLS, Wald SE/z/p, odds ratios, predicted probabilities, log-likelihood, pseudo-R2, AIC, and BIC.",
+        "required_evidence": ["method spec", "Python IRLS reference", "R glm reference", "separation/rank guards", "product/export enforcement"],
+        "artifacts": [
+            artifact("docs/methods/REGRESSION_LOGISTIC_V1.md", "method specification"),
+            artifact("validation/results/v08_extended_methods_reference_report.json", "integrated Python reference"),
+            artifact("validation/results/extended_methods_publication_audit.json", "publication audit"),
+            artifact("validation/results/logistic_method_promotion_audit.json", "v1.2.2 logistic promotion audit"),
+        ],
+        "blocking_questions": [],
+        "scope_decisions": ["Multinomial, ordinal, weighted, clustered, and Firth-corrected models remain unsupported."],
+    },
+    {
+        "id": "process",
+        "family": "Regression",
+        "method": "PROCESS-style mediation/moderation",
+        "current_status": "experimental",
+        "target_status": "validated",
+        "promotion_batch": 3,
+        "candidate_scope": "Bounded mediation and moderation workflows generated from OLS component models.",
+        "required_evidence": ["method spec", "Python OLS equations", "R base-lm parity", "mediation/moderation fixtures", "product/export enforcement"],
+        "artifacts": [
+            artifact("docs/methods/PROCESS_V1.md", "method specification"),
+            artifact("validation/results/v08_extended_methods_reference_report.json", "integrated Python reference"),
+            artifact("validation/results/mediation_method_promotion_audit.json", "mediation evidence"),
+            artifact("validation/results/moderation_method_promotion_audit.json", "moderation evidence"),
+            artifact("validation/results/process_method_promotion_audit.json", "v1.2.2 PROCESS promotion audit"),
+        ],
+        "blocking_questions": [],
+        "scope_decisions": ["Moderated mediation and the full Hayes PROCESS catalogue remain experimental."],
+    },
+]
+
+
 LATER_BATCHES = [
     {
         "id": "extended_pls_batch",
-        "promotion_batch": 2,
+        "promotion_batch": 4,
         "methods": [
             "moderated mediation",
             "CCA",
@@ -363,18 +475,15 @@ LATER_BATCHES = [
     },
     {
         "id": "prediction_groups_batch",
-        "promotion_batch": 3,
-        "methods": ["MICOM", "MGA", "FIMIX-PLS", "PLS-POS"],
+        "promotion_batch": 4,
+        "methods": [],
         "main_missing_evidence": [
-            "prediction leakage false-positive screens",
-            "group-invariance simulation matrix",
-            "segmentation null/recovery matrix",
-            "larger performance benchmark",
+            "No remaining group/prediction methods in this batch after v1.2.2; keep this placeholder for future scope expansions.",
         ],
     },
     {
         "id": "cbsem_gsca_batch",
-        "promotion_batch": 4,
+        "promotion_batch": 5,
         "methods": ["CB-SEM/CFA", "GSCA"],
         "main_missing_evidence": [
             "broader lavaan parity",
@@ -385,12 +494,10 @@ LATER_BATCHES = [
     },
     {
         "id": "extended_methods_batch",
-        "promotion_batch": 3,
-        "methods": ["logistic regression", "PROCESS-style workflows"],
+        "promotion_batch": 4,
+        "methods": [],
         "main_missing_evidence": [
-            "R/Python second-source split reports",
-            "bootstrap/permutation qualification",
-            "edge cases and performance evidence",
+            "No remaining logistic/PROCESS methods in this batch after v1.2.2 except moderated mediation, tracked under extended PLS.",
         ],
     },
 ]
@@ -411,7 +518,7 @@ def summarize_row(row: dict) -> dict:
 
 def main():
     RESULTS.mkdir(parents=True, exist_ok=True)
-    rows = [summarize_row(row) for row in FIRST_BATCH + SECOND_BATCH]
+    rows = [summarize_row(row) for row in FIRST_BATCH + SECOND_BATCH + THIRD_BATCH]
     report = {
         "schema_version": 2,
         "target": "v1_2_method_promotion_program",
@@ -420,6 +527,8 @@ def main():
         "first_batch_promotion_ready": sum(1 for row in rows if row["promotion_batch"] == 1 and row["promotion_ready"]),
         "second_batch_rows": sum(1 for row in rows if row["promotion_batch"] == 2),
         "second_batch_promotion_ready": sum(1 for row in rows if row["promotion_batch"] == 2 and row["promotion_ready"]),
+        "third_batch_rows": sum(1 for row in rows if row["promotion_batch"] == 3),
+        "third_batch_promotion_ready": sum(1 for row in rows if row["promotion_batch"] == 3 and row["promotion_ready"]),
         "rows": rows,
         "later_batches": LATER_BATCHES,
         "decision_rule": (
@@ -434,7 +543,8 @@ def main():
     print(
         f"wrote {OUTPUT} | rows={len(rows)} | "
         f"batch1_ready={report['first_batch_promotion_ready']}/{report['first_batch_rows']} | "
-        f"batch2_ready={report['second_batch_promotion_ready']}/{report['second_batch_rows']}"
+        f"batch2_ready={report['second_batch_promotion_ready']}/{report['second_batch_rows']} | "
+        f"batch3_ready={report['third_batch_promotion_ready']}/{report['third_batch_rows']}"
     )
 
 

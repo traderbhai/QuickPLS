@@ -1,6 +1,6 @@
 # REGRESSION_LOGISTIC_V1
 
-Status: experimental v0.8 preview.
+Status: validated for the documented QuickPLS v1.2.2 binary numeric complete-case scope.
 
 `regression_logistic_v1` provides standalone binary logistic regression for raw numeric data.
 
@@ -17,8 +17,8 @@ Status: experimental v0.8 preview.
 - Multinomial or ordinal logistic regression.
 - Firth correction.
 - Clustered, weighted, or robust covariance estimators.
-- Publication-stable inference claims.
+- Publication claims outside the documented binary numeric complete-case scope.
 
 ## Validation
 
-`npm run qpls:regression:logistic-reference` compares bounded-fixture estimates against an independent Python IRLS implementation. Later promotion requires rare-event, separation, and second-source R `glm` evidence.
+`npm run qpls:regression:logistic-reference` compares bounded-fixture estimates against an independent Python IRLS implementation. `npm run qpls:promotion:logistic` verifies the promotion evidence, including R `glm` comparison, balanced/rare-event fixtures, separation and rank-deficiency guards, and GUI/CLI/export parity. Multinomial, ordinal, weighted, clustered, and Firth-corrected models remain unsupported.

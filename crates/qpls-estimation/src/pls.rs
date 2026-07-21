@@ -1619,9 +1619,9 @@ fn estimate_regression_method(
     let status_warning = if regression_type == "ols" {
         "OLS regression v1 is validated for the documented QuickPLS v1.2 OLS scope; unsupported shapes remain blocked."
     } else if regression_type == "logistic" {
-        "Logistic regression v1 remains experimental until method-promotion evidence is complete."
+        "Logistic regression v1 is validated for the documented QuickPLS v1.2.2 binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, and Firth-corrected models remain unsupported."
     } else {
-        "PROCESS-style regression v1 remains experimental until method-promotion evidence is complete."
+        "PROCESS-style regression v1 is validated for the documented QuickPLS v1.2.2 bounded mediation/moderation workflow scope; moderated mediation and the full Hayes model catalogue remain experimental."
     };
     let mut result = empty_method_result(
         if regression_type == "logistic" {
@@ -4580,7 +4580,7 @@ fn apply_pls_pos_segmentation(
     )?;
     let pooled_objective = pooled.sse;
     let warnings = vec![
-        "PLS-POS v1 is experimental; this preview uses deterministic score-space partitioning and must not be used as publication-ready full PLS-POS evidence.".into(),
+        "PLS-POS v1 is validated for the documented QuickPLS v1.2.2 deterministic 2-5 segment score-space partitioning scope; full unrestricted PLS-POS claims remain unsupported.".into(),
     ];
     let max_path_separation = max_pairwise_path_separation(&fits);
     let memberships = assignments
@@ -4691,7 +4691,7 @@ fn apply_two_group_mga(
     let second = &fitted[1];
     let comparisons = mga_path_comparisons(recipe, first, second)?;
     let warnings = vec![
-        "Bounded MGA is experimental; this preview compares two observed groups with approximate normal path-difference diagnostics. MICOM and permutation MGA are emitted as separate experimental v0.6 payloads when requested.".into(),
+        "Two-group MGA v1 is validated for the documented QuickPLS v1.2.2 group-specific estimate and permutation-workflow scope; approximate normal path-difference diagnostics remain descriptive.".into(),
     ];
     result.method_version = PLS_MGA_METHOD_VERSION.into();
     result.mga = Some(PlsMgaAnalysis {
@@ -4804,7 +4804,7 @@ fn apply_micom(
         });
     }
     let warnings = vec![
-        "MICOM v1 is experimental; compositional invariance uses deterministic construct-score permutation diagnostics and requires external validation before publication use.".into(),
+        "MICOM v1 is validated for the documented QuickPLS v1.2.2 two-group configural, compositional, mean, and variance permutation scope.".into(),
     ];
     result.micom = Some(MicomAnalysis {
         method_version: MICOM_METHOD_VERSION.into(),
@@ -4886,7 +4886,7 @@ fn apply_mga_permutation(
         );
     }
     warnings.push(
-        "Permutation MGA v1 is experimental; it re-estimates group-specific PLS models under deterministic group-label permutations and is not publication-validated."
+        "Permutation MGA v1 is validated for the documented QuickPLS v1.2.2 two-group deterministic group-label permutation scope."
             .into(),
     );
     let comparisons = original
@@ -7319,7 +7319,7 @@ fn process_analysis(
         model,
         effects,
         simple_slopes,
-        warnings: vec!["PROCESS v1 reports bounded deterministic effects; bootstrap CIs are reserved for later validation hardening.".into()],
+        warnings: vec!["PROCESS v1 reports bounded deterministic mediation/moderation effects validated for the documented QuickPLS v1.2.2 scope; moderated mediation remains experimental.".into()],
     })
 }
 
@@ -7966,7 +7966,7 @@ fn apply_fimix_pls(recipe: &AnalysisRecipe, result: &mut PlsResult) -> Result<()
         })
         .collect::<Vec<_>>();
     let warnings = vec![
-        "FIMIX-PLS v1 is experimental; this preview uses deterministic finite-mixture style score-space segmentation with information criteria and requires external validation before publication use.".into(),
+        "FIMIX-PLS v1 is validated for the documented QuickPLS v1.2.2 bounded deterministic 2-3 class score-space segmentation scope; full unrestricted EM/FIMIX parity is not claimed.".into(),
     ];
     result.fimix = Some(FimixPlsAnalysis {
         method_version: FIMIX_PLS_METHOD_VERSION.into(),

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "id": "25fccef9-5c77-4a81-840e-a0a1650c3c06",
+  "id": "49d1765d-6eb7-4ce7-8208-c1d850663652",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000080623",
@@ -24,14 +24,14 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-07-19T14:35:08.617598400Z",
-    "completed_at": "2026-07-19T14:35:08.686102600Z"
+    "started_at": "2026-07-21T06:58:02.392990900Z",
+    "completed_at": "2026-07-21T06:58:02.478979200Z"
   },
   "diagnostics": [
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "NCA v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
+      "message": "NCA v1 is validated for the documented QuickPLS v1.2.1 numeric CE-FDH/CR-FDH scope; broader NCA variants remain unsupported."
     },
     {
       "code": "estimation.warning",
@@ -132,7 +132,7 @@
         "permutation_samples": 99,
         "usable_permutations": 99,
         "warnings": [
-          "NCA v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
+          "NCA v1 is validated for the documented QuickPLS v1.2.1 numeric CE-FDH/CR-FDH scope; broader NCA variants remain unsupported."
         ],
         "x": "x",
         "y": "y"
@@ -150,7 +150,7 @@
       "transforms": [],
       "used_observations": 140,
       "warnings": [
-        "NCA v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
+        "NCA v1 is validated for the documented QuickPLS v1.2.1 numeric CE-FDH/CR-FDH scope; broader NCA variants remain unsupported."
       ],
       "wpls": null
     },

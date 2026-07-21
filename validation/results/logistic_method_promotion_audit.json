@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "target": "v1_2_2_group_prediction_regression_promotion",
+  "method_id": "logistic",
+  "promoted_scope": "Binary 0/1 numeric complete-case logistic regression with deterministic IRLS, Wald SE/z/p, odds ratios, predicted probabilities, log-likelihood, pseudo-R2, AIC, and BIC.",
+  "passed": true,
+  "reports": [
+    {
+      "path": "validation\\results\\v08_extended_methods_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\extended_methods_publication_audit.json",
+      "present": true,
+      "passed": true
+    }
+  ],
+  "docs": [
+    {
+      "path": "docs\\methods\\REGRESSION_LOGISTIC_V1.md",
+      "present": true,
+      "bytes": 1374
+    }
+  ],
+  "checks": [
+    {
+      "name": "python_irls_reference_present",
+      "passed": true,
+      "detail": "v0.8 reference report compares logistic estimates with an independent Python IRLS implementation."
+    },
+    {
+      "name": "r_glm_scope_recorded",
+      "passed": true,
+      "detail": "Promotion doc records the R glm comparison requirement and bounded binary numeric scope."
+    },
+    {
+      "name": "edge_guards_present",
+      "passed": true,
+      "detail": "Rank deficiency, separation, nonconvergence, and unsupported-model guards are part of the documented promotion scope."
+    }
+  ],
+  "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."
+}

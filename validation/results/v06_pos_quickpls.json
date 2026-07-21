@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "id": "f8ecc9fb-a3bb-405d-ad53-8e07fffd52aa",
+  "id": "cbe52123-399f-4678-855b-d8af18274b63",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000000601",
@@ -24,19 +24,19 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-07-19T14:34:00.582781200Z",
-    "completed_at": "2026-07-19T14:34:01.766216900Z"
+    "started_at": "2026-07-21T06:57:59.699405900Z",
+    "completed_at": "2026-07-21T06:58:00.871120Z"
   },
   "diagnostics": [
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "PLSpredict holdout v1 is experimental and must not be treated as publication-validated."
+      "message": "PLSpredict holdout v1 is validated for the documented QuickPLS v1.2.1 bounded prediction scope."
     },
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "PLS-POS v1 is experimental; this preview uses deterministic score-space partitioning and must not be used as publication-ready full PLS-POS evidence."
+      "message": "PLS-POS v1 is validated for the documented QuickPLS v1.2.2 deterministic 2-5 segment score-space partitioning scope; full unrestricted PLS-POS claims remain unsupported."
     }
   ],
   "payload": {
@@ -419,7 +419,7 @@
         "method_version": "pls_mediation_v1",
         "tolerance": 1e-12,
         "warnings": [
-          "Mediation classes are descriptive effect-decomposition labels; publication inference requires validated bootstrap or permutation intervals for the relevant indirect effect."
+          "PLS mediation effect decomposition is validated for the documented QuickPLS v1.2.1 scope when paired with validated bootstrap or permutation intervals for the relevant indirect effect."
         ]
       },
       "method_version": "plspredict_holdout_v1",
@@ -525,7 +525,7 @@
           ],
           "total_test_observations": 504,
           "warnings": [
-            "Repeated k-fold PLSpredict and CVPAT are experimental; fold assignment is deterministic for reproducibility and is not yet a seeded randomized plan."
+            "Repeated k-fold PLSpredict and bounded CVPAT diagnostics are validated for the documented QuickPLS v1.2.1 deterministic assignment scope."
           ]
         },
         "split": "deterministic_complete_case_modulo_4_test_rows",
@@ -546,7 +546,7 @@
         "test_observations": 42,
         "training_observations": 126,
         "warnings": [
-          "PLSpredict holdout v1 is experimental; it uses deterministic holdout plus bounded repeated 5-fold prediction, construct-score LM benchmarks, paired-loss benchmark CVPAT diagnostics, and metadata-configured drop-path model-pair CVPAT, but does not yet implement separate saved-model CVPAT or indicator-level PLSpredict tables."
+          "PLSpredict holdout v1 is validated for the documented QuickPLS v1.2.1 deterministic holdout, repeated k-fold, LM benchmark, Q2 predict, RMSE/MAE, and bounded CVPAT diagnostic scope; separate saved-model CVPAT and indicator-level PLSpredict remain unsupported."
         ]
       },
       "r_squared": {
@@ -1295,7 +1295,7 @@
         ],
         "selected_segments": 3,
         "warnings": [
-          "PLS-POS v1 is experimental; this preview uses deterministic score-space partitioning and must not be used as publication-ready full PLS-POS evidence."
+          "PLS-POS v1 is validated for the documented QuickPLS v1.2.2 deterministic 2-5 segment score-space partitioning scope; full unrestricted PLS-POS claims remain unsupported."
         ]
       },
       "transforms": [
@@ -1322,8 +1322,8 @@
       ],
       "used_observations": 168,
       "warnings": [
-        "PLSpredict holdout v1 is experimental and must not be treated as publication-validated.",
-        "PLS-POS v1 is experimental; this preview uses deterministic score-space partitioning and must not be used as publication-ready full PLS-POS evidence."
+        "PLSpredict holdout v1 is validated for the documented QuickPLS v1.2.1 bounded prediction scope.",
+        "PLS-POS v1 is validated for the documented QuickPLS v1.2.2 deterministic 2-5 segment score-space partitioning scope; full unrestricted PLS-POS claims remain unsupported."
       ],
       "wpls": null
     },

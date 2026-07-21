@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "target": "v1_2_2_group_prediction_regression_promotion",
+  "method_id": "micom",
+  "promoted_scope": "Exactly two observed groups with configural checklist, compositional permutation, and composite mean/variance permutation diagnostics.",
+  "passed": true,
+  "reports": [
+    {
+      "path": "validation\\results\\v06_group_methods_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\prediction_heterogeneity_publication_audit.json",
+      "present": true,
+      "passed": true
+    }
+  ],
+  "docs": [
+    {
+      "path": "docs\\methods\\MICOM_V1.md",
+      "present": true,
+      "bytes": 1513
+    }
+  ],
+  "checks": [
+    {
+      "name": "integrated_reference_covers_micom",
+      "passed": true,
+      "detail": "v06 integrated reference includes MICOM construct permutation output."
+    },
+    {
+      "name": "unsupported_shapes_guarded",
+      "passed": true,
+      "detail": "Group/segmentation validation blocks case weights, interactions, HOC, too-small groups, and non-two-group input."
+    }
+  ],
+  "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."
+}

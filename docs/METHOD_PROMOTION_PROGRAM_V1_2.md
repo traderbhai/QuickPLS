@@ -58,10 +58,8 @@ These methods are prioritized because their equations and reference engines are 
 
 Extend validation for medium and high-risk methods:
 
-- mediation/moderation/PROCESS;
-- PLSc/WPLS/CCA/CTA;
-- PLSpredict/CVPAT/IPMA/NCA;
-- MICOM/MGA/FIMIX/PLS-POS;
+- CCA/CTA and remaining extended PLS diagnostics;
+- higher-order constructs, nonlinear effects, endogeneity, and moderated mediation;
 - CB-SEM/CFA;
 - GSCA.
 
@@ -71,9 +69,9 @@ Update the app so researcher-ready methods appear without experimental watermark
 
 Current enforcement pass:
 
-- PLS core, documented PLS assessment/inference scope, standalone PCA, and OLS regression are eligible for validated product status.
-- The broad Regression method remains setting-aware: OLS is validated, while logistic regression and PROCESS-style workflows remain experimental.
-- NCA, GSCA, CB-SEM/CFA, segmentation, prediction/heterogeneity methods, and extended PLS methods remain experimental until their own promotion gates pass.
+- PLS core, documented PLS assessment/inference scope, standalone PCA, OLS, second-batch PLS/prediction/NCA methods, and v1.2.2 group/prediction/regression methods are eligible for validated product status.
+- The broad Regression method remains setting-aware: OLS, logistic, and bounded PROCESS mediation/moderation are validated; PROCESS moderated mediation remains experimental.
+- GSCA, CB-SEM/CFA, higher-order constructs, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation remain experimental until their own promotion gates pass.
 - Newly generated result warnings and export tables must not mark an unpromoted method as validated.
 
 ## v1.2.1 Second Batch
@@ -88,10 +86,21 @@ The second promotion batch is validated for bounded scopes:
 - Deterministic PLSpredict holdout, repeated k-fold, LM benchmark, Q2 predict, RMSE/MAE, and bounded CVPAT diagnostics.
 - Numeric X/Y NCA with CE-FDH and CR-FDH ceilings, deterministic permutation p values, and bottleneck tables.
 
-Later-batch methods remain experimental: CB-SEM/CFA, GSCA, MICOM/MGA, FIMIX-PLS, PLS-POS, logistic regression, PROCESS-style workflows, higher-order constructs, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation.
+## v1.2.2 Group, Prediction, And Regression Batch
+
+The third promotion batch is validated for bounded scopes:
+
+- MICOM for exactly two observed groups with configural, compositional, mean, and variance permutation diagnostics.
+- Two-group permutation MGA with deterministic group-label permutation and MICOM warning enforcement.
+- Deterministic PLS-POS with 2-5 segments, deterministic starts, objective history, memberships, segment paths, and segment R2.
+- Bounded deterministic 2-3 class FIMIX-PLS with probabilities, memberships, information criteria, entropy, and no unrestricted EM/FIMIX parity claim.
+- Binary numeric complete-case logistic regression with deterministic IRLS, Wald tests, odds ratios, probabilities, log-likelihood, pseudo-R2, AIC, and BIC.
+- Bounded PROCESS-style mediation and moderation generated from OLS component models.
+
+Remaining later-batch methods remain experimental: CB-SEM/CFA, GSCA, higher-order constructs, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation.
 
 ## Gate
 
 The registry slice is `v1_2_method_promotion_program`.
 
-This gate should remain open until the first method batch is actually promoted with reproducible evidence. The initial program setup is considered complete when the criteria docs, registry slice, audit script, and initial backlog artifact exist.
+This gate remains open until the remaining higher-risk method families are promoted with reproducible evidence. The first, second, and third batches are complete for their documented scopes.

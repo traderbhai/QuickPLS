@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "target": "v1_2_2_group_prediction_regression_promotion",
+  "passed": true,
+  "checks": [
+    {
+      "name": "desktop_catalog_promotes_group_and_regression_methods",
+      "passed": true,
+      "detail": "Desktop catalog marks MGA, prediction, and regression as validated entry points with setting-aware scope text."
+    },
+    {
+      "name": "core_registry_promotes_entry_points",
+      "passed": true,
+      "detail": "Core registry exposes the promoted entry points as validated while validation guards unsupported settings."
+    },
+    {
+      "name": "setting_aware_boundaries",
+      "passed": true,
+      "detail": "UI method status is setting-aware for MGA and regression PROCESS moderated-mediation exclusion."
+    },
+    {
+      "name": "result_tables_promote_third_batch",
+      "passed": true,
+      "detail": "Report/export tables promote only v1.2.2 scoped group, segmentation, logistic, and bounded PROCESS payloads."
+    },
+    {
+      "name": "groups_workspace_uses_validated_scope_language",
+      "passed": true,
+      "detail": "Groups workspace labels promoted v1.2.2 payloads as validated scope."
+    },
+    {
+      "name": "engine_warnings_promoted_scope",
+      "passed": true,
+      "detail": "Newly generated result warnings use bounded v1.2.2 validated-scope language."
+    },
+    {
+      "name": "later_methods_remain_experimental",
+      "passed": true,
+      "detail": "Unpromoted later methods remain experimental in compatibility docs."
+    }
+  ]
+}

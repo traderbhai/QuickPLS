@@ -486,11 +486,18 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
             .get("regression_type")
             .map(String::as_str)
             .unwrap_or("ols");
-        if regression_type != "ols" {
+        if regression_type == "process"
+            && recipe
+                .metadata
+                .get("process_model")
+                .map(String::as_str)
+                .unwrap_or("mediation")
+                == "moderated_mediation"
+        {
             issues.push(issue(
-                "regression.experimental",
+                "process.moderated_mediation.experimental",
                 Severity::Warning,
-                "Only OLS regression is validated for the documented QuickPLS v1.2 scope; logistic regression and PROCESS-style workflows remain experimental",
+                "PROCESS moderated mediation remains experimental; validated PROCESS v1.2.2 scope is limited to bounded mediation and moderation workflows",
                 Some(regression_type.to_owned()),
             ));
         }
@@ -1042,9 +1049,8 @@ mod tests {
                 .iter()
                 .any(|item| item.code == "mga.group_column_required")
         );
-        assert!(issues.iter().any(|item| {
-            item.code == "method.experimental" && item.severity == Severity::Warning
-        }));
+        assert!(!issues.iter().any(|item| item.code == "method.experimental"));
+        assert_eq!(method_status("mga"), MethodStatus::Validated);
     }
 
     #[test]

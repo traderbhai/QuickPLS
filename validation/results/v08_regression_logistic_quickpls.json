@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "id": "3fc08745-c6f9-4630-8950-0de85aa42d57",
+  "id": "f9f26bb7-18e1-4fba-901a-2e97555ffca0",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000082363",
@@ -24,14 +24,14 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-07-19T14:35:08.153601300Z",
-    "completed_at": "2026-07-19T14:35:08.155886800Z"
+    "started_at": "2026-07-21T06:58:01.753274400Z",
+    "completed_at": "2026-07-21T06:58:01.756283900Z"
   },
   "diagnostics": [
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "Regression/PROCESS v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
+      "message": "Logistic regression v1 is validated for the documented QuickPLS v1.2.2 binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, and Firth-corrected models remain unsupported."
     },
     {
       "code": "estimation.warning",
@@ -991,14 +991,14 @@
         "process": null,
         "regression_type": "logistic",
         "warnings": [
-          "Regression/PROCESS v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
+          "Logistic regression v1 is validated for the documented QuickPLS v1.2.2 binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, and Firth-corrected models remain unsupported."
         ]
       },
       "segmentation": null,
       "transforms": [],
       "used_observations": 140,
       "warnings": [
-        "Regression/PROCESS v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
+        "Logistic regression v1 is validated for the documented QuickPLS v1.2.2 binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, and Firth-corrected models remain unsupported."
       ],
       "wpls": null
     },

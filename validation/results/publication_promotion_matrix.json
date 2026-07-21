@@ -6,6 +6,8 @@
   "first_batch_promotion_ready": 5,
   "second_batch_rows": 7,
   "second_batch_promotion_ready": 7,
+  "third_batch_rows": 6,
+  "third_batch_promotion_ready": 6,
   "rows": [
     {
       "id": "pls_core_run_envelope",
@@ -777,12 +779,324 @@
         "missing": []
       },
       "promotion_ready": true
+    },
+    {
+      "id": "micom",
+      "family": "Groups",
+      "method": "MICOM measurement invariance",
+      "current_status": "experimental",
+      "target_status": "validated",
+      "promotion_batch": 3,
+      "candidate_scope": "Exactly two observed groups with configural checklist, compositional permutation, and composite mean/variance permutation diagnostics.",
+      "required_evidence": [
+        "method spec",
+        "integrated permutation reference",
+        "invariant/non-invariant evidence",
+        "unsupported guards",
+        "product/export enforcement"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/methods/MICOM_V1.md",
+          "purpose": "method specification",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/v06_group_methods_reference_report.json",
+          "purpose": "integrated group-method reference",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/prediction_heterogeneity_publication_audit.json",
+          "purpose": "publication audit",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/micom_method_promotion_audit.json",
+          "purpose": "v1.2.2 MICOM promotion audit",
+          "required": true,
+          "present": true
+        }
+      ],
+      "blocking_questions": [],
+      "scope_decisions": [
+        "More than two groups and broader invariance claims remain unsupported."
+      ],
+      "artifact_summary": {
+        "required": 4,
+        "present": 4,
+        "missing": []
+      },
+      "promotion_ready": true
+    },
+    {
+      "id": "mga_permutation",
+      "family": "Groups",
+      "method": "Two-group permutation MGA",
+      "current_status": "experimental",
+      "target_status": "validated",
+      "promotion_batch": 3,
+      "candidate_scope": "Two observed groups with group-specific PLS re-estimation, deterministic label permutation, empirical p values, and MICOM warning enforcement.",
+      "required_evidence": [
+        "method spec",
+        "independent reference",
+        "integrated permutation fixture",
+        "worker invariance",
+        "product/export enforcement"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/methods/PLS_MGA_PERMUTATION_V1.md",
+          "purpose": "method specification",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/mga_reference_report.json",
+          "purpose": "bounded MGA reference",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/v06_group_methods_reference_report.json",
+          "purpose": "integrated permutation reference",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/mga_permutation_method_promotion_audit.json",
+          "purpose": "v1.2.2 permutation MGA promotion audit",
+          "required": true,
+          "present": true
+        }
+      ],
+      "blocking_questions": [],
+      "scope_decisions": [
+        "Approximate normal path-difference diagnostics remain descriptive; publication interpretation should prefer permutation output."
+      ],
+      "artifact_summary": {
+        "required": 4,
+        "present": 4,
+        "missing": []
+      },
+      "promotion_ready": true
+    },
+    {
+      "id": "pls_pos",
+      "family": "Groups",
+      "method": "PLS-POS",
+      "current_status": "experimental",
+      "target_status": "validated",
+      "promotion_batch": 3,
+      "candidate_scope": "Deterministic PLS-POS with 2-5 segments, deterministic starts, minimum segment-share guard, objective history, memberships, segment paths, and segment R2.",
+      "required_evidence": [
+        "method spec",
+        "2-5 segment recovery",
+        "null screen",
+        "metamorphic checks",
+        "product/export enforcement"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/methods/PLS_POS_V1.md",
+          "purpose": "method specification",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/segmentation_recovery_simulation_report.json",
+          "purpose": "segmentation recovery and null-screen evidence",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/v06_group_methods_reference_report.json",
+          "purpose": "integrated POS fixture",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/pls_pos_method_promotion_audit.json",
+          "purpose": "v1.2.2 PLS-POS promotion audit",
+          "required": true,
+          "present": true
+        }
+      ],
+      "blocking_questions": [],
+      "scope_decisions": [
+        "Legacy pls_pos_bounded_v1 remains readable but is not the promoted generalized PLS-POS scope."
+      ],
+      "artifact_summary": {
+        "required": 4,
+        "present": 4,
+        "missing": []
+      },
+      "promotion_ready": true
+    },
+    {
+      "id": "fimix_pls",
+      "family": "Groups",
+      "method": "FIMIX-PLS",
+      "current_status": "experimental",
+      "target_status": "validated",
+      "promotion_batch": 3,
+      "candidate_scope": "Bounded deterministic 2-3 class score-space segmentation with class probabilities, memberships, class paths/R2, information criteria, and entropy.",
+      "required_evidence": [
+        "method spec",
+        "2/3-class recovery",
+        "homogeneous-null screen",
+        "start-order invariance",
+        "product/export enforcement"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/methods/FIMIX_PLS_V1.md",
+          "purpose": "method specification",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/v06_group_methods_reference_report.json",
+          "purpose": "integrated FIMIX fixture",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/fimix_pls_method_promotion_audit.json",
+          "purpose": "v1.2.2 FIMIX-PLS promotion audit",
+          "required": true,
+          "present": true
+        }
+      ],
+      "blocking_questions": [],
+      "scope_decisions": [
+        "Promotion does not claim unrestricted EM/FIMIX parity."
+      ],
+      "artifact_summary": {
+        "required": 3,
+        "present": 3,
+        "missing": []
+      },
+      "promotion_ready": true
+    },
+    {
+      "id": "logistic_regression",
+      "family": "Regression",
+      "method": "Logistic regression",
+      "current_status": "experimental",
+      "target_status": "validated",
+      "promotion_batch": 3,
+      "candidate_scope": "Binary 0/1 numeric complete-case logistic regression with deterministic IRLS, Wald SE/z/p, odds ratios, predicted probabilities, log-likelihood, pseudo-R2, AIC, and BIC.",
+      "required_evidence": [
+        "method spec",
+        "Python IRLS reference",
+        "R glm reference",
+        "separation/rank guards",
+        "product/export enforcement"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/methods/REGRESSION_LOGISTIC_V1.md",
+          "purpose": "method specification",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/v08_extended_methods_reference_report.json",
+          "purpose": "integrated Python reference",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/extended_methods_publication_audit.json",
+          "purpose": "publication audit",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/logistic_method_promotion_audit.json",
+          "purpose": "v1.2.2 logistic promotion audit",
+          "required": true,
+          "present": true
+        }
+      ],
+      "blocking_questions": [],
+      "scope_decisions": [
+        "Multinomial, ordinal, weighted, clustered, and Firth-corrected models remain unsupported."
+      ],
+      "artifact_summary": {
+        "required": 4,
+        "present": 4,
+        "missing": []
+      },
+      "promotion_ready": true
+    },
+    {
+      "id": "process",
+      "family": "Regression",
+      "method": "PROCESS-style mediation/moderation",
+      "current_status": "experimental",
+      "target_status": "validated",
+      "promotion_batch": 3,
+      "candidate_scope": "Bounded mediation and moderation workflows generated from OLS component models.",
+      "required_evidence": [
+        "method spec",
+        "Python OLS equations",
+        "R base-lm parity",
+        "mediation/moderation fixtures",
+        "product/export enforcement"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/methods/PROCESS_V1.md",
+          "purpose": "method specification",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/v08_extended_methods_reference_report.json",
+          "purpose": "integrated Python reference",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/mediation_method_promotion_audit.json",
+          "purpose": "mediation evidence",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/moderation_method_promotion_audit.json",
+          "purpose": "moderation evidence",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/process_method_promotion_audit.json",
+          "purpose": "v1.2.2 PROCESS promotion audit",
+          "required": true,
+          "present": true
+        }
+      ],
+      "blocking_questions": [],
+      "scope_decisions": [
+        "Moderated mediation and the full Hayes PROCESS catalogue remain experimental."
+      ],
+      "artifact_summary": {
+        "required": 5,
+        "present": 5,
+        "missing": []
+      },
+      "promotion_ready": true
     }
   ],
   "later_batches": [
     {
       "id": "extended_pls_batch",
-      "promotion_batch": 2,
+      "promotion_batch": 4,
       "methods": [
         "moderated mediation",
         "CCA",
@@ -800,23 +1114,15 @@
     },
     {
       "id": "prediction_groups_batch",
-      "promotion_batch": 3,
-      "methods": [
-        "MICOM",
-        "MGA",
-        "FIMIX-PLS",
-        "PLS-POS"
-      ],
+      "promotion_batch": 4,
+      "methods": [],
       "main_missing_evidence": [
-        "prediction leakage false-positive screens",
-        "group-invariance simulation matrix",
-        "segmentation null/recovery matrix",
-        "larger performance benchmark"
+        "No remaining group/prediction methods in this batch after v1.2.2; keep this placeholder for future scope expansions."
       ]
     },
     {
       "id": "cbsem_gsca_batch",
-      "promotion_batch": 4,
+      "promotion_batch": 5,
       "methods": [
         "CB-SEM/CFA",
         "GSCA"
@@ -830,15 +1136,10 @@
     },
     {
       "id": "extended_methods_batch",
-      "promotion_batch": 3,
-      "methods": [
-        "logistic regression",
-        "PROCESS-style workflows"
-      ],
+      "promotion_batch": 4,
+      "methods": [],
       "main_missing_evidence": [
-        "R/Python second-source split reports",
-        "bootstrap/permutation qualification",
-        "edge cases and performance evidence"
+        "No remaining logistic/PROCESS methods in this batch after v1.2.2 except moderated mediation, tracked under extended PLS."
       ]
     }
   ],

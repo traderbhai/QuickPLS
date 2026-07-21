@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "id": "4a302470-0294-4326-922f-68982d9e7cce",
+  "id": "8e118faa-d4df-4926-8bfb-5f47ec10623b",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000081084",
@@ -24,14 +24,14 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-07-19T14:35:08.337011200Z",
-    "completed_at": "2026-07-19T14:35:08.339461600Z"
+    "started_at": "2026-07-21T06:58:02.079854500Z",
+    "completed_at": "2026-07-21T06:58:02.082157100Z"
   },
   "diagnostics": [
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "Regression/PROCESS v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
+      "message": "PROCESS-style regression v1 is validated for the documented QuickPLS v1.2.2 bounded mediation/moderation workflow scope; moderated mediation and the full Hayes model catalogue remain experimental."
     },
     {
       "code": "estimation.warning",
@@ -1002,19 +1002,19 @@
           "model": "mediation",
           "simple_slopes": [],
           "warnings": [
-            "PROCESS v1 reports bounded deterministic effects; bootstrap CIs are reserved for later validation hardening."
+            "PROCESS v1 reports bounded deterministic mediation/moderation effects validated for the documented QuickPLS v1.2.2 scope; moderated mediation remains experimental."
           ]
         },
         "regression_type": "process",
         "warnings": [
-          "Regression/PROCESS v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
+          "PROCESS-style regression v1 is validated for the documented QuickPLS v1.2.2 bounded mediation/moderation workflow scope; moderated mediation and the full Hayes model catalogue remain experimental."
         ]
       },
       "segmentation": null,
       "transforms": [],
       "used_observations": 140,
       "warnings": [
-        "Regression/PROCESS v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
+        "PROCESS-style regression v1 is validated for the documented QuickPLS v1.2.2 bounded mediation/moderation workflow scope; moderated mediation and the full Hayes model catalogue remain experimental."
       ],
       "wpls": null
     },

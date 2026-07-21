@@ -42,11 +42,11 @@ export const methods: MethodDefinition[] = [
   { id: "nonlinear_effects", family: "PLS-SEM", name: "Nonlinear effects", status: "experimental" },
   { id: "moderated_mediation", family: "PLS-SEM", name: "Moderated mediation", status: "experimental" },
   { id: "predict", family: "Prediction", name: "PLSpredict holdout / repeated k-fold", status: "validated" },
-  { id: "mga", family: "Groups", name: "Bounded two-group MGA", status: "experimental" },
+  { id: "mga", family: "Groups", name: "MICOM / permutation MGA", status: "validated" },
   { id: "ipma", family: "Prediction", name: "IPMA / cIPMA", status: "validated" },
   { id: "cbsem", family: "CB-SEM", name: "CFA / ML SEM", status: "experimental" },
   { id: "pca", family: "Components", name: "Principal component analysis", status: "validated" },
   { id: "gsca", family: "Component models", name: "GSCA", status: "experimental" },
-  { id: "regression", family: "Regression", name: "OLS / logistic / PROCESS", status: "experimental" },
+  { id: "regression", family: "Regression", name: "OLS / logistic / PROCESS", status: "validated" },
   { id: "nca", family: "Necessary conditions", name: "NCA", status: "validated" },
 ];

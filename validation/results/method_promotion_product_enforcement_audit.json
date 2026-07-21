@@ -16,7 +16,7 @@
     {
       "name": "regression_status_is_setting_aware",
       "passed": true,
-      "detail": "Regression status is validated only for OLS and experimental for logistic/PROCESS."
+      "detail": "Regression status is setting-aware: OLS/logistic/bounded PROCESS are validated while PROCESS moderated mediation remains experimental."
     },
     {
       "name": "analysis_readiness_uses_effective_status",
@@ -31,12 +31,12 @@
     {
       "name": "result_tables_promote_validated_batches_only",
       "passed": true,
-      "detail": "Export table status promotes first- and second-batch validated scopes while leaving logistic/PROCESS variants experimental."
+      "detail": "Export table status promotes first-, second-, and eligible third-batch validated scopes while leaving PROCESS moderated mediation experimental."
     },
     {
       "name": "engine_warnings_do_not_overclaim_regression_nca",
       "passed": true,
-      "detail": "Newly generated run warnings keep logistic and PROCESS experimental while treating NCA as validated only for the documented v1.2.1 numeric scope."
+      "detail": "Newly generated run warnings promote logistic and bounded PROCESS only for documented scopes while treating NCA as validated only for the documented v1.2.1 numeric scope."
     },
     {
       "name": "core_validation_does_not_warn_pca_experimental",
@@ -46,8 +46,8 @@
     {
       "name": "compatibility_docs_match_promoted_scope",
       "passed": true,
-      "detail": "Compatibility matrix separates validated PCA/OLS from experimental logistic/PROCESS."
+      "detail": "Compatibility matrix separates validated PCA/OLS from later-batch regression scopes."
     }
   ],
-  "note": "Validated product surfaces are constrained to the first and second promoted method batches; unpromoted methods remain experimental or watermarked."
+  "note": "Validated product surfaces are constrained to the first, second, and eligible third promoted method batches; unpromoted methods remain experimental or watermarked."
 }
