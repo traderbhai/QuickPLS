@@ -454,23 +454,171 @@ THIRD_BATCH = [
 ]
 
 
+FOURTH_BATCH = [
+    {
+        "id": "higher_order",
+        "family": "PLS-SEM",
+        "method": "Higher-order constructs",
+        "current_status": "validated_bounded_scope",
+        "target_status": "validated",
+        "promotion_batch": 4,
+        "candidate_scope": "Repeated-indicator, two-stage, and documented hybrid higher-order construct estimation for supported PLS recipes.",
+        "required_evidence": ["independent references", "metamorphic checks", "invalid hybrid guards", "product/export enforcement"],
+        "artifacts": [
+            artifact("docs/methods/PLS_HIGHER_ORDER_V1.md", "method specification"),
+            artifact("docs/methods/HIGHER_ORDER_CONSTRUCTS_V1.md", "method alias"),
+            artifact("validation/results/higher_order_method_promotion_audit.json", "v1.2.3 HOC promotion audit"),
+            artifact("validation/results/higher_order_reference_report.json", "repeated-indicator reference"),
+            artifact("validation/results/higher_order_metamorphic_report.json", "metamorphic evidence"),
+            artifact("validation/results/higher_order_two_stage_reference_report.json", "two-stage reference"),
+            artifact("validation/results/higher_order_hybrid_reference_report.json", "hybrid reference"),
+            artifact("validation/results/higher_order_hybrid_guard_report.json", "invalid hybrid guard"),
+        ],
+        "blocking_questions": [],
+        "scope_decisions": ["Unsupported HOC variants and invalid hybrid splits remain blocked."],
+    },
+    {
+        "id": "nonlinear_effects",
+        "family": "PLS-SEM",
+        "method": "Nonlinear effects",
+        "current_status": "validated_bounded_scope",
+        "target_status": "validated",
+        "promotion_batch": 4,
+        "candidate_scope": "Centered squared-term fixed-score nonlinear diagnostic for supported PLS structural paths.",
+        "required_evidence": ["independent Python reference", "OLS equation checks", "product/export enforcement"],
+        "artifacts": [
+            artifact("docs/methods/PLS_NONLINEAR_EFFECTS_V1.md", "method specification"),
+            artifact("docs/methods/NONLINEAR_EFFECTS_V1.md", "method alias"),
+            artifact("validation/results/nonlinear_effects_method_promotion_audit.json", "v1.2.3 nonlinear promotion audit"),
+            artifact("validation/results/nonlinear_effects_reference_report.json", "independent reference"),
+        ],
+        "blocking_questions": [],
+        "scope_decisions": ["Broader nonlinear SEM estimation remains unsupported."],
+    },
+    {
+        "id": "endogeneity",
+        "family": "PLS-SEM",
+        "method": "Gaussian-copula endogeneity diagnostics",
+        "current_status": "validated_bounded_scope",
+        "target_status": "validated",
+        "promotion_batch": 4,
+        "candidate_scope": "Gaussian-copula diagnostic with rankit inverse-normal copula terms for screenable nonnormal predictor scores.",
+        "required_evidence": ["independent Python reference", "applicability warnings", "diagnostic-only product language"],
+        "artifacts": [
+            artifact("docs/methods/PLS_GAUSSIAN_COPULA_ENDOGENEITY_V1.md", "method specification"),
+            artifact("docs/methods/GAUSSIAN_COPULA_ENDOGENEITY_V1.md", "method alias"),
+            artifact("validation/results/endogeneity_method_promotion_audit.json", "v1.2.3 endogeneity promotion audit"),
+            artifact("validation/results/endogeneity_reference_report.json", "independent reference"),
+        ],
+        "blocking_questions": [],
+        "scope_decisions": ["The diagnostic is not causal proof."],
+    },
+    {
+        "id": "cca",
+        "family": "PLS-SEM",
+        "method": "CCA",
+        "current_status": "validated_bounded_scope",
+        "target_status": "validated",
+        "promotion_batch": 4,
+        "candidate_scope": "Descriptive composite correlation residual diagnostic for recursive standardized PLS path models.",
+        "required_evidence": ["independent reference", "invalid-settings guard", "product/export enforcement"],
+        "artifacts": [
+            artifact("docs/methods/PLS_CCA_V1.md", "method specification"),
+            artifact("docs/methods/CCA_V1.md", "method alias"),
+            artifact("validation/results/cca_method_promotion_audit.json", "v1.2.3 CCA promotion audit"),
+            artifact("validation/results/cca_reference_report.json", "independent reference"),
+        ],
+        "blocking_questions": [],
+        "scope_decisions": ["Bootstrap-based CCA decisions remain unsupported."],
+    },
+    {
+        "id": "cta_pls",
+        "family": "PLS-SEM",
+        "method": "CTA-PLS",
+        "current_status": "validated_bounded_scope",
+        "target_status": "validated",
+        "promotion_batch": 4,
+        "candidate_scope": "Descriptive sample-covariance tetrad diagnostic for valid indicator blocks with four or more indicators.",
+        "required_evidence": ["independent reference", "invalid-block guard", "product/export enforcement"],
+        "artifacts": [
+            artifact("docs/methods/PLS_CTA_PLS_V1.md", "method specification"),
+            artifact("docs/methods/CTA_PLS_V1.md", "method alias"),
+            artifact("validation/results/cta_pls_method_promotion_audit.json", "v1.2.3 CTA-PLS promotion audit"),
+            artifact("validation/results/cta_pls_reference_report.json", "independent reference"),
+        ],
+        "blocking_questions": [],
+        "scope_decisions": ["Bootstrap/permutation tetrad decision rules remain unsupported."],
+    },
+    {
+        "id": "moderated_mediation",
+        "family": "PLS-SEM",
+        "method": "Moderated mediation",
+        "current_status": "validated_bounded_scope",
+        "target_status": "validated",
+        "promotion_batch": 4,
+        "candidate_scope": "Two-stage conditional indirect-effect diagnostic with standardized moderator levels -1, 0, and +1 plus index of moderated mediation.",
+        "required_evidence": ["independent reference", "invalid-recipe guard", "product/export enforcement"],
+        "artifacts": [
+            artifact("docs/methods/PLS_MODERATED_MEDIATION_V1.md", "method specification"),
+            artifact("docs/methods/MODERATED_MEDIATION_V1.md", "method alias"),
+            artifact("validation/results/moderated_mediation_method_promotion_audit.json", "v1.2.3 moderated mediation promotion audit"),
+            artifact("validation/results/moderated_mediation_reference_report.json", "independent reference"),
+        ],
+        "blocking_questions": [],
+        "scope_decisions": ["The full Hayes PROCESS catalogue remains unsupported."],
+    },
+]
+
+
+FIFTH_BATCH = [
+    {
+        "id": "cbsem_cfa",
+        "family": "CB-SEM",
+        "method": "CFA and maximum-likelihood SEM",
+        "current_status": "validated_bounded_scope",
+        "target_status": "validated",
+        "promotion_batch": 5,
+        "candidate_scope": "Raw-data single-group reflective CFA/SEM ML with marker identification, standardized solutions, residuals, fit indices, and modification-index diagnostics.",
+        "required_evidence": ["lavaan parity", "publication audit", "optimizer/inadmissibility guards", "product/export enforcement"],
+        "artifacts": [
+            artifact("docs/methods/CBSEM_ML_V1.md", "SEM method specification"),
+            artifact("docs/methods/CFA_ML_V1.md", "CFA method specification"),
+            artifact("validation/results/cbsem_cfa_method_promotion_audit.json", "v1.2.4 CB-SEM/CFA promotion audit"),
+            artifact("validation/results/cbsem_lavaan_reference_report.json", "lavaan reference"),
+            artifact("validation/results/v07_cbsem_evidence.json", "CB-SEM evidence index"),
+            artifact("validation/results/cbsem_publication_audit.json", "publication audit"),
+        ],
+        "blocking_questions": [],
+        "scope_decisions": ["Bootstrap, unrestricted multigroup/invariance, robust/ordinal/FIML, and broad constraints remain experimental or unsupported."],
+    },
+    {
+        "id": "gsca",
+        "family": "Components",
+        "method": "GSCA",
+        "current_status": "validated_bounded_scope",
+        "target_status": "validated",
+        "promotion_batch": 5,
+        "candidate_scope": "Bounded deterministic GSCA component model with reflective/formative blocks, recursive paths, FIT/AFIT/GFI diagnostics, weights, loadings, scores, and R2.",
+        "required_evidence": ["independent reference", "publication audit", "product/export enforcement"],
+        "artifacts": [
+            artifact("docs/methods/GSCA_V1.md", "method specification"),
+            artifact("validation/results/gsca_method_promotion_audit.json", "v1.2.4 GSCA promotion audit"),
+            artifact("validation/results/v08_extended_methods_reference_report.json", "integrated reference"),
+            artifact("validation/results/extended_methods_publication_audit.json", "publication audit"),
+        ],
+        "blocking_questions": [],
+        "scope_decisions": ["Unrestricted GSCA variants and GSCA bootstrap claims remain unsupported unless separately audited."],
+    },
+]
+
+
 LATER_BATCHES = [
     {
         "id": "extended_pls_batch",
         "promotion_batch": 4,
-        "methods": [
-            "moderated mediation",
-            "CCA",
-            "CTA-PLS",
-            "higher-order constructs",
-            "endogeneity diagnostics",
-            "nonlinear effects",
-        ],
+        "methods": [],
         "main_missing_evidence": [
-            "method-specific second-source matrix",
-            "larger simulation/recovery studies",
-            "inference coverage for promoted effects",
-            "edge-case diagnostics",
+            "No remaining extended PLS diagnostics after v1.2.3; future variants must be added as new rows.",
         ],
     },
     {
@@ -484,12 +632,9 @@ LATER_BATCHES = [
     {
         "id": "cbsem_gsca_batch",
         "promotion_batch": 5,
-        "methods": ["CB-SEM/CFA", "GSCA"],
+        "methods": [],
         "main_missing_evidence": [
-            "broader lavaan parity",
-            "second-source SEM validation",
-            "robust inadmissibility and optimizer tests",
-            "full independent GSCA ALS validation",
+            "No remaining CB-SEM/CFA or GSCA scopes after v1.2.4; advanced variants remain post-v1.2.",
         ],
     },
     {
@@ -518,17 +663,21 @@ def summarize_row(row: dict) -> dict:
 
 def main():
     RESULTS.mkdir(parents=True, exist_ok=True)
-    rows = [summarize_row(row) for row in FIRST_BATCH + SECOND_BATCH + THIRD_BATCH]
+    rows = [summarize_row(row) for row in FIRST_BATCH + SECOND_BATCH + THIRD_BATCH + FOURTH_BATCH + FIFTH_BATCH]
     report = {
         "schema_version": 2,
         "target": "v1_2_method_promotion_program",
-        "passed": False,
+        "passed": all(row["promotion_ready"] for row in rows),
         "first_batch_rows": sum(1 for row in rows if row["promotion_batch"] == 1),
         "first_batch_promotion_ready": sum(1 for row in rows if row["promotion_batch"] == 1 and row["promotion_ready"]),
         "second_batch_rows": sum(1 for row in rows if row["promotion_batch"] == 2),
         "second_batch_promotion_ready": sum(1 for row in rows if row["promotion_batch"] == 2 and row["promotion_ready"]),
         "third_batch_rows": sum(1 for row in rows if row["promotion_batch"] == 3),
         "third_batch_promotion_ready": sum(1 for row in rows if row["promotion_batch"] == 3 and row["promotion_ready"]),
+        "fourth_batch_rows": sum(1 for row in rows if row["promotion_batch"] == 4),
+        "fourth_batch_promotion_ready": sum(1 for row in rows if row["promotion_batch"] == 4 and row["promotion_ready"]),
+        "fifth_batch_rows": sum(1 for row in rows if row["promotion_batch"] == 5),
+        "fifth_batch_promotion_ready": sum(1 for row in rows if row["promotion_batch"] == 5 and row["promotion_ready"]),
         "rows": rows,
         "later_batches": LATER_BATCHES,
         "decision_rule": (
@@ -544,7 +693,9 @@ def main():
         f"wrote {OUTPUT} | rows={len(rows)} | "
         f"batch1_ready={report['first_batch_promotion_ready']}/{report['first_batch_rows']} | "
         f"batch2_ready={report['second_batch_promotion_ready']}/{report['second_batch_rows']} | "
-        f"batch3_ready={report['third_batch_promotion_ready']}/{report['third_batch_rows']}"
+        f"batch3_ready={report['third_batch_promotion_ready']}/{report['third_batch_rows']} | "
+        f"batch4_ready={report['fourth_batch_promotion_ready']}/{report['fourth_batch_rows']} | "
+        f"batch5_ready={report['fifth_batch_promotion_ready']}/{report['fifth_batch_rows']}"
     )
 
 

@@ -308,3 +308,29 @@ Promoted scopes:
 - Bounded PROCESS-style mediation and moderation.
 
 Remaining later-batch methods remain experimental: CB-SEM/CFA, GSCA, higher-order constructs, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation.
+
+## v1.2.3 / v1.2.4 Final Method Promotion Note
+
+Evidence added:
+
+- `validation/higher_order_method_promotion_audit.py`
+- `validation/nonlinear_effects_method_promotion_audit.py`
+- `validation/endogeneity_method_promotion_audit.py`
+- `validation/cca_method_promotion_audit.py`
+- `validation/cta_pls_method_promotion_audit.py`
+- `validation/moderated_mediation_method_promotion_audit.py`
+- `validation/fourth_batch_product_enforcement_audit.py`
+- `validation/fourth_batch_method_promotion_audit.py`
+- `validation/cbsem_cfa_method_promotion_audit.py`
+- `validation/gsca_method_promotion_audit.py`
+- `validation/fifth_batch_product_enforcement_audit.py`
+- `validation/fifth_batch_method_promotion_audit.py`
+- `validation/method_promotion_completion_audit.py`
+- `validation/development_slices.json` slices `v1_2_3_extended_pls_diagnostics_promotion`, `v1_2_4_cbsem_gsca_promotion`, and `v1_2_5_method_promotion_completion`
+
+Promoted scopes:
+
+- Higher-order constructs, CCA, CTA-PLS, Gaussian-copula endogeneity diagnostics, nonlinear diagnostics, and PLS moderated mediation diagnostics for documented v1.2.3 bounds.
+- Raw-data single-group reflective CB-SEM/CFA ML and bounded deterministic GSCA for documented v1.2.4 bounds.
+
+The broader v1.2 method-promotion program is now closed for documented bounded scopes. Unsupported variants remain excluded by method docs, product labels, warnings, and export status.

@@ -14,7 +14,7 @@ Implemented contract:
 - endogenous residual variances in `Psi` use `1 - R2`, with off-diagonal endogenous residual covariances fixed to zero;
 - the payload reports observed, reproduced, residual, absolute residual, and max absolute residual.
 
-Unsupported in this preview:
+Unsupported outside the validated v1.2.3 descriptive scope:
 
 - PCA weighting;
 - formative composites;
@@ -28,4 +28,4 @@ Validation evidence:
 - The reference script independently estimates PLS scores, rebuilds the recursive composite covariance identity, compares all observed/reproduced/residual rows, and checks the invalid PCA guard.
 - Current observed max delta is `3.51e-14`.
 
-Publication status: experimental. Treat this as a descriptive composite residual diagnostic until bootstrap decisions, simulations, published examples, UI/report review, and release-family promotion are complete.
+Publication status: validated for the documented QuickPLS v1.2.3 descriptive composite residual diagnostic scope. Bootstrap decisions, discrepancy tests, and broader CCA decision rules remain unsupported.

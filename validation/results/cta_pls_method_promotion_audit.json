@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "target": "v1_2_3_extended_pls_diagnostics_promotion",
+  "method_id": "cta_pls",
+  "promoted_scope": "Descriptive sample-covariance tetrad diagnostic for valid indicator blocks with four or more indicators.",
+  "passed": true,
+  "reports": [
+    {
+      "path": "validation\\results\\cta_pls_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\v05_extended_pls_evidence.json",
+      "present": true,
+      "passed": true
+    }
+  ],
+  "docs": [
+    {
+      "path": "docs\\methods\\PLS_CTA_PLS_V1.md",
+      "present": true,
+      "bytes": 1804
+    }
+  ],
+  "checks": [
+    {
+      "name": "tetrad_reference",
+      "passed": true,
+      "detail": "The independent reference verifies all tetrad pairings within tolerance."
+    },
+    {
+      "name": "inference_decisions_excluded",
+      "passed": true,
+      "detail": "Bootstrap/permutation tetrad decision rules remain outside the promoted scope."
+    }
+  ],
+  "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."
+}

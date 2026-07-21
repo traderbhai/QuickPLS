@@ -19,23 +19,25 @@ const minimalResult: PlsResult = {
 describe("model editor state", () => {
   beforeEach(() => useWorkspace.getState().resetProject());
 
-  it("keeps planned extended PLS methods visible but unsupported in the desktop catalog", () => {
+  it("keeps promoted extended PLS methods visible in the desktop catalog", () => {
     const unsupported = new Set(methods.filter((method) => method.status === "unsupported").map((method) => method.id));
     for (const method of []) {
       expect(unsupported.has(method)).toBe(true);
     }
     expect(methods.find((method) => method.id === "wpls")?.status).toBe("validated");
-    expect(methods.find((method) => method.id === "cca")?.status).toBe("experimental");
+    expect(methods.find((method) => method.id === "cca")?.status).toBe("validated");
     expect(methods.find((method) => method.id === "plsc")?.status).toBe("validated");
-    expect(methods.find((method) => method.id === "endogeneity")?.status).toBe("experimental");
-    expect(methods.find((method) => method.id === "nonlinear_effects")?.status).toBe("experimental");
-    expect(methods.find((method) => method.id === "moderated_mediation")?.status).toBe("experimental");
-    expect(methods.find((method) => method.id === "cta_pls")?.status).toBe("experimental");
+    expect(methods.find((method) => method.id === "endogeneity")?.status).toBe("validated");
+    expect(methods.find((method) => method.id === "nonlinear_effects")?.status).toBe("validated");
+    expect(methods.find((method) => method.id === "moderated_mediation")?.status).toBe("validated");
+    expect(methods.find((method) => method.id === "cta_pls")?.status).toBe("validated");
     expect(methods.find((method) => method.id === "predict")?.status).toBe("validated");
     expect(methods.find((method) => method.id === "mga")?.status).toBe("validated");
     expect(methods.find((method) => method.id === "ipma")?.status).toBe("validated");
     expect(methods.find((method) => method.id === "regression")?.status).toBe("validated");
     expect(methods.find((method) => method.id === "nca")?.status).toBe("validated");
+    expect(methods.find((method) => method.id === "cbsem")?.status).toBe("validated");
+    expect(methods.find((method) => method.id === "gsca")?.status).toBe("validated");
   });
 
   it("supports undo and redo for construct creation", () => {

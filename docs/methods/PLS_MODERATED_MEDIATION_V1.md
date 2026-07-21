@@ -20,4 +20,4 @@ Validation evidence:
 - Current observed reference delta is `4.67e-14`.
 - The same script proves recipes without interaction terms are rejected with `moderated_mediation.interaction_required`.
 
-Publication status: experimental. Bootstrap/permutation intervals for conditional indirect effects, broader second-stage fixtures, UI/report review, and release-family promotion remain open.
+Publication status: validated for the documented QuickPLS v1.2.3 two-stage conditional indirect-effect diagnostic scope. The full Hayes PROCESS catalogue and unsupported moderated-mediation variants remain experimental or unsupported.

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "target": "v1_2_3_extended_pls_diagnostics_promotion",
+  "passed": true,
+  "checks": [
+    {
+      "name": "catalog_promotes_extended_pls_diagnostics",
+      "passed": true,
+      "detail": "Desktop catalog marks promoted extended PLS diagnostics as validated entry points."
+    },
+    {
+      "name": "core_registry_promotes_extended_pls_diagnostics",
+      "passed": true,
+      "detail": "Core method registry marks promoted extended PLS diagnostics as validated."
+    },
+    {
+      "name": "result_tables_promote_extended_pls_payloads",
+      "passed": true,
+      "detail": "Result/export tables expose the promoted diagnostic payloads as validated and no longer force the run envelope experimental for them."
+    },
+    {
+      "name": "engine_warnings_use_bounded_validated_language",
+      "passed": true,
+      "detail": "Newly generated warnings use bounded v1.2.3 validated-scope language."
+    },
+    {
+      "name": "compatibility_docs_match_fourth_batch",
+      "passed": true,
+      "detail": "Compatibility matrix marks only the documented bounded scopes as validated."
+    }
+  ]
+}

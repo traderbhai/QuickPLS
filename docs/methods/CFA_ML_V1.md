@@ -1,6 +1,6 @@
 # CFA ML v1
 
-`cfa_ml_v1` is an experimental QuickPLS v0.7 CFA beta emitted from `AnalysisMethod::Cbsem` when recipe metadata sets `cbsem_model_type = "cfa"`.
+`cfa_ml_v1` is validated for the documented QuickPLS v1.2.4 raw-data single-group reflective CFA ML scope emitted from `AnalysisMethod::Cbsem` when recipe metadata sets `cbsem_model_type = "cfa"`.
 
 ## Scope
 
@@ -11,7 +11,7 @@
 
 ## Unsupported
 
-Cross-loadings as free parameters, ordinal/polychoric/WLSMV estimation, mean/intercept estimation beyond the v0.7 scalar-invariance preview, single-indicator latent factors, formative blocks, generated interactions, higher-order constructs, case weights, robust corrections, and publication-ready CFA claims are unsupported.
+Cross-loadings as free parameters, ordinal/polychoric/WLSMV estimation, mean/intercept estimation beyond the bounded preview, single-indicator latent factors, formative blocks, generated interactions, higher-order constructs, case weights, robust corrections, unrestricted multigroup/invariance, and bootstrap publication claims remain experimental or unsupported outside the v1.2.4 CFA scope.
 
 ## Validation
 

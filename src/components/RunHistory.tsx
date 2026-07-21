@@ -187,7 +187,7 @@ function MethodPayloadSections({ result }: { result: PlsResult }) {
       {result.ipma.constructs.map((row) => <tr key={`${row.target}-${row.construct}`}><td>{row.target}</td><td>{row.construct}</td><td>{row.importance.toFixed(6)}</td><td>{row.performance.toFixed(4)}</td></tr>)}
     </tbody></table></>}
 
-    {result.cbsem && <><strong>CB-SEM / CFA ML beta</strong><MethodWarnings warnings={[...result.cbsem.warnings, ...result.cbsem.diagnostics]} /><div className="method-metric"><span>Fit</span><b>chi-square {result.cbsem.fit.chi_square.toFixed(4)} | df {result.cbsem.fit.degrees_of_freedom} | CFI {formatOptional(result.cbsem.fit.cfi, 4)} | RMSEA {formatOptional(result.cbsem.fit.rmsea, 4)} | SRMR {result.cbsem.fit.srmr.toFixed(4)}</b></div>
+    {result.cbsem && <><strong>CB-SEM / CFA ML</strong><MethodWarnings warnings={[...result.cbsem.warnings, ...result.cbsem.diagnostics]} /><div className="method-metric"><span>Fit</span><b>chi-square {result.cbsem.fit.chi_square.toFixed(4)} | df {result.cbsem.fit.degrees_of_freedom} | CFI {formatOptional(result.cbsem.fit.cfi, 4)} | RMSEA {formatOptional(result.cbsem.fit.rmsea, 4)} | SRMR {result.cbsem.fit.srmr.toFixed(4)}</b></div>
     <table><thead><tr><th>Parameter</th><th>Kind</th><th>Estimate</th><th>SE</th><th>z</th><th>p</th><th>Fixed</th></tr></thead><tbody>
       {result.cbsem.parameters.slice(0, 80).map((row) => <tr key={row.name} title={row.warning ?? undefined}><td>{row.lhs} - {row.rhs}</td><td>{formatDiagnosticCode(row.kind)}</td><td>{row.estimate.toFixed(6)}</td><td>{formatOptional(row.standard_error, 6)}</td><td>{formatOptional(row.z_statistic, 4)}</td><td>{formatPValue(row.p_value_two_sided)}</td><td>{row.fixed ? "yes" : "no"}</td></tr>)}
     </tbody></table>

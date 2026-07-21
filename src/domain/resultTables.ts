@@ -56,16 +56,16 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "cca_residuals",
       title: "CCA composite residuals",
-      status: "experimental",
-      warning: warnings(result.cca.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.cca.warnings),
       columns: ["Left", "Right", "Observed", "Reproduced", "Residual", "Absolute residual"],
       rows: result.cca.correlations.map((row) => [row.left, row.right, formatNumber(row.observed, 6), formatNumber(row.reproduced, 6), formatNumber(row.residual, 6), formatNumber(row.absolute_residual, 6)]),
     });
     tables.push({
       id: "cca_summary",
       title: "CCA residual summary",
-      status: "experimental",
-      warning: warnings(result.cca.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.cca.warnings),
       columns: ["Metric", "Value"],
       rows: [["Max absolute residual", formatNumber(result.cca.max_absolute_residual, 6)]],
     });
@@ -154,16 +154,16 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "cta_pls_summary",
       title: "CTA-PLS tetrad summary",
-      status: "experimental",
-      warning: warnings(result.cta_pls.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.cta_pls.warnings),
       columns: ["Construct", "Max absolute tetrad"],
       rows: Object.entries(result.cta_pls.max_absolute_tetrad_by_construct).map(([construct, value]) => [construct, formatNumber(value, 6)]),
     });
     tables.push({
       id: "cta_pls_tetrads",
       title: "CTA-PLS tetrads",
-      status: "experimental",
-      warning: warnings(result.cta_pls.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.cta_pls.warnings),
       columns: ["Construct", "Indicator A", "Indicator B", "Indicator C", "Indicator D", "Pairing", "Tetrad", "Absolute tetrad"],
       rows: result.cta_pls.estimates.map((row) => [row.construct, row.indicator_a, row.indicator_b, row.indicator_c, row.indicator_d, formatLabel(row.pairing), formatNumber(row.tetrad, 6), formatNumber(row.absolute_tetrad, 6)]),
     });
@@ -253,16 +253,16 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "gsca_fit",
       title: "GSCA fit diagnostics",
-      status: "experimental",
-      warning: warnings(result.gsca.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.gsca.warnings),
       columns: ["Metric", "Value"],
       rows: [["FIT", formatNumber(result.gsca.fit, 6)], ["AFIT", formatNumber(result.gsca.adjusted_fit, 6)], ["GFI", formatNumber(result.gsca.gfi, 6)], ["Iterations", String(result.gsca.iterations)]],
     });
     tables.push({
       id: "gsca_paths",
       title: "GSCA paths",
-      status: "experimental",
-      warning: warnings(result.gsca.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.gsca.warnings),
       columns: ["Source", "Target", "Coefficient"],
       rows: result.gsca.paths.map((row) => [row.source, row.target, formatNumber(row.coefficient, 6)]),
     });
@@ -484,8 +484,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "cbsem_fit",
       title: "CB-SEM fit indices",
-      status: "experimental",
-      warning: warnings(result.cbsem.warnings.concat(result.cbsem.diagnostics)),
+      status: "validated",
+      warning: scopeWarnings(result.cbsem.warnings.concat(result.cbsem.diagnostics)),
       columns: ["Metric", "Value"],
       rows: [
         ["Method version", result.cbsem.method_version],
@@ -507,24 +507,24 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "cbsem_parameters",
       title: "CB-SEM parameter estimates",
-      status: "experimental",
-      warning: warnings(result.cbsem.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.cbsem.warnings),
       columns: ["Parameter", "Kind", "LHS", "RHS", "Estimate", "SE", "z", "p", "Fixed", "Warning"],
       rows: result.cbsem.parameters.map((row) => [row.name, formatLabel(row.kind), row.lhs, row.rhs, formatNumber(row.estimate, 6), row.standard_error == null ? "N/A" : formatNumber(row.standard_error, 6), row.z_statistic == null ? "N/A" : formatNumber(row.z_statistic, 4), formatPValue(row.p_value_two_sided), row.fixed ? "yes" : "no", row.warning ?? ""]),
     });
     tables.push({
       id: "cbsem_standardized",
       title: "CB-SEM standardized solution",
-      status: "experimental",
-      warning: warnings(result.cbsem.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.cbsem.warnings),
       columns: ["Parameter", "Kind", "LHS", "RHS", "std_lv", "std_all"],
       rows: result.cbsem.standardized.map((row) => [row.name, formatLabel(row.kind), row.lhs, row.rhs, formatNumber(row.std_lv, 6), formatNumber(row.std_all, 6)]),
     });
     tables.push({
       id: "cbsem_modification_indices",
       title: "CB-SEM modification indices",
-      status: "experimental",
-      warning: warnings(result.cbsem.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.cbsem.warnings),
       columns: ["Kind", "LHS", "RHS", "MI", "EPC"],
       rows: result.cbsem.modification_indices.map((row) => [formatLabel(row.kind), row.lhs, row.rhs, formatNumber(row.modification_index, 6), row.expected_parameter_change == null ? "N/A" : formatNumber(row.expected_parameter_change, 6)]),
     });
@@ -562,8 +562,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "endogeneity_copula",
       title: "Gaussian-copula endogeneity diagnostics",
-      status: "experimental",
-      warning: warnings(result.endogeneity.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.endogeneity.warnings),
       columns: ["Source", "Target", "Path coefficient", "Copula coefficient", "t statistic", "p value", "Predictor skewness", "Applicability", "Warning"],
       rows: result.endogeneity.estimates.map((row) => [row.source, row.target, formatNumber(row.path_coefficient, 6), formatNumber(row.copula_coefficient, 6), formatNumber(row.t_statistic, 4), formatPValue(row.p_value_two_sided), formatNumber(row.predictor_skewness, 4), row.applicable ? "screenable" : "weak", row.warning ?? ""]),
     });
@@ -573,8 +573,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "nonlinear_effects",
       title: "Nonlinear effects",
-      status: "experimental",
-      warning: warnings(result.nonlinear_effects.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.nonlinear_effects.warnings),
       columns: ["Source", "Target", "Linear coefficient", "Quadratic coefficient", "t statistic", "p value", "Linear R2", "Augmented R2", "Delta R2", "Warning"],
       rows: result.nonlinear_effects.estimates.map((row) => [row.source, row.target, formatNumber(row.linear_coefficient, 6), formatNumber(row.quadratic_coefficient, 6), formatNumber(row.t_statistic, 4), formatPValue(row.p_value_two_sided), formatNumber(row.linear_r_squared, 4), formatNumber(row.augmented_r_squared, 4), formatNumber(row.delta_r_squared, 4), row.warning ?? ""]),
     });
@@ -584,8 +584,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "moderated_mediation",
       title: "Moderated mediation",
-      status: "experimental",
-      warning: warnings(result.moderated_mediation.warnings),
+      status: "validated",
+      warning: scopeWarnings(result.moderated_mediation.warnings),
       columns: ["Interaction", "Predictor", "Moderator", "Mediator", "Target", "Stage", "Index", "Conditional indirect effects", "Warning"],
       rows: result.moderated_mediation.estimates.map((row) => [
         row.interaction,
@@ -670,19 +670,13 @@ function regressionScopeStatus(regression: NonNullable<PlsResult["regression"]>)
 
 function resultScopeStatus(result: PlsResult): ResultTable["status"] {
   if (
-    result.cca ||
-    result.cta_pls ||
     (result.segmentation && result.segmentation.method_version !== "pls_pos_v1") ||
-    result.cbsem ||
-    result.endogeneity ||
-    result.nonlinear_effects ||
-    result.moderated_mediation ||
-    result.gsca ||
+    (result.cbsem && (result.cbsem.bootstrap || result.cbsem.multigroup)) ||
     (result.regression && regressionScopeStatus(result.regression) !== "validated")
   ) {
     return "experimental";
   }
-  if (result.method_version.startsWith("pls_pm_v1") || result.method_version === "pca_v1" || result.method_version === "plsc_v1" || result.method_version === "wpls_case_weighted_v1" || result.method_version === "plspredict_holdout_v1" || result.method_version === "ipma_v1" || result.method_version === "nca_v1" || result.method_version === "regression_logistic_v1" || result.method_version === "regression_process_v1") return "validated";
+  if (result.method_version.startsWith("pls_pm_v1") || result.method_version === "pca_v1" || result.method_version === "plsc_v1" || result.method_version === "wpls_case_weighted_v1" || result.method_version === "plspredict_holdout_v1" || result.method_version === "ipma_v1" || result.method_version === "nca_v1" || result.method_version === "regression_logistic_v1" || result.method_version === "regression_process_v1" || result.method_version === "cca_composite_residual_v1" || result.method_version === "cta_pls_tetrad_v1" || result.method_version === "gaussian_copula_endogeneity_v1" || result.method_version === "pls_quadratic_nonlinear_effects_v1" || result.method_version === "pls_moderated_mediation_v1" || result.method_version === "cbsem_ml_v1" || result.method_version === "cfa_ml_v1" || result.method_version === "gsca_v1") return "validated";
   if (result.mga || result.micom || result.mga_permutation || result.fimix || result.segmentation) return "validated";
   if (result.regression && regressionScopeStatus(result.regression) === "validated") return "validated";
   return "experimental";

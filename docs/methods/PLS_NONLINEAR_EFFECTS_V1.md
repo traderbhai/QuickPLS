@@ -12,7 +12,7 @@ Implemented contract:
 - the payload reports the original linear path coefficient, quadratic coefficient, standard error, t-statistic, two-sided p-value, linear R2, augmented R2, delta R2, and warnings;
 - delta R2 is reported as zero when the augmented model does not improve fixed-score R2 beyond numerical tolerance.
 
-Unsupported in this preview:
+Unsupported outside the validated v1.2.3 diagnostic scope:
 
 - PCA weighting;
 - spline, logarithmic, exponential, or custom nonlinear terms;
@@ -26,4 +26,4 @@ Validation evidence:
 - The reference script independently estimates PLS scores, constructs centered squared score terms, runs the augmented regression, and compares quadratic coefficients, standard errors, t-statistics, linear R2, augmented R2, and delta R2 within `1e-6`.
 - Current observed max delta is `1.96e-12`.
 
-Publication status: experimental. Treat this as a fixed-score diagnostic until broader simulation, UI/report review, and release-family promotion are complete.
+Publication status: validated for the documented QuickPLS v1.2.3 fixed-score quadratic diagnostic scope. Broader nonlinear SEM estimation remains unsupported.

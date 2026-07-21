@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "target": "v1_2_4_cbsem_gsca_promotion",
+  "passed": true,
+  "artifacts": [
+    {
+      "path": "validation\\results\\cbsem_cfa_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\gsca_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\fifth_batch_product_enforcement_audit.json",
+      "present": true,
+      "passed": true
+    }
+  ],
+  "registry_gate_present": true,
+  "registry_gate_all_passed": true,
+  "note": "Fifth-batch promotion is bounded to documented single-group CB-SEM/CFA ML and deterministic GSCA scopes."
+}

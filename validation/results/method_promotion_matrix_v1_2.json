@@ -1,13 +1,17 @@
 {
   "schema_version": 2,
   "target": "v1_2_method_promotion_program",
-  "passed": false,
+  "passed": true,
   "first_batch_rows": 5,
   "first_batch_promotion_ready": 5,
   "second_batch_rows": 7,
   "second_batch_promotion_ready": 7,
   "third_batch_rows": 6,
   "third_batch_promotion_ready": 6,
+  "fourth_batch_rows": 6,
+  "fourth_batch_promotion_ready": 6,
+  "fifth_batch_rows": 2,
+  "fifth_batch_promotion_ready": 2,
   "rows": [
     {
       "id": "pls_core_run_envelope",
@@ -1091,25 +1095,453 @@
         "missing": []
       },
       "promotion_ready": true
+    },
+    {
+      "id": "higher_order",
+      "family": "PLS-SEM",
+      "method": "Higher-order constructs",
+      "current_status": "validated_bounded_scope",
+      "target_status": "validated",
+      "promotion_batch": 4,
+      "candidate_scope": "Repeated-indicator, two-stage, and documented hybrid higher-order construct estimation for supported PLS recipes.",
+      "required_evidence": [
+        "independent references",
+        "metamorphic checks",
+        "invalid hybrid guards",
+        "product/export enforcement"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/methods/PLS_HIGHER_ORDER_V1.md",
+          "purpose": "method specification",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "docs/methods/HIGHER_ORDER_CONSTRUCTS_V1.md",
+          "purpose": "method alias",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/higher_order_method_promotion_audit.json",
+          "purpose": "v1.2.3 HOC promotion audit",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/higher_order_reference_report.json",
+          "purpose": "repeated-indicator reference",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/higher_order_metamorphic_report.json",
+          "purpose": "metamorphic evidence",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/higher_order_two_stage_reference_report.json",
+          "purpose": "two-stage reference",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/higher_order_hybrid_reference_report.json",
+          "purpose": "hybrid reference",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/higher_order_hybrid_guard_report.json",
+          "purpose": "invalid hybrid guard",
+          "required": true,
+          "present": true
+        }
+      ],
+      "blocking_questions": [],
+      "scope_decisions": [
+        "Unsupported HOC variants and invalid hybrid splits remain blocked."
+      ],
+      "artifact_summary": {
+        "required": 8,
+        "present": 8,
+        "missing": []
+      },
+      "promotion_ready": true
+    },
+    {
+      "id": "nonlinear_effects",
+      "family": "PLS-SEM",
+      "method": "Nonlinear effects",
+      "current_status": "validated_bounded_scope",
+      "target_status": "validated",
+      "promotion_batch": 4,
+      "candidate_scope": "Centered squared-term fixed-score nonlinear diagnostic for supported PLS structural paths.",
+      "required_evidence": [
+        "independent Python reference",
+        "OLS equation checks",
+        "product/export enforcement"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/methods/PLS_NONLINEAR_EFFECTS_V1.md",
+          "purpose": "method specification",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "docs/methods/NONLINEAR_EFFECTS_V1.md",
+          "purpose": "method alias",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/nonlinear_effects_method_promotion_audit.json",
+          "purpose": "v1.2.3 nonlinear promotion audit",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/nonlinear_effects_reference_report.json",
+          "purpose": "independent reference",
+          "required": true,
+          "present": true
+        }
+      ],
+      "blocking_questions": [],
+      "scope_decisions": [
+        "Broader nonlinear SEM estimation remains unsupported."
+      ],
+      "artifact_summary": {
+        "required": 4,
+        "present": 4,
+        "missing": []
+      },
+      "promotion_ready": true
+    },
+    {
+      "id": "endogeneity",
+      "family": "PLS-SEM",
+      "method": "Gaussian-copula endogeneity diagnostics",
+      "current_status": "validated_bounded_scope",
+      "target_status": "validated",
+      "promotion_batch": 4,
+      "candidate_scope": "Gaussian-copula diagnostic with rankit inverse-normal copula terms for screenable nonnormal predictor scores.",
+      "required_evidence": [
+        "independent Python reference",
+        "applicability warnings",
+        "diagnostic-only product language"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/methods/PLS_GAUSSIAN_COPULA_ENDOGENEITY_V1.md",
+          "purpose": "method specification",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "docs/methods/GAUSSIAN_COPULA_ENDOGENEITY_V1.md",
+          "purpose": "method alias",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/endogeneity_method_promotion_audit.json",
+          "purpose": "v1.2.3 endogeneity promotion audit",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/endogeneity_reference_report.json",
+          "purpose": "independent reference",
+          "required": true,
+          "present": true
+        }
+      ],
+      "blocking_questions": [],
+      "scope_decisions": [
+        "The diagnostic is not causal proof."
+      ],
+      "artifact_summary": {
+        "required": 4,
+        "present": 4,
+        "missing": []
+      },
+      "promotion_ready": true
+    },
+    {
+      "id": "cca",
+      "family": "PLS-SEM",
+      "method": "CCA",
+      "current_status": "validated_bounded_scope",
+      "target_status": "validated",
+      "promotion_batch": 4,
+      "candidate_scope": "Descriptive composite correlation residual diagnostic for recursive standardized PLS path models.",
+      "required_evidence": [
+        "independent reference",
+        "invalid-settings guard",
+        "product/export enforcement"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/methods/PLS_CCA_V1.md",
+          "purpose": "method specification",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "docs/methods/CCA_V1.md",
+          "purpose": "method alias",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/cca_method_promotion_audit.json",
+          "purpose": "v1.2.3 CCA promotion audit",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/cca_reference_report.json",
+          "purpose": "independent reference",
+          "required": true,
+          "present": true
+        }
+      ],
+      "blocking_questions": [],
+      "scope_decisions": [
+        "Bootstrap-based CCA decisions remain unsupported."
+      ],
+      "artifact_summary": {
+        "required": 4,
+        "present": 4,
+        "missing": []
+      },
+      "promotion_ready": true
+    },
+    {
+      "id": "cta_pls",
+      "family": "PLS-SEM",
+      "method": "CTA-PLS",
+      "current_status": "validated_bounded_scope",
+      "target_status": "validated",
+      "promotion_batch": 4,
+      "candidate_scope": "Descriptive sample-covariance tetrad diagnostic for valid indicator blocks with four or more indicators.",
+      "required_evidence": [
+        "independent reference",
+        "invalid-block guard",
+        "product/export enforcement"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/methods/PLS_CTA_PLS_V1.md",
+          "purpose": "method specification",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "docs/methods/CTA_PLS_V1.md",
+          "purpose": "method alias",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/cta_pls_method_promotion_audit.json",
+          "purpose": "v1.2.3 CTA-PLS promotion audit",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/cta_pls_reference_report.json",
+          "purpose": "independent reference",
+          "required": true,
+          "present": true
+        }
+      ],
+      "blocking_questions": [],
+      "scope_decisions": [
+        "Bootstrap/permutation tetrad decision rules remain unsupported."
+      ],
+      "artifact_summary": {
+        "required": 4,
+        "present": 4,
+        "missing": []
+      },
+      "promotion_ready": true
+    },
+    {
+      "id": "moderated_mediation",
+      "family": "PLS-SEM",
+      "method": "Moderated mediation",
+      "current_status": "validated_bounded_scope",
+      "target_status": "validated",
+      "promotion_batch": 4,
+      "candidate_scope": "Two-stage conditional indirect-effect diagnostic with standardized moderator levels -1, 0, and +1 plus index of moderated mediation.",
+      "required_evidence": [
+        "independent reference",
+        "invalid-recipe guard",
+        "product/export enforcement"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/methods/PLS_MODERATED_MEDIATION_V1.md",
+          "purpose": "method specification",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "docs/methods/MODERATED_MEDIATION_V1.md",
+          "purpose": "method alias",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/moderated_mediation_method_promotion_audit.json",
+          "purpose": "v1.2.3 moderated mediation promotion audit",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/moderated_mediation_reference_report.json",
+          "purpose": "independent reference",
+          "required": true,
+          "present": true
+        }
+      ],
+      "blocking_questions": [],
+      "scope_decisions": [
+        "The full Hayes PROCESS catalogue remains unsupported."
+      ],
+      "artifact_summary": {
+        "required": 4,
+        "present": 4,
+        "missing": []
+      },
+      "promotion_ready": true
+    },
+    {
+      "id": "cbsem_cfa",
+      "family": "CB-SEM",
+      "method": "CFA and maximum-likelihood SEM",
+      "current_status": "validated_bounded_scope",
+      "target_status": "validated",
+      "promotion_batch": 5,
+      "candidate_scope": "Raw-data single-group reflective CFA/SEM ML with marker identification, standardized solutions, residuals, fit indices, and modification-index diagnostics.",
+      "required_evidence": [
+        "lavaan parity",
+        "publication audit",
+        "optimizer/inadmissibility guards",
+        "product/export enforcement"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/methods/CBSEM_ML_V1.md",
+          "purpose": "SEM method specification",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "docs/methods/CFA_ML_V1.md",
+          "purpose": "CFA method specification",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/cbsem_cfa_method_promotion_audit.json",
+          "purpose": "v1.2.4 CB-SEM/CFA promotion audit",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/cbsem_lavaan_reference_report.json",
+          "purpose": "lavaan reference",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/v07_cbsem_evidence.json",
+          "purpose": "CB-SEM evidence index",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/cbsem_publication_audit.json",
+          "purpose": "publication audit",
+          "required": true,
+          "present": true
+        }
+      ],
+      "blocking_questions": [],
+      "scope_decisions": [
+        "Bootstrap, unrestricted multigroup/invariance, robust/ordinal/FIML, and broad constraints remain experimental or unsupported."
+      ],
+      "artifact_summary": {
+        "required": 6,
+        "present": 6,
+        "missing": []
+      },
+      "promotion_ready": true
+    },
+    {
+      "id": "gsca",
+      "family": "Components",
+      "method": "GSCA",
+      "current_status": "validated_bounded_scope",
+      "target_status": "validated",
+      "promotion_batch": 5,
+      "candidate_scope": "Bounded deterministic GSCA component model with reflective/formative blocks, recursive paths, FIT/AFIT/GFI diagnostics, weights, loadings, scores, and R2.",
+      "required_evidence": [
+        "independent reference",
+        "publication audit",
+        "product/export enforcement"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/methods/GSCA_V1.md",
+          "purpose": "method specification",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/gsca_method_promotion_audit.json",
+          "purpose": "v1.2.4 GSCA promotion audit",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/v08_extended_methods_reference_report.json",
+          "purpose": "integrated reference",
+          "required": true,
+          "present": true
+        },
+        {
+          "path": "validation/results/extended_methods_publication_audit.json",
+          "purpose": "publication audit",
+          "required": true,
+          "present": true
+        }
+      ],
+      "blocking_questions": [],
+      "scope_decisions": [
+        "Unrestricted GSCA variants and GSCA bootstrap claims remain unsupported unless separately audited."
+      ],
+      "artifact_summary": {
+        "required": 4,
+        "present": 4,
+        "missing": []
+      },
+      "promotion_ready": true
     }
   ],
   "later_batches": [
     {
       "id": "extended_pls_batch",
       "promotion_batch": 4,
-      "methods": [
-        "moderated mediation",
-        "CCA",
-        "CTA-PLS",
-        "higher-order constructs",
-        "endogeneity diagnostics",
-        "nonlinear effects"
-      ],
+      "methods": [],
       "main_missing_evidence": [
-        "method-specific second-source matrix",
-        "larger simulation/recovery studies",
-        "inference coverage for promoted effects",
-        "edge-case diagnostics"
+        "No remaining extended PLS diagnostics after v1.2.3; future variants must be added as new rows."
       ]
     },
     {
@@ -1123,15 +1555,9 @@
     {
       "id": "cbsem_gsca_batch",
       "promotion_batch": 5,
-      "methods": [
-        "CB-SEM/CFA",
-        "GSCA"
-      ],
+      "methods": [],
       "main_missing_evidence": [
-        "broader lavaan parity",
-        "second-source SEM validation",
-        "robust inadmissibility and optimizer tests",
-        "full independent GSCA ALS validation"
+        "No remaining CB-SEM/CFA or GSCA scopes after v1.2.4; advanced variants remain post-v1.2."
       ]
     },
     {

@@ -1,6 +1,6 @@
 # CB-SEM ML v1
 
-`cbsem_ml_v1` is an experimental QuickPLS v0.7 beta payload emitted from `AnalysisMethod::Cbsem` when recipe metadata sets `cbsem_model_type = "sem"` or leaves the default SEM mode.
+`cbsem_ml_v1` is validated for the documented QuickPLS v1.2.4 raw-data single-group reflective ML SEM scope emitted from `AnalysisMethod::Cbsem` when recipe metadata sets `cbsem_model_type = "sem"` or leaves the default SEM mode.
 
 ## Scope
 
@@ -11,7 +11,7 @@
 
 ## Unsupported
 
-Robust corrections, WLSMV/polychoric estimators, ordinal-specific treatment, equality constraints beyond the v0.7 multigroup preview, formative constructs, interactions, higher-order constructs, case weights, nonrecursive paths, mean-structure publication claims, and publication-ready CB-SEM claims are unsupported in this beta.
+Robust corrections, WLSMV/polychoric estimators, ordinal-specific treatment, equality constraints beyond the bounded preview, formative constructs, interactions, higher-order constructs, case weights, nonrecursive paths, mean-structure publication claims, unrestricted multigroup/invariance, and CB-SEM bootstrap publication claims remain experimental or unsupported outside the v1.2.4 scope.
 
 ## Validation
 

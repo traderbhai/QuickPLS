@@ -12,7 +12,7 @@ Implemented contract:
 - the payload reports the original path coefficient, copula coefficient, standard error, t-statistic, two-sided p-value, predictor skewness, applicability flag, and warning;
 - predictors with absolute skewness below `0.5` are marked as weak-applicability cases because the diagnostic assumes nonnormal predictor scores.
 
-Unsupported in this preview:
+Unsupported outside the validated v1.2.3 diagnostic scope:
 
 - PCA weighting;
 - bootstrap/permutation inference for copula coefficients;
@@ -25,4 +25,4 @@ Validation evidence:
 - The reference script independently estimates PLS scores, applies the rankit inverse-normal transform, runs the augmented regression, and compares copula coefficients, standard errors, t-statistics, and skewness within `1e-6`.
 - Current observed max delta is `5.54e-09`.
 
-Publication status: experimental. Treat the output as a diagnostic screen until broader simulation, published examples, UI/report review, and release-family promotion are complete.
+Publication status: validated for the documented QuickPLS v1.2.3 Gaussian-copula diagnostic scope. The output is a diagnostic screen for possible endogeneity risk, not proof of causality.

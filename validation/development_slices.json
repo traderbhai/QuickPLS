@@ -1479,11 +1479,11 @@
       "release": "v1.2",
       "family": "Validation",
       "name": "Method promotion program",
-      "status": "experimental",
-      "stable_output": false,
+      "status": "validated",
+      "stable_output": true,
       "owner_track": "validation",
       "priority": 18,
-      "summary": "QuickPLS v1.2 starts the method-by-method promotion program. The first, second, and group/prediction/regression calculation batches are now promoted for documented scopes. Remaining calculation families move from experimental preview output to researcher-ready validated output only after method-specific reference, simulation, edge-case, GUI/CLI/export, reproducibility, performance, and documentation evidence is complete.",
+      "summary": "QuickPLS v1.2 completes the method-by-method promotion program. First through fifth calculation batches are promoted for documented bounded scopes, and unsupported variants remain blocked, excluded, or explicitly warned by method docs and product surfaces.",
       "gates": [
         {
           "track": "documentation",
@@ -1542,21 +1542,35 @@
         {
           "track": "validation",
           "name": "Later high-risk method expansion",
-          "status": "open",
-          "evidence": "Remaining later-batch validation is still required for CB-SEM/CFA, GSCA, higher-order constructs, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation."
+          "status": "passed",
+          "evidence": "v1.2.3 and v1.2.4 method-specific promotion audits pass for CB-SEM/CFA, GSCA, higher-order constructs, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation."
         },
         {
           "track": "product",
           "name": "Validated-scope product enforcement",
           "status": "passed",
           "evidence": "validation/method_promotion_product_enforcement_audit.py writes validation/results/method_promotion_product_enforcement_audit.json and verifies UI/catalog/readiness/result-table/engine-warning surfaces promote only method scopes cleared by v1.2, v1.2.1, and v1.2.2 while CB-SEM, GSCA, HOC, nonlinear/endogeneity, CCA, CTA-PLS, and moderated mediation remain experimental or watermarked."
+        },
+        {
+          "track": "validation",
+          "name": "Fourth promotion batch evidence",
+          "status": "passed",
+          "evidence": "validation/fourth_batch_method_promotion_audit.py writes validation/results/fourth_batch_method_promotion_audit.json and verifies HOC, nonlinear, endogeneity, CCA, CTA-PLS, moderated mediation, and product-enforcement artifacts pass."
+        },
+        {
+          "track": "validation",
+          "name": "Fifth promotion batch evidence",
+          "status": "passed",
+          "evidence": "validation/fifth_batch_method_promotion_audit.py writes validation/results/fifth_batch_method_promotion_audit.json and verifies CB-SEM/CFA, GSCA, and product-enforcement artifacts pass."
+        },
+        {
+          "track": "validation",
+          "name": "Method-promotion completion audit",
+          "status": "passed",
+          "evidence": "validation/method_promotion_completion_audit.py writes validation/results/method_promotion_completion_audit.json and verifies all v1.2 promotion batches are complete."
         }
       ],
-      "next_actions": [
-        "Keep every non-promoted later-batch method watermarked experimental until its method-specific promotion gate passes.",
-        "Start later-batch promotion planning for CB-SEM/CFA, GSCA, HOC, nonlinear/endogeneity diagnostics, CCA, CTA-PLS, and moderated mediation.",
-        "For each later batch, add method-specific two-reference evidence, preregistered simulations, edge-case guards, GUI/CLI/export parity, reproducibility evidence, and performance evidence before changing product status."
-      ]
+      "next_actions": []
     },
     {
       "id": "v1_2_1_second_batch_method_promotion",
@@ -1693,6 +1707,138 @@
         "Keep CB-SEM/CFA, GSCA, higher-order constructs, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation experimental until later promotion gates pass.",
         "Start the next promotion batch with the highest-risk numerical families only after second-source and simulation evidence is complete."
       ]
+    },
+    {
+      "id": "v1_2_3_extended_pls_diagnostics_promotion",
+      "release": "v1.2.3",
+      "family": "Validation",
+      "name": "Extended PLS diagnostics promotion",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "validation",
+      "priority": 21,
+      "summary": "Promotes higher-order constructs, nonlinear effects, Gaussian-copula endogeneity diagnostics, CCA, CTA-PLS, and PLS moderated mediation for documented bounded diagnostic scopes.",
+      "gates": [
+        {
+          "track": "validation",
+          "name": "Higher-order constructs promotion audit",
+          "status": "passed",
+          "evidence": "validation/higher_order_method_promotion_audit.py writes validation/results/higher_order_method_promotion_audit.json and verifies repeated-indicator, two-stage, hybrid, metamorphic, and invalid-split evidence."
+        },
+        {
+          "track": "validation",
+          "name": "Nonlinear effects promotion audit",
+          "status": "passed",
+          "evidence": "validation/nonlinear_effects_method_promotion_audit.py writes validation/results/nonlinear_effects_method_promotion_audit.json and verifies fixed-score quadratic diagnostic evidence."
+        },
+        {
+          "track": "validation",
+          "name": "Gaussian-copula endogeneity promotion audit",
+          "status": "passed",
+          "evidence": "validation/endogeneity_method_promotion_audit.py writes validation/results/endogeneity_method_promotion_audit.json and verifies diagnostic-only copula reference evidence."
+        },
+        {
+          "track": "validation",
+          "name": "CCA promotion audit",
+          "status": "passed",
+          "evidence": "validation/cca_method_promotion_audit.py writes validation/results/cca_method_promotion_audit.json and verifies descriptive composite residual evidence."
+        },
+        {
+          "track": "validation",
+          "name": "CTA-PLS promotion audit",
+          "status": "passed",
+          "evidence": "validation/cta_pls_method_promotion_audit.py writes validation/results/cta_pls_method_promotion_audit.json and verifies descriptive tetrad evidence."
+        },
+        {
+          "track": "validation",
+          "name": "Moderated mediation promotion audit",
+          "status": "passed",
+          "evidence": "validation/moderated_mediation_method_promotion_audit.py writes validation/results/moderated_mediation_method_promotion_audit.json and verifies conditional indirect-effect evidence."
+        },
+        {
+          "track": "product",
+          "name": "Fourth-batch product enforcement",
+          "status": "passed",
+          "evidence": "validation/fourth_batch_product_enforcement_audit.py writes validation/results/fourth_batch_product_enforcement_audit.json and verifies UI, CLI, report, export, docs, and warning language for bounded v1.2.3 scopes."
+        },
+        {
+          "track": "validation",
+          "name": "Fourth-batch aggregate audit",
+          "status": "passed",
+          "evidence": "validation/fourth_batch_method_promotion_audit.py writes validation/results/fourth_batch_method_promotion_audit.json and verifies all method-specific and product artifacts pass."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_2_4_cbsem_gsca_promotion",
+      "release": "v1.2.4",
+      "family": "Validation",
+      "name": "CB-SEM/CFA and GSCA promotion",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "validation",
+      "priority": 22,
+      "summary": "Promotes raw-data single-group reflective CB-SEM/CFA ML and bounded deterministic GSCA for documented scopes while leaving advanced variants experimental or unsupported.",
+      "gates": [
+        {
+          "track": "validation",
+          "name": "CB-SEM/CFA promotion audit",
+          "status": "passed",
+          "evidence": "validation/cbsem_cfa_method_promotion_audit.py writes validation/results/cbsem_cfa_method_promotion_audit.json and verifies lavaan parity, publication evidence, and bounded exclusions."
+        },
+        {
+          "track": "validation",
+          "name": "GSCA promotion audit",
+          "status": "passed",
+          "evidence": "validation/gsca_method_promotion_audit.py writes validation/results/gsca_method_promotion_audit.json and verifies bounded deterministic GSCA reference and publication evidence."
+        },
+        {
+          "track": "product",
+          "name": "Fifth-batch product enforcement",
+          "status": "passed",
+          "evidence": "validation/fifth_batch_product_enforcement_audit.py writes validation/results/fifth_batch_product_enforcement_audit.json and verifies UI, CLI, report, export, docs, and warning language for bounded v1.2.4 scopes."
+        },
+        {
+          "track": "validation",
+          "name": "Fifth-batch aggregate audit",
+          "status": "passed",
+          "evidence": "validation/fifth_batch_method_promotion_audit.py writes validation/results/fifth_batch_method_promotion_audit.json and verifies all method-specific and product artifacts pass."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_2_5_method_promotion_completion",
+      "release": "v1.2.5",
+      "family": "Validation",
+      "name": "Method promotion completion",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "validation",
+      "priority": 23,
+      "summary": "Closes the v1.2 method-promotion program after all documented bounded method scopes have method-specific evidence, product enforcement, docs, and gate artifacts.",
+      "gates": [
+        {
+          "track": "validation",
+          "name": "Promotion matrix complete",
+          "status": "passed",
+          "evidence": "validation/promotion_matrix.py writes validation/results/method_promotion_matrix_v1_2.json with first through fifth promotion rows all ready."
+        },
+        {
+          "track": "validation",
+          "name": "Final completion audit",
+          "status": "passed",
+          "evidence": "validation/method_promotion_completion_audit.py writes validation/results/method_promotion_completion_audit.json and verifies the umbrella v1.2 gate is clear."
+        },
+        {
+          "track": "documentation",
+          "name": "Compatibility and known boundaries published",
+          "status": "passed",
+          "evidence": "docs/METHOD_COMPATIBILITY.md and docs/METHOD_PROMOTION_PROGRAM_V1_2.md document validated bounded scopes and unsupported variants."
+        }
+      ],
+      "next_actions": []
     }
   ]
 }

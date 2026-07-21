@@ -12,12 +12,12 @@ Implemented contract:
 - the payload reports construct id, ordered indicators, pairing id, signed tetrad, absolute tetrad, and max absolute tetrad by construct;
 - recipes must contain at least one construct with four or more indicators.
 
-Unsupported in this preview:
+Unsupported outside the validated v1.2.3 descriptive scope:
 
 - PCA weighting;
 - bootstrap, permutation, or asymptotic tetrad inference;
 - vanishing/non-vanishing tetrad classification decisions;
-- publication-ready CTA interpretation;
+- bootstrap/permutation CTA decision rules;
 - dedicated result tables and diagram annotations.
 
 Validation evidence:
@@ -26,4 +26,4 @@ Validation evidence:
 - The reference script independently standardizes the data, computes sample covariances, recomputes all tetrad pairings, and checks the invalid less-than-four-indicator guard.
 - Current observed max delta is `4.94e-14`.
 
-Publication status: experimental. Treat the output as a descriptive tetrad screen until inference, simulations, published examples, UI/report review, and release-family promotion are complete.
+Publication status: validated for the documented QuickPLS v1.2.3 descriptive sample-covariance tetrad scope. Bootstrap/permutation tetrad decision rules and broader CTA interpretation remain unsupported.

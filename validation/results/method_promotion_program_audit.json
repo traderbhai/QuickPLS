@@ -24,8 +24,8 @@
     "first_batch_promotion_ready": 5
   },
   "method_rows": 27,
-  "experimental_or_not_stable_rows": 10,
-  "validated_method_rows": 17,
+  "experimental_or_not_stable_rows": 3,
+  "validated_method_rows": 24,
   "promotion_slice_passed_gates": [
     "Promotion criteria frozen",
     "Program plan documented",
@@ -36,11 +36,13 @@
     "Standalone PCA promotion",
     "OLS regression promotion",
     "First promotion batch evidence",
-    "Validated-scope product enforcement"
+    "Later high-risk method expansion",
+    "Validated-scope product enforcement",
+    "Fourth promotion batch evidence",
+    "Fifth promotion batch evidence",
+    "Method-promotion completion audit"
   ],
-  "promotion_slice_open_gates": [
-    "Later high-risk method expansion"
-  ],
+  "promotion_slice_open_gates": [],
   "initial_priority": [
     "PLS core stable run envelope",
     "Assessment metrics",

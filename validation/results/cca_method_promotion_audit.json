@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "target": "v1_2_3_extended_pls_diagnostics_promotion",
+  "method_id": "cca",
+  "promoted_scope": "Descriptive composite correlation residual diagnostic for recursive standardized PLS path models.",
+  "passed": true,
+  "reports": [
+    {
+      "path": "validation\\results\\cca_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\v05_extended_pls_evidence.json",
+      "present": true,
+      "passed": true
+    }
+  ],
+  "docs": [
+    {
+      "path": "docs\\methods\\PLS_CCA_V1.md",
+      "present": true,
+      "bytes": 1898
+    }
+  ],
+  "checks": [
+    {
+      "name": "decision_rules_excluded",
+      "passed": true,
+      "detail": "Bootstrap-based CCA decisions remain unsupported outside the promoted descriptive scope."
+    },
+    {
+      "name": "invalid_settings_guard",
+      "passed": true,
+      "detail": "The reference artifact includes invalid PCA-setting guard evidence."
+    }
+  ],
+  "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."
+}

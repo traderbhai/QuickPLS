@@ -1,12 +1,12 @@
 # CB-SEM Modification Indices v1
 
-`cbsem_modification_indices_v1` is an experimental QuickPLS v0.7 modification-index screening payload.
+`cbsem_modification_indices_v1` is validated as a diagnostic screening payload for the documented QuickPLS v1.2.4 raw-data single-group reflective CFA/SEM ML scope.
 
 ## Scope
 
 - Emits candidate residual-covariance and latent-covariance/free-path screens from residual-correlation magnitudes.
 - Filters self-pairs, duplicates, and already-free parameters where the v0.7 model metadata makes that detectable.
-- Reports modification index and expected-parameter-change preview fields.
+- Reports modification index and expected-parameter-change diagnostic fields.
 
 ## Unsupported
 

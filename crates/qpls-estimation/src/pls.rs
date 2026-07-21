@@ -1942,7 +1942,7 @@ fn estimate_pls_two_stage_higher_order(
         ));
     }
     result.warnings.push(
-        "Two-stage higher-order constructs are experimental; lower-order component scores are used as generated HOC indicators in stage 2."
+        "Two-stage higher-order constructs are validated for the documented QuickPLS v1.2.3 bounded repeated-indicator, two-stage, and hybrid scopes; lower-order component scores are used as generated HOC indicators in stage 2."
             .into(),
     );
     Ok(result)
@@ -2406,7 +2406,7 @@ fn apply_gaussian_copula_endogeneity(
     }
     result.method_version = GAUSSIAN_COPULA_ENDOGENEITY_METHOD_VERSION.into();
     warnings.push(
-        "Gaussian-copula endogeneity diagnostics are experimental and assume nonnormal predictor scores; use as a diagnostic, not proof of causality."
+        "Gaussian-copula endogeneity diagnostics are validated for the documented QuickPLS v1.2.3 diagnostic scope and assume nonnormal predictor scores; use as a diagnostic, not proof of causality."
             .into(),
     );
     result.endogeneity = Some(GaussianCopulaEndogeneityAnalysis {
@@ -2633,7 +2633,7 @@ fn apply_quadratic_nonlinear_effects(
         }
     }
     let warnings = vec![
-        "Nonlinear effects are experimental; quadratic diagnostics use fixed PLS construct scores and centered squared score terms.".into(),
+        "Nonlinear effects are validated for the documented QuickPLS v1.2.3 fixed-score quadratic diagnostic scope; diagnostics use fixed PLS construct scores and centered squared score terms.".into(),
     ];
     result.method_version = NONLINEAR_EFFECTS_METHOD_VERSION.into();
     result.nonlinear_effects = Some(NonlinearEffectsAnalysis {
@@ -2728,7 +2728,7 @@ fn apply_cta_pls(
     }
     result.method_version = CTA_PLS_METHOD_VERSION.into();
     result.warnings.push(
-        "CTA-PLS is experimental; tetrads are descriptive sample-covariance diagnostics and require bootstrap/permutation inference before publication"
+        "CTA-PLS tetrad diagnostics are validated for the documented QuickPLS v1.2.3 descriptive tetrad scope; bootstrap/permutation tetrad decision rules remain unsupported."
             .into(),
     );
     result.cta_pls = Some(CtaPlsAnalysis {
@@ -2737,7 +2737,7 @@ fn apply_cta_pls(
         estimates,
         max_absolute_tetrad_by_construct,
         warnings: vec![
-            "CTA-PLS tetrad inference is not implemented in this preview; do not use these diagnostics as publication-ready evidence"
+            "CTA-PLS tetrad bootstrap/permutation inference is outside the validated QuickPLS v1.2.3 descriptive scope."
                 .into(),
         ],
     });
@@ -2891,7 +2891,7 @@ fn apply_cca(
     }
     result.method_version = CCA_METHOD_VERSION.into();
     result.warnings.push(
-        "CCA is experimental; this preview reports descriptive composite correlation residuals and does not include bootstrap-based CCA decisions"
+        "CCA is validated for the documented QuickPLS v1.2.3 descriptive composite residual scope; bootstrap-based CCA decisions remain unsupported."
             .into(),
     );
     result.cca = Some(CcaAnalysis {
@@ -2900,7 +2900,7 @@ fn apply_cca(
         correlations,
         max_absolute_residual,
         warnings: vec![
-            "CCA bootstrap inference, discrepancy tests, and publication-ready decision rules are not implemented in this preview"
+            "CCA bootstrap inference, discrepancy tests, and broader decision rules are outside the validated QuickPLS v1.2.3 descriptive scope."
                 .into(),
         ],
     });
@@ -2967,11 +2967,11 @@ fn apply_gsca(
         r_squared: result.r_squared.clone(),
         bootstrap_intervals,
         warnings: vec![
-            "GSCA v1 is a bounded experimental component-model preview; validate against the method specification before publication.".into(),
+            "GSCA v1 is validated for the documented QuickPLS v1.2.4 bounded deterministic component-model scope; unrestricted GSCA variants remain unsupported.".into(),
         ],
     });
     result.warnings.push(
-        "GSCA v1 is validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked."
+        "GSCA v1 is validated for the documented QuickPLS v1.2.4 bounded deterministic component-model scope; unsupported shapes remain blocked."
             .into(),
     );
     Ok(())
@@ -3410,7 +3410,7 @@ pub fn analyze_moderated_mediation(
         }
     }
     analysis.warnings.push(
-        "Moderated mediation is experimental; conditional indirect effects use fixed PLS scores and standardized moderator levels -1, 0, and +1."
+        "Moderated mediation is validated for the documented QuickPLS v1.2.3 two-stage conditional indirect-effect diagnostic scope; conditional indirect effects use fixed PLS scores and standardized moderator levels -1, 0, and +1."
             .into(),
     );
     analysis
@@ -4228,7 +4228,7 @@ fn assemble_result(
         .any(|higher_order| higher_order.method == HigherOrderMethod::RepeatedIndicators)
     {
         warnings.push(
-            "Repeated-indicator higher-order constructs are experimental; HOC indicator blocks were expanded from lower-order component indicators"
+            "Repeated-indicator higher-order constructs are validated for the documented QuickPLS v1.2.3 bounded repeated-indicator, two-stage, and hybrid scopes; HOC indicator blocks were expanded from lower-order component indicators"
                 .into(),
         );
     }
@@ -4239,7 +4239,7 @@ fn assemble_result(
         .any(|higher_order| higher_order.method != HigherOrderMethod::RepeatedIndicators)
     {
         warnings.push(
-            "Two-stage and hybrid higher-order construct metadata is experimental; validate HOC estimates against the method contract before publication"
+            "Two-stage and hybrid higher-order constructs are validated for the documented QuickPLS v1.2.3 bounded repeated-indicator, two-stage, and hybrid scopes; unsupported HOC variants remain blocked or excluded"
                 .into(),
         );
     }
@@ -5440,7 +5440,7 @@ fn apply_cbsem(
     let multigroup = cbsem_multigroup(dataset, recipe, sample_size, &fit)?;
     let diagnostics = cbsem_diagnostics(&sample_covariance, &implied, &parameters);
     let mut warnings = vec![
-        "CB-SEM/CFA ML v1 is experimental; this run used the v0.7.1 direct maximum-likelihood optimizer for the supported simple reflective raw-data scope.".into(),
+        "CB-SEM/CFA ML v1 is validated for the documented QuickPLS v1.2.4 raw-data single-group reflective ML scope; bootstrap, unrestricted multigroup/invariance, robust, ordinal, and FIML estimators remain experimental or unsupported.".into(),
     ];
     if mean_structure {
         warnings.push(
@@ -9419,7 +9419,7 @@ mod tests {
         assert_eq!(hoc_indicators, vec!["x1", "x2", "y1", "y2"]);
         assert!(result.construct_scores.contains_key("hoc"));
         assert!(result.warnings.iter().any(|warning| {
-            warning.contains("Repeated-indicator higher-order constructs are experimental")
+            warning.contains("Repeated-indicator higher-order constructs are validated")
                 && warning.contains("expanded from lower-order component indicators")
         }));
     }
@@ -9463,7 +9463,7 @@ mod tests {
             path.source == "hoc" && path.target == "y" && path.coefficient.is_finite()
         }));
         assert!(result.warnings.iter().any(|warning| {
-            warning.contains("Two-stage and hybrid higher-order construct metadata is experimental")
+            warning.contains("Two-stage and hybrid higher-order constructs are validated")
         }));
     }
 
@@ -9590,7 +9590,7 @@ mod tests {
             path.source == "hoc" && path.target == "y" && path.coefficient.abs() > 0.9
         }));
         assert!(result.warnings.iter().any(|warning| {
-            warning.contains("Two-stage higher-order constructs are experimental")
+            warning.contains("Two-stage higher-order constructs are validated")
         }));
     }
 

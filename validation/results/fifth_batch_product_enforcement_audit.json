@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "target": "v1_2_4_cbsem_gsca_promotion",
+  "passed": true,
+  "checks": [
+    {
+      "name": "catalog_promotes_cbsem_and_gsca",
+      "passed": true,
+      "detail": "Desktop catalog marks CB-SEM/CFA and GSCA as validated entry points for documented scopes."
+    },
+    {
+      "name": "core_registry_promotes_cbsem_and_gsca",
+      "passed": true,
+      "detail": "Core method registry marks CB-SEM/CFA and GSCA as validated."
+    },
+    {
+      "name": "result_tables_promote_base_cbsem_and_gsca",
+      "passed": true,
+      "detail": "Result/export tables validate base CB-SEM/CFA and GSCA payloads while keeping CB-SEM bootstrap/multigroup experimental."
+    },
+    {
+      "name": "run_history_uses_validated_cbsem_title",
+      "passed": true,
+      "detail": "Saved-run display no longer labels the bounded CB-SEM ML scope as beta."
+    },
+    {
+      "name": "engine_warnings_use_bounded_validated_language",
+      "passed": true,
+      "detail": "Newly generated warnings use bounded v1.2.4 validated-scope language."
+    },
+    {
+      "name": "compatibility_docs_match_fifth_batch",
+      "passed": true,
+      "detail": "Compatibility matrix marks CB-SEM/CFA and GSCA validated only for documented bounded scopes."
+    }
+  ]
+}

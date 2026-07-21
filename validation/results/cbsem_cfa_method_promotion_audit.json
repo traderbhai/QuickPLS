@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "target": "v1_2_4_cbsem_gsca_promotion",
+  "method_id": "cbsem_cfa",
+  "promoted_scope": "Raw-data single-group reflective CFA/SEM ML with marker identification, standardized solutions, residuals, fit indices, and modification-index diagnostics.",
+  "passed": true,
+  "reports": [
+    {
+      "path": "validation\\results\\cbsem_lavaan_reference_report.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\v07_cbsem_evidence.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\cbsem_publication_audit.json",
+      "present": true,
+      "passed": true
+    }
+  ],
+  "docs": [
+    {
+      "path": "docs\\methods\\CBSEM_ML_V1.md",
+      "present": true,
+      "bytes": 1871
+    },
+    {
+      "path": "docs\\methods\\CFA_ML_V1.md",
+      "present": true,
+      "bytes": 1455
+    },
+    {
+      "path": "docs\\methods\\CBSEM_FIT_V1.md",
+      "present": true,
+      "bytes": 1115
+    },
+    {
+      "path": "docs\\methods\\CBSEM_MODIFICATION_INDICES_V1.md",
+      "present": true,
+      "bytes": 995
+    }
+  ],
+  "checks": [
+    {
+      "name": "lavaan_estimate_tolerance",
+      "passed": true,
+      "detail": "Max lavaan estimate delta = 5.462345956663839e-07."
+    },
+    {
+      "name": "lavaan_fit_tolerance",
+      "passed": true,
+      "detail": "Max lavaan fit delta = 6.2049907365024914e-09."
+    },
+    {
+      "name": "advanced_cbsem_exclusions_recorded",
+      "passed": true,
+      "detail": "Bootstrap, unrestricted multigroup/invariance, robust/ordinal/FIML, and broad constraints remain experimental or unsupported."
+    }
+  ],
+  "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."
+}

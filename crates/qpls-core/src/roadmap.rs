@@ -220,7 +220,8 @@ mod tests {
                 .slices
                 .iter()
                 .any(|slice| slice.id == "v1_2_method_promotion_program"
-                    && slice.status == SliceStatus::Experimental)
+                    && slice.status == SliceStatus::Validated
+                    && slice.stable_output)
         );
     }
 

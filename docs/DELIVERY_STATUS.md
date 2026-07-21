@@ -320,4 +320,15 @@ Implemented as a bounded method-promotion milestone:
 - Updated engine warning text and result/export table status for promoted third-batch payloads.
 - Updated method docs and compatibility notes while keeping moderated mediation, CB-SEM/CFA, GSCA, HOC, nonlinear effects, endogeneity, CCA, and CTA-PLS experimental.
 
-Remaining later-batch methods remain experimental: CB-SEM/CFA, GSCA, higher-order constructs, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation.
+## v1.2.3 / v1.2.4 Final Method Promotion
+
+Implemented as the final bounded method-promotion milestones:
+
+- Added `v1_2_3_extended_pls_diagnostics_promotion`, `v1_2_4_cbsem_gsca_promotion`, and `v1_2_5_method_promotion_completion` to the registry.
+- Added method-specific promotion audits for higher-order constructs, nonlinear effects, Gaussian-copula endogeneity diagnostics, CCA, CTA-PLS, PLS moderated mediation, CB-SEM/CFA, and GSCA.
+- Added `validation/fourth_batch_product_enforcement_audit.py`, `validation/fourth_batch_method_promotion_audit.py`, `validation/fifth_batch_product_enforcement_audit.py`, `validation/fifth_batch_method_promotion_audit.py`, and `validation/method_promotion_completion_audit.py`.
+- Updated product-facing statuses so the remaining methods are validated only for documented bounded scopes.
+- Updated engine warning text and result/export table status for promoted fourth- and fifth-batch payloads.
+- Updated method docs, alias docs, and compatibility notes while keeping unsupported variants excluded: CB-SEM bootstrap and unrestricted multigroup/invariance, robust/ordinal/FIML estimators, broad constraints, unrestricted GSCA variants, broader nonlinear SEM, bootstrap-based CCA/CTA decisions, unsupported HOC variants, and the full Hayes PROCESS catalogue.
+
+The v1.2 method-promotion program is now complete for documented bounded scopes.

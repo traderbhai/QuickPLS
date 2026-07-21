@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "target": "v1_2_3_extended_pls_diagnostics_promotion",
+  "passed": true,
+  "artifacts": [
+    {
+      "path": "validation\\results\\higher_order_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\nonlinear_effects_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\endogeneity_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\cca_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\cta_pls_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\moderated_mediation_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\fourth_batch_product_enforcement_audit.json",
+      "present": true,
+      "passed": true
+    }
+  ],
+  "registry_gate_present": true,
+  "registry_gate_all_passed": true,
+  "note": "Fourth-batch promotion is bounded to documented extended PLS diagnostic scopes."
+}

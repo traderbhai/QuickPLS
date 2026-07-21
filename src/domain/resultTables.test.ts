@@ -189,7 +189,7 @@ const result: PlsResult = {
 };
 
 describe("result export tables", () => {
-  it("builds watermarked method-specific v0.5 tables", () => {
+  it("builds validated method-specific tables for promoted scopes", () => {
     const tables = methodResultTables(result);
     expect(tables.map((table) => table.id)).toEqual([
       "wpls_weights",
@@ -212,11 +212,11 @@ describe("result export tables", () => {
       "ipma_indicators",
     ]);
     expect(tables.some((table) => table.status === "validated")).toBe(true);
-    expect(tables.some((table) => table.status === "experimental")).toBe(true);
+    expect(tables.some((table) => table.status === "experimental")).toBe(false);
     expect(tables.find((table) => table.id === "wpls_weights")?.status).toBe("validated");
     expect(tables.find((table) => table.id === "plspredict_holdout")?.status).toBe("validated");
     expect(tables.find((table) => table.id === "ipma_constructs")?.status).toBe("validated");
-    expect(tables.find((table) => table.id === "cca_residuals")?.status).toBe("experimental");
+    expect(tables.find((table) => table.id === "cca_residuals")?.status).toBe("validated");
     expect(tables[0].warning).toContain("Validated for the documented QuickPLS supported scope");
     expect(tables[0].rows[0]).toEqual(["WEIGHT", "135.250000", "111.1250", "weighted sample covariance"]);
   });
@@ -366,7 +366,7 @@ describe("result export tables", () => {
     };
     const tables = runExportTables(run);
     expect(tables[0].id).toBe("run_provenance");
-    expect(tables[0].status).toBe("experimental");
+    expect(tables[0].status).toBe("validated");
     const csv = tablesToCsv(tables);
     expect(csv).toContain("WPLS case-weight metadata");
     expect(csv).toContain("PLSpredict holdout metrics");
@@ -378,7 +378,6 @@ describe("result export tables", () => {
     expect(csv).toContain("weighted sample covariance");
     const html = tablesToHtml(tables);
     expect(html).toContain("<title>QuickPLS export</title>");
-    expect(html).toContain("Experimental output");
     expect(html).toContain("Validated for the documented QuickPLS supported scope");
   });
 });

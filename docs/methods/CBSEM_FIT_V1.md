@@ -1,6 +1,6 @@
 # CB-SEM Fit v1
 
-`cbsem_fit_v1` is an experimental QuickPLS v0.7 fit-index payload attached to `cfa_ml_v1` and `cbsem_ml_v1`.
+`cbsem_fit_v1` is validated for the documented QuickPLS v1.2.4 raw-data single-group reflective CFA/SEM ML scope attached to `cfa_ml_v1` and `cbsem_ml_v1`.
 
 ## Scope
 
@@ -10,7 +10,7 @@
 
 ## Unsupported
 
-Robust/scaled fit indices, estimator-specific corrections, missing-data FIML, multilevel/complex-sample corrections, and publication-ready fit claims are unsupported.
+Robust/scaled fit indices, estimator-specific corrections, missing-data FIML, multilevel/complex-sample corrections, and fit claims outside the documented v1.2.4 estimator scope remain unsupported.
 
 ## Validation
 

@@ -57,6 +57,9 @@ export const methodStatusDescription = (method: MethodDefinition, settings?: Ana
   if (method.id === "mga") return "Unsupported group workflows remain experimental or blocked.";
   if (method.id === "regression" && status === "validated") return "OLS, binary logistic, and bounded PROCESS mediation/moderation are validated for documented QuickPLS scopes; moderated mediation remains experimental.";
   if (method.id === "regression") return "PROCESS moderated mediation and broader regression workflows remain experimental.";
+  if (["cca", "cta_pls", "endogeneity", "nonlinear_effects", "moderated_mediation"].includes(method.id)) return "Validated for the documented QuickPLS v1.2.3 bounded diagnostic scope; broader variants remain unsupported.";
+  if (method.id === "cbsem") return "Validated for raw-data single-group reflective CFA/SEM ML; bootstrap, unrestricted multigroup/invariance, robust, ordinal, and FIML estimators remain experimental or unsupported.";
+  if (method.id === "gsca") return "Validated for the documented QuickPLS v1.2.4 bounded deterministic component-model scope; unrestricted GSCA variants remain unsupported.";
   if (status === "validated") return "Validated for the documented QuickPLS supported scope.";
   if (status === "experimental") return "Available with explicit method-status warnings and watermarked exports where applicable.";
   return "Not available in this build.";

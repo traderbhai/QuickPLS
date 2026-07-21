@@ -71,7 +71,7 @@ Current enforcement pass:
 
 - PLS core, documented PLS assessment/inference scope, standalone PCA, OLS, second-batch PLS/prediction/NCA methods, and v1.2.2 group/prediction/regression methods are eligible for validated product status.
 - The broad Regression method remains setting-aware: OLS, logistic, and bounded PROCESS mediation/moderation are validated; PROCESS moderated mediation remains experimental.
-- GSCA, CB-SEM/CFA, higher-order constructs, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation remain experimental until their own promotion gates pass.
+- Higher-order constructs, nonlinear effects, endogeneity, CCA, CTA-PLS, PLS moderated mediation, CB-SEM/CFA, and GSCA are validated only for the bounded v1.2.3/v1.2.4 scopes listed below.
 - Newly generated result warnings and export tables must not mark an unpromoted method as validated.
 
 ## v1.2.1 Second Batch
@@ -97,10 +97,30 @@ The third promotion batch is validated for bounded scopes:
 - Binary numeric complete-case logistic regression with deterministic IRLS, Wald tests, odds ratios, probabilities, log-likelihood, pseudo-R2, AIC, and BIC.
 - Bounded PROCESS-style mediation and moderation generated from OLS component models.
 
-Remaining later-batch methods remain experimental: CB-SEM/CFA, GSCA, higher-order constructs, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation.
+## v1.2.3 Extended PLS Diagnostics Batch
+
+The fourth promotion batch is validated for bounded scopes:
+
+- Higher-order constructs using repeated-indicator, two-stage, and documented hybrid contracts.
+- CCA as a descriptive composite residual diagnostic.
+- CTA-PLS as a descriptive sample-covariance tetrad diagnostic.
+- Gaussian-copula endogeneity as a diagnostic screen, not causal proof.
+- Nonlinear effects as fixed-score centered-quadratic diagnostics.
+- PLS moderated mediation as a two-stage conditional indirect-effect diagnostic.
+
+Bootstrap decision rules, unrestricted nonlinear SEM, broad HOC variants, and full Hayes PROCESS catalogue claims remain unsupported unless separately audited.
+
+## v1.2.4 CB-SEM/CFA And GSCA Batch
+
+The fifth promotion batch is validated for bounded scopes:
+
+- Raw-data single-group reflective CFA/SEM ML with marker identification, lavaan parity fixtures, standardized solutions, residuals, fit indices, and modification-index diagnostics.
+- Bounded deterministic GSCA component-model output for reflective/formative blocks, recursive paths, weights, loadings, scores, R2, and FIT/AFIT/GFI-style diagnostics.
+
+CB-SEM bootstrap, unrestricted multigroup/invariance, robust/ordinal/FIML estimators, broad constraints, and unrestricted GSCA variants remain experimental or unsupported.
 
 ## Gate
 
 The registry slice is `v1_2_method_promotion_program`.
 
-This gate remains open until the remaining higher-risk method families are promoted with reproducible evidence. The first, second, and third batches are complete for their documented scopes.
+This gate is clear when the first through fifth promotion batches are complete for their documented scopes and product/export surfaces enforce the same scope boundaries.
