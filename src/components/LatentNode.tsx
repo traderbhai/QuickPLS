@@ -17,7 +17,8 @@ export function LatentNode({ id, data, selected }: NodeProps<Node<LatentNodeData
   const modeLabel = data.semantic === "interaction" ? "INT" : data.mode === "reflective" ? "Mode A" : "Mode B";
 
   const paperStyle = data.displayMode === "sem" || data.displayMode === "publication" || data.displayMode === "smartpls_result";
-  const lockedResultMode = data.displayMode === "smartpls_result";
+  const editablePaperMode = data.displayMode === "sem";
+  const lockedResultMode = data.displayMode === "smartpls_result" || data.displayMode === "publication";
   const setCanvasDropTarget = (active: boolean) => {
     window.dispatchEvent(new CustomEvent("quickpls:diagram-drop-target", { detail: { constructId: active ? id : null } }));
   };
@@ -46,14 +47,14 @@ export function LatentNode({ id, data, selected }: NodeProps<Node<LatentNodeData
         if (indicators.length) assignIndicators(id, indicators);
       }}
     >
-      <Handle className="smartpls-hidden-handle" id="target-left" type="target" position={Position.Left} />
-      <Handle className="smartpls-hidden-handle" id="target-right" type="target" position={Position.Right} />
-      <Handle className="smartpls-hidden-handle" id="target-top" type="target" position={Position.Top} />
-      <Handle className="smartpls-hidden-handle" id="target-bottom" type="target" position={Position.Bottom} />
-      <Handle className="smartpls-hidden-handle" id="source-left" type="source" position={Position.Left} />
-      <Handle className="smartpls-hidden-handle" id="source-right" type="source" position={Position.Right} />
-      <Handle className="smartpls-hidden-handle" id="source-top" type="source" position={Position.Top} />
-      <Handle className="smartpls-hidden-handle" id="source-bottom" type="source" position={Position.Bottom} />
+      <Handle className={editablePaperMode ? "smartpls-edit-handle" : "smartpls-hidden-handle"} id="target-left" type="target" position={Position.Left} />
+      <Handle className={editablePaperMode ? "smartpls-edit-handle" : "smartpls-hidden-handle"} id="target-right" type="target" position={Position.Right} />
+      <Handle className={editablePaperMode ? "smartpls-edit-handle" : "smartpls-hidden-handle"} id="target-top" type="target" position={Position.Top} />
+      <Handle className={editablePaperMode ? "smartpls-edit-handle" : "smartpls-hidden-handle"} id="target-bottom" type="target" position={Position.Bottom} />
+      <Handle className={editablePaperMode ? "smartpls-edit-handle source" : "smartpls-hidden-handle"} id="source-left" type="source" position={Position.Left} />
+      <Handle className={editablePaperMode ? "smartpls-edit-handle source" : "smartpls-hidden-handle"} id="source-right" type="source" position={Position.Right} />
+      <Handle className={editablePaperMode ? "smartpls-edit-handle source" : "smartpls-hidden-handle"} id="source-top" type="source" position={Position.Top} />
+      <Handle className={editablePaperMode ? "smartpls-edit-handle source" : "smartpls-hidden-handle"} id="source-bottom" type="source" position={Position.Bottom} />
       <div className="smartpls-latent-ellipse">
         {data.resultR2 !== undefined && data.overlayMode !== "model" ? <span className="smartpls-r2">R² {data.resultR2.toFixed(3)}</span> : null}
       </div>
@@ -67,7 +68,7 @@ export function LatentNode({ id, data, selected }: NodeProps<Node<LatentNodeData
           if (event.key === "Enter") commit();
           if (event.key === "Escape") { setDraft(data.label); setEditing(false); }
         }}
-      /> : <button className="smartpls-latent-label" title="Double-click to rename" onDoubleClick={() => { if (!lockedResultMode) { setDraft(data.label); setEditing(true); } }}>{data.label}</button>}
+      /> : <div className="smartpls-latent-label" role="button" tabIndex={0} title="Double-click to rename; drag the oval to move" onDoubleClick={() => { if (!lockedResultMode) { setDraft(data.label); setEditing(true); } }}>{data.label}</div>}
     </div>;
   }
 

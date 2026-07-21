@@ -2,14 +2,14 @@
   "schema_version": 1,
   "program": "QuickPLS accelerated method-slice registry",
   "active_goal": "Complete QuickPLS as a free, proprietary, fully offline Windows desktop application that is first ready in all sense before unrestricted research use.",
-  "current_stage": "v1_2_method_promotion_program",
+  "current_stage": "v1_3_1_sem_diagram_geometry_polish",
   "policy": {
     "promotion_order": [
       "unsupported",
       "experimental",
       "validated"
     ],
-    "deterministic_tolerance": 1e-06,
+    "deterministic_tolerance": 0.000001,
     "stable_export_rule": "Stable exports must reject or watermark experimental results.",
     "validation_rule": "A method cannot be marked validated until formula, implementation, reference fixtures, simulations or metamorphic tests, UI, CLI, exports, and documentation gates all pass."
   },
@@ -1205,13 +1205,13 @@
           "track": "product",
           "name": "Paper-style rendering",
           "status": "passed",
-          "evidence": "src/components/LatentNode.tsx, src/components/IndicatorNode.tsx, and src/styles.css render grey latent ovals, light grey indicator rectangles, direct dark arrows, hidden editor affordances, and corrected R\u00b2 text."
+          "evidence": "src/components/LatentNode.tsx, src/components/IndicatorNode.tsx, and src/styles.css render grey latent ovals, light grey indicator rectangles, direct dark arrows, hidden editor affordances, and corrected R² text."
         },
         {
           "track": "product",
           "name": "Publication SVG export parity",
           "status": "passed",
-          "evidence": "src/domain/publicationDiagram.ts and src/components/ReportsWorkspace.tsx default SVG export to SmartPLS-like grayscale with controls for precision, loadings, paths, R\u00b2, and palette variants."
+          "evidence": "src/domain/publicationDiagram.ts and src/components/ReportsWorkspace.tsx default SVG export to SmartPLS-like grayscale with controls for precision, loadings, paths, R², and palette variants."
         },
         {
           "track": "automation",
@@ -1836,6 +1836,112 @@
           "name": "Compatibility and known boundaries published",
           "status": "passed",
           "evidence": "docs/METHOD_COMPATIBILITY.md and docs/METHOD_PROMOTION_PROGRAM_V1_2.md document validated bounded scopes and unsupported variants."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_3_sem_designer_ux_overhaul",
+      "release": "v1.3",
+      "family": "Product",
+      "name": "SEM designer UX overhaul",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 24,
+      "summary": "Makes the academic SEM canvas the primary editable modeling surface with smoother construct dragging, visible edit-mode connection handles, direct path/covariance feedback, draggable/keyboard-nudgeable edge labels, locked result/publication views, and WYSIWYG publication-diagram parity evidence.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Editable academic SEM canvas",
+          "status": "passed",
+          "evidence": "src/components/LatentNode.tsx exposes edit-mode SmartPLS-style handles while result/publication modes remain locked."
+        },
+        {
+          "track": "product",
+          "name": "Direct canvas actions and invalid-action feedback",
+          "status": "passed",
+          "evidence": "src/components/ModelCanvas.tsx provides context-menu rename/delete/reverse/reset actions and visible duplicate/self-path feedback."
+        },
+        {
+          "track": "product",
+          "name": "Edge-label manipulation",
+          "status": "passed",
+          "evidence": "src/components/SemEdge.tsx supports pointer dragging plus keyboard nudge/reset/delete for selected edge labels."
+        },
+        {
+          "track": "validation",
+          "name": "Visual smoke evidence",
+          "status": "passed",
+          "evidence": "validation/v13_sem_designer_ux_smoke.mjs writes validation/results/v13_sem_designer_ux_smoke.json and screenshots under validation/results/screens/v13/sem-designer/."
+        },
+        {
+          "track": "validation",
+          "name": "Static UX and export parity audit",
+          "status": "passed",
+          "evidence": "validation/v13_sem_designer_ux_audit.py writes validation/results/v13_sem_designer_ux_audit.json and checks source affordances, locked modes, shared publication grammar, and R? text integrity."
+        },
+        {
+          "track": "documentation",
+          "name": "Designer scope documented",
+          "status": "passed",
+          "evidence": "docs/V1_3_SEM_DESIGNER_UX_OVERHAUL.md documents scope, workflows, acceptance evidence, and boundaries."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_3_1_sem_diagram_geometry_polish",
+      "release": "v1.3.1",
+      "family": "Product",
+      "name": "SEM diagram geometry and professional polish",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 25,
+      "summary": "Standardizes SEM diagram connector geometry, indicator placement, SmartPLS-like visual tokens, label controls, layout quality evidence, and SVG/canvas parity without changing analysis recipes, result schemas, or numerical fingerprints.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Shared SEM geometry",
+          "status": "passed",
+          "evidence": "src/domain/semGeometry.ts provides boundaryPoint, routeBetweenBoxes, smartIndicatorPosition, and measureDiagramQuality for canvas and SVG export."
+        },
+        {
+          "track": "product",
+          "name": "Standardized connectors and covariance arcs",
+          "status": "passed",
+          "evidence": "src/domain/diagramGraph.ts and src/domain/publicationDiagram.ts use shared oval/rectangle boundary routing; structural paths default to straight routes and covariance paths remain curved double-headed arcs."
+        },
+        {
+          "track": "product",
+          "name": "Smart indicator placement and label commands",
+          "status": "passed",
+          "evidence": "src/components/ModelCanvas.tsx exposes Auto-place indicators, Tidy selected construct, and Tidy labels actions backed by persisted layout metadata."
+        },
+        {
+          "track": "product",
+          "name": "Professional visual grammar",
+          "status": "passed",
+          "evidence": "src/styles.css defines larger SmartPLS-like latent ovals, indicator rectangles, stronger filled arrowheads, lighter measurement paths, distinct covariance arcs, and hover-only handles."
+        },
+        {
+          "track": "validation",
+          "name": "Geometry unit tests and SVG parity tests",
+          "status": "passed",
+          "evidence": "src/domain/semGeometry.test.ts and src/domain/publicationDiagram.test.ts cover boundary attachment, quality metrics, shared SVG dimensions, markers, and edit-chrome exclusion."
+        },
+        {
+          "track": "validation",
+          "name": "Visual smoke and quality audit",
+          "status": "passed",
+          "evidence": "validation/v131_sem_geometry_smoke.mjs writes screenshots and quality metrics under validation/results/screens/v131/sem-geometry; validation/v131_sem_geometry_audit.py verifies source, tests, smoke, and R² integrity."
+        },
+        {
+          "track": "documentation",
+          "name": "Geometry polish scope documented",
+          "status": "passed",
+          "evidence": "docs/V1_3_1_SEM_DIAGRAM_GEOMETRY_POLISH.md documents the diagram-layer scope, layout rules, export parity, evidence, and non-engine boundary."
         }
       ],
       "next_actions": []

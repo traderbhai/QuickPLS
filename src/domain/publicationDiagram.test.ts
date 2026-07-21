@@ -72,9 +72,17 @@ describe("publication diagram SVG", () => {
     const layout = defaultDiagramLayout(nodes, edges);
     layout.indicatorLayouts.x.x1 = { side: "free", x: 25, y: 35, order: 0, pinned: true };
     const svg = publicationDiagramSvg(nodes, edges, run, { layoutSource: "current_canvas" }, layout);
-    expect(svg).toContain('x="127" y="42" width="78" height="24"');
+    expect(svg).toContain('x="149" y="42" width="88" height="28"');
     expect(svg).toContain("R&#178; 0.208");
     expect(svg).not.toContain("RÂ²");
+  });
+  it("uses SmartPLS-like geometry and omits edit-only UI in SVG export", () => {
+    const svg = publicationDiagramSvg(nodes, edges, run);
+    expect(svg).toContain('rx="52" ry="34"');
+    expect(svg).toContain('marker-end="url(#arrow)"');
+    expect(svg).not.toContain("smartpls-edit-handle");
+    expect(svg).not.toContain("diagram-context-menu");
+    expect(svg).not.toContain("selection");
   });
   it("exports persisted edge label offsets", () => {
     const layout = defaultDiagramLayout(nodes, edges);

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.3 SEM designer UX overhaul",
+  "passed": true,
+  "checklist": {
+    "editable_sem_handles": true,
+    "result_and_publication_locked": true,
+    "context_menus_cover_common_actions": true,
+    "invalid_path_feedback": true,
+    "edge_labels_drag_and_keyboard": true,
+    "publication_svg_uses_shared_grammar": true,
+    "visual_smoke_passed": true,
+    "no_source_r2_mojibake": true
+  },
+  "mojibake_hits": [],
+  "evidence": [
+    "validation/results/v13_sem_designer_ux_smoke.json",
+    "validation/results/screens/v13/sem-designer/01_editable_academic_canvas.png",
+    "validation/results/screens/v13/sem-designer/02_arranged_sem_canvas.png"
+  ]
+}

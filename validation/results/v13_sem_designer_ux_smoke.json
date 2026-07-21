@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.3 SEM designer UX overhaul",
+  "passed": true,
+  "checklist": {
+    "editable_academic_canvas_renders": true,
+    "edit_handles_available": true,
+    "latent_drag_moves_construct": true,
+    "context_menu_exposes_common_actions": true,
+    "edge_labels_keyboard_accessible": true,
+    "arranged_layout_keeps_latents_apart": true,
+    "screenshots_written": true
+  },
+  "errors": [],
+  "drag_delta": {
+    "x": 84,
+    "y": 38
+  },
+  "evidence": {
+    "latent_count": 4,
+    "indicator_count": 9,
+    "edit_handle_count": 32,
+    "visible_edit_handle_count": 32,
+    "structural_edge_count": 10,
+    "edge_label_count": 5,
+    "action_feedback_present": false,
+    "latent_rects": [
+      {
+        "left": 614.8209228515625,
+        "top": 410.8155822753906,
+        "right": 676.3646240234375,
+        "bottom": 468.16314697265625
+      },
+      {
+        "left": 530.8976440429688,
+        "top": 519.2164306640625,
+        "right": 592.4413452148438,
+        "bottom": 576.56396484375
+      },
+      {
+        "left": 719.7249755859375,
+        "top": 445.7835998535156,
+        "right": 781.2686767578125,
+        "bottom": 503.13116455078125
+      },
+      {
+        "left": 901.5586547851562,
+        "top": 445.7835998535156,
+        "right": 963.1023559570312,
+        "bottom": 503.13116455078125
+      }
+    ],
+    "label_rects": [
+      {
+        "text": "Path",
+        "left": 696.4657592773438,
+        "top": 440.8880615234375,
+        "right": 716.408447265625,
+        "bottom": 450.67913818359375
+      },
+      {
+        "text": "Path",
+        "left": 646.11181640625,
+        "top": 497.88592529296875,
+        "right": 666.0545043945312,
+        "bottom": 507.677001953125
+      },
+      {
+        "text": "Path",
+        "left": 778.9902954101562,
+        "top": 443.6855163574219,
+        "right": 798.9329833984375,
+        "bottom": 453.4765625
+      },
+      {
+        "text": "Path",
+        "left": 737.0286865234375,
+        "top": 497.88592529296875,
+        "right": 756.9713745117188,
+        "bottom": 507.677001953125
+      },
+      {
+        "text": "Path",
+        "left": 831.4423217773438,
+        "top": 461.1695251464844,
+        "right": 851.385009765625,
+        "bottom": 470.9605712890625
+      }
+    ],
+    "latent_overlap_count": 0,
+    "label_overlap_count": 0,
+    "screenshots": [
+      "D:\\QuickPLS\\validation\\results\\screens\\v13\\sem-designer\\01_editable_academic_canvas.png",
+      "D:\\QuickPLS\\validation\\results\\screens\\v13\\sem-designer\\02_arranged_sem_canvas.png"
+    ]
+  }
+}

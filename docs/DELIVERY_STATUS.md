@@ -279,6 +279,27 @@ Implemented as a stricter desktop UX hardening milestone on top of v1.1:
 
 `npm run qpls:v111:release` runs the hardening suite and gates `v1_1_1_native_ux_hardening`. Mobile remains non-gating. SVG remains the audited publication export; native PDF/PNG remains post-v1 unless separately implemented and audited.
 
+## v1.3 SEM Designer UX Overhaul
+
+Status: validated.
+
+- The academic SEM diagram is now the default editable canvas style rather than only a publication/result view.
+- Edit mode exposes subtle latent-construct connection handles for visual path creation while result and publication modes remain locked.
+- Construct labels no longer use a button surface that can interfere with dragging; double-click rename remains available.
+- Edge labels support pointer dragging and keyboard nudging/reset, improving label collision control in dense diagrams.
+- Duplicate/self-path and duplicate covariance attempts now show nearby canvas feedback instead of failing silently.
+- Context-menu and toolbar actions cover rename, duplicate, delete, reverse, route, control, covariance conversion, indicator side movement, reset layout, and fit/arrange actions.
+
+Evidence:
+
+- `validation/results/v13_sem_designer_ux_smoke.json`
+- `validation/results/v13_sem_designer_ux_audit.json`
+- `validation/results/screens/v13/sem-designer/`
+
+Command:
+
+`npm run qpls:v13:sem-designer`
+
 ## v1.2 Method Promotion Program
 
 Started as the next development milestone:
@@ -332,3 +353,12 @@ Implemented as the final bounded method-promotion milestones:
 - Updated method docs, alias docs, and compatibility notes while keeping unsupported variants excluded: CB-SEM bootstrap and unrestricted multigroup/invariance, robust/ordinal/FIML estimators, broad constraints, unrestricted GSCA variants, broader nonlinear SEM, bootstrap-based CCA/CTA decisions, unsupported HOC variants, and the full Hayes PROCESS catalogue.
 
 The v1.2 method-promotion program is now complete for documented bounded scopes.
+## v1.3.1 SEM Diagram Geometry Polish
+
+Complete:
+
+- Added shared SEM geometry for canvas and SVG export boundary routing.
+- Structural arrows now attach to latent oval boundaries; indicator measurement arrows attach to rectangle boundaries.
+- SmartPLS-like editable diagrams use larger ovals, larger indicator boxes, clearer labels, stronger structural arrows, lighter measurement arrows, and distinct covariance arcs.
+- Added context commands for `Auto-place indicators`, `Tidy selected construct`, and `Tidy labels`.
+- Added visual smoke and static audits for dense diagram quality and SVG/canvas parity.

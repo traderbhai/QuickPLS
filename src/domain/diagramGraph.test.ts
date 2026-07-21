@@ -55,6 +55,14 @@ describe("SEM diagram graph", () => {
     expect(stale.diagnostic).toContain("Selected run does not match");
   });
 
+  it("keeps structural path labels visible in editable academic mode before results", () => {
+    const graph = buildDiagramGraph(nodes, edges, "sem", "model");
+    expect(graph.edges.find((edge) => edge.id === "x-y")?.label).toBe("Path");
+    expect(graph.edges.find((edge) => edge.id === "x-y")?.data?.routing).toBe("straight");
+    const locked = buildDiagramGraph(nodes, edges, "publication", "model");
+    expect(locked.edges.find((edge) => edge.id === "x-y")?.label).toBe("");
+  });
+
   it("keeps the editable SEM canvas tied to manual node positions", () => {
     const moved = nodes.map((node) => node.id === "x" ? { ...node, position: { x: 720, y: 310 } } : node);
     const graph = buildDiagramGraph(moved, edges, "sem", "model");
@@ -153,6 +161,15 @@ describe("SEM diagram graph", () => {
     expect(graph.nodes.find((node) => node.id === "x")?.position).toEqual({ x: 900, y: 240 });
     const tidy = buildDiagramGraph(moved, edges, "smartpls_result", "model", undefined, { layoutSource: "tidy_publication" });
     expect(tidy.nodes.find((node) => node.id === "x")?.position).not.toEqual({ x: 900, y: 240 });
+  });
+
+  it("keeps edit mode draggable and publication/result modes locked", () => {
+    const editable = buildDiagramGraph(nodes, edges, "sem", "model");
+    const publication = buildDiagramGraph(nodes, edges, "publication", "model");
+    const resultGraph = buildDiagramGraph(nodes, edges, "smartpls_result", "model");
+    expect(editable.nodes.find((node) => node.id === "x")?.draggable).toBe(true);
+    expect(publication.nodes.find((node) => node.id === "x")?.draggable).toBe(false);
+    expect(resultGraph.nodes.find((node) => node.id === "x")?.draggable).toBe(false);
   });
 
   it("applies persisted edge label offsets to graph edges", () => {

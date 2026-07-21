@@ -334,3 +334,39 @@ Promoted scopes:
 - Raw-data single-group reflective CB-SEM/CFA ML and bounded deterministic GSCA for documented v1.2.4 bounds.
 
 The broader v1.2 method-promotion program is now closed for documented bounded scopes. Unsupported variants remain excluded by method docs, product labels, warnings, and export status.
+
+## v1.3 SEM Designer UX Overhaul Note
+
+Evidence added:
+
+- `validation/v13_sem_designer_ux_smoke.mjs`
+- `validation/v13_sem_designer_ux_audit.py`
+- `validation/development_slices.json` slice `v1_3_sem_designer_ux_overhaul`
+- `docs/V1_3_SEM_DESIGNER_UX_OVERHAUL.md`
+
+Completed scope:
+
+- Academic SEM diagram style is the default editable model canvas.
+- Edit mode exposes subtle visual connection handles for path creation.
+- Constructs and indicators remain draggable in edit mode while result and publication modes are locked.
+- Edge labels support pointer dragging plus keyboard nudge/reset behavior.
+- Context menus cover common researcher actions without requiring the dense inspector.
+- Duplicate/self-path and duplicate covariance attempts show nearby feedback.
+- Publication SVG remains the audited WYSIWYG diagram export.
+## v1.3.1 SEM Diagram Geometry Polish
+
+Status: complete for the diagram-layer milestone.
+
+Evidence:
+
+- `src/domain/semGeometry.ts`
+- `src/domain/semGeometry.test.ts`
+- `validation/v131_sem_geometry_smoke.mjs`
+- `validation/v131_sem_geometry_audit.py`
+- `docs/V1_3_1_SEM_DIAGRAM_GEOMETRY_POLISH.md`
+- `validation/development_slices.json` slice `v1_3_1_sem_diagram_geometry_polish`
+
+Notes:
+
+- This milestone improves connector geometry, indicator placement, path-label controls, SmartPLS-like visual tokens, and SVG/canvas parity.
+- It deliberately does not change engines, analysis recipes, result schemas, method validation, or numerical fingerprints.

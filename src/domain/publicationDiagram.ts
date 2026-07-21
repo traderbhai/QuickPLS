@@ -1,5 +1,6 @@
 import type { Edge, Node } from "@xyflow/react";
 import { buildDiagramGraph } from "./diagramGraph";
+import { SEM_SIZES, routeBetweenBoxes, semNodeBox } from "./semGeometry";
 import type { AnalysisRun, ConstructData, DiagramLayoutState, PublicationDiagramSettings } from "../types";
 
 const PADDING = 42;
@@ -18,7 +19,14 @@ const FALLBACK_SETTINGS: PublicationDiagramSettings = {
   showRunProvenance: true,
 };
 const QUICKPLS_SIZE = { latentWidth: 150, latentHeight: 110, indicatorWidth: 96, indicatorHeight: 34 };
-const SMARTPLS_SIZE = { latentWidth: 88, latentHeight: 82, ellipseWidth: 88, ellipseHeight: 58, indicatorWidth: 78, indicatorHeight: 24 };
+const SMARTPLS_SIZE = {
+  latentWidth: SEM_SIZES.smartplsLatent.width,
+  latentHeight: SEM_SIZES.smartplsLatent.height,
+  ellipseWidth: SEM_SIZES.smartplsEllipse.width,
+  ellipseHeight: SEM_SIZES.smartplsEllipse.height,
+  indicatorWidth: SEM_SIZES.smartplsIndicator.width,
+  indicatorHeight: SEM_SIZES.smartplsIndicator.height,
+};
 
 export function publicationDiagramSvg(nodes: Array<Node<ConstructData>>, edges: Edge[], run?: AnalysisRun, settings: Partial<PublicationDiagramSettings> = {}, layout?: DiagramLayoutState): string {
   const options = normalizeSettings(settings);
@@ -39,14 +47,14 @@ export function publicationDiagramSvg(nodes: Array<Node<ConstructData>>, edges: 
     : "";
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeXml(title)}" class="${palette}">
 <defs>
-<marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="arrow"/></marker>
-<marker id="arrow-start" markerWidth="8" markerHeight="8" refX="1" refY="4" orient="auto"><path d="M8,0 L0,4 L8,8 z" class="arrow"/></marker>
+<marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="arrow"/></marker>
+<marker id="arrow-start" markerWidth="10" markerHeight="10" refX="1" refY="5" orient="auto"><path d="M10,0 L0,5 L10,10 z" class="arrow"/></marker>
 <style>
 .bg{fill:#fff}.caption{font:10px Arial,sans-serif;fill:#526169}.warning{font:10px Arial,sans-serif;fill:#666}
 .latent{fill:#fff;stroke:#2d777a;stroke-width:1.8}.latent.formative{stroke:#a16d0b}.latent-title{font:700 12px Arial,sans-serif;fill:#172126}.latent-meta{font:10px Arial,sans-serif;fill:#56656b}.r2{font:700 10px Arial,sans-serif;fill:#32630d}.indicator{fill:#fff8df;stroke:#c49116;stroke-width:1.2}.indicator.formative{fill:#eaf8f8;stroke:#0b8f92}.indicator-text{font:700 9px Arial,sans-serif;fill:#253137}.indicator-stat{font:700 8px Arial,sans-serif;fill:#32630d}
 .smartpls-latent{fill:#7d7d7d;stroke:#777;stroke-width:1}.smartpls-latent-label{font:10px Arial,sans-serif;fill:#222}.smartpls-r2{font:700 10px Arial,sans-serif;fill:#fff}.smartpls-indicator{fill:#eee;stroke:#d2d2d2;stroke-width:1}.smartpls-indicator-text{font:700 9px Arial,sans-serif;fill:#222}
-.edge{stroke:#465961;stroke-width:1.45;fill:none}.measurement{stroke:#9c7a20;stroke-width:1.05;fill:none}.measurement.formative{stroke:#0c777b}.covariance{stroke:#8d5798;stroke-width:1.25;stroke-dasharray:4 3;fill:none}.edge-label{font:700 10px Arial,sans-serif;fill:#172126}.label-bg{fill:#fff;stroke:#dce2e5}.arrow{fill:#465961}
-.smartpls .edge,.smartpls .measurement{stroke:#333;stroke-width:1.05}.smartpls .edge-label{font:500 9px Arial,sans-serif;fill:#222}.smartpls .label-bg{fill:#fff;stroke:none;fill-opacity:.85}.smartpls .arrow{fill:#333}
+.edge{stroke:#465961;stroke-width:1.65;fill:none}.measurement{stroke:#8d9699;stroke-width:1.2;fill:none}.measurement.formative{stroke:#0c777b}.covariance{stroke:#4f5b60;stroke-width:1.3;stroke-dasharray:4 3;fill:none}.edge-label{font:700 10px Arial,sans-serif;fill:#172126}.label-bg{fill:#fff;stroke:#dce2e5}.arrow{fill:#465961}
+.smartpls .edge{stroke:#222;stroke-width:1.45}.smartpls .measurement{stroke:#444;stroke-width:1.12}.smartpls .edge-label{font:500 9px Arial,sans-serif;fill:#222}.smartpls .label-bg{fill:#fff;stroke:none;fill-opacity:.85}.smartpls .arrow{fill:#222}
 .mono .latent,.mono .indicator{stroke:#333}.mono .indicator{fill:#fff}.mono .edge,.mono .measurement,.mono .covariance{stroke:#333}.mono .arrow{fill:#333}.high-contrast .smartpls-latent{fill:#222;stroke:#111}.high-contrast .smartpls-indicator{fill:#fff;stroke:#111}.quickpls-color .smartpls-latent{fill:#4f9fa2;stroke:#1f6e72}.quickpls-color .smartpls-indicator{fill:#fff8df;stroke:#c49116}
 </style>
 </defs>
@@ -100,10 +108,12 @@ function renderLatent(node: Node, bounds: { minX: number; minY: number }, smartp
   const data = node.data as Record<string, unknown>;
   const label = String(data.label ?? node.id);
   if (smartpls) {
-    const r2 = options.showRSquared && typeof data.resultR2 === "number" ? `<text x="${position.x + 44}" y="${position.y + 33}" text-anchor="middle" class="smartpls-r2">R&#178; ${data.resultR2.toFixed(options.precision)}</text>` : "";
-    return `<ellipse class="smartpls-latent" cx="${position.x + 44}" cy="${position.y + 29}" rx="44" ry="29"/>
+    const centerX = position.x + SMARTPLS_SIZE.ellipseWidth / 2;
+    const centerY = position.y + SMARTPLS_SIZE.ellipseHeight / 2;
+    const r2 = options.showRSquared && typeof data.resultR2 === "number" ? `<text x="${centerX}" y="${centerY + 4}" text-anchor="middle" class="smartpls-r2">R&#178; ${data.resultR2.toFixed(options.precision)}</text>` : "";
+    return `<ellipse class="smartpls-latent" cx="${centerX}" cy="${centerY}" rx="${SMARTPLS_SIZE.ellipseWidth / 2}" ry="${SMARTPLS_SIZE.ellipseHeight / 2}"/>
 ${r2}
-<text x="${position.x + 44}" y="${position.y + 74}" text-anchor="middle" class="smartpls-latent-label">${escapeXml(label)}</text>`;
+<text x="${centerX}" y="${position.y + SMARTPLS_SIZE.ellipseHeight + 18}" text-anchor="middle" class="smartpls-latent-label">${escapeXml(label)}</text>`;
   }
   const shortName = String(data.shortName ?? node.id);
   const mode = data.mode === "formative" ? "formative" : "reflective";
@@ -119,8 +129,8 @@ function renderIndicator(node: Node, bounds: { minX: number; minY: number }, pre
   const data = node.data as Record<string, unknown>;
   const indicator = String(data.indicator ?? node.id);
   if (smartpls) {
-    return `<rect class="smartpls-indicator" x="${position.x}" y="${position.y}" width="78" height="24"/>
-<text x="${position.x + 39}" y="${position.y + 16}" text-anchor="middle" class="smartpls-indicator-text">${escapeXml(indicator)}</text>`;
+    return `<rect class="smartpls-indicator" x="${position.x}" y="${position.y}" width="${SMARTPLS_SIZE.indicatorWidth}" height="${SMARTPLS_SIZE.indicatorHeight}"/>
+<text x="${position.x + SMARTPLS_SIZE.indicatorWidth / 2}" y="${position.y + 18}" text-anchor="middle" class="smartpls-indicator-text">${escapeXml(indicator)}</text>`;
   }
   const mode = data.mode === "formative" ? "formative" : "reflective";
   const value = typeof data.loading === "number" ? data.loading : typeof data.weight === "number" ? data.weight : null;
@@ -134,8 +144,9 @@ function renderEdge(edge: Edge, nodes: Array<Node>, bounds: { minX: number; minY
   const source = nodes.find((node) => node.id === edge.source);
   const target = nodes.find((node) => node.id === edge.target);
   if (!source || !target) return "";
-  const start = anchor(source, target, bounds, smartpls);
-  const end = anchor(target, source, bounds, smartpls);
+  const route = routeBetweenBoxes(projectedBox(source, bounds, smartpls), projectedBox(target, bounds, smartpls));
+  const start = route.start;
+  const end = route.end;
   const rawLabel = typeof edge.label === "string" ? edge.label : "";
   const measurement = String(edge.className ?? "").includes("measurement-edge");
   const structural = String(edge.className ?? "").includes("structural-edge");
@@ -152,7 +163,7 @@ function renderEdge(edge: Edge, nodes: Array<Node>, bounds: { minX: number; minY
     y: (start.y + end.y) / 2 - (smartpls ? 2 : 5) + Number(offset.y ?? 0),
   };
   const d = className === "covariance"
-    ? `M${start.x},${start.y} Q${mid.x},${mid.y - 45} ${end.x},${end.y}`
+    ? `M${start.x},${start.y} Q${mid.x},${mid.y - 50} ${end.x},${end.y}`
     : `M${start.x},${start.y} L${end.x},${end.y}`;
   const labelWidth = Math.max(30, label.length * (smartpls ? 5 : 6) + 10);
   const labelMarkup = label ? `<rect class="label-bg" x="${mid.x - labelWidth / 2}" y="${mid.y - 12}" width="${labelWidth}" height="15" rx="2"/><text x="${mid.x}" y="${mid.y}" text-anchor="middle" class="edge-label">${escapeXml(label)}</text>` : "";
@@ -160,22 +171,21 @@ function renderEdge(edge: Edge, nodes: Array<Node>, bounds: { minX: number; minY
 ${labelMarkup}`;
 }
 
-function anchor(node: Node, other: Node, bounds: { minX: number; minY: number }, smartpls: boolean) {
+function projectedBox(node: Node, bounds: { minX: number; minY: number }, smartpls: boolean) {
+  if (smartpls) {
+    const base = semNodeBox(node);
+    const projected = project(node.position, bounds);
+    return { ...base, x: projected.x, y: projected.y };
+  }
+  return legacyAnchorBox(node, bounds, smartpls);
+}
+
+function legacyAnchorBox(node: Node, bounds: { minX: number; minY: number }, smartpls: boolean) {
   const size = node.type === "indicator"
     ? (smartpls ? { width: SMARTPLS_SIZE.indicatorWidth, height: SMARTPLS_SIZE.indicatorHeight } : { width: QUICKPLS_SIZE.indicatorWidth, height: QUICKPLS_SIZE.indicatorHeight })
     : (smartpls ? { width: SMARTPLS_SIZE.ellipseWidth, height: SMARTPLS_SIZE.ellipseHeight } : { width: QUICKPLS_SIZE.latentWidth, height: QUICKPLS_SIZE.latentHeight });
-  const offsetY = smartpls && node.type !== "indicator" ? 0 : 0;
   const position = project(node.position, bounds);
-  const center = { x: position.x + size.width / 2, y: position.y + offsetY + size.height / 2 };
-  const otherSize = other.type === "indicator"
-    ? (smartpls ? { width: SMARTPLS_SIZE.indicatorWidth, height: SMARTPLS_SIZE.indicatorHeight } : { width: QUICKPLS_SIZE.indicatorWidth, height: QUICKPLS_SIZE.indicatorHeight })
-    : (smartpls ? { width: SMARTPLS_SIZE.ellipseWidth, height: SMARTPLS_SIZE.ellipseHeight } : { width: QUICKPLS_SIZE.latentWidth, height: QUICKPLS_SIZE.latentHeight });
-  const otherPosition = project(other.position, bounds);
-  const otherCenter = { x: otherPosition.x + otherSize.width / 2, y: otherPosition.y + otherSize.height / 2 };
-  const dx = otherCenter.x - center.x;
-  const dy = otherCenter.y - center.y;
-  if (Math.abs(dx) > Math.abs(dy)) return { x: center.x + Math.sign(dx) * size.width / 2, y: center.y };
-  return { x: center.x, y: center.y + Math.sign(dy) * size.height / 2 };
+  return { x: position.x, y: position.y, width: size.width, height: size.height, kind: node.type === "indicator" ? "indicator" as const : "compact" as const, ellipse: node.type !== "indicator" };
 }
 
 function escapeXml(value: string) {

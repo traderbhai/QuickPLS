@@ -24,6 +24,7 @@ declare global {
     __QUICKPLS_SMOKE__?: {
       addCompletedRun: () => void;
       loadDiagramFixture: (fixture: string) => void;
+      arrangeSmartpls: () => void;
       setView: (nextView: string) => void;
     };
   }
@@ -104,6 +105,7 @@ export function App() {
           diagramMode: "sem",
         });
       },
+      arrangeSmartpls: () => useWorkspace.getState().autoLayout("smartpls"),
       setView: (nextView: string) => {
         if (["data", "models", "analyses", "run", "runs", "groups", "reports"].includes(nextView)) {
           useWorkspace.getState().setView(nextView as WorkspaceView);

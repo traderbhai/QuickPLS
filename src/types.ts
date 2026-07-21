@@ -48,7 +48,7 @@ export interface DiagramLayoutState {
   indicatorLayouts: Record<string, Record<string, IndicatorLayout>>;
   edgeLayouts: Record<string, EdgeLayout>;
   diagramViewport?: DiagramViewport;
-  diagramTheme: "academic_grayscale" | "quickpls_color" | "high_contrast";
+  diagramTheme: "academic_grayscale" | "smartpls_like" | "quickpls_color" | "journal_mono" | "high_contrast";
 }
 
 export interface AnalysisUiSettings {

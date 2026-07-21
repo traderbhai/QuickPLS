@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.3.1 SEM diagram geometry polish",
+  "passed": true,
+  "checklist": {
+    "shared_sem_geometry_module": true,
+    "canvas_uses_shared_geometry": true,
+    "svg_uses_shared_geometry": true,
+    "default_theme_is_smartpls_like": true,
+    "professional_shape_tokens": true,
+    "geometry_unit_tests": true,
+    "label_and_indicator_commands": true,
+    "publication_svg_tests": true,
+    "visual_smoke_passed": true,
+    "smoke_has_dense_quality_metrics": true,
+    "no_r2_mojibake": true
+  },
+  "mojibake_hits": [],
+  "evidence": [
+    "src/domain/semGeometry.ts",
+    "src/domain/semGeometry.test.ts",
+    "validation/results/v131_sem_geometry_smoke.json",
+    "validation/results/screens/v131/sem-geometry/"
+  ]
+}

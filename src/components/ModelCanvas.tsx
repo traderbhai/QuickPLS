@@ -17,6 +17,7 @@ import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent } from "react";
 import { analysisReadiness } from "../domain/analysisReadiness";
 import { buildDiagramGraph, isIndicatorNodeId, parseIndicatorNodeId } from "../domain/diagramGraph";
+import { SEM_SIZES } from "../domain/semGeometry";
 import { isNativeDesktop } from "../services/projectService";
 import { useWorkspace } from "../store";
 import type { ConstructData, DiagramToolMode, IndicatorSide } from "../types";
@@ -29,7 +30,7 @@ const nodeTypes: NodeTypes = { construct: memo(ConstructNode), latent: memo(Late
 const edgeTypes: EdgeTypes = { semEdge: SemEdge };
 const SNAP_SIZE = 10;
 const ALIGN_THRESHOLD = 8;
-const smartplsNodeSize = { width: 88, height: 82 };
+const smartplsNodeSize = { width: SEM_SIZES.smartplsLatent.width, height: SEM_SIZES.smartplsLatent.height };
 const compactNodeSize = { width: 170, height: 118 };
 
 const isEditingText = (target: EventTarget | null) => {
@@ -84,6 +85,7 @@ export function ModelCanvas() {
   const updateEdge = useWorkspace((state) => state.updateEdge);
   const nudgeEdgeLabel = useWorkspace((state) => state.nudgeEdgeLabel);
   const resetEdgeLabel = useWorkspace((state) => state.resetEdgeLabel);
+  const resetAllEdgeLabels = useWorkspace((state) => state.resetAllEdgeLabels);
   const analysisSettings = useWorkspace((state) => state.analysisSettings);
   const undo = useWorkspace((state) => state.undo);
   const redo = useWorkspace((state) => state.redo);
@@ -94,6 +96,7 @@ export function ModelCanvas() {
   const [showHelp, setShowHelp] = useState(false);
   const [dropHint, setDropHint] = useState<null | { count: number; x: number; y: number; targetConstructId?: string | null }>(null);
   const [dragGuide, setDragGuide] = useState<null | { vertical?: number; horizontal?: number; x: number; y: number; label: string }>(null);
+  const [actionFeedback, setActionFeedback] = useState<null | { message: string; x?: number; y?: number }>(null);
   const [draggingVariableCount, setDraggingVariableCount] = useState(0);
   const [hoverDropTargetId, setHoverDropTargetId] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<null | { kind: "canvas"; x: number; y: number } | { kind: "construct"; id: string; x: number; y: number } | { kind: "indicator"; constructId: string; indicator: string; x: number; y: number } | { kind: "edge"; id: string; x: number; y: number }>(null);
@@ -225,6 +228,35 @@ export function ModelCanvas() {
   const selectTool = (tool: DiagramToolMode) => {
     setDiagramTool(tool);
     setPathSource(null);
+    setActionFeedback(null);
+  };
+  const covarianceExists = (source: string, target: string) => {
+    const [left, right] = [source, target].sort();
+    return edges.some((edge) => edge.data?.role === "covariance" && [edge.source, edge.target].sort().join("\u0000") === `${left}\u0000${right}`);
+  };
+  const structuralPathExists = (source: string, target: string) =>
+    edges.some((edge) => edge.data?.role !== "covariance" && edge.source === source && edge.target === target);
+  const createPathOrCovariance = (source: string, target: string, point?: { x: number; y: number }) => {
+    if (source === target) {
+      setActionFeedback({ message: "Self-paths and self-covariances are not valid SEM diagram actions.", ...point });
+      return false;
+    }
+    if (diagramTool === "path") {
+      if (structuralPathExists(source, target)) {
+        setActionFeedback({ message: "That structural path already exists. Select the path to edit, reverse, or delete it.", ...point });
+        return false;
+      }
+      addPath(source, target);
+      setActionFeedback(null);
+      return true;
+    }
+    if (covarianceExists(source, target)) {
+      setActionFeedback({ message: "That covariance display arc already exists.", ...point });
+      return false;
+    }
+    addCovariance(source, target);
+    setActionFeedback(null);
+    return true;
   };
   const onVisualNodesChange = (changes: NodeChange[]) => {
     const modelChanges = changes.filter((change) => !("id" in change) || !isIndicatorNodeId(change.id)) as Array<NodeChange<Node<ConstructData>>>;
@@ -239,14 +271,13 @@ export function ModelCanvas() {
     const modelChanges = changes.filter((change) => !("id" in change) || !change.id.startsWith("measurement::"));
     if (modelChanges.length) onEdgesChange(modelChanges);
   };
-  const chooseConstruct = (id: string) => {
+  const chooseConstruct = (id: string, point?: { x: number; y: number }) => {
     if (diagramTool === "path" || diagramTool === "covariance") {
       if (!pathSource) {
         setPathSource(id);
         setSelectedNode(id);
       } else if (pathSource !== id) {
-        diagramTool === "path" ? addPath(pathSource, id) : addCovariance(pathSource, id);
-        setPathSource(null);
+        if (createPathOrCovariance(pathSource, id, point)) setPathSource(null);
       }
       return;
     }
@@ -385,7 +416,7 @@ export function ModelCanvas() {
       </div>
       <div className="canvas-tool-group path-tools">
         <button aria-label="Reverse selected path" title="Reverse selected path" disabled={!selectedEdgeId || selectedEdge?.data?.role === "covariance"} onClick={reverseSelectedPath}><ArrowLeftRight size={15} /></button>
-        <select aria-label="Selected path routing" value={String(selectedEdge?.type ?? "smoothstep")} disabled={!selectedEdge || selectedEdge.data?.role === "covariance"} onChange={(event) => setSelectedPathRouting(event.target.value as "smoothstep" | "default" | "straight")}>
+        <select aria-label="Selected path routing" value={String(selectedEdge?.type ?? "straight")} disabled={!selectedEdge || selectedEdge.data?.role === "covariance"} onChange={(event) => setSelectedPathRouting(event.target.value as "smoothstep" | "default" | "straight")}>
           <option value="smoothstep">Orthogonal</option>
           <option value="default">Curved</option>
           <option value="straight">Straight</option>
@@ -432,6 +463,12 @@ export function ModelCanvas() {
       {(diagramTool === "path" || diagramTool === "covariance") && <div className="canvas-tool-status">{pathSource ? `Choose ${diagramTool === "path" ? "outcome construct" : "second construct"}` : `Choose ${diagramTool === "path" ? "predictor construct" : "first construct"}`}</div>}
     </div>
     {disabledActionReason ? <div className="canvas-disabled-action-reason" role="status">{disabledActionReason}</div> : null}
+    {actionFeedback ? <div
+      className={`canvas-action-feedback${actionFeedback.x !== undefined && actionFeedback.y !== undefined ? " local" : ""}`}
+      style={actionFeedback.x !== undefined && actionFeedback.y !== undefined ? { left: actionFeedback.x + 12, top: actionFeedback.y + 12 } : undefined}
+      role="status"
+      aria-live="polite"
+    >{actionFeedback.message}</div> : null}
     <div className={`canvas-overlay-status ${overlayStatus.tone}`} role="status" aria-live="polite">
       <strong>{overlayStatus.label}</strong>
       <span>{overlayStatus.detail}</span>
@@ -463,6 +500,7 @@ export function ModelCanvas() {
       {contextMenu.kind === "canvas" ? <>
         <button onClick={() => { if (flow) addConstruct(flow.screenToFlowPosition({ x: contextMenu.x, y: contextMenu.y })); setContextMenu(null); }}>Add latent construct</button>
         <button onClick={() => { arrangeModel("smartpls"); setContextMenu(null); }}>Arrange like SmartPLS</button>
+        <button onClick={() => { resetAllEdgeLabels(); setContextMenu(null); }}>Tidy labels</button>
         <button onClick={() => { void flow?.fitView({ padding: 0.22, duration: 220 }); setContextMenu(null); }}>Fit view</button>
       </> : contextMenu.kind === "construct" ? <>
         <button onClick={() => { renameConstruct(contextMenu.id); setContextMenu(null); }}>Rename construct</button>
@@ -471,6 +509,8 @@ export function ModelCanvas() {
         <button onClick={() => setConstructIndicatorSideFromMenu("right")}>Place all indicators right</button>
         <button onClick={() => setConstructIndicatorSideFromMenu("top")}>Place all indicators top</button>
         <button onClick={() => setConstructIndicatorSideFromMenu("bottom")}>Place all indicators bottom</button>
+        <button onClick={() => { resetIndicatorLayout(contextMenu.id); setContextMenu(null); }}>Auto-place indicators</button>
+        <button onClick={() => { resetIndicatorLayout(contextMenu.id); resetAllEdgeLabels(); setContextMenu(null); }}>Tidy selected construct</button>
         <button onClick={() => { resetIndicatorLayout(contextMenu.id); setContextMenu(null); }}>Reset indicator layout</button>
         <button onClick={() => { setSelectedNode(contextMenu.id); duplicateSelected(); setContextMenu(null); }}>Duplicate</button>
         <button className="danger" onClick={() => { setSelectedNode(contextMenu.id); removeSelection(); setContextMenu(null); }}>Delete</button>
@@ -509,7 +549,20 @@ export function ModelCanvas() {
       onConnect={(connection) => {
         if (resultDiagramMode) return;
         if (!connection.source || !connection.target || isIndicatorNodeId(connection.source) || isIndicatorNodeId(connection.target)) return;
-        diagramTool === "covariance" ? addCovariance(connection.source, connection.target) : onConnect(connection);
+        if (diagramTool === "covariance") {
+          createPathOrCovariance(connection.source, connection.target);
+          return;
+        }
+        if (connection.source === connection.target) {
+          setActionFeedback({ message: "Self-paths are not valid. Connect two different constructs." });
+          return;
+        }
+        if (structuralPathExists(connection.source, connection.target)) {
+          setActionFeedback({ message: "That structural path already exists. Select the path to edit, reverse, or delete it." });
+          return;
+        }
+        setActionFeedback(null);
+        onConnect(connection);
       }}
       onReconnect={resultDiagramMode ? undefined : reconnectPath}
       onNodeDragStart={resultDiagramMode ? undefined : (_, node) => { checkpoint(); updateDragGuide(node); }}
@@ -522,10 +575,10 @@ export function ModelCanvas() {
         if (target) assignIndicator(target.id, indicator.indicator);
         else moveIndicator(indicator.constructId, indicator.indicator, node.position);
       }}
-      onNodeClick={(_, node) => {
+      onNodeClick={(event, node) => {
         const indicator = parseIndicatorNodeId(node.id);
         if (indicator) setSelectedNode(indicator.constructId);
-        else chooseConstruct(node.id);
+        else chooseConstruct(node.id, { x: event.clientX, y: event.clientY });
       }}
       onEdgeClick={(_, edge) => setSelectedEdge(edge.id)}
       onNodeContextMenu={(event, node) => {

@@ -1,5 +1,6 @@
 import { MarkerType, type Edge, type Node, type XYPosition } from "@xyflow/react";
 import type { AnalysisRun, ConstructData, DiagramLayoutState, DiagramMode, DiagramOverlayMode, IndicatorLayout, IndicatorSide } from "../types";
+import { SEM_SIZES, measureDiagramQuality, routeBetweenBoxes, semNodeBox, smartIndicatorPosition } from "./semGeometry";
 
 export interface IndicatorNodeData extends Record<string, unknown> {
   constructId: string;
@@ -34,15 +35,13 @@ const INDICATOR_WIDTH = 96;
 const INDICATOR_HEIGHT = 34;
 const MEASUREMENT_GAP = 88;
 const INDICATOR_ROW_GAP = 42;
-const SMARTPLS_LATENT_WIDTH = 88;
-const SMARTPLS_LATENT_HEIGHT = 58;
-const SMARTPLS_INDICATOR_WIDTH = 78;
-const SMARTPLS_INDICATOR_HEIGHT = 24;
+const SMARTPLS_LATENT_WIDTH = SEM_SIZES.smartplsEllipse.width;
+const SMARTPLS_LATENT_HEIGHT = SEM_SIZES.smartplsEllipse.height;
+const SMARTPLS_LATENT_NODE_HEIGHT = SEM_SIZES.smartplsLatent.height;
+const SMARTPLS_INDICATOR_WIDTH = SEM_SIZES.smartplsIndicator.width;
+const SMARTPLS_INDICATOR_HEIGHT = SEM_SIZES.smartplsIndicator.height;
 const SMARTPLS_COLUMN_GAP = 270;
-const SMARTPLS_VERTICAL_GAP = 135;
-const SMARTPLS_INDICATOR_GAP = 30;
-const SMARTPLS_MEASUREMENT_GAP = 82;
-const SMARTPLS_BOTTOM_INDICATOR_GAP = 82;
+const SMARTPLS_VERTICAL_GAP = 320;
 
 export const isIndicatorNodeId = (id: string) => id.startsWith("indicator::");
 export const indicatorNodeId = (constructId: string, indicator: string) => `indicator::${constructId}::${encodeURIComponent(indicator)}`;
@@ -63,7 +62,7 @@ export function buildDiagramGraph(
   const structuralEdges = modelEdges.filter((edge) => edge.data?.role !== "covariance");
   const covarianceEdges = modelEdges.filter((edge) => edge.data?.role === "covariance");
   const paperStyle = mode === "sem" || mode === "publication" || mode === "smartpls_result";
-  const lockedResultMode = mode === "smartpls_result";
+  const lockedResultMode = mode === "smartpls_result" || mode === "publication";
   const smartplsPlacement = (mode === "publication" || mode === "smartpls_result") && options.layoutSource !== "current_canvas" ? smartplsLayout(modelNodes, structuralEdges) : null;
   const structuralShape = structuralShapeMaps(modelNodes, structuralEdges);
   const result = run?.status === "completed" ? run.result : undefined;
@@ -98,7 +97,7 @@ export function buildDiagramGraph(
     const coefficient = pathCoefficients.get(`${edge.source}\u0000${edge.target}`);
     const sourceNode = visualNodes.find((node) => node.id === edge.source);
     const targetNode = visualNodes.find((node) => node.id === edge.target);
-    const route = paperStyle && sourceNode && targetNode ? routeSides(sourceNode.position, targetNode.position) : null;
+    const route = paperStyle && sourceNode && targetNode ? routeSides(sourceNode, targetNode) : null;
     return {
       ...edge,
       type: paperStyle ? "semEdge" : edge.type ?? "smoothstep",
@@ -106,12 +105,12 @@ export function buildDiagramGraph(
       targetHandle: route ? handleId("target", route.target) : edge.targetHandle,
       label: resultForOverlay && coefficient !== undefined && (paperStyle || overlayMode === "paths_r2" || overlayMode === "significance")
         ? coefficient.toFixed(3)
-        : paperStyle ? ""
+        : paperStyle ? (mode === "sem" ? edge.data?.role === "control" ? "Control" : edge.label ?? "Path" : "")
           : edge.data?.role === "control" ? "Control" : edge.label ?? "Path",
-      markerEnd: { type: MarkerType.ArrowClosed, width: paperStyle ? 10 : 16, height: paperStyle ? 10 : 16 },
+      markerEnd: { type: MarkerType.ArrowClosed, width: paperStyle ? 16 : 16, height: paperStyle ? 16 : 16, color: paperStyle ? "#222" : undefined },
       className: edge.data?.role === "control" ? "control-edge" : paperStyle ? "smartpls-structural-edge structural-edge" : "structural-edge",
       selectable: !lockedResultMode,
-      data: { ...edge.data, labelOffset: options.layout?.edgeLayouts[edge.id]?.labelOffset, edgeClassName: edge.data?.role === "control" ? "control-edge" : paperStyle ? "smartpls-structural-edge structural-edge" : "structural-edge" },
+      data: { ...edge.data, routing: edge.type ?? (paperStyle ? "straight" : "smoothstep"), labelOffset: options.layout?.edgeLayouts[edge.id]?.labelOffset, edgeClassName: edge.data?.role === "control" ? "control-edge" : paperStyle ? "smartpls-structural-edge structural-edge" : "structural-edge" },
     };
   });
 
@@ -123,7 +122,13 @@ export function buildDiagramGraph(
       node.data.indicators.forEach((indicator, index) => {
         const estimate = loadingByConstruct.get(node.id)?.get(indicator);
         const indicatorPosition = placement[index] ?? latentPosition;
-        const route = paperStyle ? routeSides(latentPosition, indicatorPosition) : null;
+        const latentForRoute = visualNodes.find((visualNode) => visualNode.id === node.id);
+        const indicatorForRoute = {
+          id: indicatorNodeId(node.id, indicator),
+          type: "indicator",
+          position: indicatorPosition,
+        } as Node<LatentNodeData | IndicatorNodeData>;
+        const route = paperStyle && latentForRoute ? routeSides(latentForRoute, indicatorForRoute) : null;
         visualNodes.push({
           id: indicatorNodeId(node.id, indicator),
           type: "indicator",
@@ -144,10 +149,10 @@ export function buildDiagramGraph(
             ? (reflective ? estimate?.loading : estimate?.weight)?.toFixed(3) ?? ""
             : paperStyle ? ""
               : reflective ? "loading" : "weight",
-          markerEnd: { type: MarkerType.ArrowClosed, width: paperStyle ? 8 : 14, height: paperStyle ? 8 : 14 },
+          markerEnd: { type: MarkerType.ArrowClosed, width: paperStyle ? 13 : 14, height: paperStyle ? 13 : 14, color: paperStyle ? "#222" : undefined },
           className: reflective ? `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge reflective` : `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge formative`,
           selectable: false,
-          data: { visualOnly: true, edgeClassName: reflective ? `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge reflective` : `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge formative` },
+          data: { visualOnly: true, routing: "straight", edgeClassName: reflective ? `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge reflective` : `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge formative` },
         });
       });
     }
@@ -159,7 +164,7 @@ export function buildDiagramGraph(
         markerStart: { type: MarkerType.ArrowClosed, width: 12, height: 12 },
         markerEnd: { type: MarkerType.ArrowClosed, width: 12, height: 12 },
         className: "covariance-edge",
-        data: { ...edge.data, labelOffset: options.layout?.edgeLayouts[edge.id]?.labelOffset, edgeClassName: "covariance-edge" },
+        data: { ...edge.data, routing: "default", labelOffset: options.layout?.edgeLayouts[edge.id]?.labelOffset, edgeClassName: "covariance-edge" },
       });
     }
   }
@@ -234,7 +239,9 @@ export function defaultDiagramLayout(modelNodes: Array<Node<ConstructData>>, mod
     node.data.indicators.forEach((indicator, index) => {
       const previous = existing?.indicatorLayouts?.[node.id]?.[indicator];
       currentIndicators[indicator] = previous
-        ? { side: previous.side, x: previous.x, y: previous.y, order: previous.order ?? index, pinned: previous.pinned }
+        ? previous.pinned
+          ? { side: previous.side, x: previous.x, y: previous.y, order: previous.order ?? index, pinned: previous.pinned }
+          : { side: indicatorSide(node.id, shape, false), order: previous.order ?? index, pinned: false }
         : { side: indicatorSide(node.id, shape, false), order: index };
     });
     indicatorLayouts[node.id] = currentIndicators;
@@ -252,7 +259,7 @@ export function defaultDiagramLayout(modelNodes: Array<Node<ConstructData>>, mod
     indicatorLayouts,
     edgeLayouts,
     diagramViewport: existing?.diagramViewport,
-    diagramTheme: existing?.diagramTheme === "quickpls_color" || existing?.diagramTheme === "high_contrast" ? existing.diagramTheme : "academic_grayscale",
+    diagramTheme: existing?.diagramTheme === "quickpls_color" || existing?.diagramTheme === "high_contrast" || existing?.diagramTheme === "journal_mono" || existing?.diagramTheme === "smartpls_like" ? existing.diagramTheme : "smartpls_like",
   };
 }
 
@@ -292,7 +299,7 @@ function smartplsLayout(modelNodes: Array<Node<ConstructData>>, structuralEdges:
         y: startY + index * SMARTPLS_VERTICAL_GAP,
       };
       latents.set(node.id, position);
-      indicators.set(node.id, smartplsIndicatorPositions(position, node.data.indicators.length, indicatorSide(node.id, shape, currentLevel === maxLevel)));
+      indicators.set(node.id, smartplsIndicatorPositions(position, node.data.indicators.length, indicatorSide(node.id, shape, currentLevel === maxLevel, index, columnNodes.length)));
     });
   }
   return { latents, indicators };
@@ -367,45 +374,28 @@ function structuralShapeMaps(modelNodes: Array<Node<ConstructData>>, structuralE
   return { incoming, outgoing, parents, children };
 }
 
-function indicatorSide(id: string, shape: ReturnType<typeof structuralShapeMaps>, finalLevel: boolean): "left" | "right" | "top" | "bottom" {
+function indicatorSide(id: string, shape: ReturnType<typeof structuralShapeMaps>, finalLevel: boolean, columnIndex = 0, columnSize = 1): "left" | "right" | "top" | "bottom" {
   const incomingCount = shape.incoming.get(id) ?? 0;
   const outgoingCount = shape.outgoing.get(id) ?? 0;
   if (incomingCount === 0) return "left";
   if (finalLevel || outgoingCount === 0) return "right";
-  return "top";
+  if (columnSize === 1) return "top";
+  if (columnIndex === 0) return "bottom";
+  if (columnIndex === columnSize - 1) return "top";
+  return columnIndex % 2 === 0 ? "top" : "bottom";
 }
 
 function smartplsIndicatorPositions(position: XYPosition, count: number, side: "left" | "right" | "top" | "bottom"): XYPosition[] {
-  if (count === 0) return [];
-  if (side === "top" || side === "bottom") {
-    const stackWidth = Math.max(0, count - 1) * (SMARTPLS_INDICATOR_WIDTH + 8);
-    const y = side === "top"
-      ? position.y - SMARTPLS_MEASUREMENT_GAP
-      : position.y + SMARTPLS_LATENT_HEIGHT + SMARTPLS_BOTTOM_INDICATOR_GAP;
-    return Array.from({ length: count }, (_, index) => ({
-      x: position.x + SMARTPLS_LATENT_WIDTH / 2 - SMARTPLS_INDICATOR_WIDTH / 2 - stackWidth / 2 + index * (SMARTPLS_INDICATOR_WIDTH + 8),
-      y,
-    }));
-  }
-  const stackHeight = Math.max(0, count - 1) * SMARTPLS_INDICATOR_GAP;
-  const x = side === "left"
-    ? position.x - SMARTPLS_MEASUREMENT_GAP - SMARTPLS_INDICATOR_WIDTH
-    : position.x + SMARTPLS_LATENT_WIDTH + SMARTPLS_MEASUREMENT_GAP;
-  const centerY = position.y + SMARTPLS_LATENT_HEIGHT / 2 - SMARTPLS_INDICATOR_HEIGHT / 2;
-  return Array.from({ length: count }, (_, index) => ({ x, y: centerY - stackHeight / 2 + index * SMARTPLS_INDICATOR_GAP }));
+  return smartIndicatorPosition(position, count, side);
 }
 
 function handleId(kind: "source" | "target", side: "left" | "right" | "top" | "bottom") {
   return `${kind}-${side}`;
 }
 
-function routeSides(source: XYPosition, target: XYPosition): { source: "left" | "right" | "top" | "bottom"; target: "left" | "right" | "top" | "bottom" } {
-  const dx = target.x - source.x;
-  const dy = target.y - source.y;
-  if (Math.abs(dx) >= Math.abs(dy)) {
-    return dx >= 0 ? { source: "right", target: "left" } : { source: "left", target: "right" };
-  }
-  return dy >= 0 ? { source: "bottom", target: "top" } : { source: "top", target: "bottom" };
+function routeSides(sourceNode: Node<LatentNodeData | IndicatorNodeData>, targetNode: Node<LatentNodeData | IndicatorNodeData>): { source: "left" | "right" | "top" | "bottom"; target: "left" | "right" | "top" | "bottom" } {
+  const route = routeBetweenBoxes(semNodeBox(sourceNode), semNodeBox(targetNode));
+  return { source: route.source, target: route.target };
 }
 
 function indicatorPositionsForConstruct(
@@ -466,3 +456,5 @@ function resultMatchesModel(nodes: Array<Node<ConstructData>>, edges: Edge[], re
       && node.data.indicators.every((indicator) => indicators.has(indicator));
   });
 }
+
+export { measureDiagramQuality };

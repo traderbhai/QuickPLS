@@ -70,6 +70,7 @@ interface WorkspaceState {
   setEdgeLabelOffset: (id: string, offset: { x: number; y: number }) => void;
   nudgeEdgeLabel: (id: string, delta: { x: number; y: number }) => void;
   resetEdgeLabel: (id: string) => void;
+  resetAllEdgeLabels: () => void;
   addConstruct: (position?: XYPosition, indicators?: string[]) => void;
   addConstructsFromIndicators: (indicators: string[]) => void;
   addConstructsFromIndicatorGroups: (indicators: string[]) => void;
@@ -384,7 +385,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
       edges: addEdge({
         ...connection,
         id,
-        type: "smoothstep",
+        type: "straight",
         label: "Path",
         markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
       }, state.edges),
@@ -411,7 +412,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
         id,
         source,
         target,
-        type: "smoothstep",
+        type: "straight",
         label: "Path",
         markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
       }, state.edges),
@@ -466,7 +467,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
           id: edgeId,
           source: id,
           target: outcome,
-          type: "smoothstep",
+          type: "straight",
           label: "Interaction",
           markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
         }, state.edges),
@@ -518,6 +519,16 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
         ...state.diagramLayout.edgeLayouts,
         [id]: { ...(state.diagramLayout.edgeLayouts[id] ?? { routing: "straight" }), labelOffset: undefined, pinned: false },
       },
+    },
+  })),
+  resetAllEdgeLabels: () => set((state) => ({
+    ...historyPatch(state),
+    diagramLayout: {
+      ...state.diagramLayout,
+      edgeLayouts: Object.fromEntries(Object.entries(state.diagramLayout.edgeLayouts).map(([id, layout]) => [
+        id,
+        { ...layout, labelOffset: undefined, pinned: false },
+      ])),
     },
   })),
   addConstruct: (position, indicators = []) => set((state) => {
@@ -721,7 +732,16 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   }),
   autoLayout: (direction = "horizontal") => set((state) => {
     const nodes = direction === "smartpls" ? layoutSmartplsModel(state.nodes, state.edges) : layoutModel(state.nodes, state.edges, direction);
-    return { ...historyPatch(state), nodes, diagramLayout: syncedDiagramLayout(nodes, state.edges, state.diagramLayout) };
+    const diagramLayout = syncedDiagramLayout(nodes, state.edges, state.diagramLayout);
+    for (const node of nodes) {
+      diagramLayout.constructLayouts[node.id] = {
+        ...(diagramLayout.constructLayouts[node.id] ?? {}),
+        x: node.position.x,
+        y: node.position.y,
+        pinned: false,
+      };
+    }
+    return { ...historyPatch(state), nodes, diagramLayout };
   }),
   moveIndicator: (constructId, indicator, position) => set((state) => {
     const construct = state.nodes.find((node) => node.id === constructId);
@@ -754,7 +774,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
           ...state.diagramLayout.indicatorLayouts,
           [constructId]: {
             ...constructIndicators,
-            [indicator]: { ...current, side, x: undefined, y: undefined, pinned: side === "free" },
+            [indicator]: { ...current, side, x: undefined, y: undefined, pinned: true },
           },
         },
       }),
@@ -766,7 +786,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     const constructIndicators = state.diagramLayout.indicatorLayouts[constructId] ?? {};
     const nextIndicators = Object.fromEntries(construct.data.indicators.map((indicator, index) => {
       const current = constructIndicators[indicator] ?? { order: index };
-      return [indicator, { ...current, side, x: undefined, y: undefined, order: current.order ?? index, pinned: false }];
+      return [indicator, { ...current, side, x: undefined, y: undefined, order: current.order ?? index, pinned: true }];
     }));
     return {
       ...historyPatch(state),

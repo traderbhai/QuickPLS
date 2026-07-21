@@ -321,7 +321,7 @@ describe("model editor state", () => {
     state = useWorkspace.getState();
     expect(state.diagramLayout.indicatorLayouts.competence.COMP1.side).not.toBe("free");
     useWorkspace.getState().setIndicatorSide("competence", "COMP1", "right");
-    expect(useWorkspace.getState().diagramLayout.indicatorLayouts.competence.COMP1).toMatchObject({ side: "right", x: undefined, y: undefined });
+    expect(useWorkspace.getState().diagramLayout.indicatorLayouts.competence.COMP1).toMatchObject({ side: "right", x: undefined, y: undefined, pinned: true });
     useWorkspace.getState().resetIndicatorLayout("competence", "COMP1");
     expect(useWorkspace.getState().diagramLayout.indicatorLayouts.competence.COMP1.side).not.toBe("free");
   });
@@ -332,7 +332,7 @@ describe("model editor state", () => {
     useWorkspace.getState().setConstructIndicatorSide("competence", "right");
     let state = useWorkspace.getState();
     expect(Object.values(state.diagramLayout.indicatorLayouts.competence).map((layout) => layout.side)).toEqual(["right", "right", "right"]);
-    expect(state.diagramLayout.indicatorLayouts.competence.COMP1).toMatchObject({ x: undefined, y: undefined, pinned: false });
+    expect(state.diagramLayout.indicatorLayouts.competence.COMP1).toMatchObject({ x: undefined, y: undefined, pinned: true });
     expect(state.nodes.find((node) => node.id === "competence")?.data.indicators).toEqual(originalIndicators);
 
     useWorkspace.getState().undo();
