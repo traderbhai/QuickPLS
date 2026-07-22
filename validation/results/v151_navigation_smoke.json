@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.5.1 navigation smoke",
+  "passed": true,
+  "checklist": {
+    "primary_rail_sequence": true,
+    "no_primary_validate_or_groups": true,
+    "home_current_project_card": true,
+    "data_next_step": true,
+    "model_canvas_available": true,
+    "setup_readiness_available": true,
+    "run_workspace_available": true,
+    "results_summary_available": true,
+    "results_groups_tab_available": true,
+    "report_workspace_available": true,
+    "screenshots_written": true,
+    "no_console_errors": true
+  },
+  "navLabels": [
+    "Home",
+    "Data",
+    "Model",
+    "Setup",
+    "Run",
+    "Results",
+    "Report"
+  ],
+  "screenshots": {
+    "home": "D:\\QuickPLS\\validation\\results\\screens\\v151\\navigation\\01_home.png",
+    "data": "D:\\QuickPLS\\validation\\results\\screens\\v151\\navigation\\02_data.png",
+    "model": "D:\\QuickPLS\\validation\\results\\screens\\v151\\navigation\\03_model.png",
+    "setup": "D:\\QuickPLS\\validation\\results\\screens\\v151\\navigation\\04_setup.png",
+    "run": "D:\\QuickPLS\\validation\\results\\screens\\v151\\navigation\\05_run.png",
+    "results": "D:\\QuickPLS\\validation\\results\\screens\\v151\\navigation\\06_results_summary.png",
+    "resultsGroups": "D:\\QuickPLS\\validation\\results\\screens\\v151\\navigation\\07_results_groups.png",
+    "report": "D:\\QuickPLS\\validation\\results\\screens\\v151\\navigation\\08_report.png"
+  },
+  "errors": []
+}

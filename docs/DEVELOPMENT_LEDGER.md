@@ -468,3 +468,28 @@ Notes:
 - The milestone adds command palette, shortcut overlay, toast feedback, status-bar autosave messaging, method run summary, result headline cards, current-table export, publication export stepper, and variable prefix grouping.
 - The app version is `1.5.0`; release artifacts use the label `v1_5_0_researcher_ux_refinement`.
 - This milestone deliberately does not change estimators, method formulas, analysis result schemas, validation tolerances, or numerical fingerprints.
+
+## v1.5.1 Navigation Workspace Hardening
+
+Status: complete for the left-navigation and workspace-hardening milestone.
+
+Evidence:
+
+- `src/components/NavRail.tsx`
+- `src/components/WorkflowStrip.tsx`
+- `src/components/OnboardingWorkspace.tsx`
+- `src/components/DataWorkspace.tsx`
+- `src/components/AnalysisCatalog.tsx`
+- `src/components/RunHistory.tsx`
+- `src/components/ProductivityOverlays.tsx`
+- `validation/v151_navigation_smoke.mjs`
+- `validation/v151_navigation_audit.py`
+- `docs/V1_5_1_NAVIGATION_WORKSPACE_HARDENING.md`
+- `validation/development_slices.json` slice `v1_5_1_navigation_workspace_hardening`
+
+Notes:
+
+- The primary rail now follows Home, Data, Model, Setup, Run, Results, and Report.
+- Groups remains available as a workflow through Setup and the Results Groups tab, but it is no longer a permanent rail item.
+- The app version is `1.5.1`; release artifacts use the label `v1_5_1_navigation_workspace_hardening`.
+- This milestone deliberately does not change estimators, method formulas, analysis result schemas, validation tolerances, or numerical fingerprints.

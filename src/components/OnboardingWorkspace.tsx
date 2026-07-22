@@ -9,12 +9,20 @@ export function OnboardingWorkspace() {
   const nodes = useWorkspace((state) => state.nodes);
   const dataset = useWorkspace((state) => state.dataset);
   const runs = useWorkspace((state) => state.runs);
+  const projectPath = useWorkspace((state) => state.projectPath);
   const start = (view: Parameters<typeof setView>[0]) => {
     setOnboardingState({ dismissed: true });
     setView(view);
   };
   return <section className="workspace-page onboarding-workspace">
-    <PageHeader title="Start QuickPLS" description="Open a project, import data, build a SEM diagram, run a validated method, and export a publication-ready report." actions={<StatusBadge status="validated">desktop-first workflow</StatusBadge>} />
+    <PageHeader title="Home" description="Open a project, import data, build a SEM diagram, run a validated method, and export a publication-ready report." actions={<StatusBadge status="validated">desktop-first workflow</StatusBadge>} />
+    <section className="current-project-card" aria-label="Current project status">
+      <div>
+        <strong>{projectPath ? "Current project saved" : "Current workspace not saved yet"}</strong>
+        <span>{projectPath ?? "Use Save in the top bar to enable autosave and recovery for this workspace."}</span>
+      </div>
+      <button className="secondary-button" onClick={() => window.dispatchEvent(new CustomEvent(projectPath ? "quickpls:save-project" : "quickpls:open-project"))}>{projectPath ? "Save now" : "Open project"}</button>
+    </section>
     <div className="onboarding-grid">
       <Card title="Start new project" description="Start from the current workspace and build a diagram.">
         <button className="run-button" onClick={() => start("models")}><Plus size={16} />Build model</button>

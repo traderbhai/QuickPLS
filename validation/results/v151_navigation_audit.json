@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.5.1 navigation workspace hardening",
+  "passed": true,
+  "checklist": {
+    "version_is_151": true,
+    "artifact_label_is_151": true,
+    "rail_sequence_updated": true,
+    "rail_removed_validate_groups": true,
+    "workflow_uses_setup": true,
+    "home_hardened": true,
+    "data_has_next_step": true,
+    "setup_has_group_workflows": true,
+    "results_has_groups_bridge": true,
+    "command_palette_updated": true,
+    "no_mojibake": true,
+    "smoke_passed": true,
+    "registry_current_stage": true,
+    "registry_slice_registered": true
+  },
+  "evidence": [
+    "src/components/NavRail.tsx",
+    "src/components/WorkflowStrip.tsx",
+    "src/components/AnalysisCatalog.tsx",
+    "src/components/RunHistory.tsx",
+    "validation/results/v151_navigation_smoke.json"
+  ]
+}

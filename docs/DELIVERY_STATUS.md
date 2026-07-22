@@ -418,3 +418,17 @@ Complete:
 - Updated versioned build metadata to `1.5.0` with artifact label `v1_5_0_researcher_ux_refinement`.
 
 Scope note: v1.5.0 is frontend/product-only. It does not change statistical engines, analysis recipes, result schemas, validation tolerances, or numerical fingerprints.
+
+## v1.5.1 Navigation Workspace Hardening
+
+Complete:
+
+- Redesigned the primary left rail into Home, Data, Model, Setup, Run, Results, and Report.
+- Renamed the previous Start workspace to Home and added current-project/autosave status.
+- Renamed the previous Validate rail item to Setup because that page owns method selection, validation, and readiness.
+- Removed Groups from the permanent rail while preserving group workflows through Setup and the Results Groups tab.
+- Added next-step guidance in Data, Setup, Results, and Report so every workspace has a clear forward action.
+- Added `validation/v151_navigation_smoke.mjs`, `validation/v151_navigation_audit.py`, and the registry slice `v1_5_1_navigation_workspace_hardening`.
+- Updated versioned build metadata to `1.5.1` with artifact label `v1_5_1_navigation_workspace_hardening`.
+
+Scope note: v1.5.1 is frontend/navigation-only. It does not change statistical engines, analysis recipes, result schemas, validation tolerances, or numerical fingerprints.

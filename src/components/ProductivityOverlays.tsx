@@ -62,16 +62,18 @@ export function ProductivityOverlays() {
   }, [dismissToast, toasts]);
 
   const commands = useMemo(() => [
-    { label: "Start workspace", detail: "Open the desktop-first start page", icon: BookOpen, action: () => setView("welcome" as WorkspaceView) },
+    { label: "Home workspace", detail: "Open project start, recent project, demo, and recovery actions", icon: BookOpen, action: () => setView("welcome" as WorkspaceView) },
     { label: "Import dataset", detail: `${datasetColumnCount} columns currently loaded`, icon: Database, action: () => setView("data" as WorkspaceView) },
     { label: "Open SEM designer", detail: `${constructCount} constructs in the current model`, icon: Network, action: () => setView("models" as WorkspaceView) },
     { label: "Use Path tool", detail: "Draw structural paths between constructs", icon: Network, action: () => { setView("models" as WorkspaceView); setDiagramTool("path"); } },
     { label: "Arrange like SmartPLS", detail: "Tidy the SEM diagram left-to-right", icon: Network, action: () => { setView("models" as WorkspaceView); autoLayout("smartpls"); } },
+    { label: "Open Setup", detail: "Method selection, validation, and readiness", icon: Settings, action: () => setView("analyses" as WorkspaceView) },
     { label: "Setup PLS + Bootstrap", detail: "Apply recommended bootstrap preset", icon: FlaskConical, action: () => { applyMethodPreset("pls_bootstrap"); setView("analyses" as WorkspaceView); } },
-    { label: "Setup MICOM + MGA", detail: "Open group-analysis preset", icon: Settings, action: () => { applyMethodPreset("micom_mga"); setView("analyses" as WorkspaceView); } },
+    { label: "Setup MICOM + MGA", detail: "Open group-analysis settings inside Setup", icon: Settings, action: () => { applyMethodPreset("micom_mga"); setView("analyses" as WorkspaceView); } },
     { label: "Open Run checklist", detail: "Review readiness and launch analysis", icon: Play, action: () => setView("run" as WorkspaceView) },
     { label: "Open Results", detail: `${runCount} saved runs`, icon: FileText, action: () => setView("runs" as WorkspaceView) },
-    { label: "Open Publication export", detail: "Preview diagram and table exports", icon: Download, action: () => setView("reports" as WorkspaceView) },
+    { label: "Open Results: Groups", detail: "Review MICOM, MGA, FIMIX, PLS-POS, and IPMA output in Results", icon: FileText, action: () => { useWorkspace.getState().setResultWorkspaceState({ selectedTab: "groups" }); setView("runs" as WorkspaceView); } },
+    { label: "Open Publication Report", detail: "Preview diagram and table exports", icon: Download, action: () => setView("reports" as WorkspaceView) },
     { label: "Publication preview mode", detail: "Lock canvas into publication figure view", icon: FileText, action: () => { setView("models" as WorkspaceView); setDiagramMode("publication"); } },
     { label: "Show keyboard shortcuts", detail: "Open shortcut overlay", icon: Keyboard, action: () => setShortcutOverlayOpen(true) },
   ], [applyMethodPreset, autoLayout, constructCount, datasetColumnCount, runCount, setDiagramMode, setDiagramTool, setShortcutOverlayOpen, setView]);

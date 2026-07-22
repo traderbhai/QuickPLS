@@ -53,8 +53,10 @@ export function AnalysisCatalog() {
     { title: "Run state", detail: readiness.summary, tone: readiness.canRun ? "validated" : "warning" },
   ] as const;
 
+  const groupWorkflowActive = settings.method === "mga" || settings.method === "predict" || settings.method === "ipma";
+
   return <section className="workspace-page analysis-workspace-v14">
-    <PageHeader title="Analysis setup" description="Choose a validated method path, keep common settings simple, and open expert controls only when needed." actions={<StatusBadge status={selectedStatus === "validated" ? "validated" : selectedStatus === "experimental" ? "experimental" : "unsupported"}>{selectedStatus === "validated" ? "validated scope" : selectedStatus}</StatusBadge>} />
+    <PageHeader title="Setup" description="Choose a method, validate model readiness, and keep advanced group or prediction settings available only when needed." actions={<StatusBadge status={selectedStatus === "validated" ? "validated" : selectedStatus === "experimental" ? "experimental" : "unsupported"}>{selectedStatus === "validated" ? "validated scope" : selectedStatus}</StatusBadge>} />
     <ReadinessPanel readiness={readiness} onNavigate={setView} />
 
     <ActionStrip>
@@ -71,6 +73,19 @@ export function AnalysisCatalog() {
         <strong>{preset.label}</strong><span>{preset.description}</span>
       </button>)}
     </div>
+
+    <section className="group-setup-card" aria-label="Group and prediction workflow setup">
+      <div>
+        <strong>Group and prediction workflows</strong>
+        <p>MICOM, permutation MGA, FIMIX-PLS, PLS-POS, and IPMA are configured here, then reviewed from the Groups tab in Results.</p>
+      </div>
+      <div className="group-setup-actions">
+        <button className={setup.selectedPreset === "micom_mga" ? "secondary-button active" : "secondary-button"} onClick={() => applyPreset("micom_mga")}>MICOM + MGA setup</button>
+        <button className={settings.method === "predict" ? "secondary-button active" : "secondary-button"} onClick={() => setSettings({ method: "predict", groupMethods: "pls_pos" })}>PLS-POS / FIMIX setup</button>
+        <button className={settings.method === "ipma" ? "secondary-button active" : "secondary-button"} onClick={() => setSettings({ method: "ipma" })}>IPMA setup</button>
+      </div>
+      <small>{groupWorkflowActive ? "A group or prediction workflow is selected. Completed group outputs will appear in Results > Groups." : "Select a group workflow only when your research design needs invariance, group comparison, segmentation, or IPMA output."}</small>
+    </section>
 
     <div className="analysis-settings guided-settings">
       <div><strong>Basic setup</strong><span className={readiness.canRun ? "status-text validated" : "status-text experimental"}>{readiness.canRun ? <CheckCircle2 size={14} /> : <Clock3 size={14} />}{readiness.canRun ? "ready" : "needs attention"}</span></div>

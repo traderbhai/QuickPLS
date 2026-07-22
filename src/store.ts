@@ -374,7 +374,9 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   projectPath: null,
   past: [],
   future: [],
-  setView: (view) => set({ view }),
+  setView: (view) => set((state) => view === "groups"
+    ? { view: "runs", resultWorkspaceState: { ...state.resultWorkspaceState, selectedTab: "groups" } }
+    : { view }),
   setSelectedNode: (selectedNodeId) => set({ selectedNodeId, selectedEdgeId: null }),
   setSelectedEdge: (selectedEdgeId) => set({ selectedEdgeId, selectedNodeId: null }),
   setSelectedResultRun: (selectedResultRunId) => set((state) => ({ selectedResultRunId, diagramOverlaySettings: { ...state.diagramOverlaySettings, selectedRunId: selectedResultRunId } })),

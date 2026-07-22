@@ -215,20 +215,23 @@ export function TopBar() {
     };
     const handleOpenProject = () => { void openProjectCommand().catch((error) => window.alert(error)); };
     const handleOpenDemo = () => { void openDemoProjectCommand().catch((error) => window.alert(error)); };
+    const handleSaveProject = () => { void saveProject().catch((error) => window.alert(error)); };
     window.addEventListener("quickpls:run-analysis", handleRunRequest);
     window.addEventListener("quickpls:open-project", handleOpenProject);
     window.addEventListener("quickpls:open-demo-project", handleOpenDemo);
+    window.addEventListener("quickpls:save-project", handleSaveProject);
     return () => {
       window.removeEventListener("quickpls:run-analysis", handleRunRequest);
       window.removeEventListener("quickpls:open-project", handleOpenProject);
       window.removeEventListener("quickpls:open-demo-project", handleOpenDemo);
+      window.removeEventListener("quickpls:save-project", handleSaveProject);
     };
   }, [activeJob, canRun, runAnalysis]);
 
   return <>
     <header className="title-bar">
       <Menu size={20} /><strong>QuickPLS</strong><span className="project-title">{projectName}.qpls</span>
-      <span className="alpha-mark">v1.5 researcher UX</span>
+      <span className="alpha-mark">v1.5.1 navigation hardening</span>
     </header>
     <div className="command-bar">
       <button className="icon-command" aria-label="New project" title="New project" onClick={() => { void newProjectCommand().catch((error) => window.alert(error)); }}><Plus size={17} /><span>New</span></button>

@@ -7,7 +7,7 @@ import type { WorkspaceView } from "../types";
 const steps: Array<{ view: WorkspaceView; label: string }> = [
   { view: "data", label: "Data" },
   { view: "models", label: "Model" },
-  { view: "analyses", label: "Validate" },
+  { view: "analyses", label: "Setup" },
   { view: "run", label: "Run" },
   { view: "runs", label: "Results" },
   { view: "reports", label: "Report" },

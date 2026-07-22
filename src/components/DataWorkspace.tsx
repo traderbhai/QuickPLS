@@ -25,6 +25,7 @@ export function DataWorkspace() {
   const inputRef = useRef<HTMLInputElement>(null);
   const dataset = useWorkspace((state) => state.dataset);
   const setDataset = useWorkspace((state) => state.setDataset);
+  const setView = useWorkspace((state) => state.setView);
   const [importKind, setImportKind] = useState<ImportKind>("raw");
   const [sampleSize, setSampleSize] = useState("");
   const [missingMarkers, setMissingMarkers] = useState("NA, N/A, .");
@@ -101,7 +102,12 @@ export function DataWorkspace() {
         {importKind === "raw" && <input className="missing-markers-input" aria-label="Missing value markers" title="Comma-separated missing value markers" placeholder="Missing: NA, ." value={missingMarkers} onChange={(event) => setMissingMarkers(event.target.value)} />}
         <button className="secondary-button" title={validationFixtureSource} onClick={() => { void loadValidationFixture().catch((error) => window.alert(error)); }}><FlaskConical size={16} />Validation fixture</button>
         <button className="secondary-button" onClick={() => { void importData().catch((error) => window.alert(error)); }}><Upload size={16} />Import data</button>
+        <button className="secondary-button" disabled={!dataset.columns.length} title={dataset.columns.length ? "Continue to SEM diagram designer" : "Import a dataset before building the model"} onClick={() => setView("models")}>Build model</button>
       </div>
+    </div>
+    <div className="data-next-step-card">
+      <div><strong>Next step after data import</strong><span>Review column metadata, then create constructs from prefixes or continue to the SEM designer.</span></div>
+      <button className="secondary-button" disabled={!dataset.columns.length} onClick={() => setView("models")}>Open Model</button>
     </div>
     <div className="fixture-source-card">
       <FlaskConical size={16} />

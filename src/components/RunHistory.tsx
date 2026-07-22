@@ -69,7 +69,7 @@ export function RunHistory() {
   if (runs.length === 0) return <section className="workspace-page">
     <PageHeader title="Results" description="Completed runs, immutable recipes, estimates, and provenance records." />
     <ReadinessPanel readiness={readiness} compact onNavigate={setView} />
-    <EmptyState title="No completed results" description={readiness.canRun ? "Run the selected method to create the first result." : readiness.blockers[0]?.detail ?? "Complete the analysis checklist before running."} actions={<><button className="secondary-button" onClick={() => setView("models")}>Open model</button><button className="secondary-button" onClick={() => setView("analyses")}>Check readiness</button></>} />
+    <EmptyState title="No completed results" description={readiness.canRun ? "Run the selected method to create the first result." : readiness.blockers[0]?.detail ?? "Complete the analysis checklist before running."} actions={<><button className="secondary-button" onClick={() => setView("models")}>Open model</button><button className="secondary-button" onClick={() => setView("analyses")}>Open setup</button></>} />
   </section>;
 
   return <section className="workspace-page">
@@ -88,6 +88,13 @@ export function RunHistory() {
       <article><span>Paths</span><strong>{selectedRun.result?.paths.length ?? 0}</strong><small>Click a row to focus the diagram</small></article>
       <article className={significantWarningCount ? "warning" : "validated"}><span>Warnings</span><strong>{significantWarningCount}</strong><small>{significantWarningCount ? "Review provenance before export" : "No extra warnings"}</small></article>
     </div> : null}
+    {resultState.selectedTab === "groups" ? <section className="results-groups-bridge" aria-label="Groups result workflow">
+      <div>
+        <strong>Groups and segmentation results</strong>
+        <p>MICOM, permutation MGA, FIMIX-PLS, PLS-POS, and IPMA outputs appear here when the selected run contains those payloads.</p>
+      </div>
+      <button className="secondary-button" onClick={() => setView("analyses")}>Configure group workflow in Setup</button>
+    </section> : null}
     <div className={`run-list result-tab-${resultState.selectedTab} table-density-${resultState.tableDensity}`}>{visibleRuns.map((run) => <article key={run.id} className="run-row">
       <div className="run-icon"><FlaskConical size={18} /></div>
       <div className="run-content"><strong>{run.name}</strong><p>{new Date(run.createdAt).toLocaleString()} | seed {run.seed} | fingerprint {run.fingerprint}</p><span><AlertTriangle size={13} />{run.warnings[0]}</span>

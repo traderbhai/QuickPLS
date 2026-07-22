@@ -188,7 +188,7 @@ export function Explorer() {
       <div><Database size={15} /><span>{dataset.name}</span><b>{dataset.rowCount ?? dataset.rows.length} rows</b></div>
       <div className="explorer-status-actions">
         <button onClick={() => setView("data")}>Data</button>
-        <button onClick={() => setView("analyses")}>Validate</button>
+        <button onClick={() => setView("analyses")}>Setup</button>
       </div>
     </section>
 
