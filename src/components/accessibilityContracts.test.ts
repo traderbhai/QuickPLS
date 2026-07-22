@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+﻿import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const read = (path: string) => readFileSync(path, "utf8");
@@ -47,8 +47,8 @@ describe("desktop accessibility contracts", () => {
     expect(styles).toContain(".quality-summary:focus-visible");
 
     expect(reports).toContain("<label>R<sup>2</sup>");
-    expect(reports).not.toContain("RÂ²");
-    expect(reports).not.toContain("R�");
+    expect(reports).not.toContain("RÃ‚Â²");
+    expect(reports).not.toContain("Rï¿½");
   });
   it("keeps SEM canvas overlay state visible to users", () => {
     const canvas = read("src/components/ModelCanvas.tsx");
@@ -109,3 +109,4 @@ describe("desktop accessibility contracts", () => {
     expect(styles).toContain(".status-readiness-pill.blocked");
   });
 });
+

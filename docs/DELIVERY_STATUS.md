@@ -362,3 +362,26 @@ Complete:
 - SmartPLS-like editable diagrams use larger ovals, larger indicator boxes, clearer labels, stronger structural arrows, lighter measurement arrows, and distinct covariance arcs.
 - Added context commands for `Auto-place indicators`, `Tidy selected construct`, and `Tidy labels`.
 - Added visual smoke and static audits for dense diagram quality and SVG/canvas parity.
+
+## v1.3.2 SEM Canvas Toolbar Redesign
+
+Complete:
+
+- Replaced the long scrollable SEM canvas toolbar with a compact primary toolbar, contextual object toolbar, and grouped View/Results controls.
+- Permanent toolbar now prioritizes core desktop modeling actions: undo, redo, select, pan, construct, path, covariance, arrange, fit, validate, view, results, and help.
+- Construct, indicator, path, covariance, and multi-selection actions now appear only when relevant.
+- Arrange, View, and Results controls use dropdowns to avoid normal desktop horizontal overflow.
+- Theme, grid/minimap, and layout-lock controls are functional and covered by toolbar smoke evidence.
+- Indicator reassignment, construct pin/unpin, and multi-selection alignment/distribution are covered by contextual-toolbar evidence.
+- Added `validation/v132_toolbar_smoke.mjs`, `validation/v132_toolbar_audit.py`, and the registry slice `v1_3_2_sem_canvas_toolbar_redesign`.
+
+## v1.3.3 SEM Explorer Sidebar Redesign
+
+Complete:
+
+- Replaced the dense left model tree and duplicated Data/Model tab strip with a SEM-native Explorer.
+- Added dedicated Constructs, Variables, Structure, and Issues tabs.
+- Exposed common construct, variable, path, covariance, and model-issue actions directly in the sidebar.
+- Added resizable/collapsible desktop sidebar state that remains UI-only and separate from numerical recipes.
+- Added sidebar-to-canvas focus events for constructs and paths.
+- Added `validation/v133_sem_sidebar_smoke.mjs`, `validation/v133_sem_sidebar_audit.py`, and the registry slice `v1_3_3_sem_explorer_sidebar_redesign`.

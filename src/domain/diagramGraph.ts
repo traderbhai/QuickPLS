@@ -98,6 +98,7 @@ export function buildDiagramGraph(
     const sourceNode = visualNodes.find((node) => node.id === edge.source);
     const targetNode = visualNodes.find((node) => node.id === edge.target);
     const route = paperStyle && sourceNode && targetNode ? routeSides(sourceNode, targetNode) : null;
+    const routing = structuralRouting(edge, paperStyle, options.layout);
     return {
       ...edge,
       type: paperStyle ? "semEdge" : edge.type ?? "smoothstep",
@@ -110,7 +111,7 @@ export function buildDiagramGraph(
       markerEnd: { type: MarkerType.ArrowClosed, width: paperStyle ? 16 : 16, height: paperStyle ? 16 : 16, color: paperStyle ? "#222" : undefined },
       className: edge.data?.role === "control" ? "control-edge" : paperStyle ? "smartpls-structural-edge structural-edge" : "structural-edge",
       selectable: !lockedResultMode,
-      data: { ...edge.data, routing: edge.type ?? (paperStyle ? "straight" : "smoothstep"), labelOffset: options.layout?.edgeLayouts[edge.id]?.labelOffset, edgeClassName: edge.data?.role === "control" ? "control-edge" : paperStyle ? "smartpls-structural-edge structural-edge" : "structural-edge" },
+      data: { ...edge.data, routing, labelOffset: options.layout?.edgeLayouts[edge.id]?.labelOffset, edgeClassName: edge.data?.role === "control" ? "control-edge" : paperStyle ? "smartpls-structural-edge structural-edge" : "structural-edge" },
     };
   });
 
@@ -259,7 +260,9 @@ export function defaultDiagramLayout(modelNodes: Array<Node<ConstructData>>, mod
     indicatorLayouts,
     edgeLayouts,
     diagramViewport: existing?.diagramViewport,
-    diagramTheme: existing?.diagramTheme === "quickpls_color" || existing?.diagramTheme === "high_contrast" || existing?.diagramTheme === "journal_mono" || existing?.diagramTheme === "smartpls_like" ? existing.diagramTheme : "smartpls_like",
+    diagramTheme: existing?.diagramTheme === "academic_grayscale" || existing?.diagramTheme === "quickpls_color" || existing?.diagramTheme === "high_contrast" || existing?.diagramTheme === "journal_mono" || existing?.diagramTheme === "smartpls_like" ? existing.diagramTheme : "smartpls_like",
+    showGrid: existing?.showGrid ?? true,
+    layoutLocked: existing?.layoutLocked ?? false,
   };
 }
 
@@ -391,6 +394,15 @@ function smartplsIndicatorPositions(position: XYPosition, count: number, side: "
 
 function handleId(kind: "source" | "target", side: "left" | "right" | "top" | "bottom") {
   return `${kind}-${side}`;
+}
+
+function structuralRouting(edge: Edge, paperStyle: boolean, layout?: DiagramLayoutState) {
+  if (!paperStyle) return edge.type ?? "smoothstep";
+  const saved = layout?.edgeLayouts[edge.id];
+  if (!saved?.pinned) return "straight";
+  if (saved.routing === "orthogonal") return "smoothstep";
+  if (saved.routing === "curved") return "default";
+  return "straight";
 }
 
 function routeSides(sourceNode: Node<LatentNodeData | IndicatorNodeData>, targetNode: Node<LatentNodeData | IndicatorNodeData>): { source: "left" | "right" | "top" | "bottom"; target: "left" | "right" | "top" | "bottom" } {

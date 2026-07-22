@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.3.3 SEM explorer sidebar redesign",
+  "passed": true,
+  "checklist": {
+    "default_sidebar_has_no_horizontal_overflow": true,
+    "legacy_data_model_inner_tabs_removed": true,
+    "tabs_are_model_native": true,
+    "project_status_and_summary_present": true,
+    "constructs_tab_lists_construct_actions": true,
+    "variables_tab_exposes_assignment_workflow": true,
+    "variable_filter_is_functional": true,
+    "structure_tab_lists_paths_and_controls": true,
+    "structure_click_selects_path": true,
+    "issues_tab_surfaces_actionable_status": true,
+    "collapse_and_expand_workflow": true,
+    "screenshots_written": true
+  },
+  "errors": [],
+  "evidence": {
+    "constructs": {
+      "width": 329,
+      "scroll_width": 329,
+      "body_scroll_height": 519,
+      "body_height": 519,
+      "has_horizontal_overflow": false,
+      "tabs": [
+        "Constructs",
+        "Variables",
+        "Structure",
+        "Issues"
+      ],
+      "text": "SEM explorerCorporate Reputation StudyCorporate Reputation.csv5 rowsDataValidateConstructsVariablesStructureIssuesConstructs4AddCompetenceCOMP · 3 indicators · 0 in / 2 outleftrighttopbottomReset indicatorsLikeabilityLIKE · 2 indicators · 0 in / 2 outleftrighttopbottomReset indicatorsCustomer SatisfactionCUSA · 2 indicators · 2 in / 1 outleftrighttopbottomReset indicatorsCustomer LoyaltyCUSL · 2 indicators · 3 in / 0 outleftrighttopbottomReset indicators4 constructs9 indicators5 paths0 missing",
+      "visible_cards": 4,
+      "visible_variables": 0,
+      "visible_structure_rows": 0,
+      "visible_issues": 0,
+      "collapsed": false,
+      "legacy_data_model_tabs_present": false,
+      "footer_text": "4 constructs9 indicators5 paths0 missing"
+    },
+    "variables": {
+      "width": 329,
+      "scroll_width": 329,
+      "body_scroll_height": 519,
+      "body_height": 519,
+      "has_horizontal_overflow": false,
+      "tabs": [
+        "Constructs",
+        "Variables",
+        "Structure",
+        "Issues"
+      ],
+      "text": "SEM explorerCorporate Reputation StudyCorporate Reputation.csv5 rowsDataValidateConstructsVariablesStructureIssuesDataset variables9allallunassignedassignedselectedCOMP1COMPCOMP2COMPCOMP3COMPLIKE1LIKELIKE2LIKECUSA1CUSACUSA2CUSACUSL1CUSLCUSL2CUSL4 constructs9 indicators5 paths0 missing",
+      "visible_cards": 0,
+      "visible_variables": 9,
+      "visible_structure_rows": 0,
+      "visible_issues": 0,
+      "collapsed": false,
+      "legacy_data_model_tabs_present": false,
+      "footer_text": "4 constructs9 indicators5 paths0 missing"
+    },
+    "structure": {
+      "width": 329,
+      "scroll_width": 329,
+      "body_scroll_height": 519,
+      "body_height": 519,
+      "has_horizontal_overflow": false,
+      "tabs": [
+        "Constructs",
+        "Variables",
+        "Structure",
+        "Issues"
+      ],
+      "text": "SEM explorerCorporate Reputation StudyCorporate Reputation.csv5 rowsDataValidateConstructsVariablesStructureIssuesStructural model5 pathsCOMP -> CUSAStraightLabelLIKE -> CUSAStraightLabelCOMP -> CUSLStraightLabelLIKE -> CUSLStraightLabelCUSA -> CUSLStraightLabelCovariances04 constructs9 indicators5 paths0 missing",
+      "visible_cards": 0,
+      "visible_variables": 0,
+      "visible_structure_rows": 5,
+      "visible_issues": 0,
+      "collapsed": false,
+      "legacy_data_model_tabs_present": false,
+      "footer_text": "4 constructs9 indicators5 paths0 missing"
+    },
+    "issues": {
+      "width": 329,
+      "scroll_width": 329,
+      "body_scroll_height": 519,
+      "body_height": 519,
+      "has_horizontal_overflow": false,
+      "tabs": [
+        "Constructs",
+        "Variables",
+        "Structure",
+        "Issues"
+      ],
+      "text": "SEM explorerCorporate Reputation StudyCorporate Reputation.csv5 rowsDataValidateConstructsVariablesStructureIssuesModel issues0No obvious model-building issues in the current diagram.4 constructs9 indicators5 paths0 missing",
+      "visible_cards": 0,
+      "visible_variables": 0,
+      "visible_structure_rows": 0,
+      "visible_issues": 0,
+      "collapsed": false,
+      "legacy_data_model_tabs_present": false,
+      "footer_text": "4 constructs9 indicators5 paths0 missing"
+    },
+    "collapsed": {
+      "width": 43,
+      "scroll_width": 43,
+      "body_scroll_height": 0,
+      "body_height": 0,
+      "has_horizontal_overflow": false,
+      "tabs": [],
+      "text": "SEM",
+      "visible_cards": 0,
+      "visible_variables": 0,
+      "visible_structure_rows": 0,
+      "visible_issues": 0,
+      "collapsed": true,
+      "legacy_data_model_tabs_present": false,
+      "footer_text": ""
+    },
+    "expanded": {
+      "width": 329,
+      "scroll_width": 329,
+      "body_scroll_height": 519,
+      "body_height": 519,
+      "has_horizontal_overflow": false,
+      "tabs": [
+        "Constructs",
+        "Variables",
+        "Structure",
+        "Issues"
+      ],
+      "text": "SEM explorerCorporate Reputation StudyCorporate Reputation.csv5 rowsDataValidateConstructsVariablesStructureIssuesModel issues0No obvious model-building issues in the current diagram.4 constructs9 indicators5 paths0 missing",
+      "visible_cards": 0,
+      "visible_variables": 0,
+      "visible_structure_rows": 0,
+      "visible_issues": 0,
+      "collapsed": false,
+      "legacy_data_model_tabs_present": false,
+      "footer_text": "4 constructs9 indicators5 paths0 missing"
+    },
+    "pathSelectedText": "COMP -> CUSA\nStraight\nLabel",
+    "screenshots": {
+      "constructs": "D:\\QuickPLS\\validation\\results\\screens\\v133\\sidebar\\01_constructs_tab.png",
+      "variables": "D:\\QuickPLS\\validation\\results\\screens\\v133\\sidebar\\02_variables_tab.png",
+      "structure": "D:\\QuickPLS\\validation\\results\\screens\\v133\\sidebar\\03_structure_tab.png",
+      "pathSelected": "D:\\QuickPLS\\validation\\results\\screens\\v133\\sidebar\\04_structure_path_selected.png",
+      "issues": "D:\\QuickPLS\\validation\\results\\screens\\v133\\sidebar\\05_issues_tab.png",
+      "collapsed": "D:\\QuickPLS\\validation\\results\\screens\\v133\\sidebar\\06_collapsed_sidebar.png"
+    }
+  }
+}

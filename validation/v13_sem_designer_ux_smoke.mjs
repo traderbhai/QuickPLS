@@ -82,7 +82,8 @@ try {
     await page.keyboard.press("Shift+ArrowRight");
   }
 
-  await page.locator("button").filter({ hasText: "SmartPLS" }).click();
+  await page.getByRole("button", { name: /Arrange/i }).click();
+  await page.getByRole("menuitem", { name: /Arrange like SmartPLS/i }).click();
   await page.waitForTimeout(300);
   const denseShot = path.join(ARTIFACTS, "02_arranged_sem_canvas.png");
   await page.screenshot({ path: denseShot, fullPage: true });

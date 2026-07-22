@@ -15,7 +15,7 @@ import { create } from "zustand";
 import { initialEdges, initialNodes, sampleDataset } from "./data/sample";
 import { defaultDiagramLayout, layoutSmartplsModel } from "./domain/diagramGraph";
 import { layoutModel } from "./domain/modelLayout";
-import type { AnalysisMethodId, AnalysisRun, AnalysisUiSettings, ConstructData, Dataset, DiagramLayoutState, DiagramMode, DiagramOverlaySettings, DiagramToolMode, IndicatorSide, PublicationDiagramSettings, WorkspaceView } from "./types";
+import type { AnalysisMethodId, AnalysisRun, AnalysisUiSettings, ConstructData, Dataset, DiagramLayoutState, DiagramMode, DiagramOverlaySettings, DiagramToolMode, ExplorerTab, IndicatorSide, PublicationDiagramSettings, WorkspaceView } from "./types";
 
 type AlignTarget = "left" | "centerX" | "right" | "top" | "centerY" | "bottom";
 type DistributeAxis = "horizontal" | "vertical";
@@ -34,6 +34,9 @@ interface WorkspaceState {
   selectedNodeId: string | null;
   selectedEdgeId: string | null;
   selectedResultRunId: string | null;
+  explorerTab: ExplorerTab;
+  explorerCollapsed: boolean;
+  explorerWidth: number;
   diagramMode: DiagramMode;
   diagramTool: DiagramToolMode;
   diagramOverlaySettings: DiagramOverlaySettings;
@@ -50,11 +53,17 @@ interface WorkspaceState {
   setSelectedNode: (id: string | null) => void;
   setSelectedEdge: (id: string | null) => void;
   setSelectedResultRun: (id: string | null) => void;
+  setExplorerTab: (tab: ExplorerTab) => void;
+  setExplorerCollapsed: (collapsed: boolean) => void;
+  setExplorerWidth: (width: number) => void;
   setDiagramMode: (mode: DiagramMode) => void;
   setDiagramTool: (tool: DiagramToolMode) => void;
   setDiagramOverlaySettings: (patch: Partial<DiagramOverlaySettings>) => void;
   setPublicationDiagramSettings: (patch: Partial<PublicationDiagramSettings>) => void;
   setDiagramViewport: (viewport: DiagramLayoutState["diagramViewport"]) => void;
+  setDiagramTheme: (theme: DiagramLayoutState["diagramTheme"]) => void;
+  setDiagramGridVisible: (showGrid: boolean) => void;
+  setDiagramLayoutLocked: (layoutLocked: boolean) => void;
   checkpoint: () => void;
   undo: () => void;
   redo: () => void;
@@ -78,12 +87,14 @@ interface WorkspaceState {
   removeSelection: () => void;
   reverseSelectedPath: () => void;
   setSelectedPathRouting: (routing: PathRouting) => void;
+  setPathRouting: (id: string, routing: PathRouting) => void;
   alignSelectedConstructs: (target: AlignTarget) => void;
   distributeSelectedConstructs: (axis: DistributeAxis) => void;
   autoLayout: (direction?: "horizontal" | "vertical" | "smartpls") => void;
   moveIndicator: (constructId: string, indicator: string, position: XYPosition) => void;
   setIndicatorSide: (constructId: string, indicator: string, side: IndicatorSide) => void;
   setConstructIndicatorSide: (constructId: string, side: Exclude<IndicatorSide, "free">) => void;
+  toggleConstructPinned: (constructId: string) => void;
   resetIndicatorLayout: (constructId: string, indicator?: string) => void;
   assignIndicator: (constructId: string, indicator: string) => void;
   assignIndicators: (constructId: string, indicators: string[]) => void;
@@ -209,6 +220,28 @@ const syncedDiagramLayout = (nodes: Array<Node<ConstructData>>, edges: Edge[], e
 
 const constructSize = { width: 170, height: 118 };
 
+const routeStyleForType = (routing: PathRouting): DiagramLayoutState["edgeLayouts"][string]["routing"] =>
+  routing === "smoothstep" ? "orthogonal" : routing === "default" ? "curved" : "straight";
+
+const setPathRoutingState = (state: WorkspaceState, id: string, routing: PathRouting) => {
+  if (!state.edges.some((edge) => edge.id === id)) return state;
+  return {
+    ...historyPatch(state),
+    edges: state.edges.map((edge) => edge.id === id ? { ...edge, type: routing } : edge),
+    diagramLayout: syncedDiagramLayout(state.nodes, state.edges, {
+      ...state.diagramLayout,
+      edgeLayouts: {
+        ...state.diagramLayout.edgeLayouts,
+        [id]: {
+          ...(state.diagramLayout.edgeLayouts[id] ?? { routing: routeStyleForType(routing) }),
+          routing: routeStyleForType(routing),
+          pinned: routing !== "straight",
+        },
+      },
+    }),
+  };
+};
+
 const selectedConstructIds = (state: WorkspaceState) => new Set([
   ...state.nodes.filter((node) => node.selected).map((node) => node.id),
   ...(state.selectedNodeId ? [state.selectedNodeId] : []),
@@ -295,6 +328,9 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   selectedNodeId: "satisfaction",
   selectedEdgeId: null,
   selectedResultRunId: null,
+  explorerTab: "constructs",
+  explorerCollapsed: false,
+  explorerWidth: 330,
   diagramMode: "sem",
   diagramTool: "select",
   diagramOverlaySettings: defaultDiagramOverlaySettings,
@@ -311,6 +347,9 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   setSelectedNode: (selectedNodeId) => set({ selectedNodeId, selectedEdgeId: null }),
   setSelectedEdge: (selectedEdgeId) => set({ selectedEdgeId, selectedNodeId: null }),
   setSelectedResultRun: (selectedResultRunId) => set((state) => ({ selectedResultRunId, diagramOverlaySettings: { ...state.diagramOverlaySettings, selectedRunId: selectedResultRunId } })),
+  setExplorerTab: (explorerTab) => set({ explorerTab }),
+  setExplorerCollapsed: (explorerCollapsed) => set({ explorerCollapsed }),
+  setExplorerWidth: (explorerWidth) => set({ explorerWidth: Math.min(430, Math.max(250, Math.trunc(explorerWidth))) }),
   setDiagramMode: (diagramMode) => set((state) => ({
     diagramMode,
     diagramTool: diagramMode === "smartpls_result" ? "select" : state.diagramTool,
@@ -325,6 +364,9 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   }),
   setPublicationDiagramSettings: (patch) => set((state) => ({ publicationDiagramSettings: normalizePublicationDiagramSettings({ ...state.publicationDiagramSettings, ...patch }) })),
   setDiagramViewport: (diagramViewport) => set((state) => ({ diagramLayout: { ...state.diagramLayout, diagramViewport } })),
+  setDiagramTheme: (diagramTheme) => set((state) => ({ diagramLayout: { ...state.diagramLayout, diagramTheme } })),
+  setDiagramGridVisible: (showGrid) => set((state) => ({ diagramLayout: { ...state.diagramLayout, showGrid } })),
+  setDiagramLayoutLocked: (layoutLocked) => set((state) => ({ diagramLayout: { ...state.diagramLayout, layoutLocked } })),
   checkpoint: () => set((state) => historyPatch(state)),
   undo: () => set((state) => {
     const previous = state.past.at(-1);
@@ -670,12 +712,10 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   }),
   setSelectedPathRouting: (routing) => set((state) => {
     const selected = state.edges.find((edge) => edge.id === state.selectedEdgeId);
-    if (!selected || selected.type === routing) return state;
-    return {
-      ...historyPatch(state),
-      edges: state.edges.map((edge) => edge.id === selected.id ? { ...edge, type: routing } : edge),
-    };
+    if (!selected) return state;
+    return setPathRoutingState(state, selected.id, routing);
   }),
+  setPathRouting: (id, routing) => set((state) => setPathRoutingState(state, id, routing)),
   alignSelectedConstructs: (target) => set((state) => {
     const selected = selectedConstructs(state);
     if (selected.length < 2) return state;
@@ -799,6 +839,20 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
       }),
     };
   }),
+  toggleConstructPinned: (constructId) => set((state) => {
+    const construct = state.nodes.find((node) => node.id === constructId);
+    if (!construct) return state;
+    const current = state.diagramLayout.constructLayouts[constructId] ?? { x: construct.position.x, y: construct.position.y };
+    return {
+      diagramLayout: syncedDiagramLayout(state.nodes, state.edges, {
+        ...state.diagramLayout,
+        constructLayouts: {
+          ...state.diagramLayout.constructLayouts,
+          [constructId]: { ...current, x: construct.position.x, y: construct.position.y, pinned: !current.pinned },
+        },
+      }),
+    };
+  }),
   resetIndicatorLayout: (constructId, indicator) => set((state) => {
     const constructIndicators = { ...(state.diagramLayout.indicatorLayouts[constructId] ?? {}) };
     if (indicator) delete constructIndicators[indicator];
@@ -885,6 +939,8 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     selectedNodeId: "satisfaction",
     selectedEdgeId: null,
     selectedResultRunId: null,
+    explorerTab: "constructs",
+    explorerCollapsed: false,
     diagramMode: "sem",
     diagramTool: "select",
     diagramOverlaySettings: defaultDiagramOverlaySettings,
@@ -913,6 +969,8 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     selectedNodeId: project.nodes[0]?.id ?? null,
     selectedEdgeId: null,
     selectedResultRunId: null,
+    explorerTab: "constructs",
+    explorerCollapsed: false,
     view: "models",
     past: [],
     future: [],

@@ -370,3 +370,47 @@ Notes:
 
 - This milestone improves connector geometry, indicator placement, path-label controls, SmartPLS-like visual tokens, and SVG/canvas parity.
 - It deliberately does not change engines, analysis recipes, result schemas, method validation, or numerical fingerprints.
+
+## v1.3.2 SEM Canvas Toolbar Redesign
+
+Status: complete for the toolbar/product-layer milestone.
+
+Evidence:
+
+- `src/components/ModelCanvas.tsx`
+- `src/styles.css`
+- `validation/v132_toolbar_smoke.mjs`
+- `validation/v132_toolbar_audit.py`
+- `docs/V1_3_2_SEM_CANVAS_TOOLBAR_REDESIGN.md`
+- `validation/development_slices.json` slice `v1_3_2_sem_canvas_toolbar_redesign`
+
+Notes:
+
+- This milestone reduces the permanent SEM canvas toolbar to core modeling actions and moves object-specific controls into contextual toolbars.
+- Arrange, View, and Results are grouped into dropdowns to prevent normal desktop toolbar scrolling.
+- View controls now apply real diagram themes, grid/minimap visibility, and layout locking.
+- Contextual controls now include indicator reassignment, construct pin/unpin, and multi-selection alignment/distribution evidence.
+- Placeholder residual/caption/observed-indicator tools remain hidden from the permanent toolbar until those workflows are fully specified.
+- It deliberately does not change engines, analysis recipes, result schemas, method validation, or numerical fingerprints.
+
+## v1.3.3 SEM Explorer Sidebar Redesign
+
+Status: complete for the sidebar/product-layer milestone.
+
+Evidence:
+
+- `src/components/Explorer.tsx`
+- `src/components/ModelCanvas.tsx`
+- `src/store.ts`
+- `src/styles.css`
+- `validation/v133_sem_sidebar_smoke.mjs`
+- `validation/v133_sem_sidebar_audit.py`
+- `docs/V1_3_3_SEM_EXPLORER_SIDEBAR_REDESIGN.md`
+- `validation/development_slices.json` slice `v1_3_3_sem_explorer_sidebar_redesign`
+
+Notes:
+
+- The left sidebar now behaves as a SEM Explorer with Constructs, Variables, Structure, and Issues tabs.
+- Common model-building actions are available without opening the right inspector: construct focus, rename, duplicate, delete, path creation, variable assignment, indicator layout commands, path routing, label reset, and issue fix actions.
+- Sidebar width, collapsed state, and active tab are UI-only preferences and do not affect method recipes or numerical fingerprints.
+- The milestone deliberately does not change engines, result schemas, method validation, or export calculations.

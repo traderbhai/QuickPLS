@@ -58,7 +58,8 @@ try {
   for (const fixture of fixtures) {
     await page.evaluate((name) => window.__QUICKPLS_SMOKE__?.loadDiagramFixture(name), fixture);
     await page.waitForTimeout(500);
-    await page.locator("button").filter({ hasText: "SmartPLS" }).click();
+    await page.getByRole("button", { name: /Arrange/i }).click();
+    await page.getByRole("menuitem", { name: /Arrange like SmartPLS/i }).click();
     await page.waitForTimeout(500);
     const screenshot = path.join(ARTIFACTS, `${fixture}.png`);
     await page.screenshot({ path: screenshot, fullPage: true });

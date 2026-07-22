@@ -82,7 +82,8 @@ try {
 
   await page.evaluate(() => window.__QUICKPLS_SMOKE__?.loadDiagramFixture("mediation"));
   await page.waitForTimeout(350);
-  await page.locator("button").filter({ hasText: "SmartPLS" }).click();
+  await page.getByRole("button", { name: /Arrange/i }).click();
+  await page.getByRole("menuitem", { name: /Arrange like SmartPLS/i }).click();
   await page.waitForTimeout(350);
   await page.locator('select[aria-label="Diagram mode"]').selectOption("publication");
   await page.waitForTimeout(250);

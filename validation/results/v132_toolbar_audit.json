@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.3.2 SEM canvas toolbar redesign",
+  "passed": true,
+  "checklist": {
+    "toolbar_three_zone_structure": true,
+    "main_toolbar_core_actions": true,
+    "placeholder_tools_hidden_from_main_toolbar": true,
+    "arrange_view_results_dropdowns": true,
+    "view_controls_are_functional": true,
+    "construct_context_actions": true,
+    "indicator_context_actions": true,
+    "path_context_actions": true,
+    "multi_selection_context_actions": true,
+    "disabled_reasons_visible": true,
+    "toolbar_css_no_horizontal_scroll": true,
+    "theme_css_exists": true,
+    "visual_smoke_passed": true,
+    "visual_smoke_exercises_functional_view_controls": true,
+    "no_r2_mojibake": true,
+    "npm_scripts_registered": true,
+    "registry_gate_registered": true
+  },
+  "mojibake_hits": [],
+  "evidence": [
+    "validation/results/v132_toolbar_smoke.json",
+    "validation/results/screens/v132/toolbar/",
+    "src/components/ModelCanvas.tsx",
+    "src/styles.css"
+  ]
+}

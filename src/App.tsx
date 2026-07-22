@@ -14,7 +14,7 @@ import { WorkflowStrip } from "./components/WorkflowStrip";
 import { completedSamplePlsRun } from "./data/smokeRun";
 import { sampleDataset } from "./data/sample";
 import { useWorkspace } from "./store";
-import { useEffect } from "react";
+import { useEffect, type CSSProperties } from "react";
 import { autosaveNativeProject, isNativeDesktop } from "./services/projectService";
 import type { ConstructData, WorkspaceView } from "./types";
 import type { Edge, Node } from "@xyflow/react";
@@ -25,6 +25,7 @@ declare global {
       addCompletedRun: () => void;
       loadDiagramFixture: (fixture: string) => void;
       arrangeSmartpls: () => void;
+      selectConstructs: (ids: string[]) => void;
       setView: (nextView: string) => void;
     };
   }
@@ -86,6 +87,8 @@ export function App() {
   const diagramLayout = useWorkspace((state) => state.diagramLayout);
   const dataset = useWorkspace((state) => state.dataset);
   const projectPath = useWorkspace((state) => state.projectPath);
+  const explorerCollapsed = useWorkspace((state) => state.explorerCollapsed);
+  const explorerWidth = useWorkspace((state) => state.explorerWidth);
   useEffect(() => {
     if (!new URLSearchParams(window.location.search).has("quickpls_smoke")) return;
     const smokeApi = {
@@ -106,6 +109,14 @@ export function App() {
         });
       },
       arrangeSmartpls: () => useWorkspace.getState().autoLayout("smartpls"),
+      selectConstructs: (ids: string[]) => {
+        const selected = new Set(ids);
+        useWorkspace.setState((state) => ({
+          selectedNodeId: null,
+          selectedEdgeId: null,
+          nodes: state.nodes.map((node) => ({ ...node, selected: selected.has(node.id) })),
+        }));
+      },
       setView: (nextView: string) => {
         if (["data", "models", "analyses", "run", "runs", "groups", "reports"].includes(nextView)) {
           useWorkspace.getState().setView(nextView as WorkspaceView);
@@ -122,7 +133,7 @@ export function App() {
   }, [projectPath, nodes, edges, runs, analysisSettings, diagramMode, diagramOverlaySettings, publicationDiagramSettings, diagramLayout, dataset]);
   return <div className="app-shell">
     <TopBar />
-    <div className="workspace-shell">
+    <div className={`workspace-shell${explorerCollapsed ? " explorer-collapsed" : ""}`} style={{ "--explorer-width": `${explorerWidth}px` } as CSSProperties}>
       <NavRail />
       {view === "models" ? <><Explorer /><ModelCanvas /><Inspector /></> : <div className="page-host"><WorkflowStrip />{view === "data" ? <DataWorkspace /> : view === "analyses" ? <AnalysisCatalog /> : view === "run" ? <RunWorkspace /> : view === "runs" ? <RunHistory /> : view === "groups" ? <GroupsWorkspace /> : <ReportsWorkspace />}</div>}
     </div>

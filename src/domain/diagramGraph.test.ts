@@ -63,6 +63,17 @@ describe("SEM diagram graph", () => {
     expect(locked.edges.find((edge) => edge.id === "x-y")?.label).toBe("");
   });
 
+  it("normalizes legacy bent construct paths to straight academic routes unless explicitly pinned", () => {
+    const legacyBent: Edge[] = [{ id: "x-y", source: "x", target: "y", label: "Path", type: "smoothstep" }];
+    const graph = buildDiagramGraph(nodes, legacyBent, "sem", "model");
+    expect(graph.edges.find((edge) => edge.id === "x-y")?.data?.routing).toBe("straight");
+
+    const layout = defaultDiagramLayout(nodes, legacyBent);
+    layout.edgeLayouts["x-y"] = { routing: "orthogonal", pinned: true };
+    const pinned = buildDiagramGraph(nodes, legacyBent, "sem", "model", undefined, { layout });
+    expect(pinned.edges.find((edge) => edge.id === "x-y")?.data?.routing).toBe("smoothstep");
+  });
+
   it("keeps the editable SEM canvas tied to manual node positions", () => {
     const moved = nodes.map((node) => node.id === "x" ? { ...node, position: { x: 720, y: 310 } } : node);
     const graph = buildDiagramGraph(moved, edges, "sem", "model");

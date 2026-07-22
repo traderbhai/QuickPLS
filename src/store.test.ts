@@ -57,6 +57,18 @@ describe("model editor state", () => {
     expect(state.edges.every((edge) => edge.label === "Path")).toBe(true);
   });
 
+  it("keeps SEM explorer UI preferences separate from numerical history", () => {
+    const beforeHistory = useWorkspace.getState().past.length;
+    useWorkspace.getState().setExplorerTab("variables");
+    useWorkspace.getState().setExplorerWidth(900);
+    useWorkspace.getState().setExplorerCollapsed(true);
+    const state = useWorkspace.getState();
+    expect(state.explorerTab).toBe("variables");
+    expect(state.explorerWidth).toBe(430);
+    expect(state.explorerCollapsed).toBe(true);
+    expect(state.past).toHaveLength(beforeHistory);
+  });
+
   it("prevents self paths and duplicate directed paths", () => {
     const before = useWorkspace.getState().edges.length;
     useWorkspace.getState().onConnect({ source: "competence", target: "competence", sourceHandle: null, targetHandle: null });
@@ -164,8 +176,11 @@ describe("model editor state", () => {
     useWorkspace.getState().setSelectedEdge("comp-cusa");
     useWorkspace.getState().setSelectedPathRouting("straight");
     expect(useWorkspace.getState().edges.find((edge) => edge.id === "comp-cusa")?.type).toBe("straight");
+    expect(useWorkspace.getState().diagramLayout.edgeLayouts["comp-cusa"]?.pinned).toBe(false);
+    useWorkspace.getState().setSelectedPathRouting("smoothstep");
+    expect(useWorkspace.getState().diagramLayout.edgeLayouts["comp-cusa"]).toMatchObject({ routing: "orthogonal", pinned: true });
     useWorkspace.getState().undo();
-    expect(useWorkspace.getState().edges.find((edge) => edge.id === "comp-cusa")?.type).toBe("smoothstep");
+    expect(useWorkspace.getState().edges.find((edge) => edge.id === "comp-cusa")?.type).toBe("straight");
   });
 
   it("marks a path as a control with undoable edge metadata", () => {
@@ -308,6 +323,24 @@ describe("model editor state", () => {
     expect(state.publicationDiagramSettings.layoutSource).toBe("current_canvas");
     expect(state.diagramLayout.diagramVersion).toBe("sem_designer_v1");
     expect(state.diagramLayout.constructLayouts.competence).toMatchObject({ x: state.nodes.find((node) => node.id === "competence")?.position.x });
+  });
+
+  it("persists toolbar view preferences without changing the engine model", () => {
+    const originalNodes = useWorkspace.getState().nodes;
+    const originalEdges = useWorkspace.getState().edges;
+    useWorkspace.getState().setDiagramTheme("academic_grayscale");
+    useWorkspace.getState().setDiagramGridVisible(false);
+    useWorkspace.getState().setDiagramLayoutLocked(true);
+    useWorkspace.getState().toggleConstructPinned("competence");
+    const state = useWorkspace.getState();
+    expect(state.diagramLayout.diagramTheme).toBe("academic_grayscale");
+    expect(state.diagramLayout.showGrid).toBe(false);
+    expect(state.diagramLayout.layoutLocked).toBe(true);
+    expect(state.diagramLayout.constructLayouts.competence.pinned).toBe(true);
+    expect(state.nodes).toEqual(originalNodes);
+    expect(state.edges).toEqual(originalEdges);
+    useWorkspace.getState().setDiagramLayoutLocked(false);
+    expect(useWorkspace.getState().diagramLayout.constructLayouts.competence.pinned).toBe(true);
   });
 
   it("persists and resets indicator layout independently from the engine model", () => {

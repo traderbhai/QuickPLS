@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.3.3 SEM explorer sidebar redesign",
+  "passed": true,
+  "checklist": {
+    "explorer_uses_sem_native_tabs": true,
+    "duplicate_data_model_tabs_removed": true,
+    "project_status_and_summary_exist": true,
+    "construct_actions_exist": true,
+    "variable_assignment_workflow_exists": true,
+    "structure_tab_controls_exist": true,
+    "issues_tab_is_actionable": true,
+    "sidebar_resize_and_collapse_exist": true,
+    "canvas_focus_hooks_exist": true,
+    "store_ui_state_exists": true,
+    "store_ui_state_tested": true,
+    "css_replaces_dense_tree_with_sem_explorer": true,
+    "version_and_release_label_updated": true,
+    "npm_scripts_registered": true,
+    "registry_gate_registered": true,
+    "visual_smoke_passed": true,
+    "visual_smoke_covers_key_sidebar_states": true
+  },
+  "evidence": [
+    "src/components/Explorer.tsx",
+    "src/components/ModelCanvas.tsx",
+    "src/store.ts",
+    "src/styles.css",
+    "validation/results/v133_sem_sidebar_smoke.json",
+    "validation/results/screens/v133/sidebar/"
+  ]
+}

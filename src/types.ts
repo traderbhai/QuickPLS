@@ -1,4 +1,5 @@
 export type WorkspaceView = "data" | "models" | "analyses" | "run" | "runs" | "groups" | "reports";
+export type ExplorerTab = "constructs" | "variables" | "structure" | "issues";
 export type MeasurementMode = "reflective" | "formative";
 export type MethodStatus = "experimental" | "validated" | "unsupported";
 export type AnalysisMethodId = "pls_pm" | "bootstrap" | "plsc" | "wpls" | "cca" | "cta_pls" | "endogeneity" | "nonlinear_effects" | "moderated_mediation" | "predict" | "mga" | "ipma" | "cbsem" | "pca" | "gsca" | "regression" | "nca";
@@ -49,6 +50,8 @@ export interface DiagramLayoutState {
   edgeLayouts: Record<string, EdgeLayout>;
   diagramViewport?: DiagramViewport;
   diagramTheme: "academic_grayscale" | "smartpls_like" | "quickpls_color" | "journal_mono" | "high_contrast";
+  showGrid: boolean;
+  layoutLocked: boolean;
 }
 
 export interface AnalysisUiSettings {

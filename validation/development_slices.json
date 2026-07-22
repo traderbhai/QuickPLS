@@ -2,14 +2,14 @@
   "schema_version": 1,
   "program": "QuickPLS accelerated method-slice registry",
   "active_goal": "Complete QuickPLS as a free, proprietary, fully offline Windows desktop application that is first ready in all sense before unrestricted research use.",
-  "current_stage": "v1_3_1_sem_diagram_geometry_polish",
+  "current_stage": "v1_3_3_sem_explorer_sidebar_redesign",
   "policy": {
     "promotion_order": [
       "unsupported",
       "experimental",
       "validated"
     ],
-    "deterministic_tolerance": 0.000001,
+    "deterministic_tolerance": 1e-06,
     "stable_export_rule": "Stable exports must reject or watermark experimental results.",
     "validation_rule": "A method cannot be marked validated until formula, implementation, reference fixtures, simulations or metamorphic tests, UI, CLI, exports, and documentation gates all pass."
   },
@@ -1205,13 +1205,13 @@
           "track": "product",
           "name": "Paper-style rendering",
           "status": "passed",
-          "evidence": "src/components/LatentNode.tsx, src/components/IndicatorNode.tsx, and src/styles.css render grey latent ovals, light grey indicator rectangles, direct dark arrows, hidden editor affordances, and corrected R² text."
+          "evidence": "src/components/LatentNode.tsx, src/components/IndicatorNode.tsx, and src/styles.css render grey latent ovals, light grey indicator rectangles, direct dark arrows, hidden editor affordances, and corrected R\u00b2 text."
         },
         {
           "track": "product",
           "name": "Publication SVG export parity",
           "status": "passed",
-          "evidence": "src/domain/publicationDiagram.ts and src/components/ReportsWorkspace.tsx default SVG export to SmartPLS-like grayscale with controls for precision, loadings, paths, R², and palette variants."
+          "evidence": "src/domain/publicationDiagram.ts and src/components/ReportsWorkspace.tsx default SVG export to SmartPLS-like grayscale with controls for precision, loadings, paths, R\u00b2, and palette variants."
         },
         {
           "track": "automation",
@@ -1935,13 +1935,107 @@
           "track": "validation",
           "name": "Visual smoke and quality audit",
           "status": "passed",
-          "evidence": "validation/v131_sem_geometry_smoke.mjs writes screenshots and quality metrics under validation/results/screens/v131/sem-geometry; validation/v131_sem_geometry_audit.py verifies source, tests, smoke, and R² integrity."
+          "evidence": "validation/v131_sem_geometry_smoke.mjs writes screenshots and quality metrics under validation/results/screens/v131/sem-geometry; validation/v131_sem_geometry_audit.py verifies source, tests, smoke, and R\u00b2 integrity."
         },
         {
           "track": "documentation",
           "name": "Geometry polish scope documented",
           "status": "passed",
           "evidence": "docs/V1_3_1_SEM_DIAGRAM_GEOMETRY_POLISH.md documents the diagram-layer scope, layout rules, export parity, evidence, and non-engine boundary."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_3_2_sem_canvas_toolbar_redesign",
+      "release": "v1.3.2",
+      "family": "Product",
+      "name": "SEM canvas toolbar UX redesign",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 26,
+      "summary": "Redesigns the SEM canvas toolbar into a compact desktop modeling bar with contextual object actions, grouped arrange/view/result controls, disabled-action explanations, and smoke-tested no-overflow behavior without changing statistical recipes or result schemas.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Three-zone toolbar structure",
+          "status": "passed",
+          "evidence": "src/components/ModelCanvas.tsx renders canvas-toolbar-primary, canvas-context-toolbar, and grouped Arrange/View/Results dropdown menus."
+        },
+        {
+          "track": "product",
+          "name": "Core actions prioritized",
+          "status": "passed",
+          "evidence": "The permanent toolbar keeps Undo, Redo, Select, Pan, Construct, Path, Covariance, Arrange, Fit, Validate, View, Results, and Help while hiding residual, caption, and observed-indicator placeholders."
+        },
+        {
+          "track": "product",
+          "name": "Contextual object actions",
+          "status": "passed",
+          "evidence": "Construct, indicator, structural path, covariance, and multi-selection actions are exposed through contextual toolbar rows with rename, duplicate, indicator reassignment, construct pin/unpin, side placement, route, label, align, distribute, and delete controls where applicable."
+        },
+        {
+          "track": "product",
+          "name": "Result and view controls grouped",
+          "status": "passed",
+          "evidence": "View and Results dropdowns contain diagram modes, functional theme selection, grid/minimap toggle, layout lock, selected run, overlay mode, precision, and overlay checkboxes while preserving locked result/publication mode behavior."
+        },
+        {
+          "track": "validation",
+          "name": "Toolbar smoke and static audit",
+          "status": "passed",
+          "evidence": "validation/v132_toolbar_smoke.mjs writes screenshots under validation/results/screens/v132/toolbar and verifies no overflow, functional View controls, multi-selection context actions, and R? overlays. validation/v132_toolbar_audit.py verifies source structure, smoke evidence, scripts, theme CSS, disabled reasons, and R? integrity."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_3_3_sem_explorer_sidebar_redesign",
+      "release": "v1.3.3",
+      "family": "Product",
+      "name": "SEM explorer sidebar redesign",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 27,
+      "summary": "Replaces the dense left model tree with a professional SEM Explorer for constructs, dataset variables, structural paths/covariances, and actionable model issues, while keeping layout state UI-only and numerical recipes unchanged.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "SEM-native explorer structure",
+          "status": "passed",
+          "evidence": "src/components/Explorer.tsx replaces the duplicated Data/Model tabs with Constructs, Variables, Structure, and Issues tabs plus project status and compact model summary."
+        },
+        {
+          "track": "product",
+          "name": "Construct and variable workflows",
+          "status": "passed",
+          "evidence": "The sidebar exposes construct focus, rename, duplicate, delete, path creation, pinning, indicator-side commands, drag-based variable assignment, grouped construct creation, and unassign/reassign workflows."
+        },
+        {
+          "track": "product",
+          "name": "Structure and issue navigation",
+          "status": "passed",
+          "evidence": "The Structure tab lists structural paths and covariances with focus, reverse, route, label reset, and delete controls; the Issues tab surfaces missing indicators, missing paths, single-item constructs, and dataset warnings with fix actions."
+        },
+        {
+          "track": "product",
+          "name": "Resizable and collapsible desktop panel",
+          "status": "passed",
+          "evidence": "src/store.ts adds explorerTab, explorerCollapsed, and explorerWidth UI state; src/App.tsx applies the width; src/styles.css provides resize and collapsed explorer states."
+        },
+        {
+          "track": "validation",
+          "name": "Sidebar smoke and static audit",
+          "status": "passed",
+          "evidence": "validation/v133_sem_sidebar_smoke.mjs writes screenshots under validation/results/screens/v133/sidebar and validation/v133_sem_sidebar_audit.py verifies source wiring, UI-only store state, scripts, registry, and visual smoke evidence."
+        },
+        {
+          "track": "documentation",
+          "name": "Sidebar redesign scope documented",
+          "status": "passed",
+          "evidence": "docs/V1_3_3_SEM_EXPLORER_SIDEBAR_REDESIGN.md documents the product scope, non-engine boundary, workflows, evidence, and versioned build expectation."
         }
       ],
       "next_actions": []
