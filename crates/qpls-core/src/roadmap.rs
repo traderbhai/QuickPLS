@@ -177,7 +177,7 @@ mod tests {
     #[test]
     fn registry_keeps_current_stage_explicit() {
         let registry = development_slice_registry().unwrap();
-        assert_eq!(registry.current_stage, "v1_3_3_sem_explorer_sidebar_redesign");
+        assert_eq!(registry.current_stage, "v1_5_0_researcher_ux_refinement");
         assert!(
             registry
                 .slices
@@ -228,6 +228,22 @@ mod tests {
                 .slices
                 .iter()
                 .any(|slice| slice.id == "v1_3_3_sem_explorer_sidebar_redesign"
+                    && slice.status == SliceStatus::Validated
+                    && slice.stable_output)
+        );
+        assert!(
+            registry
+                .slices
+                .iter()
+                .any(|slice| slice.id == "v1_4_frontend_success_program"
+                    && slice.status == SliceStatus::Validated
+                    && slice.stable_output)
+        );
+        assert!(
+            registry
+                .slices
+                .iter()
+                .any(|slice| slice.id == "v1_5_0_researcher_ux_refinement"
                     && slice.status == SliceStatus::Validated
                     && slice.stable_output)
         );

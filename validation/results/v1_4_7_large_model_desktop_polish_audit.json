@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "target": "v1_4_7_large_model_desktop_polish",
+  "section": "large-model-desktop",
+  "passed": true,
+  "checklist": {
+    "large_model_state": true,
+    "view_menu_controls": true,
+    "smoke_api_supports_welcome": true,
+    "versioned_desktop_build_script": true
+  },
+  "evidence": [
+    "src/components",
+    "src/store.ts",
+    "src/types.ts",
+    "src/styles.css",
+    "package.json"
+  ]
+}

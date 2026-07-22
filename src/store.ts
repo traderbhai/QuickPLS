@@ -15,7 +15,7 @@ import { create } from "zustand";
 import { initialEdges, initialNodes, sampleDataset } from "./data/sample";
 import { defaultDiagramLayout, layoutSmartplsModel } from "./domain/diagramGraph";
 import { layoutModel } from "./domain/modelLayout";
-import type { AnalysisMethodId, AnalysisRun, AnalysisUiSettings, ConstructData, Dataset, DiagramLayoutState, DiagramMode, DiagramOverlaySettings, DiagramToolMode, ExplorerTab, IndicatorSide, PublicationDiagramSettings, WorkspaceView } from "./types";
+import type { AnalysisMethodId, AnalysisRun, AnalysisUiSettings, ConstructData, Dataset, DiagramLayoutState, DiagramMode, DiagramOverlaySettings, DiagramToolMode, ExplorerTab, IndicatorSide, LargeModelViewState, MethodPresetId, MethodSetupState, OnboardingState, PublicationDiagramSettings, ResultWorkspaceState, ToastNotification, UiPreferences, WorkspaceView } from "./types";
 
 type AlignTarget = "left" | "centerX" | "right" | "top" | "centerY" | "bottom";
 type DistributeAxis = "horizontal" | "vertical";
@@ -37,6 +37,14 @@ interface WorkspaceState {
   explorerTab: ExplorerTab;
   explorerCollapsed: boolean;
   explorerWidth: number;
+  uiPreferences: UiPreferences;
+  resultWorkspaceState: ResultWorkspaceState;
+  methodSetupState: MethodSetupState;
+  onboardingState: OnboardingState;
+  largeModelViewState: LargeModelViewState;
+  commandPaletteOpen: boolean;
+  shortcutOverlayOpen: boolean;
+  toasts: ToastNotification[];
   diagramMode: DiagramMode;
   diagramTool: DiagramToolMode;
   diagramOverlaySettings: DiagramOverlaySettings;
@@ -56,6 +64,16 @@ interface WorkspaceState {
   setExplorerTab: (tab: ExplorerTab) => void;
   setExplorerCollapsed: (collapsed: boolean) => void;
   setExplorerWidth: (width: number) => void;
+  setUiPreferences: (patch: Partial<UiPreferences>) => void;
+  setResultWorkspaceState: (patch: Partial<ResultWorkspaceState>) => void;
+  setMethodSetupState: (patch: Partial<MethodSetupState>) => void;
+  applyMethodPreset: (preset: MethodPresetId) => void;
+  setOnboardingState: (patch: Partial<OnboardingState>) => void;
+  setLargeModelViewState: (patch: Partial<LargeModelViewState>) => void;
+  setCommandPaletteOpen: (open: boolean) => void;
+  setShortcutOverlayOpen: (open: boolean) => void;
+  pushToast: (toast: Omit<ToastNotification, "id">) => string;
+  dismissToast: (id: string) => void;
   setDiagramMode: (mode: DiagramMode) => void;
   setDiagramTool: (tool: DiagramToolMode) => void;
   setDiagramOverlaySettings: (patch: Partial<DiagramOverlaySettings>) => void;
@@ -112,6 +130,11 @@ const supportedAnalysisMethods = new Set<AnalysisMethodId>(["pls_pm", "bootstrap
 const defaultAnalysisSettings: AnalysisUiSettings = { method: "pls_pm", bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 0, seed: 20260718, workers: 1, confidenceLevel: 0.95, caseWeightColumn: null, groupColumn: null, ipmaTargets: null, groupMethods: "micom,mga_permutation", groupPermutationSamples: 999, segmentCount: 2, segmentStarts: 10, minimumSegmentShare: 0.10, cbsemModelType: "sem", cbsemMeanStructure: false, cbsemStandardization: "std_all", cbsemGroupColumn: null, cbsemInvarianceSteps: "configural,metric,scalar", cbsemBootstrapSamples: 0, pcaVariables: null, pcaComponentRule: "kaiser", pcaComponents: 2, regressionType: "ols", regressionOutcome: null, regressionPredictors: null, regressionControls: null, robustSe: "hc3", processModel: "mediation", processX: null, processM: null, processW: null, ncaX: null, ncaY: null, ncaCeiling: "both", ncaPermutationSamples: 999 };
 const defaultDiagramOverlaySettings: DiagramOverlaySettings = { selectedRunId: null, mode: "model", precision: 3, showLoadings: true, showPathCoefficients: true, showPValues: false, showTValues: false, showRSquared: true, showWarnings: true, showWatermark: true };
 const defaultPublicationDiagramSettings: PublicationDiagramSettings = { mode: "smartpls_result", precision: 3, overlayMode: "paths_r2", aspectRatio: "wide", palette: "grayscale", layoutSource: "current_canvas", showLoadings: true, showPathCoefficients: true, showRSquared: true, showValidationWatermark: true, showUnsupportedWarning: true, showRunProvenance: true };
+const defaultUiPreferences: UiPreferences = { density: "compact", tableDensity: "compact", defaultPrecision: 4, showAdvancedHelp: true, recentPanels: ["models", "runs", "reports"] };
+const defaultResultWorkspaceState: ResultWorkspaceState = { selectedRunId: null, selectedTab: "summary", tableSearch: "", tableDensity: "compact", includeExperimental: false };
+const defaultMethodSetupState: MethodSetupState = { mode: "basic", selectedPreset: "standard_pls", expandedSections: ["basic"] };
+const defaultOnboardingState: OnboardingState = { dismissed: false, selectedDemo: "corporate_reputation", recentProjectCards: [] };
+const defaultLargeModelViewState: LargeModelViewState = { indicatorsCollapsed: false, isolatedConstructId: null, neighborhoodMode: "off" };
 
 const normalizeDiagramOverlaySettings = (settings?: Partial<DiagramOverlaySettings>): DiagramOverlaySettings => ({
   ...defaultDiagramOverlaySettings,
@@ -322,7 +345,7 @@ const validUniqueIndicators = (indicators: string[], dataset: Dataset) =>
   [...new Set(indicators)].filter((indicator): indicator is string => typeof indicator === "string" && dataset.columns.includes(indicator));
 
 export const useWorkspace = create<WorkspaceState>()((set) => ({
-  view: "models",
+  view: "welcome",
   nodes: initialNodes,
   edges: initialEdges,
   selectedNodeId: "satisfaction",
@@ -331,6 +354,14 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   explorerTab: "constructs",
   explorerCollapsed: false,
   explorerWidth: 330,
+  uiPreferences: defaultUiPreferences,
+  resultWorkspaceState: defaultResultWorkspaceState,
+  methodSetupState: defaultMethodSetupState,
+  onboardingState: defaultOnboardingState,
+  largeModelViewState: defaultLargeModelViewState,
+  commandPaletteOpen: false,
+  shortcutOverlayOpen: false,
+  toasts: [],
   diagramMode: "sem",
   diagramTool: "select",
   diagramOverlaySettings: defaultDiagramOverlaySettings,
@@ -350,6 +381,34 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   setExplorerTab: (explorerTab) => set({ explorerTab }),
   setExplorerCollapsed: (explorerCollapsed) => set({ explorerCollapsed }),
   setExplorerWidth: (explorerWidth) => set({ explorerWidth: Math.min(430, Math.max(250, Math.trunc(explorerWidth))) }),
+  setUiPreferences: (patch) => set((state) => ({ uiPreferences: { ...state.uiPreferences, ...patch, defaultPrecision: Math.min(6, Math.max(2, Math.trunc(patch.defaultPrecision ?? state.uiPreferences.defaultPrecision))) } })),
+  setResultWorkspaceState: (patch) => set((state) => ({ resultWorkspaceState: { ...state.resultWorkspaceState, ...patch } })),
+  setMethodSetupState: (patch) => set((state) => ({ methodSetupState: { ...state.methodSetupState, ...patch, expandedSections: patch.expandedSections ?? state.methodSetupState.expandedSections } })),
+  applyMethodPreset: (preset) => set((state) => {
+    const presets: Record<MethodPresetId, Partial<AnalysisUiSettings>> = {
+      standard_pls: { method: "pls_pm", bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 0 },
+      pls_bootstrap: { method: "bootstrap", bootstrapSamples: 5000, studentizedInnerSamples: 0, permutationSamples: 0 },
+      plspredict: { method: "predict", groupMethods: "pls_pos", segmentCount: 2, segmentStarts: 10 },
+      micom_mga: { method: "mga", groupMethods: "micom,mga_permutation", groupPermutationSamples: 999 },
+      cbsem_cfa: { method: "cbsem", cbsemModelType: "cfa", cbsemStandardization: "std_all", cbsemMeanStructure: false },
+      ols_regression: { method: "regression", regressionType: "ols", robustSe: "hc3" },
+      nca: { method: "nca", ncaCeiling: "both", ncaPermutationSamples: 999 },
+    };
+    return {
+      analysisSettings: normalizeAnalysisSettings({ ...state.analysisSettings, ...presets[preset] }),
+      methodSetupState: { ...state.methodSetupState, selectedPreset: preset, mode: preset === "standard_pls" ? "basic" : state.methodSetupState.mode },
+    };
+  }),
+  setOnboardingState: (patch) => set((state) => ({ onboardingState: { ...state.onboardingState, ...patch } })),
+  setLargeModelViewState: (patch) => set((state) => ({ largeModelViewState: { ...state.largeModelViewState, ...patch } })),
+  setCommandPaletteOpen: (commandPaletteOpen) => set({ commandPaletteOpen }),
+  setShortcutOverlayOpen: (shortcutOverlayOpen) => set({ shortcutOverlayOpen }),
+  pushToast: (toast) => {
+    const id = crypto.randomUUID();
+    set((state) => ({ toasts: [{ id, ...toast }, ...state.toasts].slice(0, 4) }));
+    return id;
+  },
+  dismissToast: (id) => set((state) => ({ toasts: state.toasts.filter((toast) => toast.id !== id) })),
   setDiagramMode: (diagramMode) => set((state) => ({
     diagramMode,
     diagramTool: diagramMode === "smartpls_result" ? "select" : state.diagramTool,
@@ -941,6 +1000,9 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     selectedResultRunId: null,
     explorerTab: "constructs",
     explorerCollapsed: false,
+    resultWorkspaceState: defaultResultWorkspaceState,
+    methodSetupState: defaultMethodSetupState,
+    largeModelViewState: defaultLargeModelViewState,
     diagramMode: "sem",
     diagramTool: "select",
     diagramOverlaySettings: defaultDiagramOverlaySettings,
@@ -971,6 +1033,8 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     selectedResultRunId: null,
     explorerTab: "constructs",
     explorerCollapsed: false,
+    resultWorkspaceState: defaultResultWorkspaceState,
+    largeModelViewState: defaultLargeModelViewState,
     view: "models",
     past: [],
     future: [],

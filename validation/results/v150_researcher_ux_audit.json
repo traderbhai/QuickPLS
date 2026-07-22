@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.5.0 researcher UX refinement",
+  "passed": true,
+  "checklist": {
+    "command_palette_and_shortcuts": true,
+    "toast_feedback_layer": true,
+    "status_bar_desktop_feedback": true,
+    "method_what_will_run_summary": true,
+    "results_headline_and_export_tools": true,
+    "publication_export_stepper": true,
+    "explorer_prefix_grouping": true,
+    "styles_cover_new_surfaces": true,
+    "version_and_artifact_label": true,
+    "no_ui_mojibake": true,
+    "visual_smoke_passed": true,
+    "registry_gate_registered": true
+  },
+  "evidence": [
+    "src/components/ProductivityOverlays.tsx",
+    "src/components/AnalysisCatalog.tsx",
+    "src/components/RunHistory.tsx",
+    "src/components/ReportsWorkspace.tsx",
+    "src/components/Explorer.tsx",
+    "src/styles.css",
+    "validation/results/v150_researcher_ux_smoke.json"
+  ]
+}

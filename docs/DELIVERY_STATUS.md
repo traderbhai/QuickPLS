@@ -385,3 +385,36 @@ Complete:
 - Added resizable/collapsible desktop sidebar state that remains UI-only and separate from numerical recipes.
 - Added sidebar-to-canvas focus events for constructs and paths.
 - Added `validation/v133_sem_sidebar_smoke.mjs`, `validation/v133_sem_sidebar_audit.py`, and the registry slice `v1_3_3_sem_explorer_sidebar_redesign`.
+
+## v1.4 Frontend Success Program
+
+Complete:
+
+- Added a reusable desktop design system surface for page headers, action strips, cards, tabs, empty states, and status badges.
+- Added a desktop-first Start workspace with new/open/demo/import/recent project entry points.
+- Reworked method setup into Basic/Expert modes with researcher presets and readiness cards.
+- Reworked results into workflow tabs with search, density controls, copy actions, and result-to-diagram focus hooks.
+- Added publication/report presets for thesis, journal figure, journal tables, presentation, and reproducibility reports.
+- Extended SEM designer controls with large-model collapse, isolate neighborhood, clear isolation, and fit selected actions.
+- Strengthened explorer/inspector usability through global search, issue filters, and contextual result details.
+- Added `validation/v14_frontend_success_audit.py`, `validation/v14_frontend_success_smoke.mjs`, and registry slices through `v1_4_frontend_success_program`.
+- Updated versioned build metadata to `1.4.7` with artifact label `v1_4_frontend_success_program`.
+
+Scope note: v1.4 is frontend/product-only. It does not change statistical engines, analysis recipes, result schemas, validation tolerances, or numerical fingerprints.
+
+## v1.5.0 Researcher UX Refinement
+
+Complete:
+
+- Added a desktop command palette (`Ctrl+K`) for common navigation, method presets, SEM canvas actions, and export entry points.
+- Added a keyboard shortcut overlay (`?`) with the core SEM designer shortcuts.
+- Added toast notifications for save/open/recovery/import/export/run-complete feedback.
+- Added clearer status-bar autosave and shortcut access messaging.
+- Added a method setup “What will run” summary so researchers can verify method, data/model counts, seed, workers, resampling, and scope before running.
+- Added Results headline cards, current-table export, and clearer table-to-diagram focus wording.
+- Added a four-step publication export flow: select run, choose diagram style, preview figure, export tables/SVG.
+- Added variable prefix grouping chips in the SEM Explorer.
+- Added `validation/v150_researcher_ux_smoke.mjs`, `validation/v150_researcher_ux_audit.py`, and the registry slice `v1_5_0_researcher_ux_refinement`.
+- Updated versioned build metadata to `1.5.0` with artifact label `v1_5_0_researcher_ux_refinement`.
+
+Scope note: v1.5.0 is frontend/product-only. It does not change statistical engines, analysis recipes, result schemas, validation tolerances, or numerical fingerprints.

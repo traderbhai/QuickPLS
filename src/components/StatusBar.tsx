@@ -9,6 +9,8 @@ export function StatusBar() {
   const edges = useWorkspace((state) => state.edges);
   const dataset = useWorkspace((state) => state.dataset);
   const settings = useWorkspace((state) => state.analysisSettings);
+  const projectPath = useWorkspace((state) => state.projectPath);
+  const setShortcutOverlayOpen = useWorkspace((state) => state.setShortcutOverlayOpen);
   const issues = validateModel(nodes, edges);
   const readiness = analysisReadiness({ dataset, nodes, edges, settings, nativeDesktop: isNativeDesktop() });
   const structuralPathCount = edges.filter((edge) => edge.data?.role !== "covariance").length;
@@ -20,6 +22,7 @@ export function StatusBar() {
       </span>)}
     </span>
     <span><Database size={14} />{dataset.rows.length} rows</span><span>{nodes.length} constructs</span><span>{structuralPathCount} paths</span>
-    <span className="status-spacer" /><span><WifiOff size={14} />Offline mode</span><span>Engine 1.0.0 stable scope</span>
+    <span>{projectPath ? "Autosave active" : "Save project to enable autosave"}</span>
+    <span className="status-spacer" /><button className="status-link" onClick={() => setShortcutOverlayOpen(true)}>Shortcuts ?</button><span><WifiOff size={14} />Offline mode</span><span>Engine 1.0.0 stable scope</span>
   </footer>;
 }

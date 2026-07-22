@@ -50,6 +50,7 @@ export function ModelCanvas() {
   const diagramTool = useWorkspace((state) => state.diagramTool);
   const diagramOverlaySettings = useWorkspace((state) => state.diagramOverlaySettings);
   const diagramLayout = useWorkspace((state) => state.diagramLayout);
+  const largeModelViewState = useWorkspace((state) => state.largeModelViewState);
   const pastCount = useWorkspace((state) => state.past.length);
   const futureCount = useWorkspace((state) => state.future.length);
   const onNodesChange = useWorkspace((state) => state.onNodesChange);
@@ -68,6 +69,7 @@ export function ModelCanvas() {
   const setDiagramTheme = useWorkspace((state) => state.setDiagramTheme);
   const setDiagramGridVisible = useWorkspace((state) => state.setDiagramGridVisible);
   const setDiagramLayoutLocked = useWorkspace((state) => state.setDiagramLayoutLocked);
+  const setLargeModelViewState = useWorkspace((state) => state.setLargeModelViewState);
   const checkpoint = useWorkspace((state) => state.checkpoint);
   const addConstruct = useWorkspace((state) => state.addConstruct);
   const duplicateSelected = useWorkspace((state) => state.duplicateSelected);
@@ -125,6 +127,25 @@ export function ModelCanvas() {
   const layoutLocked = diagramLayout.layoutLocked && !resultDiagramMode;
   const canEditLayout = !resultDiagramMode && !layoutLocked;
   const readiness = useMemo(() => analysisReadiness({ dataset, nodes, edges, settings: analysisSettings, nativeDesktop: isNativeDesktop() }), [analysisSettings, dataset, edges, nodes]);
+  const visibleGraph = useMemo(() => {
+    if (!largeModelViewState.isolatedConstructId || largeModelViewState.neighborhoodMode === "off") return graph;
+    const focusId = largeModelViewState.isolatedConstructId;
+    const adjacent = new Set<string>([focusId]);
+    graph.edges.forEach((edge) => {
+      if (edge.source === focusId) adjacent.add(edge.target);
+      if (edge.target === focusId) adjacent.add(edge.source);
+    });
+    const visibleNodeIds = new Set<string>();
+    graph.nodes.forEach((node) => {
+      const indicator = parseIndicatorNodeId(node.id);
+      if (adjacent.has(node.id) || (indicator && adjacent.has(indicator.constructId))) visibleNodeIds.add(node.id);
+    });
+    return {
+      ...graph,
+      nodes: graph.nodes.filter((node) => visibleNodeIds.has(node.id)),
+      edges: graph.edges.filter((edge) => visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target)),
+    };
+  }, [graph, largeModelViewState.isolatedConstructId, largeModelViewState.neighborhoodMode]);
   const overlayStatus = graph.diagnostic
     ? { tone: "warning", label: "Overlay blocked", detail: graph.diagnostic }
     : selectedResultRun
@@ -155,6 +176,29 @@ export function ModelCanvas() {
       setDiagramOverlaySettings({ mode: selectedResultRunId ? "paths_r2" : "model" });
       window.setTimeout(() => { void flow?.fitView({ padding: 0.16, duration: 220 }); }, 0);
     }
+  };
+  const fitSelectedObject = () => {
+    if (!flow) return;
+    const selectedGraphNode = selectedNodeId ? graph.nodes.find((node) => node.id === selectedNodeId) : null;
+    if (selectedGraphNode) {
+      const size = selectedGraphNode.type === "latent" ? smartplsNodeSize : compactNodeSize;
+      void flow.setCenter(selectedGraphNode.position.x + size.width / 2, selectedGraphNode.position.y + size.height / 2, { zoom: Math.max(0.85, flow.getZoom()), duration: 220 });
+      return;
+    }
+    if (selectedEdgeId) {
+      window.dispatchEvent(new CustomEvent("quickpls:focus-edge", { detail: { id: selectedEdgeId } }));
+      return;
+    }
+    void flow.fitView({ padding: 0.22, duration: 220 });
+  };
+  const isolateSelectedObject = () => {
+    if (!selectedNodeId) {
+      setActionFeedback({ message: "Select a construct first to isolate its local neighborhood." });
+      return;
+    }
+    const constructId = parseIndicatorNodeId(selectedNodeId)?.constructId ?? selectedNodeId;
+    setLargeModelViewState({ isolatedConstructId: constructId, neighborhoodMode: "selected" });
+    window.setTimeout(() => { void flow?.fitView({ padding: 0.24, duration: 220 }); }, 0);
   };
 
   useEffect(() => {
@@ -522,7 +566,7 @@ export function ModelCanvas() {
     <button className="danger" onClick={removeSelection}><Trash2 size={13} /> Delete</button>
   </div> : null;
 
-  return <main className={`model-canvas theme-${diagramLayout.diagramTheme}${paperStyleCanvas ? " smartpls-result-canvas" : ""}${resultDiagramMode ? " locked-result-canvas" : ""}${layoutLocked ? " layout-locked-canvas" : ""}${showDropCue ? " can-drop-variables" : ""}`}>
+  return <main className={`model-canvas theme-${diagramLayout.diagramTheme}${paperStyleCanvas ? " smartpls-result-canvas" : ""}${resultDiagramMode ? " locked-result-canvas" : ""}${layoutLocked ? " layout-locked-canvas" : ""}${showDropCue ? " can-drop-variables" : ""}${largeModelViewState.isolatedConstructId ? " isolating-neighborhood" : ""}`}>
     <div className="canvas-toolbar redesigned" role="toolbar" aria-label="Model editing tools">
       <div className="canvas-toolbar-primary">
         <div className="canvas-tool-group">
@@ -565,6 +609,17 @@ export function ModelCanvas() {
             <button role="menuitem" className={diagramLayout.diagramTheme === "quickpls_color" ? "active" : ""} onClick={() => setDiagramTheme("quickpls_color")}>QuickPLS color</button>
             <button role="menuitem" className={diagramLayout.diagramTheme === "journal_mono" ? "active" : ""} onClick={() => setDiagramTheme("journal_mono")}>Journal mono</button>
             <button role="menuitem" className={diagramLayout.diagramTheme === "high_contrast" ? "active" : ""} onClick={() => setDiagramTheme("high_contrast")}>High contrast</button>
+            <button role="menuitem" className={largeModelViewState.indicatorsCollapsed ? "active" : ""} onClick={() => {
+              const nextCollapsed = !largeModelViewState.indicatorsCollapsed;
+              setLargeModelViewState({ indicatorsCollapsed: nextCollapsed });
+              setMode(nextCollapsed ? "compact" : "sem");
+            }}>{largeModelViewState.indicatorsCollapsed ? "Show measurement indicators" : "Collapse measurement indicators"}</button>
+            <button role="menuitem" disabled={!selectedNodeId} title={!selectedNodeId ? "Select a construct to isolate its neighborhood." : "Show the selected construct and directly connected constructs."} className={largeModelViewState.neighborhoodMode === "selected" ? "active" : ""} onClick={isolateSelectedObject}>Isolate selected neighborhood</button>
+            <button role="menuitem" disabled={!largeModelViewState.isolatedConstructId} title={!largeModelViewState.isolatedConstructId ? "No isolated neighborhood is active." : "Return to the full diagram."} onClick={() => {
+              setLargeModelViewState({ isolatedConstructId: null, neighborhoodMode: "off" });
+              window.setTimeout(() => { void flow?.fitView({ padding: 0.22, duration: 220 }); }, 0);
+            }}>Clear isolation</button>
+            <button role="menuitem" title={selectedNodeId || selectedEdgeId ? "Fit the selected diagram object." : "Select a construct or path to fit only that object."} onClick={fitSelectedObject}>Fit selected</button>
             <button role="menuitem" className={diagramLayout.layoutLocked ? "active" : ""} onClick={() => setDiagramLayoutLocked(!diagramLayout.layoutLocked)}>{diagramLayout.layoutLocked ? "Unlock layout" : "Lock layout"}</button>
             <button role="menuitem" className={diagramLayout.showGrid ? "active" : ""} onClick={() => setDiagramGridVisible(!diagramLayout.showGrid)}>{diagramLayout.showGrid ? "Hide grid" : "Show grid"}</button>
           </div> : null}
@@ -675,8 +730,8 @@ export function ModelCanvas() {
       </>}
     </div> : null}
     <ReactFlow
-      nodes={graph.nodes}
-      edges={graph.edges}
+      nodes={visibleGraph.nodes}
+      edges={visibleGraph.edges}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
       onInit={setFlow}

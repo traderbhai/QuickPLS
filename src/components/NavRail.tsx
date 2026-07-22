@@ -1,8 +1,9 @@
-import { BarChart3, Database, FileText, Network, Play, PlayCircle, Users } from "lucide-react";
+import { BarChart3, Database, FileText, Home, Network, Play, PlayCircle, Users } from "lucide-react";
 import type { WorkspaceView } from "../types";
 import { useWorkspace } from "../store";
 
 const items: Array<{ view: WorkspaceView; label: string; Icon: typeof Database }> = [
+  { view: "welcome", label: "Start", Icon: Home },
   { view: "data", label: "Data", Icon: Database },
   { view: "models", label: "Model", Icon: Network },
   { view: "analyses", label: "Validate", Icon: BarChart3 },

@@ -414,3 +414,57 @@ Notes:
 - Common model-building actions are available without opening the right inspector: construct focus, rename, duplicate, delete, path creation, variable assignment, indicator layout commands, path routing, label reset, and issue fix actions.
 - Sidebar width, collapsed state, and active tab are UI-only preferences and do not affect method recipes or numerical fingerprints.
 - The milestone deliberately does not change engines, result schemas, method validation, or export calculations.
+
+## v1.4 Frontend Success Program
+
+Status: complete for the frontend/product-layer program.
+
+Evidence:
+
+- `src/components/Ui.tsx`
+- `src/components/OnboardingWorkspace.tsx`
+- `src/components/AnalysisCatalog.tsx`
+- `src/components/RunHistory.tsx`
+- `src/components/ReportsWorkspace.tsx`
+- `src/components/Explorer.tsx`
+- `src/components/Inspector.tsx`
+- `src/components/ModelCanvas.tsx`
+- `src/store.ts`
+- `src/types.ts`
+- `src/styles.css`
+- `validation/v14_frontend_success_audit.py`
+- `validation/v14_frontend_success_smoke.mjs`
+- `docs/V1_4_FRONTEND_SUCCESS_PROGRAM.md`
+- `validation/development_slices.json` slices `v1_4_0_frontend_design_system_foundation` through `v1_4_frontend_success_program`
+
+Notes:
+
+- The release line adds a desktop design system, guided method setup, result workspace tabs, publication presets, onboarding/start workflow, explorer search and issue filtering, and large-model canvas controls.
+- All added state is UI-only: `UiPreferences`, `ResultWorkspaceState`, `MethodSetupState`, `OnboardingState`, and `LargeModelViewState`.
+- The app version is `1.4.7`; release artifacts use the label `v1_4_frontend_success_program`.
+- This milestone deliberately does not change estimators, method formulas, analysis result schemas, validation tolerances, or numerical fingerprints.
+
+## v1.5.0 Researcher UX Refinement
+
+Status: complete for the researcher-productivity frontend milestone.
+
+Evidence:
+
+- `src/components/ProductivityOverlays.tsx`
+- `src/components/TopBar.tsx`
+- `src/components/StatusBar.tsx`
+- `src/components/AnalysisCatalog.tsx`
+- `src/components/RunHistory.tsx`
+- `src/components/ReportsWorkspace.tsx`
+- `src/components/Explorer.tsx`
+- `src/styles.css`
+- `validation/v150_researcher_ux_smoke.mjs`
+- `validation/v150_researcher_ux_audit.py`
+- `docs/V1_5_0_RESEARCHER_UX_REFINEMENT.md`
+- `validation/development_slices.json` slice `v1_5_0_researcher_ux_refinement`
+
+Notes:
+
+- The milestone adds command palette, shortcut overlay, toast feedback, status-bar autosave messaging, method run summary, result headline cards, current-table export, publication export stepper, and variable prefix grouping.
+- The app version is `1.5.0`; release artifacts use the label `v1_5_0_researcher_ux_refinement`.
+- This milestone deliberately does not change estimators, method formulas, analysis result schemas, validation tolerances, or numerical fingerprints.

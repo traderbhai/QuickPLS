@@ -1,10 +1,24 @@
-import { AlertTriangle, FlaskConical } from "lucide-react";
+import { AlertTriangle, Copy, FlaskConical, Search } from "lucide-react";
 import { useWorkspace } from "../store";
 import type { HtmtAssessment, PlsResult } from "../types";
 import { findBcaParameter, findBootstrapParameter, findStudentizedParameter, formatParameterIdentity } from "../domain/inference";
 import { analysisReadiness } from "../domain/analysisReadiness";
 import { isNativeDesktop } from "../services/projectService";
 import { ReadinessPanel } from "./ReadinessPanel";
+import { ActionStrip, EmptyState, PageHeader, StatusBadge, TabStrip } from "./Ui";
+import type { ResultWorkspaceTab } from "../types";
+
+const resultTabs: Array<{ id: ResultWorkspaceTab; label: string }> = [
+  { id: "summary", label: "Summary" },
+  { id: "measurement", label: "Measurement Model" },
+  { id: "structural", label: "Structural Model" },
+  { id: "quality", label: "Reliability and Validity" },
+  { id: "inference", label: "Inference" },
+  { id: "prediction", label: "Prediction" },
+  { id: "groups", label: "Groups" },
+  { id: "diagnostics", label: "Diagnostics" },
+  { id: "comparison", label: "Comparison" },
+];
 
 export function RunHistory() {
   const runs = useWorkspace((state) => state.runs);
@@ -13,24 +27,75 @@ export function RunHistory() {
   const nodes = useWorkspace((state) => state.nodes);
   const edges = useWorkspace((state) => state.edges);
   const settings = useWorkspace((state) => state.analysisSettings);
+  const resultState = useWorkspace((state) => state.resultWorkspaceState);
+  const setResultState = useWorkspace((state) => state.setResultWorkspaceState);
+  const setSelectedEdge = useWorkspace((state) => state.setSelectedEdge);
+  const setSelectedNode = useWorkspace((state) => state.setSelectedNode);
   const readiness = analysisReadiness({ dataset, nodes, edges, settings, nativeDesktop: isNativeDesktop() });
+  const search = resultState.tableSearch.toLowerCase();
+  const visibleRuns = runs.filter((run) => {
+    const body = `${run.name} ${run.method} ${run.warnings.join(" ")} ${run.result?.paths.map((path) => `${path.source} ${path.target}`).join(" ") ?? ""}`.toLowerCase();
+    return body.includes(search);
+  });
+  const selectedRun = visibleRuns.find((run) => run.id === resultState.selectedRunId) ?? visibleRuns[0];
+  const significantWarningCount = selectedRun?.warnings.filter((warning) => !warning.toLowerCase().includes("validated")).length ?? 0;
+  const bestR2 = selectedRun?.result ? Object.entries(selectedRun.result.r_squared).sort((a, b) => b[1] - a[1])[0] : null;
+  const focusPath = (source: string, target: string) => {
+    const edge = edges.find((candidate) => candidate.source === source && candidate.target === target);
+    if (edge) {
+      setSelectedEdge(edge.id);
+      window.dispatchEvent(new CustomEvent("quickpls:focus-edge", { detail: { id: edge.id } }));
+    } else {
+      setSelectedNode(target);
+      window.dispatchEvent(new CustomEvent("quickpls:focus-construct", { detail: { id: target } }));
+    }
+    setView("models");
+  };
+  const copyVisibleSummary = async () => {
+    const text = visibleRuns.map((run) => `${run.name}\t${run.method}\t${run.status}\t${run.createdAt}`).join("\n");
+    await navigator.clipboard?.writeText(text);
+  };
+  const exportCurrentTable = () => {
+    const rows = selectedRun?.result?.paths.map((path) => `${path.source}->${path.target},${path.coefficient}`) ?? [];
+    const csv = ["path,coefficient", ...rows].join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "quickpls-current-result-table.csv";
+    anchor.click();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  };
 
   if (runs.length === 0) return <section className="workspace-page">
-    <div className="page-heading"><div><h1>Results</h1><p>Completed runs, immutable recipes, estimates, and provenance records.</p></div></div>
+    <PageHeader title="Results" description="Completed runs, immutable recipes, estimates, and provenance records." />
     <ReadinessPanel readiness={readiness} compact onNavigate={setView} />
-    <div className="empty-state"><FlaskConical size={30} /><h2>No completed results</h2><p>{readiness.canRun ? "Run the selected method to create the first result." : readiness.blockers[0]?.detail ?? "Complete the analysis checklist before running."}</p><div className="empty-actions"><button className="secondary-button" onClick={() => setView("models")}>Open model</button><button className="secondary-button" onClick={() => setView("analyses")}>Check readiness</button></div></div>
+    <EmptyState title="No completed results" description={readiness.canRun ? "Run the selected method to create the first result." : readiness.blockers[0]?.detail ?? "Complete the analysis checklist before running."} actions={<><button className="secondary-button" onClick={() => setView("models")}>Open model</button><button className="secondary-button" onClick={() => setView("analyses")}>Check readiness</button></>} />
   </section>;
 
   return <section className="workspace-page">
-    <div className="page-heading"><div><h1>Results</h1><p>Completed runs, immutable analysis recipes, estimates, and provenance records.</p></div></div>
-    <div className="run-list">{runs.map((run) => <article key={run.id} className="run-row">
+    <PageHeader title="Results" description="Review saved runs by measurement, structural, inference, prediction, groups, diagnostics, and comparison workflow." actions={<StatusBadge status="validated">{visibleRuns.length} visible</StatusBadge>} />
+    <ActionStrip>
+      <TabStrip label="Result workspace sections" tabs={resultTabs} value={resultState.selectedTab} onChange={(selectedTab) => setResultState({ selectedTab })} />
+      <label className="result-search"><Search size={13} /><input aria-label="Search result tables" placeholder="Search runs, paths, warnings" value={resultState.tableSearch} onChange={(event) => setResultState({ tableSearch: event.target.value })} /></label>
+      <button className="secondary-button" onClick={() => void copyVisibleSummary()}><Copy size={14} />Copy run list</button>
+      <button className="secondary-button" disabled={!selectedRun?.result} onClick={exportCurrentTable}>Export current table</button>
+      <button className="secondary-button" onClick={() => setResultState({ includeExperimental: !resultState.includeExperimental })}>{resultState.includeExperimental ? "Include experimental" : "Validated only"}</button>
+      <button className="secondary-button" onClick={() => setResultState({ tableDensity: resultState.tableDensity === "compact" ? "comfortable" : "compact" })}>{resultState.tableDensity}</button>
+    </ActionStrip>
+    {selectedRun ? <div className="result-headline-grid">
+      <article><span>Selected run</span><strong>{selectedRun.name}</strong><small>{selectedRun.method}</small></article>
+      <article><span>Strongest R²</span><strong>{bestR2 ? bestR2[1].toFixed(4) : "N/A"}</strong><small>{bestR2?.[0] ?? "No endogenous construct"}</small></article>
+      <article><span>Paths</span><strong>{selectedRun.result?.paths.length ?? 0}</strong><small>Click a row to focus the diagram</small></article>
+      <article className={significantWarningCount ? "warning" : "validated"}><span>Warnings</span><strong>{significantWarningCount}</strong><small>{significantWarningCount ? "Review provenance before export" : "No extra warnings"}</small></article>
+    </div> : null}
+    <div className={`run-list result-tab-${resultState.selectedTab} table-density-${resultState.tableDensity}`}>{visibleRuns.map((run) => <article key={run.id} className="run-row">
       <div className="run-icon"><FlaskConical size={18} /></div>
       <div className="run-content"><strong>{run.name}</strong><p>{new Date(run.createdAt).toLocaleString()} | seed {run.seed} | fingerprint {run.fingerprint}</p><span><AlertTriangle size={13} />{run.warnings[0]}</span>
         {run.result && <div className="result-summary" tabIndex={0} role="region" aria-label={`${run.name} result summary`}>
           <div><b>{run.result.iterations}</b><small>Iterations</small></div>
           <div><b>{run.result.used_observations}</b><small>Observations</small></div>
           {Object.entries(run.result.r_squared).map(([construct, value]) => <div key={construct}><b>{value.toFixed(4)}</b><small>R2 {construct}</small></div>)}
-          <table><thead><tr><th>Path</th><th>Coefficient</th></tr></thead><tbody>{run.result.paths.map((path) => <tr key={`${path.source}-${path.target}`}><td>{path.source} -&gt; {path.target}</td><td>{path.coefficient.toFixed(6)}</td></tr>)}</tbody></table>
+          {(resultState.selectedTab === "summary" || resultState.selectedTab === "structural") && <table><thead><tr><th>Path</th><th>Coefficient</th></tr></thead><tbody>{run.result.paths.map((path) => <tr key={`${path.source}-${path.target}`} onClick={() => focusPath(path.source, path.target)} title="Open this path in the SEM canvas"><td>{path.source} -&gt; {path.target}</td><td>{path.coefficient.toFixed(6)}</td></tr>)}</tbody></table>}
           {(run.result.control_estimates ?? []).length > 0 && <><strong>Control paths</strong><table><thead><tr><th>Control</th><th>Coefficient</th></tr></thead><tbody>{run.result.control_estimates!.map((control) => <tr key={`${control.source}-${control.target}`}><td>{control.label ? `${control.label} ` : ""}{control.source} -&gt; {control.target}</td><td>{control.coefficient.toFixed(6)}</td></tr>)}</tbody></table></>}
           {(run.result.mediation?.estimates ?? []).length > 0 && <><strong>Mediation effects</strong><table><thead><tr><th>Effect</th><th>Direct</th><th>Indirect</th><th>Total</th><th>Indirect p</th><th>Percentile CI</th><th>BCa CI</th><th>Bootstrap-t CI</th><th>VAF</th><th>Class</th></tr></thead><tbody>
             {run.result.mediation!.estimates.map((effect) => {
@@ -59,7 +124,7 @@ export function RunHistory() {
           </tbody></table></>}
           <MethodPayloadSections result={run.result} />
         </div>}
-        {run.assessment && <div className="quality-summary" tabIndex={0} role="region" aria-label={`${run.name} measurement quality tables`}>
+        {run.assessment && ["summary", "measurement", "quality", "diagnostics"].includes(resultState.selectedTab) && <div className="quality-summary" tabIndex={0} role="region" aria-label={`${run.name} measurement quality tables`}>
           <strong>Measurement quality</strong>
           <table><thead><tr><th>Construct</th><th>Alpha</th><th>rho_A</th><th>rho_C</th><th>AVE</th></tr></thead><tbody>
             {run.assessment.construct_quality.map((quality) => <tr key={quality.construct}>
@@ -95,7 +160,7 @@ export function RunHistory() {
             {run.assessment.blindfolding.constructs.map((value) => <tr key={value.construct}><td>{value.construct}</td><td>{value.q_squared?.toFixed(4) ?? "N/A"}</td><td>{value.prediction_error_sum_squares?.toFixed(6) ?? "N/A"}</td><td>{value.observation_sum_squares?.toFixed(6) ?? "N/A"}</td></tr>)}
           </tbody></table></>}
         </div>}
-        {run.bootstrap && <div className="bootstrap-summary">
+        {run.bootstrap && ["summary", "inference"].includes(resultState.selectedTab) && <div className="bootstrap-summary">
           <div className="bootstrap-meta"><strong>Bootstrap replicates</strong><span>{run.bootstrap.usable_replicates} usable</span><span>{run.bootstrap.failed_replicates.length} failed</span><span>{Math.round(run.bootstrap.percentile.confidence_level * 100)}% percentile CI</span>{run.bootstrap.bca && <span>{run.bootstrap.bca.jackknife_case_count} jackknife cases | BCa CI</span>}{run.bootstrap.studentized && <span>{run.bootstrap.studentized.inner_replicates} inner replicates | {run.bootstrap.studentized.failure ? "bootstrap-t failed" : "bootstrap-t CI"}</span>}</div>
           {run.bootstrap.studentized?.failure && <div className="inference-failure" role="alert"><strong>Bootstrap-t unavailable</strong><span>{run.bootstrap.studentized.failure.message}</span></div>}
           <div className="bootstrap-table-scroll" tabIndex={0} role="region" aria-label={`${run.name} bootstrap parameter table`}><table><thead><tr><th>Parameter</th><th>Original</th><th>Mean</th><th>Bias</th><th>SE</th><th>t</th><th>p (two-sided)</th><th>Percentile lower</th><th>Percentile upper</th><th>BCa lower</th><th>BCa upper</th><th>Bootstrap-t lower</th><th>Bootstrap-t upper</th></tr></thead><tbody>
@@ -104,7 +169,7 @@ export function RunHistory() {
               </tr>; })}
             </tbody></table></div>
         </div>}
-        {run.permutation && <div className="bootstrap-summary">
+        {run.permutation && ["summary", "inference"].includes(resultState.selectedTab) && <div className="bootstrap-summary">
           <div className="bootstrap-meta"><strong>Freedman-Lane permutation</strong><span>{run.permutation.plan.permutations} samples</span><span>two-sided finite-sample corrected p-values</span></div>
           <div className="bootstrap-table-scroll" tabIndex={0} role="region" aria-label={`${run.name} permutation parameter table`}><table><thead><tr><th>Path</th><th>Original coefficient</th><th>Exceedances</th><th>p (two-sided)</th></tr></thead><tbody>
             {run.permutation.parameters.map((parameter) => <tr key={parameter.parameter}><td>{formatParameterIdentity(parameter.parameter)}</td><td>{parameter.original.toFixed(6)}</td><td>{parameter.exceedances} / {parameter.permutations}</td><td>{formatPValue(parameter.p_value_two_sided)}</td></tr>)}
@@ -113,6 +178,7 @@ export function RunHistory() {
       </div>
       <div className="run-status">Scope checked</div>
     </article>)}</div>
+    {visibleRuns.length === 0 ? <EmptyState title="No matching runs" description="Clear the search field or include a broader result section." /> : null}
   </section>;
 }
 

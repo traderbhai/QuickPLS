@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "target": "v1_4_5_publication_export_workflow",
+  "section": "publication-export",
+  "passed": true,
+  "checklist": {
+    "export_presets": true,
+    "wysiwyg_controls": true,
+    "audited_svg_scope": true
+  },
+  "evidence": [
+    "src/components",
+    "src/store.ts",
+    "src/types.ts",
+    "src/styles.css",
+    "package.json"
+  ]
+}

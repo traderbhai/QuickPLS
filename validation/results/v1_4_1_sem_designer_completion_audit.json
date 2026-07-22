@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "target": "v1_4_1_sem_designer_completion",
+  "section": "sem-designer",
+  "passed": true,
+  "checklist": {
+    "professional_toolbar_remains": true,
+    "large_model_view_controls": true,
+    "result_modes_locked": true,
+    "straight_route_default": true
+  },
+  "evidence": [
+    "src/components",
+    "src/store.ts",
+    "src/types.ts",
+    "src/styles.css",
+    "package.json"
+  ]
+}

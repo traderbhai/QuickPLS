@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "target": "v1_4_6_onboarding_demo_workflow",
+  "section": "onboarding-demo",
+  "passed": true,
+  "checklist": {
+    "welcome_view": true,
+    "start_actions": true,
+    "native_events": true,
+    "nav_entry": true
+  },
+  "evidence": [
+    "src/components",
+    "src/store.ts",
+    "src/types.ts",
+    "src/styles.css",
+    "package.json"
+  ]
+}

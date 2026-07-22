@@ -1,5 +1,9 @@
-export type WorkspaceView = "data" | "models" | "analyses" | "run" | "runs" | "groups" | "reports";
+export type WorkspaceView = "welcome" | "data" | "models" | "analyses" | "run" | "runs" | "groups" | "reports";
 export type ExplorerTab = "constructs" | "variables" | "structure" | "issues";
+export type UiDensity = "comfortable" | "compact";
+export type ResultWorkspaceTab = "summary" | "measurement" | "structural" | "quality" | "inference" | "prediction" | "groups" | "diagnostics" | "comparison";
+export type MethodSetupMode = "basic" | "expert";
+export type MethodPresetId = "standard_pls" | "pls_bootstrap" | "plspredict" | "micom_mga" | "cbsem_cfa" | "ols_regression" | "nca";
 export type MeasurementMode = "reflective" | "formative";
 export type MethodStatus = "experimental" | "validated" | "unsupported";
 export type AnalysisMethodId = "pls_pm" | "bootstrap" | "plsc" | "wpls" | "cca" | "cta_pls" | "endogeneity" | "nonlinear_effects" | "moderated_mediation" | "predict" | "mga" | "ipma" | "cbsem" | "pca" | "gsca" | "regression" | "nca";
@@ -52,6 +56,47 @@ export interface DiagramLayoutState {
   diagramTheme: "academic_grayscale" | "smartpls_like" | "quickpls_color" | "journal_mono" | "high_contrast";
   showGrid: boolean;
   layoutLocked: boolean;
+}
+
+export interface UiPreferences {
+  density: UiDensity;
+  tableDensity: UiDensity;
+  defaultPrecision: number;
+  showAdvancedHelp: boolean;
+  recentPanels: WorkspaceView[];
+}
+
+export interface ResultWorkspaceState {
+  selectedRunId: string | null;
+  selectedTab: ResultWorkspaceTab;
+  tableSearch: string;
+  tableDensity: UiDensity;
+  includeExperimental: boolean;
+}
+
+export interface MethodSetupState {
+  mode: MethodSetupMode;
+  selectedPreset: MethodPresetId;
+  expandedSections: string[];
+}
+
+export interface OnboardingState {
+  dismissed: boolean;
+  selectedDemo: "corporate_reputation" | "simple_pls" | "cbsem_cfa";
+  recentProjectCards: string[];
+}
+
+export interface LargeModelViewState {
+  indicatorsCollapsed: boolean;
+  isolatedConstructId: string | null;
+  neighborhoodMode: "off" | "selected" | "upstream_downstream";
+}
+
+export interface ToastNotification {
+  id: string;
+  tone: "success" | "warning" | "info";
+  title: string;
+  detail?: string;
 }
 
 export interface AnalysisUiSettings {

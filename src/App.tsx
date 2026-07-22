@@ -5,6 +5,8 @@ import { GroupsWorkspace } from "./components/GroupsWorkspace";
 import { Inspector } from "./components/Inspector";
 import { ModelCanvas } from "./components/ModelCanvas";
 import { NavRail } from "./components/NavRail";
+import { OnboardingWorkspace } from "./components/OnboardingWorkspace";
+import { ProductivityOverlays } from "./components/ProductivityOverlays";
 import { ReportsWorkspace } from "./components/ReportsWorkspace";
 import { RunHistory } from "./components/RunHistory";
 import { RunWorkspace } from "./components/RunWorkspace";
@@ -89,6 +91,7 @@ export function App() {
   const projectPath = useWorkspace((state) => state.projectPath);
   const explorerCollapsed = useWorkspace((state) => state.explorerCollapsed);
   const explorerWidth = useWorkspace((state) => state.explorerWidth);
+  const uiPreferences = useWorkspace((state) => state.uiPreferences);
   useEffect(() => {
     if (!new URLSearchParams(window.location.search).has("quickpls_smoke")) return;
     const smokeApi = {
@@ -118,7 +121,7 @@ export function App() {
         }));
       },
       setView: (nextView: string) => {
-        if (["data", "models", "analyses", "run", "runs", "groups", "reports"].includes(nextView)) {
+        if (["welcome", "data", "models", "analyses", "run", "runs", "groups", "reports"].includes(nextView)) {
           useWorkspace.getState().setView(nextView as WorkspaceView);
         }
       },
@@ -131,12 +134,13 @@ export function App() {
     const timer = window.setTimeout(() => { void autosaveNativeProject(projectPath, { nodes, edges, runs, analysisSettings, diagramMode, diagramOverlaySettings, publicationDiagramSettings, diagramLayout, activeDatasetId: dataset.id }).catch(() => undefined); }, 5000);
     return () => window.clearTimeout(timer);
   }, [projectPath, nodes, edges, runs, analysisSettings, diagramMode, diagramOverlaySettings, publicationDiagramSettings, diagramLayout, dataset]);
-  return <div className="app-shell">
+  return <div className={`app-shell density-${uiPreferences.density}`}>
     <TopBar />
     <div className={`workspace-shell${explorerCollapsed ? " explorer-collapsed" : ""}`} style={{ "--explorer-width": `${explorerWidth}px` } as CSSProperties}>
       <NavRail />
-      {view === "models" ? <><Explorer /><ModelCanvas /><Inspector /></> : <div className="page-host"><WorkflowStrip />{view === "data" ? <DataWorkspace /> : view === "analyses" ? <AnalysisCatalog /> : view === "run" ? <RunWorkspace /> : view === "runs" ? <RunHistory /> : view === "groups" ? <GroupsWorkspace /> : <ReportsWorkspace />}</div>}
+      {view === "models" ? <><Explorer /><ModelCanvas /><Inspector /></> : <div className="page-host"><WorkflowStrip />{view === "welcome" ? <OnboardingWorkspace /> : view === "data" ? <DataWorkspace /> : view === "analyses" ? <AnalysisCatalog /> : view === "run" ? <RunWorkspace /> : view === "runs" ? <RunHistory /> : view === "groups" ? <GroupsWorkspace /> : <ReportsWorkspace />}</div>}
     </div>
+    <ProductivityOverlays />
     <StatusBar />
   </div>;
 }

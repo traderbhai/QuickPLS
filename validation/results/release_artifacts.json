@@ -2,28 +2,28 @@
   "schema_version": 1,
   "target": "QuickPLS release artifact preservation",
   "passed": true,
-  "version": "1.3.3",
-  "label": "v1_3_3_sem_explorer_sidebar_redesign",
-  "timestamp_utc": "20260722-155308",
+  "version": "1.5.0",
+  "label": "v1_5_0_researcher_ux_refinement",
+  "timestamp_utc": "20260722-172613",
   "artifact_directory": "target\\release\\artifacts",
   "artifacts": [
     {
       "source": "target\\release\\quickpls-desktop.exe",
-      "path": "target\\release\\artifacts\\QuickPLS_1.3.3_v1_3_3_sem_explorer_sidebar_redesign_20260722-155308_x64_portable.exe",
-      "bytes": 23540224,
-      "sha256": "C48615BF31B39BA0BD5F9539367B5E34522AEADFC3FE928FF6BE42909DEF8898"
+      "path": "target\\release\\artifacts\\QuickPLS_1.5.0_v1_5_0_researcher_ux_refinement_20260722-172613_x64_portable.exe",
+      "bytes": 23549440,
+      "sha256": "D79C2AEF4F0C5B382703D792F4D7908DB0B974329CAA4889A50EC6588A714F13"
     },
     {
-      "source": "target\\release\\bundle\\nsis\\QuickPLS_1.3.3_x64-setup.exe",
-      "path": "target\\release\\artifacts\\QuickPLS_1.3.3_v1_3_3_sem_explorer_sidebar_redesign_20260722-155308_x64_setup.exe",
-      "bytes": 4962564,
-      "sha256": "8A2D90C2DDA7464C344CB8E8139FD6B1460C5609F0C101DC82082316A907C75C"
+      "source": "target\\release\\bundle\\nsis\\QuickPLS_1.5.0_x64-setup.exe",
+      "path": "target\\release\\artifacts\\QuickPLS_1.5.0_v1_5_0_researcher_ux_refinement_20260722-172613_x64_setup.exe",
+      "bytes": 4971528,
+      "sha256": "92584B547DD00B43594DCC15F9B58BC2509463AA50F0F51EEC8B838E990B10C0"
     },
     {
       "source": null,
-      "path": "target\\release\\artifacts\\QuickPLS_1.3.3_v1_3_3_sem_explorer_sidebar_redesign_20260722-155308_x64_checksums.txt",
-      "bytes": 301,
-      "sha256": "A484227EA4B4EBFF3C860AF42B3BD8ED69C41083D7201D62574729857CF2B9C2"
+      "path": "target\\release\\artifacts\\QuickPLS_1.5.0_v1_5_0_researcher_ux_refinement_20260722-172613_x64_checksums.txt",
+      "bytes": 291,
+      "sha256": "E03CD15CDFF28EB461105BB7DEC681D38111CAF7F4946609622DE561D34A78C3"
     }
   ],
   "note": "Files are copied to unique names so repeated desktop builds do not overwrite prior user-testable artifacts."

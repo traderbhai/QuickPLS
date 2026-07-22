@@ -2,7 +2,7 @@
   "schema_version": 1,
   "program": "QuickPLS accelerated method-slice registry",
   "active_goal": "Complete QuickPLS as a free, proprietary, fully offline Windows desktop application that is first ready in all sense before unrestricted research use.",
-  "current_stage": "v1_3_3_sem_explorer_sidebar_redesign",
+  "current_stage": "v1_5_0_researcher_ux_refinement",
   "policy": {
     "promotion_order": [
       "unsupported",
@@ -2036,6 +2036,197 @@
           "name": "Sidebar redesign scope documented",
           "status": "passed",
           "evidence": "docs/V1_3_3_SEM_EXPLORER_SIDEBAR_REDESIGN.md documents the product scope, non-engine boundary, workflows, evidence, and versioned build expectation."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_4_0_frontend_design_system_foundation",
+      "release": "v1.4.0",
+      "family": "Product",
+      "name": "Frontend design system foundation",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 28,
+      "summary": "Introduces reusable desktop UI components, density tokens, consistent status badges, and static wording/mojibake checks without changing numerical engines.",
+      "gates": [
+        { "track": "product", "name": "Shared UI primitives", "status": "passed", "evidence": "src/components/Ui.tsx defines PageHeader, StatusBadge, ActionStrip, Card, TabStrip, and EmptyState." },
+        { "track": "product", "name": "Desktop density and status styling", "status": "passed", "evidence": "src/styles.css defines reusable page, action, card, tab, empty-state, density, and method-status tokens." },
+        { "track": "validation", "name": "Static wording and mojibake audit", "status": "passed", "evidence": "validation/v14_frontend_success_audit.py --section design-system." }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_4_1_sem_designer_completion",
+      "release": "v1.4.1",
+      "family": "Product",
+      "name": "SEM designer completion",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 29,
+      "summary": "Hardens the SEM designer toolbar, result locking, straight routing defaults, and large-model controls while preserving UI-only layout metadata.",
+      "gates": [
+        { "track": "product", "name": "Professional designer controls", "status": "passed", "evidence": "src/components/ModelCanvas.tsx keeps core Select, Pan, Construct, Path, Covariance, Arrange, Fit, Validate, View, and Results controls." },
+        { "track": "product", "name": "Large-model canvas controls", "status": "passed", "evidence": "View menu exposes collapse indicators, isolate selected neighborhood, clear isolation, and fit selected controls." },
+        { "track": "validation", "name": "SEM designer audit", "status": "passed", "evidence": "validation/v14_frontend_success_audit.py --section sem-designer." }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_4_2_explorer_inspector_simplification",
+      "release": "v1.4.2",
+      "family": "Product",
+      "name": "Explorer and inspector simplification",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 30,
+      "summary": "Adds global explorer search, issue filtering, and lightweight inspector Results context while keeping common actions available in canvas/sidebar controls.",
+      "gates": [
+        { "track": "product", "name": "Explorer search and issue filters", "status": "passed", "evidence": "src/components/Explorer.tsx searches constructs, variables, indicators, paths, and issues and filters blocking/warning/info issues." },
+        { "track": "product", "name": "Inspector stays contextual", "status": "passed", "evidence": "src/components/Inspector.tsx keeps Essentials/Layout/Advanced/Results sections while common actions remain on canvas/sidebar controls." },
+        { "track": "validation", "name": "Explorer inspector audit", "status": "passed", "evidence": "validation/v14_frontend_success_audit.py --section explorer-inspector." }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_4_3_method_setup_experience",
+      "release": "v1.4.3",
+      "family": "Product",
+      "name": "Method setup experience",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 31,
+      "summary": "Replaces flat analysis setup with Basic/Expert modes, readiness cards, and saved method presets for common researcher workflows.",
+      "gates": [
+        { "track": "product", "name": "Guided setup surface", "status": "passed", "evidence": "src/components/AnalysisCatalog.tsx provides Basic/Expert modes, readiness cards, and progressive method sections." },
+        { "track": "product", "name": "Method presets", "status": "passed", "evidence": "src/store.ts applyMethodPreset covers Standard PLS-SEM, PLS + Bootstrap, PLSpredict, MICOM + MGA, CB-SEM CFA, OLS Regression, and NCA." },
+        { "track": "validation", "name": "Method setup audit", "status": "passed", "evidence": "validation/v14_frontend_success_audit.py --section method-setup." }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_4_4_results_workspace_redesign",
+      "release": "v1.4.4",
+      "family": "Product",
+      "name": "Results workspace redesign",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 32,
+      "summary": "Organizes results by researcher workflow tabs, adds table search/density tools, and links result rows back to diagram objects where possible.",
+      "gates": [
+        { "track": "product", "name": "Researcher result tabs", "status": "passed", "evidence": "src/components/RunHistory.tsx adds Summary, Measurement Model, Structural Model, Reliability and Validity, Inference, Prediction, Groups, Diagnostics, and Comparison." },
+        { "track": "product", "name": "Result table tools and diagram focus", "status": "passed", "evidence": "RunHistory includes search, density, copy, and path-row focus hooks." },
+        { "track": "validation", "name": "Results workspace audit", "status": "passed", "evidence": "validation/v14_frontend_success_audit.py --section results-workspace." }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_4_5_publication_export_workflow",
+      "release": "v1.4.5",
+      "family": "Product",
+      "name": "Publication export workflow",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 33,
+      "summary": "Adds journal/thesis/presentation export presets and clearer WYSIWYG report controls while keeping SVG as the audited primary diagram export.",
+      "gates": [
+        { "track": "product", "name": "Publication presets", "status": "passed", "evidence": "src/components/ReportsWorkspace.tsx adds Thesis appendix, Journal figure, Journal tables, Presentation, and Full reproducibility report presets." },
+        { "track": "product", "name": "Export scope clarity", "status": "passed", "evidence": "Reports workspace keeps SVG/CSV/HTML/XLSX audited and documents browser print-to-PDF as the PDF path." },
+        { "track": "validation", "name": "Publication export audit", "status": "passed", "evidence": "validation/v14_frontend_success_audit.py --section publication-export." }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_4_6_onboarding_demo_workflow",
+      "release": "v1.4.6",
+      "family": "Product",
+      "name": "Onboarding and demo workflow",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 34,
+      "summary": "Adds a desktop-first Start workspace with new/open/demo/import/recent actions and native event wiring.",
+      "gates": [
+        { "track": "product", "name": "Start workspace", "status": "passed", "evidence": "src/components/OnboardingWorkspace.tsx provides Start new project, Open existing project, Open demo project, Import dataset, and Continue recent project entry points." },
+        { "track": "product", "name": "Native open/demo wiring", "status": "passed", "evidence": "TopBar listens for quickpls:open-project and quickpls:open-demo-project events; NavRail exposes Start." },
+        { "track": "validation", "name": "Onboarding audit", "status": "passed", "evidence": "validation/v14_frontend_success_audit.py --section onboarding-demo." }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_4_7_large_model_desktop_polish",
+      "release": "v1.4.7",
+      "family": "Product",
+      "name": "Large-model and desktop polish",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 35,
+      "summary": "Adds UI-only large-model state, isolate/collapse/focus controls, versioned artifact labeling, and smoke coverage for desktop-size workflows.",
+      "gates": [
+        { "track": "product", "name": "Large-model UI state", "status": "passed", "evidence": "src/types.ts and src/store.ts add LargeModelViewState without changing numerical fingerprints." },
+        { "track": "release", "name": "Versioned desktop artifacts", "status": "passed", "evidence": "package.json version is 1.4.7 and qpls:release:artifacts uses v1_4_frontend_success_program." },
+        { "track": "validation", "name": "Large model desktop audit", "status": "passed", "evidence": "validation/v14_frontend_success_audit.py --section large-model-desktop." }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_4_frontend_success_program",
+      "release": "v1.4.7",
+      "family": "Product",
+      "name": "Frontend success program",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 36,
+      "summary": "Completes the frontend-focused v1.4 program across design system, SEM designer, explorer/inspector, method setup, results, reports, onboarding, and large-model desktop polish without changing statistical engines.",
+      "gates": [
+        { "track": "validation", "name": "All v1.4 milestone audits", "status": "passed", "evidence": "npm run qpls:v14:frontend-success runs all v1.4 audit sections and the desktop-size smoke script." },
+        { "track": "validation", "name": "Desktop-size visual smoke", "status": "passed", "evidence": "validation/v14_frontend_success_smoke.mjs writes screenshots under validation/results/screens/v14/frontend-success." },
+        { "track": "release", "name": "Versioned frontend desktop build path", "status": "passed", "evidence": "npm run qpls:desktop:build-versioned creates fresh v1.4.7-labelled release artifacts." }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_5_0_researcher_ux_refinement",
+      "release": "v1.5.0",
+      "family": "Product",
+      "name": "Researcher UX refinement",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 37,
+      "summary": "Adds desktop command palette, shortcut overlay, toast feedback, clearer autosave/status messaging, method run summary, result headline cards, current-table export, publication export stepper, and variable prefix grouping without changing numerical engines.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Command, shortcut, and notification layer",
+          "status": "passed",
+          "evidence": "src/components/ProductivityOverlays.tsx adds Ctrl+K command palette, ? shortcut overlay, and toast notifications; TopBar emits save/import/run feedback."
+        },
+        {
+          "track": "product",
+          "name": "Researcher workflow clarity",
+          "status": "passed",
+          "evidence": "AnalysisCatalog adds What will run; RunHistory adds headline cards and current-table export; ReportsWorkspace adds a four-step export stepper; Explorer adds variable prefix grouping."
+        },
+        {
+          "track": "validation",
+          "name": "Researcher UX smoke and static audit",
+          "status": "passed",
+          "evidence": "validation/v150_researcher_ux_smoke.mjs writes screenshots under validation/results/screens/v150/researcher-ux and validation/v150_researcher_ux_audit.py verifies source wiring, versioning, and mojibake protection."
+        },
+        {
+          "track": "release",
+          "name": "Versioned desktop artifacts",
+          "status": "passed",
+          "evidence": "package.json version is 1.5.0 and qpls:release:artifacts uses v1_5_0_researcher_ux_refinement."
         }
       ],
       "next_actions": []

@@ -3,7 +3,7 @@ resolver = "2"
 members = ["crates/qpls-data", "crates/qpls-project", "crates/qpls-core", "crates/qpls-estimation", "crates/qpls-assessment", "crates/qpls-resampling", "crates/qpls-runner", "crates/qpls-cli", "src-tauri"]
 
 [workspace.package]
-version = "1.3.3"
+version = "1.5.0"
 edition = "2024"
 license = "LicenseRef-Proprietary"
 

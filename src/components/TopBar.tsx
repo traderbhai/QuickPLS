@@ -30,6 +30,7 @@ export function TopBar() {
   const publicationDiagramSettings = useWorkspace((state) => state.publicationDiagramSettings);
   const diagramLayout = useWorkspace((state) => state.diagramLayout);
   const setAnalysisSettings = useWorkspace((state) => state.setAnalysisSettings);
+  const pushToast = useWorkspace((state) => state.pushToast);
   const runnableMethods = methods.filter(isSelectableAnalysisMethod);
   const selectedMethod = runnableMethods.find((candidate) => candidate.id === analysisSettings.method) ?? runnableMethods[0];
 
@@ -43,7 +44,10 @@ export function TopBar() {
   const saveProject = async () => {
     if (!isNativeDesktop()) { download("corporate-reputation.qpls.json", JSON.stringify({ schemaVersion: 1, nodes, edges, dataset, runs, analysisSettings, diagramMode, diagramOverlaySettings, publicationDiagramSettings, diagramLayout }, null, 2), "application/json"); return; }
     const saved = await saveNativeProject(projectPath, { nodes, edges, runs, analysisSettings, diagramMode, diagramOverlaySettings, publicationDiagramSettings, diagramLayout, activeDatasetId: dataset.id });
-    if (saved) setProjectMeta(saved.name, saved.path);
+    if (saved) {
+      setProjectMeta(saved.name, saved.path);
+      pushToast({ tone: "success", title: "Project saved", detail: saved.path ?? saved.name });
+    }
   };
   const openProject = async (file?: File) => {
     if (!file) return;
@@ -58,6 +62,7 @@ export function TopBar() {
     if (workspace?.nodes && workspace?.edges) loadProject({ ...workspace, dataset: activeDataset });
     else if (project.datasets[0]) setDataset(project.datasets[0]);
     setProjectMeta(project.name, project.path);
+    pushToast({ tone: project.recovered ? "warning" : "success", title: project.recovered ? "Project recovered" : "Project opened", detail: project.name });
   };
   const openProjectCommand = async () => {
     if (!isNativeDesktop()) { projectInputRef.current?.click(); return; }
@@ -69,9 +74,19 @@ export function TopBar() {
     if (!isNativeDesktop()) { window.alert("The demo evidence project opens in the native QuickPLS desktop application."); return; }
     loadNativeProjectSnapshot(await openNativeDemoProject());
   };
-  const newProjectCommand = async () => { resetProject(); if (isNativeDesktop()) await createNativeProject(); };
-  const importDataCommand = async () => { if (!isNativeDesktop()) { inputRef.current?.click(); return; } const value = await importNativeDataset(); if (value) setDataset(value); };
-  const exportSummary = () => download("quickpls-foundation-summary.html", `<!doctype html><meta charset="utf-8"><title>QuickPLS foundation summary</title><h1>QuickPLS foundation summary</h1><p>Dataset: ${dataset.name}</p><p>Rows: ${dataset.rows.length}; constructs: ${nodes.length}; paths: ${edges.length}</p><p><strong>Stable scope:</strong> supported analyses are validated for the documented v1.0.0 scope after a saved run is selected.</p>`, "text/html");
+  const newProjectCommand = async () => { resetProject(); if (isNativeDesktop()) await createNativeProject(); pushToast({ tone: "info", title: "New project ready", detail: "Build a model or import a dataset." }); };
+  const importDataCommand = async () => {
+    if (!isNativeDesktop()) { inputRef.current?.click(); return; }
+    const value = await importNativeDataset();
+    if (value) {
+      setDataset(value);
+      pushToast({ tone: "success", title: "Dataset imported", detail: `${value.name}: ${value.rowCount ?? value.rows.length} rows, ${value.columns.length} variables` });
+    }
+  };
+  const exportSummary = () => {
+    download("quickpls-foundation-summary.html", `<!doctype html><meta charset="utf-8"><title>QuickPLS foundation summary</title><h1>QuickPLS foundation summary</h1><p>Dataset: ${dataset.name}</p><p>Rows: ${dataset.rows.length}; constructs: ${nodes.length}; paths: ${edges.length}</p><p><strong>Stable scope:</strong> supported analyses are validated for the documented v1.0.0 scope after a saved run is selected.</p>`, "text/html");
+    pushToast({ tone: "success", title: "Summary exported", detail: "HTML summary download started." });
+  };
 
   const importCsv = (file?: File) => {
     if (!file) return;
@@ -82,6 +97,7 @@ export function TopBar() {
       complete: ({ data, meta }) => {
         const missing = data.reduce((count, row) => count + Object.values(row).filter((value) => value === null || value === "").length, 0);
         setDataset({ id: crypto.randomUUID(), name: file.name, columns: meta.fields ?? [], rows: data, missing });
+        pushToast({ tone: "success", title: "CSV imported", detail: `${file.name}: ${data.length} rows, ${(meta.fields ?? []).length} variables` });
       },
     });
   };
@@ -186,6 +202,7 @@ export function TopBar() {
     const bootstrap = envelope.payload.kind === "pls_pm_v2" ? envelope.payload.bootstrap : envelope.payload.kind === "pls_pm_v3" ? envelope.payload.bootstrap ?? undefined : undefined;
     const permutation = envelope.payload.kind === "pls_pm_v3" ? envelope.payload.permutation ?? undefined : undefined;
     addRun({ id: envelope.id, name: `${selectedMethod.name} run`, method: selectedMethod.name, createdAt: envelope.provenance.completed_at, seed: envelope.provenance.seed, status: "completed", warnings: ["Validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked or explicitly marked.", ...envelope.diagnostics.filter((item) => item.level === "warning").map((item) => item.message)], fingerprint: envelope.provenance.dataset_fingerprint.slice(0, 12), result, assessment, bootstrap, permutation });
+    pushToast({ tone: "success", title: "Run completed", detail: `${selectedMethod.name} finished with ${result.iterations} iterations.` });
   };
   const cancelAnalysis = async () => {
     if (!activeJob) return;
@@ -196,14 +213,22 @@ export function TopBar() {
       if (activeJob || !canRun) return;
       void runAnalysis().catch((error) => { setActiveJob(null); window.alert(error); });
     };
+    const handleOpenProject = () => { void openProjectCommand().catch((error) => window.alert(error)); };
+    const handleOpenDemo = () => { void openDemoProjectCommand().catch((error) => window.alert(error)); };
     window.addEventListener("quickpls:run-analysis", handleRunRequest);
-    return () => window.removeEventListener("quickpls:run-analysis", handleRunRequest);
+    window.addEventListener("quickpls:open-project", handleOpenProject);
+    window.addEventListener("quickpls:open-demo-project", handleOpenDemo);
+    return () => {
+      window.removeEventListener("quickpls:run-analysis", handleRunRequest);
+      window.removeEventListener("quickpls:open-project", handleOpenProject);
+      window.removeEventListener("quickpls:open-demo-project", handleOpenDemo);
+    };
   }, [activeJob, canRun, runAnalysis]);
 
   return <>
     <header className="title-bar">
       <Menu size={20} /><strong>QuickPLS</strong><span className="project-title">{projectName}.qpls</span>
-      <span className="alpha-mark">v1.0.0</span>
+      <span className="alpha-mark">v1.5 researcher UX</span>
     </header>
     <div className="command-bar">
       <button className="icon-command" aria-label="New project" title="New project" onClick={() => { void newProjectCommand().catch((error) => window.alert(error)); }}><Plus size={17} /><span>New</span></button>

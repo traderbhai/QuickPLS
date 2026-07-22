@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "target": "v1_4_4_results_workspace_redesign",
+  "section": "results-workspace",
+  "passed": true,
+  "checklist": {
+    "researcher_tabs": true,
+    "table_tools": true,
+    "diagram_cross_focus": true,
+    "persistent_state": true
+  },
+  "evidence": [
+    "src/components",
+    "src/store.ts",
+    "src/types.ts",
+    "src/styles.css",
+    "package.json"
+  ]
+}

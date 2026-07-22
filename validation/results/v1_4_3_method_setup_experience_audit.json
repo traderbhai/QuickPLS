@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "target": "v1_4_3_method_setup_experience",
+  "section": "method-setup",
+  "passed": true,
+  "checklist": {
+    "basic_expert_modes": true,
+    "method_presets": true,
+    "readiness_cards": true,
+    "store_preset_actions": true
+  },
+  "evidence": [
+    "src/components",
+    "src/store.ts",
+    "src/types.ts",
+    "src/styles.css",
+    "package.json"
+  ]
+}

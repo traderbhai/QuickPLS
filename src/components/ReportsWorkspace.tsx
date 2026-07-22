@@ -5,6 +5,7 @@ import { runExportTables, tablesToCsv, tablesToHtml } from "../domain/resultTabl
 import { compareRuns } from "../domain/runComparison";
 import { exportNativeXlsxTables, isNativeDesktop } from "../services/projectService";
 import { useWorkspace } from "../store";
+import { ActionStrip, Card, PageHeader, StatusBadge } from "./Ui";
 
 export function ReportsWorkspace() {
   const runs = useWorkspace((state) => state.runs);
@@ -47,9 +48,35 @@ export function ReportsWorkspace() {
     await exportNativeXlsxTables(tables);
   };
 
+  const applyExportPreset = (preset: "thesis" | "journal_figure" | "journal_tables" | "presentation" | "full_report") => {
+    if (preset === "journal_figure") setPublicationDiagramSettings({ mode: "smartpls_result", palette: "grayscale", precision: 3, layoutSource: "tidy_publication", showValidationWatermark: false });
+    else if (preset === "presentation") setPublicationDiagramSettings({ mode: "smartpls_result", palette: "quickpls_color", precision: 2, layoutSource: "current_canvas", showValidationWatermark: true });
+    else if (preset === "thesis") setPublicationDiagramSettings({ mode: "publication", palette: "grayscale", precision: 4, layoutSource: "current_canvas", showValidationWatermark: true, showRunProvenance: true });
+    else if (preset === "full_report") setPublicationDiagramSettings({ mode: "publication", palette: "high_contrast", precision: 4, layoutSource: "current_canvas", showValidationWatermark: true, showRunProvenance: true });
+    else setPublicationDiagramSettings({ precision: 4, showLoadings: true, showPathCoefficients: true, showRSquared: true });
+  };
+
   return <section className="workspace-page publication-workspace">
-    <div className="page-heading"><div><h1>Publication report</h1><p>Preview the exact diagram style, export tables, and preserve validation status, warnings, and run provenance.</p></div></div>
-    <div className="analysis-settings">
+    <PageHeader title="Publication report" description="Preview the exact diagram style, export tables, and preserve validation status, warnings, and run provenance." actions={<StatusBadge status={selectedRun ? "validated" : "warning"}>{selectedRun ? "run selected" : "model-only"}</StatusBadge>} />
+    <ActionStrip>
+      <button className="secondary-button" onClick={() => applyExportPreset("thesis")}>Thesis appendix</button>
+      <button className="secondary-button" onClick={() => applyExportPreset("journal_figure")}>Journal figure</button>
+      <button className="secondary-button" onClick={() => applyExportPreset("journal_tables")}>Journal tables</button>
+      <button className="secondary-button" onClick={() => applyExportPreset("presentation")}>Presentation</button>
+      <button className="secondary-button" onClick={() => applyExportPreset("full_report")}>Full reproducibility report</button>
+    </ActionStrip>
+    <div className="setup-readiness-grid">
+      <Card title="Diagram export" description="SVG is the audited publication figure format." tone="validated" />
+      <Card title="Table exports" description={tables.length ? "CSV, HTML, and desktop XLSX are available." : "Run a method before exporting tables."} tone={tables.length ? "validated" : "warning"} />
+      <Card title="PDF path" description="Use browser print-to-PDF; native PDF is post-v1.4 unless separately audited." />
+    </div>
+    <ol className="export-stepper" aria-label="Publication export steps">
+      <li className={selectedRun ? "complete" : "active"}><b>1</b><span>Select run</span></li>
+      <li className="complete"><b>2</b><span>Choose diagram style</span></li>
+      <li className={diagramSvg ? "complete" : "active"}><b>3</b><span>Preview figure</span></li>
+      <li className={tables.length ? "complete" : ""}><b>4</b><span>Export tables and SVG</span></li>
+    </ol>
+    <div className="analysis-settings publication-settings-grid">
       <div><strong>Publication setup</strong><span className={selectedRun ? "status-text validated" : "status-text experimental"}>{selectedRun ? "run selected" : "model-only preview"}</span></div>
       <label>Saved run<select value={selectedRun?.id ?? ""} onChange={(event) => setSelectedRunId(event.target.value)} disabled={!runs.length}>
         {runs.length ? runs.map((run) => <option key={run.id} value={run.id}>{run.name}</option>) : <option>No saved runs</option>}
@@ -57,13 +84,13 @@ export function ReportsWorkspace() {
       <label>Compare with<select value={comparisonRun?.id ?? ""} onChange={(event) => setComparisonRunId(event.target.value)} disabled={runs.length < 2}>
         {runs.length > 1 ? runs.filter((run) => run.id !== selectedRun?.id).map((run) => <option key={run.id} value={run.id}>{run.name}</option>) : <option>Need two runs</option>}
       </select></label>
-      <label>Diagram mode<select value={publicationDiagramSettings.mode} onChange={(event) => setPublicationDiagramSettings({ mode: event.target.value as typeof publicationDiagramSettings.mode })}>
+      <label>Diagram style<select value={publicationDiagramSettings.mode} onChange={(event) => setPublicationDiagramSettings({ mode: event.target.value as typeof publicationDiagramSettings.mode })}>
         <option value="smartpls_result">SmartPLS-like</option>
         <option value="publication">QuickPLS publication</option>
         <option value="sem">SEM diagram</option>
         <option value="compact">Compact</option>
       </select></label>
-      <label>Diagram precision<select value={publicationDiagramSettings.precision} onChange={(event) => setPublicationDiagramSettings({ precision: Number(event.target.value) })}>
+      <label>Precision<select value={publicationDiagramSettings.precision} onChange={(event) => setPublicationDiagramSettings({ precision: Number(event.target.value) })}>
         {[2, 3, 4, 5, 6].map((value) => <option key={value} value={value}>{value} decimals</option>)}
       </select></label>
       <label>Diagram palette<select value={publicationDiagramSettings.palette} onChange={(event) => setPublicationDiagramSettings({ palette: event.target.value as typeof publicationDiagramSettings.palette })}>

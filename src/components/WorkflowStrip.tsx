@@ -24,6 +24,7 @@ export function WorkflowStrip() {
   const readiness = analysisReadiness({ dataset, nodes, edges, settings, nativeDesktop: isNativeDesktop() });
   const completedRuns = runs.filter((run) => run.status === "completed" && run.result);
   const complete = {
+    welcome: true,
     data: dataset.columns.length > 0 && (dataset.rowCount ?? dataset.rows.length) > 0,
     models: nodes.length > 0 && nodes.every((node) => node.data.indicators.length > 0) && edges.length > 0,
     analyses: readiness.items.filter((item) => item.id !== "runtime").every((item) => item.status !== "blocked"),

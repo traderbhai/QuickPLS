@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.5.0 researcher UX smoke",
+  "passed": true,
+  "checklist": {
+    "command_palette_visible": true,
+    "shortcut_overlay_visible": true,
+    "method_summary_visible": true,
+    "result_headlines_visible": true,
+    "export_stepper_visible": true,
+    "prefix_groups_visible": true,
+    "screenshots_written": true,
+    "no_console_errors": true
+  },
+  "screenshots": {
+    "commandPalette": "D:\\QuickPLS\\validation\\results\\screens\\v150\\researcher-ux\\01_command_palette.png",
+    "shortcuts": "D:\\QuickPLS\\validation\\results\\screens\\v150\\researcher-ux\\02_shortcuts.png",
+    "methodSummary": "D:\\QuickPLS\\validation\\results\\screens\\v150\\researcher-ux\\03_method_what_will_run.png",
+    "results": "D:\\QuickPLS\\validation\\results\\screens\\v150\\researcher-ux\\04_results_headlines.png",
+    "reports": "D:\\QuickPLS\\validation\\results\\screens\\v150\\researcher-ux\\05_export_stepper.png",
+    "prefixGroups": "D:\\QuickPLS\\validation\\results\\screens\\v150\\researcher-ux\\06_prefix_groups.png"
+  },
+  "errors": []
+}

@@ -11,6 +11,7 @@ export function Inspector() {
   const dataset = useWorkspace((state) => state.dataset);
   const node = nodes.find((item) => item.id === selectedNodeId);
   const edge = edges.find((item) => item.id === selectedEdgeId);
+  const selectedRun = useWorkspace((state) => state.runs.find((run) => run.id === state.selectedResultRunId) ?? state.runs[0]);
   const updateConstruct = useWorkspace((state) => state.updateConstruct);
   const updateEdge = useWorkspace((state) => state.updateEdge);
   const assignIndicator = useWorkspace((state) => state.assignIndicator);
@@ -165,6 +166,9 @@ export function Inspector() {
     </fieldset></details> : null}
     <details className="inspector-section"><summary>Diagnostics</summary>
       <label>Missing values<select><option>Use dataset setting</option><option>Casewise deletion</option><option>Mean replacement</option></select></label>
+    </details>
+    <details className="inspector-section"><summary>Results</summary>
+      {selectedRun?.result ? <div className="method-note"><strong>Selected run values</strong><p>R² {node.id}: {selectedRun.result.r_squared[node.id]?.toFixed(4) ?? "N/A"}. Indicator values and path coefficients remain synchronized with the selected result overlay.</p></div> : <div className="indicator-empty">Run or select a compatible result to inspect construct-level values here.</div>}
     </details>
     <div className="method-note"><strong>QuickPLS v1.0 stable scope</strong><p>Mode A and Mode B measurement, supported assessment, bootstrap, and permutation workflows are available within the documented v1.0 scope.</p></div>
   </aside>;

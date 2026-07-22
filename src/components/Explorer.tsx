@@ -56,6 +56,7 @@ export function Explorer() {
   const addConstructsFromIndicatorGroups = useWorkspace((state) => state.addConstructsFromIndicatorGroups);
   const [query, setQuery] = useState("");
   const [variableFilter, setVariableFilter] = useState<VariableFilter>("all");
+  const [issueFilter, setIssueFilter] = useState<"all" | "error" | "warning" | "info">("all");
   const [selectedVariables, setSelectedVariables] = useState<string[]>([]);
   const [draggingVariables, setDraggingVariables] = useState<string[]>([]);
 
@@ -74,6 +75,22 @@ export function Explorer() {
       if (variableFilter === "selected") return selectedVariables.includes(column);
       return true;
     });
+  const prefixSummary = useMemo(() => {
+    const counts = new Map<string, number>();
+    dataset.columns.forEach((column) => {
+      const prefix = column.match(/^[A-Za-z_]+/)?.[0]?.replace(/[_-]+$/, "") || column.slice(0, 4);
+      counts.set(prefix.toUpperCase(), (counts.get(prefix.toUpperCase()) ?? 0) + 1);
+    });
+    return [...counts.entries()].filter(([, count]) => count > 1).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  }, [dataset.columns]);
+  const globalMatches = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return [];
+    const constructMatches = nodes.filter((node) => `${node.data.label} ${node.data.shortName} ${node.data.indicators.join(" ")}`.toLowerCase().includes(needle)).map((node) => ({ id: node.id, label: node.data.label, kind: "Construct" }));
+    const variableMatches = dataset.columns.filter((column) => column.toLowerCase().includes(needle)).slice(0, 8).map((column) => ({ id: column, label: column, kind: "Variable" }));
+    const pathMatches = structuralEdges.filter((edge) => edgeLabel(edge, constructLabelById).toLowerCase().includes(needle)).map((edge) => ({ id: edge.id, label: edgeLabel(edge, constructLabelById), kind: "Path" }));
+    return [...constructMatches, ...variableMatches, ...pathMatches].slice(0, 10);
+  }, [constructLabelById, dataset.columns, nodes, query, structuralEdges]);
   const issues = useMemo(() => {
     const list: Array<{ tone: "error" | "warning" | "info"; title: string; detail: string; action?: () => void }> = [];
     if (dataset.columns.length === 0) list.push({ tone: "error", title: "No dataset columns", detail: "Import a raw dataset before building a model.", action: () => setView("data") });
@@ -180,6 +197,10 @@ export function Explorer() {
     </nav>
 
     <div className="explorer-body">
+      {globalMatches.length > 0 && <div className="explorer-global-results" aria-label="Global SEM explorer search results">
+        <strong>Search all</strong>
+        {globalMatches.map((match) => <button key={`${match.kind}-${match.id}`} onClick={() => match.kind === "Construct" ? focusConstruct(match.id) : match.kind === "Path" ? focusEdge(match.id) : setExplorerTab("variables")}><strong>{match.kind}</strong><span>{match.label}</span></button>)}
+      </div>}
       {explorerTab === "constructs" && <>
         <div className="explorer-section-heading">
           <div><Network size={15} /><strong>Constructs</strong><span>{nodes.length}</span></div>
@@ -221,6 +242,13 @@ export function Explorer() {
         <div className="explorer-filter-row">
           {(["all", "unassigned", "assigned", "selected"] as const).map((filter) => <button key={filter} className={variableFilter === filter ? "active" : ""} onClick={() => setVariableFilter(filter)}>{filter}</button>)}
         </div>
+        {prefixSummary.length > 0 && <div className="prefix-chip-row" aria-label="Detected variable prefix groups">
+          <strong>Prefix groups</strong>
+          {prefixSummary.map(([prefix, count]) => <button key={prefix} onClick={() => {
+            const matching = dataset.columns.filter((column) => column.toUpperCase().startsWith(prefix));
+            setSelectedVariables(matching);
+          }}>{prefix}<span>{count}</span></button>)}
+        </div>}
         {selectedVariables.length > 0 && <div className="variable-bulk-actions" aria-live="polite">
           <span>{selectedVariables.length} selected</span>
           <button title="Create construct from selected variables" onClick={() => { addConstruct(undefined, selectedVariables); setSelectedVariables([]); }}><Plus size={13} />Construct</button>
@@ -300,9 +328,12 @@ export function Explorer() {
         <div className="explorer-section-heading">
           <div><AlertTriangle size={15} /><strong>Model issues</strong><span>{issues.length}</span></div>
         </div>
+        <div className="explorer-filter-row">
+          {(["all", "error", "warning", "info"] as const).map((filter) => <button key={filter} className={issueFilter === filter ? "active" : ""} onClick={() => setIssueFilter(filter)}>{filter === "error" ? "blocking" : filter}</button>)}
+        </div>
         <div className="explorer-list compact">
-          {issues.length === 0 && <div className="empty-panel success">No obvious model-building issues in the current diagram.</div>}
-          {issues.map((issue, index) => <article key={`${issue.title}-${index}`} className={`issue-row ${issue.tone}`}>
+          {issues.filter((issue) => issueFilter === "all" || issue.tone === issueFilter).length === 0 && <div className="empty-panel success">No obvious model-building issues in this filter.</div>}
+          {issues.filter((issue) => issueFilter === "all" || issue.tone === issueFilter).map((issue, index) => <article key={`${issue.title}-${index}`} className={`issue-row ${issue.tone}`}>
             <AlertTriangle size={14} />
             <div><strong>{issue.title}</strong><span>{issue.detail}</span></div>
             {issue.action && <button onClick={issue.action}>Fix</button>}

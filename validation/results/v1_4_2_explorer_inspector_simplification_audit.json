@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "target": "v1_4_2_explorer_inspector_simplification",
+  "section": "explorer-inspector",
+  "passed": true,
+  "checklist": {
+    "global_search_exists": true,
+    "issue_filters_exist": true,
+    "inspector_progressive_sections": true,
+    "common_actions_outside_advanced": true
+  },
+  "evidence": [
+    "src/components",
+    "src/store.ts",
+    "src/types.ts",
+    "src/styles.css",
+    "package.json"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.4 frontend success program smoke",
+  "passed": true,
+  "checklist": {
+    "onboarding_has_desktop_first_actions": true,
+    "sem_designer_toolbar_has_core_actions": true,
+    "toolbar_has_no_horizontal_overflow_at_1440": true,
+    "view_menu_has_large_model_controls": true,
+    "method_setup_has_basic_expert_and_presets": true,
+    "results_workspace_has_researcher_tabs": true,
+    "reports_have_publication_presets": true,
+    "no_r2_mojibake_visible": true,
+    "screenshots_written": true,
+    "no_console_errors": true
+  },
+  "screenshots": {
+    "onboarding": "D:\\QuickPLS\\validation\\results\\screens\\v14\\frontend-success\\01_onboarding.png",
+    "semDesigner": "D:\\QuickPLS\\validation\\results\\screens\\v14\\frontend-success\\02_sem_designer.png",
+    "viewMenu": "D:\\QuickPLS\\validation\\results\\screens\\v14\\frontend-success\\03_view_large_model_menu.png",
+    "methodSetup": "D:\\QuickPLS\\validation\\results\\screens\\v14\\frontend-success\\04_method_setup.png",
+    "results": "D:\\QuickPLS\\validation\\results\\screens\\v14\\frontend-success\\05_results_workspace.png",
+    "reports": "D:\\QuickPLS\\validation\\results\\screens\\v14\\frontend-success\\06_reports_export.png",
+    "desktop1280": "D:\\QuickPLS\\validation\\results\\screens\\v14\\frontend-success\\07_desktop_1280.png"
+  },
+  "errors": []
+}
