@@ -51,7 +51,7 @@ describe("publication diagram SVG", () => {
     expect(svg).toContain("0.457");
     expect(svg).toContain("R&#178; 0.208");
     expect(svg).toContain("0.910");
-    expect(svg).toContain("Validated for documented QuickPLS v1.0.0 supported scope");
+    expect(svg).toContain("Validated for documented QuickPLS supported scope");
     expect(svg).not.toContain("Mode A");
     expect(svg).not.toContain("Trash");
   });
@@ -66,7 +66,7 @@ describe("publication diagram SVG", () => {
   it("escapes labels in model-only diagrams", () => {
     const svg = publicationDiagramSvg([{ ...nodes[0], data: { ...nodes[0].data, label: "A&B <test>" } }], [], undefined);
     expect(svg).toContain("A&amp;B &lt;test&gt;");
-    expect(svg).not.toContain("Validated for documented QuickPLS v1.0.0 supported scope");
+    expect(svg).not.toContain("Validated for documented QuickPLS supported scope");
   });
 
   it("exports the current canvas indicator layout when requested", () => {

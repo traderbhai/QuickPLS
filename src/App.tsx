@@ -25,6 +25,7 @@ declare global {
   interface Window {
     __QUICKPLS_SMOKE__?: {
       addCompletedRun: () => void;
+      addComparisonRun: () => void;
       loadDiagramFixture: (fixture: string) => void;
       arrangeSmartpls: () => void;
       selectConstructs: (ids: string[]) => void;
@@ -98,6 +99,21 @@ export function App() {
     if (!new URLSearchParams(window.location.search).has("quickpls_smoke")) return;
     const smokeApi = {
       addCompletedRun: () => useWorkspace.getState().addRun(completedSamplePlsRun()),
+      addComparisonRun: () => {
+        const run = completedSamplePlsRun();
+        const comparison = {
+          ...run,
+          id: `${run.id}-comparison`,
+          name: `${run.name} comparison`,
+          seed: run.seed + 1,
+          result: run.result ? {
+            ...run.result,
+            paths: run.result.paths.map((path, index) => ({ ...path, coefficient: path.coefficient + (index % 2 === 0 ? 0.02 : -0.015) })),
+            r_squared: Object.fromEntries(Object.entries(run.result.r_squared).map(([key, value]) => [key, value + 0.01])),
+          } : run.result,
+        };
+        useWorkspace.getState().addRun(comparison);
+      },
       loadDiagramFixture: (fixture: string) => {
         const { nodes, edges } = diagramFixture(fixture);
         useWorkspace.getState().loadProject({

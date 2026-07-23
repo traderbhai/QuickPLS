@@ -109,6 +109,9 @@ export function ModelCanvas() {
   const [selectedIndicator, setSelectedIndicator] = useState<null | { constructId: string; indicator: string }>(null);
   const [openToolbarMenu, setOpenToolbarMenu] = useState<null | "arrange" | "view" | "results">(null);
   const [contextMenu, setContextMenu] = useState<null | { kind: "canvas"; x: number; y: number } | { kind: "construct"; id: string; x: number; y: number } | { kind: "indicator"; constructId: string; indicator: string; x: number; y: number } | { kind: "edge"; id: string; x: number; y: number }>(null);
+  useEffect(() => {
+    if (selectedNodeId || selectedEdgeId) setSelectedIndicator(null);
+  }, [selectedEdgeId, selectedNodeId]);
   const resultRuns = useMemo(() => runs.filter((run) => run.status === "completed" && run.result), [runs]);
   const selectedResultRun = useMemo(() => resultRuns.find((run) => run.id === selectedResultRunId), [resultRuns, selectedResultRunId]);
   const graph = useMemo(() => buildDiagramGraph(nodes, edges, diagramMode, diagramOverlaySettings.mode, selectedResultRun, { layout: diagramLayout, layoutSource: diagramMode === "publication" ? "current_canvas" : undefined }), [diagramLayout, diagramMode, diagramOverlaySettings.mode, edges, nodes, selectedResultRun]);

@@ -30,7 +30,7 @@
         "Structure",
         "Issues"
       ],
-      "text": "SEM explorerCorporate Reputation StudyCorporate Reputation.csv5 rowsDataValidateConstructsVariablesStructureIssuesConstructs4AddCompetenceCOMP · 3 indicators · 0 in / 2 outleftrighttopbottomReset indicatorsLikeabilityLIKE · 2 indicators · 0 in / 2 outleftrighttopbottomReset indicatorsCustomer SatisfactionCUSA · 2 indicators · 2 in / 1 outleftrighttopbottomReset indicatorsCustomer LoyaltyCUSL · 2 indicators · 3 in / 0 outleftrighttopbottomReset indicators4 constructs9 indicators5 paths0 missing",
+      "text": "SEM explorerCorporate Reputation StudyCorporate Reputation.csv5 rowsDataSetupConstructsVariablesStructureIssuesConstructs4AddCompetenceCOMP · 3 indicators · 0 in / 2 outleftrighttopbottomReset indicatorsLikeabilityLIKE · 2 indicators · 0 in / 2 outleftrighttopbottomReset indicatorsCustomer SatisfactionCUSA · 2 indicators · 2 in / 1 outleftrighttopbottomReset indicatorsCustomer LoyaltyCUSL · 2 indicators · 3 in / 0 outleftrighttopbottomReset indicators4 constructs9 indicators5 paths0 missing",
       "visible_cards": 4,
       "visible_variables": 0,
       "visible_structure_rows": 0,
@@ -51,7 +51,7 @@
         "Structure",
         "Issues"
       ],
-      "text": "SEM explorerCorporate Reputation StudyCorporate Reputation.csv5 rowsDataValidateConstructsVariablesStructureIssuesDataset variables9allallunassignedassignedselectedCOMP1COMPCOMP2COMPCOMP3COMPLIKE1LIKELIKE2LIKECUSA1CUSACUSA2CUSACUSL1CUSLCUSL2CUSL4 constructs9 indicators5 paths0 missing",
+      "text": "SEM explorerCorporate Reputation StudyCorporate Reputation.csv5 rowsDataSetupConstructsVariablesStructureIssuesDataset variables9allallunassignedassignedselectedPrefix groupsCOMP3LIKE2CUSA2CUSL2COMP1COMPCOMP2COMPCOMP3COMPLIKE1LIKELIKE2LIKECUSA1CUSACUSA2CUSACUSL1CUSLCUSL2CUSL4 constructs9 indicators5 paths0 missing",
       "visible_cards": 0,
       "visible_variables": 9,
       "visible_structure_rows": 0,
@@ -72,7 +72,7 @@
         "Structure",
         "Issues"
       ],
-      "text": "SEM explorerCorporate Reputation StudyCorporate Reputation.csv5 rowsDataValidateConstructsVariablesStructureIssuesStructural model5 pathsCOMP -> CUSAStraightLabelLIKE -> CUSAStraightLabelCOMP -> CUSLStraightLabelLIKE -> CUSLStraightLabelCUSA -> CUSLStraightLabelCovariances04 constructs9 indicators5 paths0 missing",
+      "text": "SEM explorerCorporate Reputation StudyCorporate Reputation.csv5 rowsDataSetupConstructsVariablesStructureIssuesStructural model5 pathsCOMP -> CUSAStraightLabelLIKE -> CUSAStraightLabelCOMP -> CUSLStraightLabelLIKE -> CUSLStraightLabelCUSA -> CUSLStraightLabelCovariances04 constructs9 indicators5 paths0 missing",
       "visible_cards": 0,
       "visible_variables": 0,
       "visible_structure_rows": 5,
@@ -93,7 +93,7 @@
         "Structure",
         "Issues"
       ],
-      "text": "SEM explorerCorporate Reputation StudyCorporate Reputation.csv5 rowsDataValidateConstructsVariablesStructureIssuesModel issues0No obvious model-building issues in the current diagram.4 constructs9 indicators5 paths0 missing",
+      "text": "SEM explorerCorporate Reputation StudyCorporate Reputation.csv5 rowsDataSetupConstructsVariablesStructureIssuesModel issues0allblockingwarninginfoNo obvious model-building issues in this filter.4 constructs9 indicators5 paths0 missing",
       "visible_cards": 0,
       "visible_variables": 0,
       "visible_structure_rows": 0,
@@ -130,7 +130,7 @@
         "Structure",
         "Issues"
       ],
-      "text": "SEM explorerCorporate Reputation StudyCorporate Reputation.csv5 rowsDataValidateConstructsVariablesStructureIssuesModel issues0No obvious model-building issues in the current diagram.4 constructs9 indicators5 paths0 missing",
+      "text": "SEM explorerCorporate Reputation StudyCorporate Reputation.csv5 rowsDataSetupConstructsVariablesStructureIssuesModel issues0allblockingwarninginfoNo obvious model-building issues in this filter.4 constructs9 indicators5 paths0 missing",
       "visible_cards": 0,
       "visible_variables": 0,
       "visible_structure_rows": 0,

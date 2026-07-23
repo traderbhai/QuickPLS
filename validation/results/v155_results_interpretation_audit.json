@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.5.5 results interpretation polish audit",
+  "passed": true,
+  "checklist": {
+    "registry_current_stage": true,
+    "registry_gate_registered": true,
+    "source_contracts_present": true,
+    "no_results_mojibake_or_stale_scope": true,
+    "smoke_report_exists": true,
+    "smoke_report_passed": true,
+    "smoke_has_interpretation_and_comparison": true,
+    "roadmap_current_stage_updated": true,
+    "docs_present": true
+  },
+  "missing_required_snippets": [],
+  "forbidden_hits": [],
+  "smoke_report": "D:\\QuickPLS\\validation\\results\\v155_results_interpretation_smoke.json"
+}

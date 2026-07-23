@@ -1,0 +1,299 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.5.5 results interpretation polish smoke",
+  "passed": true,
+  "checklist": {
+    "overview_has_path_guidance": true,
+    "measurement_has_loading_guidance": true,
+    "structural_has_r2_and_vif_guidance": true,
+    "validity_has_reliability_and_discriminant_guidance": true,
+    "inference_has_guidance": true,
+    "prediction_has_guidance_or_empty": true,
+    "groups_has_clear_state": true,
+    "diagnostics_has_scope_and_extended_guidance": true,
+    "interpretation_has_report_wording": true,
+    "comparison_has_real_tables": true,
+    "table_actions_present": true,
+    "row_detail_visible": true,
+    "screenshots_written": true,
+    "no_stale_scope_or_mojibake": true,
+    "no_console_errors": true
+  },
+  "tabs": {
+    "overview": {
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v155\\results-interpretation\\01_overview.png",
+      "sections": [
+        "Path coefficients",
+        "Total effects",
+        "Mediation effects",
+        "Path coefficients",
+        "Total effects",
+        "Mediation effects"
+      ],
+      "interpretationPanels": [
+        "Path coefficientsValidated for documented QuickPLS scope",
+        "Path coefficientsValidated for documented QuickPLS scope"
+      ],
+      "detailRows": 0,
+      "tableActions": [
+        "Copy table",
+        "Hide guidance",
+        "Copy table",
+        "Copy table",
+        "Copy table",
+        "Hide guidance",
+        "Copy table",
+        "Copy table"
+      ],
+      "comparisonSelector": 0,
+      "hasMojibake": false,
+      "hasOldScope": false
+    },
+    "measurement": {
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v155\\results-interpretation\\02_measurement.png",
+      "sections": [
+        "Outer loadings and weights",
+        "Cross-loadings",
+        "Structural paths for diagram focus",
+        "Outer loadings and weights",
+        "Cross-loadings",
+        "Structural paths for diagram focus"
+      ],
+      "interpretationPanels": [
+        "Outer loadings and weightsValidated for documented QuickPLS scope",
+        "Outer loadings and weightsValidated for documented QuickPLS scope"
+      ],
+      "detailRows": 0,
+      "tableActions": [
+        "Copy table",
+        "Hide guidance",
+        "Copy table",
+        "Copy table",
+        "Copy table",
+        "Hide guidance",
+        "Copy table",
+        "Copy table"
+      ],
+      "comparisonSelector": 0,
+      "hasMojibake": false,
+      "hasOldScope": false
+    },
+    "structural": {
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v155\\results-interpretation\\03_structural.png",
+      "sections": [
+        "Path coefficients",
+        "Total effects",
+        "R² and adjusted R²",
+        "Inner VIF",
+        "Cohen f² effect sizes",
+        "Mediation effects",
+        "Path coefficients",
+        "Total effects",
+        "R² and adjusted R²",
+        "Inner VIF",
+        "Cohen f² effect sizes",
+        "Mediation effects"
+      ],
+      "interpretationPanels": [
+        "Path coefficientsValidated for documented QuickPLS scope",
+        "Path coefficientsValidated for documented QuickPLS scope"
+      ],
+      "detailRows": 0,
+      "tableActions": [
+        "Copy table",
+        "Hide guidance",
+        "Copy table",
+        "Copy table",
+        "Interpretation",
+        "Copy table",
+        "Interpretation",
+        "Copy table",
+        "Interpretation",
+        "Copy table",
+        "Copy table",
+        "Hide guidance",
+        "Copy table",
+        "Copy table",
+        "Interpretation",
+        "Copy table",
+        "Interpretation",
+        "Copy table",
+        "Interpretation",
+        "Copy table"
+      ],
+      "comparisonSelector": 0,
+      "hasMojibake": false,
+      "hasOldScope": false
+    },
+    "validity": {
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v155\\results-interpretation\\04_validity.png",
+      "sections": [
+        "Construct reliability and convergent validity",
+        "Fornell-Larcker criterion",
+        "Cross-loadings check",
+        "Construct reliability and convergent validity",
+        "Fornell-Larcker criterion",
+        "Cross-loadings check"
+      ],
+      "interpretationPanels": [
+        "Reliability and convergent validityValidated for documented QuickPLS scope",
+        "Reliability and convergent validityValidated for documented QuickPLS scope"
+      ],
+      "detailRows": 0,
+      "tableActions": [
+        "Copy table",
+        "Hide guidance",
+        "Interpretation",
+        "Copy table",
+        "Copy table",
+        "Hide guidance",
+        "Interpretation",
+        "Copy table"
+      ],
+      "comparisonSelector": 0,
+      "hasMojibake": false,
+      "hasOldScope": false
+    },
+    "inference": {
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v155\\results-interpretation\\05_inference.png",
+      "sections": [],
+      "interpretationPanels": [
+        "InferenceValidated for documented QuickPLS scope",
+        "InferenceValidated for documented QuickPLS scope"
+      ],
+      "detailRows": 0,
+      "tableActions": [],
+      "comparisonSelector": 0,
+      "hasMojibake": false,
+      "hasOldScope": false
+    },
+    "prediction": {
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v155\\results-interpretation\\06_prediction.png",
+      "sections": [
+        "Blindfolding Q²",
+        "Blindfolding Q²"
+      ],
+      "interpretationPanels": [
+        "PredictionValidated for documented QuickPLS scope",
+        "PredictionValidated for documented QuickPLS scope"
+      ],
+      "detailRows": 0,
+      "tableActions": [
+        "Copy table",
+        "Copy table"
+      ],
+      "comparisonSelector": 0,
+      "hasMojibake": false,
+      "hasOldScope": false
+    },
+    "groups": {
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v155\\results-interpretation\\07_groups.png",
+      "sections": [],
+      "interpretationPanels": [],
+      "detailRows": 0,
+      "tableActions": [],
+      "comparisonSelector": 0,
+      "hasMojibake": false,
+      "hasOldScope": false
+    },
+    "diagnostics": {
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v155\\results-interpretation\\08_diagnostics.png",
+      "sections": [
+        "Run provenance",
+        "Warnings and scope status",
+        "Correlation-residual fit",
+        "Run provenance",
+        "Warnings and scope status",
+        "Correlation-residual fit"
+      ],
+      "interpretationPanels": [],
+      "detailRows": 0,
+      "tableActions": [
+        "Copy table",
+        "Copy table",
+        "Copy table",
+        "Copy table",
+        "Copy table",
+        "Copy table"
+      ],
+      "comparisonSelector": 0,
+      "hasMojibake": false,
+      "hasOldScope": false
+    },
+    "interpretation": {
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v155\\results-interpretation\\09_interpretation.png",
+      "sections": [
+        "What should I inspect next?",
+        "Copyable report wording",
+        "Result availability map",
+        "What should I inspect next?",
+        "Copyable report wording",
+        "Result availability map"
+      ],
+      "interpretationPanels": [
+        "Path coefficientsValidated for documented QuickPLS scope",
+        "Outer loadings and weightsValidated for documented QuickPLS scope",
+        "Reliability and convergent validityValidated for documented QuickPLS scope",
+        "Structural qualityValidated for documented QuickPLS scope",
+        "Path coefficientsValidated for documented QuickPLS scope",
+        "Outer loadings and weightsValidated for documented QuickPLS scope",
+        "Reliability and convergent validityValidated for documented QuickPLS scope",
+        "Structural qualityValidated for documented QuickPLS scope"
+      ],
+      "detailRows": 0,
+      "tableActions": [
+        "Copy table",
+        "Copy table",
+        "Copy table",
+        "Copy table",
+        "Copy table",
+        "Copy table"
+      ],
+      "comparisonSelector": 0,
+      "hasMojibake": false,
+      "hasOldScope": false
+    },
+    "comparison": {
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v155\\results-interpretation\\10_comparison.png",
+      "sections": [
+        "Run metadata comparison",
+        "Path coefficient deltas",
+        "R² deltas",
+        "Measurement metric deltas",
+        "Run metadata comparison",
+        "Path coefficient deltas",
+        "R² deltas",
+        "Measurement metric deltas"
+      ],
+      "interpretationPanels": [
+        "Path coefficientsValidated for documented QuickPLS scope",
+        "Path coefficientsValidated for documented QuickPLS scope"
+      ],
+      "detailRows": 0,
+      "tableActions": [
+        "Copy table",
+        "Copy table",
+        "Hide guidance",
+        "Copy table",
+        "Interpretation",
+        "Copy table",
+        "Interpretation",
+        "Copy table",
+        "Copy table",
+        "Hide guidance",
+        "Copy table",
+        "Interpretation",
+        "Copy table",
+        "Interpretation"
+      ],
+      "comparisonSelector": 4,
+      "hasMojibake": false,
+      "hasOldScope": false
+    }
+  },
+  "screenshots": {
+    "desktop1280": "D:\\QuickPLS\\validation\\results\\screens\\v155\\results-interpretation\\11_comparison_1280.png",
+    "rowDetail": "D:\\QuickPLS\\validation\\results\\screens\\v155\\results-interpretation\\12_row_detail.png"
+  },
+  "errors": []
+}

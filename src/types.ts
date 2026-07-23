@@ -1,7 +1,7 @@
 export type WorkspaceView = "welcome" | "data" | "models" | "analyses" | "run" | "runs" | "groups" | "reports";
 export type ExplorerTab = "constructs" | "variables" | "structure" | "issues";
 export type UiDensity = "comfortable" | "compact";
-export type ResultWorkspaceTab = "summary" | "measurement" | "structural" | "quality" | "inference" | "prediction" | "groups" | "diagnostics" | "comparison";
+export type ResultWorkspaceTab = "overview" | "measurement" | "structural" | "validity" | "inference" | "prediction" | "groups" | "diagnostics" | "interpretation" | "comparison";
 export type MethodSetupMode = "basic" | "expert";
 export type MethodPresetId = "standard_pls" | "pls_bootstrap" | "plspredict" | "micom_mga" | "cbsem_cfa" | "ols_regression" | "nca";
 export type MeasurementMode = "reflective" | "formative";
@@ -72,6 +72,12 @@ export interface ResultWorkspaceState {
   tableSearch: string;
   tableDensity: UiDensity;
   includeExperimental: boolean;
+  selectedDetailRow: string | null;
+  resultPrecision: number;
+  tableSort: string | null;
+  activeInterpretationPanel: string | null;
+  comparisonRunIds: string[];
+  showInterpretationColumns: boolean;
 }
 
 export interface MethodSetupState {

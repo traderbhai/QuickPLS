@@ -22,10 +22,10 @@
   "errors": [],
   "evidence": {
     "defaultMetrics": {
-      "toolbar_width": 786,
-      "toolbar_scroll_width": 786,
-      "primary_width": 766,
-      "primary_scroll_width": 766,
+      "toolbar_width": 734,
+      "toolbar_scroll_width": 734,
+      "primary_width": 714,
+      "primary_scroll_width": 714,
       "has_toolbar_scroll": false,
       "has_primary_scroll": false,
       "text": "SelectPanConstructPathCovArrangeFitValidateViewResultsConstruct: Customer SatisfactionRename DuplicateAuto indicatorsIndicators leftRightTopBottomReset indicator layoutTidy selectedPin Delete",
@@ -44,10 +44,10 @@
       ]
     },
     "narrowMetrics": {
-      "toolbar_width": 626,
-      "toolbar_scroll_width": 626,
-      "primary_width": 606,
-      "primary_scroll_width": 606,
+      "toolbar_width": 574,
+      "toolbar_scroll_width": 574,
+      "primary_width": 554,
+      "primary_scroll_width": 554,
       "has_toolbar_scroll": false,
       "has_primary_scroll": false,
       "text": "SelectPanConstructPathCovArrangeFitValidateViewResults3 constructs selected Left Center X Top Center Y Distribute H Distribute VTidy selection",
@@ -61,20 +61,21 @@
       "grid_visible": false,
       "minimap_visible": false,
       "disabled_buttons": [
+        "Undo",
         "Redo"
       ]
     },
     "arrangeText": "Arrange like SmartPLS\nLeft to right\nTop to bottom\nCFA measurement preset\nMediation preset\nLarge model preset",
-    "viewText": "Diagram mode\nEdit model\nResult diagram\nCompact\nPublication preview\nSmartPLS-like theme\nAcademic grayscale\nQuickPLS color\nJournal mono\nHigh contrast\nLock layout\nHide grid",
+    "viewText": "Diagram mode\nEdit model\nResult diagram\nCompact\nPublication preview\nSmartPLS-like theme\nAcademic grayscale\nQuickPLS color\nJournal mono\nHigh contrast\nCollapse measurement indicators\nIsolate selected neighborhood\nClear isolation\nFit selected\nLock layout\nHide grid",
     "resultsText": "Run\nNo diagram estimates\nOverlay\nModel only\nLoadings / weights\nPaths + R²\nSignificance\nReliability warnings\nCB-SEM standardized\nCB-SEM residuals\nModification indices\nPrecision\n2 decimals\n3 decimals\n4 decimals\n5 decimals\n6 decimals\nLoadings\nPath coefficients\nR²\nSignificance",
     "themeMetrics": {
-      "toolbar_width": 786,
-      "toolbar_scroll_width": 786,
-      "primary_width": 766,
-      "primary_scroll_width": 766,
+      "toolbar_width": 734,
+      "toolbar_scroll_width": 734,
+      "primary_width": 714,
+      "primary_scroll_width": 714,
       "has_toolbar_scroll": false,
       "has_primary_scroll": false,
-      "text": "SelectPanConstructPathCovArrangeFitValidateViewDiagram modeEdit modelResult diagramCompactPublication previewSmartPLS-like themeAcademic grayscaleQuickPLS colorJournal monoHigh contrastLock layoutHide gridResultsConstruct: Customer SatisfactionRename DuplicateAuto indicatorsIndicators leftRightTopBottomReset indicator layoutTidy selectedPin Delete",
+      "text": "SelectPanConstructPathCovArrangeFitValidateViewDiagram modeEdit modelResult diagramCompactPublication previewSmartPLS-like themeAcademic grayscaleQuickPLS colorJournal monoHigh contrastCollapse measurement indicatorsIsolate selected neighborhoodClear isolationFit selectedLock layoutHide gridResultsConstruct: Customer SatisfactionRename DuplicateAuto indicatorsIndicators leftRightTopBottomReset indicator layoutTidy selectedPin Delete",
       "main_has_residual": false,
       "main_has_caption": false,
       "main_has_observed_indicator": false,
@@ -86,17 +87,18 @@
       "minimap_visible": true,
       "disabled_buttons": [
         "Undo",
-        "Redo"
+        "Redo",
+        "Clear isolation"
       ]
     },
     "gridHiddenMetrics": {
-      "toolbar_width": 786,
-      "toolbar_scroll_width": 786,
-      "primary_width": 766,
-      "primary_scroll_width": 766,
+      "toolbar_width": 734,
+      "toolbar_scroll_width": 734,
+      "primary_width": 714,
+      "primary_scroll_width": 714,
       "has_toolbar_scroll": false,
       "has_primary_scroll": false,
-      "text": "SelectPanConstructPathCovArrangeFitValidateViewDiagram modeEdit modelResult diagramCompactPublication previewSmartPLS-like themeAcademic grayscaleQuickPLS colorJournal monoHigh contrastLock layoutShow gridResultsConstruct: Customer SatisfactionRename DuplicateAuto indicatorsIndicators leftRightTopBottomReset indicator layoutTidy selectedPin Delete",
+      "text": "SelectPanConstructPathCovArrangeFitValidateViewDiagram modeEdit modelResult diagramCompactPublication previewSmartPLS-like themeAcademic grayscaleQuickPLS colorJournal monoHigh contrastCollapse measurement indicatorsIsolate selected neighborhoodClear isolationFit selectedLock layoutShow gridResultsConstruct: Customer SatisfactionRename DuplicateAuto indicatorsIndicators leftRightTopBottomReset indicator layoutTidy selectedPin Delete",
       "main_has_residual": false,
       "main_has_caption": false,
       "main_has_observed_indicator": false,
@@ -108,17 +110,18 @@
       "minimap_visible": false,
       "disabled_buttons": [
         "Undo",
-        "Redo"
+        "Redo",
+        "Clear isolation"
       ]
     },
     "lockedMetrics": {
-      "toolbar_width": 786,
-      "toolbar_scroll_width": 786,
-      "primary_width": 766,
-      "primary_scroll_width": 766,
+      "toolbar_width": 734,
+      "toolbar_scroll_width": 734,
+      "primary_width": 714,
+      "primary_scroll_width": 714,
       "has_toolbar_scroll": false,
       "has_primary_scroll": false,
-      "text": "SelectPanConstructPathCovArrangeFitValidateViewDiagram modeEdit modelResult diagramCompactPublication previewSmartPLS-like themeAcademic grayscaleQuickPLS colorJournal monoHigh contrastUnlock layoutShow gridResultsConstruct: Customer SatisfactionRename DuplicateAuto indicatorsIndicators leftRightTopBottomReset indicator layoutTidy selectedPin Delete",
+      "text": "SelectPanConstructPathCovArrangeFitValidateViewDiagram modeEdit modelResult diagramCompactPublication previewSmartPLS-like themeAcademic grayscaleQuickPLS colorJournal monoHigh contrastCollapse measurement indicatorsIsolate selected neighborhoodClear isolationFit selectedUnlock layoutShow gridResultsConstruct: Customer SatisfactionRename DuplicateAuto indicatorsIndicators leftRightTopBottomReset indicator layoutTidy selectedPin Delete",
       "main_has_residual": false,
       "main_has_caption": false,
       "main_has_observed_indicator": false,
@@ -134,6 +137,7 @@
         "Construct",
         "Path",
         "Cov",
+        "Clear isolation",
         "Auto indicators",
         "Indicators left",
         "Right",

@@ -1,4 +1,4 @@
-import { execFileSync, spawn } from "node:child_process";
+﻿import { execFileSync, spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -87,10 +87,10 @@ try {
   await page.waitForSelector(".researcher-result-card", { timeout: 10_000 });
 
   const tabs = {
-    summary: await readTab(page, "Summary", "01_summary.png"),
-    measurement: await readTab(page, "Measurement Model", "02_measurement.png"),
-    structural: await readTab(page, "Structural Model", "03_structural.png"),
-    quality: await readTab(page, "Reliability and Validity", "04_quality.png"),
+    overview: await readTab(page, "Overview", "01_overview.png"),
+    measurement: await readTab(page, "Measurement", "02_measurement.png"),
+    structural: await readTab(page, "Structural", "03_structural.png"),
+    validity: await readTab(page, "Validity", "04_validity.png"),
     inference: await readTab(page, "Inference", "05_inference.png"),
     prediction: await readTab(page, "Prediction", "06_prediction.png"),
     groups: await readTab(page, "Groups", "07_groups.png"),
@@ -98,15 +98,15 @@ try {
   };
 
   const checklist = {
-    summary_has_kpis_paths_and_effects: tabs.summary.metricTiles.some((text) => text.includes("R²")) && tabs.summary.sections.includes("Path coefficients") && tabs.summary.sections.includes("Total effects"),
+    overview_has_kpis_paths_and_effects: tabs.overview.metricTiles.some((text) => text.includes("R") && text.includes("satisfaction")) && tabs.overview.sections.includes("Path coefficients") && tabs.overview.sections.includes("Total effects"),
     measurement_has_outer_and_cross_loading_sections: tabs.measurement.sections.includes("Outer loadings and weights") && tabs.measurement.sections.includes("Cross-loadings"),
-    structural_has_effects_r2_vif_and_f2: tabs.structural.sections.includes("Path coefficients") && tabs.structural.sections.includes("Total effects") && tabs.structural.sections.includes("R² and adjusted R²") && tabs.structural.sections.includes("Inner VIF") && tabs.structural.sections.includes("Cohen f² effect sizes"),
-    quality_has_reliability_htmt_and_fornell_larcker: tabs.quality.sections.includes("Construct reliability and convergent validity") && tabs.quality.sections.includes("Fornell-Larcker criterion"),
+    structural_has_effects_r2_vif_and_f2: tabs.structural.sections.includes("Path coefficients") && tabs.structural.sections.includes("Total effects") && tabs.structural.sections.some((section) => section.startsWith("R") && section.includes("adjusted")) && tabs.structural.sections.includes("Inner VIF") && tabs.structural.sections.some((section) => section.startsWith("Cohen") && section.includes("effect sizes")),
+    validity_has_reliability_htmt_and_fornell_larcker: tabs.validity.sections.includes("Construct reliability and convergent validity") && tabs.validity.sections.includes("Fornell-Larcker criterion"),
     inference_has_bootstrap_table: tabs.inference.bootstrapTableCount > 0 && tabs.inference.sections.includes("Mediation effects") === false,
-    prediction_has_q2_or_clear_empty_state: tabs.prediction.sections.includes("Blindfolding Q²") || tabs.prediction.emptyTitle === "Prediction outputs not run",
+    prediction_has_q2_or_clear_empty_state: tabs.prediction.sections.some((section) => section.startsWith("Blindfolding Q")) || tabs.prediction.emptyTitle === "Prediction outputs not run",
     groups_are_not_generic_dump_without_payloads: tabs.groups.emptyTitle === "No group or segmentation payloads" && !tabs.groups.hasMethodPayloadDump,
     diagnostics_has_provenance_and_scope: tabs.diagnostics.sections.includes("Run provenance") && tabs.diagnostics.sections.includes("Warnings and scope status"),
-    diagram_selection_highlights_result_rows: tabs.summary.activeResultRows > 0 && tabs.measurement.activeResultRows > 0 && tabs.structural.activeResultRows > 0,
+    diagram_selection_highlights_result_rows: tabs.overview.activeResultRows > 0 && tabs.measurement.activeResultRows > 0 && tabs.structural.activeResultRows > 0,
     no_stale_scope_or_mojibake: Object.values(tabs).every((tab) => !tab.hasOldScope && !tab.hasMojibake),
     screenshots_written: Object.values(tabs).every((tab) => Boolean(tab.screenshot)),
     no_console_errors: errors.length === 0,

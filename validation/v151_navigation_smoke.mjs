@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -92,11 +92,11 @@ try {
     primary_rail_sequence: JSON.stringify(navLabels) === JSON.stringify(["Home", "Data", "Model", "Setup", "Run", "Results", "Report"]),
     no_primary_validate_or_groups: !navLabels.includes("Validate") && !navLabels.includes("Groups"),
     home_current_project_card: hasAll(home.body, ["Home", "Current", "Open project"]),
-    data_next_step: hasAll(data.body, ["Data preview", "Next step after data import", "Build model"]),
+    data_next_step: hasAll(data.body, ["Data preview", "Open Model Designer"]),
     model_canvas_available: hasAll(model.body, ["Select", "Path", "Validate"]),
-    setup_readiness_available: hasAll(setup.body, ["Setup", "Analysis readiness", "Group and prediction workflows"]),
+    setup_readiness_available: hasAll(setup.body, ["Setup", "Analysis readiness", "Standard PLS-SEM"]),
     run_workspace_available: hasAll(run.body, ["Run", "Before publication", "Open results"]),
-    results_summary_available: hasAll(results.body, ["Results", "Summary", "Export current table"]),
+    results_summary_available: hasAll(results.body, ["Results", "Overview", "Export current table"]),
     results_groups_tab_available: hasAll(groupsText, ["Groups and segmentation results", "Configure group workflow in Setup"]),
     report_workspace_available: hasAll(report.body, ["Publication report", "Export tables and SVG"]),
     screenshots_written: Object.values(shots).length === 8,
@@ -108,5 +108,18 @@ try {
   if (!result.passed) process.exitCode = 1;
 } finally {
   if (browser) await browser.close();
-  server.kill();
+  if (server.pid) {
+    try {
+      execFileSync("taskkill.exe", ["/PID", String(server.pid), "/T", "/F"], { stdio: "ignore" });
+    } catch {
+      server.kill();
+    }
+    try {
+      execFileSync("powershell.exe", ["-NoProfile", "-Command", `(Get-NetTCPConnection -LocalPort ${PORT} -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique) | ForEach-Object { Stop-Process -Id $_ -Force }`], { stdio: "ignore" });
+    } catch {
+      // Best-effort cleanup for detached Vite children.
+    }
+  } else {
+    server.kill();
+  }
 }

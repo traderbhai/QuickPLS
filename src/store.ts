@@ -131,7 +131,19 @@ const defaultAnalysisSettings: AnalysisUiSettings = { method: "pls_pm", bootstra
 const defaultDiagramOverlaySettings: DiagramOverlaySettings = { selectedRunId: null, mode: "model", precision: 3, showLoadings: true, showPathCoefficients: true, showPValues: false, showTValues: false, showRSquared: true, showWarnings: true, showWatermark: true };
 const defaultPublicationDiagramSettings: PublicationDiagramSettings = { mode: "smartpls_result", precision: 3, overlayMode: "paths_r2", aspectRatio: "wide", palette: "grayscale", layoutSource: "current_canvas", showLoadings: true, showPathCoefficients: true, showRSquared: true, showValidationWatermark: true, showUnsupportedWarning: true, showRunProvenance: true };
 const defaultUiPreferences: UiPreferences = { density: "compact", tableDensity: "compact", defaultPrecision: 4, showAdvancedHelp: true, recentPanels: ["models", "runs", "reports"] };
-const defaultResultWorkspaceState: ResultWorkspaceState = { selectedRunId: null, selectedTab: "summary", tableSearch: "", tableDensity: "compact", includeExperimental: false };
+const defaultResultWorkspaceState: ResultWorkspaceState = {
+  selectedRunId: null,
+  selectedTab: "overview",
+  tableSearch: "",
+  tableDensity: "compact",
+  includeExperimental: false,
+  selectedDetailRow: null,
+  resultPrecision: 4,
+  tableSort: null,
+  activeInterpretationPanel: null,
+  comparisonRunIds: [],
+  showInterpretationColumns: true,
+};
 const defaultMethodSetupState: MethodSetupState = { mode: "basic", selectedPreset: "standard_pls", expandedSections: ["basic"] };
 const defaultOnboardingState: OnboardingState = { dismissed: false, selectedDemo: "corporate_reputation", recentProjectCards: [] };
 const defaultLargeModelViewState: LargeModelViewState = { indicatorsCollapsed: false, isolatedConstructId: null, neighborhoodMode: "off" };

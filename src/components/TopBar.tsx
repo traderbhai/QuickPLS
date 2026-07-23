@@ -203,7 +203,7 @@ export function TopBar() {
     const { estimation: result, assessment } = envelope.payload;
     const bootstrap = envelope.payload.kind === "pls_pm_v2" ? envelope.payload.bootstrap : envelope.payload.kind === "pls_pm_v3" ? envelope.payload.bootstrap ?? undefined : undefined;
     const permutation = envelope.payload.kind === "pls_pm_v3" ? envelope.payload.permutation ?? undefined : undefined;
-    addRun({ id: envelope.id, name: `${selectedMethod.name} run`, method: selectedMethod.name, createdAt: envelope.provenance.completed_at, seed: envelope.provenance.seed, status: "completed", warnings: ["Validated for the documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked or explicitly marked.", ...envelope.diagnostics.filter((item) => item.level === "warning").map((item) => item.message)], fingerprint: envelope.provenance.dataset_fingerprint.slice(0, 12), result, assessment, bootstrap, permutation });
+    addRun({ id: envelope.id, name: `${selectedMethod.name} run`, method: selectedMethod.name, createdAt: envelope.provenance.completed_at, seed: envelope.provenance.seed, status: "completed", warnings: ["Validated for the documented QuickPLS supported scope; unsupported shapes remain blocked or explicitly marked.", ...envelope.diagnostics.filter((item) => item.level === "warning").map((item) => item.message)], fingerprint: envelope.provenance.dataset_fingerprint.slice(0, 12), result, assessment, bootstrap, permutation });
     pushToast({ tone: "success", title: "Run completed", detail: `${selectedMethod.name} finished with ${result.iterations} iterations.` });
   };
   const cancelAnalysis = async () => {

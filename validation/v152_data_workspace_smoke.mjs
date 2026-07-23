@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -128,5 +128,18 @@ try {
   if (!result.passed) process.exitCode = 1;
 } finally {
   if (browser) await browser.close();
-  server.kill();
+  if (server.pid) {
+    try {
+      execFileSync("taskkill.exe", ["/PID", String(server.pid), "/T", "/F"], { stdio: "ignore" });
+    } catch {
+      server.kill();
+    }
+    try {
+      execFileSync("powershell.exe", ["-NoProfile", "-Command", `(Get-NetTCPConnection -LocalPort ${PORT} -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique) | ForEach-Object { Stop-Process -Id $_ -Force }`], { stdio: "ignore" });
+    } catch {
+      // Best-effort cleanup for detached Vite children.
+    }
+  } else {
+    server.kill();
+  }
 }

@@ -3,10 +3,10 @@
   "target": "QuickPLS results workspace deep smoke",
   "passed": true,
   "checklist": {
-    "summary_has_kpis_paths_and_effects": true,
+    "overview_has_kpis_paths_and_effects": true,
     "measurement_has_outer_and_cross_loading_sections": true,
     "structural_has_effects_r2_vif_and_f2": true,
-    "quality_has_reliability_htmt_and_fornell_larcker": true,
+    "validity_has_reliability_htmt_and_fornell_larcker": true,
     "inference_has_bootstrap_table": true,
     "prediction_has_q2_or_clear_empty_state": true,
     "groups_are_not_generic_dump_without_payloads": true,
@@ -17,7 +17,7 @@
     "no_console_errors": true
   },
   "tabs": {
-    "summary": {
+    "overview": {
       "sections": [
         "Path coefficients",
         "Total effects",
@@ -37,7 +37,7 @@
       "hasMethodPayloadDump": false,
       "hasMojibake": false,
       "hasOldScope": false,
-      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v154\\results-workspace\\01_summary.png"
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v154\\results-workspace\\01_overview.png"
     },
     "measurement": {
       "sections": [
@@ -74,7 +74,7 @@
       "hasOldScope": false,
       "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v154\\results-workspace\\03_structural.png"
     },
-    "quality": {
+    "validity": {
       "sections": [
         "Construct reliability and convergent validity",
         "Fornell-Larcker criterion",
@@ -88,7 +88,7 @@
       "hasMethodPayloadDump": false,
       "hasMojibake": false,
       "hasOldScope": false,
-      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v154\\results-workspace\\04_quality.png"
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v154\\results-workspace\\04_validity.png"
     },
     "inference": {
       "sections": [],

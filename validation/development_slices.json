@@ -2,7 +2,7 @@
   "schema_version": 1,
   "program": "QuickPLS accelerated method-slice registry",
   "active_goal": "Complete QuickPLS as a free, proprietary, fully offline Windows desktop application that is first ready in all sense before unrestricted research use.",
-  "current_stage": "v1_5_4_results_workspace_hardening",
+  "current_stage": "v1_5_5_results_interpretation_polish",
   "policy": {
     "promotion_order": [
       "unsupported",
@@ -2538,6 +2538,50 @@
           "name": "Versioned desktop artifacts",
           "status": "passed",
           "evidence": "package.json, Cargo.toml, and src-tauri/tauri.conf.json use version 1.5.4; qpls:release:artifacts uses v1_5_4_results_workspace_hardening to create fresh non-overwriting installer and portable artifacts."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_5_5_results_interpretation_polish",
+      "release": "v1.5.5",
+      "family": "Product",
+      "name": "Results interpretation polish",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 42,
+      "summary": "Adds researcher-facing interpretation panels, threshold guidance, report wording, table-level copy/detail controls, precision controls, and bounded two-run comparison for compatible PLS-family results while preserving result payloads and numerical fingerprints.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Interpretation registry and result controls",
+          "status": "passed",
+          "evidence": "src/components/RunHistory.tsx adds interpretationRegistry, expandable guidance panels, row-detail selection, precision controls, table copy controls, and show/hide interpretation controls."
+        },
+        {
+          "track": "product",
+          "name": "Interpretation and comparison workspaces",
+          "status": "passed",
+          "evidence": "src/components/RunHistory.tsx renders the Interpretation tab with next-step guidance/report wording and the Comparison tab with metadata, path, R², and measurement deltas for two compatible PLS-family runs."
+        },
+        {
+          "track": "validation",
+          "name": "Results interpretation smoke and source audit",
+          "status": "passed",
+          "evidence": "validation/v155_results_interpretation_smoke.mjs captures Results screenshots and validates interpretation/comparison behavior; validation/v155_results_interpretation_audit.py verifies source contracts, registry state, docs, and no stale/mojibake wording."
+        },
+        {
+          "track": "documentation",
+          "name": "Interpretation polish scope documented",
+          "status": "passed",
+          "evidence": "docs/V1_5_5_RESULTS_INTERPRETATION_POLISH.md documents the frontend-only scope, evidence, gate, and non-engine boundary."
+        },
+        {
+          "track": "release",
+          "name": "Versioned desktop artifact metadata",
+          "status": "passed",
+          "evidence": "package.json, Cargo.toml, and src-tauri/tauri.conf.json use version 1.5.5; qpls:release:artifacts uses v1_5_5_results_interpretation_polish for fresh non-overwriting artifacts when a desktop build is requested."
         }
       ],
       "next_actions": []

@@ -58,8 +58,8 @@ function hasAnyCollision(text) {
     "Experimental scopeValidated",
     "Diagram exportSVG",
     "Table exportsRun",
-    "RÂ²",
-    "RÃ",
+    `R${String.fromCharCode(0x00c2)}²`,
+    `R${String.fromCharCode(0x00c3)}`,
   ].some((needle) => text.includes(needle));
 }
 
@@ -136,7 +136,7 @@ try {
     setup_status_copy_is_scoped: setupTopText.includes("Scope status") && !setupTopText.includes("Experimental scope") && setupTopText.includes("Validated for documented QuickPLS scope"),
     setup_group_workflows_are_progressive: !setupTopText.includes("MICOM + MGA setup") && setupPresetText.includes("Standard PLS-SEM"),
     run_disabled_reason_is_action_specific: runText.includes("Run disabled:"),
-    results_empty_primary_matches_blocker: /(Open data|Open model)/i.test(resultsText) && resultsText.includes("Summary") && resultsText.includes("Diagnostics"),
+    results_empty_primary_matches_blocker: /(Open data|Open model)/i.test(resultsText) && resultsText.includes("Overview") && resultsText.includes("Diagnostics"),
     report_controls_are_aligned_and_specific: reportSetupText.includes("Export disabled:") && reportSetupText.includes("exporting result tables") && reportPreviewText.includes("Model-only SVG preview"),
     report_preview_visible: reportPreviewText.includes("Publication diagram preview") || reportPreviewText.includes("Model diagram"),
     scroll_resets_on_workspace_change: dataScrollTop === 0,

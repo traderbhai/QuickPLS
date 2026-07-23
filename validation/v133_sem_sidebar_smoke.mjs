@@ -65,6 +65,8 @@ try {
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
   await page.goto(`${URL}?quickpls_smoke=1`, { waitUntil: "domcontentloaded", timeout: 45_000 });
+  await page.getByRole("button", { name: /^Model:/i }).click();
+  await page.waitForSelector(".explorer-tabs", { timeout: 10_000 });
 
   const shots = {};
   shots.constructs = path.join(ARTIFACTS, "01_constructs_tab.png");

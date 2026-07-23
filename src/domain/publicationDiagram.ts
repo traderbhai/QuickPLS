@@ -40,7 +40,7 @@ export function publicationDiagramSvg(nodes: Array<Node<ConstructData>>, edges: 
   const edgeMarkup = graph.edges.map((edge) => renderEdge(edge, graph.nodes, bounds, smartpls, options)).join("\n");
   const title = run ? `${run.name} publication diagram` : "QuickPLS model diagram";
   const warning = run && options.showValidationWatermark
-    ? `<text x="${PADDING}" y="${height - 15}" class="warning">Validated for documented QuickPLS v1.0.0 supported scope; unsupported shapes remain blocked.</text>`
+    ? `<text x="${PADDING}" y="${height - 15}" class="warning">Validated for documented QuickPLS supported scope; unsupported shapes remain blocked.</text>`
     : "";
   const provenance = run && options.showRunProvenance
     ? `<text x="${width - PADDING}" y="${height - 15}" text-anchor="end" class="caption">Run ${escapeXml(run.id)} | ${escapeXml(run.createdAt)}</text>`

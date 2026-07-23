@@ -531,3 +531,13 @@ Notes:
 - Added `validation/v154_results_workspace_smoke.mjs`, `validation/v154_results_workspace_audit.py`, `validation/v154_results_native_smoke.py`, `docs/V1_5_4_RESULTS_WORKSPACE_HARDENING.md`, and the `v1_5_4_results_workspace_hardening` registry gate.
 - Updated release metadata to `1.5.4` and artifact labeling to `v1_5_4_results_workspace_hardening` for fresh non-overwriting desktop builds.
 - Boundary: frontend/product polish only; no numerical backend or result-schema changes.
+
+## v1.5.5 Results Interpretation Polish
+
+- Added a frontend-only interpretation registry for validated result families, including threshold guidance, rationale, scope status, and report wording.
+- Added researcher controls for result precision, interpretation visibility, table-level copy, row detail, and current-tab exports.
+- Added an Interpretation tab with next-step guidance, copyable report wording, and result availability mapping.
+- Implemented bounded two-run comparison for compatible PLS-family runs with metadata, path, R², and measurement deltas.
+- Added `validation/v155_results_interpretation_smoke.mjs`, `validation/v155_results_interpretation_audit.py`, `docs/V1_5_5_RESULTS_INTERPRETATION_POLISH.md`, and the `v1_5_5_results_interpretation_polish` registry gate.
+- Updated release metadata to `1.5.5` and artifact labeling to `v1_5_5_results_interpretation_polish` for fresh non-overwriting desktop builds.
+- Boundary: frontend/product polish only; no numerical backend, result-schema, formula, or validation-tolerance changes.

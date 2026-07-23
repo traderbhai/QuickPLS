@@ -474,3 +474,21 @@ Complete:
 No statistical engines, formulas, result schemas, recipes, project format, or numerical fingerprints changed.
 
 Release metadata now uses `1.5.4`; versioned desktop artifacts use the label `v1_5_4_results_workspace_hardening`.
+
+## v1.5.5 Results Interpretation Polish
+
+Status: validated.
+
+This frontend-only milestone adds researcher-facing interpretation to the Results workspace without changing any numerical backend behavior.
+
+Complete:
+
+- Added expandable interpretation panels with threshold guidance, methodological rationale, and report wording.
+- Added result precision, interpretation-column visibility, table-level copy, row-detail selection, and current-tab export support.
+- Added an Interpretation tab for next-step guidance, copyable report wording, and availability mapping.
+- Replaced the placeholder Comparison tab with bounded two-run comparison for compatible PLS-family runs.
+- Added `validation/v155_results_interpretation_smoke.mjs`, `validation/v155_results_interpretation_audit.py`, `docs/V1_5_5_RESULTS_INTERPRETATION_POLISH.md`, and the registry slice `v1_5_5_results_interpretation_polish`.
+
+No statistical engines, formulas, result schemas, recipes, project format, or numerical fingerprints changed.
+
+Release metadata now uses `1.5.5`; versioned desktop artifacts use the label `v1_5_5_results_interpretation_polish`.

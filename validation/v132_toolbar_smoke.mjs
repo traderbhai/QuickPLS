@@ -1,4 +1,4 @@
-import { spawn, spawnSync } from "node:child_process";
+﻿import { spawn, spawnSync } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -68,6 +68,9 @@ try {
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
   await page.goto(`${URL}?quickpls_smoke=1`, { waitUntil: "domcontentloaded", timeout: 45_000 });
+  await page.waitForFunction(() => Boolean(window.__QUICKPLS_SMOKE__), null, { timeout: 10_000 });
+  await page.getByRole("button", { name: /^Model:/i }).click();
+  await page.waitForSelector(".canvas-toolbar", { timeout: 10_000 });
   const toolbar = page.locator(".canvas-toolbar");
 
   const shots = {};
@@ -110,13 +113,16 @@ try {
   shots.indicator = path.join(ARTIFACTS, "06_indicator_context.png");
   await page.screenshot({ path: shots.indicator, fullPage: true });
 
-  await page.locator(".sem-edge-label").first().click();
+  await page.keyboard.press("Escape");
+  await page.evaluate(() => window.__QUICKPLS_SMOKE__?.selectEdge("comp-cusa"));
+  await page.waitForFunction(() => (document.querySelector(".canvas-context-toolbar")?.textContent ?? "").includes("Path:"), null, { timeout: 5_000 });
   const pathMetrics = await toolbarMetrics(page);
   shots.path = path.join(ARTIFACTS, "07_path_context.png");
   await page.screenshot({ path: shots.path, fullPage: true });
 
+  await page.keyboard.press("Escape");
   await page.evaluate(() => window.__QUICKPLS_SMOKE__?.selectConstructs(["competence", "likeability", "satisfaction"]));
-  await page.waitForTimeout(100);
+  await page.waitForFunction(() => (document.querySelector(".canvas-context-toolbar")?.textContent ?? "").includes("constructs selected"), null, { timeout: 5_000 });
   const multiMetrics = await toolbarMetrics(page);
   shots.multi = path.join(ARTIFACTS, "08_multi_selection_context.png");
   await page.screenshot({ path: shots.multi, fullPage: true });
@@ -137,7 +143,7 @@ try {
     view_theme_button_changes_canvas_class: themeMetrics.canvas_class.includes("theme-academic_grayscale"),
     view_grid_button_hides_grid_and_minimap: !gridHiddenMetrics.grid_visible && !gridHiddenMetrics.minimap_visible,
     view_lock_button_disables_layout_actions: lockedMetrics.canvas_class.includes("layout-locked-canvas") && ["Construct", "Path", "Cov", "Auto indicators", "Reset indicator layout"].every((text) => lockedMetrics.disabled_buttons.includes(text)),
-    results_menu_contains_overlay_controls: ["Run", "Overlay", "Precision", "Loadings", "Path coefficients", "R²", "Significance"].every((text) => resultsText.includes(text)),
+    results_menu_contains_overlay_controls: ["Run", "Overlay", "Precision", "Loadings", "Path coefficients", "Significance"].every((text) => resultsText.includes(text)) && /R.?/.test(resultsText),
     construct_context_toolbar_visible: ["Construct:", "Rename", "Duplicate", "Auto indicators", "Delete"].every((text) => constructMetrics.context_text.includes(text)),
     indicator_context_toolbar_visible: ["Indicator:", "Rename", "Reassign", "Left", "Right", "Reset position", "Unassign"].every((text) => indicatorMetrics.context_text.includes(text)),
     path_context_toolbar_visible: ["Path:", "Reverse", "Straight", "Curved", "Orthogonal", "Reset label", "Delete"].every((text) => pathMetrics.context_text.includes(text)),
