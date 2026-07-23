@@ -19,7 +19,7 @@ Complete:
 - Archive schema v4 with tested legacy and v3 payload migration, typed result provenance, nested PLS payload validation, strong compact-bootstrap consistency checks, bootstrap round trips, and future-version read-only behavior.
 - CSV, XLSX, and SAV fixture generation plus checksum mutation and interrupted-archive tests.
 - README instructions distinguish the native Tauri shell from the browser-only preview and identify the exact corporate-reputation and compact deterministic validation fixture paths.
-- The Data workspace has a visible validation-fixture source card and `Validation fixture`/`Load fixture` actions sourced from `D:\QuickPLS\validation\fixtures\corporate_reputation.csv`. Browser preview parses bundled CSV text safely without a native dialog; desktop mode imports the same fixture embedded in the Rust binary, so installed builds do not depend on the development path. Loading the fixture immediately selects the first column for metadata editing.
+- The Data workspace has a researcher-facing import source panel, `Load Sample Dataset` action, mode-specific raw/covariance/correlation guidance, data-quality cards, variable search/filter, metadata editing sections, and prefix-based construct creation. Browser preview parses bundled CSV text safely without a native dialog; desktop mode imports the same fixture embedded in the Rust binary, so installed builds do not depend on the development path.
 
 ## v0.3 PLS Core
 
@@ -432,3 +432,18 @@ Complete:
 - Updated versioned build metadata to `1.5.1` with artifact label `v1_5_1_navigation_workspace_hardening`.
 
 Scope note: v1.5.1 is frontend/navigation-only. It does not change statistical engines, analysis recipes, result schemas, validation tolerances, or numerical fingerprints.
+
+## v1.5.2 Data Workspace Hardening
+
+Complete:
+
+- Reorganized Data into Import Source, Data Quality, and Preview And Metadata zones.
+- Replaced duplicate validation-fixture actions with one researcher-facing `Load Sample Dataset` action.
+- Added raw, covariance, and correlation import-mode guidance with inline matrix sample-size readiness.
+- Added data-quality cards for rows, variables, missing cells, nonnumeric variables, constant columns, header issues, and sample readiness.
+- Added variable search/filter, clearer selected-column metadata editing, and a visible horizontal-scroll hint.
+- Added `Create Constructs From Prefixes` with detected prefix preview and handoff to the Model designer.
+- Added `validation/v152_data_workspace_smoke.mjs`, `validation/v152_data_workspace_audit.py`, and the registry slice `v1_5_2_data_workspace_hardening`.
+- Updated versioned build metadata to `1.5.2` with artifact label `v1_5_2_data_workspace_hardening`.
+
+Scope note: v1.5.2 is frontend/Data-workspace-only. It does not change statistical engines, analysis recipes, result schemas, validation tolerances, or numerical fingerprints.

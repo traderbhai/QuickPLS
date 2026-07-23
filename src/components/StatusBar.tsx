@@ -23,6 +23,6 @@ export function StatusBar() {
     </span>
     <span><Database size={14} />{dataset.rows.length} rows</span><span>{nodes.length} constructs</span><span>{structuralPathCount} paths</span>
     <span>{projectPath ? "Autosave active" : "Save project to enable autosave"}</span>
-    <span className="status-spacer" /><button className="status-link" onClick={() => setShortcutOverlayOpen(true)}>Shortcuts ?</button><span><WifiOff size={14} />Offline mode</span><span>Engine 1.0.0 stable scope</span>
+    <span className="status-spacer" /><button className="status-link" onClick={() => setShortcutOverlayOpen(true)}>Shortcuts ?</button><span><WifiOff size={14} />Offline mode</span><span>Validated engine scope: v1.0</span>
   </footer>;
 }

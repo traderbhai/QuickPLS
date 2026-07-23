@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.5.2 Data workspace hardening",
+  "passed": true,
+  "checklist": {
+    "version_is_152": true,
+    "artifact_label_is_152": true,
+    "scripts_registered": true,
+    "single_sample_dataset_language": true,
+    "mode_specific_import_guidance": true,
+    "quality_helpers_present": true,
+    "quality_cards_present": true,
+    "prefix_bridge_present": true,
+    "metadata_editor_sections": true,
+    "table_search_filter_present": true,
+    "status_copy_clear": true,
+    "css_supports_data_sections": true,
+    "helper_tests_present": true,
+    "smoke_passed": true,
+    "registry_current_stage": true,
+    "registry_slice_registered": true
+  },
+  "evidence": [
+    "src/components/DataWorkspace.tsx",
+    "src/domain/dataWorkspace.ts",
+    "src/domain/dataWorkspace.test.ts",
+    "validation/results/v152_data_workspace_smoke.json",
+    "validation/results/screens/v152/data-workspace/"
+  ]
+}

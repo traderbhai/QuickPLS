@@ -2,7 +2,7 @@
   "schema_version": 1,
   "program": "QuickPLS accelerated method-slice registry",
   "active_goal": "Complete QuickPLS as a free, proprietary, fully offline Windows desktop application that is first ready in all sense before unrestricted research use.",
-  "current_stage": "v1_5_1_navigation_workspace_hardening",
+  "current_stage": "v1_5_2_data_workspace_hardening",
   "policy": {
     "promotion_order": [
       "unsupported",
@@ -2400,6 +2400,44 @@
           "name": "Versioned desktop artifacts",
           "status": "passed",
           "evidence": "package.json version is 1.5.1 and qpls:release:artifacts uses v1_5_1_navigation_workspace_hardening."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_5_2_data_workspace_hardening",
+      "release": "v1.5.2",
+      "family": "Product",
+      "name": "Data workspace hardening",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 39,
+      "summary": "Redesigns the Data workspace into import source, data quality, preview/metadata, and model handoff zones while preserving existing native import APIs, dataset schemas, project format, and numerical fingerprints.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Data workflow structure",
+          "status": "passed",
+          "evidence": "src/components/DataWorkspace.tsx separates Import Source, Data Quality, Preview And Metadata, and prefix-based model handoff; duplicate validation-fixture actions are replaced by Load Sample Dataset."
+        },
+        {
+          "track": "product",
+          "name": "Import mode clarity",
+          "status": "passed",
+          "evidence": "Raw, covariance, and correlation modes show distinct guidance, matrix sample-size readiness, desktop-runtime requirements, and clear current-loaded-dataset preview labeling."
+        },
+        {
+          "track": "validation",
+          "name": "Data workspace smoke and static audit",
+          "status": "passed",
+          "evidence": "validation/v152_data_workspace_smoke.mjs writes eight Data workspace screenshots and validation/v152_data_workspace_audit.py verifies source wiring, scripts, versioning, registry, and copy."
+        },
+        {
+          "track": "release",
+          "name": "Versioned desktop artifacts",
+          "status": "passed",
+          "evidence": "package.json version is 1.5.2 and qpls:release:artifacts uses v1_5_2_data_workspace_hardening."
         }
       ],
       "next_actions": []

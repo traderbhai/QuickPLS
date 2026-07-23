@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.5.2 Data workspace smoke",
+  "passed": true,
+  "checklist": {
+    "raw_mode_has_import_source_quality_preview": true,
+    "duplicate_fixture_language_removed": true,
+    "sample_dataset_action_present": true,
+    "quality_cards_present": true,
+    "small_sample_warning_visible": true,
+    "prefix_bridge_present": true,
+    "covariance_mode_has_persistent_requirement": true,
+    "matrix_ready_keeps_mode_clear": true,
+    "correlation_mode_has_guidance": true,
+    "search_filters_columns": true,
+    "scale_filter_filters_columns": true,
+    "metadata_selection_visible": true,
+    "screenshots_written": true,
+    "no_console_errors": true
+  },
+  "screenshots": {
+    "raw": "D:\\QuickPLS\\validation\\results\\screens\\v152\\data-workspace\\01_raw_data_workspace.png",
+    "covariance": "D:\\QuickPLS\\validation\\results\\screens\\v152\\data-workspace\\02_covariance_mode.png",
+    "matrixReady": "D:\\QuickPLS\\validation\\results\\screens\\v152\\data-workspace\\03_matrix_ready.png",
+    "correlation": "D:\\QuickPLS\\validation\\results\\screens\\v152\\data-workspace\\04_correlation_mode.png",
+    "search": "D:\\QuickPLS\\validation\\results\\screens\\v152\\data-workspace\\05_variable_search.png",
+    "filter": "D:\\QuickPLS\\validation\\results\\screens\\v152\\data-workspace\\06_variable_filter.png",
+    "metadata": "D:\\QuickPLS\\validation\\results\\screens\\v152\\data-workspace\\07_metadata_selected_column.png",
+    "desktop1280": "D:\\QuickPLS\\validation\\results\\screens\\v152\\data-workspace\\08_desktop_1280.png"
+  },
+  "errors": []
+}
