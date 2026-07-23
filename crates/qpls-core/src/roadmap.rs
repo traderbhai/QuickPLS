@@ -177,7 +177,7 @@ mod tests {
     #[test]
     fn registry_keeps_current_stage_explicit() {
         let registry = development_slice_registry().unwrap();
-        assert_eq!(registry.current_stage, "v1_5_2_data_workspace_hardening");
+        assert_eq!(registry.current_stage, "v1_5_3_layout_copy_readiness_polish");
         assert!(
             registry
                 .slices
@@ -260,6 +260,14 @@ mod tests {
                 .slices
                 .iter()
                 .any(|slice| slice.id == "v1_5_2_data_workspace_hardening"
+                    && slice.status == SliceStatus::Validated
+                    && slice.stable_output)
+        );
+        assert!(
+            registry
+                .slices
+                .iter()
+                .any(|slice| slice.id == "v1_5_3_layout_copy_readiness_polish"
                     && slice.status == SliceStatus::Validated
                     && slice.stable_output)
         );

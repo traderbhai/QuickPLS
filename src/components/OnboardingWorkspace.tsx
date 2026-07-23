@@ -1,6 +1,6 @@
-import { Database, FileText, FlaskConical, FolderOpen, Network, Play, Plus } from "lucide-react";
+import { Database, FileText, FlaskConical, FolderOpen, Network, Play, Plus, Save } from "lucide-react";
 import { useWorkspace } from "../store";
-import { Card, PageHeader, StatusBadge } from "./Ui";
+import { Card, PageHeader } from "./Ui";
 
 export function OnboardingWorkspace() {
   const setView = useWorkspace((state) => state.setView);
@@ -15,13 +15,16 @@ export function OnboardingWorkspace() {
     setView(view);
   };
   return <section className="workspace-page onboarding-workspace">
-    <PageHeader title="Home" description="Open a project, import data, build a SEM diagram, run a validated method, and export a publication-ready report." actions={<StatusBadge status="validated">desktop-first workflow</StatusBadge>} />
+    <PageHeader title="Home" description="Open a project, import data, build a SEM diagram, run a validated method, and export a publication-ready report." />
     <section className="current-project-card" aria-label="Current project status">
       <div>
         <strong>{projectPath ? "Current project saved" : "Current workspace not saved yet"}</strong>
         <span>{projectPath ?? "Use Save in the top bar to enable autosave and recovery for this workspace."}</span>
       </div>
-      <button className="secondary-button" onClick={() => window.dispatchEvent(new CustomEvent(projectPath ? "quickpls:save-project" : "quickpls:open-project"))}>{projectPath ? "Save now" : "Open project"}</button>
+      <div className="current-project-actions">
+        <button className="secondary-button" onClick={() => window.dispatchEvent(new CustomEvent("quickpls:save-project"))}><Save size={15} />{projectPath ? "Save now" : "Save project"}</button>
+        <button className="secondary-button" onClick={() => window.dispatchEvent(new CustomEvent("quickpls:open-project"))}><FolderOpen size={15} />Open project</button>
+      </div>
     </section>
     <div className="onboarding-grid">
       <Card title="Start new project" description="Start from the current workspace and build a diagram.">

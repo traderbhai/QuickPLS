@@ -10,6 +10,7 @@ const nodes: Array<Node<ConstructData>> = [
 ];
 
 const edges: Edge[] = [{ id: "x-y", source: "x", target: "y", label: "Path" }];
+const mojibakeR2 = `R${String.fromCharCode(0x00c2)}²`;
 
 const result: PlsResult = {
   method_version: "wpls_case_weighted_v1",
@@ -74,7 +75,7 @@ describe("publication diagram SVG", () => {
     const svg = publicationDiagramSvg(nodes, edges, run, { layoutSource: "current_canvas" }, layout);
     expect(svg).toContain('x="149" y="42" width="88" height="28"');
     expect(svg).toContain("R&#178; 0.208");
-    expect(svg).not.toContain("RÂ²");
+    expect(svg).not.toContain(mojibakeR2);
   });
   it("uses SmartPLS-like geometry and omits edit-only UI in SVG export", () => {
     const svg = publicationDiagramSvg(nodes, edges, run);

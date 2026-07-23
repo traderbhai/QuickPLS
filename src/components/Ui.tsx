@@ -17,8 +17,8 @@ export function ActionStrip({ children }: { children: ReactNode }) {
 
 export function Card({ title, description, children, tone = "plain" }: { title: string; description?: string; children?: ReactNode; tone?: "plain" | "warning" | "validated" }) {
   return <article className={`ui-card ${tone}`}>
-    <div className="ui-card-heading"><strong>{title}</strong>{description ? <span>{description}</span> : null}</div>
-    {children}
+    <header className="ui-card-heading"><strong>{title}</strong>{description ? <span>{description}</span> : null}</header>
+    {children ? <div className="ui-card-actions">{children}</div> : null}
   </article>;
 }
 

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.5.3 layout, copy, and readiness polish",
+  "passed": true,
+  "checklist": {
+    "scripts_registered": true,
+    "registry_current_stage": true,
+    "registry_slice_registered": true,
+    "roadmap_current_stage_updated": true,
+    "shared_card_structure": true,
+    "compact_blocker_chip": true,
+    "scroll_reset_present": true,
+    "data_profile_and_copy": true,
+    "generic_path_labels_hidden": true,
+    "setup_status_copy": true,
+    "setup_progressive_groups": true,
+    "run_disabled_reason_near_action": true,
+    "results_empty_cta_matches_blocker": true,
+    "report_controls_polished": true,
+    "css_supports_new_controls": true,
+    "normal_ui_forbidden_copy_removed": true,
+    "docs_present": true,
+    "smoke_passed": true,
+    "screenshots_exist": true
+  },
+  "evidence": [
+    "src/components/Ui.tsx",
+    "src/components/TopBar.tsx",
+    "src/components/DataWorkspace.tsx",
+    "src/components/AnalysisCatalog.tsx",
+    "src/components/RunWorkspace.tsx",
+    "src/components/RunHistory.tsx",
+    "src/components/ReportsWorkspace.tsx",
+    "src/components/SemEdge.tsx",
+    "src/styles.css",
+    "validation/results/v153_layout_copy_smoke.json",
+    "validation/results/screens/v153/layout-copy/"
+  ]
+}

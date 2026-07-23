@@ -515,3 +515,11 @@ Notes:
 - Covariance/correlation matrix modes show persistent sample-size and desktop-runtime requirements while keeping the current loaded dataset preview clearly labeled.
 - The app version is `1.5.2`; release artifacts use the label `v1_5_2_data_workspace_hardening`.
 - This milestone deliberately does not change estimators, method formulas, analysis result schemas, validation tolerances, or numerical fingerprints.
+## v1.5.3 Layout, Copy, And Readiness Polish
+
+- Added shared card heading/action structure to prevent title/body collisions across Home, Setup, Report, and status cards.
+- Replaced the repeated top disabled-run banner with a compact blocker chip and localized action-specific disabled reasons.
+- Added workspace scroll reset on rail changes, Data selected-column profile statistics, model generic-path label suppression, Setup scope-status copy, progressive group/prediction setup, Results blocker-aware empty states, and Report preset/export alignment.
+- Added `validation/v153_layout_copy_smoke.mjs`, `validation/v153_layout_copy_audit.py`, `docs/V1_5_3_LAYOUT_COPY_READINESS_POLISH.md`, and the `v1_5_3_layout_copy_readiness_polish` registry gate.
+- Updated release metadata to `1.5.3` and artifact labeling to `v1_5_3_layout_copy_readiness_polish` for fresh non-overwriting desktop builds.
+- Boundary: frontend/product polish only; no numerical backend or result-schema changes.

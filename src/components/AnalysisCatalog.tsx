@@ -45,10 +45,10 @@ export function AnalysisCatalog() {
   const selectedStatus = effectiveMethodStatus(selectedMethod, settings);
   const basicFieldsReady = readiness.canRun && selectedStatus !== "unsupported";
   const methodCards = [
-    { title: "Missing dataset", detail: dataset.columns.length ? `${dataset.columns.length} variables loaded` : "Import a dataset first", tone: dataset.columns.length ? "validated" : "warning" },
+    { title: "Dataset", detail: dataset.columns.length ? `${dataset.columns.length} variables loaded` : "Import a dataset first", tone: dataset.columns.length ? "validated" : "warning" },
     { title: "Model", detail: nodes.every((node) => node.data.indicators.length > 0) ? `${nodes.length} constructs with indicators` : "Some constructs need indicators", tone: nodes.every((node) => node.data.indicators.length > 0) ? "validated" : "warning" },
     { title: "Unsupported shape", detail: selectedStatus === "unsupported" ? methodStatusDescription(selectedMethod, settings) : "No unsupported shape detected for the selected method settings", tone: selectedStatus === "unsupported" ? "warning" : "validated" },
-    { title: "Experimental scope", detail: selectedStatus === "validated" ? "Validated for documented QuickPLS scope" : methodStatusDescription(selectedMethod, settings), tone: selectedStatus === "validated" ? "validated" : "warning" },
+    { title: "Scope status", detail: selectedStatus === "validated" ? "Validated for documented QuickPLS scope" : selectedStatus === "experimental" ? "Experimental / watermarked outside validated scope" : methodStatusDescription(selectedMethod, settings), tone: selectedStatus === "validated" ? "validated" : "warning" },
     { title: "Readiness", detail: readiness.summary, tone: readiness.canRun ? "validated" : "warning" },
     { title: "Run state", detail: readiness.summary, tone: readiness.canRun ? "validated" : "warning" },
   ] as const;
@@ -61,7 +61,10 @@ export function AnalysisCatalog() {
 
     <ActionStrip>
       <TabStrip label="Method setup mode" value={setup.mode} onChange={(mode) => setSetup({ mode })} tabs={[{ id: "basic", label: "Basic" }, { id: "expert", label: "Expert" }]} />
-      <button className="run-button" disabled={!basicFieldsReady} title={basicFieldsReady ? "Open run workspace" : readiness.blockers[0]?.detail ?? readiness.summary} onClick={() => setView("run")}><Play size={15} fill="currentColor" />Ready to run</button>
+      <div className="setup-run-action">
+        <button className="run-button" disabled={!basicFieldsReady} title={basicFieldsReady ? "Open run workspace" : readiness.blockers[0]?.detail ?? readiness.summary} onClick={() => setView("run")}><Play size={15} fill="currentColor" />Ready to run</button>
+        {!basicFieldsReady ? <span className="disabled-reason inline-disabled-reason">Run disabled: {readiness.blockers[0]?.detail ?? readiness.summary}</span> : null}
+      </div>
     </ActionStrip>
 
     <div className="setup-readiness-grid">
@@ -74,7 +77,7 @@ export function AnalysisCatalog() {
       </button>)}
     </div>
 
-    <section className="group-setup-card" aria-label="Group and prediction workflow setup">
+    {setup.mode === "expert" ? <section className="group-setup-card" aria-label="Group and prediction workflow setup">
       <div>
         <strong>Group and prediction workflows</strong>
         <p>MICOM, permutation MGA, FIMIX-PLS, PLS-POS, and IPMA are configured here, then reviewed from the Groups tab in Results.</p>
@@ -85,14 +88,14 @@ export function AnalysisCatalog() {
         <button className={settings.method === "ipma" ? "secondary-button active" : "secondary-button"} onClick={() => setSettings({ method: "ipma" })}>IPMA setup</button>
       </div>
       <small>{groupWorkflowActive ? "A group or prediction workflow is selected. Completed group outputs will appear in Results > Groups." : "Select a group workflow only when your research design needs invariance, group comparison, segmentation, or IPMA output."}</small>
-    </section>
+    </section> : null}
 
     <div className="analysis-settings guided-settings">
       <div><strong>Basic setup</strong><span className={readiness.canRun ? "status-text validated" : "status-text experimental"}>{readiness.canRun ? <CheckCircle2 size={14} /> : <Clock3 size={14} />}{readiness.canRun ? "ready" : "needs attention"}</span></div>
       <label>Run method<select value={settings.method} onChange={(event) => setSettings({ method: event.target.value as AnalysisMethodId })}>
         {runnableMethods.map((method) => <option key={method.id} value={method.id}>{method.name} | {method.id === "regression" ? "OLS/logistic/bounded PROCESS validated" : method.id === "mga" ? "MICOM/permutation MGA validated" : methodStatusLabel(method.status)}</option>)}
       </select></label>
-      <label>Bootstrap<input type="checkbox" checked={settings.bootstrapSamples > 0} onChange={(event) => setSettings(event.target.checked ? { bootstrapSamples: 5000 } : { bootstrapSamples: 0, studentizedInnerSamples: 0 })} /></label>
+      <label className="checkbox-row">Bootstrap<input type="checkbox" checked={settings.bootstrapSamples > 0} onChange={(event) => setSettings(event.target.checked ? { bootstrapSamples: 5000 } : { bootstrapSamples: 0, studentizedInnerSamples: 0 })} /></label>
 
       {settings.method === "wpls" && <SelectField label="Case weight column" value={settings.caseWeightColumn ?? ""} columns={columns} empty="Select column" onChange={(value) => setSettings({ caseWeightColumn: value || null })} />}
       {settings.method === "mga" && <SelectField label="Group column" value={settings.groupColumn ?? ""} columns={columns} empty="Select two-group column" onChange={(value) => setSettings({ groupColumn: value || null })} />}

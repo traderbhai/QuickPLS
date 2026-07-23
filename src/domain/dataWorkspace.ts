@@ -21,6 +21,16 @@ export interface PrefixGroup {
   indicators: string[];
 }
 
+export interface ColumnProfile {
+  missing: number;
+  complete: number;
+  unique: number;
+  min: number | null;
+  max: number | null;
+  mean: number | null;
+  standardDeviation: number | null;
+}
+
 const metadataFor = (dataset: Dataset, column: string): ColumnMetadata | undefined =>
   dataset.columnMetadata?.find((metadata) => metadata.name === column);
 
@@ -40,6 +50,24 @@ export function isNumericColumn(dataset: Dataset, column: string) {
 
 export function missingCount(dataset: Dataset, column: string) {
   return dataset.rows.filter((row) => row[column] === null || row[column] === undefined || row[column] === "").length;
+}
+
+export function columnProfile(dataset: Dataset, column: string): ColumnProfile {
+  const values = valuesFor(dataset, column);
+  const numericValues = values.map((value) => Number(value)).filter((value) => Number.isFinite(value));
+  const mean = numericValues.length ? numericValues.reduce((sum, value) => sum + value, 0) / numericValues.length : null;
+  const variance = mean == null || numericValues.length < 2
+    ? null
+    : numericValues.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (numericValues.length - 1);
+  return {
+    missing: missingCount(dataset, column),
+    complete: values.length,
+    unique: new Set(values.map(String)).size,
+    min: numericValues.length ? Math.min(...numericValues) : null,
+    max: numericValues.length ? Math.max(...numericValues) : null,
+    mean,
+    standardDeviation: variance == null ? null : Math.sqrt(variance),
+  };
 }
 
 export function dataQualitySummary(dataset: Dataset): DataQualitySummary {

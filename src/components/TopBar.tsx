@@ -103,6 +103,8 @@ export function TopBar() {
   };
 
   const readiness = analysisReadiness({ dataset, nodes, edges, settings: analysisSettings, nativeDesktop: isNativeDesktop() });
+  const topBlocker = readiness.blockers[0];
+  const topBlockerLabel = topBlocker ? `${readiness.blockers.length} blocker${readiness.blockers.length === 1 ? "" : "s"}: ${topBlocker.label.toLowerCase()}` : readiness.summary;
   const canRun = readiness.canRun;
   const runAnalysis = async () => {
     if (!dataset.fingerprint) throw new Error("Import and save a dataset before running an analysis.");
@@ -231,7 +233,7 @@ export function TopBar() {
   return <>
     <header className="title-bar">
       <Menu size={20} /><strong>QuickPLS</strong><span className="project-title">{projectName}.qpls</span>
-      <span className="alpha-mark">v1.5.2 data workspace hardening</span>
+      <span className="alpha-mark">v1.5.3 layout, copy, and readiness polish</span>
     </header>
     <div className="command-bar">
       <button className="icon-command" aria-label="New project" title="New project" onClick={() => { void newProjectCommand().catch((error) => window.alert(error)); }}><Plus size={17} /><span>New</span></button>
@@ -257,7 +259,7 @@ export function TopBar() {
         {activeJob ? <Square size={14} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
         <span className="run-button-label">{activeJob ? `${activeJob.phase} ${activeJob.completed_units}/${activeJob.total_units}` : `Run ${selectedMethod.name}`}</span>
       </button>
-      {!activeJob && !canRun ? <span id="run-disabled-reason" className="command-disabled-reason">{readiness.blockers[0]?.detail ?? readiness.summary}</span> : null}
+      {!activeJob && !canRun ? <button id="run-disabled-reason" type="button" className="command-blocker-chip" title={topBlocker?.detail ?? readiness.summary} onClick={() => topBlocker?.actionView ? useWorkspace.getState().setView(topBlocker.actionView) : undefined}>{topBlockerLabel}</button> : null}
     </div>
   </>;
 }

@@ -447,3 +447,12 @@ Complete:
 - Updated versioned build metadata to `1.5.2` with artifact label `v1_5_2_data_workspace_hardening`.
 
 Scope note: v1.5.2 is frontend/Data-workspace-only. It does not change statistical engines, analysis recipes, result schemas, validation tolerances, or numerical fingerprints.
+## v1.5.3 Layout, Copy, And Readiness Polish
+
+Status: validated.
+
+This frontend-only milestone closes the visible screen-review issues from the v1.5.2 SmartPLS-user audit: card text collisions, repeated global warnings, scroll-state confusion, sparse readiness pages, Setup scope wording, Report control alignment, and missing local disabled reasons. Evidence is recorded in `validation/results/v153_layout_copy_smoke.json` and `validation/results/v153_layout_copy_audit.json`.
+
+No statistical engines, formulas, result schemas, recipes, project format, or numerical fingerprints changed.
+
+Release metadata now uses `1.5.3`; versioned desktop artifacts use the label `v1_5_3_layout_copy_readiness_polish`.

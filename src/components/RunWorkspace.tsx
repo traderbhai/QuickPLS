@@ -19,7 +19,7 @@ export function RunWorkspace() {
 
   return <section className="workspace-page run-workspace">
     <div className="page-heading"><div><h1>Run analysis</h1><p>Review readiness, launch the selected method, then inspect the saved result.</p></div></div>
-    <ReadinessPanel readiness={readiness} onNavigate={setView} />
+    <ReadinessPanel readiness={readiness} compact onNavigate={setView} />
     <div className="run-launch-card">
       <div>
         <strong>{method?.name ?? settings.method}</strong>
@@ -30,7 +30,7 @@ export function RunWorkspace() {
           <Play size={17} fill="currentColor" />
           <span>Run selected method</span>
         </button>
-        {!readiness.canRun ? <p className="disabled-reason">{readiness.blockers[0]?.detail ?? readiness.summary}</p> : null}
+        {!readiness.canRun ? <p className="disabled-reason">Run disabled: {readiness.blockers[0]?.detail ?? readiness.summary}</p> : null}
       </div>
     </div>
     <div className="run-guidance-grid">
@@ -44,7 +44,7 @@ export function RunWorkspace() {
       </article>
       <article>
         <Play size={18} />
-        <div><strong>Next step</strong><p>{runs.length ? "Open Results to compare or select diagram overlays." : "Your first completed run will appear in Results."}</p><button className="secondary-button" onClick={() => setView("runs")}>Open results</button></div>
+        <div><strong>Next step</strong><p>{runs.length ? "Open Results to compare or select diagram overlays." : "Run a method before opening completed results."}</p><button className="secondary-button" disabled={!runs.length} title={runs.length ? "Open completed results" : "No completed run exists yet"} onClick={() => setView("runs")}>Open results</button>{!runs.length ? <small className="inline-disabled-reason">Results unlock after the first completed run.</small> : null}</div>
       </article>
     </div>
   </section>;

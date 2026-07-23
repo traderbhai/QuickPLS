@@ -16,6 +16,7 @@ export function ReportsWorkspace() {
   const setPublicationDiagramSettings = useWorkspace((state) => state.setPublicationDiagramSettings);
   const [selectedRunId, setSelectedRunId] = useState(runs.at(0)?.id ?? "");
   const [comparisonRunId, setComparisonRunId] = useState(runs.at(1)?.id ?? runs.at(0)?.id ?? "");
+  const [selectedPreset, setSelectedPreset] = useState<"thesis" | "journal_figure" | "journal_tables" | "presentation" | "full_report">("journal_figure");
   const selectedRun = useMemo(() => runs.find((run) => run.id === selectedRunId) ?? runs.at(0), [runs, selectedRunId]);
   const comparisonRun = useMemo(() => runs.find((run) => run.id === comparisonRunId) ?? runs.find((run) => run.id !== selectedRun?.id), [runs, comparisonRunId, selectedRun?.id]);
   const tables = useMemo(() => selectedRun ? runExportTables(selectedRun) : [], [selectedRun]);
@@ -49,6 +50,7 @@ export function ReportsWorkspace() {
   };
 
   const applyExportPreset = (preset: "thesis" | "journal_figure" | "journal_tables" | "presentation" | "full_report") => {
+    setSelectedPreset(preset);
     if (preset === "journal_figure") setPublicationDiagramSettings({ mode: "smartpls_result", palette: "grayscale", precision: 3, layoutSource: "tidy_publication", showValidationWatermark: false });
     else if (preset === "presentation") setPublicationDiagramSettings({ mode: "smartpls_result", palette: "quickpls_color", precision: 2, layoutSource: "current_canvas", showValidationWatermark: true });
     else if (preset === "thesis") setPublicationDiagramSettings({ mode: "publication", palette: "grayscale", precision: 4, layoutSource: "current_canvas", showValidationWatermark: true, showRunProvenance: true });
@@ -59,11 +61,13 @@ export function ReportsWorkspace() {
   return <section className="workspace-page publication-workspace">
     <PageHeader title="Publication report" description="Preview the exact diagram style, export tables, and preserve validation status, warnings, and run provenance." actions={<StatusBadge status={selectedRun ? "validated" : "warning"}>{selectedRun ? "run selected" : "model-only"}</StatusBadge>} />
     <ActionStrip>
-      <button className="secondary-button" onClick={() => applyExportPreset("thesis")}>Thesis appendix</button>
-      <button className="secondary-button" onClick={() => applyExportPreset("journal_figure")}>Journal figure</button>
-      <button className="secondary-button" onClick={() => applyExportPreset("journal_tables")}>Journal tables</button>
-      <button className="secondary-button" onClick={() => applyExportPreset("presentation")}>Presentation</button>
-      <button className="secondary-button" onClick={() => applyExportPreset("full_report")}>Full reproducibility report</button>
+      <div className="report-preset-strip" role="group" aria-label="Report export presets">
+        <button className={selectedPreset === "thesis" ? "secondary-button active" : "secondary-button"} onClick={() => applyExportPreset("thesis")}>Thesis appendix</button>
+        <button className={selectedPreset === "journal_figure" ? "secondary-button active" : "secondary-button"} onClick={() => applyExportPreset("journal_figure")}>Journal figure</button>
+        <button className={selectedPreset === "journal_tables" ? "secondary-button active" : "secondary-button"} onClick={() => applyExportPreset("journal_tables")}>Journal tables</button>
+        <button className={selectedPreset === "presentation" ? "secondary-button active" : "secondary-button"} onClick={() => applyExportPreset("presentation")}>Presentation</button>
+        <button className={selectedPreset === "full_report" ? "secondary-button active" : "secondary-button"} onClick={() => applyExportPreset("full_report")}>Full reproducibility report</button>
+      </div>
     </ActionStrip>
     <div className="setup-readiness-grid">
       <Card title="Diagram export" description="SVG is the audited publication figure format." tone="validated" />
@@ -102,20 +106,20 @@ export function ReportsWorkspace() {
         <option value="current_canvas">Current canvas</option>
         <option value="tidy_publication">Tidy publication</option>
       </select></label>
-      <label>Loadings<input type="checkbox" checked={publicationDiagramSettings.showLoadings} onChange={(event) => setPublicationDiagramSettings({ showLoadings: event.target.checked })} /></label>
-      <label>Path coefficients<input type="checkbox" checked={publicationDiagramSettings.showPathCoefficients} onChange={(event) => setPublicationDiagramSettings({ showPathCoefficients: event.target.checked })} /></label>
-      <label>R<sup>2</sup><input type="checkbox" checked={publicationDiagramSettings.showRSquared} onChange={(event) => setPublicationDiagramSettings({ showRSquared: event.target.checked })} /></label>
+      <label className="checkbox-row">Loadings<input type="checkbox" checked={publicationDiagramSettings.showLoadings} onChange={(event) => setPublicationDiagramSettings({ showLoadings: event.target.checked })} /></label>
+      <label className="checkbox-row">Path coefficients<input type="checkbox" checked={publicationDiagramSettings.showPathCoefficients} onChange={(event) => setPublicationDiagramSettings({ showPathCoefficients: event.target.checked })} /></label>
+      <label className="checkbox-row">R<sup>2</sup><input type="checkbox" checked={publicationDiagramSettings.showRSquared} onChange={(event) => setPublicationDiagramSettings({ showRSquared: event.target.checked })} /></label>
     </div>
-    {exportDisabledReason ? <p className="disabled-reason export-disabled-reason top-export-reason">{exportDisabledReason}</p> : null}
+    {exportDisabledReason ? <p className="disabled-reason export-disabled-reason top-export-reason">Export disabled: {exportDisabledReason}</p> : null}
     <div className="publication-preview-shell">
       <div className="publication-preview-heading"><div><strong>Publication diagram preview</strong><span>{selectedRun ? "WYSIWYG SVG export with selected run overlays" : "Model-only SVG preview until a result is selected"}</span></div><button className="secondary-button" onClick={() => download("quickpls-publication-diagram.svg", diagramSvg, "image/svg+xml")}><Image size={16} /> Export SVG</button></div>
       <div className="diagram-preview" aria-label="Publication diagram preview" dangerouslySetInnerHTML={{ __html: diagramSvg }} />
     </div>
     <div className="export-list">
-      <button disabled={!tables.length} onClick={() => download("quickpls-result-tables.csv", tablesToCsv(tables), "text/csv")}><FileSpreadsheet /><span><strong>CSV tables</strong><small>Provenance and method tables</small></span></button>
-      <button disabled={!tables.length} onClick={() => download("quickpls-result-report.html", tablesToHtml(tables), "text/html")}><FileText /><span><strong>HTML report</strong><small>Watermarked table report</small></span></button>
-      <button disabled={!tables.length || !isNativeDesktop()} title={isNativeDesktop() ? "Export XLSX workbook" : "XLSX export is available in the desktop app and CLI"} onClick={() => { void exportXlsx().catch((error) => window.alert(error)); }}><FileSpreadsheet /><span><strong>XLSX workbook</strong><small>Desktop and CLI</small></span></button>
-      <button disabled={!tables.length} onClick={printPdfReport}><FileText /><span><strong>Print / PDF</strong><small>Browser PDF path</small></span></button>
+      <button disabled={!tables.length} onClick={() => download("quickpls-result-tables.csv", tablesToCsv(tables), "text/csv")}><FileSpreadsheet /><span><strong>CSV tables</strong><small>{tables.length ? "Provenance and method tables" : "Run a method before CSV export"}</small></span></button>
+      <button disabled={!tables.length} onClick={() => download("quickpls-result-report.html", tablesToHtml(tables), "text/html")}><FileText /><span><strong>HTML report</strong><small>{tables.length ? "Watermarked table report" : "Run a method before HTML export"}</small></span></button>
+      <button disabled={!tables.length || !isNativeDesktop()} title={isNativeDesktop() ? "Export XLSX workbook" : "XLSX export is available in the desktop app and CLI"} onClick={() => { void exportXlsx().catch((error) => window.alert(error)); }}><FileSpreadsheet /><span><strong>XLSX workbook</strong><small>{!tables.length ? "Run a method before XLSX export" : isNativeDesktop() ? "Desktop and CLI" : "Desktop runtime required"}</small></span></button>
+      <button disabled={!tables.length} onClick={printPdfReport}><FileText /><span><strong>Print / PDF</strong><small>{tables.length ? "Browser PDF path" : "Run a method before print report"}</small></span></button>
       <button onClick={() => download("quickpls-publication-diagram.svg", diagramSvg, "image/svg+xml")}><Image /><span><strong>Model diagram</strong><small>WYSIWYG SVG</small></span></button>
     </div>
     {exportDisabledReason ? <p className="disabled-reason export-disabled-reason">{exportDisabledReason}</p> : null}

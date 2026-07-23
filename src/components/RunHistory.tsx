@@ -65,11 +65,15 @@ export function RunHistory() {
     anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 0);
   };
+  const emptyPrimary = readiness.blockers[0]?.actionView ?? (readiness.canRun ? "run" : "analyses");
+  const emptyPrimaryLabel = readiness.blockers[0]?.actionLabel ?? (readiness.canRun ? "Run method" : "Open setup");
+  const previewTabs = ["Summary", "Measurement", "Structural", "Reliability", "Inference", "Diagnostics"];
 
   if (runs.length === 0) return <section className="workspace-page">
     <PageHeader title="Results" description="Completed runs, immutable recipes, estimates, and provenance records." />
     <ReadinessPanel readiness={readiness} compact onNavigate={setView} />
-    <EmptyState title="No completed results" description={readiness.canRun ? "Run the selected method to create the first result." : readiness.blockers[0]?.detail ?? "Complete the analysis checklist before running."} actions={<><button className="secondary-button" onClick={() => setView("models")}>Open model</button><button className="secondary-button" onClick={() => setView("analyses")}>Open setup</button></>} />
+    <EmptyState title="No completed results" description={readiness.canRun ? "Run the selected method to create the first result." : readiness.blockers[0]?.detail ?? "Complete the analysis checklist before running."} actions={<><button className="run-button" onClick={() => setView(emptyPrimary)}>{emptyPrimaryLabel}</button><button className="secondary-button" onClick={() => setView("analyses")}>Open setup</button></>} />
+    <div className="result-preview-tabs" aria-label="Result sections preview">{previewTabs.map((tab) => <span key={tab}>{tab}</span>)}</div>
   </section>;
 
   return <section className="workspace-page">

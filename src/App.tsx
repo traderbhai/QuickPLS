@@ -16,7 +16,7 @@ import { WorkflowStrip } from "./components/WorkflowStrip";
 import { completedSamplePlsRun } from "./data/smokeRun";
 import { sampleDataset } from "./data/sample";
 import { useWorkspace } from "./store";
-import { useEffect, type CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { autosaveNativeProject, isNativeDesktop } from "./services/projectService";
 import type { ConstructData, WorkspaceView } from "./types";
 import type { Edge, Node } from "@xyflow/react";
@@ -92,6 +92,7 @@ export function App() {
   const explorerCollapsed = useWorkspace((state) => state.explorerCollapsed);
   const explorerWidth = useWorkspace((state) => state.explorerWidth);
   const uiPreferences = useWorkspace((state) => state.uiPreferences);
+  const pageHostRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!new URLSearchParams(window.location.search).has("quickpls_smoke")) return;
     const smokeApi = {
@@ -134,11 +135,14 @@ export function App() {
     const timer = window.setTimeout(() => { void autosaveNativeProject(projectPath, { nodes, edges, runs, analysisSettings, diagramMode, diagramOverlaySettings, publicationDiagramSettings, diagramLayout, activeDatasetId: dataset.id }).catch(() => undefined); }, 5000);
     return () => window.clearTimeout(timer);
   }, [projectPath, nodes, edges, runs, analysisSettings, diagramMode, diagramOverlaySettings, publicationDiagramSettings, diagramLayout, dataset]);
+  useEffect(() => {
+    pageHostRef.current?.scrollTo({ top: 0, left: 0 });
+  }, [view]);
   return <div className={`app-shell density-${uiPreferences.density}`}>
     <TopBar />
     <div className={`workspace-shell${explorerCollapsed ? " explorer-collapsed" : ""}`} style={{ "--explorer-width": `${explorerWidth}px` } as CSSProperties}>
       <NavRail />
-      {view === "models" ? <><Explorer /><ModelCanvas /><Inspector /></> : <div className="page-host"><WorkflowStrip />{view === "welcome" ? <OnboardingWorkspace /> : view === "data" ? <DataWorkspace /> : view === "analyses" ? <AnalysisCatalog /> : view === "run" ? <RunWorkspace /> : view === "runs" ? <RunHistory /> : view === "groups" ? <GroupsWorkspace /> : <ReportsWorkspace />}</div>}
+      {view === "models" ? <><Explorer /><ModelCanvas /><Inspector /></> : <div ref={pageHostRef} className="page-host"><WorkflowStrip />{view === "welcome" ? <OnboardingWorkspace /> : view === "data" ? <DataWorkspace /> : view === "analyses" ? <AnalysisCatalog /> : view === "run" ? <RunWorkspace /> : view === "runs" ? <RunHistory /> : view === "groups" ? <GroupsWorkspace /> : <ReportsWorkspace />}</div>}
     </div>
     <ProductivityOverlays />
     <StatusBar />

@@ -2,6 +2,8 @@
 import { describe, expect, it } from "vitest";
 
 const read = (path: string) => readFileSync(path, "utf8");
+const mojibakeR2 = `R${String.fromCharCode(0x00c2)}²`;
+const doubleEncodedR2 = `R${String.fromCharCode(0x00c3)}${String.fromCharCode(0x201a)}${String.fromCharCode(0x00c2)}²`;
 
 describe("desktop accessibility contracts", () => {
   it("keeps large table surfaces keyboard-focusable and named", () => {
@@ -46,8 +48,8 @@ describe("desktop accessibility contracts", () => {
     expect(styles).toContain(".result-summary:focus-visible");
     expect(styles).toContain(".quality-summary:focus-visible");
 
-    expect(reports).toContain("<label>R<sup>2</sup>");
-    expect(reports).not.toContain("RÃ‚Â²");
+    expect(reports).toContain("R<sup>2</sup>");
+    expect(reports).not.toContain(doubleEncodedR2);
     expect(reports).not.toContain("Rï¿½");
   });
   it("keeps SEM canvas overlay state visible to users", () => {
@@ -63,8 +65,8 @@ describe("desktop accessibility contracts", () => {
     expect(canvas).toContain("Recommended next workflow action");
     expect(canvas).toContain("R²");
     expect(latent).toContain("R²");
-    expect(canvas).not.toContain("RÂ²");
-    expect(latent).not.toContain("RÂ²");
+    expect(canvas).not.toContain(mojibakeR2);
+    expect(latent).not.toContain(mojibakeR2);
     expect(styles).toContain(".canvas-overlay-status");
     expect(styles).toContain(".canvas-next-action");
     expect(styles).toContain(".canvas-overlay-status.ready");

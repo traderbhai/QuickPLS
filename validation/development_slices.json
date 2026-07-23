@@ -2,7 +2,7 @@
   "schema_version": 1,
   "program": "QuickPLS accelerated method-slice registry",
   "active_goal": "Complete QuickPLS as a free, proprietary, fully offline Windows desktop application that is first ready in all sense before unrestricted research use.",
-  "current_stage": "v1_5_2_data_workspace_hardening",
+  "current_stage": "v1_5_3_layout_copy_readiness_polish",
   "policy": {
     "promotion_order": [
       "unsupported",
@@ -2438,6 +2438,56 @@
           "name": "Versioned desktop artifacts",
           "status": "passed",
           "evidence": "package.json version is 1.5.2 and qpls:release:artifacts uses v1_5_2_data_workspace_hardening."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_5_3_layout_copy_readiness_polish",
+      "release": "v1.5.3",
+      "family": "Product",
+      "name": "Layout, copy, and readiness polish",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 40,
+      "summary": "Completes the SmartPLS-user screen review recommendations for layout density, card typography, disabled-action reasons, workspace scroll behavior, Setup status wording, Report alignment, and model-canvas label clutter without changing engines, schemas, recipes, or numerical fingerprints.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Collision-free shared UI cards",
+          "status": "passed",
+          "evidence": "src/components/Ui.tsx and src/styles.css define stacked card headings, separated actions, compact status cards, and aligned checkbox/toggle rows."
+        },
+        {
+          "track": "product",
+          "name": "Readiness and disabled-action clarity",
+          "status": "passed",
+          "evidence": "src/components/TopBar.tsx uses a compact blocker chip; Setup, Run, Results, and Report place action-specific disabled reasons beside the blocked action."
+        },
+        {
+          "track": "product",
+          "name": "Workspace density and scroll reset",
+          "status": "passed",
+          "evidence": "src/App.tsx resets the page host scroll on rail workspace changes; Setup, Run, Results, Report, Home, Data, and Model polish reduces sparse card-heavy layouts."
+        },
+        {
+          "track": "validation",
+          "name": "Layout/copy smoke and static audit",
+          "status": "passed",
+          "evidence": "validation/v153_layout_copy_smoke.mjs writes workspace screenshots under validation/results/screens/v153/layout-copy and validation/v153_layout_copy_audit.py verifies source wiring, copy, registry, scripts, and screenshots."
+        },
+        {
+          "track": "documentation",
+          "name": "Polish scope documented",
+          "status": "passed",
+          "evidence": "docs/V1_5_3_LAYOUT_COPY_READINESS_POLISH.md documents the frontend-only scope, evidence, and non-engine boundary."
+        },
+        {
+          "track": "release",
+          "name": "Versioned desktop artifacts",
+          "status": "passed",
+          "evidence": "package.json, Cargo.toml, and src-tauri/tauri.conf.json use version 1.5.3; qpls:release:artifacts uses v1_5_3_layout_copy_readiness_polish to create fresh non-overwriting installer and portable artifacts."
         }
       ],
       "next_actions": []

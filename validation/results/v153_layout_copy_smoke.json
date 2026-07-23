@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.5.3 layout, copy, and readiness polish smoke",
+  "passed": true,
+  "checklist": {
+    "home_cards_are_collision_free": true,
+    "compact_blocker_chip_present": true,
+    "no_large_global_dataset_banner": true,
+    "data_has_column_profile": true,
+    "model_hides_generic_path_labels": true,
+    "setup_status_copy_is_scoped": true,
+    "setup_group_workflows_are_progressive": true,
+    "run_disabled_reason_is_action_specific": true,
+    "results_empty_primary_matches_blocker": true,
+    "report_controls_are_aligned_and_specific": true,
+    "report_preview_visible": true,
+    "scroll_resets_on_workspace_change": true,
+    "screenshots_written": true,
+    "no_text_collisions_or_mojibake": true,
+    "no_console_errors": true
+  },
+  "screenshots": {
+    "home": "D:\\QuickPLS\\validation\\results\\screens\\v153\\layout-copy\\01_home_top.png",
+    "dataTop": "D:\\QuickPLS\\validation\\results\\screens\\v153\\layout-copy\\02_data_top.png",
+    "dataPreview": "D:\\QuickPLS\\validation\\results\\screens\\v153\\layout-copy\\03_data_preview_profile.png",
+    "modelSelected": "D:\\QuickPLS\\validation\\results\\screens\\v153\\layout-copy\\04_model_selected_construct.png",
+    "setupTop": "D:\\QuickPLS\\validation\\results\\screens\\v153\\layout-copy\\05_setup_top.png",
+    "setupPresets": "D:\\QuickPLS\\validation\\results\\screens\\v153\\layout-copy\\06_setup_preset_area.png",
+    "runBlocked": "D:\\QuickPLS\\validation\\results\\screens\\v153\\layout-copy\\07_run_blocked_state.png",
+    "resultsEmpty": "D:\\QuickPLS\\validation\\results\\screens\\v153\\layout-copy\\08_results_empty_state.png",
+    "reportSetup": "D:\\QuickPLS\\validation\\results\\screens\\v153\\layout-copy\\09_report_setup.png",
+    "reportPreview": "D:\\QuickPLS\\validation\\results\\screens\\v153\\layout-copy\\10_report_preview.png",
+    "desktop1280": "D:\\QuickPLS\\validation\\results\\screens\\v153\\layout-copy\\11_desktop_1280_home.png"
+  },
+  "errors": []
+}

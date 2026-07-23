@@ -23,6 +23,8 @@ export function SemEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition
   const x = labelX + Number(offset.x ?? 0);
   const y = labelY + Number(offset.y ?? 0);
   const text = typeof label === "string" ? label : "";
+  const isGenericPathLabel = text.trim().toLowerCase() === "path";
+  const shouldShowLabel = Boolean(text && (!isGenericPathLabel || selected));
   const startDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
@@ -68,8 +70,8 @@ export function SemEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition
 
   return <>
     <BaseEdge id={id} path={path} markerEnd={markerEnd} markerStart={markerStart} className={`${edgeClassName}${selected ? " selected" : ""}`} />
-    {text ? <EdgeLabelRenderer>
-      <div className={`sem-edge-label${selected ? " selected" : ""}`} role="button" tabIndex={0} aria-label={`Move label for ${text || "selected path"}`} title="Drag to move label. Arrow keys nudge; Home resets." style={{ transform: `translate(-50%, -50%) translate(${x}px, ${y}px)` }} onPointerDown={startDrag} onKeyDown={handleKeyDown}>
+    {shouldShowLabel ? <EdgeLabelRenderer>
+      <div className={`sem-edge-label${isGenericPathLabel ? " generic-path-label" : ""}${selected ? " selected" : ""}`} role="button" tabIndex={0} aria-label={`Move label for ${text || "selected path"}`} title="Drag to move label. Arrow keys nudge; Home resets." style={{ transform: `translate(-50%, -50%) translate(${x}px, ${y}px)` }} onPointerDown={startDrag} onKeyDown={handleKeyDown}>
         {text}
       </div>
     </EdgeLabelRenderer> : null}

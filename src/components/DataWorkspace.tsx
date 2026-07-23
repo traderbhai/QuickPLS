@@ -2,7 +2,7 @@ import { AlertTriangle, Boxes, CheckCircle2, Database, FlaskConical, Info, Save,
 import Papa from "papaparse";
 import { useEffect, useMemo, useRef, useState } from "react";
 import validationFixture from "../../validation/fixtures/corporate_reputation.csv?raw";
-import { dataQualitySummary, detectPrefixGroups, filteredColumns, type DataColumnFilter } from "../domain/dataWorkspace";
+import { columnProfile, dataQualitySummary, detectPrefixGroups, filteredColumns, type DataColumnFilter } from "../domain/dataWorkspace";
 import { importNativeDataset, importNativeValidationFixture, isNativeDesktop, updateNativeColumnMetadata } from "../services/projectService";
 import { useWorkspace } from "../store";
 import type { ColumnMetadata } from "../types";
@@ -39,6 +39,7 @@ export function DataWorkspace() {
   const [columnFilter, setColumnFilter] = useState<DataColumnFilter>("all");
   const [showValidationDetails, setShowValidationDetails] = useState(false);
   const selectedMetadata = useMemo(() => dataset.columnMetadata?.find((column) => column.name === selectedColumn) ?? defaultMetadata(selectedColumn), [dataset.columnMetadata, selectedColumn]);
+  const selectedProfile = useMemo(() => selectedColumn ? columnProfile(dataset, selectedColumn) : null, [dataset, selectedColumn]);
   const [draft, setDraft] = useState<ColumnMetadata>(selectedMetadata);
   const quality = useMemo(() => dataQualitySummary(dataset), [dataset]);
   const prefixGroups = useMemo(() => detectPrefixGroups(dataset.columns), [dataset.columns]);
@@ -143,7 +144,7 @@ export function DataWorkspace() {
         </div>
       </div>
       <details className="validation-details" open={showValidationDetails} onToggle={(event) => setShowValidationDetails(event.currentTarget.open)}>
-        <summary>Validation details</summary>
+        <summary>Sample dataset details</summary>
         <span>{validationFixtureSource}</span>
         <code>{validationFixtureDevelopmentPath}</code>
       </details>
@@ -187,6 +188,15 @@ export function DataWorkspace() {
         <aside className="metadata-editor" aria-label="Column metadata">
           <div className="metadata-heading"><strong>{selectedColumn || "No column selected"}</strong><span>Selected column metadata</span></div>
           <p className="metadata-help">Select a column header to edit metadata. Import missing markers are applied during import and do not recode already-loaded values.</p>
+          {selectedProfile ? <div className="column-profile-wrap"><strong>Column profile</strong><dl className="column-profile" aria-label="Selected column profile">
+            <div><dt>Complete</dt><dd>{selectedProfile.complete}</dd></div>
+            <div><dt>Missing</dt><dd>{selectedProfile.missing}</dd></div>
+            <div><dt>Unique</dt><dd>{selectedProfile.unique}</dd></div>
+            <div><dt>Min</dt><dd>{formatProfileValue(selectedProfile.min)}</dd></div>
+            <div><dt>Max</dt><dd>{formatProfileValue(selectedProfile.max)}</dd></div>
+            <div><dt>Mean</dt><dd>{formatProfileValue(selectedProfile.mean)}</dd></div>
+            <div><dt>Standard deviation</dt><dd>{formatProfileValue(selectedProfile.standardDeviation)}</dd></div>
+          </dl></div> : null}
           <details open><summary>Essentials</summary>
             <label>Label<input value={draft.label ?? ""} onChange={(event) => setDraft({ ...draft, label: event.target.value || null })} /></label>
             <label>Scale<select value={draft.scale_type} onChange={(event) => setDraft({ ...draft, scale_type: event.target.value as ColumnMetadata["scale_type"] })}><option value="continuous">Continuous</option><option value="ordinal">Ordinal</option><option value="nominal">Nominal</option><option value="binary">Binary</option><option value="identifier">Identifier</option></select></label>
@@ -209,4 +219,8 @@ export function DataWorkspace() {
 
 function QualityCard({ label, value, detail, tone = "neutral" }: { label: string; value: string | number; detail: string; tone?: "neutral" | "ok" | "warning" }) {
   return <article className={`data-quality-card ${tone}`}><span>{label}</span><strong>{value}</strong><small>{tone === "ok" ? <CheckCircle2 size={12} /> : tone === "warning" ? <AlertTriangle size={12} /> : <Database size={12} />}{detail}</small></article>;
+}
+
+function formatProfileValue(value: number | null) {
+  return value == null || !Number.isFinite(value) ? "N/A" : Math.abs(value) >= 100 ? value.toFixed(1) : value.toFixed(3);
 }
