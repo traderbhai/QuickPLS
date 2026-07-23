@@ -28,6 +28,7 @@ declare global {
       loadDiagramFixture: (fixture: string) => void;
       arrangeSmartpls: () => void;
       selectConstructs: (ids: string[]) => void;
+      selectEdge: (id: string) => void;
       setView: (nextView: string) => void;
     };
   }
@@ -121,6 +122,7 @@ export function App() {
           nodes: state.nodes.map((node) => ({ ...node, selected: selected.has(node.id) })),
         }));
       },
+      selectEdge: (id: string) => useWorkspace.getState().setSelectedEdge(id),
       setView: (nextView: string) => {
         if (["welcome", "data", "models", "analyses", "run", "runs", "groups", "reports"].includes(nextView)) {
           useWorkspace.getState().setView(nextView as WorkspaceView);

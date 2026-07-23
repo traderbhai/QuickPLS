@@ -1,12 +1,11 @@
 import { AlertTriangle, Copy, FlaskConical, Search } from "lucide-react";
 import { useWorkspace } from "../store";
-import type { HtmtAssessment, PlsResult } from "../types";
+import type { AnalysisRun, AssessmentResult, HtmtAssessment, PlsResult, ResultWorkspaceTab } from "../types";
 import { findBcaParameter, findBootstrapParameter, findStudentizedParameter, formatParameterIdentity } from "../domain/inference";
 import { analysisReadiness } from "../domain/analysisReadiness";
 import { isNativeDesktop } from "../services/projectService";
 import { ReadinessPanel } from "./ReadinessPanel";
 import { ActionStrip, EmptyState, PageHeader, StatusBadge, TabStrip } from "./Ui";
-import type { ResultWorkspaceTab } from "../types";
 
 const resultTabs: Array<{ id: ResultWorkspaceTab; label: string }> = [
   { id: "summary", label: "Summary" },
@@ -29,6 +28,7 @@ export function RunHistory() {
   const settings = useWorkspace((state) => state.analysisSettings);
   const resultState = useWorkspace((state) => state.resultWorkspaceState);
   const setResultState = useWorkspace((state) => state.setResultWorkspaceState);
+  const selectedEdgeId = useWorkspace((state) => state.selectedEdgeId);
   const setSelectedEdge = useWorkspace((state) => state.setSelectedEdge);
   const setSelectedNode = useWorkspace((state) => state.setSelectedNode);
   const readiness = analysisReadiness({ dataset, nodes, edges, settings, nativeDesktop: isNativeDesktop() });
@@ -40,6 +40,8 @@ export function RunHistory() {
   const selectedRun = visibleRuns.find((run) => run.id === resultState.selectedRunId) ?? visibleRuns[0];
   const significantWarningCount = selectedRun?.warnings.filter((warning) => !warning.toLowerCase().includes("validated")).length ?? 0;
   const bestR2 = selectedRun?.result ? Object.entries(selectedRun.result.r_squared).sort((a, b) => b[1] - a[1])[0] : null;
+  const selectedEdge = edges.find((edge) => edge.id === selectedEdgeId);
+  const activePath = selectedEdge ? { source: selectedEdge.source, target: selectedEdge.target } : null;
   const focusPath = (source: string, target: string) => {
     const edge = edges.find((candidate) => candidate.source === source && candidate.target === target);
     if (edge) {
@@ -56,12 +58,11 @@ export function RunHistory() {
     await navigator.clipboard?.writeText(text);
   };
   const exportCurrentTable = () => {
-    const rows = selectedRun?.result?.paths.map((path) => `${path.source}->${path.target},${path.coefficient}`) ?? [];
-    const csv = ["path,coefficient", ...rows].join("\n");
+    const csv = selectedRun ? csvForCurrentResultTab(selectedRun, resultState.selectedTab) : "";
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "quickpls-current-result-table.csv";
+    anchor.download = `quickpls-${resultState.selectedTab}-results.csv`;
     anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 0);
   };
@@ -99,98 +100,217 @@ export function RunHistory() {
       </div>
       <button className="secondary-button" onClick={() => setView("analyses")}>Configure group workflow in Setup</button>
     </section> : null}
-    <div className={`run-list result-tab-${resultState.selectedTab} table-density-${resultState.tableDensity}`}>{visibleRuns.map((run) => <article key={run.id} className="run-row">
+    <div className={`run-list result-tab-${resultState.selectedTab} table-density-${resultState.tableDensity}`}>{visibleRuns.map((run) => <article key={run.id} className="run-row researcher-result-card">
       <div className="run-icon"><FlaskConical size={18} /></div>
-      <div className="run-content"><strong>{run.name}</strong><p>{new Date(run.createdAt).toLocaleString()} | seed {run.seed} | fingerprint {run.fingerprint}</p><span><AlertTriangle size={13} />{run.warnings[0]}</span>
-        {run.result && <div className="result-summary" tabIndex={0} role="region" aria-label={`${run.name} result summary`}>
-          <div><b>{run.result.iterations}</b><small>Iterations</small></div>
-          <div><b>{run.result.used_observations}</b><small>Observations</small></div>
-          {Object.entries(run.result.r_squared).map(([construct, value]) => <div key={construct}><b>{value.toFixed(4)}</b><small>R2 {construct}</small></div>)}
-          {(resultState.selectedTab === "summary" || resultState.selectedTab === "structural") && <table><thead><tr><th>Path</th><th>Coefficient</th></tr></thead><tbody>{run.result.paths.map((path) => <tr key={`${path.source}-${path.target}`} onClick={() => focusPath(path.source, path.target)} title="Open this path in the SEM canvas"><td>{path.source} -&gt; {path.target}</td><td>{path.coefficient.toFixed(6)}</td></tr>)}</tbody></table>}
-          {(run.result.control_estimates ?? []).length > 0 && <><strong>Control paths</strong><table><thead><tr><th>Control</th><th>Coefficient</th></tr></thead><tbody>{run.result.control_estimates!.map((control) => <tr key={`${control.source}-${control.target}`}><td>{control.label ? `${control.label} ` : ""}{control.source} -&gt; {control.target}</td><td>{control.coefficient.toFixed(6)}</td></tr>)}</tbody></table></>}
-          {(run.result.mediation?.estimates ?? []).length > 0 && <><strong>Mediation effects</strong><table><thead><tr><th>Effect</th><th>Direct</th><th>Indirect</th><th>Total</th><th>Indirect p</th><th>Percentile CI</th><th>BCa CI</th><th>Bootstrap-t CI</th><th>VAF</th><th>Class</th></tr></thead><tbody>
-            {run.result.mediation!.estimates.map((effect) => {
-              const parameter = findBootstrapParameter(run.bootstrap, "indirect_effect", [effect.source, effect.target]);
-              const bca = parameter ? findBcaParameter(run.bootstrap, parameter.parameter) : undefined;
-              const studentized = parameter ? findStudentizedParameter(run.bootstrap, parameter.parameter) : undefined;
-              return <tr key={`${effect.source}-${effect.target}`}><td>{effect.source} -&gt; {effect.target}</td><td>{effect.direct.toFixed(6)}</td><td>{effect.indirect.toFixed(6)}</td><td>{effect.total.toFixed(6)}</td><td>{formatPValue(parameter?.p_value_two_sided)}</td><td>{formatInterval(parameter?.lower, parameter?.upper)}</td><td title={bca?.unavailable_reason ?? undefined}>{formatInterval(bca?.lower, bca?.upper)}</td><td title={studentized?.unavailable_reason ?? undefined}>{formatInterval(studentized?.lower, studentized?.upper)}</td><td>{effect.variance_accounted_for?.toFixed(4) ?? "N/A"}</td><td>{formatMediationClass(effect.classification)}</td></tr>;
-            })}
-          </tbody></table></>}
-          {(run.result.moderation?.estimates ?? []).length > 0 && <><strong>Moderation effects</strong><table><thead><tr><th>Interaction</th><th>Main effect</th><th>Interaction</th><th>Interaction p</th><th>Percentile CI</th><th>BCa CI</th><th>Bootstrap-t CI</th><th>Simple slopes</th></tr></thead><tbody>
-            {run.result.moderation!.estimates.map((effect) => {
-              const parameter = findBootstrapParameter(run.bootstrap, "path", [effect.product_construct, effect.outcome]);
-              const bca = parameter ? findBcaParameter(run.bootstrap, parameter.parameter) : undefined;
-              const studentized = parameter ? findStudentizedParameter(run.bootstrap, parameter.parameter) : undefined;
-              return <tr key={effect.interaction}>
-                <td>{effect.predictor} x {effect.moderator} -&gt; {effect.outcome}</td>
-                <td>{effect.predictor_main_effect?.toFixed(6) ?? "N/A"}</td>
-                <td>{effect.interaction_effect.toFixed(6)}</td>
-                <td>{formatPValue(parameter?.p_value_two_sided)}</td>
-                <td>{formatInterval(parameter?.lower, parameter?.upper)}</td>
-                <td title={bca?.unavailable_reason ?? undefined}>{formatInterval(bca?.lower, bca?.upper)}</td>
-                <td title={studentized?.unavailable_reason ?? undefined}>{formatInterval(studentized?.lower, studentized?.upper)}</td>
-                <td title={effect.warning ?? undefined}>{effect.simple_slopes.length ? effect.simple_slopes.map((slope) => `${formatModeratorLevel(slope.moderator_score)}: ${slope.effect.toFixed(6)}`).join(" | ") : "N/A"}</td>
-              </tr>;
-            })}
-          </tbody></table></>}
-          <MethodPayloadSections result={run.result} />
-        </div>}
-        {run.assessment && ["summary", "measurement", "quality", "diagnostics"].includes(resultState.selectedTab) && <div className="quality-summary" tabIndex={0} role="region" aria-label={`${run.name} measurement quality tables`}>
-          <strong>Measurement quality</strong>
-          <table><thead><tr><th>Construct</th><th>Alpha</th><th>rho_A</th><th>rho_C</th><th>AVE</th></tr></thead><tbody>
-            {run.assessment.construct_quality.map((quality) => <tr key={quality.construct}>
-              <td>{quality.construct}</td>
-              <td>{quality.cronbach_alpha?.toFixed(4) ?? "N/A"}</td>
-              <td>{quality.rho_a?.toFixed(4) ?? "N/A"}{[quality.rho_a_reason, ...(quality.rho_a_warning_codes ?? [])].filter((value): value is string => Boolean(value)).map((code) => <small className="rho-a-note" key={code}>{formatDiagnosticCode(code)}</small>)}</td>
-              <td>{quality.rho_c?.toFixed(4) ?? "N/A"}</td>
-              <td>{quality.ave?.toFixed(4) ?? "N/A"}</td>
-            </tr>)}
-          </tbody></table>
-          {run.assessment.htmt_plus && <HtmtTable label="HTMT+" artifact={run.assessment.htmt_plus} />}
-          {run.assessment.htmt_original && <HtmtTable label="Original HTMT" artifact={run.assessment.htmt_original} />}
-          {run.assessment.htmt && !run.assessment.htmt_plus && <><strong>HTMT+ (legacy)</strong><table><thead><tr><th>Construct</th>{run.assessment.htmt.constructs.map((construct) => <th key={construct}>{construct}</th>)}</tr></thead><tbody>
-            {run.assessment.htmt.values.map((row, rowIndex) => <tr key={run.assessment!.htmt!.constructs[rowIndex]}><th>{run.assessment!.htmt!.constructs[rowIndex]}</th>{row.map((value, columnIndex) => <td key={run.assessment!.htmt!.constructs[columnIndex]}>{value?.toFixed(4) ?? "N/A"}</td>)}</tr>)}
-          </tbody></table></>}
-          {(run.assessment.structural_quality ?? []).length > 0 && <><strong>Structural quality</strong><table><thead><tr><th>Construct</th><th>Predictors</th><th>R2</th><th>Adjusted R2</th></tr></thead><tbody>
-            {(run.assessment.structural_quality ?? []).map((quality) => <tr key={quality.construct}><td>{quality.construct}</td><td>{quality.predictor_count}</td><td>{quality.r_squared.toFixed(4)}</td><td>{quality.adjusted_r_squared?.toFixed(4) ?? "N/A"}</td></tr>)}
-          </tbody></table></>}
-          {(run.assessment.structural_vif ?? []).length > 0 && <><strong>Inner VIF</strong><table><thead><tr><th>Target</th><th>Predictor</th><th>VIF</th></tr></thead><tbody>
-            {(run.assessment.structural_vif ?? []).map((value) => <tr key={`${value.target_construct}-${value.predictor_construct}`}><td>{value.target_construct}</td><td>{value.predictor_construct}</td><td>{value.vif?.toFixed(4) ?? "N/A"}</td></tr>)}
-          </tbody></table></>}
-          {(run.assessment.formative_indicator_vif ?? []).length > 0 && <><strong>Formative indicator VIF</strong><table><thead><tr><th>Construct</th><th>Indicator</th><th>VIF</th></tr></thead><tbody>
-            {(run.assessment.formative_indicator_vif ?? []).map((value) => <tr key={`${value.construct}-${value.indicator}`}><td>{value.construct}</td><td>{value.indicator}</td><td>{value.vif?.toFixed(4) ?? "N/A"}</td></tr>)}
-          </tbody></table></>}
-          {(run.assessment.f_squared ?? []).length > 0 && <><strong>Cohen f2 effect sizes</strong><table><thead><tr><th>Path</th><th>R2 included</th><th>R2 excluded</th><th>f2</th></tr></thead><tbody>
-            {(run.assessment.f_squared ?? []).map((value) => <tr key={`${value.source_construct}-${value.target_construct}`}><td>{value.source_construct} -&gt; {value.target_construct}</td><td>{value.included_r_squared.toFixed(4)}</td><td>{value.excluded_r_squared?.toFixed(4) ?? "N/A"}</td><td>{value.f_squared?.toFixed(4) ?? "N/A"}</td></tr>)}
-          </tbody></table></>}
-          {run.assessment.model_fit && <><strong>Correlation-residual fit</strong><table><thead><tr><th>Model</th><th>SRMR</th><th>d_ULS</th></tr></thead><tbody>
-            <tr><td>Saturated</td><td>{run.assessment.model_fit.saturated.srmr.toFixed(4)}</td><td>{run.assessment.model_fit.saturated.d_uls.toFixed(6)}</td></tr>
-            <tr><td>Estimated</td><td>{run.assessment.model_fit.estimated.srmr.toFixed(4)}</td><td>{run.assessment.model_fit.estimated.d_uls.toFixed(6)}</td></tr>
-          </tbody></table></>}
-          {run.assessment.blindfolding && <><strong>Blindfolding Q2</strong><span>Omission distance {run.assessment.blindfolding.settings.omission_distance}</span><table><thead><tr><th>Construct</th><th>Q2</th><th>PRESS</th><th>SSO</th></tr></thead><tbody>
-            {run.assessment.blindfolding.constructs.map((value) => <tr key={value.construct}><td>{value.construct}</td><td>{value.q_squared?.toFixed(4) ?? "N/A"}</td><td>{value.prediction_error_sum_squares?.toFixed(6) ?? "N/A"}</td><td>{value.observation_sum_squares?.toFixed(6) ?? "N/A"}</td></tr>)}
-          </tbody></table></>}
-        </div>}
-        {run.bootstrap && ["summary", "inference"].includes(resultState.selectedTab) && <div className="bootstrap-summary">
-          <div className="bootstrap-meta"><strong>Bootstrap replicates</strong><span>{run.bootstrap.usable_replicates} usable</span><span>{run.bootstrap.failed_replicates.length} failed</span><span>{Math.round(run.bootstrap.percentile.confidence_level * 100)}% percentile CI</span>{run.bootstrap.bca && <span>{run.bootstrap.bca.jackknife_case_count} jackknife cases | BCa CI</span>}{run.bootstrap.studentized && <span>{run.bootstrap.studentized.inner_replicates} inner replicates | {run.bootstrap.studentized.failure ? "bootstrap-t failed" : "bootstrap-t CI"}</span>}</div>
-          {run.bootstrap.studentized?.failure && <div className="inference-failure" role="alert"><strong>Bootstrap-t unavailable</strong><span>{run.bootstrap.studentized.failure.message}</span></div>}
-          <div className="bootstrap-table-scroll" tabIndex={0} role="region" aria-label={`${run.name} bootstrap parameter table`}><table><thead><tr><th>Parameter</th><th>Original</th><th>Mean</th><th>Bias</th><th>SE</th><th>t</th><th>p (two-sided)</th><th>Percentile lower</th><th>Percentile upper</th><th>BCa lower</th><th>BCa upper</th><th>Bootstrap-t lower</th><th>Bootstrap-t upper</th></tr></thead><tbody>
-              {run.bootstrap.percentile.parameters.map((parameter) => { const bca = run.bootstrap!.bca?.parameters.find((value) => value.parameter === parameter.parameter); const studentized = run.bootstrap!.studentized?.parameters.find((value) => value.parameter === parameter.parameter); return <tr key={parameter.parameter}>
-                <td>{formatParameterIdentity(parameter.parameter)}</td><td>{parameter.original.toFixed(6)}</td><td>{parameter.bootstrap_mean.toFixed(6)}</td><td>{parameter.bias.toFixed(6)}</td><td>{parameter.standard_error.toFixed(6)}</td><td>{parameter.t_statistic?.toFixed(4) ?? "N/A"}</td><td>{formatPValue(parameter.p_value_two_sided)}</td><td>{parameter.lower.toFixed(6)}</td><td>{parameter.upper.toFixed(6)}</td><td title={bca?.unavailable_reason ?? undefined}>{bca?.lower?.toFixed(6) ?? "N/A"}</td><td title={bca?.unavailable_reason ?? undefined}>{bca?.upper?.toFixed(6) ?? "N/A"}</td><td title={studentized?.unavailable_reason ?? undefined}>{studentized?.lower?.toFixed(6) ?? "N/A"}</td><td title={studentized?.unavailable_reason ?? undefined}>{studentized?.upper?.toFixed(6) ?? "N/A"}</td>
-              </tr>; })}
-            </tbody></table></div>
-        </div>}
-        {run.permutation && ["summary", "inference"].includes(resultState.selectedTab) && <div className="bootstrap-summary">
-          <div className="bootstrap-meta"><strong>Freedman-Lane permutation</strong><span>{run.permutation.plan.permutations} samples</span><span>two-sided finite-sample corrected p-values</span></div>
-          <div className="bootstrap-table-scroll" tabIndex={0} role="region" aria-label={`${run.name} permutation parameter table`}><table><thead><tr><th>Path</th><th>Original coefficient</th><th>Exceedances</th><th>p (two-sided)</th></tr></thead><tbody>
-            {run.permutation.parameters.map((parameter) => <tr key={parameter.parameter}><td>{formatParameterIdentity(parameter.parameter)}</td><td>{parameter.original.toFixed(6)}</td><td>{parameter.exceedances} / {parameter.permutations}</td><td>{formatPValue(parameter.p_value_two_sided)}</td></tr>)}
-          </tbody></table></div>
-        </div>}
+      <div className="run-content"><strong>{run.name}</strong><p>{new Date(run.createdAt).toLocaleString()} | seed {run.seed} | fingerprint {run.fingerprint}</p><span><AlertTriangle size={13} />{scopeCopy(run.warnings[0])}</span>
+        {run.result ? <RunResultSections run={run} tab={resultState.selectedTab} focusPath={focusPath} activePath={activePath} /> : <SectionEmpty title="No result payload" detail="This saved run does not contain a completed result payload." />}
       </div>
       <div className="run-status">Scope checked</div>
     </article>)}</div>
     {visibleRuns.length === 0 ? <EmptyState title="No matching runs" description="Clear the search field or include a broader result section." /> : null}
   </section>;
+}
+
+function RunResultSections({ run, tab, focusPath, activePath }: { run: AnalysisRun; tab: ResultWorkspaceTab; focusPath: (source: string, target: string) => void; activePath: { source: string; target: string } | null }) {
+  const result = run.result;
+  if (!result) return null;
+  if (tab === "summary") return <SummaryResults run={run} focusPath={focusPath} activePath={activePath} />;
+  if (tab === "measurement") return <MeasurementResults result={result} assessment={run.assessment} focusPath={focusPath} activePath={activePath} />;
+  if (tab === "structural") return <StructuralResults run={run} focusPath={focusPath} activePath={activePath} />;
+  if (tab === "quality") return <QualityResults assessment={run.assessment} />;
+  if (tab === "inference") return <InferenceResults run={run} />;
+  if (tab === "prediction") return <PredictionResults result={result} assessment={run.assessment} />;
+  if (tab === "groups") return <GroupResults result={result} />;
+  if (tab === "diagnostics") return <DiagnosticsResults run={run} />;
+  return <ComparisonResults />;
+}
+
+function SummaryResults({ run, focusPath, activePath }: { run: AnalysisRun; focusPath: (source: string, target: string) => void; activePath: { source: string; target: string } | null }) {
+  const result = run.result!;
+  const warningCount = [...run.warnings, ...result.warnings].filter((warning) => !warning.toLowerCase().includes("validated")).length;
+  return <div className="result-sections result-summary" tabIndex={0} role="region" aria-label={`${run.name} result summary`}>
+    <div className="result-kpi-row">
+      <MetricTile label="Iterations" value={String(result.iterations)} detail={result.converged ? "converged" : "not converged"} tone={result.converged ? "ok" : "warn"} />
+      <MetricTile label="Observations" value={String(result.used_observations)} detail={result.omitted_observations ? `${result.omitted_observations} omitted` : "complete cases used"} />
+      {Object.entries(result.r_squared).map(([construct, value]) => <MetricTile key={construct} label={`R² ${construct}`} value={value.toFixed(4)} detail={interpretR2(value)} tone={value >= 0.75 ? "ok" : value >= 0.25 ? "neutral" : "warn"} />)}
+      <MetricTile label="Warnings" value={String(warningCount)} detail={warningCount ? "review diagnostics" : "none beyond scope status"} tone={warningCount ? "warn" : "ok"} />
+    </div>
+    <SectionTable title="Path coefficients" note="Click a path row to focus the related edge in the SEM diagram." columns={["Path", "Coefficient", "Direction"]} rows={result.paths.map((path) => [pathLabel(path.source, path.target), path.coefficient.toFixed(6), coefficientDirection(path.coefficient)])} activeRowIndexes={activeIndexes(result.paths, activePath)} onRowClick={(_, index) => focusPath(result.paths[index].source, result.paths[index].target)} />
+    <EffectsTable result={result} activePath={activePath} />
+    {result.mediation?.estimates.length ? <MediationTable run={run} /> : null}
+    {result.moderation?.estimates.length ? <ModerationTable run={run} /> : null}
+    <ResultGuidance title="Researcher review" items={["Open Measurement Model for indicator loadings/weights and cross-loadings.", "Open Reliability and Validity for alpha, rho_A, rho_C, AVE, Fornell-Larcker, and HTMT.", "Enable bootstrap in Setup before interpreting p values or confidence intervals."]} />
+  </div>;
+}
+
+function MeasurementResults({ result, assessment, focusPath, activePath }: { result: PlsResult; assessment?: AssessmentResult; focusPath: (source: string, target: string) => void; activePath: { source: string; target: string } | null }) {
+  return <div className="result-sections" tabIndex={0} role="region" aria-label="Measurement model results">
+    <SectionTable title="Outer loadings and weights" note="Reflective constructs are usually interpreted through loadings; formative constructs require weights and collinearity diagnostics." columns={["Construct", "Indicator", "Loading", "Weight", "Loading status"]} rows={result.outer_estimates.map((row) => [row.construct, row.indicator, row.loading.toFixed(6), row.weight.toFixed(6), loadingStatus(row.loading)])} />
+    {assessment?.formative_indicator_vif.length ? <SectionTable title="Outer VIF for formative indicators" note="Use VIF to screen formative indicator collinearity." columns={["Construct", "Indicator", "VIF", "Status"]} rows={assessment.formative_indicator_vif.map((row) => [row.construct, row.indicator, formatOptional(row.vif, 4), vifStatus(row.vif)])} /> : null}
+    {assessment?.cross_loadings.length ? <SectionTable title="Cross-loadings" note="Each indicator should usually load highest on its assigned construct." columns={["Indicator", "Assigned construct", "Compared construct", "Loading"]} rows={assessment.cross_loadings.map((row) => [row.indicator, row.assigned_construct, row.construct, row.loading.toFixed(6)])} /> : null}
+    <SectionTable title="Structural paths for diagram focus" note="This helper keeps measurement review linked to the model canvas." columns={["Path", "Coefficient"]} rows={result.paths.map((path) => [pathLabel(path.source, path.target), path.coefficient.toFixed(6)])} activeRowIndexes={activeIndexes(result.paths, activePath)} onRowClick={(_, index) => focusPath(result.paths[index].source, result.paths[index].target)} />
+  </div>;
+}
+
+function StructuralResults({ run, focusPath, activePath }: { run: AnalysisRun; focusPath: (source: string, target: string) => void; activePath: { source: string; target: string } | null }) {
+  const result = run.result!;
+  const assessment = run.assessment;
+  return <div className="result-sections" tabIndex={0} role="region" aria-label="Structural model results">
+    <SectionTable title="Path coefficients" note="Bootstrapped t values and p values appear in Inference after bootstrap is enabled." columns={["Path", "Coefficient", "Direction"]} rows={result.paths.map((path) => [pathLabel(path.source, path.target), path.coefficient.toFixed(6), coefficientDirection(path.coefficient)])} activeRowIndexes={activeIndexes(result.paths, activePath)} onRowClick={(_, index) => focusPath(result.paths[index].source, result.paths[index].target)} />
+    <EffectsTable result={result} activePath={activePath} />
+    {(result.control_estimates ?? []).length ? <SectionTable title="Control paths" columns={["Control path", "Coefficient"]} rows={result.control_estimates!.map((control) => [pathLabel(control.source, control.target), control.coefficient.toFixed(6)])} /> : null}
+    {assessment?.structural_quality.length ? <SectionTable title="R² and adjusted R²" note="Use R² for explained variance and adjusted R² when comparing models with different predictor counts." columns={["Construct", "Predictors", "R²", "Adjusted R²", "Interpretation"]} rows={assessment.structural_quality.map((row) => [row.construct, String(row.predictor_count), row.r_squared.toFixed(4), formatOptional(row.adjusted_r_squared, 4), interpretR2(row.r_squared)])} /> : null}
+    {assessment?.structural_vif.length ? <SectionTable title="Inner VIF" note="High VIF suggests predictor collinearity in the structural model." columns={["Target", "Predictor", "VIF", "Status"]} rows={assessment.structural_vif.map((row) => [row.target_construct, row.predictor_construct, formatOptional(row.vif, 4), vifStatus(row.vif)])} /> : null}
+    {assessment?.f_squared.length ? <SectionTable title="Cohen f² effect sizes" note="f² describes how much an omitted predictor changes the target construct R²." columns={["Path", "R² included", "R² excluded", "f²", "Interpretation"]} rows={assessment.f_squared.map((row) => [pathLabel(row.source_construct, row.target_construct), row.included_r_squared.toFixed(4), formatOptional(row.excluded_r_squared, 4), formatOptional(row.f_squared, 4), interpretF2(row.f_squared)])} /> : null}
+    {result.mediation?.estimates.length ? <MediationTable run={run} /> : null}
+    {result.moderation?.estimates.length ? <ModerationTable run={run} /> : null}
+  </div>;
+}
+
+function QualityResults({ assessment }: { assessment?: AssessmentResult }) {
+  if (!assessment) return <SectionEmpty title="No assessment payload" detail="Run a PLS-SEM method with assessment outputs to review reliability and validity." />;
+   return <div className="result-sections quality-summary" tabIndex={0} role="region" aria-label="measurement quality tables">
+    <SectionTable title="Construct reliability and convergent validity" note="Common reporting columns for reflective PLS-SEM measurement model assessment." columns={["Construct", "Cronbach alpha", "rho_A", "rho_C", "AVE", "Quick check"]} rows={assessment.construct_quality.map((quality) => [
+      quality.construct,
+      formatOptional(quality.cronbach_alpha, 4),
+      quality.rho_a == null ? formatDiagnosticCode(quality.rho_a_reason ?? "N/A") : quality.rho_a.toFixed(4),
+      formatOptional(quality.rho_c, 4),
+      formatOptional(quality.ave, 4),
+      reliabilityStatus(quality.cronbach_alpha, quality.rho_c, quality.ave),
+    ])} />
+    <MatrixTable title="Fornell-Larcker criterion" note="Diagonal values should be read against construct correlations according to the documented QuickPLS convention." constructs={assessment.fornell_larcker.constructs} values={assessment.fornell_larcker.values} />
+    {assessment.htmt_plus && <HtmtTable label="HTMT+" artifact={assessment.htmt_plus} />}
+    {assessment.htmt_original && <HtmtTable label="Original HTMT" artifact={assessment.htmt_original} />}
+    {assessment.htmt && !assessment.htmt_plus && <MatrixTable title="HTMT+ (legacy)" constructs={assessment.htmt.constructs} values={assessment.htmt.values} />}
+    {assessment.cross_loadings.length ? <SectionTable title="Cross-loadings check" note="Confirm each indicator is strongest on its assigned construct." columns={["Indicator", "Assigned construct", "Compared construct", "Loading"]} rows={assessment.cross_loadings.map((row) => [row.indicator, row.assigned_construct, row.construct, row.loading.toFixed(6)])} /> : null}
+  </div>;
+}
+
+function InferenceResults({ run }: { run: AnalysisRun }) {
+  if (!run.bootstrap && !run.permutation) return <SectionEmpty title="Inference not run" detail="Enable bootstrap or permutation in Setup, rerun the model, then return here for t values, p values, and confidence intervals." />;
+  return <div className="result-sections" tabIndex={0} role="region" aria-label="Inference results">
+    {run.bootstrap ? <BootstrapSection run={run} /> : null}
+    {run.permutation ? <PermutationSection run={run} /> : null}
+  </div>;
+}
+
+function PredictionResults({ result, assessment }: { result: PlsResult; assessment?: AssessmentResult }) {
+  const hasPredict = Boolean(result.predict);
+  const hasBlindfolding = Boolean(assessment?.blindfolding);
+  if (!hasPredict && !hasBlindfolding) return <SectionEmpty title="Prediction outputs not run" detail="Enable PLSpredict or blindfolding-related prediction settings, rerun the model, then review holdout metrics and Q² here." />;
+  return <div className="result-sections" tabIndex={0} role="region" aria-label="Prediction results">
+    {result.predict ? <><strong className="result-section-heading">PLSpredict holdout</strong><MethodWarnings warnings={result.predict.warnings} /><PlsPredictTable targets={result.predict.targets} />{result.predict.repeated_kfold ? <><strong className="result-section-heading">Repeated k-fold prediction</strong><MethodWarnings warnings={result.predict.repeated_kfold.warnings} /><PlsPredictTable targets={result.predict.repeated_kfold.targets} />{result.predict.repeated_kfold.cvpat?.length ? <CvpatTable comparisons={result.predict.repeated_kfold.cvpat} /> : null}</> : null}</> : null}
+    {assessment?.blindfolding ? <SectionTable title="Blindfolding Q²" note={`Omission distance ${assessment.blindfolding.settings.omission_distance}.`} columns={["Construct", "Q²", "PRESS", "SSO"]} rows={assessment.blindfolding.constructs.map((row) => [row.construct, formatOptional(row.q_squared, 4), formatOptional(row.prediction_error_sum_squares, 6), formatOptional(row.observation_sum_squares, 6)])} /> : null}
+  </div>;
+}
+
+function GroupResults({ result }: { result: PlsResult }) {
+  if (!result.mga && !result.micom && !result.mga_permutation && !result.fimix && !result.segmentation && !result.ipma) return <SectionEmpty title="No group or segmentation payloads" detail="Configure MICOM/MGA, FIMIX-PLS, PLS-POS, or IPMA in Setup and rerun the model to populate this tab." />;
+  return <div className="result-sections" tabIndex={0} role="region" aria-label="Groups and segmentation results"><MethodPayloadSections result={result} /></div>;
+}
+
+function DiagnosticsResults({ run }: { run: AnalysisRun }) {
+  const result = run.result!;
+  const assessment = run.assessment;
+  return <div className="result-sections" tabIndex={0} role="region" aria-label="Diagnostics results">
+    <SectionTable title="Run provenance" columns={["Field", "Value"]} rows={[["Method", run.method], ["Created", new Date(run.createdAt).toLocaleString()], ["Seed", String(run.seed)], ["Fingerprint", run.fingerprint], ["Converged", result.converged ? "yes" : "no"], ["Iterations", String(result.iterations)], ["Used observations", String(result.used_observations)], ["Omitted observations", String(result.omitted_observations)]]} />
+    <SectionTable title="Warnings and scope status" columns={["Message"]} rows={[...run.warnings, ...result.warnings, ...(assessment?.warnings ?? [])].map((warning) => [scopeCopy(warning)])} />
+    {assessment?.model_fit ? <SectionTable title="Correlation-residual fit" note="PLS-SEM approximate fit diagnostics should be interpreted within the documented QuickPLS scope." columns={["Model", "SRMR", "d_ULS"]} rows={[["Saturated", assessment.model_fit.saturated.srmr.toFixed(4), assessment.model_fit.saturated.d_uls.toFixed(6)], ["Estimated", assessment.model_fit.estimated.srmr.toFixed(4), assessment.model_fit.estimated.d_uls.toFixed(6)]]} /> : null}
+    {result.plsc || result.wpls || result.cca || result.cta_pls || result.endogeneity || result.nonlinear_effects || result.moderated_mediation || result.cbsem || result.gsca || result.regression || result.nca || result.pca ? <MethodPayloadSections result={result} /> : null}
+  </div>;
+}
+
+function ComparisonResults() {
+  return <SectionEmpty title="Comparison workflow" detail="Run at least two compatible models to compare path coefficients, R², diagnostics, and export-ready differences here." />;
+}
+
+function BootstrapSection({ run }: { run: AnalysisRun }) {
+  const bootstrap = run.bootstrap!;
+  return <div className="bootstrap-summary">
+    <div className="bootstrap-meta"><strong>Bootstrap replicates</strong><span>{bootstrap.usable_replicates} usable</span><span>{bootstrap.failed_replicates.length} failed</span><span>{Math.round(bootstrap.percentile.confidence_level * 100)}% percentile CI</span>{bootstrap.bca && <span>{bootstrap.bca.jackknife_case_count} jackknife cases | BCa CI</span>}{bootstrap.studentized && <span>{bootstrap.studentized.inner_replicates} inner replicates | {bootstrap.studentized.failure ? "bootstrap-t failed" : "bootstrap-t CI"}</span>}</div>
+    {bootstrap.studentized?.failure && <div className="inference-failure" role="alert"><strong>Bootstrap-t unavailable</strong><span>{bootstrap.studentized.failure.message}</span></div>}
+    <div className="bootstrap-table-scroll result-table-scroll" tabIndex={0} role="region" aria-label={`${run.name} bootstrap parameter table`}><table><thead><tr><th>Parameter</th><th>Original</th><th>Mean</th><th>Bias</th><th>SE</th><th>t</th><th>p</th><th>Percentile lower</th><th>Percentile upper</th><th>BCa lower</th><th>BCa upper</th><th>Bootstrap-t lower</th><th>Bootstrap-t upper</th></tr></thead><tbody>
+      {bootstrap.percentile.parameters.map((parameter) => { const bca = bootstrap.bca?.parameters.find((value) => value.parameter === parameter.parameter); const studentized = bootstrap.studentized?.parameters.find((value) => value.parameter === parameter.parameter); return <tr key={parameter.parameter}>
+        <td>{formatParameterIdentity(parameter.parameter)}</td><td>{parameter.original.toFixed(6)}</td><td>{parameter.bootstrap_mean.toFixed(6)}</td><td>{parameter.bias.toFixed(6)}</td><td>{parameter.standard_error.toFixed(6)}</td><td>{parameter.t_statistic?.toFixed(4) ?? "N/A"}</td><td>{formatPValue(parameter.p_value_two_sided)}</td><td>{parameter.lower.toFixed(6)}</td><td>{parameter.upper.toFixed(6)}</td><td title={bca?.unavailable_reason ?? undefined}>{bca?.lower?.toFixed(6) ?? "N/A"}</td><td title={bca?.unavailable_reason ?? undefined}>{bca?.upper?.toFixed(6) ?? "N/A"}</td><td title={studentized?.unavailable_reason ?? undefined}>{studentized?.lower?.toFixed(6) ?? "N/A"}</td><td title={studentized?.unavailable_reason ?? undefined}>{studentized?.upper?.toFixed(6) ?? "N/A"}</td>
+      </tr>; })}
+    </tbody></table></div>
+  </div>;
+}
+
+function PermutationSection({ run }: { run: AnalysisRun }) {
+  const permutation = run.permutation!;
+  return <div className="bootstrap-summary">
+    <div className="bootstrap-meta"><strong>Freedman-Lane permutation</strong><span>{permutation.plan.permutations} samples</span><span>two-sided finite-sample corrected p-values</span></div>
+    <SectionTable title="permutation parameter table" columns={["Path", "Original coefficient", "Exceedances", "p"]} rows={permutation.parameters.map((parameter) => [formatParameterIdentity(parameter.parameter), parameter.original.toFixed(6), `${parameter.exceedances} / ${parameter.permutations}`, formatPValue(parameter.p_value_two_sided)])} />
+  </div>;
+}
+
+function MediationTable({ run }: { run: AnalysisRun }) {
+  const estimates = run.result?.mediation?.estimates ?? [];
+  return <SectionTable title="Mediation effects" note={run.bootstrap ? "Bootstrap inference is shown where the matching indirect-effect parameter exists." : "Bootstrap was not run; p values and confidence intervals are unavailable."} columns={["Effect", "Direct", "Indirect", "Total", "Indirect p", "Percentile CI", "BCa CI", "Bootstrap-t CI", "VAF", "Class"]} rows={estimates.map((effect) => {
+    const parameter = findBootstrapParameter(run.bootstrap, "indirect_effect", [effect.source, effect.target]);
+    const bca = parameter ? findBcaParameter(run.bootstrap, parameter.parameter) : undefined;
+    const studentized = parameter ? findStudentizedParameter(run.bootstrap, parameter.parameter) : undefined;
+    return [pathLabel(effect.source, effect.target), effect.direct.toFixed(6), effect.indirect.toFixed(6), effect.total.toFixed(6), formatPValue(parameter?.p_value_two_sided), formatInterval(parameter?.lower, parameter?.upper), formatInterval(bca?.lower, bca?.upper), formatInterval(studentized?.lower, studentized?.upper), effect.variance_accounted_for?.toFixed(4) ?? "N/A", formatMediationClass(effect.classification)];
+  })} />;
+}
+
+function EffectsTable({ result, activePath }: { result: PlsResult; activePath: { source: string; target: string } | null }) {
+  return <SectionTable
+    title="Total effects"
+    note="Direct, indirect, and total effects are separated so mediation and serial path interpretation stays explicit."
+    columns={["Effect", "Direct", "Indirect", "Total", "Effect type"]}
+    rows={result.effects.map((effect) => [
+      pathLabel(effect.source, effect.target),
+      effect.direct.toFixed(6),
+      effect.indirect.toFixed(6),
+      effect.total.toFixed(6),
+      effect.indirect === 0 ? "direct only" : effect.direct === 0 ? "indirect only" : "direct and indirect",
+    ])}
+    activeRowIndexes={activeIndexes(result.effects, activePath)}
+  />;
+}
+
+function ModerationTable({ run }: { run: AnalysisRun }) {
+  const estimates = run.result?.moderation?.estimates ?? [];
+  return <SectionTable title="Moderation effects" note={run.bootstrap ? "Bootstrap inference is shown where the product-path parameter exists." : "Bootstrap was not run; p values and confidence intervals are unavailable."} columns={["Interaction", "Main effect", "Interaction", "Interaction p", "Percentile CI", "BCa CI", "Bootstrap-t CI", "Simple slopes"]} rows={estimates.map((effect) => {
+    const parameter = findBootstrapParameter(run.bootstrap, "path", [effect.product_construct, effect.outcome]);
+    const bca = parameter ? findBcaParameter(run.bootstrap, parameter.parameter) : undefined;
+    const studentized = parameter ? findStudentizedParameter(run.bootstrap, parameter.parameter) : undefined;
+    return [`${effect.predictor} x ${effect.moderator} -> ${effect.outcome}`, effect.predictor_main_effect?.toFixed(6) ?? "N/A", effect.interaction_effect.toFixed(6), formatPValue(parameter?.p_value_two_sided), formatInterval(parameter?.lower, parameter?.upper), formatInterval(bca?.lower, bca?.upper), formatInterval(studentized?.lower, studentized?.upper), effect.simple_slopes.length ? effect.simple_slopes.map((slope) => `${formatModeratorLevel(slope.moderator_score)}: ${slope.effect.toFixed(6)}`).join(" | ") : "N/A"];
+  })} />;
+}
+
+function SectionTable({ title, note, columns, rows, onRowClick, activeRowIndexes }: { title: string; note?: string; columns: string[]; rows: string[][]; onRowClick?: (row: string[], index: number) => void; activeRowIndexes?: number[] }) {
+  if (!rows.length) return null;
+  const activeRows = new Set(activeRowIndexes ?? []);
+  return <section className="result-table-section">
+    <div className="result-section-title"><strong>{title}</strong>{note ? <span>{note}</span> : null}</div>
+    <div className="bootstrap-table-scroll result-table-scroll" tabIndex={0} role="region" aria-label={`${title} table`}><table><thead><tr>{columns.map((column) => <th key={column}>{column}</th>)}</tr></thead><tbody>
+      {rows.map((row, index) => <tr key={`${title}-${index}`} className={`${onRowClick ? "result-path-row" : ""}${activeRows.has(index) ? " active-result-row" : ""}`.trim() || undefined} aria-current={activeRows.has(index) ? "true" : undefined} onClick={onRowClick ? () => onRowClick(row, index) : undefined}>{row.map((cell, cellIndex) => <td key={`${title}-${index}-${cellIndex}`}>{cell}</td>)}</tr>)}
+    </tbody></table></div>
+  </section>;
+}
+
+function MatrixTable({ title, note, constructs, values }: { title: string; note?: string; constructs: string[]; values: Array<Array<number | null>> }) {
+  return <section className="result-table-section">
+    <div className="result-section-title"><strong>{title}</strong>{note ? <span>{note}</span> : null}</div>
+    <div className="bootstrap-table-scroll result-table-scroll" tabIndex={0} role="region" aria-label={`${title} matrix`}><table><thead><tr><th>Construct</th>{constructs.map((construct) => <th key={construct}>{construct}</th>)}</tr></thead><tbody>
+      {values.map((row, rowIndex) => <tr key={constructs[rowIndex]}><td>{constructs[rowIndex]}</td>{row.map((value, columnIndex) => <td key={constructs[columnIndex]}>{value?.toFixed(4) ?? "N/A"}</td>)}</tr>)}
+    </tbody></table></div>
+  </section>;
+}
+
+function MetricTile({ label, value, detail, tone = "neutral" }: { label: string; value: string; detail: string; tone?: "ok" | "warn" | "neutral" }) {
+  return <article className={`result-metric-tile ${tone}`}><span>{label}</span><strong>{value}</strong><small>{detail}</small></article>;
+}
+
+function ResultGuidance({ title, items }: { title: string; items: string[] }) {
+  return <section className="result-guidance"><strong>{title}</strong><ul>{items.map((item) => <li key={item}>{item}</li>)}</ul></section>;
+}
+
+function SectionEmpty({ title, detail }: { title: string; detail: string }) {
+  return <div className="result-section-empty"><strong>{title}</strong><p>{detail}</p></div>;
 }
 
 function MethodPayloadSections({ result }: { result: PlsResult }) {
@@ -354,4 +474,87 @@ function formatModeratorLevel(value: number) {
   if (value === 0) return "Mean";
   if (value === 1) return "+1 SD";
   return value.toFixed(2);
+}
+
+function pathLabel(source: string, target: string) {
+  return `${source} -> ${target}`;
+}
+
+function activeIndexes<T extends { source: string; target: string }>(rows: T[], activePath: { source: string; target: string } | null) {
+  if (!activePath) return [];
+  return rows.map((row, index) => row.source === activePath.source && row.target === activePath.target ? index : -1).filter((index) => index >= 0);
+}
+
+function coefficientDirection(value: number) {
+  if (Math.abs(value) < 0.000001) return "near zero";
+  return value > 0 ? "positive" : "negative";
+}
+
+function loadingStatus(value: number) {
+  const absolute = Math.abs(value);
+  if (absolute >= 0.708) return "strong";
+  if (absolute >= 0.4) return "review";
+  return "weak";
+}
+
+function vifStatus(value: number | null | undefined) {
+  if (value == null || !Number.isFinite(value)) return "N/A";
+  if (value >= 5) return "high";
+  if (value >= 3.3) return "review";
+  return "acceptable";
+}
+
+function interpretR2(value: number) {
+  if (value >= 0.75) return "substantial";
+  if (value >= 0.5) return "moderate";
+  if (value >= 0.25) return "weak to moderate";
+  return "weak";
+}
+
+function interpretF2(value: number | null | undefined) {
+  if (value == null || !Number.isFinite(value)) return "N/A";
+  if (value >= 0.35) return "large";
+  if (value >= 0.15) return "medium";
+  if (value >= 0.02) return "small";
+  return "very small";
+}
+
+function reliabilityStatus(alpha: number | null, rhoC: number | null, ave: number | null) {
+  const issues: string[] = [];
+  if (alpha != null && alpha < 0.7) issues.push("alpha");
+  if (rhoC != null && rhoC < 0.7) issues.push("rho_C");
+  if (ave != null && ave < 0.5) issues.push("AVE");
+  return issues.length ? `review ${issues.join(", ")}` : "passes common cutoffs";
+}
+
+function scopeCopy(warning: string | undefined) {
+  if (!warning) return "Validated for documented QuickPLS scope.";
+  return warning.replace(/QuickPLS v\d+\.\d+\.\d+ supported scope/g, "documented QuickPLS supported scope");
+}
+
+function csvForCurrentResultTab(run: AnalysisRun, tab: ResultWorkspaceTab) {
+  const result = run.result;
+  const assessment = run.assessment;
+  const rows: string[][] = [];
+  if (!result) return "message\nNo result payload";
+  if (tab === "measurement") {
+    rows.push(["construct", "indicator", "loading", "weight"], ...result.outer_estimates.map((row) => [row.construct, row.indicator, row.loading.toString(), row.weight.toString()]));
+  } else if (tab === "quality") {
+    rows.push(["construct", "cronbach_alpha", "rho_a", "rho_c", "ave"], ...(assessment?.construct_quality ?? []).map((row) => [row.construct, String(row.cronbach_alpha ?? ""), String(row.rho_a ?? ""), String(row.rho_c ?? ""), String(row.ave ?? "")]));
+  } else if (tab === "structural" || tab === "summary") {
+    rows.push(["path", "coefficient"], ...result.paths.map((path) => [pathLabel(path.source, path.target), path.coefficient.toString()]));
+  } else if (tab === "inference" && run.bootstrap) {
+    rows.push(["parameter", "original", "mean", "bias", "se", "p"], ...run.bootstrap.percentile.parameters.map((parameter) => [formatParameterIdentity(parameter.parameter), String(parameter.original), String(parameter.bootstrap_mean), String(parameter.bias), String(parameter.standard_error), String(parameter.p_value_two_sided ?? "")]));
+  } else if (tab === "prediction" && assessment?.blindfolding) {
+    rows.push(["construct", "q2", "press", "sso"], ...assessment.blindfolding.constructs.map((row) => [row.construct, String(row.q_squared ?? ""), String(row.prediction_error_sum_squares ?? ""), String(row.observation_sum_squares ?? "")]));
+  } else if (tab === "diagnostics") {
+    rows.push(["field", "value"], ["method", run.method], ["seed", String(run.seed)], ["fingerprint", run.fingerprint], ["iterations", String(result.iterations)], ["observations", String(result.used_observations)]);
+  } else {
+    rows.push(["message"], [`No exportable ${tab} table is available for this run.`]);
+  }
+  return rows.map((row) => row.map(csvCell).join(",")).join("\n");
+}
+
+function csvCell(value: string) {
+  return /[",\n]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
 }

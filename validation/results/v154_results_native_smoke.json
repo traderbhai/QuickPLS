@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.5.4 native results workspace smoke",
+  "passed": true,
+  "checklist": {
+    "results_workspace_smoke_passed": true,
+    "diagram_result_linking_evidence_present": true,
+    "native_import_run_save_reopen_xlsx_workflow_passed": true,
+    "release_executable_launches_without_dev_server": true,
+    "results_workspace_screenshots_present": true
+  },
+  "commands": [
+    {
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "quickpls-desktop",
+        "desktop_native_v11_workflow_smoke_import_run_save_reopen_and_export"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "elapsed_seconds": 6.7251,
+      "stdout_tail": "\nrunning 1 test\ntest desktop_native_v11_workflow_smoke_import_run_save_reopen_and_export ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.06s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.29s\n     Running unittests src\\lib.rs (target\\debug\\deps\\quickpls_desktop_lib-8e82f693b9e8e019.exe)\n     Running unittests src\\main.rs (target\\debug\\deps\\quickpls_desktop-de687545d0a3783a.exe)\n"
+    }
+  ],
+  "launch": {
+    "passed": true,
+    "path": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+    "elapsed_seconds": 5.054,
+    "smoke_env": "QUICKPLS_SMOKE_UI=1"
+  },
+  "artifacts": {
+    "browser_smoke": "D:\\QuickPLS\\validation\\results\\v154_results_workspace_smoke.json",
+    "screenshots": "D:\\QuickPLS\\validation\\results\\screens\\v154\\results-workspace",
+    "screenshot_count": 8
+  }
+}

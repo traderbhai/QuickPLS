@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS results workspace source and smoke audit",
+  "passed": true,
+  "checklist": {
+    "required_source_contracts_present": true,
+    "no_forbidden_stale_or_mojibake_text": true,
+    "smoke_report_exists": true,
+    "smoke_report_passed": true,
+    "smoke_has_all_expected_tabs": true
+  },
+  "missing_required_snippets": [],
+  "forbidden_hits": [],
+  "smoke_report": "D:\\QuickPLS\\validation\\results\\v154_results_workspace_smoke.json"
+}

@@ -522,4 +522,12 @@ Notes:
 - Added workspace scroll reset on rail changes, Data selected-column profile statistics, model generic-path label suppression, Setup scope-status copy, progressive group/prediction setup, Results blocker-aware empty states, and Report preset/export alignment.
 - Added `validation/v153_layout_copy_smoke.mjs`, `validation/v153_layout_copy_audit.py`, `docs/V1_5_3_LAYOUT_COPY_READINESS_POLISH.md`, and the `v1_5_3_layout_copy_readiness_polish` registry gate.
 - Updated release metadata to `1.5.3` and artifact labeling to `v1_5_3_layout_copy_readiness_polish` for fresh non-overwriting desktop builds.
+
+## v1.5.4 Results Workspace Hardening
+
+- Reworked the Results workspace into tab-specific review sections for Summary, Measurement Model, Structural Model, Reliability and Validity, Inference, Prediction, Groups, Diagnostics, and Comparison.
+- Added interpretation notes, current-tab export scoping, sticky result controls, and explicit not-run states for method families without payloads.
+- Added diagram/result linking: selected SEM paths highlight matching result rows in the relevant tables.
+- Added `validation/v154_results_workspace_smoke.mjs`, `validation/v154_results_workspace_audit.py`, `validation/v154_results_native_smoke.py`, `docs/V1_5_4_RESULTS_WORKSPACE_HARDENING.md`, and the `v1_5_4_results_workspace_hardening` registry gate.
+- Updated release metadata to `1.5.4` and artifact labeling to `v1_5_4_results_workspace_hardening` for fresh non-overwriting desktop builds.
 - Boundary: frontend/product polish only; no numerical backend or result-schema changes.

@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS results workspace deep smoke",
+  "passed": true,
+  "checklist": {
+    "summary_has_kpis_paths_and_effects": true,
+    "measurement_has_outer_and_cross_loading_sections": true,
+    "structural_has_effects_r2_vif_and_f2": true,
+    "quality_has_reliability_htmt_and_fornell_larcker": true,
+    "inference_has_bootstrap_table": true,
+    "prediction_has_q2_or_clear_empty_state": true,
+    "groups_are_not_generic_dump_without_payloads": true,
+    "diagnostics_has_provenance_and_scope": true,
+    "diagram_selection_highlights_result_rows": true,
+    "no_stale_scope_or_mojibake": true,
+    "screenshots_written": true,
+    "no_console_errors": true
+  },
+  "tabs": {
+    "summary": {
+      "sections": [
+        "Path coefficients",
+        "Total effects",
+        "Mediation effects"
+      ],
+      "metricTiles": [
+        "Iterations5converged",
+        "Observations5complete cases used",
+        "R² satisfaction0.5440moderate",
+        "R² loyalty0.6170moderate",
+        "Warnings0none beyond scope status"
+      ],
+      "emptyTitle": null,
+      "tableCount": 3,
+      "bootstrapTableCount": 0,
+      "activeResultRows": 2,
+      "hasMethodPayloadDump": false,
+      "hasMojibake": false,
+      "hasOldScope": false,
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v154\\results-workspace\\01_summary.png"
+    },
+    "measurement": {
+      "sections": [
+        "Outer loadings and weights",
+        "Cross-loadings",
+        "Structural paths for diagram focus"
+      ],
+      "metricTiles": [],
+      "emptyTitle": null,
+      "tableCount": 3,
+      "bootstrapTableCount": 0,
+      "activeResultRows": 1,
+      "hasMethodPayloadDump": false,
+      "hasMojibake": false,
+      "hasOldScope": false,
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v154\\results-workspace\\02_measurement.png"
+    },
+    "structural": {
+      "sections": [
+        "Path coefficients",
+        "Total effects",
+        "R² and adjusted R²",
+        "Inner VIF",
+        "Cohen f² effect sizes",
+        "Mediation effects"
+      ],
+      "metricTiles": [],
+      "emptyTitle": null,
+      "tableCount": 6,
+      "bootstrapTableCount": 0,
+      "activeResultRows": 2,
+      "hasMethodPayloadDump": false,
+      "hasMojibake": false,
+      "hasOldScope": false,
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v154\\results-workspace\\03_structural.png"
+    },
+    "quality": {
+      "sections": [
+        "Construct reliability and convergent validity",
+        "Fornell-Larcker criterion",
+        "Cross-loadings check"
+      ],
+      "metricTiles": [],
+      "emptyTitle": null,
+      "tableCount": 3,
+      "bootstrapTableCount": 0,
+      "activeResultRows": 0,
+      "hasMethodPayloadDump": false,
+      "hasMojibake": false,
+      "hasOldScope": false,
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v154\\results-workspace\\04_quality.png"
+    },
+    "inference": {
+      "sections": [],
+      "metricTiles": [],
+      "emptyTitle": null,
+      "tableCount": 0,
+      "bootstrapTableCount": 1,
+      "activeResultRows": 0,
+      "hasMethodPayloadDump": false,
+      "hasMojibake": false,
+      "hasOldScope": false,
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v154\\results-workspace\\05_inference.png"
+    },
+    "prediction": {
+      "sections": [
+        "Blindfolding Q²"
+      ],
+      "metricTiles": [],
+      "emptyTitle": null,
+      "tableCount": 1,
+      "bootstrapTableCount": 0,
+      "activeResultRows": 0,
+      "hasMethodPayloadDump": false,
+      "hasMojibake": false,
+      "hasOldScope": false,
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v154\\results-workspace\\06_prediction.png"
+    },
+    "groups": {
+      "sections": [],
+      "metricTiles": [],
+      "emptyTitle": "No group or segmentation payloads",
+      "tableCount": 0,
+      "bootstrapTableCount": 0,
+      "activeResultRows": 0,
+      "hasMethodPayloadDump": false,
+      "hasMojibake": false,
+      "hasOldScope": false,
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v154\\results-workspace\\07_groups.png"
+    },
+    "diagnostics": {
+      "sections": [
+        "Run provenance",
+        "Warnings and scope status",
+        "Correlation-residual fit"
+      ],
+      "metricTiles": [],
+      "emptyTitle": null,
+      "tableCount": 3,
+      "bootstrapTableCount": 0,
+      "activeResultRows": 0,
+      "hasMethodPayloadDump": false,
+      "hasMojibake": false,
+      "hasOldScope": false,
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v154\\results-workspace\\08_diagnostics.png"
+    }
+  },
+  "errors": []
+}

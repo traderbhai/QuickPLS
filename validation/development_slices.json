@@ -2,7 +2,7 @@
   "schema_version": 1,
   "program": "QuickPLS accelerated method-slice registry",
   "active_goal": "Complete QuickPLS as a free, proprietary, fully offline Windows desktop application that is first ready in all sense before unrestricted research use.",
-  "current_stage": "v1_5_3_layout_copy_readiness_polish",
+  "current_stage": "v1_5_4_results_workspace_hardening",
   "policy": {
     "promotion_order": [
       "unsupported",
@@ -2488,6 +2488,56 @@
           "name": "Versioned desktop artifacts",
           "status": "passed",
           "evidence": "package.json, Cargo.toml, and src-tauri/tauri.conf.json use version 1.5.3; qpls:release:artifacts uses v1_5_3_layout_copy_readiness_polish to create fresh non-overwriting installer and portable artifacts."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_5_4_results_workspace_hardening",
+      "release": "v1.5.4",
+      "family": "Product",
+      "name": "Results workspace hardening",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 41,
+      "summary": "Redesigns the Results workspace into tab-specific researcher review sections with interpretation notes, selected-tab export, diagram-to-result linking, sticky controls, and clear not-run states while preserving existing result payloads and numerical fingerprints.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Tab-specific results sections",
+          "status": "passed",
+          "evidence": "src/components/RunHistory.tsx renders Summary, Measurement Model, Structural Model, Reliability and Validity, Inference, Prediction, Groups, Diagnostics, and Comparison with scoped tables and empty states."
+        },
+        {
+          "track": "product",
+          "name": "Diagram-result linking and export ergonomics",
+          "status": "passed",
+          "evidence": "src/components/RunHistory.tsx highlights active result rows for selected SEM paths and exports the selected result tab instead of a generic summary."
+        },
+        {
+          "track": "validation",
+          "name": "Results workspace smoke and source audit",
+          "status": "passed",
+          "evidence": "validation/v154_results_workspace_smoke.mjs writes screenshots under validation/results/screens/v154/results-workspace and validation/v154_results_workspace_audit.py verifies source contracts, no stale scope wording, and no mojibake."
+        },
+        {
+          "track": "validation",
+          "name": "Native desktop results smoke",
+          "status": "passed",
+          "evidence": "validation/v154_results_native_smoke.py verifies the v1.5.4 results smoke output, release executable launch without a dev server, and the existing native import/run/save/reopen/XLSX command path."
+        },
+        {
+          "track": "documentation",
+          "name": "Results hardening scope documented",
+          "status": "passed",
+          "evidence": "docs/V1_5_4_RESULTS_WORKSPACE_HARDENING.md documents the frontend-only scope, evidence, gate, and non-engine boundary."
+        },
+        {
+          "track": "release",
+          "name": "Versioned desktop artifacts",
+          "status": "passed",
+          "evidence": "package.json, Cargo.toml, and src-tauri/tauri.conf.json use version 1.5.4; qpls:release:artifacts uses v1_5_4_results_workspace_hardening to create fresh non-overwriting installer and portable artifacts."
         }
       ],
       "next_actions": []

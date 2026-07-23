@@ -456,3 +456,21 @@ This frontend-only milestone closes the visible screen-review issues from the v1
 No statistical engines, formulas, result schemas, recipes, project format, or numerical fingerprints changed.
 
 Release metadata now uses `1.5.3`; versioned desktop artifacts use the label `v1_5_3_layout_copy_readiness_polish`.
+
+## v1.5.4 Results Workspace Hardening
+
+Status: validated.
+
+This frontend-only milestone turns the Results page into a workflow-specific review surface. Summary, Measurement Model, Structural Model, Reliability and Validity, Inference, Prediction, Groups, Diagnostics, and Comparison now render scoped sections instead of repeating broad run output.
+
+Complete:
+
+- Added tab-specific result tables, interpretation notes, empty states, and selected-tab export behavior.
+- Added diagram-to-result linking evidence: selecting a SEM path highlights related Summary, Measurement, and Structural rows.
+- Kept result action controls visible while scrolling.
+- Replaced generic Groups/Prediction dumps with method-specific empty states when those payloads are not present.
+- Added `validation/v154_results_workspace_smoke.mjs`, `validation/v154_results_workspace_audit.py`, `validation/v154_results_native_smoke.py`, and the registry slice `v1_5_4_results_workspace_hardening`.
+
+No statistical engines, formulas, result schemas, recipes, project format, or numerical fingerprints changed.
+
+Release metadata now uses `1.5.4`; versioned desktop artifacts use the label `v1_5_4_results_workspace_hardening`.
