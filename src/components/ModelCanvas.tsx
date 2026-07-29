@@ -50,7 +50,10 @@ export function ModelCanvas() {
   const diagramTool = useWorkspace((state) => state.diagramTool);
   const diagramOverlaySettings = useWorkspace((state) => state.diagramOverlaySettings);
   const diagramLayout = useWorkspace((state) => state.diagramLayout);
+  const uiPreferences = useWorkspace((state) => state.uiPreferences);
   const largeModelViewState = useWorkspace((state) => state.largeModelViewState);
+  const explorerCollapsed = useWorkspace((state) => state.explorerCollapsed);
+  const inspectorCollapsed = useWorkspace((state) => state.inspectorCollapsed);
   const pastCount = useWorkspace((state) => state.past.length);
   const futureCount = useWorkspace((state) => state.future.length);
   const onNodesChange = useWorkspace((state) => state.onNodesChange);
@@ -69,7 +72,10 @@ export function ModelCanvas() {
   const setDiagramTheme = useWorkspace((state) => state.setDiagramTheme);
   const setDiagramGridVisible = useWorkspace((state) => state.setDiagramGridVisible);
   const setDiagramLayoutLocked = useWorkspace((state) => state.setDiagramLayoutLocked);
+  const setUiPreferences = useWorkspace((state) => state.setUiPreferences);
   const setLargeModelViewState = useWorkspace((state) => state.setLargeModelViewState);
+  const setExplorerCollapsed = useWorkspace((state) => state.setExplorerCollapsed);
+  const setInspectorCollapsed = useWorkspace((state) => state.setInspectorCollapsed);
   const checkpoint = useWorkspace((state) => state.checkpoint);
   const addConstruct = useWorkspace((state) => state.addConstruct);
   const duplicateSelected = useWorkspace((state) => state.duplicateSelected);
@@ -108,6 +114,7 @@ export function ModelCanvas() {
   const [hoverDropTargetId, setHoverDropTargetId] = useState<string | null>(null);
   const [selectedIndicator, setSelectedIndicator] = useState<null | { constructId: string; indicator: string }>(null);
   const [openToolbarMenu, setOpenToolbarMenu] = useState<null | "arrange" | "view" | "results">(null);
+  const [showMiniMap, setShowMiniMap] = useState(false);
   const [contextMenu, setContextMenu] = useState<null | { kind: "canvas"; x: number; y: number } | { kind: "construct"; id: string; x: number; y: number } | { kind: "indicator"; constructId: string; indicator: string; x: number; y: number } | { kind: "edge"; id: string; x: number; y: number }>(null);
   useEffect(() => {
     if (selectedNodeId || selectedEdgeId) setSelectedIndicator(null);
@@ -486,9 +493,26 @@ export function ModelCanvas() {
 
   const showDropCue = draggingVariableCount > 0 && canEditLayout;
   const toggleToolbarMenu = (menu: "arrange" | "view" | "results") => setOpenToolbarMenu((current) => current === menu ? null : menu);
+  const toggleFocusDiagram = () => {
+    const next = !uiPreferences.focusDiagramMode;
+    setUiPreferences({ focusDiagramMode: next });
+    setExplorerCollapsed(next);
+    setInspectorCollapsed(next);
+    window.setTimeout(() => { void flow?.fitView({ padding: next ? 0.12 : 0.2, duration: 220 }); }, 0);
+  };
   const validateDiagram = () => {
+    const structuralPaths = edges.filter((edge) => edge.data?.role !== "covariance");
+    const offCanvas = graph.nodes.filter((node) => node.position.x < -80 || node.position.y < -80).length;
+    const missingIndicators = nodes.filter((node) => node.data.indicators.length === 0).length;
+    const publicationMessage = [
+      readiness.canRun ? "Diagram validation passed for selected method settings." : readiness.blockers[0]?.detail ?? readiness.summary,
+      structuralPaths.length > 12 ? "Publication check: many structural paths may need Focus Diagram or tidy layout before export." : "Publication check: structural path count is readable for the current model.",
+      offCanvas ? `${offCanvas} diagram item(s) are near or outside the canvas origin.` : "No obvious off-canvas diagram elements detected.",
+      missingIndicators ? `${missingIndicators} construct(s) have no indicators.` : "All constructs have assigned indicators.",
+      graph.diagnostic ?? "",
+    ].filter(Boolean).join(" ");
     setOpenToolbarMenu(null);
-    setActionFeedback({ message: readiness.canRun ? "Diagram validation passed for the selected method settings." : readiness.blockers[0]?.detail ?? readiness.summary });
+    setActionFeedback({ message: publicationMessage });
   };
   const selectIndicatorForToolbar = (constructId: string, indicator: string) => {
     setSelectedIndicator({ constructId, indicator });
@@ -527,23 +551,25 @@ export function ModelCanvas() {
     <strong>Indicator: {validSelectedIndicator.indicator}</strong>
     <button onClick={() => renameIndicator(validSelectedIndicator.constructId, validSelectedIndicator.indicator)}>Rename</button>
     <button onClick={reassignSelectedIndicator}>Reassign</button>
-    <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicator to the left side."} onClick={() => setIndicatorSide(validSelectedIndicator.constructId, validSelectedIndicator.indicator, "left")}>Left</button>
-    <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicator to the right side."} onClick={() => setIndicatorSide(validSelectedIndicator.constructId, validSelectedIndicator.indicator, "right")}>Right</button>
-    <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicator to the top side."} onClick={() => setIndicatorSide(validSelectedIndicator.constructId, validSelectedIndicator.indicator, "top")}>Top</button>
-    <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicator to the bottom side."} onClick={() => setIndicatorSide(validSelectedIndicator.constructId, validSelectedIndicator.indicator, "bottom")}>Bottom</button>
-    <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to reset indicator position." : "Reset manually positioned indicator."} onClick={() => resetIndicatorLayout(validSelectedIndicator.constructId, validSelectedIndicator.indicator)}>Reset position</button>
+    <details className="context-menu-lite"><summary>Side</summary><div>
+      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicator to the left side."} onClick={() => setIndicatorSide(validSelectedIndicator.constructId, validSelectedIndicator.indicator, "left")}>Left</button>
+      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicator to the right side."} onClick={() => setIndicatorSide(validSelectedIndicator.constructId, validSelectedIndicator.indicator, "right")}>Right</button>
+      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicator to the top side."} onClick={() => setIndicatorSide(validSelectedIndicator.constructId, validSelectedIndicator.indicator, "top")}>Top</button>
+      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicator to the bottom side."} onClick={() => setIndicatorSide(validSelectedIndicator.constructId, validSelectedIndicator.indicator, "bottom")}>Bottom</button>
+    </div></details>
+    <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to reset indicator position." : "Reset manually positioned indicator."} onClick={() => resetIndicatorLayout(validSelectedIndicator.constructId, validSelectedIndicator.indicator)}>Reset</button>
     <button className="danger" onClick={() => { unassignIndicator(validSelectedIndicator.constructId, validSelectedIndicator.indicator); setSelectedIndicator(null); }}>Unassign</button>
   </div> : selectedEdge ? <div className="canvas-context-toolbar" role="toolbar" aria-label={selectedEdge.data?.role === "covariance" ? "Selected covariance actions" : "Selected path actions"}>
-    <strong>{selectedEdge.data?.role === "covariance" ? "Covariance" : "Path"}: {selectedEdge.source} → {selectedEdge.target}</strong>
+    <strong>{selectedEdge.data?.role === "covariance" ? "Covariance" : "Path"}: {selectedEdge.source} -&gt; {selectedEdge.target}</strong>
     {selectedEdge.data?.role !== "covariance" ? <button onClick={reverseSelectedPath}><ArrowLeftRight size={13} /> Reverse</button> : <button disabled title="Covariance arcs have no structural direction to reverse.">Reverse</button>}
-    {selectedEdge.data?.role !== "covariance" ? <>
-      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to change path routing." : "Use a direct shortest route."} className={selectedRouteValue === "straight" ? "active" : ""} onClick={() => setSelectedPathRouting("straight")}>Straight</button>
+    {selectedEdge.data?.role !== "covariance" ? <details className="context-menu-lite"><summary>Route</summary><div>
+      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to change path routing." : "Use a direct shortest boundary-to-boundary route."} className={selectedRouteValue === "straight" ? "active" : ""} onClick={() => setSelectedPathRouting("straight")}>Straight</button>
       <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to change path routing." : "Use a curved route."} className={selectedRouteValue === "default" ? "active" : ""} onClick={() => setSelectedPathRouting("default")}>Curved</button>
       <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to change path routing." : "Use an orthogonal route."} className={selectedRouteValue === "smoothstep" ? "active" : ""} onClick={() => setSelectedPathRouting("smoothstep")}>Orthogonal</button>
-    </> : <button onClick={() => resetEdgeLabel(selectedEdge.id)}>Reset arc label</button>}
-    <button onClick={renameSelectedPath}>Rename label</button>
+    </div></details> : <button onClick={() => resetEdgeLabel(selectedEdge.id)}>Reset arc label</button>}
+    <button onClick={renameSelectedPath}>Label</button>
     <button onClick={() => resetEdgeLabel(selectedEdge.id)}>Reset label</button>
-    {selectedEdge.data?.role !== "covariance" ? <button onClick={() => updateEdge(selectedEdge.id, { label: "Control", data: { ...selectedEdge.data, role: "control" } })}>Mark control</button> : null}
+    {selectedEdge.data?.role !== "covariance" ? <details className="context-menu-lite"><summary>More</summary><div><button onClick={() => updateEdge(selectedEdge.id, { label: "Control", data: { ...selectedEdge.data, role: "control" } })}>Mark control</button></div></details> : null}
     <button className="danger" onClick={removeSelection}>Delete</button>
   </div> : selectedConstructCount >= 2 ? <div className="canvas-context-toolbar" role="toolbar" aria-label="Selected constructs alignment actions">
     <strong>{selectedConstructCount} constructs selected</strong>
@@ -559,12 +585,14 @@ export function ModelCanvas() {
     <button onClick={() => renameConstruct(selectedConstruct.id)}>Rename</button>
     <button onClick={duplicateSelected}><Copy size={13} /> Duplicate</button>
     <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to auto-place indicators." : "Auto-place this construct's indicators."} onClick={() => resetIndicatorLayout(selectedConstruct.id)}>Auto indicators</button>
-    <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicators left."} onClick={() => setConstructIndicatorSide(selectedConstruct.id, "left")}>Indicators left</button>
-    <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicators right."} onClick={() => setConstructIndicatorSide(selectedConstruct.id, "right")}>Right</button>
-    <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicators top."} onClick={() => setConstructIndicatorSide(selectedConstruct.id, "top")}>Top</button>
-    <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicators bottom."} onClick={() => setConstructIndicatorSide(selectedConstruct.id, "bottom")}>Bottom</button>
-    <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to reset indicator layout." : "Reset this construct's indicator layout."} onClick={() => resetIndicatorLayout(selectedConstruct.id)}>Reset indicator layout</button>
-    <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to tidy selected construct." : "Tidy selected construct."} onClick={() => arrangeModel("smartpls")}>Tidy selected</button>
+    <details className="context-menu-lite"><summary>Indicators</summary><div>
+      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicators left."} onClick={() => setConstructIndicatorSide(selectedConstruct.id, "left")}>Left</button>
+      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicators right."} onClick={() => setConstructIndicatorSide(selectedConstruct.id, "right")}>Right</button>
+      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicators top."} onClick={() => setConstructIndicatorSide(selectedConstruct.id, "top")}>Top</button>
+      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicators bottom."} onClick={() => setConstructIndicatorSide(selectedConstruct.id, "bottom")}>Bottom</button>
+      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to reset indicator layout." : "Reset this construct's indicator layout."} onClick={() => resetIndicatorLayout(selectedConstruct.id)}>Reset layout</button>
+    </div></details>
+    <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to tidy selected construct." : "Tidy selected construct."} onClick={() => arrangeModel("smartpls")}>Tidy</button>
     <button onClick={() => toggleConstructPinned(selectedConstruct.id)}>{selectedConstructPinned ? "Unpin" : "Pin"}</button>
     <button className="danger" onClick={removeSelection}><Trash2 size={13} /> Delete</button>
   </div> : null;
@@ -596,7 +624,7 @@ export function ModelCanvas() {
             <button role="menuitem" disabled title="Large-model compaction is available through Compact view.">Large model preset</button>
           </div> : null}
           <button aria-label="Fit model to view" title="Fit model to view (F)" onClick={() => { void flow?.fitView({ padding: 0.22, duration: 220 }); }}><Focus size={15} /><span>Fit</span></button>
-          <button aria-label="Validate diagram" title="Validate diagram readiness" onClick={validateDiagram}><span>Validate</span></button>
+          <button aria-label="Check diagram for publication" title="Check diagram for publication and analysis readiness" onClick={validateDiagram}><span>Validate</span></button>
         </div>
         <div className="canvas-tool-group result-tools menu-group">
           <button aria-haspopup="menu" aria-expanded={openToolbarMenu === "view"} title="View and diagram mode" onClick={() => toggleToolbarMenu("view")}><span>View</span></button>
@@ -617,6 +645,10 @@ export function ModelCanvas() {
               setLargeModelViewState({ indicatorsCollapsed: nextCollapsed });
               setMode(nextCollapsed ? "compact" : "sem");
             }}>{largeModelViewState.indicatorsCollapsed ? "Show measurement indicators" : "Collapse measurement indicators"}</button>
+            <button role="menuitem" className={uiPreferences.focusDiagramMode ? "active" : ""} onClick={toggleFocusDiagram}>{uiPreferences.focusDiagramMode ? "Exit Focus Diagram" : "Focus Diagram"}</button>
+            <button role="menuitem" className={explorerCollapsed ? "active" : ""} onClick={() => setExplorerCollapsed(!explorerCollapsed)}>{explorerCollapsed ? "Show left explorer" : "Collapse left explorer"}</button>
+            <button role="menuitem" className={inspectorCollapsed ? "active" : ""} onClick={() => setInspectorCollapsed(!inspectorCollapsed)}>{inspectorCollapsed ? "Show right inspector" : "Collapse right inspector"}</button>
+            <button role="menuitem" className={showMiniMap ? "active" : ""} onClick={() => setShowMiniMap((value) => !value)}>{showMiniMap ? "Hide minimap" : "Show minimap"}</button>
             <button role="menuitem" disabled={!selectedNodeId} title={!selectedNodeId ? "Select a construct to isolate its neighborhood." : "Show the selected construct and directly connected constructs."} className={largeModelViewState.neighborhoodMode === "selected" ? "active" : ""} onClick={isolateSelectedObject}>Isolate selected neighborhood</button>
             <button role="menuitem" disabled={!largeModelViewState.isolatedConstructId} title={!largeModelViewState.isolatedConstructId ? "No isolated neighborhood is active." : "Return to the full diagram."} onClick={() => {
               setLargeModelViewState({ isolatedConstructId: null, neighborhoodMode: "off" });
@@ -664,7 +696,7 @@ export function ModelCanvas() {
       role="status"
       aria-live="polite"
     >{actionFeedback.message}</div> : null}
-    <div className={`canvas-overlay-status ${overlayStatus.tone}`} role="status" aria-live="polite">
+    <div className={`canvas-overlay-status compact ${overlayStatus.tone}`} role="status" aria-live="polite">
       <strong>{overlayStatus.label}</strong>
       <span>{overlayStatus.detail}</span>
     </div>
@@ -861,7 +893,7 @@ export function ModelCanvas() {
     >
       {diagramLayout.showGrid && !resultDiagramMode ? <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#dbe1e4" /> : null}
       <Controls showInteractive={false} />
-      {diagramLayout.showGrid && !resultDiagramMode ? <MiniMap pannable zoomable nodeColor={(node) => node.type === "indicator" ? "#f8dd8a" : "#c6eef0"} maskColor="rgba(246,248,249,.7)" /> : null}
+      {showMiniMap && !resultDiagramMode ? <MiniMap pannable zoomable nodeColor={(node) => node.type === "indicator" ? "#f8dd8a" : "#c6eef0"} maskColor="rgba(246,248,249,.7)" /> : null}
     </ReactFlow>
   </main>;
 }

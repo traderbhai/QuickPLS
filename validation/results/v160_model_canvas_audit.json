@@ -1,0 +1,47 @@
+{
+  "passed": true,
+  "milestone": "v1_6_0_model_canvas_shell_and_panel_polish",
+  "generated_at": "2026-07-29T10:34:07.067134Z",
+  "checks": [
+    {
+      "name": "Right inspector collapse is wired",
+      "passed": true,
+      "evidence": "App shell, store, and CSS include inspector-collapsed support."
+    },
+    {
+      "name": "Canvas View menu controls both side panels",
+      "passed": true,
+      "evidence": "ModelCanvas View menu exposes left explorer and right inspector collapse actions."
+    },
+    {
+      "name": "Minimap is opt-in",
+      "passed": true,
+      "evidence": "Minimap defaults off and appears only when explicitly enabled."
+    },
+    {
+      "name": "Overlay status is compact",
+      "passed": true,
+      "evidence": "Overlay status has a compact class and compact CSS placement."
+    },
+    {
+      "name": "Context toolbar secondary actions are grouped",
+      "passed": true,
+      "evidence": "Path routing and indicator side commands are grouped instead of always occupying toolbar width."
+    },
+    {
+      "name": "Explorer construct cards are less dense",
+      "passed": true,
+      "evidence": "Low-frequency construct card commands live under More and mojibake separators were removed."
+    },
+    {
+      "name": "Inspector can collapse and is no longer the primary layout surface",
+      "passed": true,
+      "evidence": "Inspector exposes collapse control and keeps nonessential sections collapsed by default."
+    },
+    {
+      "name": "No visible mojibake remains in model shell sources",
+      "passed": true,
+      "evidence": "ModelCanvas, Explorer, and Inspector contain no R\u00b2/separator/arrow mojibake."
+    }
+  ]
+}

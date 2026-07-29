@@ -36,6 +36,7 @@ interface WorkspaceState {
   selectedResultRunId: string | null;
   explorerTab: ExplorerTab;
   explorerCollapsed: boolean;
+  inspectorCollapsed: boolean;
   explorerWidth: number;
   uiPreferences: UiPreferences;
   resultWorkspaceState: ResultWorkspaceState;
@@ -63,6 +64,7 @@ interface WorkspaceState {
   setSelectedResultRun: (id: string | null) => void;
   setExplorerTab: (tab: ExplorerTab) => void;
   setExplorerCollapsed: (collapsed: boolean) => void;
+  setInspectorCollapsed: (collapsed: boolean) => void;
   setExplorerWidth: (width: number) => void;
   setUiPreferences: (patch: Partial<UiPreferences>) => void;
   setResultWorkspaceState: (patch: Partial<ResultWorkspaceState>) => void;
@@ -130,7 +132,17 @@ const supportedAnalysisMethods = new Set<AnalysisMethodId>(["pls_pm", "bootstrap
 const defaultAnalysisSettings: AnalysisUiSettings = { method: "pls_pm", bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 0, seed: 20260718, workers: 1, confidenceLevel: 0.95, caseWeightColumn: null, groupColumn: null, ipmaTargets: null, groupMethods: "micom,mga_permutation", groupPermutationSamples: 999, segmentCount: 2, segmentStarts: 10, minimumSegmentShare: 0.10, cbsemModelType: "sem", cbsemMeanStructure: false, cbsemStandardization: "std_all", cbsemGroupColumn: null, cbsemInvarianceSteps: "configural,metric,scalar", cbsemBootstrapSamples: 0, pcaVariables: null, pcaComponentRule: "kaiser", pcaComponents: 2, regressionType: "ols", regressionOutcome: null, regressionPredictors: null, regressionControls: null, robustSe: "hc3", processModel: "mediation", processX: null, processM: null, processW: null, ncaX: null, ncaY: null, ncaCeiling: "both", ncaPermutationSamples: 999 };
 const defaultDiagramOverlaySettings: DiagramOverlaySettings = { selectedRunId: null, mode: "model", precision: 3, showLoadings: true, showPathCoefficients: true, showPValues: false, showTValues: false, showRSquared: true, showWarnings: true, showWatermark: true };
 const defaultPublicationDiagramSettings: PublicationDiagramSettings = { mode: "smartpls_result", precision: 3, overlayMode: "paths_r2", aspectRatio: "wide", palette: "grayscale", layoutSource: "current_canvas", showLoadings: true, showPathCoefficients: true, showRSquared: true, showValidationWatermark: true, showUnsupportedWarning: true, showRunProvenance: true };
-const defaultUiPreferences: UiPreferences = { density: "compact", tableDensity: "compact", defaultPrecision: 4, showAdvancedHelp: true, recentPanels: ["models", "runs", "reports"] };
+const defaultUiPreferences: UiPreferences = {
+  density: "compact",
+  tableDensity: "compact",
+  defaultPrecision: 4,
+  showAdvancedHelp: true,
+  recentPanels: ["models", "runs", "reports"],
+  methodScopeDrawerOpen: false,
+  showThresholdColors: true,
+  focusDiagramMode: false,
+  selectedExportPreset: "journal_figure",
+};
 const defaultResultWorkspaceState: ResultWorkspaceState = {
   selectedRunId: null,
   selectedTab: "overview",
@@ -365,6 +377,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   selectedResultRunId: null,
   explorerTab: "constructs",
   explorerCollapsed: false,
+  inspectorCollapsed: false,
   explorerWidth: 330,
   uiPreferences: defaultUiPreferences,
   resultWorkspaceState: defaultResultWorkspaceState,
@@ -394,6 +407,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   setSelectedResultRun: (selectedResultRunId) => set((state) => ({ selectedResultRunId, diagramOverlaySettings: { ...state.diagramOverlaySettings, selectedRunId: selectedResultRunId } })),
   setExplorerTab: (explorerTab) => set({ explorerTab }),
   setExplorerCollapsed: (explorerCollapsed) => set({ explorerCollapsed }),
+  setInspectorCollapsed: (inspectorCollapsed) => set({ inspectorCollapsed }),
   setExplorerWidth: (explorerWidth) => set({ explorerWidth: Math.min(430, Math.max(250, Math.trunc(explorerWidth))) }),
   setUiPreferences: (patch) => set((state) => ({ uiPreferences: { ...state.uiPreferences, ...patch, defaultPrecision: Math.min(6, Math.max(2, Math.trunc(patch.defaultPrecision ?? state.uiPreferences.defaultPrecision))) } })),
   setResultWorkspaceState: (patch) => set((state) => ({ resultWorkspaceState: { ...state.resultWorkspaceState, ...patch } })),
@@ -1014,6 +1028,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     selectedResultRunId: null,
     explorerTab: "constructs",
     explorerCollapsed: false,
+    inspectorCollapsed: false,
     resultWorkspaceState: defaultResultWorkspaceState,
     methodSetupState: defaultMethodSetupState,
     largeModelViewState: defaultLargeModelViewState,
@@ -1047,6 +1062,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     selectedResultRunId: null,
     explorerTab: "constructs",
     explorerCollapsed: false,
+    inspectorCollapsed: false,
     resultWorkspaceState: defaultResultWorkspaceState,
     largeModelViewState: defaultLargeModelViewState,
     view: "models",

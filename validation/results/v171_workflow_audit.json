@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "section": "v171_workflow",
+  "generated_at": "2026-07-29T12:29:54.354759+00:00",
+  "checked_files": [
+    "src/components/AnalysisCatalog.tsx",
+    "src/components/DataWorkspace.tsx",
+    "src/components/RunHistory.tsx",
+    "src/components/RunWorkspace.tsx"
+  ],
+  "passed_checks": [
+    {
+      "file": "src/components/DataWorkspace.tsx",
+      "label": "Data to Model transition"
+    },
+    {
+      "file": "src/components/DataWorkspace.tsx",
+      "label": "prefix-based construct bridge"
+    },
+    {
+      "file": "src/components/AnalysisCatalog.tsx",
+      "label": "post-run workflow preview"
+    },
+    {
+      "file": "src/components/AnalysisCatalog.tsx",
+      "label": "pre-run output preview"
+    },
+    {
+      "file": "src/components/AnalysisCatalog.tsx",
+      "label": "pre-run unavailable output preview"
+    },
+    {
+      "file": "src/components/RunWorkspace.tsx",
+      "label": "Run to Results handoff"
+    },
+    {
+      "file": "src/components/RunHistory.tsx",
+      "label": "Results to Report handoff or report workflow copy"
+    }
+  ],
+  "missing": [],
+  "frontend_only": true,
+  "numerical_outputs_changed": false
+}

@@ -92,6 +92,7 @@ export function App() {
   const dataset = useWorkspace((state) => state.dataset);
   const projectPath = useWorkspace((state) => state.projectPath);
   const explorerCollapsed = useWorkspace((state) => state.explorerCollapsed);
+  const inspectorCollapsed = useWorkspace((state) => state.inspectorCollapsed);
   const explorerWidth = useWorkspace((state) => state.explorerWidth);
   const uiPreferences = useWorkspace((state) => state.uiPreferences);
   const pageHostRef = useRef<HTMLDivElement | null>(null);
@@ -156,9 +157,9 @@ export function App() {
   useEffect(() => {
     pageHostRef.current?.scrollTo({ top: 0, left: 0 });
   }, [view]);
-  return <div className={`app-shell density-${uiPreferences.density}`}>
+  return <div className={`app-shell density-${uiPreferences.density}${uiPreferences.focusDiagramMode ? " focus-diagram-mode" : ""}`}>
     <TopBar />
-    <div className={`workspace-shell${explorerCollapsed ? " explorer-collapsed" : ""}`} style={{ "--explorer-width": `${explorerWidth}px` } as CSSProperties}>
+    <div className={`workspace-shell${explorerCollapsed ? " explorer-collapsed" : ""}${inspectorCollapsed ? " inspector-collapsed" : ""}`} style={{ "--explorer-width": `${explorerWidth}px` } as CSSProperties}>
       <NavRail />
       {view === "models" ? <><Explorer /><ModelCanvas /><Inspector /></> : <div ref={pageHostRef} className="page-host"><WorkflowStrip />{view === "welcome" ? <OnboardingWorkspace /> : view === "data" ? <DataWorkspace /> : view === "analyses" ? <AnalysisCatalog /> : view === "run" ? <RunWorkspace /> : view === "runs" ? <RunHistory /> : view === "groups" ? <GroupsWorkspace /> : <ReportsWorkspace />}</div>}
     </div>

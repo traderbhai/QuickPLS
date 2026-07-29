@@ -1,0 +1,47 @@
+{
+  "passed": true,
+  "section": "v170_confidence_scope",
+  "generated_at": "2026-07-29T12:29:52.198081+00:00",
+  "checked_files": [
+    "src/components/AnalysisCatalog.tsx",
+    "src/components/ReportsWorkspace.tsx",
+    "src/components/Ui.tsx"
+  ],
+  "passed_checks": [
+    {
+      "file": "src/components/Ui.tsx",
+      "label": "method-scope drawer entry point"
+    },
+    {
+      "file": "src/components/Ui.tsx",
+      "label": "run confidence panel"
+    },
+    {
+      "file": "src/components/Ui.tsx",
+      "label": "offline/runtime dependency note"
+    },
+    {
+      "file": "src/components/Ui.tsx",
+      "label": "bounded non-equivalence wording"
+    },
+    {
+      "file": "src/components/AnalysisCatalog.tsx",
+      "label": "scope drawer appears in Setup"
+    },
+    {
+      "file": "src/components/AnalysisCatalog.tsx",
+      "label": "calculation output preview"
+    },
+    {
+      "file": "src/components/ReportsWorkspace.tsx",
+      "label": "scope drawer appears in Reports"
+    },
+    {
+      "file": "src/components/ReportsWorkspace.tsx",
+      "label": "method confidence appears in Reports"
+    }
+  ],
+  "missing": [],
+  "frontend_only": true,
+  "numerical_outputs_changed": false
+}

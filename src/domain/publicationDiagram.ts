@@ -52,7 +52,7 @@ export function publicationDiagramSvg(nodes: Array<Node<ConstructData>>, edges: 
 <style>
 .bg{fill:#fff}.caption{font:10px Arial,sans-serif;fill:#526169}.warning{font:10px Arial,sans-serif;fill:#666}
 .latent{fill:#fff;stroke:#2d777a;stroke-width:1.8}.latent.formative{stroke:#a16d0b}.latent-title{font:700 12px Arial,sans-serif;fill:#172126}.latent-meta{font:10px Arial,sans-serif;fill:#56656b}.r2{font:700 10px Arial,sans-serif;fill:#32630d}.indicator{fill:#fff8df;stroke:#c49116;stroke-width:1.2}.indicator.formative{fill:#eaf8f8;stroke:#0b8f92}.indicator-text{font:700 9px Arial,sans-serif;fill:#253137}.indicator-stat{font:700 8px Arial,sans-serif;fill:#32630d}
-.smartpls-latent{fill:#7d7d7d;stroke:#777;stroke-width:1}.smartpls-latent-label{font:10px Arial,sans-serif;fill:#222}.smartpls-r2{font:700 10px Arial,sans-serif;fill:#fff}.smartpls-indicator{fill:#eee;stroke:#d2d2d2;stroke-width:1}.smartpls-indicator-text{font:700 9px Arial,sans-serif;fill:#222}
+.smartpls-latent{fill:#7d7d7d;stroke:#777;stroke-width:1}.smartpls-latent-label{font:10px Arial,sans-serif;fill:#222}.smartpls-latent-label-bg{fill:#fff;fill-opacity:.9;stroke:none}.smartpls-r2{font:700 10px Arial,sans-serif;fill:#fff}.smartpls-indicator{fill:#eee;stroke:#d2d2d2;stroke-width:1}.smartpls-indicator-text{font:700 9px Arial,sans-serif;fill:#222}
 .edge{stroke:#465961;stroke-width:1.65;fill:none}.measurement{stroke:#8d9699;stroke-width:1.2;fill:none}.measurement.formative{stroke:#0c777b}.covariance{stroke:#4f5b60;stroke-width:1.3;stroke-dasharray:4 3;fill:none}.edge-label{font:700 10px Arial,sans-serif;fill:#172126}.label-bg{fill:#fff;stroke:#dce2e5}.arrow{fill:#465961}
 .smartpls .edge{stroke:#222;stroke-width:1.45}.smartpls .measurement{stroke:#444;stroke-width:1.12}.smartpls .edge-label{font:500 9px Arial,sans-serif;fill:#222}.smartpls .label-bg{fill:#fff;stroke:none;fill-opacity:.85}.smartpls .arrow{fill:#222}
 .mono .latent,.mono .indicator{stroke:#333}.mono .indicator{fill:#fff}.mono .edge,.mono .measurement,.mono .covariance{stroke:#333}.mono .arrow{fill:#333}.high-contrast .smartpls-latent{fill:#222;stroke:#111}.high-contrast .smartpls-indicator{fill:#fff;stroke:#111}.quickpls-color .smartpls-latent{fill:#4f9fa2;stroke:#1f6e72}.quickpls-color .smartpls-indicator{fill:#fff8df;stroke:#c49116}
@@ -110,10 +110,13 @@ function renderLatent(node: Node, bounds: { minX: number; minY: number }, smartp
   if (smartpls) {
     const centerX = position.x + SMARTPLS_SIZE.ellipseWidth / 2;
     const centerY = position.y + SMARTPLS_SIZE.ellipseHeight / 2;
+    const labelY = position.y + SMARTPLS_SIZE.ellipseHeight + 23;
+    const labelWidth = Math.min(170, Math.max(56, label.length * 5.4 + 14));
     const r2 = options.showRSquared && typeof data.resultR2 === "number" ? `<text x="${centerX}" y="${centerY + 4}" text-anchor="middle" class="smartpls-r2">R&#178; ${data.resultR2.toFixed(options.precision)}</text>` : "";
     return `<ellipse class="smartpls-latent" cx="${centerX}" cy="${centerY}" rx="${SMARTPLS_SIZE.ellipseWidth / 2}" ry="${SMARTPLS_SIZE.ellipseHeight / 2}"/>
 ${r2}
-<text x="${centerX}" y="${position.y + SMARTPLS_SIZE.ellipseHeight + 18}" text-anchor="middle" class="smartpls-latent-label">${escapeXml(label)}</text>`;
+<rect class="smartpls-latent-label-bg" x="${centerX - labelWidth / 2}" y="${labelY - 12}" width="${labelWidth}" height="16" rx="2"/>
+<text x="${centerX}" y="${labelY}" text-anchor="middle" class="smartpls-latent-label">${escapeXml(label)}</text>`;
   }
   const shortName = String(data.shortName ?? node.id);
   const mode = data.mode === "formative" ? "formative" : "reflective";
@@ -158,9 +161,15 @@ function renderEdge(edge: Edge, nodes: Array<Node>, bounds: { minX: number; minY
   const offset = edge.data?.labelOffset && typeof edge.data.labelOffset === "object"
     ? edge.data.labelOffset as { x?: number; y?: number }
     : {};
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const length = Math.hypot(dx, dy) || 1;
+  const automaticLabelOffset = smartpls && structural
+    ? { x: (-dy / length) * 9, y: (dx / length) * 9 - 2 }
+    : { x: 0, y: smartpls ? -2 : -5 };
   const mid = {
-    x: (start.x + end.x) / 2 + Number(offset.x ?? 0),
-    y: (start.y + end.y) / 2 - (smartpls ? 2 : 5) + Number(offset.y ?? 0),
+    x: (start.x + end.x) / 2 + automaticLabelOffset.x + Number(offset.x ?? 0),
+    y: (start.y + end.y) / 2 + automaticLabelOffset.y + Number(offset.y ?? 0),
   };
   const d = className === "covariance"
     ? `M${start.x},${start.y} Q${mid.x},${mid.y - 50} ${end.x},${end.y}`

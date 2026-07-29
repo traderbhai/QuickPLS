@@ -35,7 +35,8 @@ describe("desktop accessibility contracts", () => {
       expect(groups).toContain(label);
     }
 
-    expect(reports).toContain("Run comparison table");
+    expect(reports).toContain("report-comparison-link");
+    expect(reports).toContain("Open Results Comparison");
     expect(reports).toContain('aria-label={`${table.title} table`}');
   });
 

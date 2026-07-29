@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock3, LockKeyhole, Play, SlidersHorizontal } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock3, LockKeyhole, Play, SlidersHorizontal } from "lucide-react";
 import { methods } from "../data/sample";
 import { analysisReadiness } from "../domain/analysisReadiness";
 import { effectiveMethodStatus, isSelectableAnalysisMethod, methodStatusDescription, methodStatusLabel } from "../domain/methodStatus";
@@ -6,7 +6,7 @@ import { isNativeDesktop } from "../services/projectService";
 import { useWorkspace } from "../store";
 import type { AnalysisMethodId, MethodDefinition, MethodPresetId } from "../types";
 import { ReadinessPanel } from "./ReadinessPanel";
-import { ActionStrip, Card, PageHeader, StatusBadge, TabStrip } from "./Ui";
+import { ActionStrip, Card, MethodScopeDrawer, PageHeader, StatusBadge, TabStrip } from "./Ui";
 
 const runnableMethods = methods.filter(isSelectableAnalysisMethod);
 const presets: Array<{ id: MethodPresetId; label: string; description: string }> = [
@@ -32,8 +32,10 @@ function MethodStatusPill({ method }: { method: MethodDefinition }) {
 export function AnalysisCatalog() {
   const settings = useWorkspace((state) => state.analysisSettings);
   const setup = useWorkspace((state) => state.methodSetupState);
+  const uiPreferences = useWorkspace((state) => state.uiPreferences);
   const setSettings = useWorkspace((state) => state.setAnalysisSettings);
   const setSetup = useWorkspace((state) => state.setMethodSetupState);
+  const setUiPreferences = useWorkspace((state) => state.setUiPreferences);
   const applyPreset = useWorkspace((state) => state.applyMethodPreset);
   const columns = useWorkspace((state) => state.dataset.columns);
   const dataset = useWorkspace((state) => state.dataset);
@@ -49,20 +51,19 @@ export function AnalysisCatalog() {
     { title: "Model", detail: nodes.every((node) => node.data.indicators.length > 0) ? `${nodes.length} constructs with indicators` : "Some constructs need indicators", tone: nodes.every((node) => node.data.indicators.length > 0) ? "validated" : "warning" },
     { title: "Unsupported shape", detail: selectedStatus === "unsupported" ? methodStatusDescription(selectedMethod, settings) : "No unsupported shape detected for the selected method settings", tone: selectedStatus === "unsupported" ? "warning" : "validated" },
     { title: "Scope status", detail: selectedStatus === "validated" ? "Validated for documented QuickPLS scope" : selectedStatus === "experimental" ? "Experimental / watermarked outside validated scope" : methodStatusDescription(selectedMethod, settings), tone: selectedStatus === "validated" ? "validated" : "warning" },
-    { title: "Readiness", detail: readiness.summary, tone: readiness.canRun ? "validated" : "warning" },
-    { title: "Run state", detail: readiness.summary, tone: readiness.canRun ? "validated" : "warning" },
   ] as const;
 
   const groupWorkflowActive = settings.method === "mga" || settings.method === "predict" || settings.method === "ipma";
 
   return <section className="workspace-page analysis-workspace-v14">
     <PageHeader title="Setup" description="Choose a method, validate model readiness, and keep advanced group or prediction settings available only when needed." actions={<StatusBadge status={selectedStatus === "validated" ? "validated" : selectedStatus === "experimental" ? "experimental" : "unsupported"}>{selectedStatus === "validated" ? "validated scope" : selectedStatus}</StatusBadge>} />
+    <MethodScopeDrawer method={selectedMethod} open={uiPreferences.methodScopeDrawerOpen} onToggle={() => setUiPreferences({ methodScopeDrawerOpen: !uiPreferences.methodScopeDrawerOpen })} />
     <ReadinessPanel readiness={readiness} onNavigate={setView} />
 
     <ActionStrip>
       <TabStrip label="Method setup mode" value={setup.mode} onChange={(mode) => setSetup({ mode })} tabs={[{ id: "basic", label: "Basic" }, { id: "expert", label: "Expert" }]} />
       <div className="setup-run-action">
-        <button className="run-button" disabled={!basicFieldsReady} title={basicFieldsReady ? "Open run workspace" : readiness.blockers[0]?.detail ?? readiness.summary} onClick={() => setView("run")}><Play size={15} fill="currentColor" />Ready to run</button>
+        <button className="run-button" disabled={!basicFieldsReady} title={basicFieldsReady ? `Run ${selectedMethod.name}` : readiness.blockers[0]?.detail ?? readiness.summary} onClick={() => window.dispatchEvent(new CustomEvent("quickpls:run-analysis"))}><Play size={15} fill="currentColor" />Run now</button>
         {!basicFieldsReady ? <span className="disabled-reason inline-disabled-reason">Run disabled: {readiness.blockers[0]?.detail ?? readiness.summary}</span> : null}
       </div>
     </ActionStrip>
@@ -120,9 +121,9 @@ export function AnalysisCatalog() {
       {!readiness.canRun ? <p className="disabled-reason inline-disabled-reason">{readiness.blockers[0]?.detail ?? readiness.summary}</p> : null}
     </div>
 
-    <section className="what-will-run-card" aria-label="What will run">
+    <section className="setup-launch-panel" aria-label="Setup launch summary">
       <div>
-        <strong>What will run</strong>
+        <strong>Ready-to-run summary</strong>
         <p>{selectedMethod.name} on {dataset.name} with {nodes.length} constructs, {edges.filter((edge) => edge.data?.role !== "covariance").length} structural paths, seed {settings.seed}, and {settings.workers} worker{settings.workers === 1 ? "" : "s"}.</p>
       </div>
       <dl>
@@ -130,6 +131,20 @@ export function AnalysisCatalog() {
         <div><dt>Permutation</dt><dd>{settings.permutationSamples > 0 ? `${settings.permutationSamples} samples` : "off"}</dd></div>
         <div><dt>Scope</dt><dd>{selectedStatus === "validated" ? "Validated documented scope" : methodStatusDescription(selectedMethod, settings)}</dd></div>
       </dl>
+      <div className="setup-launch-actions">
+        <button className="run-button large" disabled={!basicFieldsReady} title={basicFieldsReady ? `Run ${selectedMethod.name}` : readiness.blockers[0]?.detail ?? readiness.summary} onClick={() => window.dispatchEvent(new CustomEvent("quickpls:run-analysis"))}><Play size={17} fill="currentColor" />Run selected method</button>
+        {!basicFieldsReady ? <span className="disabled-reason inline-disabled-reason"><AlertTriangle size={14} />{readiness.blockers[0]?.detail ?? readiness.summary}</span> : <button className="secondary-button" onClick={() => setView("run")}>Open run monitor</button>}
+      </div>
+    </section>
+
+    <section className="calculation-preview-panel" aria-label="Calculation output preview">
+      <header><strong>Calculation preview</strong><span>Outputs expected from the selected settings before the offline engine starts.</span></header>
+      <div className="calculation-preview-grid">
+        <Card title="Algorithm" description={`${selectedMethod.name}; ${methodStatusDescription(selectedMethod, settings)}`} tone={selectedStatus === "validated" ? "validated" : "warning"} />
+        <Card title="Produced outputs" description={["paths", "loadings / weights", "R²", "reliability / validity"].concat(settings.bootstrapSamples > 0 ? ["bootstrap inference"] : []).concat(settings.method === "predict" ? ["prediction / segmentation"] : []).join(", ")} tone="validated" />
+        <Card title="Unavailable outputs" description={settings.bootstrapSamples > 0 ? "Permutation and experimental variants appear only when configured." : "p values and confidence intervals require bootstrap or permutation settings."} tone={settings.bootstrapSamples > 0 ? "validated" : "warning"} />
+        <Card title="After run" description="Completed runs open in Results with reportability checklist, interpretation notes, export tables, and publication diagram overlays." />
+      </div>
     </section>
 
     <div className="method-table"><div className="method-table-head"><span>Method</span><span>Family</span><span>Status</span></div>{methods.map((method) => {

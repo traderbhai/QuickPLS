@@ -177,7 +177,10 @@ mod tests {
     #[test]
     fn registry_keeps_current_stage_explicit() {
         let registry = development_slice_registry().unwrap();
-        assert_eq!(registry.current_stage, "v1_5_5_results_interpretation_polish");
+        assert_eq!(
+            registry.current_stage,
+            "v1_7_smartpls_competitive_researcher_experience"
+        );
         assert!(
             registry
                 .slices
@@ -284,6 +287,78 @@ mod tests {
                 .slices
                 .iter()
                 .any(|slice| slice.id == "v1_5_5_results_interpretation_polish"
+                    && slice.status == SliceStatus::Validated
+                    && slice.stable_output)
+        );
+        assert!(
+            registry
+                .slices
+                .iter()
+                .any(|slice| slice.id == "v1_5_6_result_specific_interpretation_engine"
+                    && slice.status == SliceStatus::Validated
+                    && slice.stable_output)
+        );
+        assert!(
+            registry
+                .slices
+                .iter()
+                .any(|slice| slice.id == "v1_5_7_ui_ux_launch_quality_audit"
+                    && slice.status == SliceStatus::Validated
+                    && slice.stable_output)
+        );
+        assert!(
+            registry
+                .slices
+                .iter()
+                .any(|slice| slice.id == "v1_5_8_results_workspace_launch_redesign"
+                    && slice.status == SliceStatus::Validated
+                    && slice.stable_output)
+        );
+        assert!(
+            registry
+                .slices
+                .iter()
+                .any(|slice| slice.id == "v1_5_9_report_publication_workflow_redesign"
+                    && slice.status == SliceStatus::Validated
+                    && slice.stable_output)
+        );
+        assert!(
+            registry
+                .slices
+                .iter()
+                .any(|slice| slice.id == "v1_6_0_model_canvas_shell_and_panel_polish"
+                    && slice.status == SliceStatus::Validated
+                    && slice.stable_output)
+        );
+        assert!(
+            registry
+                .slices
+                .iter()
+                .any(|slice| slice.id == "v1_6_1_setup_run_workflow_consolidation"
+                    && slice.status == SliceStatus::Validated
+                    && slice.stable_output)
+        );
+        assert!(
+            registry
+                .slices
+                .iter()
+                .any(|slice| slice.id == "v1_6_2_data_home_launch_polish"
+                    && slice.status == SliceStatus::Validated
+                    && slice.stable_output)
+        );
+        assert!(
+            registry
+                .slices
+                .iter()
+                .any(|slice| slice.id == "v1_6_3_global_design_system_and_accessibility_pass"
+                    && slice.status == SliceStatus::Validated
+                    && slice.stable_output)
+        );
+        assert!(
+            registry
+                .slices
+                .iter()
+                .any(|slice| slice.id == "v1_7_smartpls_competitive_researcher_experience"
                     && slice.status == SliceStatus::Validated
                     && slice.stable_output)
         );

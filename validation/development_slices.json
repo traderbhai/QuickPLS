@@ -2,14 +2,14 @@
   "schema_version": 1,
   "program": "QuickPLS accelerated method-slice registry",
   "active_goal": "Complete QuickPLS as a free, proprietary, fully offline Windows desktop application that is first ready in all sense before unrestricted research use.",
-  "current_stage": "v1_5_5_results_interpretation_polish",
+  "current_stage": "v1_7_smartpls_competitive_researcher_experience",
   "policy": {
     "promotion_order": [
       "unsupported",
       "experimental",
       "validated"
     ],
-    "deterministic_tolerance": 1e-06,
+    "deterministic_tolerance": 0.000001,
     "stable_export_rule": "Stable exports must reject or watermark experimental results.",
     "validation_rule": "A method cannot be marked validated until formula, implementation, reference fixtures, simulations or metamorphic tests, UI, CLI, exports, and documentation gates all pass."
   },
@@ -1205,13 +1205,13 @@
           "track": "product",
           "name": "Paper-style rendering",
           "status": "passed",
-          "evidence": "src/components/LatentNode.tsx, src/components/IndicatorNode.tsx, and src/styles.css render grey latent ovals, light grey indicator rectangles, direct dark arrows, hidden editor affordances, and corrected R\u00b2 text."
+          "evidence": "src/components/LatentNode.tsx, src/components/IndicatorNode.tsx, and src/styles.css render grey latent ovals, light grey indicator rectangles, direct dark arrows, hidden editor affordances, and corrected R² text."
         },
         {
           "track": "product",
           "name": "Publication SVG export parity",
           "status": "passed",
-          "evidence": "src/domain/publicationDiagram.ts and src/components/ReportsWorkspace.tsx default SVG export to SmartPLS-like grayscale with controls for precision, loadings, paths, R\u00b2, and palette variants."
+          "evidence": "src/domain/publicationDiagram.ts and src/components/ReportsWorkspace.tsx default SVG export to SmartPLS-like grayscale with controls for precision, loadings, paths, R², and palette variants."
         },
         {
           "track": "automation",
@@ -1935,7 +1935,7 @@
           "track": "validation",
           "name": "Visual smoke and quality audit",
           "status": "passed",
-          "evidence": "validation/v131_sem_geometry_smoke.mjs writes screenshots and quality metrics under validation/results/screens/v131/sem-geometry; validation/v131_sem_geometry_audit.py verifies source, tests, smoke, and R\u00b2 integrity."
+          "evidence": "validation/v131_sem_geometry_smoke.mjs writes screenshots and quality metrics under validation/results/screens/v131/sem-geometry; validation/v131_sem_geometry_audit.py verifies source, tests, smoke, and R² integrity."
         },
         {
           "track": "documentation",
@@ -2582,6 +2582,632 @@
           "name": "Versioned desktop artifact metadata",
           "status": "passed",
           "evidence": "package.json, Cargo.toml, and src-tauri/tauri.conf.json use version 1.5.5; qpls:release:artifacts uses v1_5_5_results_interpretation_polish for fresh non-overwriting artifacts when a desktop build is requested."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_5_6_result_specific_interpretation_engine",
+      "release": "v1.5.6",
+      "family": "Product",
+      "name": "Result-specific interpretation engine",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 43,
+      "summary": "Adds a deterministic offline frontend interpretation engine that turns existing result values into value-specific findings, SEM diagram advice, row-level explanations, and opt-in report wording without changing statistical engines or result payloads.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Deterministic interpretation engine",
+          "status": "passed",
+          "evidence": "src/domain/resultInterpretation.ts defines InterpretationFinding outputs for paths, loadings, reliability, AVE, HTMT, cross-loadings, VIF, f2, Q2, inference, mediation/moderation, method payloads, and SEM diagram-advisor checks."
+        },
+        {
+          "track": "product",
+          "name": "Results workspace value-specific UI",
+          "status": "passed",
+          "evidence": "src/components/RunHistory.tsx renders computed finding cards, prioritized Interpretation checklist groups, exact-value row-detail explanations, and copy controls while preserving clean numeric tables."
+        },
+        {
+          "track": "product",
+          "name": "Report wording opt-in",
+          "status": "passed",
+          "evidence": "src/components/ReportsWorkspace.tsx adds an Include interpretation notes option for HTML/print reports; default numeric exports remain clean unless interpretation notes are explicitly selected."
+        },
+        {
+          "track": "validation",
+          "name": "Interpretation unit tests and smoke audit",
+          "status": "passed",
+          "evidence": "src/domain/resultInterpretation.test.ts covers fixed result fixtures; validation/v156_result_interpretation_smoke.mjs and validation/v156_result_interpretation_audit.py verify UI behavior, report option, row details, no mojibake, and no SmartPLS-equivalence claims."
+        },
+        {
+          "track": "documentation",
+          "name": "Result-specific interpretation scope documented",
+          "status": "passed",
+          "evidence": "docs/V1_5_6_RESULT_SPECIFIC_INTERPRETATION_ENGINE.md documents frontend-only scope, interpretation rules, UI surfaces, evidence, and non-engine boundary."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_5_7_ui_ux_launch_quality_audit",
+      "release": "v1.5.7",
+      "family": "Product",
+      "name": "UI/UX launch-quality audit",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 44,
+      "summary": "Preserves the latest full-screen user-supplied visual evidence and converts it into a 60-item launch-quality UI/UX issue register with a dependency-ordered implementation sequence. This is an audit/planning gate only; it does not change statistical engines, schemas, or numerical fingerprints.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Screen-by-screen launch issue register",
+          "status": "passed",
+          "evidence": "docs/V1_5_7_UI_UX_LAUNCH_QUALITY_AUDIT.md lists 60 prioritized issues across Home, Data, Model, Setup, Run, Results, and Report."
+        },
+        {
+          "track": "validation",
+          "name": "User-supplied screenshot preservation",
+          "status": "passed",
+          "evidence": "validation/v157_ui_ux_launch_quality_smoke.py copies the 15 supplied screenshots into validation/results/screens/v157/ui-ux-launch-quality/ and writes validation/results/v157_ui_ux_launch_quality_smoke.json."
+        },
+        {
+          "track": "validation",
+          "name": "Audit completeness checks",
+          "status": "passed",
+          "evidence": "validation/v157_ui_ux_launch_quality_audit.py verifies registry wiring, screenshot evidence, issue-register depth, screen/category coverage, and the non-engine boundary."
+        },
+        {
+          "track": "documentation",
+          "name": "Dependency-ordered remediation sequence",
+          "status": "passed",
+          "evidence": "docs/V1_5_7_UI_UX_LAUNCH_QUALITY_AUDIT.md defines the sequence v1.5.8 Results, v1.5.9 Report, v1.6.0 Model shell, v1.6.1 Setup/Run, v1.6.2 Data/Home, and v1.6.3 design-system/accessibility."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_5_8_results_workspace_launch_redesign",
+      "release": "v1.5.8",
+      "family": "Product",
+      "name": "Results workspace launch redesign",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 45,
+      "summary": "Redesigns the Results workspace presentation layer for launch readiness: cleaner section navigation, grouped result tools, triaged findings, deduplicated HTMT warnings, split mediation tables, and table readability affordances without changing result payloads or numerical fingerprints.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Results workbench navigation",
+          "status": "passed",
+          "evidence": "src/components/RunHistory.tsx replaces the crowded mixed action strip with a results-workbench shell, section navigation tiles, and grouped table tools."
+        },
+        {
+          "track": "product",
+          "name": "Findings triage and HTMT dedupe",
+          "status": "passed",
+          "evidence": "src/components/RunHistory.tsx caps visible finding cards by severity and src/domain/resultInterpretation.ts limits HTMT matrix findings to unique upper-triangle construct pairs."
+        },
+        {
+          "track": "product",
+          "name": "Readable research tables",
+          "status": "passed",
+          "evidence": "src/components/RunHistory.tsx adds row-count metadata, wide-table affordances, and split mediation effect/inference/classification tables."
+        },
+        {
+          "track": "validation",
+          "name": "Results launch smoke and audit",
+          "status": "passed",
+          "evidence": "validation/v158_results_launch_smoke.mjs and validation/v158_results_launch_audit.py verify source contracts, registry wiring, documentation, mojibake cleanup, and frontend-only boundary."
+        },
+        {
+          "track": "documentation",
+          "name": "Results launch redesign documented",
+          "status": "passed",
+          "evidence": "docs/V1_5_8_RESULTS_WORKSPACE_LAUNCH_REDESIGN.md documents the scope, UI changes, evidence, and non-engine boundary."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_5_9_report_publication_workflow_redesign",
+      "release": "v1.5.9",
+      "family": "Product",
+      "name": "Report publication workflow redesign",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 46,
+      "summary": "Redesigns the Report workspace publication workflow: preset cards, grouped figure/statistics/table/note settings, explicit export actions, safer publication preview, SVG label polish, and a Results handoff for run comparison without changing statistical engines, result payloads, schemas, or numerical fingerprints.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Publication workflow grouped by task",
+          "status": "passed",
+          "evidence": "src/components/ReportsWorkspace.tsx groups report setup into Figure, Statistics, Tables, and Notes sections with selectable report preset cards."
+        },
+        {
+          "track": "product",
+          "name": "Export actions and disabled reasons",
+          "status": "passed",
+          "evidence": "src/components/ReportsWorkspace.tsx provides explicit CSV, HTML, XLSX, Print/PDF, and SVG export actions with action-specific disabled reasons."
+        },
+        {
+          "track": "product",
+          "name": "Publication preview and SVG polish",
+          "status": "passed",
+          "evidence": "src/components/ReportsWorkspace.tsx adds preview layout guidance, while src/domain/publicationDiagram.ts adds SmartPLS-like label backgrounds and structural label offsets."
+        },
+        {
+          "track": "product",
+          "name": "Comparison moved out of Report",
+          "status": "passed",
+          "evidence": "Run comparison is linked to the Results comparison workspace through openResultsComparison instead of rendering a misplaced comparison table in Report."
+        },
+        {
+          "track": "validation",
+          "name": "Report publication smoke and audit",
+          "status": "passed",
+          "evidence": "validation/v159_report_publication_smoke.mjs and validation/v159_report_publication_audit.py verify source contracts, registry wiring, documentation, mojibake cleanup, and frontend-only boundary."
+        },
+        {
+          "track": "documentation",
+          "name": "Report publication workflow documented",
+          "status": "passed",
+          "evidence": "docs/V1_5_9_REPORT_PUBLICATION_WORKFLOW_REDESIGN.md documents the scope, UI changes, evidence, and non-engine boundary."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_6_0_model_canvas_shell_and_panel_polish",
+      "release": "v1.6.0",
+      "family": "Product",
+      "name": "Model canvas shell and panel polish",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 47,
+      "summary": "Polishes the SEM model canvas shell by adding a collapsible right inspector, opt-in minimap, compact overlay status, grouped object actions, cleaner explorer cards, and large-model workspace controls without changing statistical engines, schemas, result payloads, or numerical fingerprints.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Canvas side panels can be collapsed",
+          "status": "passed",
+          "evidence": "src/App.tsx, src/store.ts, src/components/Inspector.tsx, and src/styles.css wire inspectorCollapsed alongside the existing explorerCollapsed state."
+        },
+        {
+          "track": "product",
+          "name": "Large-model view controls consolidated",
+          "status": "passed",
+          "evidence": "src/components/ModelCanvas.tsx adds View menu controls for left explorer, right inspector, minimap, indicator collapse, selected-neighborhood isolation, and fit selected."
+        },
+        {
+          "track": "product",
+          "name": "Minimap and overlay no longer crowd the canvas",
+          "status": "passed",
+          "evidence": "src/components/ModelCanvas.tsx makes the minimap opt-in, and src/styles.css adds compact canvas-overlay-status placement."
+        },
+        {
+          "track": "product",
+          "name": "Object action toolbars are less crowded",
+          "status": "passed",
+          "evidence": "src/components/ModelCanvas.tsx groups secondary indicator side and path routing actions under context-menu-lite menus."
+        },
+        {
+          "track": "product",
+          "name": "SEM explorer cards are simplified",
+          "status": "passed",
+          "evidence": "src/components/Explorer.tsx moves duplicate, pin, and indicator-side controls into explorer-card-more and removes mojibake separators."
+        },
+        {
+          "track": "validation",
+          "name": "Model canvas shell smoke and static audit pass",
+          "status": "passed",
+          "evidence": "validation/results/v160_model_canvas_smoke.json and validation/results/v160_model_canvas_audit.json."
+        },
+        {
+          "track": "documentation",
+          "name": "Model canvas shell polish documented",
+          "status": "passed",
+          "evidence": "docs/V1_6_0_MODEL_CANVAS_SHELL_AND_PANEL_POLISH.md documents scope, evidence, and the frontend-only boundary."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_6_1_setup_run_workflow_consolidation",
+      "release": "v1.6.1",
+      "family": "Product",
+      "name": "Setup/Run workflow consolidation",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 48,
+      "summary": "Consolidates analysis setup and execution workflow by making Setup the primary configuration and launch surface while changing Run into a compact monitor/handoff workspace. This is frontend-only and does not change statistical engines, schemas, result payloads, or numerical fingerprints.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Setup can launch the configured run",
+          "status": "passed",
+          "evidence": "src/components/AnalysisCatalog.tsx dispatches the production quickpls:run-analysis event from Setup and keeps Open run monitor as a secondary action."
+        },
+        {
+          "track": "product",
+          "name": "Setup launch summary replaces duplicated readiness cards",
+          "status": "passed",
+          "evidence": "src/components/AnalysisCatalog.tsx and src/styles.css add setup-launch-panel and remove the duplicate Readiness and Run state cards."
+        },
+        {
+          "track": "product",
+          "name": "Run workspace is monitor-oriented",
+          "status": "passed",
+          "evidence": "src/components/RunWorkspace.tsx uses run-monitor-summary and no longer renders the full ReadinessPanel copy."
+        },
+        {
+          "track": "product",
+          "name": "Configuration edits route back to Setup",
+          "status": "passed",
+          "evidence": "src/components/RunWorkspace.tsx includes an Open setup action for method, bootstrap, group, prediction, and reproducibility changes."
+        },
+        {
+          "track": "validation",
+          "name": "Setup/Run smoke and static audit pass",
+          "status": "passed",
+          "evidence": "validation/results/v161_setup_run_smoke.json and validation/results/v161_setup_run_audit.json."
+        },
+        {
+          "track": "documentation",
+          "name": "Setup/Run consolidation documented",
+          "status": "passed",
+          "evidence": "docs/V1_6_1_SETUP_RUN_WORKFLOW_CONSOLIDATION.md documents scope, evidence, and the frontend-only boundary."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_6_2_data_home_launch_polish",
+      "release": "v1.6.2",
+      "family": "Product",
+      "name": "Data/Home launch polish",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 49,
+      "summary": "Polishes the launch and data-to-model workflow by adding a workflow-aware Home next-step launcher, compact workflow status list, and stronger Data-to-Model bridge while preserving import APIs, project format, statistical engines, and numerical fingerprints.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Home recommends the next workflow step",
+          "status": "passed",
+          "evidence": "src/components/OnboardingWorkspace.tsx computes nextStep from dataset, model, and run state and renders home-next-step."
+        },
+        {
+          "track": "product",
+          "name": "Home workflow status is compact",
+          "status": "passed",
+          "evidence": "src/components/OnboardingWorkspace.tsx and src/styles.css replace sparse workflow cards with home-workflow-list."
+        },
+        {
+          "track": "product",
+          "name": "Data keeps a clear model bridge",
+          "status": "passed",
+          "evidence": "src/components/DataWorkspace.tsx keeps Open Model Designer, prefix detection, and Create Constructs From Prefixes."
+        },
+        {
+          "track": "validation",
+          "name": "Data/Home launch smoke and static audit pass",
+          "status": "passed",
+          "evidence": "validation/results/v162_data_home_smoke.json and validation/results/v162_data_home_audit.json."
+        },
+        {
+          "track": "documentation",
+          "name": "Data/Home launch polish documented",
+          "status": "passed",
+          "evidence": "docs/V1_6_2_DATA_HOME_LAUNCH_POLISH.md documents scope, evidence, and the frontend-only boundary."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_6_3_global_design_system_and_accessibility_pass",
+      "release": "v1.6.3",
+      "family": "Product",
+      "name": "Global design-system and accessibility pass",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 50,
+      "summary": "Closes the final v1.5.7 remediation item by enforcing live release-label consistency, source-level mojibake prevention, visible keyboard focus contracts, scoped status wording, and accessible disabled-action wiring without changing statistical engines, schemas, result payloads, or numerical fingerprints.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Live release/status label is current",
+          "status": "passed",
+          "evidence": "src/components/TopBar.tsx displays v1.6.3 design and accessibility pass instead of stale v1.5.3 wording."
+        },
+        {
+          "track": "product",
+          "name": "Accessible disabled Run reason remains linked",
+          "status": "passed",
+          "evidence": "TopBar keeps aria-describedby wiring from the main Run button to the compact blocker chip."
+        },
+        {
+          "track": "product",
+          "name": "Global focus treatment remains available",
+          "status": "passed",
+          "evidence": "src/styles.css keeps focus-visible outlines for buttons, inputs, selects, SEM nodes, tables, and report actions."
+        },
+        {
+          "track": "validation",
+          "name": "Design/accessibility smoke and static audit pass",
+          "status": "passed",
+          "evidence": "validation/results/v163_design_accessibility_smoke.json and validation/results/v163_design_accessibility_audit.json."
+        },
+        {
+          "track": "documentation",
+          "name": "Global design/accessibility pass documented",
+          "status": "passed",
+          "evidence": "docs/V1_6_3_GLOBAL_DESIGN_ACCESSIBILITY_PASS.md documents scope, evidence, and the frontend-only boundary."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_7_0_researcher_confidence_scope_transparency",
+      "release": "v1.7.0",
+      "family": "Product",
+      "name": "Researcher confidence and scope transparency",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 51,
+      "summary": "Adds method-scope transparency, Why trust this result entry points, validation basis copy, runtime dependency notes, and Method Confidence run metadata while preserving statistical engines and numerical fingerprints.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Method scope and confidence surfaces exist",
+          "status": "passed",
+          "evidence": "src/components/Ui.tsx provides MethodScopeDrawer and MethodConfidencePanel."
+        },
+        {
+          "track": "validation",
+          "name": "Confidence/scope audit passes",
+          "status": "passed",
+          "evidence": "validation/results/v170_confidence_scope_audit.json."
+        },
+        {
+          "track": "documentation",
+          "name": "Confidence/scope milestone documented",
+          "status": "passed",
+          "evidence": "docs/V1_7_0_RESEARCHER_CONFIDENCE_SCOPE_TRANSPARENCY.md."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_7_1_continuous_researcher_workflow",
+      "release": "v1.7.1",
+      "family": "Product",
+      "name": "SmartPLS-like continuous researcher workflow",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 52,
+      "summary": "Strengthens Data to Model to Setup/Calculate to Results to Report transitions with output previews, clear handoffs, and fewer dead-end workflow states.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Workflow transitions are explicit",
+          "status": "passed",
+          "evidence": "Data, Setup, Run, Results, and Report surfaces expose next-step handoffs."
+        },
+        {
+          "track": "validation",
+          "name": "Workflow audit passes",
+          "status": "passed",
+          "evidence": "validation/results/v171_workflow_audit.json."
+        },
+        {
+          "track": "documentation",
+          "name": "Workflow milestone documented",
+          "status": "passed",
+          "evidence": "docs/V1_7_1_CONTINUOUS_RESEARCHER_WORKFLOW.md."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_7_2_sem_designer_professional_mode",
+      "release": "v1.7.2",
+      "family": "Product",
+      "name": "SEM Designer professional mode",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 53,
+      "summary": "Adds Focus Diagram mode, explicit publication diagram checking, and direct shortest boundary-to-boundary routing copy while keeping recipes and numerical fingerprints unchanged.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Focus Diagram and publication check are available",
+          "status": "passed",
+          "evidence": "src/components/ModelCanvas.tsx exposes Focus Diagram and Check diagram for publication behavior."
+        },
+        {
+          "track": "validation",
+          "name": "SEM designer audit passes",
+          "status": "passed",
+          "evidence": "validation/results/v172_sem_designer_audit.json."
+        },
+        {
+          "track": "documentation",
+          "name": "SEM designer professional mode documented",
+          "status": "passed",
+          "evidence": "docs/V1_7_2_SEM_DESIGNER_PROFESSIONAL_MODE.md."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_7_3_results_reportability_checklist",
+      "release": "v1.7.3",
+      "family": "Product",
+      "name": "Results reportability checklist",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 54,
+      "summary": "Adds a value-driven PLS-SEM reportability checklist and threshold-color controls using existing result and assessment payloads only.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Reportability checklist uses existing results",
+          "status": "passed",
+          "evidence": "src/components/RunHistory.tsx builds reportabilityItems from AnalysisRun, PlsResult, and AssessmentResult values."
+        },
+        {
+          "track": "validation",
+          "name": "Reportability audit passes",
+          "status": "passed",
+          "evidence": "validation/results/v173_reportability_audit.json."
+        },
+        {
+          "track": "documentation",
+          "name": "Reportability milestone documented",
+          "status": "passed",
+          "evidence": "docs/V1_7_3_RESULTS_REPORTABILITY_CHECKLIST.md."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_7_4_research_table_system",
+      "release": "v1.7.4",
+      "family": "Product",
+      "name": "Research-grade table system",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 55,
+      "summary": "Adds reusable research-table infrastructure and verifies search, precision, copy, export, row metadata, and sticky-column affordances.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Research table shell and table tools exist",
+          "status": "passed",
+          "evidence": "src/components/Ui.tsx and src/components/RunHistory.tsx expose table shell and Results table controls."
+        },
+        {
+          "track": "validation",
+          "name": "Research table audit passes",
+          "status": "passed",
+          "evidence": "validation/results/v174_research_tables_audit.json."
+        },
+        {
+          "track": "documentation",
+          "name": "Research table milestone documented",
+          "status": "passed",
+          "evidence": "docs/V1_7_4_RESEARCH_TABLE_SYSTEM.md."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_7_5_publication_reviewer_pack",
+      "release": "v1.7.5",
+      "family": "Product",
+      "name": "Publication and Reviewer Pack",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 56,
+      "summary": "Adds a Reviewer Pack preset that foregrounds method scope, fingerprints, warnings, known differences, validation artifacts, tables, and diagram output.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Reviewer Pack preset is available",
+          "status": "passed",
+          "evidence": "src/components/ReportsWorkspace.tsx exposes Reviewer Pack and explicit interpretation-note opt-in."
+        },
+        {
+          "track": "validation",
+          "name": "Publication pack audit passes",
+          "status": "passed",
+          "evidence": "validation/results/v175_publication_pack_audit.json."
+        },
+        {
+          "track": "documentation",
+          "name": "Publication Reviewer Pack documented",
+          "status": "passed",
+          "evidence": "docs/V1_7_5_PUBLICATION_REVIEWER_PACK.md."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_7_6_sample_projects_guided_workflows",
+      "release": "v1.7.6",
+      "family": "Product",
+      "name": "Sample projects and guided research workflows",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 57,
+      "summary": "Adds sample-project gallery entries for common research workflows and a guided Start from dataset path.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Sample gallery and guided dataset flow exist",
+          "status": "passed",
+          "evidence": "src/components/OnboardingWorkspace.tsx exposes sample-project gallery and guided dataset workflow."
+        },
+        {
+          "track": "validation",
+          "name": "Sample workflow audit passes",
+          "status": "passed",
+          "evidence": "validation/results/v176_samples_guided_audit.json."
+        },
+        {
+          "track": "documentation",
+          "name": "Sample workflow milestone documented",
+          "status": "passed",
+          "evidence": "docs/V1_7_6_SAMPLE_PROJECTS_GUIDED_WORKFLOWS.md."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_7_smartpls_competitive_researcher_experience",
+      "release": "v1.7.6",
+      "family": "Product",
+      "name": "SmartPLS-competitive researcher experience program",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 58,
+      "summary": "Aggregates v1.7.0 through v1.7.6 into a researcher-experience program focused on trust, workflow continuity, SEM diagram usability, reportability, table quality, publication packaging, and guided samples.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "All v1.7 milestone audits pass",
+          "status": "passed",
+          "evidence": "validation/results/v17_researcher_experience_audit.json."
+        },
+        {
+          "track": "release",
+          "name": "Versioned release metadata is ready",
+          "status": "passed",
+          "evidence": "package.json, package-lock.json, Cargo.toml, and src-tauri/tauri.conf.json use 1.7.6; qpls:release:artifacts uses v1_7_smartpls_competitive_researcher_experience."
+        },
+        {
+          "track": "documentation",
+          "name": "v1.7 program documented",
+          "status": "passed",
+          "evidence": "docs/V1_7_SMARTPLS_COMPETITIVE_RESEARCHER_EXPERIENCE.md plus milestone docs."
         }
       ],
       "next_actions": []

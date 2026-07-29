@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "milestone": "v1_5_9_report_publication_workflow_redesign",
+  "checked_at": "2026-07-29T10:07:05.171Z",
+  "checks": {
+    "report preset cards replace passive strip": true,
+    "settings grouped by task": true,
+    "export actions are explicit buttons": true,
+    "export disabled reasons are action specific": true,
+    "preview frame has layout risk guidance": true,
+    "comparison moved to Results": true,
+    "report no longer renders comparison table inline": true,
+    "new report CSS exists": true,
+    "publication SVG protects construct labels": true,
+    "publication SVG offsets structural labels": true,
+    "no report mojibake remains": true
+  },
+  "failures": [],
+  "boundary": "frontend-only report and publication workflow redesign; no statistical engine or result payload changes"
+}

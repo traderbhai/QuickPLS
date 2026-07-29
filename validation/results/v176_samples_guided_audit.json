@@ -1,0 +1,37 @@
+{
+  "passed": true,
+  "section": "v176_samples_guided",
+  "generated_at": "2026-07-29T12:30:01.471054+00:00",
+  "checked_files": [
+    "src/components/OnboardingWorkspace.tsx"
+  ],
+  "passed_checks": [
+    {
+      "file": "src/components/OnboardingWorkspace.tsx",
+      "label": "sample project gallery"
+    },
+    {
+      "file": "src/components/OnboardingWorkspace.tsx",
+      "label": "simple PLS sample"
+    },
+    {
+      "file": "src/components/OnboardingWorkspace.tsx",
+      "label": "group sample"
+    },
+    {
+      "file": "src/components/OnboardingWorkspace.tsx",
+      "label": "CB-SEM sample"
+    },
+    {
+      "file": "src/components/OnboardingWorkspace.tsx",
+      "label": "guided dataset workflow"
+    },
+    {
+      "file": "src/components/OnboardingWorkspace.tsx",
+      "label": "guided prefix step"
+    }
+  ],
+  "missing": [],
+  "frontend_only": true,
+  "numerical_outputs_changed": false
+}

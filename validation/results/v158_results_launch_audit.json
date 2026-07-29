@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "milestone": "v1_5_8_results_workspace_launch_redesign",
+  "checks": {
+    "smoke_passed": true,
+    "registry_current_stage": "v1_5_8_results_workspace_launch_redesign",
+    "docs_present": true,
+    "package_scripts_present": true,
+    "roadmap_references_milestone": true
+  },
+  "failures": [],
+  "boundary": "frontend-only results workspace launch redesign"
+}

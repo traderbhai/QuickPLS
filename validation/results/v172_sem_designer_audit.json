@@ -1,0 +1,34 @@
+{
+  "passed": true,
+  "section": "v172_sem_designer",
+  "generated_at": "2026-07-29T12:29:55.628319+00:00",
+  "checked_files": [
+    "src/components/ModelCanvas.tsx",
+    "src/styles.css"
+  ],
+  "passed_checks": [
+    {
+      "file": "src/components/ModelCanvas.tsx",
+      "label": "focus diagram mode"
+    },
+    {
+      "file": "src/components/ModelCanvas.tsx",
+      "label": "publication diagram check"
+    },
+    {
+      "file": "src/components/ModelCanvas.tsx",
+      "label": "shortest path geometry comment or copy"
+    },
+    {
+      "file": "src/components/ModelCanvas.tsx",
+      "label": "diagram object focusing from results"
+    },
+    {
+      "file": "src/styles.css",
+      "label": "focus mode layout style"
+    }
+  ],
+  "missing": [],
+  "frontend_only": true,
+  "numerical_outputs_changed": false
+}

@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.5.6 result-specific interpretation smoke",
+  "passed": true,
+  "checklist": {
+    "overview_has_computed_findings": true,
+    "measurement_has_loading_finding": true,
+    "structural_has_path_r2_vif_finding": true,
+    "validity_has_value_specific_panel": true,
+    "inference_covers_unavailable_or_bootstrap": true,
+    "prediction_has_guidance": true,
+    "groups_has_state_or_payload_guidance": true,
+    "diagnostics_has_method_payload_guidance": true,
+    "interpretation_has_prioritized_checklist": true,
+    "interpretation_has_report_wording": true,
+    "copy_controls_present": true,
+    "row_detail_uses_values": true,
+    "report_has_interpretation_notes_option": true,
+    "screenshots_written": true,
+    "no_mojibake_or_overclaim": true,
+    "no_console_errors": true
+  },
+  "tabs": {
+    "overview": {
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v156\\result-interpretation\\01_overview_findings.png",
+      "findingCards": 12,
+      "findingPanels": 2,
+      "checklists": [],
+      "reportWording": false,
+      "rowDetails": 0,
+      "copyInterpretationButtons": 2,
+      "hasValueSpecificCopy": true,
+      "hasMojibake": false,
+      "hasSmartplsEquivalenceClaim": false
+    },
+    "measurement": {
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v156\\result-interpretation\\02_measurement_findings.png",
+      "findingCards": 2,
+      "findingPanels": 2,
+      "checklists": [],
+      "reportWording": false,
+      "rowDetails": 0,
+      "copyInterpretationButtons": 2,
+      "hasValueSpecificCopy": true,
+      "hasMojibake": false,
+      "hasSmartplsEquivalenceClaim": false
+    },
+    "structural": {
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v156\\result-interpretation\\03_structural_findings.png",
+      "findingCards": 14,
+      "findingPanels": 2,
+      "checklists": [],
+      "reportWording": false,
+      "rowDetails": 0,
+      "copyInterpretationButtons": 2,
+      "hasValueSpecificCopy": true,
+      "hasMojibake": false,
+      "hasSmartplsEquivalenceClaim": false
+    },
+    "validity": {
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v156\\result-interpretation\\04_validity_findings.png",
+      "findingCards": 10,
+      "findingPanels": 2,
+      "checklists": [],
+      "reportWording": false,
+      "rowDetails": 0,
+      "copyInterpretationButtons": 2,
+      "hasValueSpecificCopy": true,
+      "hasMojibake": false,
+      "hasSmartplsEquivalenceClaim": false
+    },
+    "inference": {
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v156\\result-interpretation\\05_inference_findings.png",
+      "findingCards": 6,
+      "findingPanels": 2,
+      "checklists": [],
+      "reportWording": false,
+      "rowDetails": 0,
+      "copyInterpretationButtons": 2,
+      "hasValueSpecificCopy": true,
+      "hasMojibake": false,
+      "hasSmartplsEquivalenceClaim": false
+    },
+    "prediction": {
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v156\\result-interpretation\\06_prediction_findings.png",
+      "findingCards": 4,
+      "findingPanels": 2,
+      "checklists": [],
+      "reportWording": false,
+      "rowDetails": 0,
+      "copyInterpretationButtons": 2,
+      "hasValueSpecificCopy": true,
+      "hasMojibake": false,
+      "hasSmartplsEquivalenceClaim": false
+    },
+    "groups": {
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v156\\result-interpretation\\07_groups_findings.png",
+      "findingCards": 0,
+      "findingPanels": 2,
+      "checklists": [],
+      "reportWording": false,
+      "rowDetails": 0,
+      "copyInterpretationButtons": 0,
+      "hasValueSpecificCopy": true,
+      "hasMojibake": false,
+      "hasSmartplsEquivalenceClaim": false
+    },
+    "diagnostics": {
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v156\\result-interpretation\\08_diagnostics_findings.png",
+      "findingCards": 0,
+      "findingPanels": 2,
+      "checklists": [],
+      "reportWording": false,
+      "rowDetails": 0,
+      "copyInterpretationButtons": 0,
+      "hasValueSpecificCopy": true,
+      "hasMojibake": false,
+      "hasSmartplsEquivalenceClaim": false
+    },
+    "interpretation": {
+      "screenshot": "D:\\QuickPLS\\validation\\results\\screens\\v156\\result-interpretation\\09_interpretation_checklist.png",
+      "findingCards": 0,
+      "findingPanels": 0,
+      "checklists": [
+        "Must address before reporting",
+        "Recommended checks",
+        "Optional advanced checks",
+        "Must address before reporting",
+        "Recommended checks",
+        "Optional advanced checks"
+      ],
+      "reportWording": true,
+      "rowDetails": 0,
+      "copyInterpretationButtons": 6,
+      "hasValueSpecificCopy": true,
+      "hasMojibake": false,
+      "hasSmartplsEquivalenceClaim": false
+    }
+  },
+  "screenshots": {
+    "rowDetail": "D:\\QuickPLS\\validation\\results\\screens\\v156\\result-interpretation\\10_row_detail_interpretation.png",
+    "reportWording": "D:\\QuickPLS\\validation\\results\\screens\\v156\\result-interpretation\\11_report_interpretation_option.png",
+    "desktop1280": "D:\\QuickPLS\\validation\\results\\screens\\v156\\result-interpretation\\12_results_1280.png"
+  },
+  "rowDetailState": {
+    "count": 2,
+    "text": "Selected row interpretationcompetence has VIF 1.2020 for satisfaction. This is below the common review thresholds.\nSelected row interpretationcompetence has VIF 1.2020 for satisfaction. This is below the common review thresholds."
+  },
+  "errors": []
+}

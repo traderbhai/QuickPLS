@@ -64,6 +64,10 @@ export interface UiPreferences {
   defaultPrecision: number;
   showAdvancedHelp: boolean;
   recentPanels: WorkspaceView[];
+  methodScopeDrawerOpen: boolean;
+  showThresholdColors: boolean;
+  focusDiagramMode: boolean;
+  selectedExportPreset: "journal_figure" | "journal_tables" | "thesis_appendix" | "reviewer_pack" | "full_reproducibility_report";
 }
 
 export interface ResultWorkspaceState {
@@ -88,7 +92,7 @@ export interface MethodSetupState {
 
 export interface OnboardingState {
   dismissed: boolean;
-  selectedDemo: "corporate_reputation" | "simple_pls" | "cbsem_cfa";
+  selectedDemo: "corporate_reputation" | "simple_pls" | "mediation" | "moderation" | "formative" | "plspredict" | "micom_mga" | "cbsem_cfa" | "regression" | "nca";
   recentProjectCards: string[];
 }
 

@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import shutil
 from datetime import datetime, timezone
@@ -20,9 +21,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_JSON = ROOT / "package.json"
 TAURI_CONFIG = ROOT / "src-tauri" / "tauri.conf.json"
-RELEASE_DIR = ROOT / "target" / "release"
+RELEASE_DIR = Path(os.environ.get("QPLS_RELEASE_DIR", ROOT / "target" / "release"))
 NSIS_DIR = RELEASE_DIR / "bundle" / "nsis"
-ARTIFACT_DIR = RELEASE_DIR / "artifacts"
+ARTIFACT_DIR = ROOT / "target" / "release" / "artifacts"
 RESULTS = ROOT / "validation" / "results"
 REPORT = RESULTS / "release_artifacts.json"
 

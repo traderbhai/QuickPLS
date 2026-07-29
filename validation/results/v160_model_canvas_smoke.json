@@ -1,0 +1,27 @@
+{
+  "passed": true,
+  "milestone": "v1_6_0_model_canvas_shell_and_panel_polish",
+  "generated_at": "2026-07-29T10:34:05.367Z",
+  "smoke": [
+    {
+      "name": "Model canvas shell supports large-model workspace",
+      "passed": true,
+      "evidence": "Left explorer and right inspector can be collapsed from the View menu."
+    },
+    {
+      "name": "Canvas overlay is compact",
+      "passed": true,
+      "evidence": "Result overlay status uses compact chrome and no longer consumes the main diagram lane."
+    },
+    {
+      "name": "Minimap is opt-in",
+      "passed": true,
+      "evidence": "The React Flow minimap is hidden by default and available through View > Show minimap."
+    },
+    {
+      "name": "Object actions are grouped",
+      "passed": true,
+      "evidence": "Construct, indicator, and edge context toolbars move secondary commands into grouped menus."
+    }
+  ]
+}

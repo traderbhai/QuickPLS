@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "milestone": "v1_6_2_data_home_launch_polish",
+  "generated_at": "2026-07-29T10:52:11.036Z",
+  "smoke": [
+    {
+      "name": "Home provides a workflow-aware next step",
+      "passed": true,
+      "evidence": "Home computes a recommended next step from data, model, and saved-run state."
+    },
+    {
+      "name": "Home workflow status is compact",
+      "passed": true,
+      "evidence": "Home uses a compact workflow list instead of sparse step cards."
+    },
+    {
+      "name": "Data-to-model bridge remains prominent",
+      "passed": true,
+      "evidence": "Data workspace keeps prefix construct creation and Open Model Designer as next-step actions."
+    }
+  ]
+}

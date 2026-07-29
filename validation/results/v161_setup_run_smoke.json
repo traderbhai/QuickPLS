@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "milestone": "v1_6_1_setup_run_workflow_consolidation",
+  "generated_at": "2026-07-29T10:44:55.576Z",
+  "smoke": [
+    {
+      "name": "Setup is the primary configuration and launch surface",
+      "passed": true,
+      "evidence": "Setup exposes method selection, readiness, run summary, and a direct Run selected method action."
+    },
+    {
+      "name": "Run workspace is monitor-oriented",
+      "passed": true,
+      "evidence": "Run shows a compact readiness summary, execution settings, run action, and handoff to Results."
+    },
+    {
+      "name": "Settings changes are routed back to Setup",
+      "passed": true,
+      "evidence": "Run workspace includes an Open setup action for method/bootstrap/group/prediction changes."
+    }
+  ]
+}

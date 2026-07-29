@@ -214,19 +214,22 @@ export function Explorer() {
             return <article key={node.id} className={selectedNodeId === node.id ? "explorer-card selected" : "explorer-card"}>
               <button className="explorer-card-main" onClick={() => focusConstruct(node.id)}>
                 <span className={`mode-dot ${node.data.mode}`} />
-                <span><strong>{node.data.label}</strong><small>{node.data.shortName} · {node.data.indicators.length} indicators · {incoming} in / {outgoing} out</small></span>
+                <span><strong>{node.data.label}</strong><small>{node.data.shortName} - {node.data.indicators.length} indicators - {incoming} in / {outgoing} out</small></span>
               </button>
               <div className="explorer-card-actions" aria-label={`${node.data.label} actions`}>
                 <button title="Focus construct" onClick={() => focusConstruct(node.id)}><Focus size={13} /></button>
-                <button title="Rename construct" onClick={() => renameConstruct(node)}><MoreVertical size={13} /></button>
-                <button title="Duplicate construct" onClick={() => duplicateConstruct(node.id)}><Boxes size={13} /></button>
                 <button title="Create path from this construct" onClick={() => createPathFrom(node.id)}><GitBranch size={13} /></button>
-                <button title="Pin or unpin layout" onClick={() => toggleConstructPinned(node.id)}><Pin size={13} /></button>
+                <button title="Rename construct" onClick={() => renameConstruct(node)}><MoreVertical size={13} /></button>
                 <button title="Delete construct" onClick={() => deleteConstruct(node.id)}><Trash2 size={13} /></button>
-              </div>
-              <div className="explorer-mini-actions">
-                {(["left", "right", "top", "bottom"] as const).map((side) => <button key={side} onClick={() => setConstructIndicatorSide(node.id, side)}>{side}</button>)}
-                <button onClick={() => resetIndicatorLayout(node.id)}>Reset indicators</button>
+                <details className="explorer-card-more">
+                  <summary>More</summary>
+                  <div>
+                    <button title="Duplicate construct" onClick={() => duplicateConstruct(node.id)}><Boxes size={13} />Duplicate</button>
+                    <button title="Pin or unpin layout" onClick={() => toggleConstructPinned(node.id)}><Pin size={13} />Pin</button>
+                    {(["left", "right", "top", "bottom"] as const).map((side) => <button key={side} onClick={() => setConstructIndicatorSide(node.id, side)}>{side}</button>)}
+                    <button onClick={() => resetIndicatorLayout(node.id)}>Reset indicators</button>
+                  </div>
+                </details>
               </div>
             </article>;
           })}

@@ -1,11 +1,12 @@
-import { AlertTriangle, CheckCircle2, Copy, FlaskConical, Search } from "lucide-react";
+﻿import { AlertTriangle, CheckCircle2, Copy, FlaskConical, Search } from "lucide-react";
 import { useWorkspace } from "../store";
 import type { AnalysisRun, AssessmentResult, HtmtAssessment, PlsResult, ResultWorkspaceTab } from "../types";
 import { findBcaParameter, findBootstrapParameter, findStudentizedParameter, formatParameterIdentity } from "../domain/inference";
 import { analysisReadiness } from "../domain/analysisReadiness";
+import { buildResultInterpretation, copyableInterpretationText, findingsByGroup, findingsForTab, rowSpecificInterpretation, type InterpretationFinding, type ResultInterpretation, type SemDiagramEdgeLike, type SemDiagramNodeLike } from "../domain/resultInterpretation";
 import { isNativeDesktop } from "../services/projectService";
 import { ReadinessPanel } from "./ReadinessPanel";
-import { ActionStrip, EmptyState, PageHeader, StatusBadge, TabStrip } from "./Ui";
+import { EmptyState, MethodConfidencePanel, PageHeader, ReportabilityChecklist, StatusBadge, type ReportabilityItem } from "./Ui";
 
 const resultTabs: Array<{ id: ResultWorkspaceTab; label: string }> = [
   { id: "overview", label: "Overview" },
@@ -20,6 +21,22 @@ const resultTabs: Array<{ id: ResultWorkspaceTab; label: string }> = [
   { id: "comparison", label: "Comparison" },
 ];
 
+function resultTabHint(tab: ResultWorkspaceTab) {
+  switch (tab) {
+    case "overview": return "run summary";
+    case "measurement": return "loadings";
+    case "structural": return "paths and R²";
+    case "validity": return "reliability";
+    case "inference": return "bootstrap";
+    case "prediction": return "Q² predict";
+    case "groups": return "MGA/IPMA";
+    case "diagnostics": return "warnings";
+    case "interpretation": return "checklist";
+    case "comparison": return "two runs";
+    default: return "";
+  }
+}
+
 export function RunHistory() {
   const runs = useWorkspace((state) => state.runs);
   const setView = useWorkspace((state) => state.setView);
@@ -28,7 +45,9 @@ export function RunHistory() {
   const edges = useWorkspace((state) => state.edges);
   const settings = useWorkspace((state) => state.analysisSettings);
   const resultState = useWorkspace((state) => state.resultWorkspaceState);
+  const uiPreferences = useWorkspace((state) => state.uiPreferences);
   const setResultState = useWorkspace((state) => state.setResultWorkspaceState);
+  const setUiPreferences = useWorkspace((state) => state.setUiPreferences);
   const selectedEdgeId = useWorkspace((state) => state.selectedEdgeId);
   const setSelectedEdge = useWorkspace((state) => state.setSelectedEdge);
   const setSelectedNode = useWorkspace((state) => state.setSelectedNode);
@@ -81,18 +100,31 @@ export function RunHistory() {
     <div className="result-preview-tabs" aria-label="Result sections preview">{previewTabs.map((tab) => <span key={tab}>{tab}</span>)}</div>
   </section>;
 
-  return <section className="workspace-page">
+  return <section className={`workspace-page${uiPreferences.showThresholdColors ? " threshold-colors-enabled" : " threshold-colors-hidden"}`}>
     <PageHeader title="Results" description="Review saved runs by measurement, structural, inference, prediction, groups, diagnostics, and comparison workflow." actions={<StatusBadge status="validated">{visibleRuns.length} visible</StatusBadge>} />
-    <ActionStrip>
-      <TabStrip label="Result workspace sections" tabs={resultTabs} value={resultState.selectedTab} onChange={(selectedTab) => setResultState({ selectedTab })} />
-      <label className="result-search"><Search size={13} /><input aria-label="Search result tables" placeholder="Search runs, paths, warnings" value={resultState.tableSearch} onChange={(event) => setResultState({ tableSearch: event.target.value })} /></label>
-      <button className="secondary-button" onClick={() => void copyVisibleSummary()}><Copy size={14} />Copy run list</button>
-      <button className="secondary-button" disabled={!selectedRun?.result} onClick={exportCurrentTable}>Export current table</button>
-      <label className="compact-select-label">Precision <select aria-label="Result precision" value={resultState.resultPrecision} onChange={(event) => setResultState({ resultPrecision: Number(event.target.value) })}>{[2, 3, 4, 5, 6].map((digits) => <option key={digits} value={digits}>{digits}</option>)}</select></label>
-      <button className="secondary-button" onClick={() => setResultState({ includeExperimental: !resultState.includeExperimental })}>{resultState.includeExperimental ? "Include experimental" : "Validated only"}</button>
-      <button className="secondary-button" onClick={() => setResultState({ showInterpretationColumns: !resultState.showInterpretationColumns })}>{resultState.showInterpretationColumns ? "Hide interpretation" : "Show interpretation"}</button>
-      <button className="secondary-button" onClick={() => setResultState({ tableDensity: resultState.tableDensity === "compact" ? "comfortable" : "compact" })}>{resultState.tableDensity}</button>
-    </ActionStrip>
+    <section className="results-workbench-shell" aria-label="Results workspace controls">
+      <nav className="results-section-nav" aria-label="Result sections">
+        {resultTabs.map((tab) => <button key={tab.id} type="button" className={resultState.selectedTab === tab.id ? "active" : undefined} aria-current={resultState.selectedTab === tab.id ? "page" : undefined} onClick={() => setResultState({ selectedTab: tab.id })}>
+          <span>{tab.label}</span>
+          <small>{resultTabHint(tab.id)}</small>
+        </button>)}
+      </nav>
+      <div className="results-tool-stack" aria-label="Result table tools">
+        <label className="result-search"><Search size={13} /><input aria-label="Search result tables" placeholder="Search runs, paths, warnings" value={resultState.tableSearch} onChange={(event) => setResultState({ tableSearch: event.target.value })} /></label>
+        <div className="results-tool-group">
+          <button className="secondary-button" onClick={() => void copyVisibleSummary()}><Copy size={14} />Copy runs</button>
+          <button className="secondary-button" disabled={!selectedRun?.result} onClick={exportCurrentTable}>Export table</button>
+          <button className="secondary-button" disabled={!selectedRun?.result} title={selectedRun?.result ? "Prepare report from the selected run" : "Run a method before preparing a report"} onClick={() => setView("reports")}>Prepare report</button>
+        </div>
+        <div className="results-tool-group">
+          <label className="compact-select-label">Precision <select aria-label="Result precision" value={resultState.resultPrecision} onChange={(event) => setResultState({ resultPrecision: Number(event.target.value) })}>{[2, 3, 4, 5, 6].map((digits) => <option key={digits} value={digits}>{digits}</option>)}</select></label>
+          <button className="secondary-button" onClick={() => setResultState({ includeExperimental: !resultState.includeExperimental })}>{resultState.includeExperimental ? "Include experimental" : "Validated only"}</button>
+          <button className="secondary-button" onClick={() => setUiPreferences({ showThresholdColors: !uiPreferences.showThresholdColors })}>{uiPreferences.showThresholdColors ? "Hide Threshold colors" : "Show Threshold colors"}</button>
+          <button className="secondary-button" onClick={() => setResultState({ showInterpretationColumns: !resultState.showInterpretationColumns })}>{resultState.showInterpretationColumns ? "Hide guidance columns" : "Show guidance columns"}</button>
+          <button className="secondary-button" onClick={() => setResultState({ tableDensity: resultState.tableDensity === "compact" ? "comfortable" : "compact" })}>{resultState.tableDensity}</button>
+        </div>
+      </div>
+    </section>
     {selectedRun ? <div className="result-headline-grid">
       <article><span>Selected run</span><strong>{selectedRun.name}</strong><small>{selectedRun.method}</small></article>
       <article><span>Strongest R²</span><strong>{bestR2 ? bestR2[1].toFixed(resultState.resultPrecision) : "N/A"}</strong><small>{bestR2?.[0] ?? "No endogenous construct"}</small></article>
@@ -109,7 +141,8 @@ export function RunHistory() {
     <div className={`run-list result-tab-${resultState.selectedTab} table-density-${resultState.tableDensity}`}>{visibleRuns.map((run) => <article key={run.id} className="run-row researcher-result-card">
       <div className="run-icon"><FlaskConical size={18} /></div>
       <div className="run-content"><strong>{run.name}</strong><p>{new Date(run.createdAt).toLocaleString()} | seed {run.seed} | fingerprint {run.fingerprint}</p><span><AlertTriangle size={13} />{scopeCopy(run.warnings[0])}</span>
-        {run.result ? <RunResultSections run={run} tab={resultState.selectedTab} focusPath={focusPath} activePath={activePath} comparisonRuns={selectedComparisonRuns} allRuns={runs} /> : <SectionEmpty title="No result payload" detail="This saved run does not contain a completed result payload." />}
+        <MethodConfidencePanel run={run} />
+        {run.result ? <RunResultSections run={run} tab={resultState.selectedTab} focusPath={focusPath} activePath={activePath} comparisonRuns={selectedComparisonRuns} allRuns={runs} nodes={nodes} edges={edges} /> : <SectionEmpty title="No result payload" detail="This saved run does not contain a completed result payload." />}
       </div>
       <div className="run-status">Scope checked</div>
     </article>)}</div>
@@ -117,25 +150,29 @@ export function RunHistory() {
   </section>;
 }
 
-function RunResultSections({ run, tab, focusPath, activePath, comparisonRuns, allRuns }: { run: AnalysisRun; tab: ResultWorkspaceTab; focusPath: (source: string, target: string) => void; activePath: { source: string; target: string } | null; comparisonRuns: AnalysisRun[]; allRuns: AnalysisRun[] }) {
+function RunResultSections({ run, tab, focusPath, activePath, comparisonRuns, allRuns, nodes, edges }: { run: AnalysisRun; tab: ResultWorkspaceTab; focusPath: (source: string, target: string) => void; activePath: { source: string; target: string } | null; comparisonRuns: AnalysisRun[]; allRuns: AnalysisRun[]; nodes: SemDiagramNodeLike[]; edges: SemDiagramEdgeLike[] }) {
   const result = run.result;
   if (!result) return null;
-  if (tab === "overview") return <SummaryResults run={run} focusPath={focusPath} activePath={activePath} />;
-  if (tab === "measurement") return <MeasurementResults result={result} assessment={run.assessment} focusPath={focusPath} activePath={activePath} />;
-  if (tab === "structural") return <StructuralResults run={run} focusPath={focusPath} activePath={activePath} />;
-  if (tab === "validity") return <QualityResults assessment={run.assessment} />;
-  if (tab === "inference") return <InferenceResults run={run} />;
-  if (tab === "prediction") return <PredictionResults result={result} assessment={run.assessment} />;
-  if (tab === "groups") return <GroupResults result={result} />;
-  if (tab === "diagnostics") return <DiagnosticsResults run={run} />;
-  if (tab === "interpretation") return <InterpretationResults run={run} />;
+  const interpretation = buildResultInterpretation({ run, nodes, edges });
+  if (tab === "overview") return <SummaryResults run={run} focusPath={focusPath} activePath={activePath} interpretation={interpretation} />;
+  if (tab === "measurement") return <MeasurementResults result={result} assessment={run.assessment} focusPath={focusPath} activePath={activePath} interpretation={interpretation} />;
+  if (tab === "structural") return <StructuralResults run={run} focusPath={focusPath} activePath={activePath} interpretation={interpretation} />;
+  if (tab === "validity") return <QualityResults assessment={run.assessment} interpretation={interpretation} />;
+  if (tab === "inference") return <InferenceResults run={run} interpretation={interpretation} />;
+  if (tab === "prediction") return <PredictionResults result={result} assessment={run.assessment} interpretation={interpretation} />;
+  if (tab === "groups") return <GroupResults result={result} interpretation={interpretation} />;
+  if (tab === "diagnostics") return <DiagnosticsResults run={run} interpretation={interpretation} />;
+  if (tab === "interpretation") return <InterpretationResults run={run} interpretation={interpretation} />;
   return <ComparisonResults selectedRuns={comparisonRuns} allRuns={allRuns} />;
 }
 
-function SummaryResults({ run, focusPath, activePath }: { run: AnalysisRun; focusPath: (source: string, target: string) => void; activePath: { source: string; target: string } | null }) {
+function SummaryResults({ run, focusPath, activePath, interpretation }: { run: AnalysisRun; focusPath: (source: string, target: string) => void; activePath: { source: string; target: string } | null; interpretation: ResultInterpretation }) {
   const result = run.result!;
   const warningCount = [...run.warnings, ...result.warnings].filter((warning) => !warning.toLowerCase().includes("validated")).length;
+  const setResultState = useWorkspace((state) => state.setResultWorkspaceState);
   return <div className="result-sections result-summary" tabIndex={0} role="region" aria-label={`${run.name} result summary`}>
+    <FindingCards findings={findingsForTab(interpretation, "overview")} title="Run-specific findings" onFocusPath={focusPath} />
+    <ReportabilityChecklist items={reportabilityItems(run, interpretation)} onSelect={(item) => setResultState({ selectedTab: reportabilityTargetTab(item.id) })} />
     <div className="result-kpi-row">
       <MetricTile label="Iterations" value={String(result.iterations)} detail={result.converged ? "converged" : "not converged"} tone={result.converged ? "ok" : "warn"} />
       <MetricTile label="Observations" value={String(result.used_observations)} detail={result.omitted_observations ? `${result.omitted_observations} omitted` : "complete cases used"} />
@@ -146,12 +183,128 @@ function SummaryResults({ run, focusPath, activePath }: { run: AnalysisRun; focu
     <EffectsTable result={result} activePath={activePath} />
     {result.mediation?.estimates.length ? <MediationTable run={run} /> : null}
     {result.moderation?.estimates.length ? <ModerationTable run={run} /> : null}
-    <ResultGuidance title="Researcher review" items={["Open Measurement Model for indicator loadings/weights and cross-loadings.", "Open Reliability and Validity for alpha, rho_A, rho_C, AVE, Fornell-Larcker, and HTMT.", "Enable bootstrap in Setup before interpreting p values or confidence intervals."]} />
   </div>;
 }
 
-function MeasurementResults({ result, assessment, focusPath, activePath }: { result: PlsResult; assessment?: AssessmentResult; focusPath: (source: string, target: string) => void; activePath: { source: string; target: string } | null }) {
+function reportabilityItems(run: AnalysisRun, interpretation: ResultInterpretation): ReportabilityItem[] {
+  const result = run.result;
+  const assessment = run.assessment;
+  if (!result) {
+    return [{ id: "result", label: "Completed result", status: "unavailable", evidence: "No result payload is available.", action: "Rerun the selected method." }];
+  }
+
+  const lowLoadings = result.outer_estimates.filter((row) => Math.abs(row.loading) < 0.4);
+  const reviewLoadings = result.outer_estimates.filter((row) => Math.abs(row.loading) >= 0.4 && Math.abs(row.loading) < 0.708);
+  const reliabilityIssues = assessment?.construct_quality.filter((row) => (row.cronbach_alpha != null && row.cronbach_alpha < 0.7) || (row.rho_c != null && row.rho_c < 0.7)) ?? [];
+  const aveIssues = assessment?.construct_quality.filter((row) => row.ave != null && row.ave < 0.5) ?? [];
+  const htmtIssueCount = assessment?.htmt_plus?.cells.flat().filter((cell) => (cell.value ?? 0) >= 0.9).length ?? 0;
+  const htmtReviewCount = assessment?.htmt_plus?.cells.flat().filter((cell) => (cell.value ?? 0) >= 0.85 && (cell.value ?? 0) < 0.9).length ?? 0;
+  const highVif = assessment?.structural_vif.filter((row) => (row.vif ?? 0) >= 5).length ?? 0;
+  const reviewVif = assessment?.structural_vif.filter((row) => (row.vif ?? 0) >= 3.3 && (row.vif ?? 0) < 5).length ?? 0;
+  const hasInference = Boolean(run.bootstrap || run.permutation);
+  const warnings = [...run.warnings, ...result.warnings].filter((warning) => !warning.toLowerCase().includes("validated"));
+  const shapeRecommendations = interpretation.diagramAdvice;
+
+  return [
+    {
+      id: "indicator_reliability",
+      label: "Indicator reliability",
+      status: lowLoadings.length ? "issue" : reviewLoadings.length ? "review" : result.outer_estimates.length ? "ready" : "unavailable",
+      evidence: lowLoadings.length ? `${lowLoadings.length} loading(s) below .40.` : reviewLoadings.length ? `${reviewLoadings.length} loading(s) between .40 and .708.` : `${result.outer_estimates.length} indicator estimate(s) available.`,
+      action: lowLoadings.length || reviewLoadings.length ? "Inspect item wording and theoretical justification." : undefined,
+    },
+    {
+      id: "internal_consistency",
+      label: "Internal consistency",
+      status: !assessment ? "unavailable" : reliabilityIssues.length ? "review" : "ready",
+      evidence: !assessment ? "Assessment payload is unavailable." : reliabilityIssues.length ? `${reliabilityIssues.length} construct(s) below common reliability guidance.` : "Alpha/rho_C checks are available.",
+      action: reliabilityIssues.length ? "Review reliability before reporting acceptance." : undefined,
+    },
+    {
+      id: "convergent_validity",
+      label: "Convergent validity",
+      status: !assessment ? "unavailable" : aveIssues.length ? "issue" : "ready",
+      evidence: !assessment ? "Assessment payload is unavailable." : aveIssues.length ? `${aveIssues.length} construct(s) with AVE below .50.` : "AVE values meet common guidance.",
+      action: aveIssues.length ? "Review indicators and construct definition." : undefined,
+    },
+    {
+      id: "discriminant_validity",
+      label: "Discriminant validity",
+      status: !assessment ? "unavailable" : htmtIssueCount ? "issue" : htmtReviewCount ? "review" : "ready",
+      evidence: !assessment ? "HTMT/Fornell-Larcker not available." : htmtIssueCount ? `${htmtIssueCount} HTMT+ cell(s) at or above .90.` : htmtReviewCount ? `${htmtReviewCount} HTMT+ cell(s) between .85 and .90.` : "Discriminant validity tables are available.",
+      action: htmtIssueCount || htmtReviewCount ? "Inspect construct overlap, theory, and item wording." : undefined,
+    },
+    {
+      id: "collinearity",
+      label: "Collinearity",
+      status: !assessment ? "unavailable" : highVif ? "issue" : reviewVif ? "review" : "ready",
+      evidence: !assessment ? "VIF values are unavailable." : highVif ? `${highVif} VIF value(s) at or above 5.` : reviewVif ? `${reviewVif} VIF value(s) at or above 3.3.` : "Structural VIF checks are within common guidance.",
+      action: highVif || reviewVif ? "Review overlapping predictors before interpreting paths." : undefined,
+    },
+    {
+      id: "structural_paths",
+      label: "Structural paths",
+      status: result.paths.length ? (hasInference ? "ready" : "review") : "not applicable",
+      evidence: result.paths.length ? `${result.paths.length} path coefficient(s); ${hasInference ? "inference available" : "estimate-only without resampling"}.` : "No structural paths in this model.",
+      action: hasInference ? undefined : "Enable bootstrap or permutation before significance claims.",
+    },
+    {
+      id: "r_squared",
+      label: "R² / adjusted R²",
+      status: Object.keys(result.r_squared).length ? "ready" : "not applicable",
+      evidence: Object.keys(result.r_squared).length ? `${Object.keys(result.r_squared).length} endogenous construct(s) with R².` : "No endogenous construct with R².",
+    },
+    {
+      id: "f_squared",
+      label: "f² effect sizes",
+      status: !assessment ? "unavailable" : assessment.f_squared.length ? "ready" : "not applicable",
+      evidence: !assessment ? "f² table is unavailable." : assessment.f_squared.length ? `${assessment.f_squared.length} effect-size row(s) available.` : "No f² rows for this run.",
+    },
+    {
+      id: "prediction",
+      label: "Q² / prediction",
+      status: result.predict || assessment?.blindfolding ? "ready" : "unavailable",
+      evidence: result.predict ? "PLSpredict output is available." : assessment?.blindfolding ? "Blindfolding Q² output is available." : "Prediction outputs were not run.",
+      action: result.predict || assessment?.blindfolding ? undefined : "Run PLSpredict or blindfolding when prediction is a research objective.",
+    },
+    {
+      id: "conditional_effects",
+      label: "Mediation / moderation / groups",
+      status: result.mediation?.estimates.length || result.moderation?.estimates.length || result.mga || result.micom ? "ready" : shapeRecommendations.length ? "review" : "not applicable",
+      evidence: result.mediation?.estimates.length ? `${result.mediation.estimates.length} mediation effect row(s).` : result.moderation?.estimates.length ? `${result.moderation.estimates.length} moderation row(s).` : result.mga || result.micom ? "Group-analysis payload available." : shapeRecommendations.length ? `${shapeRecommendations.length} diagram-based recommendation(s).` : "No conditional or group payload.",
+      action: shapeRecommendations.length ? "Use the advisor recommendations if they match your research design." : undefined,
+    },
+    {
+      id: "inference",
+      label: "Inference availability",
+      status: hasInference ? "ready" : "unavailable",
+      evidence: hasInference ? `${run.bootstrap ? "Bootstrap" : ""}${run.bootstrap && run.permutation ? " and " : ""}${run.permutation ? "permutation" : ""} output available.` : "No bootstrap or permutation output.",
+      action: hasInference ? undefined : "Do not report p values or confidence intervals from this run.",
+    },
+    {
+      id: "warnings",
+      label: "Warnings and provenance",
+      status: warnings.length ? "review" : "ready",
+      evidence: warnings.length ? `${warnings.length} warning(s) beyond scope status.` : `Seed ${run.seed}, fingerprint ${run.fingerprint}.`,
+      action: warnings.length ? "Review Diagnostics before reporting." : undefined,
+    },
+  ];
+}
+
+function reportabilityTargetTab(id: string): ResultWorkspaceTab {
+  if (id === "indicator_reliability" || id === "internal_consistency") return "measurement";
+  if (id === "convergent_validity" || id === "discriminant_validity") return "validity";
+  if (id === "collinearity" || id === "structural_paths" || id === "r_squared" || id === "f_squared") return "structural";
+  if (id === "prediction") return "prediction";
+  if (id === "conditional_effects") return "groups";
+  if (id === "inference") return "inference";
+  if (id === "warnings") return "diagnostics";
+  return "overview";
+}
+
+function MeasurementResults({ result, assessment, focusPath, activePath, interpretation }: { result: PlsResult; assessment?: AssessmentResult; focusPath: (source: string, target: string) => void; activePath: { source: string; target: string } | null; interpretation: ResultInterpretation }) {
   return <div className="result-sections" tabIndex={0} role="region" aria-label="Measurement model results">
+    <FindingCards findings={findingsForTab(interpretation, "measurement")} title="Measurement findings" onFocusPath={focusPath} />
     <SectionTable title="Outer loadings and weights" note="Reflective constructs are usually interpreted through loadings; formative constructs require weights and collinearity diagnostics." columns={["Construct", "Indicator", "Loading", "Weight", "Loading status"]} rows={result.outer_estimates.map((row) => [row.construct, row.indicator, row.loading.toFixed(6), row.weight.toFixed(6), loadingStatus(row.loading)])} guidance={interpretationRegistry.loadings} />
     {assessment?.formative_indicator_vif.length ? <SectionTable title="Outer VIF for formative indicators" note="Use VIF to screen formative indicator collinearity." columns={["Construct", "Indicator", "VIF", "Status"]} rows={assessment.formative_indicator_vif.map((row) => [row.construct, row.indicator, formatOptional(row.vif, 4), vifStatus(row.vif)])} /> : null}
     {assessment?.cross_loadings.length ? <SectionTable title="Cross-loadings" note="Each indicator should usually load highest on its assigned construct." columns={["Indicator", "Assigned construct", "Compared construct", "Loading"]} rows={assessment.cross_loadings.map((row) => [row.indicator, row.assigned_construct, row.construct, row.loading.toFixed(6)])} /> : null}
@@ -159,10 +312,11 @@ function MeasurementResults({ result, assessment, focusPath, activePath }: { res
   </div>;
 }
 
-function StructuralResults({ run, focusPath, activePath }: { run: AnalysisRun; focusPath: (source: string, target: string) => void; activePath: { source: string; target: string } | null }) {
+function StructuralResults({ run, focusPath, activePath, interpretation }: { run: AnalysisRun; focusPath: (source: string, target: string) => void; activePath: { source: string; target: string } | null; interpretation: ResultInterpretation }) {
   const result = run.result!;
   const assessment = run.assessment;
   return <div className="result-sections" tabIndex={0} role="region" aria-label="Structural model results">
+    <FindingCards findings={findingsForTab(interpretation, "structural")} title="Structural findings" onFocusPath={focusPath} />
     <SectionTable title="Path coefficients" note="Bootstrapped t values and p values appear in Inference after bootstrap is enabled." columns={["Path", "Coefficient", "Direction"]} rows={result.paths.map((path) => [pathLabel(path.source, path.target), path.coefficient.toFixed(6), coefficientDirection(path.coefficient)])} activeRowIndexes={activeIndexes(result.paths, activePath)} onRowClick={(_, index) => focusPath(result.paths[index].source, result.paths[index].target)} guidance={interpretationRegistry.paths} />
     <EffectsTable result={result} activePath={activePath} />
     {(result.control_estimates ?? []).length ? <SectionTable title="Control paths" columns={["Control path", "Coefficient"]} rows={result.control_estimates!.map((control) => [pathLabel(control.source, control.target), control.coefficient.toFixed(6)])} /> : null}
@@ -174,9 +328,10 @@ function StructuralResults({ run, focusPath, activePath }: { run: AnalysisRun; f
   </div>;
 }
 
-function QualityResults({ assessment }: { assessment?: AssessmentResult }) {
+function QualityResults({ assessment, interpretation }: { assessment?: AssessmentResult; interpretation: ResultInterpretation }) {
   if (!assessment) return <SectionEmpty title="No assessment payload" detail="Run a PLS-SEM method with assessment outputs to review reliability and validity." />;
    return <div className="result-sections quality-summary" tabIndex={0} role="region" aria-label="measurement quality tables">
+    <FindingCards findings={findingsForTab(interpretation, "validity")} title="Validity findings" />
     <SectionTable title="Construct reliability and convergent validity" note="Common reporting columns for reflective PLS-SEM measurement model assessment." columns={["Construct", "Cronbach alpha", "rho_A", "rho_C", "AVE", "Quick check"]} rows={assessment.construct_quality.map((quality) => [
       quality.construct,
       formatOptional(quality.cronbach_alpha, 4),
@@ -193,52 +348,60 @@ function QualityResults({ assessment }: { assessment?: AssessmentResult }) {
   </div>;
 }
 
-function InferenceResults({ run }: { run: AnalysisRun }) {
-  if (!run.bootstrap && !run.permutation) return <SectionEmpty title="Inference not run" detail="Enable bootstrap or permutation in Setup, rerun the model, then return here for t values, p values, and confidence intervals." />;
+function InferenceResults({ run, interpretation }: { run: AnalysisRun; interpretation: ResultInterpretation }) {
+  if (!run.bootstrap && !run.permutation) return <div className="result-sections" tabIndex={0} role="region" aria-label="Inference results">
+    <FindingCards findings={findingsForTab(interpretation, "inference")} title="Inference findings" />
+    <SectionEmpty title="Inference not run" detail="Enable bootstrap or permutation in Setup, rerun the model, then return here for t values, p values, and confidence intervals." />
+  </div>;
   return <div className="result-sections" tabIndex={0} role="region" aria-label="Inference results">
-    <InterpretationPanel descriptor={interpretationRegistry.inference} />
+    <FindingCards findings={findingsForTab(interpretation, "inference")} title="Inference findings" />
     {run.bootstrap ? <BootstrapSection run={run} /> : null}
     {run.permutation ? <PermutationSection run={run} /> : null}
   </div>;
 }
 
-function PredictionResults({ result, assessment }: { result: PlsResult; assessment?: AssessmentResult }) {
+function PredictionResults({ result, assessment, interpretation }: { result: PlsResult; assessment?: AssessmentResult; interpretation: ResultInterpretation }) {
   const hasPredict = Boolean(result.predict);
   const hasBlindfolding = Boolean(assessment?.blindfolding);
-  if (!hasPredict && !hasBlindfolding) return <SectionEmpty title="Prediction outputs not run" detail="Enable PLSpredict or blindfolding-related prediction settings, rerun the model, then review holdout metrics and Q² here." />;
+  if (!hasPredict && !hasBlindfolding) return <div className="result-sections" tabIndex={0} role="region" aria-label="Prediction results">
+    <FindingCards findings={findingsForTab(interpretation, "prediction")} title="Prediction findings" />
+    <SectionEmpty title="Prediction outputs not run" detail="Enable PLSpredict or blindfolding-related prediction settings, rerun the model, then review holdout metrics and Q² here." />
+  </div>;
   return <div className="result-sections" tabIndex={0} role="region" aria-label="Prediction results">
-    <InterpretationPanel descriptor={interpretationRegistry.prediction} />
+    <FindingCards findings={findingsForTab(interpretation, "prediction")} title="Prediction findings" />
     {result.predict ? <><strong className="result-section-heading">PLSpredict holdout</strong><MethodWarnings warnings={result.predict.warnings} /><PlsPredictTable targets={result.predict.targets} />{result.predict.repeated_kfold ? <><strong className="result-section-heading">Repeated k-fold prediction</strong><MethodWarnings warnings={result.predict.repeated_kfold.warnings} /><PlsPredictTable targets={result.predict.repeated_kfold.targets} />{result.predict.repeated_kfold.cvpat?.length ? <CvpatTable comparisons={result.predict.repeated_kfold.cvpat} /> : null}</> : null}</> : null}
     {assessment?.blindfolding ? <SectionTable title="Blindfolding Q²" note={`Omission distance ${assessment.blindfolding.settings.omission_distance}.`} columns={["Construct", "Q²", "PRESS", "SSO"]} rows={assessment.blindfolding.constructs.map((row) => [row.construct, formatOptional(row.q_squared, 4), formatOptional(row.prediction_error_sum_squares, 6), formatOptional(row.observation_sum_squares, 6)])} /> : null}
   </div>;
 }
 
-function GroupResults({ result }: { result: PlsResult }) {
-  if (!result.mga && !result.micom && !result.mga_permutation && !result.fimix && !result.segmentation && !result.ipma) return <SectionEmpty title="No group or segmentation payloads" detail="Configure MICOM/MGA, FIMIX-PLS, PLS-POS, or IPMA in Setup and rerun the model to populate this tab." />;
-  return <div className="result-sections" tabIndex={0} role="region" aria-label="Groups and segmentation results"><InterpretationPanel descriptor={interpretationRegistry.groups} /><MethodPayloadSections result={result} /></div>;
+function GroupResults({ result, interpretation }: { result: PlsResult; interpretation: ResultInterpretation }) {
+  if (!result.mga && !result.micom && !result.mga_permutation && !result.fimix && !result.segmentation && !result.ipma) return <div className="result-sections" tabIndex={0} role="region" aria-label="Groups and segmentation results">
+    <FindingCards findings={findingsForTab(interpretation, "groups")} title="Groups findings" />
+    <SectionEmpty title="No group or segmentation payloads" detail="Configure MICOM/MGA, FIMIX-PLS, PLS-POS, or IPMA in Setup and rerun the model to populate this tab." />
+  </div>;
+  return <div className="result-sections" tabIndex={0} role="region" aria-label="Groups and segmentation results"><FindingCards findings={findingsForTab(interpretation, "groups")} title="Groups findings" /><MethodPayloadSections result={result} /></div>;
 }
 
-function DiagnosticsResults({ run }: { run: AnalysisRun }) {
+function DiagnosticsResults({ run, interpretation }: { run: AnalysisRun; interpretation: ResultInterpretation }) {
   const result = run.result!;
   const assessment = run.assessment;
   return <div className="result-sections" tabIndex={0} role="region" aria-label="Diagnostics results">
+    <FindingCards findings={findingsForTab(interpretation, "diagnostics")} title="Method-specific findings" />
     <SectionTable title="Run provenance" columns={["Field", "Value"]} rows={[["Method", run.method], ["Created", new Date(run.createdAt).toLocaleString()], ["Seed", String(run.seed)], ["Fingerprint", run.fingerprint], ["Converged", result.converged ? "yes" : "no"], ["Iterations", String(result.iterations)], ["Used observations", String(result.used_observations)], ["Omitted observations", String(result.omitted_observations)]]} />
     <SectionTable title="Warnings and scope status" columns={["Message"]} rows={[...run.warnings, ...result.warnings, ...(assessment?.warnings ?? [])].map((warning) => [scopeCopy(warning)])} />
     {assessment?.model_fit ? <SectionTable title="Correlation-residual fit" note="PLS-SEM approximate fit diagnostics should be interpreted within the documented QuickPLS scope." columns={["Model", "SRMR", "d_ULS"]} rows={[["Saturated", assessment.model_fit.saturated.srmr.toFixed(4), assessment.model_fit.saturated.d_uls.toFixed(6)], ["Estimated", assessment.model_fit.estimated.srmr.toFixed(4), assessment.model_fit.estimated.d_uls.toFixed(6)]]} /> : null}
-    {result.plsc || result.wpls || result.cca || result.cta_pls || result.endogeneity || result.nonlinear_effects || result.moderated_mediation || result.cbsem || result.gsca || result.regression || result.nca || result.pca ? <><InterpretationPanel descriptor={interpretationRegistry.extended} /><MethodPayloadSections result={result} /></> : null}
+    {result.plsc || result.wpls || result.cca || result.cta_pls || result.endogeneity || result.nonlinear_effects || result.moderated_mediation || result.cbsem || result.gsca || result.regression || result.nca || result.pca ? <MethodPayloadSections result={result} /> : null}
   </div>;
 }
 
-function InterpretationResults({ run }: { run: AnalysisRun }) {
+function InterpretationResults({ run, interpretation }: { run: AnalysisRun; interpretation: ResultInterpretation }) {
   const result = run.result!;
-  const nextSteps = interpretationNextSteps(run);
+  const grouped = findingsByGroup(interpretation.findings);
   return <div className="result-sections interpretation-workspace" tabIndex={0} role="region" aria-label="Interpretation and report wording">
-    <InterpretationPanel descriptor={interpretationRegistry.paths} />
-    <InterpretationPanel descriptor={interpretationRegistry.loadings} />
-    <InterpretationPanel descriptor={interpretationRegistry.reliability} />
-    <InterpretationPanel descriptor={interpretationRegistry.structuralQuality} />
-    <SectionTable title="What should I inspect next?" columns={["Priority", "Reason", "Next workspace"]} rows={nextSteps.map((step, index) => [String(index + 1), step.reason, step.target])} />
-    <SectionTable title="Copyable report wording" note="Use these as starting points; adjust language for theory, sample, and journal requirements." columns={["Section", "Draft wording"]} rows={reportWording(run).map((row) => [row.section, row.text])} />
+    <FindingChecklist title="Must address before reporting" findings={grouped.must} />
+    <FindingChecklist title="Recommended checks" findings={grouped.recommended} />
+    <FindingChecklist title="Optional advanced checks" findings={grouped.optional} />
+    <SectionTable title="Report wording" note="Value-filled draft wording from this run. Adjust language for theory, sample, and journal requirements." columns={["Section", "Draft wording"]} rows={interpretation.reportParagraphs.map((row) => [row.section, row.text])} />
     <SectionTable title="Result availability map" columns={["Area", "Status"]} rows={[
       ["Measurement", result.outer_estimates.length ? "available" : "not available"],
       ["Validity", run.assessment ? "available" : "not available"],
@@ -299,12 +462,28 @@ function PermutationSection({ run }: { run: AnalysisRun }) {
 
 function MediationTable({ run }: { run: AnalysisRun }) {
   const estimates = run.result?.mediation?.estimates ?? [];
-  return <SectionTable title="Mediation effects" note={run.bootstrap ? "Bootstrap inference is shown where the matching indirect-effect parameter exists." : "Bootstrap was not run; p values and confidence intervals are unavailable."} columns={["Effect", "Direct", "Indirect", "Total", "Indirect p", "Percentile CI", "BCa CI", "Bootstrap-t CI", "VAF", "Class"]} rows={estimates.map((effect) => {
+  const rows = estimates.map((effect) => {
     const parameter = findBootstrapParameter(run.bootstrap, "indirect_effect", [effect.source, effect.target]);
     const bca = parameter ? findBcaParameter(run.bootstrap, parameter.parameter) : undefined;
     const studentized = parameter ? findStudentizedParameter(run.bootstrap, parameter.parameter) : undefined;
-    return [pathLabel(effect.source, effect.target), effect.direct.toFixed(6), effect.indirect.toFixed(6), effect.total.toFixed(6), formatPValue(parameter?.p_value_two_sided), formatInterval(parameter?.lower, parameter?.upper), formatInterval(bca?.lower, bca?.upper), formatInterval(studentized?.lower, studentized?.upper), effect.variance_accounted_for?.toFixed(4) ?? "N/A", formatMediationClass(effect.classification)];
-  })} />;
+    return {
+      effect: pathLabel(effect.source, effect.target),
+      direct: effect.direct.toFixed(6),
+      indirect: effect.indirect.toFixed(6),
+      total: effect.total.toFixed(6),
+      indirectP: formatPValue(parameter?.p_value_two_sided),
+      percentileCi: formatInterval(parameter?.lower, parameter?.upper),
+      bcaCi: formatInterval(bca?.lower, bca?.upper),
+      studentizedCi: formatInterval(studentized?.lower, studentized?.upper),
+      vaf: effect.variance_accounted_for?.toFixed(4) ?? "N/A",
+      classification: formatMediationClass(effect.classification),
+    };
+  });
+  return <div className="mediation-table-stack" aria-label="Mediation effect sections">
+    <SectionTable title="Mediation effects summary" note="Direct, indirect, and total effects are separated for readable path interpretation." columns={["Effect", "Direct", "Indirect", "Total"]} rows={rows.map((row) => [row.effect, row.direct, row.indirect, row.total])} />
+    <SectionTable title="Mediation inference" note={run.bootstrap ? "Bootstrap inference is shown where the matching indirect-effect parameter exists." : "Bootstrap was not run; p values and confidence intervals are unavailable."} columns={["Effect", "Indirect p", "Percentile CI", "BCa CI", "Bootstrap-t CI"]} rows={rows.map((row) => [row.effect, row.indirectP, row.percentileCi, row.bcaCi, row.studentizedCi])} />
+    <SectionTable title="Mediation classification" note="VAF and class are descriptive guides; use inference before claiming mediation support." columns={["Effect", "VAF", "Class"]} rows={rows.map((row) => [row.effect, row.vaf, row.classification])} />
+  </div>;
 }
 
 function EffectsTable({ result, activePath }: { result: PlsResult; activePath: { source: string; target: string } | null }) {
@@ -451,6 +630,67 @@ function InterpretationPanel({ descriptor }: { descriptor: InterpretationDescrip
   </details>;
 }
 
+function displayFindings(findings: InterpretationFinding[], limit = 6) {
+  const seen = new Set<string>();
+  const priority: Record<InterpretationFinding["severity"], number> = { issue: 0, caution: 1, unavailable: 2, info: 3, good: 4 };
+  return findings
+    .filter((finding) => {
+      const pair = finding.metric === "HTMT+" && finding.interpretation.includes(" between ")
+        ? finding.interpretation.replace(/^HTMT\+ between /, "").replace(/ is .*/, "").split(" and ").sort().join("|")
+        : "";
+      const subject = pair || finding.construct || finding.indicator || (finding.path ? `${finding.path.source}->${finding.path.target}` : "");
+      const key = `${finding.metric}|${subject}|${finding.value}|${finding.recommendedAction}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .sort((left, right) => priority[left.severity] - priority[right.severity])
+    .slice(0, limit);
+}
+
+function FindingCards({ findings, title, onFocusPath }: { findings: InterpretationFinding[]; title: string; onFocusPath?: (source: string, target: string) => void }) {
+  if (!findings.length) return <section className="finding-panel empty"><div><strong>{title}</strong><span>No value-specific findings are available for this tab.</span></div></section>;
+  const copyFindings = async () => navigator.clipboard?.writeText(copyableInterpretationText(findings));
+  const visibleFindings = displayFindings(findings);
+  const issueCount = findings.filter((finding) => finding.severity === "issue").length;
+  const cautionCount = findings.filter((finding) => finding.severity === "caution" || finding.severity === "unavailable").length;
+  const remainingCount = Math.max(0, findings.length - visibleFindings.length);
+  return <section className="finding-panel" aria-label={title}>
+    <div className="finding-panel-header"><strong>{title}</strong><button type="button" onClick={() => void copyFindings()}>Copy interpretation</button></div>
+    <div className="finding-triage-row" aria-label="Finding priority summary">
+      <span className={issueCount ? "issue" : "good"}>{issueCount} must address</span>
+      <span className={cautionCount ? "caution" : "good"}>{cautionCount} review</span>
+      <span>{findings.length} total findings</span>
+    </div>
+    <div className="finding-card-grid">
+      {visibleFindings.map((finding) => <article key={finding.id} className={`finding-card ${finding.severity}`}>
+        <div><span>{severityText(finding.severity)}</span><b>{finding.metric}</b></div>
+        <strong>{finding.value}</strong>
+        <p>{finding.interpretation}</p>
+        <small>{finding.thresholdGuide}</small>
+        <em>{finding.recommendedAction}</em>
+        {finding.path && onFocusPath ? <button type="button" onClick={() => onFocusPath(finding.path!.source, finding.path!.target)}>Focus diagram path</button> : null}
+      </article>)}
+    </div>
+    {remainingCount ? <p className="finding-more-note">{remainingCount} more finding(s) are available in the Interpretation tab or copied text.</p> : null}
+  </section>;
+}
+
+function FindingChecklist({ title, findings }: { title: string; findings: InterpretationFinding[] }) {
+  const copyFindings = async () => navigator.clipboard?.writeText(copyableInterpretationText(findings));
+  if (!findings.length) return <section className="finding-checklist"><div className="result-section-title"><strong>{title}</strong></div><p>No items in this group.</p></section>;
+  return <section className="finding-checklist">
+    <div className="result-section-title"><strong>{title}</strong><div className="result-section-actions"><button type="button" onClick={() => void copyFindings()}>Copy checklist</button></div></div>
+    <ol>
+      {findings.map((finding) => <li key={finding.id} className={finding.severity}>
+        <strong>{finding.metric}: {finding.value}</strong>
+        <p>{finding.interpretation}</p>
+        <span>{finding.recommendedAction}</span>
+      </li>)}
+    </ol>
+  </section>;
+}
+
 function SectionTable({ title, note, columns, rows, onRowClick, activeRowIndexes, guidance }: { title: string; note?: string; columns: string[]; rows: string[][]; onRowClick?: (row: string[], index: number) => void; activeRowIndexes?: number[]; guidance?: InterpretationDescriptor }) {
   const resultState = useWorkspace((state) => state.resultWorkspaceState);
   const setResultState = useWorkspace((state) => state.setResultWorkspaceState);
@@ -483,6 +723,7 @@ function SectionTable({ title, note, columns, rows, onRowClick, activeRowIndexes
     .map((column, index) => ({ column, index }))
     .filter(({ index }) => resultState.showInterpretationColumns || !interpretationColumnIndexes.has(index));
   const displayRows = sortedRows.map(({ row }) => visibleColumnEntries.map(({ index }) => formatDisplayCell(row[index] ?? "", resultState.resultPrecision)));
+  const isWideTable = visibleColumnEntries.length > 6;
   const copyTable = async () => {
     const body = [visibleColumnEntries.map(({ column }) => column), ...displayRows].map((row) => row.join("\t")).join("\n");
     await navigator.clipboard?.writeText(body);
@@ -493,9 +734,10 @@ function SectionTable({ title, note, columns, rows, onRowClick, activeRowIndexes
     const nextDirection = resultState.tableSort?.startsWith(sortKey) && resultState.tableSort.endsWith("|asc") ? "desc" : "asc";
     setResultState({ tableSort: `${title}|${columnIndex}|${nextDirection}` });
   };
-  return <section className="result-table-section">
-    <div className="result-section-title"><strong>{title}</strong>{note ? <span>{note}</span> : null}<div className="result-section-actions"><button type="button" onClick={() => void copyTable()}>Copy table</button>{guidance ? <button type="button" onClick={() => setResultState({ activeInterpretationPanel: activePanel ? null : title })}>{activePanel ? "Hide guidance" : "Interpretation"}</button> : null}</div></div>
+  return <section className={`result-table-section${isWideTable ? " wide" : ""}`}>
+    <div className="result-section-title"><strong>{title}</strong>{note ? <span>{note}</span> : null}<div className="result-section-meta"><span>{displayRows.length} of {rows.length} rows</span>{isWideTable ? <span>Wide table: first column stays pinned while scrolling</span> : null}</div><div className="result-section-actions"><button type="button" onClick={() => void copyTable()}>Copy table</button>{guidance ? <button type="button" onClick={() => setResultState({ activeInterpretationPanel: activePanel ? null : title })}>{activePanel ? "Hide guidance" : "Interpretation"}</button> : null}</div></div>
     {guidance && activePanel ? <InterpretationPanel descriptor={guidance} /> : null}
+    {isWideTable ? <div className="result-table-affordance">Scroll horizontally to inspect all columns. Use Export table for full-width review.</div> : null}
     <div className="bootstrap-table-scroll result-table-scroll" tabIndex={0} role="region" aria-label={`${title} table`}><table><thead><tr>{visibleColumnEntries.map(({ column, index }) => <th key={`${title}-${column}-${index}`}><button type="button" className="table-sort-button" onClick={() => toggleSort(index)}>{column}</button></th>)}</tr></thead><tbody>
       {displayRows.map((row, displayIndex) => {
         const original = sortedRows[displayIndex];
@@ -505,7 +747,7 @@ function SectionTable({ title, note, columns, rows, onRowClick, activeRowIndexes
       }}>{row.map((cell, cellIndex) => <td key={`${title}-${original.index}-${cellIndex}`}>{cell}</td>)}</tr>;
       })}
     </tbody></table></div>
-    {selectedDetail ? <div className="result-row-detail"><strong>Selected row</strong><span>{selectedDetail.replace(`${title}:`, "")}</span></div> : null}
+    {selectedDetail ? <div className="result-row-detail"><strong>Selected row interpretation</strong><span>{rowSpecificInterpretation(title, visibleColumnEntries.map(({ column }) => column), selectedDetail.replace(`${title}:`, "").split("|"))}</span></div> : null}
   </section>;
 }
 
@@ -822,6 +1064,14 @@ function reliabilityStatus(alpha: number | null, rhoC: number | null, ave: numbe
   if (rhoC != null && rhoC < 0.7) issues.push("rho_C");
   if (ave != null && ave < 0.5) issues.push("AVE");
   return issues.length ? `review ${issues.join(", ")}` : "passes common cutoffs";
+}
+
+function severityText(severity: InterpretationFinding["severity"]) {
+  if (severity === "good") return "Good";
+  if (severity === "issue") return "Issue";
+  if (severity === "caution") return "Caution";
+  if (severity === "unavailable") return "Unavailable";
+  return "Info";
 }
 
 function scopeCopy(warning: string | undefined) {

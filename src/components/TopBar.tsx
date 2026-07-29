@@ -233,7 +233,7 @@ export function TopBar() {
   return <>
     <header className="title-bar">
       <Menu size={20} /><strong>QuickPLS</strong><span className="project-title">{projectName}.qpls</span>
-      <span className="alpha-mark">v1.5.3 layout, copy, and readiness polish</span>
+      <span className="alpha-mark">v1.7 SmartPLS-competitive researcher experience</span>
     </header>
     <div className="command-bar">
       <button className="icon-command" aria-label="New project" title="New project" onClick={() => { void newProjectCommand().catch((error) => window.alert(error)); }}><Plus size={17} /><span>New</span></button>

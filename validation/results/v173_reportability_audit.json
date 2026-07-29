@@ -1,0 +1,42 @@
+{
+  "passed": true,
+  "section": "v173_reportability",
+  "generated_at": "2026-07-29T12:29:56.956422+00:00",
+  "checked_files": [
+    "src/components/RunHistory.tsx",
+    "src/components/Ui.tsx"
+  ],
+  "passed_checks": [
+    {
+      "file": "src/components/RunHistory.tsx",
+      "label": "reportability checklist component usage"
+    },
+    {
+      "file": "src/components/RunHistory.tsx",
+      "label": "value-driven checklist builder"
+    },
+    {
+      "file": "src/components/RunHistory.tsx",
+      "label": "indicator reliability checklist item"
+    },
+    {
+      "file": "src/components/RunHistory.tsx",
+      "label": "threshold color control"
+    },
+    {
+      "file": "src/components/RunHistory.tsx",
+      "label": "inference caveat"
+    },
+    {
+      "file": "src/components/Ui.tsx",
+      "label": "shared checklist UI"
+    },
+    {
+      "file": "src/components/Ui.tsx",
+      "label": "threshold caveat"
+    }
+  ],
+  "missing": [],
+  "frontend_only": true,
+  "numerical_outputs_changed": false
+}

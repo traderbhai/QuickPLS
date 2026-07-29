@@ -1,0 +1,42 @@
+{
+  "passed": true,
+  "milestone": "v1_6_1_setup_run_workflow_consolidation",
+  "generated_at": "2026-07-29T10:44:58.688456+00:00",
+  "checks": [
+    {
+      "name": "Setup launches the configured run directly",
+      "passed": true,
+      "evidence": "AnalysisCatalog dispatches the production run event and keeps the run monitor as a secondary destination."
+    },
+    {
+      "name": "Setup has a consolidated launch panel",
+      "passed": true,
+      "evidence": "Setup combines run summary, scope, resampling state, and launch action in one panel."
+    },
+    {
+      "name": "Setup removes duplicate readiness/run-state cards",
+      "passed": true,
+      "evidence": "Setup keeps readiness in the readiness panel and does not repeat the same summary as extra cards."
+    },
+    {
+      "name": "Run workspace no longer repeats the full readiness panel",
+      "passed": true,
+      "evidence": "RunWorkspace uses a compact monitor summary instead of rendering the full readiness grid again."
+    },
+    {
+      "name": "Run routes settings changes back to Setup",
+      "passed": true,
+      "evidence": "Run remains focused on execution and links configuration edits back to Setup."
+    },
+    {
+      "name": "Registry and docs are wired",
+      "passed": true,
+      "evidence": "Development slice registry and milestone documentation reference v1.6.1."
+    },
+    {
+      "name": "No mojibake introduced",
+      "passed": true,
+      "evidence": "Setup/Run sources contain no visible mojibake sequences."
+    }
+  ]
+}

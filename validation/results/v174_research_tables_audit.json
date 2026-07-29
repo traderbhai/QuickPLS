@@ -1,0 +1,46 @@
+{
+  "passed": true,
+  "section": "v174_research_tables",
+  "generated_at": "2026-07-29T12:29:58.495642+00:00",
+  "checked_files": [
+    "src/components/RunHistory.tsx",
+    "src/components/Ui.tsx"
+  ],
+  "passed_checks": [
+    {
+      "file": "src/components/Ui.tsx",
+      "label": "reusable research table shell"
+    },
+    {
+      "file": "src/components/Ui.tsx",
+      "label": "sticky first column support"
+    },
+    {
+      "file": "src/components/Ui.tsx",
+      "label": "row count metadata"
+    },
+    {
+      "file": "src/components/Ui.tsx",
+      "label": "column count metadata"
+    },
+    {
+      "file": "src/components/RunHistory.tsx",
+      "label": "results table search"
+    },
+    {
+      "file": "src/components/RunHistory.tsx",
+      "label": "current table export"
+    },
+    {
+      "file": "src/components/RunHistory.tsx",
+      "label": "precision control"
+    },
+    {
+      "file": "src/components/RunHistory.tsx",
+      "label": "copy table affordance"
+    }
+  ],
+  "missing": [],
+  "frontend_only": true,
+  "numerical_outputs_changed": false
+}

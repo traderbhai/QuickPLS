@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "generated_at": "2026-07-29T12:30:01.756009+00:00",
+  "required_artifacts": [
+    "v170_confidence_scope_audit.json",
+    "v171_workflow_audit.json",
+    "v172_sem_designer_audit.json",
+    "v173_reportability_audit.json",
+    "v174_research_tables_audit.json",
+    "v175_publication_pack_audit.json",
+    "v176_samples_guided_audit.json"
+  ],
+  "missing_files": [],
+  "failed_artifacts": [],
+  "frontend_only": true,
+  "numerical_outputs_changed": false
+}

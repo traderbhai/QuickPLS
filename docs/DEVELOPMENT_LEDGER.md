@@ -540,4 +540,78 @@ Notes:
 - Implemented bounded two-run comparison for compatible PLS-family runs with metadata, path, R², and measurement deltas.
 - Added `validation/v155_results_interpretation_smoke.mjs`, `validation/v155_results_interpretation_audit.py`, `docs/V1_5_5_RESULTS_INTERPRETATION_POLISH.md`, and the `v1_5_5_results_interpretation_polish` registry gate.
 - Updated release metadata to `1.5.5` and artifact labeling to `v1_5_5_results_interpretation_polish` for fresh non-overwriting desktop builds.
+
+## v1.5.6 Result-Specific Interpretation Engine
+
+- Added `src/domain/resultInterpretation.ts` with deterministic findings for path coefficients, loadings, reliability, AVE, HTMT, cross-loadings, VIF, f2, Q2, inference availability, bootstrap intervals, mediation/moderation, method payloads, and SEM diagram-advisor checks.
+- Added `src/domain/resultInterpretation.test.ts` with fixed fixtures for weak/negative paths, weak loadings, low AVE/reliability, high HTMT, high VIF, f2 classification, missing inference, bootstrap intervals, mediation, and diagram-shape advice.
+- Updated `src/components/RunHistory.tsx` to render computed finding cards, exact-value row details, prioritized interpretation checklists, report wording, and copy controls.
+- Updated `src/components/ReportsWorkspace.tsx` with an explicit `Include interpretation notes` option for HTML/print reports while keeping default numeric exports clean.
+- Added `validation/v156_result_interpretation_smoke.mjs`, `validation/v156_result_interpretation_audit.py`, `docs/V1_5_6_RESULT_SPECIFIC_INTERPRETATION_ENGINE.md`, and the `v1_5_6_result_specific_interpretation_engine` registry gate.
 - Boundary: frontend/product polish only; no numerical backend, result-schema, formula, or validation-tolerance changes.
+
+## v1.5.7 UI/UX Launch-Quality Audit
+
+- Converted the latest full-screen user-supplied screenshots into a formal launch-quality issue register with 60 concrete issues across Home, Data, Model, Setup, Run, Results, and Report.
+- Preserved the screenshot evidence under `validation/results/screens/v157/ui-ux-launch-quality/` through `validation/v157_ui_ux_launch_quality_smoke.py`.
+- Added `validation/v157_ui_ux_launch_quality_audit.py` to verify screenshot coverage, issue-register completeness, remediation sequencing, registry wiring, and non-engine boundary wording.
+- Added `docs/V1_5_7_UI_UX_LAUNCH_QUALITY_AUDIT.md` and the `v1_5_7_ui_ux_launch_quality_audit` registry gate.
+- Defined the next remediation sequence: Results workspace launch redesign, Report publication workflow redesign, Model canvas shell and panel polish, Setup/Run consolidation, Data/Home launch polish, and global design-system/accessibility pass.
+- Boundary: audit/planning only; no statistical backend, result-schema, formula, project-format, or numerical-fingerprint changes.
+
+## v1.5.8 Results Workspace Launch Redesign
+
+- Replaced the Results mixed action strip with a dedicated workbench shell that separates section navigation from table tools.
+- Added tab hints, grouped utility controls, row-count metadata, and wide-table scroll guidance for more predictable desktop use.
+- Triaged interpretation findings by severity and capped visible cards while keeping full checklist/copy access.
+- Deduplicated HTMT matrix warnings to unique construct pairs.
+- Split mediation results into narrower effect summary, inference, and classification tables.
+- Added `validation/v158_results_launch_smoke.mjs`, `validation/v158_results_launch_audit.py`, `docs/V1_5_8_RESULTS_WORKSPACE_LAUNCH_REDESIGN.md`, and the `v1_5_8_results_workspace_launch_redesign` registry gate.
+- Boundary: frontend/product polish only; no numerical backend, result-schema, formula, or validation-tolerance changes.
+
+## v1.5.9 Report Publication Workflow Redesign
+
+- Reworked Report presets into selectable cards and grouped publication setup by Figure, Statistics, Tables, and Notes.
+- Replaced passive export cards with explicit export actions and nearby disabled reasons for CSV, HTML, XLSX, Print/PDF, and SVG.
+- Added preview layout-risk guidance so users know when to switch from current canvas to tidy publication layout before exporting.
+- Moved run comparison to the Results comparison workspace and kept Report focused on publication/export output.
+- Improved SmartPLS-like SVG labels with label backgrounds and automatic structural-label offsets.
+- Added `validation/v159_report_publication_smoke.mjs`, `validation/v159_report_publication_audit.py`, `docs/V1_5_9_REPORT_PUBLICATION_WORKFLOW_REDESIGN.md`, and the `v1_5_9_report_publication_workflow_redesign` registry gate.
+- Boundary: frontend/product polish only; no numerical backend, result-schema, formula, or validation-tolerance changes.
+## v1.6.0 Model Canvas Shell And Panel Polish
+
+- Added collapsible inspector state and model-shell grid classes so researchers can reclaim canvas width for medium and large SEM diagrams.
+- Added View menu controls for explorer/inspector collapse, opt-in minimap, selected-neighborhood isolation, and indicator collapse.
+- Reduced selected-object toolbar crowding with grouped route/indicator controls and simplified the left SEM explorer cards.
+- Added `validation/v160_model_canvas_smoke.mjs`, `validation/v160_model_canvas_audit.py`, and `docs/V1_6_0_MODEL_CANVAS_SHELL_AND_PANEL_POLISH.md`.
+
+## v1.6.1 Setup/Run Workflow Consolidation
+
+- Made Setup the primary configuration and launch surface by wiring its run action to the production `quickpls:run-analysis` event.
+- Reduced duplicate readiness presentation by turning Run into a compact execution monitor and handoff workspace.
+- Added `validation/v161_setup_run_smoke.mjs`, `validation/v161_setup_run_audit.py`, and `docs/V1_6_1_SETUP_RUN_WORKFLOW_CONSOLIDATION.md`.
+- Boundary: frontend/product polish only; no numerical backend, result-schema, formula, or validation-tolerance changes.
+
+## v1.6.2 Data/Home Launch Polish
+
+- Added a workflow-aware Home next-step launcher and compact status list.
+- Kept the Data workspace bridge to model creation visible through prefix detection and `Open Model Designer`.
+- Added `validation/v162_data_home_smoke.mjs`, `validation/v162_data_home_audit.py`, and `docs/V1_6_2_DATA_HOME_LAUNCH_POLISH.md`.
+- Boundary: frontend/product polish only; no numerical backend, import backend, result-schema, formula, or validation-tolerance changes.
+
+## v1.6.3 Global Design-System And Accessibility Pass
+
+- Replaced stale live v1.5.3 header copy with the current v1.6.3 design/accessibility milestone label.
+- Added static smoke and audit checks for stale release text, mojibake markers, scoped status language, keyboard focus contracts, and accessible Run disabled-state wiring.
+- Added `validation/v163_design_accessibility_smoke.mjs`, `validation/v163_design_accessibility_audit.py`, and `docs/V1_6_3_GLOBAL_DESIGN_ACCESSIBILITY_PASS.md`.
+- Boundary: frontend/product polish only; no numerical backend, result-schema, formula, project-format, or validation-tolerance changes.
+
+## v1.7 SmartPLS-Competitive Researcher Experience
+
+- Added method-scope transparency, Method Confidence panels, and reviewer-facing validation/context copy.
+- Added continuous workflow cues across Setup, Results, Report, and Home sample workflows.
+- Added Focus Diagram mode and publication-check copy for SEM diagrams.
+- Added value-driven reportability checklist items and threshold-color toggle.
+- Added Reviewer Pack preset and deterministic sample-project gallery/guided dataset workflow.
+- Added v1.7 docs, static audits, registry slices, and release metadata for `1.7.6`.
+- Boundary: frontend/product polish only; no estimator, result schema, project archive, validation tolerance, or numerical fingerprint changes.

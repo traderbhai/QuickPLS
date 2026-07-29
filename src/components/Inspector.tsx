@@ -1,4 +1,4 @@
-import { ArrowLeftRight, Network, Plus, Trash2 } from "lucide-react";
+import { ArrowLeftRight, ChevronsLeft, ChevronsRight, Network, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useWorkspace } from "../store";
 import type { MeasurementMode } from "../types";
@@ -6,6 +6,7 @@ import type { MeasurementMode } from "../types";
 export function Inspector() {
   const selectedNodeId = useWorkspace((state) => state.selectedNodeId);
   const selectedEdgeId = useWorkspace((state) => state.selectedEdgeId);
+  const inspectorCollapsed = useWorkspace((state) => state.inspectorCollapsed);
   const nodes = useWorkspace((state) => state.nodes);
   const edges = useWorkspace((state) => state.edges);
   const dataset = useWorkspace((state) => state.dataset);
@@ -24,7 +25,14 @@ export function Inspector() {
   const addTwoStageInteraction = useWorkspace((state) => state.addTwoStageInteraction);
   const setSelectedNode = useWorkspace((state) => state.setSelectedNode);
   const setSelectedEdge = useWorkspace((state) => state.setSelectedEdge);
+  const setInspectorCollapsed = useWorkspace((state) => state.setInspectorCollapsed);
   const [interactionDraft, setInteractionDraft] = useState({ predictor: "", moderator: "", outcome: "" });
+  const collapseControl = <button className="inspector-collapse-button" type="button" title="Collapse inspector" aria-label="Collapse inspector" onClick={() => setInspectorCollapsed(true)}><ChevronsRight size={15} /></button>;
+
+  if (inspectorCollapsed) return <aside className="inspector collapsed" aria-label="Collapsed inspector">
+    <button type="button" title="Expand inspector" aria-label="Expand inspector" onClick={() => setInspectorCollapsed(false)}><ChevronsLeft size={15} /></button>
+    <span>Inspector</span>
+  </aside>;
 
   if (edge) {
     const source = nodes.find((item) => item.id === edge.source);
@@ -33,6 +41,7 @@ export function Inspector() {
     const isCovariance = edge.data?.role === "covariance";
     const controlLabel = typeof edge.data?.controlLabel === "string" ? edge.data.controlLabel : "";
     if (isCovariance) return <aside className="inspector">
+      {collapseControl}
       <div className="inspector-tabs"><button onClick={() => setSelectedNode(source?.id ?? null)}>Construct</button><button className="active">Covariance</button><button onClick={() => setSelectedNode(null)}>Model</button></div>
       <div className="path-heading"><Network size={16} /><div><strong>Covariance display</strong><span>{source?.data.shortName} &lt;-&gt; {target?.data.shortName}</span></div></div>
       <label>Left construct<input value={source?.data.label ?? edge.source} readOnly /></label>
@@ -42,6 +51,7 @@ export function Inspector() {
       <div className="method-note"><strong>Visual covariance</strong><p>This arc is excluded from PLS recipe paths. CB-SEM covariance estimation remains controlled by the supported method settings and engine schema.</p></div>
     </aside>;
     return <aside className="inspector">
+      {collapseControl}
       <div className="inspector-tabs"><button onClick={() => setSelectedNode(source?.id ?? null)}>Construct</button><button className="active">Path</button><button onClick={() => setSelectedNode(null)}>Model</button></div>
       <div className="path-heading"><Network size={16} /><div><strong>Structural path</strong><span>{source?.data.shortName} -&gt; {target?.data.shortName}</span></div></div>
       <label>From<input value={source?.data.label ?? edge.source} readOnly /></label>
@@ -57,11 +67,12 @@ export function Inspector() {
         <button className="secondary-button" onClick={reverseSelectedPath}><ArrowLeftRight size={14} />Reverse</button>
         <button className="secondary-button danger" onClick={removeSelection}><Trash2 size={14} />Delete</button>
       </div>
-      <div className="method-note"><strong>Path direction matters</strong><p>The arrow points from predictor to outcome. Reverse only when the theoretical relationship is specified in the opposite direction.</p></div>
+      <div className="method-note"><strong>Path direction matters</strong><p>The arrow points from predictor to outcome. Reverse, delete, route, and label actions are also available directly from the selected path toolbar and right-click menu.</p></div>
     </aside>;
   }
 
   if (!node) return <aside className="inspector model-inspector">
+    {collapseControl}
     <div className="inspector-tabs"><button onClick={() => setSelectedNode(nodes[0]?.id ?? null)}>Construct</button><button onClick={() => setSelectedEdge(edges[0]?.id ?? null)}>Path</button><button className="active">Model</button></div>
     <div className="path-heading"><Network size={16} /><div><strong>Structural model</strong><span>{nodes.length} constructs | {edges.length} paths</span></div></div>
     <details className="inspector-section" open><summary>Essentials</summary>
@@ -77,7 +88,7 @@ export function Inspector() {
     </fieldset>
     </details>
     <div className="inspector-actions"><button className="secondary-button" onClick={() => autoLayout("horizontal")}>Arrange model</button></div>
-    <div className="method-note"><strong>QuickPLS v1.0 stable scope</strong><p>Supported PLS-SEM estimates and assessment outputs are validated for the documented v1.0 scope. Unsupported model shapes remain blocked or explicitly marked.</p></div>
+    <div className="method-note"><strong>Validated QuickPLS scope</strong><p>Supported method outputs are validated only for their documented QuickPLS scope. Unsupported model shapes remain blocked or explicitly marked.</p></div>
   </aside>;
 
   const update = (patch: Parameters<typeof updateConstruct>[1]) => updateConstruct(node.id, patch);
@@ -115,6 +126,7 @@ export function Inspector() {
     });
   };
   return <aside className="inspector">
+    {collapseControl}
     <div className="inspector-tabs"><button className="active">Construct</button><button onClick={() => setSelectedEdge(edges.find((item) => item.source === node.id || item.target === node.id)?.id ?? edges[0]?.id ?? null)}>Path</button><button onClick={() => setSelectedNode(null)}>Model</button></div>
     <details className="inspector-section" open><summary>Essentials</summary>
     <label>Name<input value={node.data.label} onChange={(event) => update({ label: event.target.value })} /></label>
@@ -125,7 +137,7 @@ export function Inspector() {
     <div className="inspector-actions"><button className="secondary-button danger" onClick={removeSelection}><Trash2 size={14} />Delete construct</button></div>
     </details>
     {node.data.semantic === "interaction" && node.data.interaction ? <div className="method-note"><strong>Two-stage interaction</strong><p>{nodes.find((item) => item.id === node.data.interaction?.predictor)?.data.shortName} x {nodes.find((item) => item.id === node.data.interaction?.moderator)?.data.shortName} moderates {nodes.find((item) => item.id === node.data.interaction?.outcome)?.data.shortName}. Estimation is blocked until the v0.5 two-stage engine gate is complete.</p></div> : null}
-    <details className="inspector-section" open><summary>Indicators</summary>
+    <details className="inspector-section"><summary>Indicators</summary>
     <div className="inspector-section-title"><strong>Indicators ({node.data.indicators.length})</strong></div>
     <label className="indicator-picker"><span><Plus size={13} />Assign dataset variable</span><select value="" onChange={(event) => { if (event.target.value) assignIndicator(node.id, event.target.value); }}>
       <option value="">Choose variable...</option>{availableIndicators.map((indicator) => <option key={indicator}>{indicator}</option>)}
@@ -170,6 +182,6 @@ export function Inspector() {
     <details className="inspector-section"><summary>Results</summary>
       {selectedRun?.result ? <div className="method-note"><strong>Selected run values</strong><p>R² {node.id}: {selectedRun.result.r_squared[node.id]?.toFixed(4) ?? "N/A"}. Indicator values and path coefficients remain synchronized with the selected result overlay.</p></div> : <div className="indicator-empty">Run or select a compatible result to inspect construct-level values here.</div>}
     </details>
-    <div className="method-note"><strong>QuickPLS v1.0 stable scope</strong><p>Mode A and Mode B measurement, supported assessment, bootstrap, and permutation workflows are available within the documented v1.0 scope.</p></div>
+    <div className="method-note"><strong>Validated QuickPLS scope</strong><p>Mode A/B measurement, supported assessment, inference, prediction, group, regression, and extended methods are validated only within their documented bounded scopes.</p></div>
   </aside>;
 }

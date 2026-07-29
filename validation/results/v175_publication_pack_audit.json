@@ -1,0 +1,33 @@
+{
+  "passed": true,
+  "section": "v175_publication_pack",
+  "generated_at": "2026-07-29T12:30:00.125046+00:00",
+  "checked_files": [
+    "src/components/ReportsWorkspace.tsx"
+  ],
+  "passed_checks": [
+    {
+      "file": "src/components/ReportsWorkspace.tsx",
+      "label": "reviewer-pack preset"
+    },
+    {
+      "file": "src/components/ReportsWorkspace.tsx",
+      "label": "reviewer-pack preview"
+    },
+    {
+      "file": "src/components/ReportsWorkspace.tsx",
+      "label": "validation index reference"
+    },
+    {
+      "file": "src/components/ReportsWorkspace.tsx",
+      "label": "explicit interpretation opt-in"
+    },
+    {
+      "file": "src/components/ReportsWorkspace.tsx",
+      "label": "audited SVG figure path"
+    }
+  ],
+  "missing": [],
+  "frontend_only": true,
+  "numerical_outputs_changed": false
+}

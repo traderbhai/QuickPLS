@@ -1,0 +1,42 @@
+{
+  "passed": true,
+  "milestone": "v1_6_3_global_design_system_and_accessibility_pass",
+  "generated_at": "2026-07-29T11:03:36.343677+00:00",
+  "checks": [
+    {
+      "name": "Visible milestone label is current",
+      "passed": true,
+      "evidence": "TopBar must not display stale release milestone text."
+    },
+    {
+      "name": "Global focus-visible treatment exists",
+      "passed": true,
+      "evidence": "Core desktop controls keep a visible keyboard focus outline."
+    },
+    {
+      "name": "Table and canvas accessibility contracts are tested",
+      "passed": true,
+      "evidence": "Existing Vitest accessibility contracts cover tables, canvas overlay status, shortcuts, and readiness."
+    },
+    {
+      "name": "Top Run disabled reason is programmatically linked",
+      "passed": true,
+      "evidence": "The main Run button keeps a nearby accessible disabled reason."
+    },
+    {
+      "name": "Normal UI source has no mojibake markers",
+      "passed": true,
+      "evidence": "Normal user-facing source must not contain mojibake such as R\u00c2\u00b2 or replacement characters."
+    },
+    {
+      "name": "Status language remains scoped",
+      "passed": true,
+      "evidence": "Status wording stays scoped and avoids competitor-equivalence claims."
+    },
+    {
+      "name": "Registry, package scripts, and docs are wired",
+      "passed": true,
+      "evidence": "Development slice registry, npm scripts, and milestone docs reference v1.6.3."
+    }
+  ]
+}

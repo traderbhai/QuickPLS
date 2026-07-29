@@ -1,0 +1,677 @@
+{
+  "schema_version": 1,
+  "target": "QuickPLS v1.5.7 UI/UX launch-quality audit smoke",
+  "passed": true,
+  "screenshots": [
+    {
+      "screen": "Home",
+      "path": "validation\\results\\screens\\v157\\ui-ux-launch-quality\\01_home.png",
+      "bytes": 110149
+    },
+    {
+      "screen": "Data",
+      "path": "validation\\results\\screens\\v157\\ui-ux-launch-quality\\02_data_top.png",
+      "bytes": 129267
+    },
+    {
+      "screen": "Data",
+      "path": "validation\\results\\screens\\v157\\ui-ux-launch-quality\\03_data_preview_top.png",
+      "bytes": 137983
+    },
+    {
+      "screen": "Data",
+      "path": "validation\\results\\screens\\v157\\ui-ux-launch-quality\\04_data_metadata.png",
+      "bytes": 111712
+    },
+    {
+      "screen": "Model",
+      "path": "validation\\results\\screens\\v157\\ui-ux-launch-quality\\05_model_canvas.png",
+      "bytes": 205052
+    },
+    {
+      "screen": "Setup",
+      "path": "validation\\results\\screens\\v157\\ui-ux-launch-quality\\06_setup_top.png",
+      "bytes": 108790
+    },
+    {
+      "screen": "Setup",
+      "path": "validation\\results\\screens\\v157\\ui-ux-launch-quality\\07_setup_presets.png",
+      "bytes": 102010
+    },
+    {
+      "screen": "Setup",
+      "path": "validation\\results\\screens\\v157\\ui-ux-launch-quality\\08_setup_method_table.png",
+      "bytes": 108697
+    },
+    {
+      "screen": "Run",
+      "path": "validation\\results\\screens\\v157\\ui-ux-launch-quality\\09_run.png",
+      "bytes": 107813
+    },
+    {
+      "screen": "Results",
+      "path": "validation\\results\\screens\\v157\\ui-ux-launch-quality\\10_results_overview_top.png",
+      "bytes": 132462
+    },
+    {
+      "screen": "Results",
+      "path": "validation\\results\\screens\\v157\\ui-ux-launch-quality\\11_results_overview_table.png",
+      "bytes": 135852
+    },
+    {
+      "screen": "Results",
+      "path": "validation\\results\\screens\\v157\\ui-ux-launch-quality\\12_results_structural_tables.png",
+      "bytes": 111985
+    },
+    {
+      "screen": "Report",
+      "path": "validation\\results\\screens\\v157\\ui-ux-launch-quality\\13_report_setup.png",
+      "bytes": 128856
+    },
+    {
+      "screen": "Report",
+      "path": "validation\\results\\screens\\v157\\ui-ux-launch-quality\\14_report_diagram_preview.png",
+      "bytes": 146323
+    },
+    {
+      "screen": "Report",
+      "path": "validation\\results\\screens\\v157\\ui-ux-launch-quality\\15_report_exports_comparison.png",
+      "bytes": 125723
+    }
+  ],
+  "missing_screenshots": [],
+  "issue_count": 60,
+  "severity_counts": {
+    "high": 12,
+    "medium": 42,
+    "low": 6
+  },
+  "screen_counts": {
+    "Global": 15,
+    "Home": 5,
+    "Data": 6,
+    "Model": 8,
+    "Setup": 6,
+    "Run": 4,
+    "Results": 9,
+    "Report": 6,
+    "Tables": 1
+  },
+  "category_counts": {
+    "global": 10,
+    "layout": 16,
+    "copy": 9,
+    "workflow": 8,
+    "tables": 3,
+    "diagram": 3,
+    "controls": 2,
+    "interpretation": 2,
+    "accessibility": 3,
+    "performance": 1,
+    "design-system": 1,
+    "launch": 1,
+    "planning": 1
+  },
+  "top_priority_issue_ids": [
+    "UX-039",
+    "UX-040",
+    "UX-041",
+    "UX-042",
+    "UX-048",
+    "UX-001",
+    "UX-016",
+    "UX-022",
+    "UX-059",
+    "UX-060"
+  ],
+  "recommended_sequence": [
+    "v1_5_8_results_workspace_launch_redesign",
+    "v1_5_9_report_publication_workflow_redesign",
+    "v1_6_0_model_canvas_shell_and_panel_polish",
+    "v1_6_1_setup_run_workflow_consolidation",
+    "v1_6_2_data_home_launch_polish",
+    "v1_6_3_global_design_system_and_accessibility_pass"
+  ],
+  "issues": [
+    {
+      "id": "UX-001",
+      "severity": "high",
+      "category": "global",
+      "screen": "Global",
+      "title": "Version/status mismatch",
+      "evidence": "Header evidence shows stale v1.5.3 text while package metadata has advanced beyond it.",
+      "recommendation": "Wire visible version/status from package/app metadata and add static drift check."
+    },
+    {
+      "id": "UX-002",
+      "severity": "high",
+      "category": "global",
+      "screen": "Global",
+      "title": "Primary run action appears on every workspace",
+      "evidence": "The top Run button competes with Data, Model, Results, and Report tasks.",
+      "recommendation": "Make the global run action compact outside Setup/Run or make it contextual."
+    },
+    {
+      "id": "UX-003",
+      "severity": "medium",
+      "category": "global",
+      "screen": "Global",
+      "title": "Teal carries too many meanings",
+      "evidence": "Brand, active navigation, success, selected cards, and primary actions all use similar teal.",
+      "recommendation": "Separate brand/action/status palettes and reserve success green for validation."
+    },
+    {
+      "id": "UX-004",
+      "severity": "medium",
+      "category": "global",
+      "screen": "Global",
+      "title": "Bottom status bar is noisy",
+      "evidence": "Many chips and messages compete with the main workflow.",
+      "recommendation": "Group status by project/data/model/method and collapse low-priority chips."
+    },
+    {
+      "id": "UX-005",
+      "severity": "medium",
+      "category": "global",
+      "screen": "Global",
+      "title": "Nested scrollbars feel heavy",
+      "evidence": "Data, Results, and Report show page scroll plus component/table scrolls.",
+      "recommendation": "Define a scroll ownership rule for each workspace."
+    },
+    {
+      "id": "UX-006",
+      "severity": "medium",
+      "category": "global",
+      "screen": "Global",
+      "title": "Cards have weak hierarchy",
+      "evidence": "Most cards share the same border/fill/weight regardless of importance.",
+      "recommendation": "Create primary, secondary, warning, and table-section card variants."
+    },
+    {
+      "id": "UX-007",
+      "severity": "medium",
+      "category": "global",
+      "screen": "Global",
+      "title": "Desktop density is inconsistent",
+      "evidence": "Some areas are sparse while tables and toolbars are crowded.",
+      "recommendation": "Standardize page gutters, section spacing, and row density tokens."
+    },
+    {
+      "id": "UX-008",
+      "severity": "medium",
+      "category": "global",
+      "screen": "Global",
+      "title": "Stepper and rail duplicate progress",
+      "evidence": "The workflow strip repeats the left rail and sometimes does not add actionable state.",
+      "recommendation": "Convert strip into a compact project-readiness ribbon or remove on dense workspaces."
+    },
+    {
+      "id": "UX-009",
+      "severity": "low",
+      "category": "global",
+      "screen": "Global",
+      "title": "Icon style is not fully unified",
+      "evidence": "Some icons feel heavier or less aligned than adjacent labels.",
+      "recommendation": "Audit icon size/stroke and align all icon buttons to one token."
+    },
+    {
+      "id": "UX-010",
+      "severity": "medium",
+      "category": "global",
+      "screen": "Global",
+      "title": "Accessibility cannot be inferred from screenshots",
+      "evidence": "Keyboard/focus/contrast states are not visually documented for launch QA.",
+      "recommendation": "Add a launch accessibility smoke covering focus order, table navigation, and contrast."
+    },
+    {
+      "id": "UX-011",
+      "severity": "medium",
+      "category": "layout",
+      "screen": "Home",
+      "title": "Home feels static and underpowered",
+      "evidence": "The current launcher looks clean but does not feel like a mature recent-project hub.",
+      "recommendation": "Add true recent projects, recovery status, and last-run summary."
+    },
+    {
+      "id": "UX-012",
+      "severity": "low",
+      "category": "copy",
+      "screen": "Home",
+      "title": "Home workflow cards duplicate navigation",
+      "evidence": "Data/Model/Run/Report cards repeat rail steps without much extra context.",
+      "recommendation": "Make cards contextual to the current project state or remove redundant ones."
+    },
+    {
+      "id": "UX-013",
+      "severity": "medium",
+      "category": "layout",
+      "screen": "Home",
+      "title": "Large unused middle/right area",
+      "evidence": "The screen has substantial empty space at desktop size.",
+      "recommendation": "Use a two-column launcher: primary actions left, project/recent/evidence right."
+    },
+    {
+      "id": "UX-014",
+      "severity": "medium",
+      "category": "workflow",
+      "screen": "Home",
+      "title": "Continue recent project is not genuinely recent",
+      "evidence": "The card says use Open rather than listing actual projects.",
+      "recommendation": "Replace with real recent project cards or hide when unavailable."
+    },
+    {
+      "id": "UX-015",
+      "severity": "low",
+      "category": "copy",
+      "screen": "Home",
+      "title": "Current workspace save message is understated",
+      "evidence": "Autosave/recovery is important but the card reads like a passive notice.",
+      "recommendation": "Use a clearer project state panel with Save as primary when unsaved."
+    },
+    {
+      "id": "UX-016",
+      "severity": "high",
+      "category": "layout",
+      "screen": "Data",
+      "title": "Import source is visually larger than the data itself",
+      "evidence": "The import area dominates even after data exists.",
+      "recommendation": "Collapse import source after successful import and make the grid dominant."
+    },
+    {
+      "id": "UX-017",
+      "severity": "medium",
+      "category": "tables",
+      "screen": "Data",
+      "title": "Data grid lacks mature desktop controls",
+      "evidence": "No visible column resize, sorting, freeze options, or compact mode controls.",
+      "recommendation": "Add resize/sort/freeze/density controls and stronger selected-column state."
+    },
+    {
+      "id": "UX-018",
+      "severity": "medium",
+      "category": "workflow",
+      "screen": "Data",
+      "title": "Data quality cards are not actionable enough",
+      "evidence": "Warnings do not clearly lead to Setup/Run consequences.",
+      "recommendation": "Add action links from each card to metadata, setup, or issue detail."
+    },
+    {
+      "id": "UX-019",
+      "severity": "medium",
+      "category": "copy",
+      "screen": "Data",
+      "title": "Prefix chips look technical",
+      "evidence": "COMP -> 3 indicators is useful but visually raw.",
+      "recommendation": "Show construct-name preview with indicator count and confidence."
+    },
+    {
+      "id": "UX-020",
+      "severity": "medium",
+      "category": "layout",
+      "screen": "Data",
+      "title": "Metadata panel can overtake inspection work",
+      "evidence": "Right panel consumes width even when the user only wants data review.",
+      "recommendation": "Allow collapsing metadata and keep column profile as a drawer."
+    },
+    {
+      "id": "UX-021",
+      "severity": "low",
+      "category": "copy",
+      "screen": "Data",
+      "title": "Browser/desktop import copy is too implementation-oriented",
+      "evidence": "Researchers should not need to think about browser preview versus desktop commands.",
+      "recommendation": "Use user-centered copy focused on file formats and saved project state."
+    },
+    {
+      "id": "UX-022",
+      "severity": "medium",
+      "category": "layout",
+      "screen": "Model",
+      "title": "Context toolbar is crowded",
+      "evidence": "Selected construct toolbar exposes too many small actions in one line.",
+      "recommendation": "Keep Rename/Delete/Tidy visible and move side/pin/advanced actions into menus."
+    },
+    {
+      "id": "UX-023",
+      "severity": "high",
+      "category": "diagram",
+      "screen": "Model",
+      "title": "Diagram labels remain fragile",
+      "evidence": "Some path/loading labels are tiny and can collide with lines or constructs.",
+      "recommendation": "Add label collision rules and bigger readable label tokens."
+    },
+    {
+      "id": "UX-024",
+      "severity": "medium",
+      "category": "layout",
+      "screen": "Model",
+      "title": "Left explorer construct cards are too dense",
+      "evidence": "Cards combine counts, icons, side controls, and status in a compact block.",
+      "recommendation": "Use row-based construct list with hover/context actions."
+    },
+    {
+      "id": "UX-025",
+      "severity": "medium",
+      "category": "workflow",
+      "screen": "Model",
+      "title": "Right inspector duplicates canvas/sidebar controls",
+      "evidence": "Inspector repeats actions already visible in context toolbar and explorer.",
+      "recommendation": "Make inspector primarily properties/results; move common actions to context menus."
+    },
+    {
+      "id": "UX-026",
+      "severity": "medium",
+      "category": "diagram",
+      "screen": "Model",
+      "title": "Mini-map feels decorative",
+      "evidence": "It takes space but gives little readable navigation value.",
+      "recommendation": "Replace with useful overview/focus controls or hide by default."
+    },
+    {
+      "id": "UX-027",
+      "severity": "medium",
+      "category": "layout",
+      "screen": "Model",
+      "title": "Canvas width is constrained by two side panels",
+      "evidence": "SEM diagram is central but gets less width than needed.",
+      "recommendation": "Add one-click collapse and remember panel state."
+    },
+    {
+      "id": "UX-028",
+      "severity": "medium",
+      "category": "copy",
+      "screen": "Model",
+      "title": "Result overlay banner is redundant after visible values",
+      "evidence": "The banner consumes canvas space while the diagram already shows overlays.",
+      "recommendation": "Replace with compact overlay status in toolbar."
+    },
+    {
+      "id": "UX-029",
+      "severity": "medium",
+      "category": "layout",
+      "screen": "Setup",
+      "title": "Readiness cards still feel too card-heavy",
+      "evidence": "Six cards create a dashboard feel where a checklist would be faster.",
+      "recommendation": "Use compact readiness checklist with expandable details."
+    },
+    {
+      "id": "UX-030",
+      "severity": "medium",
+      "category": "workflow",
+      "screen": "Setup",
+      "title": "Method presets do not show what changes",
+      "evidence": "Preset cards are blank and do not expose settings delta or output implications.",
+      "recommendation": "Make presets selectable cards with expected outputs and setting changes."
+    },
+    {
+      "id": "UX-031",
+      "severity": "medium",
+      "category": "layout",
+      "screen": "Setup",
+      "title": "Advanced methods are visible too early",
+      "evidence": "MICOM/MGA/CB-SEM/NCA compete with standard PLS setup.",
+      "recommendation": "Place advanced families in Expert accordion groups."
+    },
+    {
+      "id": "UX-032",
+      "severity": "low",
+      "category": "controls",
+      "screen": "Setup",
+      "title": "Bootstrap checkbox feels unfinished",
+      "evidence": "The control is isolated and not styled as a clear setting row.",
+      "recommendation": "Use a toggle row with sample count and inference consequence."
+    },
+    {
+      "id": "UX-033",
+      "severity": "medium",
+      "category": "layout",
+      "screen": "Setup",
+      "title": "Lower method table is too far down",
+      "evidence": "Users must scroll to see method status list and settings.",
+      "recommendation": "Use split layout: method selection left, readiness/details right."
+    },
+    {
+      "id": "UX-034",
+      "severity": "medium",
+      "category": "copy",
+      "screen": "Setup",
+      "title": "Validated scope language needs hierarchy",
+      "evidence": "Validated badges appear, but exact support boundaries are not always near settings.",
+      "recommendation": "Add scope details inline for the selected method only."
+    },
+    {
+      "id": "UX-035",
+      "severity": "medium",
+      "category": "layout",
+      "screen": "Run",
+      "title": "Run page repeats Setup readiness",
+      "evidence": "The screen repeats readiness cards instead of focusing on execution.",
+      "recommendation": "Compress readiness to a top checklist and expand only failures."
+    },
+    {
+      "id": "UX-036",
+      "severity": "medium",
+      "category": "workflow",
+      "screen": "Run",
+      "title": "Top global Run and page Run compete",
+      "evidence": "Two run actions are visible for the same outcome.",
+      "recommendation": "One primary action per screen; global action becomes shortcut only."
+    },
+    {
+      "id": "UX-037",
+      "severity": "medium",
+      "category": "copy",
+      "screen": "Run",
+      "title": "Post-run guidance is generic",
+      "evidence": "After completion, Before publication, Next step cards do not adapt deeply to run state.",
+      "recommendation": "Use result-aware next steps after a completed run."
+    },
+    {
+      "id": "UX-038",
+      "severity": "low",
+      "category": "layout",
+      "screen": "Run",
+      "title": "Run screen is sparse at 1920px",
+      "evidence": "Cards span large space without enough useful detail.",
+      "recommendation": "Add compact execution summary, output preview, and provenance."
+    },
+    {
+      "id": "UX-039",
+      "severity": "high",
+      "category": "layout",
+      "screen": "Results",
+      "title": "Results tab block wraps awkwardly",
+      "evidence": "Tabs form a grid and consume too much space before results.",
+      "recommendation": "Use a left section list or compact horizontal tabs with overflow menu."
+    },
+    {
+      "id": "UX-040",
+      "severity": "high",
+      "category": "tables",
+      "screen": "Results",
+      "title": "Tables are hard to scan",
+      "evidence": "Wide tables, wrapped labels, and nested scrolling hurt readability.",
+      "recommendation": "Build a reusable research table shell with sticky headers, column groups, density, and horizontal affordances."
+    },
+    {
+      "id": "UX-041",
+      "severity": "high",
+      "category": "interpretation",
+      "screen": "Results",
+      "title": "Findings are too many and repetitive",
+      "evidence": "HTMT and mirrored construct pairs create repeated issue cards.",
+      "recommendation": "Deduplicate symmetrical findings and cap visible cards by priority."
+    },
+    {
+      "id": "UX-042",
+      "severity": "high",
+      "category": "layout",
+      "screen": "Results",
+      "title": "Issue cards dominate the page",
+      "evidence": "Findings push numerical tables down and overload users visually.",
+      "recommendation": "Summarize findings in Must address / Review / Info lanes with expandable details."
+    },
+    {
+      "id": "UX-043",
+      "severity": "high",
+      "category": "tables",
+      "screen": "Results",
+      "title": "Mediation table is especially difficult",
+      "evidence": "Important columns overflow and class text wraps awkwardly.",
+      "recommendation": "Split mediation into direct/indirect/total, inference, and classification subtables."
+    },
+    {
+      "id": "UX-044",
+      "severity": "medium",
+      "category": "workflow",
+      "screen": "Results",
+      "title": "Controls are crowded and misaligned",
+      "evidence": "Search, copy, export, precision, validated-only, interpretation, compact sit in one row.",
+      "recommendation": "Group table tools into toolbar sections and menus."
+    },
+    {
+      "id": "UX-045",
+      "severity": "medium",
+      "category": "interpretation",
+      "screen": "Results",
+      "title": "Interpretation hierarchy needs stronger triage",
+      "evidence": "Current findings are value-specific but not yet a clear reporting checklist.",
+      "recommendation": "Make Interpretation tab the canonical report-readiness checklist."
+    },
+    {
+      "id": "UX-046",
+      "severity": "medium",
+      "category": "layout",
+      "screen": "Results",
+      "title": "Result summary cards are useful but plain",
+      "evidence": "Strongest R2, Paths, Warnings cards lack interaction and visual ranking.",
+      "recommendation": "Make summary cards clickable filters into relevant sections."
+    },
+    {
+      "id": "UX-047",
+      "severity": "medium",
+      "category": "copy",
+      "screen": "Results",
+      "title": "Scope warning line is low contrast and repetitive",
+      "evidence": "The validated-scope sentence appears in many places.",
+      "recommendation": "Use a single run-level scope chip with expandable details."
+    },
+    {
+      "id": "UX-048",
+      "severity": "high",
+      "category": "diagram",
+      "screen": "Report",
+      "title": "Publication diagram still has label overlap",
+      "evidence": "Customer Satisfaction label/values collide in the preview.",
+      "recommendation": "Apply export label-collision rules and preview fail warnings."
+    },
+    {
+      "id": "UX-049",
+      "severity": "medium",
+      "category": "layout",
+      "screen": "Report",
+      "title": "Publication preview uses nested scrolling",
+      "evidence": "The preview scrolls inside the page, making export review awkward.",
+      "recommendation": "Use fixed preview frame with fit-to-width/fit-page controls."
+    },
+    {
+      "id": "UX-050",
+      "severity": "medium",
+      "category": "workflow",
+      "screen": "Report",
+      "title": "Export cards look passive",
+      "evidence": "CSV/HTML/XLSX/PDF cards at the bottom do not clearly behave as actions.",
+      "recommendation": "Convert to explicit export buttons with disabled reasons and output destination feedback."
+    },
+    {
+      "id": "UX-051",
+      "severity": "medium",
+      "category": "controls",
+      "screen": "Report",
+      "title": "Report controls are scattered",
+      "evidence": "Precision, palette, layout, loadings, path coefficients, R2, interpretation notes are spatially dispersed.",
+      "recommendation": "Group controls into Figure, Statistics, Tables, and Notes sections."
+    },
+    {
+      "id": "UX-052",
+      "severity": "medium",
+      "category": "workflow",
+      "screen": "Report",
+      "title": "Run comparison appears in Report without clear purpose",
+      "evidence": "Comparison table is useful but seems misplaced below export cards.",
+      "recommendation": "Move comparison to Results Comparison and only link summary from Report."
+    },
+    {
+      "id": "UX-053",
+      "severity": "medium",
+      "category": "copy",
+      "screen": "Report",
+      "title": "PDF wording reads like limitation text",
+      "evidence": "Browser print-to-PDF is described, but the flow is not guided.",
+      "recommendation": "Provide a visible Print/PDF instruction action or keep it as documentation only."
+    },
+    {
+      "id": "UX-054",
+      "severity": "medium",
+      "category": "accessibility",
+      "screen": "Global",
+      "title": "Contrast of subtle text may be weak",
+      "evidence": "Light blue/grey backgrounds with small text could fail for some users.",
+      "recommendation": "Run contrast audit and increase secondary text contrast."
+    },
+    {
+      "id": "UX-055",
+      "severity": "medium",
+      "category": "accessibility",
+      "screen": "Global",
+      "title": "Icon-only actions need visible labels or robust tooltips",
+      "evidence": "Model explorer has several unlabeled icon actions.",
+      "recommendation": "Ensure accessible names, tooltips, and contextual labels for every icon action."
+    },
+    {
+      "id": "UX-056",
+      "severity": "medium",
+      "category": "accessibility",
+      "screen": "Tables",
+      "title": "Keyboard table navigation is not visible from screenshots",
+      "evidence": "Launch readiness requires proving keyboard traversal and focus states.",
+      "recommendation": "Add keyboard smoke for result/data table search, row focus, and copy/export."
+    },
+    {
+      "id": "UX-057",
+      "severity": "medium",
+      "category": "performance",
+      "screen": "Model",
+      "title": "Large model interaction quality remains unproven visually",
+      "evidence": "Screens show small sample model only.",
+      "recommendation": "Add large-model visual QA after redesign: 8/32 and 20/80 models."
+    },
+    {
+      "id": "UX-058",
+      "severity": "medium",
+      "category": "design-system",
+      "screen": "Global",
+      "title": "No obvious token audit artifact",
+      "evidence": "The UI appears to have accumulated local styles over time.",
+      "recommendation": "Create token inventory and forbid one-off card/table/status styling."
+    },
+    {
+      "id": "UX-059",
+      "severity": "high",
+      "category": "launch",
+      "screen": "Global",
+      "title": "No single launch-grade visual acceptance checklist",
+      "evidence": "Prior gates prove slices, not final visual quality across all screens.",
+      "recommendation": "Create a launch UI QA checklist with required screenshots and pass/fail criteria."
+    },
+    {
+      "id": "UX-060",
+      "severity": "high",
+      "category": "planning",
+      "screen": "Global",
+      "title": "Next milestones need dependency order",
+      "evidence": "Random fixes could create churn.",
+      "recommendation": "Sequence work as shell/design-system, Results, Report, Model, Setup/Run, Data/Home."
+    }
+  ]
+}

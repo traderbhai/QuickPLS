@@ -455,6 +455,25 @@ This frontend-only milestone closes the visible screen-review issues from the v1
 
 No statistical engines, formulas, result schemas, recipes, project format, or numerical fingerprints changed.
 
+## v1.5.9 Report Publication Workflow Redesign
+
+Status: validated.
+
+This frontend-only milestone addresses the Report workspace issues from the v1.5.7 launch audit.
+
+Complete:
+
+- Replaced passive report preset buttons with selectable preset cards.
+- Grouped publication setup into Figure, Statistics, Tables, and Notes sections.
+- Added explicit CSV, HTML, XLSX, Print/PDF, and SVG export actions with action-specific disabled reasons.
+- Added publication preview layout-risk guidance and a visible current-canvas versus tidy-publication status.
+- Moved run comparison out of Report and into the Results comparison workspace handoff.
+- Improved SmartPLS-like publication SVG label readability with construct label backgrounds and structural label offsets.
+
+No statistical engines, formulas, result schemas, recipes, project format, or numerical fingerprints changed.
+
+Release metadata now uses `1.5.8`; versioned desktop artifacts use the label `v1_5_8_results_workspace_launch_redesign`.
+
 Release metadata now uses `1.5.3`; versioned desktop artifacts use the label `v1_5_3_layout_copy_readiness_polish`.
 
 ## v1.5.4 Results Workspace Hardening
@@ -492,3 +511,110 @@ Complete:
 No statistical engines, formulas, result schemas, recipes, project format, or numerical fingerprints changed.
 
 Release metadata now uses `1.5.5`; versioned desktop artifacts use the label `v1_5_5_results_interpretation_polish`.
+
+## v1.5.6 Result-Specific Interpretation Engine
+
+Status: complete.
+
+- Added a deterministic frontend interpretation engine in `src/domain/resultInterpretation.ts` that converts existing run values into exact findings, recommended actions, linked result tabs, row-level explanations, SEM diagram-advisor checks, and report-ready wording.
+- Updated Results to show finding cards, prioritized interpretation checklists, exact-value row details, and copy controls while preserving clean numeric result tables.
+- Updated Report with an explicit `Include interpretation notes` option for HTML/print workflows; default numeric CSV/XLSX exports remain unchanged.
+- Added `src/domain/resultInterpretation.test.ts`, `validation/v156_result_interpretation_smoke.mjs`, `validation/v156_result_interpretation_audit.py`, `docs/V1_5_6_RESULT_SPECIFIC_INTERPRETATION_ENGINE.md`, and the registry slice `v1_5_6_result_specific_interpretation_engine`.
+
+Release metadata now uses `1.5.6`; versioned desktop artifacts use the label `v1_5_6_result_specific_interpretation_engine`.
+
+## v1.5.7 UI/UX Launch-Quality Audit
+
+Status: complete.
+
+- Preserved the 15 user-supplied full-screen screenshots under `validation/results/screens/v157/ui-ux-launch-quality/`.
+- Added a 60-item launch-quality issue register covering layout, density, hierarchy, color, copy, results tables, report flow, SEM diagram presentation, accessibility, and workflow sequencing.
+- Added a dependency-ordered remediation sequence for v1.5.8 through v1.6.3 so implementation can proceed from highest-impact launch blockers first.
+
+## v1.6.0 Model Canvas Shell And Panel Polish
+
+Status: validated.
+
+- Added a collapsible right inspector and View-menu controls for collapsing the left explorer, collapsing the right inspector, showing the minimap, isolating selected neighborhoods, and collapsing measurement indicators.
+- Made the minimap opt-in and moved the result overlay into compact canvas chrome so the diagram itself gets more working space.
+- Grouped secondary selected-object actions in the canvas context toolbar and simplified SEM explorer construct cards.
+- Added smoke and static audit evidence under `validation/results/v160_model_canvas_smoke.json` and `validation/results/v160_model_canvas_audit.json`.
+- Added `validation/v157_ui_ux_launch_quality_smoke.py`, `validation/v157_ui_ux_launch_quality_audit.py`, `docs/V1_5_7_UI_UX_LAUNCH_QUALITY_AUDIT.md`, and the registry slice `v1_5_7_ui_ux_launch_quality_audit`.
+
+No statistical engines, formulas, result schemas, recipes, project format, or numerical fingerprints changed.
+
+Release metadata was advanced to `1.6.0`; fresh versioned desktop artifacts use the label `v1_6_0_model_canvas_shell_and_panel_polish`.
+
+## v1.6.1 Setup/Run Workflow Consolidation
+
+Status: validated.
+
+This frontend-only milestone consolidates the analysis setup and execution flow.
+
+Complete:
+
+- Setup now remains the primary configuration surface and can launch the configured run directly through the production run event.
+- Setup includes a consolidated ready-to-run summary with method, scope, resampling, seed, worker count, and launch action.
+- The duplicate readiness and run-state cards were removed from Setup.
+- Run now behaves as a compact execution monitor and result handoff page instead of repeating the full Setup readiness grid.
+- Run links settings changes back to Setup.
+- Added `validation/v161_setup_run_smoke.mjs`, `validation/v161_setup_run_audit.py`, `docs/V1_6_1_SETUP_RUN_WORKFLOW_CONSOLIDATION.md`, and the registry slice `v1_6_1_setup_run_workflow_consolidation`.
+
+No statistical engines, formulas, result schemas, recipes, project format, or numerical fingerprints changed.
+
+## v1.6.2 Data/Home Launch Polish
+
+Status: validated.
+
+This frontend-only milestone improves the project start and data-to-model flow.
+
+Complete:
+
+- Home now computes a recommended next step from current data/model/run state.
+- Home uses a compact workflow status list instead of sparse duplicate workflow cards.
+- Save, open, demo, recent project, import, and model-start actions remain visible.
+- Data keeps `Open Model Designer`, prefix detection, and `Create Constructs From Prefixes` as the main data-to-model bridge.
+- Added `validation/v162_data_home_smoke.mjs`, `validation/v162_data_home_audit.py`, `docs/V1_6_2_DATA_HOME_LAUNCH_POLISH.md`, and the registry slice `v1_6_2_data_home_launch_polish`.
+
+No statistical engines, formulas, result schemas, recipes, project format, import backends, or numerical fingerprints changed.
+
+## v1.6.3 Global Design-System And Accessibility Pass
+
+Status: validated.
+
+This frontend-only milestone closes the final remediation item from the v1.5.7 launch-quality audit.
+
+Complete:
+
+- Updated the visible top-bar milestone label so the app no longer shows stale v1.5.3 wording.
+- Added source-level smoke and audit evidence for release-label consistency, mojibake prevention, scoped method-status language, and accessible disabled Run reasons.
+- Preserved existing keyboard-focus, table-region, SEM overlay, shortcut, and readiness-checklist accessibility contracts.
+- Added `validation/v163_design_accessibility_smoke.mjs`, `validation/v163_design_accessibility_audit.py`, `docs/V1_6_3_GLOBAL_DESIGN_ACCESSIBILITY_PASS.md`, and the registry slice `v1_6_3_global_design_system_and_accessibility_pass`.
+
+## v1.7 SmartPLS-Competitive Researcher Experience
+
+- Added researcher trust surfaces: `Why trust this result?`, method scope drawer, and Method Confidence panels.
+- Strengthened the workflow path with Setup calculation previews, Results-to-Report handoff, Focus Diagram mode, and sample-guided workflows.
+- Added reportability checklist logic using existing result values for indicator reliability, reliability/validity, collinearity, structural paths, R², f², prediction, inference, and warnings.
+- Added Reviewer Pack export preset and explicit interpretation-note opt-in behavior.
+- Added v1.7 static audits and registry gates for v1.7.0 through v1.7.6 plus the final program gate.
+- Release metadata now uses `1.7.6`; versioned desktop artifacts use the label `v1_7_smartpls_competitive_researcher_experience`.
+
+No statistical engines, formulas, result schemas, recipes, project format, import backends, or numerical fingerprints changed.
+
+## v1.5.8 Results Workspace Launch Redesign
+
+Status: validated.
+
+This frontend-only milestone addresses the highest-priority Results workspace issues from the v1.5.7 launch audit.
+
+Complete:
+
+- Replaced the crowded Results action strip with a dedicated workbench shell, section navigation tiles, and grouped table tools.
+- Added triaged finding cards so the highest-priority issues appear first without flooding the page.
+- Removed duplicate HTMT symmetric-pair findings.
+- Split mediation effects into summary, inference, and classification tables.
+- Added row-count metadata and wide-table scroll guidance.
+- Cleaned remaining Results `R²`, `f²`, and `Q²` mojibake.
+
+No statistical engines, formulas, result schemas, recipes, project format, or numerical fingerprints changed.

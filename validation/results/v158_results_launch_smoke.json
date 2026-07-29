@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "milestone": "v1_5_8_results_workspace_launch_redesign",
+  "checked_at": "2026-07-29T09:30:27.905Z",
+  "checks": {
+    "results workbench shell exists": true,
+    "section navigation tiles exist": true,
+    "result tools are grouped": true,
+    "finding triage exists": true,
+    "mediation table is split": true,
+    "wide table affordance exists": true,
+    "HTMT uses unique upper-triangle pairs": true,
+    "results CSS shell exists": true,
+    "findings CSS triage exists": true,
+    "table CSS affordance exists": true,
+    "no Results mojibake remains": true
+  },
+  "failures": [],
+  "boundary": "frontend-only results presentation; no statistical engine or result payload changes"
+}

@@ -1,0 +1,42 @@
+{
+  "passed": true,
+  "milestone": "v1_6_2_data_home_launch_polish",
+  "generated_at": "2026-07-29T10:52:14.397512+00:00",
+  "checks": [
+    {
+      "name": "Home next step is computed from workflow state",
+      "passed": true,
+      "evidence": "Home computes and displays a workflow-aware next-step launcher."
+    },
+    {
+      "name": "Home uses compact workflow status instead of sparse step cards",
+      "passed": true,
+      "evidence": "Home step status is rendered as a compact list."
+    },
+    {
+      "name": "Home keeps project actions explicit",
+      "passed": true,
+      "evidence": "Home keeps save/open/recent/demo project entry points visible."
+    },
+    {
+      "name": "Data supports a clear model bridge",
+      "passed": true,
+      "evidence": "Data workspace can move users from imported variables into SEM model creation."
+    },
+    {
+      "name": "Sample/developer data details are not expanded by default",
+      "passed": true,
+      "evidence": "Data keeps bundled sample details in a collapsible disclosure instead of the main import path."
+    },
+    {
+      "name": "Registry and docs are wired",
+      "passed": true,
+      "evidence": "Development slice registry and milestone documentation reference v1.6.2."
+    },
+    {
+      "name": "No normal launch copy contains mojibake",
+      "passed": true,
+      "evidence": "Home and Data sources contain no visible mojibake sequences."
+    }
+  ]
+}
