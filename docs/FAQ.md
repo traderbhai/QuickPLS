@@ -18,7 +18,7 @@ No. QuickPLS implements published methods independently and validates against do
 
 ## Does QuickPLS require internet?
 
-No. QuickPLS 1.0.0 is designed for offline Windows desktop use.
+No. QuickPLS is designed for offline Windows desktop use.
 
 ## Does QuickPLS require R?
 
@@ -26,11 +26,14 @@ No. R/Rscript and R packages are validation-only development tools.
 
 ## Why does Windows warn about the installer?
 
-The v1.0.0 installer is unsigned. A code-signing certificate is planned as a separate release-hardening step.
+The current installer is unsigned. A code-signing certificate is planned as a separate release-hardening step.
 
 ## What export formats are supported?
 
 CSV, HTML, XLSX, SVG publication diagram, and browser print-to-PDF workflow.
 
-Native CLI PDF/PNG export is post-v1.
+Native PDF/PNG export is not promoted unless separately audited.
 
+## Why are some methods unavailable?
+
+QuickPLS evaluates each method against the current dataset, model, and settings. Setup shows whether a method is recommended, available after setup, not applicable, unsupported, or experimental, with the exact reason and next action.

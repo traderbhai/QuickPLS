@@ -1,28 +1,28 @@
 # QuickPLS
 
-QuickPLS is a free, proprietary, fully offline Windows desktop application for researchers working with structural equation modeling and related quantitative methods.
+QuickPLS is a free, proprietary, fully offline Windows desktop application for researchers working with PLS-SEM, SEM diagrams, validated method workflows, results interpretation, and publication-ready exports.
 
-Version `1.0.0` is stable for the documented supported scope. It does not require an account, activation server, telemetry, cloud storage, R, Python, or any remote computation at runtime.
+Current release: `v1.8.1`.
+
+QuickPLS runs locally. It does not require an account, activation server, telemetry, cloud storage, R, Python, or remote computation at runtime.
 
 > QuickPLS is independently implemented from published methods and permitted documentation. It does not import SmartPLS project files, does not reverse-engineer SmartPLS, and does not claim identical results for undocumented SmartPLS behavior.
 
 ## Download
 
-Use the GitHub Release for `v1.0.0` and download one of:
+Use the GitHub Release for `v1.8.1` and download one of these Windows assets:
 
-- `QuickPLS_1.0.0_x64-setup.exe` - Windows installer.
-- `quickpls-desktop.exe` - portable Windows executable.
+- `QuickPLS_1.8.1_v1_8_1_method_applicability_guided_setup_20260729-140437_x64_setup.exe` - installer.
+- `QuickPLS_1.8.1_v1_8_1_method_applicability_guided_setup_20260729-140437_x64_portable.exe` - portable executable.
+- `QuickPLS_1.8.1_v1_8_1_method_applicability_guided_setup_20260729-140437_x64_checksums.txt` - SHA-256 hashes.
 
-Current local release artifacts after building this repository:
-
-```text
-target/release/bundle/nsis/QuickPLS_1.0.0_x64-setup.exe
-target/release/quickpls-desktop.exe
-```
-
-The installer is currently unsigned. Windows SmartScreen may show a warning. This is expected until a code-signing certificate is supplied and audited.
+The installer is currently unsigned. Windows SmartScreen may show a warning until code signing is added and audited.
 
 ## Screenshots
+
+### Home
+
+![QuickPLS home workspace](docs/screenshots/home.png)
 
 ### Data Workspace
 
@@ -32,13 +32,17 @@ The installer is currently unsigned. Windows SmartScreen may show a warning. Thi
 
 ![QuickPLS SEM designer](docs/screenshots/sem-designer.png)
 
-### Dragging Indicators And Layout Editing
+### Guided Method Setup
 
-![QuickPLS SEM designer dragging indicators](docs/screenshots/sem-designer-dragging.png)
+![QuickPLS guided method setup](docs/screenshots/setup-guided-methods.png)
 
-### Saved Runs
+### Run Workspace
 
-![QuickPLS saved runs](docs/screenshots/saved-runs.png)
+![QuickPLS run workspace](docs/screenshots/run-workspace.png)
+
+### Results
+
+![QuickPLS results workspace](docs/screenshots/saved-runs.png)
 
 ### Reports
 
@@ -48,116 +52,111 @@ The installer is currently unsigned. Windows SmartScreen may show a warning. Thi
 
 ![QuickPLS publication diagram](docs/screenshots/publication-diagram.png)
 
-## What Is Stable In v1.0.0
+## What Users Can Do
 
-QuickPLS v1.0.0 is stable only for the bounded scope documented in:
+- Import CSV, TSV, XLSX, SAV, covariance, and correlation data where documented.
+- Inspect data quality, missing values, column metadata, and prefix-based construct suggestions.
+- Build SEM diagrams with latent constructs, indicators, paths, covariances, layout controls, and result overlays.
+- Use Setup guidance to see which methods are recommended, available after setup, not applicable, unsupported, or experimental for the current dataset and model.
+- Run validated method scopes through the offline desktop engine.
+- Review results with tables, interpretation findings, reportability guidance, warnings, and provenance.
+- Export publication SVG diagrams plus CSV, HTML, and XLSX tables.
+- Build a reviewer/reproducibility package from documented report exports.
 
-- [Supported Scope](docs/V1_SUPPORTED_SCOPE.md)
-- [Compatibility Matrix](docs/V1_COMPATIBILITY_MATRIX.md)
+## Current Scope
+
+QuickPLS is validated only for documented scopes. The UI marks methods and shapes as `Validated scope`, `Experimental`, `Unsupported`, or `Not applicable` based on the current dataset, model, and settings.
+
+Primary documentation:
+
+- [Method Compatibility](docs/METHOD_COMPATIBILITY.md)
+- [Supported v1 Scope](docs/V1_SUPPORTED_SCOPE.md)
 - [Known Differences](docs/V1_KNOWN_DIFFERENCES.md)
 - [Methodology Manual](docs/METHODOLOGY_MANUAL_V1_0.md)
 - [Validation Artifact Index](docs/VALIDATION_ARTIFACT_INDEX_V1_0.md)
+- [v1.8.1 Method Applicability Guide](docs/V1_8_1_METHOD_APPLICABILITY_GUIDED_SETUP.md)
 
-High-level supported areas include:
+Important limits:
 
-- Offline Windows project workspace.
-- CSV, TSV, XLSX, SAV, covariance, and correlation import coverage where documented.
-- `.qpls` project archives, saved recipes, saved runs, autosave, recovery, and migration checks.
-- Professional academic SEM diagram designer with persistent layout metadata.
-- PLS-SEM core, assessment, inference, extended PLS, prediction/heterogeneity, bounded CB-SEM/CFA ML, bounded GSCA, PCA, regression/PROCESS, and NCA for audited method shapes.
-- CSV, HTML, XLSX, and SVG publication diagram export surfaces.
-- Browser print-to-PDF workflow from reports.
-
-## Important Limits
-
-These are not part of v1.0.0:
-
-- SmartPLS project import.
-- Guaranteed identity with SmartPLS outputs.
-- Reproduction of undocumented SmartPLS behavior.
-- Native CLI PDF/PNG export.
-- Ordinal/polychoric/WLSMV/FIML CB-SEM.
-- Signed installer.
-- Runtime dependency on R, Rscript, Python, lavaan, cSEM, seminr, plspm, NumPy, or validation tooling.
+- No SmartPLS project import.
+- No guaranteed identity with SmartPLS outputs.
+- No reproduction of undocumented SmartPLS behavior.
+- No runtime dependency on R, Rscript, Python, lavaan, cSEM, seminr, plspm, NumPy, or validation tooling.
+- Native PDF/PNG export is not promoted; use SVG and browser print-to-PDF where documented.
+- Installer signing is still pending.
 
 ## Quick Start
 
-See [Quick Start](docs/QUICK_START_V1_0.md).
+See [Quick Start](docs/QUICK_START.md).
 
 Short version:
 
-1. Download `QuickPLS_1.0.0_x64-setup.exe` from the GitHub Release.
-2. Install and launch QuickPLS.
-3. Import a CSV/XLSX/SAV dataset.
-4. Drag variables into the SEM designer to create constructs and indicators.
-5. Draw structural paths.
-6. Click `Run`.
-7. Select the saved run to show estimates on the diagram.
-8. Export tables and publication SVG from Reports.
+1. Install QuickPLS or launch the portable executable.
+2. Open the demo project or import your dataset in `Data`.
+3. Create constructs from prefixes or build a model manually in `Model`.
+4. Use `Setup` to choose a recommended method and complete required settings.
+5. Click `Run`.
+6. Review `Results`, including warnings, scope status, and interpretation notes.
+7. Use `Report` to export SVG diagrams and result tables.
 
 ## Build From Source
 
 QuickPLS source is available for inspection and contribution under the proprietary license in [LICENSE.md](LICENSE.md). It is not open-source software.
 
-Prerequisites:
+See [Build From Source](docs/BUILD_FROM_SOURCE.md).
 
-- Windows
-- Node.js/npm
-- Rust toolchain
-- Tauri build prerequisites
-
-Commands:
+Basic commands:
 
 ```powershell
 npm install
+npm test -- --run
 npm run build
-cargo test -p qpls-core
-npm run tauri -- build
+cargo test -p qpls-core -p qpls-project -p qpls-runner -p quickpls-desktop
+npm run qpls:desktop:build-versioned
 ```
 
-Development desktop run:
+Versioned release artifacts are written to:
 
-```powershell
-npm run tauri dev
+```text
+target/release/artifacts/
 ```
 
-The browser page at `http://127.0.0.1:1420` is only a frontend preview. Native file dialogs, project storage, and engine jobs require the Tauri desktop app.
-
-## Verify v1.0.0
-
-Core release verification:
+## Verify v1.8.1
 
 ```powershell
 npm test -- --run
 npm run build
-npm run qpls:publication:all
-npm run qpls:v093:sem-designer
-npm run tauri -- build
-npm run qpls:v10:audit
-cargo run -p qpls-cli -- gate v1_0_stable
+npm run qpls:v18:results-report-refinement
+npm run qpls:v181:method-applicability
+cargo test -p qpls-core -p qpls-project -p qpls-runner -p quickpls-desktop
+cargo run -p qpls-cli -- gate v1_8_1_method_applicability_guided_setup
 ```
 
-Expected final gate:
+Expected v1.8.1 gate:
 
 ```text
-Stable all-method release (v1.0) | Validated | gates passed/open/blocked: 8/0/0
+v1_8_1_method_applicability_guided_setup
+gates passed/open/blocked: all passed / 0 open / 0 blocked
 promotion gate: clear
 ```
 
 ## Release Files And Checksums
 
-See [v1.0 checksums](docs/RELEASE_CHECKSUMS_V1_0.txt).
+See [v1.8.1 checksums](docs/RELEASE_CHECKSUMS_V1_8_1.txt).
+
+Release creation notes are in [GitHub Release v1.8.1](docs/GITHUB_RELEASE_V1_8_1.md).
 
 ## Documentation
 
-- [Installation](docs/INSTALLATION_V1_0.md)
-- [Quick Start](docs/QUICK_START_V1_0.md)
-- [User Guide](docs/USER_GUIDE_V1_0.md)
+- [Installation](docs/INSTALLATION.md)
+- [Quick Start](docs/QUICK_START.md)
+- [User Guide](docs/USER_GUIDE.md)
+- [Build From Source](docs/BUILD_FROM_SOURCE.md)
 - [First PLS Model Tutorial](docs/FIRST_PLS_MODEL_TUTORIAL.md)
 - [Troubleshooting](docs/TROUBLESHOOTING.md)
 - [FAQ](docs/FAQ.md)
-- [Release Notes](docs/RELEASE_NOTES_V1_0.md)
-- [Dependency Notices](docs/DEPENDENCY_NOTICES_V1_0.md)
+- [Release Notes v1.8.1](docs/RELEASE_NOTES_V1_8_1.md)
+- [Dependency Notices](docs/DEPENDENCY_NOTICES.md)
 
 ## License
 
@@ -168,4 +167,3 @@ Unless a separate written agreement says otherwise, you may use QuickPLS as an e
 ## Security
 
 Please report security issues using [SECURITY.md](SECURITY.md). Do not disclose suspected vulnerabilities publicly before they are reviewed.
-

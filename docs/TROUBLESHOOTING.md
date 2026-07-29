@@ -2,7 +2,7 @@
 
 ## Windows SmartScreen Warns About The Installer
 
-The v1.0.0 installer is unsigned. This warning is expected until a code-signing certificate is added and audited.
+The current installer is unsigned. This warning is expected until a code-signing certificate is added and audited.
 
 ## Browser Preview Cannot Run Analyses
 
@@ -40,9 +40,16 @@ Confirm you are running:
 target/release/quickpls-desktop.exe
 ```
 
-or the installed v1.0.0 application. Development debug builds may require a running dev server.
+or the installed release application. Development debug builds may require a running dev server.
+
+## A Method Is Missing From The Top Bar
+
+The top bar intentionally lists only recommended or currently available methods. Open `Setup` and use `Show all methods` to see methods that need setup, are not applicable, unsupported, or experimental.
+
+## A Method Says Needs Setup Or Not Applicable
+
+Open the method card in `Setup`. QuickPLS shows the exact requirement, such as selecting a group column, choosing numeric X/Y variables for NCA, selecting a binary outcome for logistic regression, or using reflective constructs for CB-SEM/CFA scope.
 
 ## R Or Python Not Found
 
 R and Python are not runtime dependencies. They are used only for development validation scripts.
-
