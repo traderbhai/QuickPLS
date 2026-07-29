@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "milestone": "v1_8_results_report_refinement_real_user_testing",
+  "checks": {
+    "bootstrap estimates section": true,
+    "percentile CI section": true,
+    "BCa CI section": true,
+    "bootstrap-t CI section": true,
+    "CI zero status helper": true,
+    "HTMT pair table": true,
+    "HTMT pair status styling": true,
+    "sticky table shell retained": true
+  },
+  "failed": []
+}

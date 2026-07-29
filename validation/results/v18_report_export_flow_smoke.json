@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "milestone": "v1_8_results_report_refinement_real_user_testing",
+  "checks": {
+    "four-step select run": true,
+    "four-step choose preset": true,
+    "four-step review preview": true,
+    "four-step export": true,
+    "export review section": true,
+    "export status feedback": true,
+    "reviewer pack interpretation default": true,
+    "explicit SVG export status": true
+  },
+  "failed": []
+}

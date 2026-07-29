@@ -1,6 +1,7 @@
 import { AlertTriangle, CheckCircle2, Clock3, LockKeyhole, Play, SlidersHorizontal } from "lucide-react";
 import { methods } from "../data/sample";
 import { analysisReadiness } from "../domain/analysisReadiness";
+import { evaluateMethodApplicability, methodCategoryLabels, type ApplicabilityStatus, type MethodApplicability } from "../domain/methodApplicability";
 import { effectiveMethodStatus, isSelectableAnalysisMethod, methodStatusDescription, methodStatusLabel } from "../domain/methodStatus";
 import { isNativeDesktop } from "../services/projectService";
 import { useWorkspace } from "../store";
@@ -8,7 +9,6 @@ import type { AnalysisMethodId, MethodDefinition, MethodPresetId } from "../type
 import { ReadinessPanel } from "./ReadinessPanel";
 import { ActionStrip, Card, MethodScopeDrawer, PageHeader, StatusBadge, TabStrip } from "./Ui";
 
-const runnableMethods = methods.filter(isSelectableAnalysisMethod);
 const presets: Array<{ id: MethodPresetId; label: string; description: string }> = [
   { id: "standard_pls", label: "Standard PLS-SEM", description: "Core PLS path model with validated defaults." },
   { id: "pls_bootstrap", label: "PLS + Bootstrap", description: "Inference-ready PLS setup with bootstrap samples." },
@@ -43,7 +43,9 @@ export function AnalysisCatalog() {
   const nodes = useWorkspace((state) => state.nodes);
   const setView = useWorkspace((state) => state.setView);
   const readiness = analysisReadiness({ dataset, nodes, edges, settings, nativeDesktop: isNativeDesktop() });
+  const applicability = evaluateMethodApplicability({ dataset, nodes, edges, settings, nativeDesktop: isNativeDesktop() });
   const selectedMethod = methods.find((method) => method.id === settings.method) ?? methods[0] as MethodDefinition;
+  const selectedApplicability = applicability.find((item) => item.method.id === settings.method);
   const selectedStatus = effectiveMethodStatus(selectedMethod, settings);
   const basicFieldsReady = readiness.canRun && selectedStatus !== "unsupported";
   const methodCards = [
@@ -54,9 +56,14 @@ export function AnalysisCatalog() {
   ] as const;
 
   const groupWorkflowActive = settings.method === "mga" || settings.method === "predict" || settings.method === "ipma";
+  const primaryApplicability = applicability.filter((item) => item.category !== "inference_add_on");
+  const recommended = primaryApplicability.filter((item) => item.status === "recommended");
+  const availableAfterSetup = primaryApplicability.filter((item) => item.status === "needs_setup").slice(0, 6);
+  const advancedDiagnostics = primaryApplicability.filter((item) => item.category === "assessment_diagnostics" || item.category === "prediction_segmentation");
+  const standalone = applicability.filter((item) => item.category === "standalone_analysis" || item.category === "workflow_analysis");
 
   return <section className="workspace-page analysis-workspace-v14">
-    <PageHeader title="Setup" description="Choose a method, validate model readiness, and keep advanced group or prediction settings available only when needed." actions={<StatusBadge status={selectedStatus === "validated" ? "validated" : selectedStatus === "experimental" ? "experimental" : "unsupported"}>{selectedStatus === "validated" ? "validated scope" : selectedStatus}</StatusBadge>} />
+    <PageHeader title="Setup" description="Choose a method, validate model readiness, and show only analyses that fit the current dataset, model, and settings." actions={<StatusBadge status={selectedStatus === "validated" ? "validated" : selectedStatus === "experimental" ? "experimental" : "unsupported"}>{selectedStatus === "validated" ? "validated scope" : selectedStatus}</StatusBadge>} />
     <MethodScopeDrawer method={selectedMethod} open={uiPreferences.methodScopeDrawerOpen} onToggle={() => setUiPreferences({ methodScopeDrawerOpen: !uiPreferences.methodScopeDrawerOpen })} />
     <ReadinessPanel readiness={readiness} onNavigate={setView} />
 
@@ -71,6 +78,13 @@ export function AnalysisCatalog() {
     <div className="setup-readiness-grid">
       {methodCards.map((card) => <Card key={card.title} title={card.title} description={card.detail} tone={card.tone} />)}
     </div>
+
+    <section className="method-guidance-board" aria-label="Method recommendations">
+      <MethodSection title="Recommended for this project" description="Ready and sensible for the current dataset and SEM model." items={recommended} selectedId={settings.method} onSelect={(method) => setSettings({ method })} empty="No method is fully recommended yet. Complete the failed readiness item above." />
+      <MethodSection title="Available after setup" description="Possible after one or more required fields are completed." items={availableAfterSetup} selectedId={settings.method} onSelect={(method) => setSettings({ method })} empty="No setup-dependent methods are relevant right now." />
+      <MethodSection title="Advanced diagnostics" description="Specialized checks for prediction, groups, invariance, endogeneity, nonlinear effects, or composite diagnostics." items={advancedDiagnostics} selectedId={settings.method} onSelect={(method) => setSettings({ method })} collapsed />
+      <MethodSection title="Standalone analyses" description="Analyses that use selected variables and do not always require the SEM diagram." items={standalone} selectedId={settings.method} onSelect={(method) => setSettings({ method })} collapsed />
+    </section>
 
     <div className="method-preset-grid">
       {presets.map((preset) => <button key={preset.id} className={setup.selectedPreset === preset.id ? "method-preset-card selected" : "method-preset-card"} onClick={() => applyPreset(preset.id)}>
@@ -94,7 +108,7 @@ export function AnalysisCatalog() {
     <div className="analysis-settings guided-settings">
       <div><strong>Basic setup</strong><span className={readiness.canRun ? "status-text validated" : "status-text experimental"}>{readiness.canRun ? <CheckCircle2 size={14} /> : <Clock3 size={14} />}{readiness.canRun ? "ready" : "needs attention"}</span></div>
       <label>Run method<select value={settings.method} onChange={(event) => setSettings({ method: event.target.value as AnalysisMethodId })}>
-        {runnableMethods.map((method) => <option key={method.id} value={method.id}>{method.name} | {method.id === "regression" ? "OLS/logistic/bounded PROCESS validated" : method.id === "mga" ? "MICOM/permutation MGA validated" : methodStatusLabel(method.status)}</option>)}
+        {primaryApplicability.filter((item) => ["recommended", "available", "needs_setup"].includes(item.status)).map((item) => <option key={item.method.id} value={item.method.id}>{item.method.name} | {applicabilityStatusLabel(item.status)}</option>)}
       </select></label>
       <label className="checkbox-row">Bootstrap<input type="checkbox" checked={settings.bootstrapSamples > 0} onChange={(event) => setSettings(event.target.checked ? { bootstrapSamples: 5000 } : { bootstrapSamples: 0, studentizedInnerSamples: 0 })} /></label>
 
@@ -141,18 +155,55 @@ export function AnalysisCatalog() {
       <header><strong>Calculation preview</strong><span>Outputs expected from the selected settings before the offline engine starts.</span></header>
       <div className="calculation-preview-grid">
         <Card title="Algorithm" description={`${selectedMethod.name}; ${methodStatusDescription(selectedMethod, settings)}`} tone={selectedStatus === "validated" ? "validated" : "warning"} />
-        <Card title="Produced outputs" description={["paths", "loadings / weights", "R²", "reliability / validity"].concat(settings.bootstrapSamples > 0 ? ["bootstrap inference"] : []).concat(settings.method === "predict" ? ["prediction / segmentation"] : []).join(", ")} tone="validated" />
+        <Card title="Produced outputs" description={(selectedApplicability?.expectedOutputs ?? ["paths", "loadings / weights", "R²", "reliability / validity"]).concat(settings.bootstrapSamples > 0 ? ["bootstrap inference"] : []).join(", ")} tone="validated" />
         <Card title="Unavailable outputs" description={settings.bootstrapSamples > 0 ? "Permutation and experimental variants appear only when configured." : "p values and confidence intervals require bootstrap or permutation settings."} tone={settings.bootstrapSamples > 0 ? "validated" : "warning"} />
         <Card title="After run" description="Completed runs open in Results with reportability checklist, interpretation notes, export tables, and publication diagram overlays." />
       </div>
     </section>
 
-    <div className="method-table"><div className="method-table-head"><span>Method</span><span>Family</span><span>Status</span></div>{methods.map((method) => {
+    <details className="show-all-methods">
+      <summary>Show all methods, including unavailable or unsupported choices</summary>
+      <div className="method-table"><div className="method-table-head"><span>Method</span><span>Family</span><span>Status</span></div>{methods.map((method) => {
       const selectable = isSelectableAnalysisMethod(method);
       return <button type="button" className={`method-row ${settings.method === method.id ? "selected" : ""}`} key={method.id} disabled={!selectable} title={methodStatusDescription(method, settings)} onClick={() => { if (selectable) setSettings({ method: method.id }); }}>
         <strong>{method.name}</strong><span>{method.family}</span><MethodStatusPill method={method} />
       </button>;
     })}</div>
+    </details>
+  </section>;
+}
+
+function applicabilityStatusLabel(status: ApplicabilityStatus) {
+  if (status === "recommended") return "Recommended";
+  if (status === "available") return "Available";
+  if (status === "needs_setup") return "Needs setup";
+  if (status === "not_applicable") return "Not applicable now";
+  if (status === "experimental") return "Experimental";
+  return "Unsupported";
+}
+
+function MethodSection({ title, description, items, selectedId, onSelect, empty, collapsed = false }: { title: string; description: string; items: MethodApplicability[]; selectedId: AnalysisMethodId; onSelect: (method: AnalysisMethodId) => void; empty?: string; collapsed?: boolean }) {
+  const body = <div className="method-guidance-grid">
+    {items.length ? items.map((item) => <button key={item.method.id} type="button" className={`method-guidance-card ${item.status} ${selectedId === item.method.id ? "selected" : ""}`} onClick={() => onSelect(item.method.id as AnalysisMethodId)}>
+      <div className="method-guidance-card-head">
+        <strong>{item.method.name}</strong>
+        <span className={`applicability-pill ${item.status}`}>{applicabilityStatusLabel(item.status)}</span>
+      </div>
+      <span>{methodCategoryLabels[item.category]}</span>
+      <p>{item.reason}</p>
+      <small>Expected: {item.expectedOutputs.slice(0, 4).join(", ")}</small>
+      <b>{item.nextActionLabel}</b>
+    </button>) : <p className="method-guidance-empty">{empty ?? "No methods in this section."}</p>}
+  </div>;
+  if (collapsed) {
+    return <details className="method-guidance-section">
+      <summary><span><strong>{title}</strong><small>{description}</small></span></summary>
+      {body}
+    </details>;
+  }
+  return <section className="method-guidance-section">
+    <header><strong>{title}</strong><small>{description}</small></header>
+    {body}
   </section>;
 }
 

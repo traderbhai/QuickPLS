@@ -1,4 +1,5 @@
-﻿import { AlertTriangle, CheckCircle2, Copy, FlaskConical, Search } from "lucide-react";
+﻿import { AlertTriangle, CheckCircle2, ChevronDown, Copy, FlaskConical, Search } from "lucide-react";
+import { useState, type ReactNode } from "react";
 import { useWorkspace } from "../store";
 import type { AnalysisRun, AssessmentResult, HtmtAssessment, PlsResult, ResultWorkspaceTab } from "../types";
 import { findBcaParameter, findBootstrapParameter, findStudentizedParameter, formatParameterIdentity } from "../domain/inference";
@@ -51,6 +52,7 @@ export function RunHistory() {
   const selectedEdgeId = useWorkspace((state) => state.selectedEdgeId);
   const setSelectedEdge = useWorkspace((state) => state.setSelectedEdge);
   const setSelectedNode = useWorkspace((state) => state.setSelectedNode);
+  const [openResultsMenu, setOpenResultsMenu] = useState<null | "view" | "table" | "export" | "interpretation">(null);
   const readiness = analysisReadiness({ dataset, nodes, edges, settings, nativeDesktop: isNativeDesktop() });
   const search = resultState.tableSearch.toLowerCase();
   const visibleRuns = runs.filter((run) => {
@@ -111,20 +113,40 @@ export function RunHistory() {
       </nav>
       <div className="results-tool-stack" aria-label="Result table tools">
         <label className="result-search"><Search size={13} /><input aria-label="Search result tables" placeholder="Search runs, paths, warnings" value={resultState.tableSearch} onChange={(event) => setResultState({ tableSearch: event.target.value })} /></label>
-        <div className="results-tool-group">
-          <button className="secondary-button" onClick={() => void copyVisibleSummary()}><Copy size={14} />Copy runs</button>
-          <button className="secondary-button" disabled={!selectedRun?.result} onClick={exportCurrentTable}>Export table</button>
-          <button className="secondary-button" disabled={!selectedRun?.result} title={selectedRun?.result ? "Prepare report from the selected run" : "Run a method before preparing a report"} onClick={() => setView("reports")}>Prepare report</button>
-        </div>
-        <div className="results-tool-group">
-          <label className="compact-select-label">Precision <select aria-label="Result precision" value={resultState.resultPrecision} onChange={(event) => setResultState({ resultPrecision: Number(event.target.value) })}>{[2, 3, 4, 5, 6].map((digits) => <option key={digits} value={digits}>{digits}</option>)}</select></label>
-          <button className="secondary-button" onClick={() => setResultState({ includeExperimental: !resultState.includeExperimental })}>{resultState.includeExperimental ? "Include experimental" : "Validated only"}</button>
-          <button className="secondary-button" onClick={() => setUiPreferences({ showThresholdColors: !uiPreferences.showThresholdColors })}>{uiPreferences.showThresholdColors ? "Hide Threshold colors" : "Show Threshold colors"}</button>
-          <button className="secondary-button" onClick={() => setResultState({ showInterpretationColumns: !resultState.showInterpretationColumns })}>{resultState.showInterpretationColumns ? "Hide guidance columns" : "Show guidance columns"}</button>
-          <button className="secondary-button" onClick={() => setResultState({ tableDensity: resultState.tableDensity === "compact" ? "comfortable" : "compact" })}>{resultState.tableDensity}</button>
-        </div>
+        <ResultMenu label="View" name="view" open={openResultsMenu} onOpen={setOpenResultsMenu}>
+          <label className="compact-select-label">Precision <select aria-label="Result precision" value={resultState.resultPrecision} onChange={(event) => setResultState({ resultPrecision: Number(event.target.value) })}>{[2, 3, 4, 5, 6].map((digits) => <option key={digits} value={digits}>{digits} decimals</option>)}</select></label>
+          <button type="button" onClick={() => setResultState({ tableDensity: resultState.tableDensity === "compact" ? "comfortable" : "compact" })}>{resultState.tableDensity === "compact" ? "Comfortable density" : "Compact density"}</button>
+          <button type="button" onClick={() => setUiPreferences({ showThresholdColors: !uiPreferences.showThresholdColors })}>{uiPreferences.showThresholdColors ? "Hide threshold colors" : "Show threshold colors"}</button>
+        </ResultMenu>
+        <ResultMenu label="Table" name="table" open={openResultsMenu} onOpen={setOpenResultsMenu}>
+          <button type="button" onClick={() => void copyVisibleSummary()}><Copy size={14} />Copy run list</button>
+          <button type="button" disabled={!selectedRun?.result} title={selectedRun?.result ? "Export the currently visible table" : "Run a method before exporting a table"} onClick={exportCurrentTable}>Export current table</button>
+          <button type="button" onClick={() => setResultState({ showInterpretationColumns: !resultState.showInterpretationColumns })}>{resultState.showInterpretationColumns ? "Hide guidance columns" : "Show guidance columns"}</button>
+        </ResultMenu>
+        <ResultMenu label="Export" name="export" open={openResultsMenu} onOpen={setOpenResultsMenu}>
+          <button type="button" disabled={!selectedRun?.result} title={selectedRun?.result ? "Prepare report from the selected run" : "Run a method before preparing a report"} onClick={() => setView("reports")}>Prepare report</button>
+          <button type="button" disabled={!selectedRun?.result} onClick={exportCurrentTable}>Download current CSV</button>
+        </ResultMenu>
+        <ResultMenu label="Interpretation" name="interpretation" open={openResultsMenu} onOpen={setOpenResultsMenu}>
+          <button type="button" onClick={() => setResultState({ includeExperimental: !resultState.includeExperimental })}>{resultState.includeExperimental ? "Hide experimental outputs" : "Validated scope only"}</button>
+          <button type="button" onClick={() => setResultState({ selectedTab: "interpretation" })}>Open interpretation checklist</button>
+          <button type="button" disabled={!selectedRun?.result} onClick={() => selectedRun?.result && navigator.clipboard?.writeText(copyableInterpretationText(buildResultInterpretation({ run: selectedRun, nodes, edges }).findings))}>Copy interpretation</button>
+        </ResultMenu>
       </div>
     </section>
+    {selectedRun ? <section className="results-run-context-sticky" aria-label="Selected run context">
+      <div>
+        <span>Selected run</span>
+        <strong>{selectedRun.name}</strong>
+        <small>{selectedRun.method} | {selectedRun.result?.used_observations ?? "N/A"} observations | seed {selectedRun.seed}</small>
+      </div>
+      <StatusBadge status="validated">Validated scope</StatusBadge>
+      <span className={significantWarningCount ? "run-warning-chip warning" : "run-warning-chip"}>{significantWarningCount ? `${significantWarningCount} warning(s)` : "No extra warnings"}</span>
+      <details className="run-confidence-details">
+        <summary>Why trust this result?</summary>
+        <MethodConfidencePanel run={selectedRun} />
+      </details>
+    </section> : null}
     {selectedRun ? <div className="result-headline-grid">
       <article><span>Selected run</span><strong>{selectedRun.name}</strong><small>{selectedRun.method}</small></article>
       <article><span>Strongest R²</span><strong>{bestR2 ? bestR2[1].toFixed(resultState.resultPrecision) : "N/A"}</strong><small>{bestR2?.[0] ?? "No endogenous construct"}</small></article>
@@ -141,13 +163,20 @@ export function RunHistory() {
     <div className={`run-list result-tab-${resultState.selectedTab} table-density-${resultState.tableDensity}`}>{visibleRuns.map((run) => <article key={run.id} className="run-row researcher-result-card">
       <div className="run-icon"><FlaskConical size={18} /></div>
       <div className="run-content"><strong>{run.name}</strong><p>{new Date(run.createdAt).toLocaleString()} | seed {run.seed} | fingerprint {run.fingerprint}</p><span><AlertTriangle size={13} />{scopeCopy(run.warnings[0])}</span>
-        <MethodConfidencePanel run={run} />
         {run.result ? <RunResultSections run={run} tab={resultState.selectedTab} focusPath={focusPath} activePath={activePath} comparisonRuns={selectedComparisonRuns} allRuns={runs} nodes={nodes} edges={edges} /> : <SectionEmpty title="No result payload" detail="This saved run does not contain a completed result payload." />}
       </div>
       <div className="run-status">Scope checked</div>
     </article>)}</div>
     {visibleRuns.length === 0 ? <EmptyState title="No matching runs" description="Clear the search field or include a broader result section." /> : null}
   </section>;
+}
+
+function ResultMenu({ label, name, open, onOpen, children }: { label: string; name: "view" | "table" | "export" | "interpretation"; open: null | "view" | "table" | "export" | "interpretation"; onOpen: (name: null | "view" | "table" | "export" | "interpretation") => void; children: ReactNode }) {
+  const expanded = open === name;
+  return <div className="results-menu">
+    <button type="button" className="secondary-button results-menu-trigger" aria-expanded={expanded} onClick={() => onOpen(expanded ? null : name)}>{label}<ChevronDown size={14} /></button>
+    {expanded ? <div className="results-menu-panel" role="menu" aria-label={`${label} result controls`}>{children}</div> : null}
+  </div>;
 }
 
 function RunResultSections({ run, tab, focusPath, activePath, comparisonRuns, allRuns, nodes, edges }: { run: AnalysisRun; tab: ResultWorkspaceTab; focusPath: (source: string, target: string) => void; activePath: { source: string; target: string } | null; comparisonRuns: AnalysisRun[]; allRuns: AnalysisRun[]; nodes: SemDiagramNodeLike[]; edges: SemDiagramEdgeLike[] }) {
@@ -441,14 +470,48 @@ function ComparisonResults({ selectedRuns, allRuns }: { selectedRuns: AnalysisRu
 
 function BootstrapSection({ run }: { run: AnalysisRun }) {
   const bootstrap = run.bootstrap!;
-  return <div className="bootstrap-summary">
+  const estimateRows = bootstrap.percentile.parameters.map((parameter) => [
+    formatParameterIdentity(parameter.parameter),
+    parameter.original.toFixed(6),
+    parameter.bootstrap_mean.toFixed(6),
+    parameter.bias.toFixed(6),
+    parameter.standard_error.toFixed(6),
+    parameter.t_statistic?.toFixed(4) ?? "N/A",
+    formatPValue(parameter.p_value_two_sided),
+  ]);
+  const percentileRows = bootstrap.percentile.parameters.map((parameter) => [
+    formatParameterIdentity(parameter.parameter),
+    parameter.lower.toFixed(6),
+    parameter.upper.toFixed(6),
+    ciZeroStatus(parameter.lower, parameter.upper),
+  ]);
+  const bcaRows = bootstrap.percentile.parameters.map((parameter) => {
+    const bca = bootstrap.bca?.parameters.find((value) => value.parameter === parameter.parameter);
+    return [
+      formatParameterIdentity(parameter.parameter),
+      bca?.lower?.toFixed(6) ?? "N/A",
+      bca?.upper?.toFixed(6) ?? "N/A",
+      bca?.unavailable_reason ? formatDiagnosticCode(bca.unavailable_reason) : ciZeroStatus(bca?.lower, bca?.upper),
+    ];
+  });
+  const studentizedRows = bootstrap.percentile.parameters.map((parameter) => {
+    const studentized = bootstrap.studentized?.parameters.find((value) => value.parameter === parameter.parameter);
+    return [
+      formatParameterIdentity(parameter.parameter),
+      studentized?.lower?.toFixed(6) ?? "N/A",
+      studentized?.upper?.toFixed(6) ?? "N/A",
+      studentized?.unavailable_reason ? formatDiagnosticCode(studentized.unavailable_reason) : ciZeroStatus(studentized?.lower, studentized?.upper),
+    ];
+  });
+  return <div className="bootstrap-summary" aria-label="bootstrap parameter table">
     <div className="bootstrap-meta"><strong>Bootstrap replicates</strong><span>{bootstrap.usable_replicates} usable</span><span>{bootstrap.failed_replicates.length} failed</span><span>{Math.round(bootstrap.percentile.confidence_level * 100)}% percentile CI</span>{bootstrap.bca && <span>{bootstrap.bca.jackknife_case_count} jackknife cases | BCa CI</span>}{bootstrap.studentized && <span>{bootstrap.studentized.inner_replicates} inner replicates | {bootstrap.studentized.failure ? "bootstrap-t failed" : "bootstrap-t CI"}</span>}</div>
     {bootstrap.studentized?.failure && <div className="inference-failure" role="alert"><strong>Bootstrap-t unavailable</strong><span>{bootstrap.studentized.failure.message}</span></div>}
-    <div className="bootstrap-table-scroll result-table-scroll" tabIndex={0} role="region" aria-label={`${run.name} bootstrap parameter table`}><table><thead><tr><th>Parameter</th><th>Original</th><th>Mean</th><th>Bias</th><th>SE</th><th>t</th><th>p</th><th>Percentile lower</th><th>Percentile upper</th><th>BCa lower</th><th>BCa upper</th><th>Bootstrap-t lower</th><th>Bootstrap-t upper</th></tr></thead><tbody>
-      {bootstrap.percentile.parameters.map((parameter) => { const bca = bootstrap.bca?.parameters.find((value) => value.parameter === parameter.parameter); const studentized = bootstrap.studentized?.parameters.find((value) => value.parameter === parameter.parameter); return <tr key={parameter.parameter}>
-        <td>{formatParameterIdentity(parameter.parameter)}</td><td>{parameter.original.toFixed(6)}</td><td>{parameter.bootstrap_mean.toFixed(6)}</td><td>{parameter.bias.toFixed(6)}</td><td>{parameter.standard_error.toFixed(6)}</td><td>{parameter.t_statistic?.toFixed(4) ?? "N/A"}</td><td>{formatPValue(parameter.p_value_two_sided)}</td><td>{parameter.lower.toFixed(6)}</td><td>{parameter.upper.toFixed(6)}</td><td title={bca?.unavailable_reason ?? undefined}>{bca?.lower?.toFixed(6) ?? "N/A"}</td><td title={bca?.unavailable_reason ?? undefined}>{bca?.upper?.toFixed(6) ?? "N/A"}</td><td title={studentized?.unavailable_reason ?? undefined}>{studentized?.lower?.toFixed(6) ?? "N/A"}</td><td title={studentized?.unavailable_reason ?? undefined}>{studentized?.upper?.toFixed(6) ?? "N/A"}</td>
-      </tr>; })}
-    </tbody></table></div>
+    <div className="bootstrap-section-grid">
+      <SectionTable title="Bootstrap estimates" note="Point estimate, bootstrap mean, bias, standard error, t statistic, and p value stay together." columns={["Parameter", "Original", "Mean", "Bias", "SE", "t", "p"]} rows={estimateRows} guidance={interpretationRegistry.inference} />
+      <SectionTable title="Percentile confidence intervals" note="Status describes whether the interval excludes zero; use the full interval in reporting." columns={["Parameter", "Lower", "Upper", "Zero status"]} rows={percentileRows} guidance={interpretationRegistry.inference} />
+      <SectionTable title="BCa confidence intervals" note={bootstrap.bca ? "Bias-corrected and accelerated intervals are shown where available." : "BCa intervals are not available for this run."} columns={["Parameter", "Lower", "Upper", "Zero status"]} rows={bcaRows} guidance={interpretationRegistry.inference} />
+      <SectionTable title="Bootstrap-t confidence intervals" note={bootstrap.studentized ? "Studentized/bootstrap-t intervals are shown where available." : "Bootstrap-t intervals are not available for this run."} columns={["Parameter", "Lower", "Upper", "Zero status"]} rows={studentizedRows} guidance={interpretationRegistry.inference} />
+    </div>
   </div>;
 }
 
@@ -655,6 +718,11 @@ function FindingCards({ findings, title, onFocusPath }: { findings: Interpretati
   const issueCount = findings.filter((finding) => finding.severity === "issue").length;
   const cautionCount = findings.filter((finding) => finding.severity === "caution" || finding.severity === "unavailable").length;
   const remainingCount = Math.max(0, findings.length - visibleFindings.length);
+  const lanes = [
+    { label: "Must address", findings: visibleFindings.filter((finding) => finding.severity === "issue") },
+    { label: "Review", findings: visibleFindings.filter((finding) => finding.severity === "caution" || finding.severity === "unavailable") },
+    { label: "Info", findings: visibleFindings.filter((finding) => finding.severity === "info" || finding.severity === "good") },
+  ].filter((lane) => lane.findings.length);
   return <section className="finding-panel" aria-label={title}>
     <div className="finding-panel-header"><strong>{title}</strong><button type="button" onClick={() => void copyFindings()}>Copy interpretation</button></div>
     <div className="finding-triage-row" aria-label="Finding priority summary">
@@ -662,15 +730,23 @@ function FindingCards({ findings, title, onFocusPath }: { findings: Interpretati
       <span className={cautionCount ? "caution" : "good"}>{cautionCount} review</span>
       <span>{findings.length} total findings</span>
     </div>
-    <div className="finding-card-grid">
-      {visibleFindings.map((finding) => <article key={finding.id} className={`finding-card ${finding.severity}`}>
-        <div><span>{severityText(finding.severity)}</span><b>{finding.metric}</b></div>
-        <strong>{finding.value}</strong>
-        <p>{finding.interpretation}</p>
-        <small>{finding.thresholdGuide}</small>
-        <em>{finding.recommendedAction}</em>
-        {finding.path && onFocusPath ? <button type="button" onClick={() => onFocusPath(finding.path!.source, finding.path!.target)}>Focus diagram path</button> : null}
-      </article>)}
+    <div className="finding-lane-grid">
+      {lanes.map((lane) => <div key={lane.label} className="finding-lane">
+        <h4>{lane.label}</h4>
+        <div className="finding-card-grid">
+          {lane.findings.map((finding) => <article key={finding.id} className={`finding-card ${finding.severity}`}>
+            <div><span>{severityText(finding.severity)}</span><b>{finding.metric}</b></div>
+            <strong>{finding.value}</strong>
+            <dl className="finding-card-detail">
+              <div><dt>What the value says</dt><dd>{finding.interpretation}</dd></div>
+              <div><dt>Why it matters</dt><dd>{finding.thresholdGuide}</dd></div>
+              <div><dt>What to inspect next</dt><dd>{finding.recommendedAction}</dd></div>
+              <div><dt>Report wording</dt><dd>{finding.reportSentence}</dd></div>
+            </dl>
+            {finding.path && onFocusPath ? <button type="button" onClick={() => onFocusPath(finding.path!.source, finding.path!.target)}>Focus diagram path</button> : null}
+          </article>)}
+        </div>
+      </div>)}
     </div>
     {remainingCount ? <p className="finding-more-note">{remainingCount} more finding(s) are available in the Interpretation tab or copied text.</p> : null}
   </section>;
@@ -905,9 +981,35 @@ function MethodWarnings({ warnings }: { warnings: string[] }) {
 }
 
 function HtmtTable({ label, artifact }: { label: string; artifact: HtmtAssessment }) {
-  return <><strong>{label}</strong><table><thead><tr><th>Construct</th>{artifact.constructs.map((construct) => <th key={construct}>{construct}</th>)}</tr></thead><tbody>
-    {artifact.cells.map((row, rowIndex) => <tr key={artifact.constructs[rowIndex]}><th>{artifact.constructs[rowIndex]}</th>{row.map((cell, columnIndex) => <td key={artifact.constructs[columnIndex]} title={cell.reason ? formatDiagnosticCode(cell.reason) : undefined}>{cell.value?.toFixed(4) ?? formatDiagnosticCode(cell.reason ?? cell.status)}</td>)}</tr>)}
-  </tbody></table></>;
+  const pairRows = artifact.cells.flatMap((row, rowIndex) => row.map((cell, columnIndex) => ({
+    rowIndex,
+    columnIndex,
+    left: artifact.constructs[rowIndex],
+    right: artifact.constructs[columnIndex],
+    value: cell.value,
+    reason: cell.reason,
+    status: cell.status,
+  }))).filter((row) => row.rowIndex < row.columnIndex);
+  const rows = pairRows.map((row) => {
+    const status = htmtPairStatus(row.value);
+    return [
+      `${row.left} - ${row.right}`,
+      row.value == null ? formatDiagnosticCode(row.reason ?? row.status) : row.value.toFixed(4),
+      status,
+      status === "issue" ? "Inspect wording, construct overlap, and theory before claiming discriminant validity." : status === "review" ? "Review against the stricter .85 guide and the conceptual distance between constructs." : "No threshold-relevant issue under common .85/.90 HTMT guides.",
+    ];
+  });
+  return <div className="htmt-table-stack">
+    <SectionTable title={`${label} construct pairs`} note="One row per construct pair is shown by default to avoid mirrored duplicate HTMT values." columns={["Construct pair", label, "Status", "Guidance"]} rows={rows} guidance={interpretationRegistry.discriminant} />
+    <details className="result-matrix-details">
+      <summary>Show full {label} matrix</summary>
+      <div className="bootstrap-table-scroll result-table-scroll" tabIndex={0} role="region" aria-label={`${label} full matrix`}>
+        <table><thead><tr><th>Construct</th>{artifact.constructs.map((construct) => <th key={construct}>{construct}</th>)}</tr></thead><tbody>
+          {artifact.cells.map((row, rowIndex) => <tr key={artifact.constructs[rowIndex]}><th>{artifact.constructs[rowIndex]}</th>{row.map((cell, columnIndex) => <td key={artifact.constructs[columnIndex]} className={htmtPairStatus(cell.value)} title={cell.reason ? formatDiagnosticCode(cell.reason) : undefined}>{cell.value?.toFixed(4) ?? formatDiagnosticCode(cell.reason ?? cell.status)}</td>)}</tr>)}
+        </tbody></table>
+      </div>
+    </details>
+  </div>;
 }
 
 function interpretationNextSteps(run: AnalysisRun) {
@@ -996,6 +1098,19 @@ function formatPValue(value: number | null | undefined) {
 function formatInterval(lower: number | null | undefined, upper: number | null | undefined) {
   if (lower == null || upper == null) return "N/A";
   return `${lower.toFixed(6)} to ${upper.toFixed(6)}`;
+}
+
+function ciZeroStatus(lower: number | null | undefined, upper: number | null | undefined) {
+  if (lower == null || upper == null || !Number.isFinite(lower) || !Number.isFinite(upper)) return "unavailable";
+  if (lower <= 0 && upper >= 0) return "CI includes zero";
+  return "CI excludes zero";
+}
+
+function htmtPairStatus(value: number | null | undefined) {
+  if (value == null || !Number.isFinite(value)) return "unavailable";
+  if (value >= 0.9) return "issue";
+  if (value >= 0.85) return "review";
+  return "ok";
 }
 
 function formatOptional(value: number | null | undefined, digits: number) {
@@ -1109,3 +1224,4 @@ function csvForCurrentResultTab(run: AnalysisRun, tab: ResultWorkspaceTab) {
 function csvCell(value: string) {
   return /[",\n]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
 }
+

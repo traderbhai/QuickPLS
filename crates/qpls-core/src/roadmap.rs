@@ -179,7 +179,7 @@ mod tests {
         let registry = development_slice_registry().unwrap();
         assert_eq!(
             registry.current_stage,
-            "v1_7_smartpls_competitive_researcher_experience"
+            "v1_8_1_method_applicability_guided_setup"
         );
         assert!(
             registry

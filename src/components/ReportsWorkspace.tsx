@@ -24,9 +24,11 @@ export function ReportsWorkspace() {
   const setPublicationDiagramSettings = useWorkspace((state) => state.setPublicationDiagramSettings);
   const setView = useWorkspace((state) => state.setView);
   const setResultWorkspaceState = useWorkspace((state) => state.setResultWorkspaceState);
+  const initialReportPreset = uiPreferences.selectedExportPreset === "thesis_appendix" ? "thesis" : uiPreferences.selectedExportPreset === "full_reproducibility_report" ? "full_report" : uiPreferences.selectedExportPreset;
   const [selectedRunId, setSelectedRunId] = useState(runs.at(0)?.id ?? "");
-  const [selectedPreset, setSelectedPreset] = useState<ReportPreset>(uiPreferences.selectedExportPreset === "thesis_appendix" ? "thesis" : uiPreferences.selectedExportPreset === "full_reproducibility_report" ? "full_report" : uiPreferences.selectedExportPreset);
-  const [includeInterpretationNotes, setIncludeInterpretationNotes] = useState(false);
+  const [selectedPreset, setSelectedPreset] = useState<ReportPreset>(initialReportPreset);
+  const [includeInterpretationNotes, setIncludeInterpretationNotes] = useState(initialReportPreset === "reviewer_pack" || initialReportPreset === "full_report");
+  const [lastExportMessage, setLastExportMessage] = useState<string | null>(null);
   const selectedRun = useMemo(() => runs.find((run) => run.id === selectedRunId) ?? runs.at(0), [runs, selectedRunId]);
   const comparisonRun = useMemo(() => runs.find((run) => run.id !== selectedRun?.id), [runs, selectedRun?.id]);
   const tables = useMemo(() => selectedRun ? runExportTables(selectedRun) : [], [selectedRun]);
@@ -41,25 +43,31 @@ export function ReportsWorkspace() {
     ? "Preview uses current canvas layout. If labels overlap, switch to Tidy publication before export."
     : "Tidy publication layout is selected for cleaner figure export.";
 
-  const download = (name: string, contents: string, type: string) => {
+  const download = (name: string, contents: string, type: string, label = "File") => {
     const url = URL.createObjectURL(new Blob([contents], { type }));
     const anchor = document.createElement("a");
     anchor.href = url;
     anchor.download = name;
     anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 0);
+    setLastExportMessage(`${label} export started: ${name}`);
   };
   const printPdfReport = () => {
     const printable = window.open("", "_blank", "noopener,noreferrer");
-    if (!printable) return;
+    if (!printable) {
+      setLastExportMessage("Print/PDF window was blocked by the browser runtime.");
+      return;
+    }
     printable.document.write(reportHtml(tablesToHtml(tables), includeInterpretationNotes ? interpretation : null));
     printable.document.close();
     printable.focus();
     printable.print();
+    setLastExportMessage("Print/PDF dialog opened. Use the browser print dialog to save PDF.");
   };
   const exportXlsx = async () => {
     if (!isNativeDesktop()) return;
     await exportNativeXlsxTables(tables);
+    setLastExportMessage("XLSX workbook export completed through the desktop runtime.");
   };
 
   const applyExportPreset = (preset: ReportPreset) => {
@@ -84,6 +92,7 @@ export function ReportsWorkspace() {
       setIncludeInterpretationNotes(true);
     }
     else setPublicationDiagramSettings({ precision: 4, showLoadings: true, showPathCoefficients: true, showRSquared: true });
+    setLastExportMessage(null);
   };
   const openResultsComparison = () => {
     const ids = [selectedRun?.id, comparisonRun?.id].filter(Boolean) as string[];
@@ -115,13 +124,13 @@ export function ReportsWorkspace() {
     </div>
     <ol className="export-stepper report-stepper" aria-label="Publication export steps">
       <li className={selectedRun ? "complete" : "active"}><b>1</b><span>Select run</span></li>
-      <li className="complete"><b>2</b><span>Choose figure and table settings</span></li>
-      <li className={diagramSvg ? "complete" : "active"}><b>3</b><span>Review preview frame</span></li>
-      <li className={tables.length ? "complete" : ""}><b>4</b><span>Export selected outputs</span></li>
+      <li className="complete"><b>2</b><span>Choose preset</span></li>
+      <li className={diagramSvg && tables.length ? "complete" : "active"}><b>3</b><span>Review figure and table preview</span></li>
+      <li className={tables.length || diagramSvg ? "complete" : ""}><b>4</b><span>Export</span></li>
     </ol>
     <section className="report-settings-shell" aria-label="Publication setup">
       <div className="report-settings-section">
-        <h3>Figure</h3>
+        <h3>Figure settings</h3>
         <label>Saved run<select value={selectedRun?.id ?? ""} onChange={(event) => setSelectedRunId(event.target.value)} disabled={!runs.length}>
           {runs.length ? runs.map((run) => <option key={run.id} value={run.id}>{run.name}</option>) : <option>No saved runs</option>}
         </select></label>
@@ -142,7 +151,7 @@ export function ReportsWorkspace() {
         </select></label>
       </div>
       <div className="report-settings-section">
-        <h3>Statistics</h3>
+        <h3>Table settings</h3>
         <label>Precision<select value={publicationDiagramSettings.precision} onChange={(event) => setPublicationDiagramSettings({ precision: Number(event.target.value) })}>
           {[2, 3, 4, 5, 6].map((value) => <option key={value} value={value}>{value} decimals</option>)}
         </select></label>
@@ -151,15 +160,24 @@ export function ReportsWorkspace() {
         <label className="checkbox-row compact-check">R<sup>2</sup><input type="checkbox" checked={publicationDiagramSettings.showRSquared} onChange={(event) => setPublicationDiagramSettings({ showRSquared: event.target.checked })} /></label>
       </div>
       <div className="report-settings-section">
-        <h3>Tables</h3>
+        <h3>Notes and interpretation</h3>
         <p>{tables.length ? "CSV, HTML, desktop XLSX, and print report actions are available below." : "Run a method before table export becomes available."}</p>
         {tableExportDisabledReason ? <p className="disabled-reason inline-disabled-reason">Table exports disabled: {tableExportDisabledReason}</p> : null}
       </div>
       <div className="report-settings-section">
-        <h3>Notes</h3>
+        <h3>Provenance and reviewer pack</h3>
         <label className="checkbox-row compact-check">Include interpretation notes<input type="checkbox" checked={includeInterpretationNotes} onChange={(event) => setIncludeInterpretationNotes(event.target.checked)} /></label>
-        <p>Interpretation notes are deterministic QuickPLS guidance and are included only when explicitly selected.</p>
+        <p>{selectedPreset === "reviewer_pack" || selectedPreset === "full_report" ? "This preset includes interpretation notes by default for reviewer context." : "Interpretation notes are deterministic QuickPLS guidance and are included only when explicitly selected."}</p>
       </div>
+    </section>
+    <section className="report-export-review" aria-label="Review selected report outputs before export">
+      <div><strong>Export review</strong><span>{selectedPresetLabel(selectedPreset)} preset with {publicationDiagramSettings.palette.replaceAll("_", " ")} palette and {publicationDiagramSettings.precision} decimal precision.</span></div>
+      <ul>
+        <li>{selectedRun ? `Run: ${selectedRun.name}` : "No run selected; diagram export is model-only."}</li>
+        <li>{tables.length ? `${tables.length} table(s) will be available for CSV/HTML/XLSX export.` : "No result tables are available yet."}</li>
+        <li>{includeInterpretationNotes ? "Interpretation notes will be included in HTML/reviewer-style outputs." : "Numeric exports stay clean; interpretation notes are not included."}</li>
+      </ul>
+      {lastExportMessage ? <p className="export-status-feedback" role="status">{lastExportMessage}</p> : null}
     </section>
     {selectedPreset === "reviewer_pack" ? <section className="reviewer-pack-preview" aria-label="Reviewer pack preview">
       <header><strong>Reviewer pack contents</strong><span>Designed for transparent method review, not for unsupported equivalence claims.</span></header>
@@ -175,18 +193,18 @@ export function ReportsWorkspace() {
         <div><strong>Publication diagram preview</strong><span>{selectedRun ? "WYSIWYG SVG export with selected run overlays" : "Model-only SVG preview until a result is selected"}</span></div>
         <div className="publication-preview-actions">
           <span className={publicationDiagramSettings.layoutSource === "tidy_publication" ? "status-text validated" : "status-text warning"}>{publicationDiagramSettings.layoutSource === "tidy_publication" ? "tidy layout" : "current canvas"}</span>
-          <button className="secondary-button" disabled={Boolean(svgDisabledReason)} title={svgDisabledReason ?? "Export the visible publication SVG"} onClick={() => download("quickpls-publication-diagram.svg", diagramSvg, "image/svg+xml")}><Image size={16} /> Export SVG</button>
+          <button className="secondary-button" disabled={Boolean(svgDisabledReason)} title={svgDisabledReason ?? "Export the visible publication SVG"} onClick={() => download("quickpls-publication-diagram.svg", diagramSvg, "image/svg+xml", "SVG diagram")}><Image size={16} /> Export SVG</button>
         </div>
       </div>
       <p className={publicationDiagramSettings.layoutSource === "tidy_publication" ? "preview-guidance validated" : "preview-guidance warning"}>{previewRisk}</p>
       <div className="diagram-preview publication-preview-frame" aria-label="Publication diagram preview" dangerouslySetInnerHTML={{ __html: diagramSvg }} />
     </div>
     <section className="report-export-actions" aria-label="Export outputs">
-      <ExportAction icon={<FileSpreadsheet />} title="CSV tables" detail={tables.length ? "Provenance and method tables" : "Run a method before CSV export"} disabledReason={tableExportDisabledReason} onClick={() => download("quickpls-result-tables.csv", tablesToCsv(tables), "text/csv")} />
-      <ExportAction icon={<FileText />} title="HTML report" detail={tables.length ? (includeInterpretationNotes ? "Tables plus interpretation notes" : "Watermarked table report") : "Run a method before HTML export"} disabledReason={tableExportDisabledReason} onClick={() => download("quickpls-result-report.html", reportHtml(tablesToHtml(tables), includeInterpretationNotes ? interpretation : null), "text/html")} />
+      <ExportAction icon={<FileSpreadsheet />} title="CSV tables" detail={tables.length ? "Provenance and method tables" : "Run a method before CSV export"} disabledReason={tableExportDisabledReason} onClick={() => download("quickpls-result-tables.csv", tablesToCsv(tables), "text/csv", "CSV tables")} />
+      <ExportAction icon={<FileText />} title="HTML report" detail={tables.length ? (includeInterpretationNotes ? "Tables plus interpretation notes" : "Watermarked table report") : "Run a method before HTML export"} disabledReason={tableExportDisabledReason} onClick={() => download("quickpls-result-report.html", reportHtml(tablesToHtml(tables), includeInterpretationNotes ? interpretation : null), "text/html", "HTML report")} />
       <ExportAction icon={<FileSpreadsheet />} title="XLSX workbook" detail={isNativeDesktop() ? "Desktop workbook export" : "Desktop runtime required"} disabledReason={xlsxDisabledReason} onClick={() => { void exportXlsx().catch((error) => window.alert(error)); }} />
       <ExportAction icon={<Printer />} title="Print / PDF" detail="Open browser print dialog for PDF output" disabledReason={pdfDisabledReason} onClick={printPdfReport} />
-      <ExportAction icon={<Image />} title="Model diagram SVG" detail="WYSIWYG publication figure" disabledReason={svgDisabledReason} onClick={() => download("quickpls-publication-diagram.svg", diagramSvg, "image/svg+xml")} />
+      <ExportAction icon={<Image />} title="Model diagram SVG" detail="WYSIWYG publication figure" disabledReason={svgDisabledReason} onClick={() => download("quickpls-publication-diagram.svg", diagramSvg, "image/svg+xml", "SVG diagram")} />
     </section>
     <section className="report-comparison-link">
       <div>
@@ -213,6 +231,15 @@ function ExportAction({ icon, title, detail, disabledReason, onClick }: { icon: 
     <span><strong>{title}</strong><small>{detail}</small>{disabledReason ? <em>{disabledReason}</em> : null}</span>
     <Download size={14} className="export-action-cue" />
   </button>;
+}
+
+function selectedPresetLabel(preset: ReportPreset) {
+  if (preset === "thesis") return "Thesis appendix";
+  if (preset === "journal_figure") return "Journal figure";
+  if (preset === "journal_tables") return "Journal tables";
+  if (preset === "presentation") return "Presentation";
+  if (preset === "reviewer_pack") return "Reviewer pack";
+  return "Full reproducibility report";
 }
 
 function reportHtml(baseHtml: string, interpretation: ReturnType<typeof buildResultInterpretation> | null) {

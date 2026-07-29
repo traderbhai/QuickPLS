@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "milestone": "v1_8_results_report_refinement_real_user_testing",
+  "checks": {
+    "canonical dedupe": true,
+    "finding structure says what value says": true,
+    "finding structure says why it matters": true,
+    "finding structure says what to inspect": true,
+    "finding structure report wording": true,
+    "conservative language": true,
+    "no mojibake": true
+  },
+  "failed": []
+}

@@ -1,0 +1,22 @@
+{
+  "milestone": "v1_8_1_method_applicability_guided_setup",
+  "passed": true,
+  "checks": {
+    "package_version_1_8_1": true,
+    "package_lock_version_1_8_1": true,
+    "cargo_version_1_8_1": true,
+    "tauri_version_1_8_1": true,
+    "artifact_label_v181": true,
+    "scripts_registered": true,
+    "current_stage_v181": true,
+    "registry_slice_exists": true,
+    "registry_slice_passed": true,
+    "doc_exists": true,
+    "smoke_passed": true,
+    "topbar_not_full_catalog": true,
+    "setup_has_show_all": true,
+    "data_model_guidance": true,
+    "no_mojibake": true
+  },
+  "failed": []
+}

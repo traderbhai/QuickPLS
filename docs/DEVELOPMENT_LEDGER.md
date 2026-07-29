@@ -615,3 +615,25 @@ Notes:
 - Added Reviewer Pack preset and deterministic sample-project gallery/guided dataset workflow.
 - Added v1.7 docs, static audits, registry slices, and release metadata for `1.7.6`.
 - Boundary: frontend/product polish only; no estimator, result schema, project archive, validation tolerance, or numerical fingerprint changes.
+
+## v1.8 Results And Report Refinement From Real User Testing
+
+- Added v1.8 audit evidence for Results and Report review across bundled/generated real-like dataset profiles.
+- Replaced the crowded Results action area with grouped menus and a compact sticky selected-run context.
+- Promoted the reusable table shell for bootstrap and HTMT refinements: split bootstrap CI sections and unique HTMT construct-pair rows by default.
+- Deduplicated interpretation findings at the source using canonical metric/object keys.
+- Changed finding cards to value-specific sections: what the value says, why it matters, what to inspect next, and report wording.
+- Reworked Report into Select run, Choose preset, Review figure/table preview, and Export, with export status feedback.
+- Added `validation/v18_*` smoke/audit scripts, `docs/V1_8_RESULTS_REPORT_REFINEMENT_REAL_USER_TESTING.md`, and the `v1_8_results_report_refinement_real_user_testing` registry gate.
+- Updated release metadata to `1.8.0` and artifact labeling to `v1_8_results_report_refinement_real_user_testing`.
+- Boundary: frontend/product polish only; no statistical engine, formula, result schema, project format, validation tolerance, or numerical fingerprint changes.
+
+## v1.8.1 Method Applicability And Guided Setup
+
+- Added `src/domain/methodApplicability.ts` to classify each method as recommended, available, needs setup, not applicable, unsupported, or experimental for the current dataset/model/settings.
+- Updated Setup to show recommendation groups, method-specific reasons, expected outputs, and next actions instead of a flat generic catalog.
+- Updated the top-bar method selector to prefer only recommended/available primary methods and direct the full catalog to Setup.
+- Added Data and Model guidance panels for “What can I do with this data/model?”.
+- Added `src/domain/methodApplicability.test.ts`, `validation/v181_method_applicability_smoke.mjs`, `validation/v181_method_applicability_audit.py`, and `docs/V1_8_1_METHOD_APPLICABILITY_GUIDED_SETUP.md`.
+- Updated release metadata to `1.8.1` and artifact labeling to `v1_8_1_method_applicability_guided_setup`.
+- Boundary: frontend/product guidance only; no statistical engine, formula, result schema, project archive format, validation tolerance, or numerical fingerprint changes.

@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "target": "optional SmartPLS/book sample validation inventory",
+  "generated_at": "2026-07-29T13:28:31.325270+00:00",
+  "passed": true,
+  "mode": "inventory-only",
+  "base_directory": "validation\\external\\smartpls_samples",
+  "ready_sample_count": 0,
+  "total_sample_count": 6,
+  "ready_samples": [],
+  "missing": [
+    {
+      "sample_id": "corporate_reputation_pls_sem",
+      "missing_files": [
+        "validation\\external\\smartpls_samples\\data\\corporate_reputation\\corporate_reputation.csv",
+        "validation\\external\\smartpls_samples\\projects\\corporate_reputation\\Corporate Reputation.zip"
+      ]
+    },
+    {
+      "sample_id": "employee_retention_cbsem_pls_gsca",
+      "missing_files": [
+        "validation\\external\\smartpls_samples\\data\\employee_retention\\employee_retention.csv",
+        "validation\\external\\smartpls_samples\\projects\\employee_retention\\Employee Retention.zip"
+      ]
+    },
+    {
+      "sample_id": "smartpls_regression_examples",
+      "missing_files": [
+        "validation\\external\\smartpls_samples\\data\\regression\\regression_example.csv",
+        "validation\\external\\smartpls_samples\\projects\\regression\\Regression.zip"
+      ]
+    },
+    {
+      "sample_id": "smartpls_nca_examples",
+      "missing_files": [
+        "validation\\external\\smartpls_samples\\data\\nca\\corporate_reputation_nca.csv",
+        "validation\\external\\smartpls_samples\\data\\nca\\extended_tam_nca.csv"
+      ]
+    },
+    {
+      "sample_id": "smartpls_process_path_examples",
+      "missing_files": [
+        "validation\\external\\smartpls_samples\\data\\process\\process_path_example.csv",
+        "validation\\external\\smartpls_samples\\projects\\process\\Path Analysis and PROCESS.zip"
+      ]
+    },
+    {
+      "sample_id": "mendeley_smartpls_teaching_dataset",
+      "missing_files": [
+        "validation\\external\\smartpls_samples\\data\\mendeley_teaching\\dataset_to_Mendeley.zip"
+      ]
+    }
+  ],
+  "samples": [
+    {
+      "id": "corporate_reputation_pls_sem",
+      "title": "Corporate Reputation Model",
+      "source_url": "https://www.smartpls.com/documentation/sample-projects/corporate-reputation/",
+      "book_url": "https://www.pls-sem.net/downloads/3rd-edition-a-primer-on-pls-sem-1/",
+      "expected_local_files": [
+        "data/corporate_reputation/corporate_reputation.csv",
+        "projects/corporate_reputation/Corporate Reputation.zip"
+      ],
+      "validation_use": [
+        "PLS-SEM result layout review",
+        "measurement and structural table comparison",
+        "report/export workflow review",
+        "known-difference documentation"
+      ],
+      "redistribution_status": "external-local-only unless source license permits redistribution",
+      "files": [
+        {
+          "relative_path": "validation\\external\\smartpls_samples\\data\\corporate_reputation\\corporate_reputation.csv",
+          "present": false,
+          "bytes": null
+        },
+        {
+          "relative_path": "validation\\external\\smartpls_samples\\projects\\corporate_reputation\\Corporate Reputation.zip",
+          "present": false,
+          "bytes": null
+        }
+      ],
+      "ready_for_local_validation": false
+    },
+    {
+      "id": "employee_retention_cbsem_pls_gsca",
+      "title": "Employee Retention Model",
+      "source_url": "https://smartpls.com/documentation/sample-projects/employee-retention/",
+      "expected_local_files": [
+        "data/employee_retention/employee_retention.csv",
+        "projects/employee_retention/Employee Retention.zip"
+      ],
+      "validation_use": [
+        "CB-SEM/CFA UI and result table review",
+        "PLS-SEM/PLSc/GSCA workflow comparison",
+        "multi-method report wording review"
+      ],
+      "redistribution_status": "external-local-only unless source license permits redistribution",
+      "files": [
+        {
+          "relative_path": "validation\\external\\smartpls_samples\\data\\employee_retention\\employee_retention.csv",
+          "present": false,
+          "bytes": null
+        },
+        {
+          "relative_path": "validation\\external\\smartpls_samples\\projects\\employee_retention\\Employee Retention.zip",
+          "present": false,
+          "bytes": null
+        }
+      ],
+      "ready_for_local_validation": false
+    },
+    {
+      "id": "smartpls_regression_examples",
+      "title": "SmartPLS Regression Examples",
+      "source_url": "https://smartpls.com/documentation/sample-projects/regression/",
+      "expected_local_files": [
+        "data/regression/regression_example.csv",
+        "projects/regression/Regression.zip"
+      ],
+      "validation_use": [
+        "OLS/logistic regression setup and result display review",
+        "report table wording review"
+      ],
+      "redistribution_status": "external-local-only unless source license permits redistribution",
+      "files": [
+        {
+          "relative_path": "validation\\external\\smartpls_samples\\data\\regression\\regression_example.csv",
+          "present": false,
+          "bytes": null
+        },
+        {
+          "relative_path": "validation\\external\\smartpls_samples\\projects\\regression\\Regression.zip",
+          "present": false,
+          "bytes": null
+        }
+      ],
+      "ready_for_local_validation": false
+    },
+    {
+      "id": "smartpls_nca_examples",
+      "title": "SmartPLS NCA Examples",
+      "source_url": "https://smartpls.com/documentation/sample-projects/",
+      "expected_local_files": [
+        "data/nca/corporate_reputation_nca.csv",
+        "data/nca/extended_tam_nca.csv"
+      ],
+      "validation_use": [
+        "NCA ceiling/effect/bottleneck table review",
+        "NCA report wording review"
+      ],
+      "redistribution_status": "external-local-only unless source license permits redistribution",
+      "files": [
+        {
+          "relative_path": "validation\\external\\smartpls_samples\\data\\nca\\corporate_reputation_nca.csv",
+          "present": false,
+          "bytes": null
+        },
+        {
+          "relative_path": "validation\\external\\smartpls_samples\\data\\nca\\extended_tam_nca.csv",
+          "present": false,
+          "bytes": null
+        }
+      ],
+      "ready_for_local_validation": false
+    },
+    {
+      "id": "smartpls_process_path_examples",
+      "title": "SmartPLS Path Analysis and PROCESS Examples",
+      "source_url": "https://smartpls.com/documentation/sample-projects/",
+      "expected_local_files": [
+        "data/process/process_path_example.csv",
+        "projects/process/Path Analysis and PROCESS.zip"
+      ],
+      "validation_use": [
+        "mediation/moderation result layout review",
+        "indirect-effect wording and report flow review"
+      ],
+      "redistribution_status": "external-local-only unless source license permits redistribution",
+      "files": [
+        {
+          "relative_path": "validation\\external\\smartpls_samples\\data\\process\\process_path_example.csv",
+          "present": false,
+          "bytes": null
+        },
+        {
+          "relative_path": "validation\\external\\smartpls_samples\\projects\\process\\Path Analysis and PROCESS.zip",
+          "present": false,
+          "bytes": null
+        }
+      ],
+      "ready_for_local_validation": false
+    },
+    {
+      "id": "mendeley_smartpls_teaching_dataset",
+      "title": "Dataset to run examples in SmartPLS 3",
+      "source_url": "https://data.mendeley.com/datasets/4tkph3mxp9/2",
+      "expected_local_files": [
+        "data/mendeley_teaching/dataset_to_Mendeley.zip"
+      ],
+      "validation_use": [
+        "teaching/example workflow review",
+        "import robustness review after local extraction"
+      ],
+      "redistribution_status": "check dataset license before redistributing derived fixtures",
+      "files": [
+        {
+          "relative_path": "validation\\external\\smartpls_samples\\data\\mendeley_teaching\\dataset_to_Mendeley.zip",
+          "present": false,
+          "bytes": null
+        }
+      ],
+      "ready_for_local_validation": false
+    }
+  ],
+  "policy": {
+    "download_automation": "disabled",
+    "bundling": "do not bundle third-party sample data unless redistribution is explicitly permitted",
+    "runtime_dependency": "none; these are development-only validation inputs",
+    "claims": "do not claim SmartPLS equivalence; document comparable settings and known differences"
+  }
+}

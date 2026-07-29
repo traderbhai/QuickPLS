@@ -3,6 +3,7 @@ import Papa from "papaparse";
 import { useEffect, useRef, useState } from "react";
 import { methods } from "../data/sample";
 import { analysisReadiness } from "../domain/analysisReadiness";
+import { evaluateMethodApplicability, topBarMethods } from "../domain/methodApplicability";
 import { effectiveMethodStatus, isSelectableAnalysisMethod, methodStatusDescription, methodStatusLabel } from "../domain/methodStatus";
 import { useWorkspace } from "../store";
 import type { AnalysisMethodId, Dataset, JobSnapshot } from "../types";
@@ -31,8 +32,9 @@ export function TopBar() {
   const diagramLayout = useWorkspace((state) => state.diagramLayout);
   const setAnalysisSettings = useWorkspace((state) => state.setAnalysisSettings);
   const pushToast = useWorkspace((state) => state.pushToast);
-  const runnableMethods = methods.filter(isSelectableAnalysisMethod);
-  const selectedMethod = runnableMethods.find((candidate) => candidate.id === analysisSettings.method) ?? runnableMethods[0];
+  const applicability = evaluateMethodApplicability({ dataset, nodes, edges, settings: analysisSettings, nativeDesktop: isNativeDesktop() });
+  const topBarApplicability = topBarMethods(applicability, analysisSettings.method);
+  const selectedMethod = (methods.filter(isSelectableAnalysisMethod).find((candidate) => candidate.id === analysisSettings.method) ?? methods.find((candidate) => candidate.id === "pls_pm"))!;
 
   const download = (name: string, contents: string, type: string) => {
     const url = URL.createObjectURL(new Blob([contents], { type }));
@@ -233,7 +235,7 @@ export function TopBar() {
   return <>
     <header className="title-bar">
       <Menu size={20} /><strong>QuickPLS</strong><span className="project-title">{projectName}.qpls</span>
-      <span className="alpha-mark">v1.7 SmartPLS-competitive researcher experience</span>
+      <span className="alpha-mark">v1.8.1 method applicability guidance</span>
     </header>
     <div className="command-bar">
       <button className="icon-command" aria-label="New project" title="New project" onClick={() => { void newProjectCommand().catch((error) => window.alert(error)); }}><Plus size={17} /><span>New</span></button>
@@ -250,8 +252,8 @@ export function TopBar() {
       <div className="command-spacer" />
       <div className="method-picker" title={selectedMethod ? methodStatusDescription(selectedMethod, analysisSettings) : undefined}>
         <select className="method-select" aria-label="Analysis method" value={analysisSettings.method} onChange={(event) => setAnalysisSettings({ method: event.target.value as AnalysisMethodId })}>
-          {runnableMethods.map((candidate) => <option key={candidate.id} value={candidate.id}>{candidate.name}</option>)}
-          <option disabled>GSCA (planned)</option>
+          {topBarApplicability.map((item) => <option key={item.method.id} value={item.method.id}>{item.method.name}</option>)}
+          <option disabled>More methods in Setup</option>
         </select>
         {selectedMethod ? <span className={`status-text ${effectiveMethodStatus(selectedMethod, analysisSettings)}`}>{methodStatusLabel(effectiveMethodStatus(selectedMethod, analysisSettings))}</span> : null}
       </div>

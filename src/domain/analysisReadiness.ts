@@ -1,5 +1,6 @@
 import type { Edge, Node } from "@xyflow/react";
 import { methods } from "../data/sample";
+import { methodApplicabilityFor } from "./methodApplicability";
 import { effectiveMethodStatus } from "./methodStatus";
 import type { AnalysisUiSettings, ConstructData, Dataset, WorkspaceView } from "../types";
 import { validateModel, type ModelIssue } from "./modelValidation";
@@ -32,13 +33,14 @@ export interface AnalysisReadinessInput {
 export function analysisReadiness({ dataset, nodes, edges, settings, nativeDesktop }: AnalysisReadinessInput): AnalysisReadiness {
   const issues = validateModel(nodes, edges);
   const method = methods.find((candidate) => candidate.id === settings.method);
+  const applicability = methodApplicabilityFor(settings.method, { dataset, nodes, edges, settings, nativeDesktop });
   const items: ReadinessItem[] = [
     dataItem(dataset, nativeDesktop),
     constructItem(nodes),
     indicatorItem(nodes, issues),
     modelIssueItem(issues),
     sampleSizeItem(dataset, nodes),
-    methodItem(settings, method?.name ?? settings.method, effectiveMethodStatus(method, settings)),
+    methodItem(method?.name ?? settings.method, effectiveMethodStatus(method, settings), applicability),
   ];
   const blockers = items.filter((item) => item.status === "blocked");
   const warnings = items.filter((item) => item.status === "warning");
@@ -143,23 +145,25 @@ function sampleSizeItem(dataset: Dataset, nodes: Array<Node<ConstructData>>): Re
   };
 }
 
-function methodItem(settings: AnalysisUiSettings, methodName: string, methodStatus: string): ReadinessItem {
+function methodItem(methodName: string, methodStatus: string, applicability: ReturnType<typeof methodApplicabilityFor>): ReadinessItem {
+  const failedCheck = applicability.checks.find((check) => check.status === "failed");
+  if (failedCheck) {
+    return {
+      id: "method",
+      label: failedCheck.label,
+      detail: failedCheck.detail,
+      status: "blocked",
+      actionLabel: failedCheck.actionLabel ?? "Open setup",
+      actionView: failedCheck.actionView ?? "analyses",
+    };
+  }
   if (methodStatus === "unsupported") {
     return { id: "method", label: "Method", detail: `${methodName} is not runnable in this build.`, status: "blocked" };
-  }
-  if (settings.method === "mga" && !settings.groupColumn) {
-    return { id: "method", label: "Method settings", detail: "Select a group column before running MGA/MICOM workflows.", status: "blocked", actionLabel: "Open setup", actionView: "analyses" };
-  }
-  if (settings.method === "regression" && !(settings.regressionOutcome && settings.regressionPredictors)) {
-    return { id: "method", label: "Method settings", detail: "Select a regression outcome and at least one predictor.", status: "blocked", actionLabel: "Open setup", actionView: "analyses" };
-  }
-  if (settings.method === "nca" && !(settings.ncaX && settings.ncaY)) {
-    return { id: "method", label: "Method settings", detail: "Select the NCA X and Y variables.", status: "blocked", actionLabel: "Open setup", actionView: "analyses" };
   }
   return {
     id: "method",
     label: "Method",
-    detail: `${methodName} is ${methodStatus === "validated" ? "validated for the documented supported scope" : "available with experimental watermarking"}.`,
-    status: methodStatus === "validated" ? "ready" : "warning",
+    detail: applicability.reason || `${methodName} is ${methodStatus === "validated" ? "validated for the documented supported scope" : "available with experimental watermarking"}.`,
+    status: applicability.status === "experimental" || methodStatus !== "validated" ? "warning" : "ready",
   };
 }

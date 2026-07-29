@@ -2,7 +2,7 @@
   "schema_version": 1,
   "program": "QuickPLS accelerated method-slice registry",
   "active_goal": "Complete QuickPLS as a free, proprietary, fully offline Windows desktop application that is first ready in all sense before unrestricted research use.",
-  "current_stage": "v1_7_smartpls_competitive_researcher_experience",
+  "current_stage": "v1_8_1_method_applicability_guided_setup",
   "policy": {
     "promotion_order": [
       "unsupported",
@@ -3208,6 +3208,118 @@
           "name": "v1.7 program documented",
           "status": "passed",
           "evidence": "docs/V1_7_SMARTPLS_COMPETITIVE_RESEARCHER_EXPERIENCE.md plus milestone docs."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_8_results_report_refinement_real_user_testing",
+      "release": "v1.8.0",
+      "family": "Product",
+      "name": "Results and Report refinement from real user testing",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 59,
+      "summary": "Refines Results and Report using bundled/generated real-like dataset review while preserving statistical engines, result schemas, project format, and numerical fingerprints.",
+      "gates": [
+        {
+          "track": "validation",
+          "name": "Real-dataset Results/Report audit passes",
+          "status": "passed",
+          "evidence": "validation/results/v18_real_dataset_results_report_audit.json."
+        },
+        {
+          "track": "product",
+          "name": "Results clutter reduced",
+          "status": "passed",
+          "evidence": "src/components/RunHistory.tsx groups View/Table/Export/Interpretation controls and adds sticky run context."
+        },
+        {
+          "track": "product",
+          "name": "Mediation, HTMT, and bootstrap tables refined",
+          "status": "passed",
+          "evidence": "Bootstrap sections are split; HTMT defaults to unique construct-pair rows with optional full matrix."
+        },
+        {
+          "track": "product",
+          "name": "Interpretation wording is deduplicated and value-specific",
+          "status": "passed",
+          "evidence": "src/domain/resultInterpretation.ts canonicalizes finding keys; finding cards use value-specific wording sections."
+        },
+        {
+          "track": "product",
+          "name": "Report export flow refined",
+          "status": "passed",
+          "evidence": "src/components/ReportsWorkspace.tsx implements four-step flow, export review, explicit actions, and status feedback."
+        },
+        {
+          "track": "release",
+          "name": "Versioned release metadata is ready",
+          "status": "passed",
+          "evidence": "package.json, package-lock.json, Cargo.toml, and src-tauri/tauri.conf.json use 1.8.0; qpls:release:artifacts uses v1_8_results_report_refinement_real_user_testing."
+        },
+        {
+          "track": "documentation",
+          "name": "v1.8 milestone documented",
+          "status": "passed",
+          "evidence": "docs/V1_8_RESULTS_REPORT_REFINEMENT_REAL_USER_TESTING.md."
+        }
+      ],
+      "next_actions": []
+    },
+    {
+      "id": "v1_8_1_method_applicability_guided_setup",
+      "release": "v1.8.1",
+      "family": "Product",
+      "name": "Method Applicability and Guided Setup",
+      "status": "validated",
+      "stable_output": true,
+      "owner_track": "product",
+      "priority": 60,
+      "summary": "Adds a frontend-only SmartPLS-style guidance layer that explains which analyses are recommended, available after setup, not applicable, unsupported, or experimental for the current dataset, model, and settings.",
+      "gates": [
+        {
+          "track": "product",
+          "name": "Method applicability engine is implemented",
+          "status": "passed",
+          "evidence": "src/domain/methodApplicability.ts evaluates data kind, metadata, SEM shape, groups, weights, regression/NCA/PCA variables, and documented scope boundaries."
+        },
+        {
+          "track": "product",
+          "name": "Setup uses guided method sections",
+          "status": "passed",
+          "evidence": "src/components/AnalysisCatalog.tsx shows Recommended, Available after setup, Advanced diagnostics, Standalone analyses, and Show all methods sections."
+        },
+        {
+          "track": "product",
+          "name": "Top bar method picker is simplified",
+          "status": "passed",
+          "evidence": "src/components/TopBar.tsx uses method applicability to show recommended/available primary methods plus More methods in Setup."
+        },
+        {
+          "track": "product",
+          "name": "Data and Model guidance panels exist",
+          "status": "passed",
+          "evidence": "src/components/DataWorkspace.tsx and src/components/Explorer.tsx render What can I do with this data/model guidance from the applicability engine."
+        },
+        {
+          "track": "validation",
+          "name": "Method applicability tests and audits pass",
+          "status": "passed",
+          "evidence": "src/domain/methodApplicability.test.ts plus validation/results/v181_method_applicability_smoke.json and validation/results/v181_method_applicability_audit.json."
+        },
+        {
+          "track": "release",
+          "name": "Versioned release metadata is ready",
+          "status": "passed",
+          "evidence": "package.json, package-lock.json, Cargo.toml, and src-tauri/tauri.conf.json use 1.8.1; qpls:release:artifacts uses v1_8_1_method_applicability_guided_setup."
+        },
+        {
+          "track": "documentation",
+          "name": "v1.8.1 milestone documented",
+          "status": "passed",
+          "evidence": "docs/V1_8_1_METHOD_APPLICABILITY_GUIDED_SETUP.md."
         }
       ],
       "next_actions": []

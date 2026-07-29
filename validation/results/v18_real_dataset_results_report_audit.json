@@ -1,0 +1,74 @@
+{
+  "passed": true,
+  "generated_at": "2026-07-29T13:13:42.171644+00:00",
+  "milestone": "v1_8_results_report_refinement_real_user_testing",
+  "viewports": [
+    "1440x900",
+    "1280x800"
+  ],
+  "datasets": [
+    {
+      "name": "corporate reputation demo",
+      "coverage": [
+        "Results",
+        "Report"
+      ]
+    },
+    {
+      "name": "larger PLS-SEM fixture",
+      "coverage": [
+        "Results",
+        "Report"
+      ]
+    },
+    {
+      "name": "mediation fixture",
+      "coverage": [
+        "Results",
+        "Report"
+      ]
+    },
+    {
+      "name": "HTMT-warning fixture",
+      "coverage": [
+        "Results",
+        "Report"
+      ]
+    },
+    {
+      "name": "bootstrap-enabled fixture",
+      "coverage": [
+        "Results",
+        "Report"
+      ]
+    }
+  ],
+  "screenshots_directory": "validation\\results\\screens\\v18",
+  "issue_register": [
+    {
+      "area": "Results",
+      "issue": "Crowded top controls",
+      "resolution": "Grouped into View, Table, Export, and Interpretation menus.",
+      "status": "resolved"
+    },
+    {
+      "area": "Results",
+      "issue": "Mirrored HTMT rows repeated the same warning.",
+      "resolution": "Default HTMT view now shows one row per construct pair, with full matrix behind a disclosure.",
+      "status": "resolved"
+    },
+    {
+      "area": "Results",
+      "issue": "Bootstrap output was too wide for normal desktop inspection.",
+      "resolution": "Bootstrap tables are split into estimates, percentile CI, BCa CI, and bootstrap-t CI sections.",
+      "status": "resolved"
+    },
+    {
+      "area": "Report",
+      "issue": "Report export flow mixed settings, preview, and export actions.",
+      "resolution": "Report now follows Select run, Choose preset, Review figure/table preview, Export.",
+      "status": "resolved"
+    }
+  ],
+  "notes": "Automated audit uses bundled/generated real-like datasets; private user datasets remain manual feedback."
+}

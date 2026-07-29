@@ -3,9 +3,10 @@ import Papa from "papaparse";
 import { useEffect, useMemo, useRef, useState } from "react";
 import validationFixture from "../../validation/fixtures/corporate_reputation.csv?raw";
 import { columnProfile, dataQualitySummary, detectPrefixGroups, filteredColumns, type DataColumnFilter } from "../domain/dataWorkspace";
+import { dataGuidance } from "../domain/methodApplicability";
 import { importNativeDataset, importNativeValidationFixture, isNativeDesktop, updateNativeColumnMetadata } from "../services/projectService";
 import { useWorkspace } from "../store";
-import type { ColumnMetadata } from "../types";
+import type { ColumnMetadata, WorkspaceView } from "../types";
 
 type ImportKind = "raw" | "covariance" | "correlation";
 
@@ -28,6 +29,9 @@ const importKindLabel = (kind: ImportKind) => kind === "raw" ? "Raw data" : kind
 export function DataWorkspace() {
   const inputRef = useRef<HTMLInputElement>(null);
   const dataset = useWorkspace((state) => state.dataset);
+  const nodes = useWorkspace((state) => state.nodes);
+  const edges = useWorkspace((state) => state.edges);
+  const settings = useWorkspace((state) => state.analysisSettings);
   const setDataset = useWorkspace((state) => state.setDataset);
   const setView = useWorkspace((state) => state.setView);
   const addConstructsFromIndicatorGroups = useWorkspace((state) => state.addConstructsFromIndicatorGroups);
@@ -44,6 +48,7 @@ export function DataWorkspace() {
   const quality = useMemo(() => dataQualitySummary(dataset), [dataset]);
   const prefixGroups = useMemo(() => detectPrefixGroups(dataset.columns), [dataset.columns]);
   const visibleColumns = useMemo(() => filteredColumns(dataset, columnQuery, columnFilter), [dataset, columnFilter, columnQuery]);
+  const guidance = useMemo(() => dataGuidance({ dataset, nodes, edges, settings, nativeDesktop: isNativeDesktop() }), [dataset, edges, nodes, settings]);
   const matrixSampleSize = sampleSize === "" ? undefined : Number(sampleSize);
   const matrixReady = importKind === "raw" || Boolean(matrixSampleSize && matrixSampleSize >= 2);
   const desktopOnlyMatrix = importKind !== "raw" && !isNativeDesktop();
@@ -162,6 +167,8 @@ export function DataWorkspace() {
       </div>
     </div>
 
+    <GuidancePanel title="What can I do with this data?" items={guidance} onNavigate={setView} />
+
     <div className="data-model-bridge">
       <div>
         <strong>Create constructs from prefixes</strong>
@@ -214,6 +221,19 @@ export function DataWorkspace() {
       const file = event.target.files?.[0]; if (!file) return;
       void file.text().then((csv) => setParsedDataset(csv, file.name));
     }} />
+  </section>;
+}
+
+function GuidancePanel({ title, items, onNavigate }: { title: string; items: Array<{ title: string; detail: string; tone: "validated" | "warning" | "neutral"; actionLabel: string; actionView: WorkspaceView }>; onNavigate: (view: WorkspaceView) => void }) {
+  return <section className="method-guidance-panel" aria-label={title}>
+    <header><strong>{title}</strong><span>QuickPLS filters methods by file type, metadata, sample rows, and current model state.</span></header>
+    <div className="method-guidance-panel-grid">
+      {items.map((item) => <article key={`${item.title}-${item.actionLabel}`} className={`method-guidance-mini ${item.tone}`}>
+        <strong>{item.title}</strong>
+        <p>{item.detail}</p>
+        <button type="button" className="secondary-button" onClick={() => onNavigate(item.actionView)}>{item.actionLabel}</button>
+      </article>)}
+    </div>
   </section>;
 }
 

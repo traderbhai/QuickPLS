@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "milestone": "v1_8_results_report_refinement_real_user_testing",
+  "checks": {
+    "package_version_1_8_0": true,
+    "artifact_label_v18": true,
+    "current_stage_v18": true,
+    "registry_slice_exists": true,
+    "required_artifacts_present": true,
+    "required_artifacts_pass": true
+  },
+  "missing": [],
+  "failed": []
+}

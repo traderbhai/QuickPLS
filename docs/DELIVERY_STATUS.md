@@ -455,6 +455,22 @@ This frontend-only milestone closes the visible screen-review issues from the v1
 
 No statistical engines, formulas, result schemas, recipes, project format, or numerical fingerprints changed.
 
+## v1.8.1 Method Applicability And Guided Setup
+
+Status: validated.
+
+This frontend-only milestone adds SmartPLS-style method guidance so researchers see which analyses are recommended, available after setup, not applicable, unsupported, or experimental for the current dataset/model/settings.
+
+Complete:
+
+- Added a deterministic frontend method applicability engine with method-specific checks and next-action labels.
+- Reworked Setup into recommendation sections plus Show all methods for unavailable/unsupported choices.
+- Made bootstrap an inference add-on instead of a primary top-bar analysis choice.
+- Added Data and Model guidance panels explaining what can be done with the current data/model.
+- Added v1.8.1 smoke/audit scripts, documentation, tests, and the `v1_8_1_method_applicability_guided_setup` registry gate.
+
+No statistical engines, formulas, result schemas, recipes, project format, import backends, or numerical fingerprints changed.
+
 ## v1.5.9 Report Publication Workflow Redesign
 
 Status: validated.
@@ -577,6 +593,24 @@ Complete:
 - Added `validation/v162_data_home_smoke.mjs`, `validation/v162_data_home_audit.py`, `docs/V1_6_2_DATA_HOME_LAUNCH_POLISH.md`, and the registry slice `v1_6_2_data_home_launch_polish`.
 
 No statistical engines, formulas, result schemas, recipes, project format, import backends, or numerical fingerprints changed.
+
+## v1.8 Results And Report Refinement From Real User Testing
+
+Status: validated.
+
+This frontend-only release focuses on Results and Report usability from real-like dataset review.
+
+Complete:
+
+- Added grouped Results menus for View, Table, Export, and Interpretation controls.
+- Added sticky run-level context and a `Why trust this result?` drawer to reduce repeated confidence text.
+- Split bootstrap output into estimates, percentile CI, BCa CI, and bootstrap-t CI sections.
+- Reworked HTMT to default to unique construct-pair rows, with full matrix view available on demand.
+- Deduplicated interpretation findings, especially symmetric HTMT findings.
+- Reworked Report into a four-step export flow with export review and destination/status feedback.
+- Added v1.8 smoke/audit scripts and the `v1_8_results_report_refinement_real_user_testing` registry gate.
+
+No statistical engines, formulas, result schemas, recipes, project format, import backends, validation tolerances, or numerical fingerprints changed.
 
 ## v1.6.3 Global Design-System And Accessibility Pass
 

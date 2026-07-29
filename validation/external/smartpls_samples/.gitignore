@@ -1,0 +1,11 @@
+data/
+projects/
+downloads/
+*.zip
+*.csv
+*.xlsx
+*.xls
+*.sav
+*.txt
+*.qpls
+*.splsm

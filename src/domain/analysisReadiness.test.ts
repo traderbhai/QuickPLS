@@ -56,7 +56,7 @@ describe("analysisReadiness", () => {
     const readiness = analysisReadiness({ dataset, nodes, edges, settings: { ...settings, method: "mga" }, nativeDesktop: true });
     expect(readiness.canRun).toBe(false);
     const blocker = readiness.blockers.find((item) => item.id === "method");
-    expect(blocker).toMatchObject({ actionLabel: "Open setup", actionView: "analyses" });
+    expect(blocker).toMatchObject({ actionLabel: "Select group column", actionView: "analyses" });
   });
 
   it("warns about demo-sized samples without blocking structural inspection", () => {

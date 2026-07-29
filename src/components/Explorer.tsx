@@ -1,6 +1,8 @@
 import { AlertTriangle, ArrowLeftRight, Boxes, ChevronLeft, ChevronRight, Database, Eye, Filter, Focus, GitBranch, GripVertical, Link2, MoreVertical, Network, Pin, Plus, Search, Trash2, X } from "lucide-react";
 import { useMemo, useState, type PointerEvent as ReactPointerEvent } from "react";
 import type { Edge } from "@xyflow/react";
+import { modelGuidance } from "../domain/methodApplicability";
+import { isNativeDesktop } from "../services/projectService";
 import { useWorkspace } from "../store";
 import type { ConstructData, ExplorerTab } from "../types";
 
@@ -27,6 +29,7 @@ export function Explorer() {
   const dataset = useWorkspace((state) => state.dataset);
   const nodes = useWorkspace((state) => state.nodes);
   const edges = useWorkspace((state) => state.edges);
+  const settings = useWorkspace((state) => state.analysisSettings);
   const projectName = useWorkspace((state) => state.projectName);
   const selectedNodeId = useWorkspace((state) => state.selectedNodeId);
   const selectedEdgeId = useWorkspace((state) => state.selectedEdgeId);
@@ -104,6 +107,7 @@ export function Explorer() {
     if (dataset.missing > 0) list.push({ tone: "info", title: "Missing values detected", detail: `${dataset.missing} missing cells will follow the selected missing-data policy.`, action: () => setView("data") });
     return list;
   }, [addConstruct, dataset, nodes, setExplorerTab, setView, structuralEdges.length]);
+  const guidance = useMemo(() => modelGuidance({ dataset, nodes, edges, settings, nativeDesktop: isNativeDesktop() }), [dataset, edges, nodes, settings]);
 
   function focusConstruct(id: string) {
     setSelectedNode(id);
@@ -190,6 +194,14 @@ export function Explorer() {
         <button onClick={() => setView("data")}>Data</button>
         <button onClick={() => setView("analyses")}>Setup</button>
       </div>
+    </section>
+
+    <section className="explorer-guidance-card" aria-label="What can I do with this model?">
+      <strong>What can I do with this model?</strong>
+      {guidance.map((item) => <button key={`${item.title}-${item.actionLabel}`} type="button" className={item.tone} onClick={() => setView(item.actionView)}>
+        <span>{item.title}</span>
+        <small>{item.detail}</small>
+      </button>)}
     </section>
 
     <nav className="explorer-tabs" aria-label="SEM explorer sections">

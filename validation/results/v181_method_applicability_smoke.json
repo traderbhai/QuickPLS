@@ -1,0 +1,18 @@
+{
+  "milestone": "v1_8_1_method_applicability_guided_setup",
+  "passed": true,
+  "checks": {
+    "applicability states exist": true,
+    "method categories exist": true,
+    "exact action labels exist": true,
+    "setup recommendation sections exist": true,
+    "bootstrap is an add-on": true,
+    "top bar points to setup for broader catalog": true,
+    "data guidance panel exists": true,
+    "model guidance panel exists": true,
+    "readiness uses applicability blocker": true,
+    "unit scenarios are covered": true,
+    "no R2 mojibake": true
+  },
+  "failed": []
+}

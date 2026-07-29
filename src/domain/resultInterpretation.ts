@@ -72,7 +72,7 @@ export function buildResultInterpretation(context: ResultInterpretationContext):
     };
   }
 
-  const findings = [
+  const findings = dedupeFindings([
     ...pathFindings(run, result),
     ...measurementFindings(result, run.assessment),
     ...validityFindings(run.assessment),
@@ -81,9 +81,9 @@ export function buildResultInterpretation(context: ResultInterpretationContext):
     ...mediationModerationFindings(result),
     ...predictionFindings(result, run.assessment),
     ...methodPayloadFindings(result),
-  ];
-  const diagramAdvice = diagramAdvisorFindings(context, result);
-  const allFindings = sortFindings([...findings, ...diagramAdvice]);
+  ]);
+  const diagramAdvice = dedupeFindings(diagramAdvisorFindings(context, result));
+  const allFindings = sortFindings(dedupeFindings([...findings, ...diagramAdvice]));
   return {
     findings: allFindings,
     diagramAdvice,
@@ -754,14 +754,43 @@ function htmtCells(assessment: AssessmentResult) {
 }
 
 function sortFindings(findings: InterpretationFinding[]) {
+  return dedupeFindings(findings)
+    .sort((a, b) => severityRank(a.severity) - severityRank(b.severity) || groupRank(a.group) - groupRank(b.group) || a.metric.localeCompare(b.metric));
+}
+
+function dedupeFindings(findings: InterpretationFinding[]) {
   const seen = new Set<string>();
   return findings
     .filter((item) => {
-      if (seen.has(item.id)) return false;
-      seen.add(item.id);
+      const key = canonicalFindingKey(item);
+      if (seen.has(key)) return false;
+      seen.add(key);
       return true;
-    })
-    .sort((a, b) => severityRank(a.severity) - severityRank(b.severity) || groupRank(a.group) - groupRank(b.group) || a.metric.localeCompare(b.metric));
+    });
+}
+
+function canonicalFindingKey(item: InterpretationFinding) {
+  const htmtPair = htmtPairKey(item);
+  if (htmtPair) return `${item.tab}|${item.metric}|${htmtPair}|${item.severity}`;
+  const objectKey = item.path
+    ? `path:${item.path.source}->${item.path.target}`
+    : item.indicator
+      ? `indicator:${item.indicator}`
+      : item.construct
+        ? `construct:${item.construct}`
+        : item.linkedObject
+          ? `${item.linkedObject.type}:${item.linkedObject.id}`
+          : item.id.replace(/\.\d+$/, "");
+  return `${item.tab}|${item.metric}|${objectKey}|${item.value}|${item.recommendedAction}`;
+}
+
+function htmtPairKey(item: InterpretationFinding) {
+  if (!/^HTMT/i.test(item.metric)) return null;
+  const idPair = item.id.match(/htmt[^.]*\.([^.]+)\.([^.]+)/i);
+  if (idPair) return [idPair[1], idPair[2]].sort().join("|");
+  const textPair = item.interpretation.match(/between (.+?) and (.+?) is /i);
+  if (textPair) return [textPair[1], textPair[2]].sort().join("|");
+  return null;
 }
 
 function finding(item: InterpretationFinding): InterpretationFinding {

@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "milestone": "v1_8_results_report_refinement_real_user_testing",
+  "checks": {
+    "grouped View menu": true,
+    "grouped Table menu": true,
+    "grouped Export menu": true,
+    "grouped Interpretation menu": true,
+    "sticky run context": true,
+    "method confidence drawer": true,
+    "finding lanes": true
+  },
+  "failed": []
+}
