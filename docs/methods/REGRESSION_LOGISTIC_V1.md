@@ -21,4 +21,4 @@ Status: validated for the documented QuickPLS v1.2.2 binary numeric complete-cas
 
 ## Validation
 
-`npm run qpls:regression:logistic-reference` compares bounded-fixture estimates against an independent Python IRLS implementation. `npm run qpls:promotion:logistic` verifies the promotion evidence, including R `glm` comparison, balanced/rare-event fixtures, separation and rank-deficiency guards, and GUI/CLI/export parity. Multinomial, ordinal, weighted, clustered, and Firth-corrected models remain unsupported.
+`npm run qpls:regression:logistic-reference` compares bounded-fixture estimates against an independent Python IRLS implementation and writes the method-specific `validation/results/v08_logistic_reference_report.json`. `npm run qpls:promotion:logistic` fails closed unless that exact current report is bound to `regression_logistic_v1`; evidence from another v0.8 section is not accepted. The promotion also verifies the R `glm` comparison, balanced/rare-event fixtures, separation and rank-deficiency guards, and GUI/CLI/export parity. Multinomial, ordinal, weighted, clustered, and Firth-corrected models remain unsupported.

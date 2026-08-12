@@ -172,7 +172,7 @@ FIRST_BATCH = [
         "artifacts": [
             artifact("docs/methods/PCA_V1.md", "method specification"),
             artifact("validation/results/pca_method_promotion_audit.json", "v1.2 PCA promotion audit"),
-            artifact("validation/results/v08_extended_methods_reference_report.json", "integrated NumPy/Python reference"),
+            artifact("validation/results/v08_pca_reference_report.json", "method-specific NumPy/Python reference"),
             artifact("validation/results/extended_methods_publication_audit.json", "publication audit"),
             artifact("validation/results/v247_native_desktop_visual_acceptance.json", "responsive native setup evidence", require_passed=True),
             artifact("validation/results/v247_tauri_native_acceptance.json", "packaged native run/export/save/reopen evidence", require_passed=True),
@@ -208,7 +208,7 @@ FIRST_BATCH = [
         "artifacts": [
             artifact("docs/methods/REGRESSION_OLS_V1.md", "method specification"),
             artifact("validation/results/ols_method_promotion_audit.json", "strict v1.2 OLS promotion audit", require_passed=True),
-            artifact("validation/results/v08_extended_methods_reference_report.json", "integrated Python reference"),
+            artifact("validation/results/v08_ols_reference_report.json", "method-specific Python reference"),
             artifact("validation/results/extended_methods_publication_audit.json", "publication audit"),
             artifact("validation/results/v247_native_desktop_visual_acceptance.json", "responsive native OLS setup evidence", require_passed=True),
             artifact("validation/results/v247_tauri_native_acceptance.json", "packaged-native OLS evidence consumed by the strict audit", require_passed=True),
@@ -365,7 +365,7 @@ SECOND_BATCH = [
             artifact("docs/methods/NCA_V2.md", "current method specification"),
             artifact("docs/methods/NCA_V1.md", "legacy compatibility and supersession policy"),
             artifact("validation/results/nca_method_promotion_audit.json", "strict NCA v2 promotion audit", require_passed=True),
-            artifact("validation/results/v08_extended_methods_reference_report.json", "integrated independent CE-FDH/CR-FDH reference"),
+            artifact("validation/results/v08_nca_reference_report.json", "method-specific independent CE-FDH/CR-FDH reference"),
             artifact("validation/results/v247_tauri_native_acceptance.json", "packaged-native evidence consumed by the strict audit"),
         ],
         "blocking_questions": [],
@@ -468,7 +468,7 @@ THIRD_BATCH = [
         "required_evidence": ["method spec", "Python IRLS reference", "R glm reference", "separation/rank guards", "product/export enforcement"],
         "artifacts": [
             artifact("docs/methods/REGRESSION_LOGISTIC_V1.md", "method specification"),
-            artifact("validation/results/v08_extended_methods_reference_report.json", "integrated Python reference"),
+            artifact("validation/results/v08_logistic_reference_report.json", "method-specific Python reference"),
             artifact("validation/results/extended_methods_publication_audit.json", "publication audit"),
             artifact("validation/results/logistic_method_promotion_audit.json", "v1.2.2 logistic promotion audit"),
         ],
@@ -486,7 +486,7 @@ THIRD_BATCH = [
         "required_evidence": ["method spec", "Python OLS equations", "R base-lm parity", "mediation/moderation fixtures", "product/export enforcement"],
         "artifacts": [
             artifact("docs/methods/PROCESS_V1.md", "method specification"),
-            artifact("validation/results/v08_extended_methods_reference_report.json", "integrated Python reference"),
+            artifact("validation/results/v08_process_reference_report.json", "method-specific Python reference"),
             artifact("validation/results/mediation_method_promotion_audit.json", "mediation evidence"),
             artifact("validation/results/moderation_method_promotion_audit.json", "moderation evidence"),
             artifact("validation/results/process_method_promotion_audit.json", "v1.2.2 PROCESS promotion audit"),

@@ -7,10 +7,14 @@ raise SystemExit(audit_method(
     "Bounded PROCESS-style mediation and moderation workflows generated from OLS component models; moderated mediation remains experimental.",
     [
         {
-            "name": "v08_extended_methods_reference_report.json",
-            "required_any_values": {"selected_section": ["process", "all"]},
+            "name": "v08_process_reference_report.json",
             "required_true": ["checks.process.passed"],
-            "required_values": {"checks.process.method_version": "regression_process_v1"},
+            "required_values": {
+                "schema_version": 2,
+                "report_scope": "method_specific",
+                "selected_section": "process",
+                "checks.process.method_version": "regression_process_v1",
+            },
             "source_paths": ["validation/v08_extended_methods_reference.py"],
             "companions": [{
                 "path": "validation/results/v08_process_quickpls.json",

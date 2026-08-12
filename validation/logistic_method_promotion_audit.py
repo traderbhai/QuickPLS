@@ -7,10 +7,14 @@ raise SystemExit(audit_method(
     "Binary 0/1 numeric complete-case logistic regression with deterministic IRLS, Wald SE/z/p, odds ratios, predicted probabilities, log-likelihood, pseudo-R2, AIC, and BIC.",
     [
         {
-            "name": "v08_extended_methods_reference_report.json",
-            "required_any_values": {"selected_section": ["logistic", "all"]},
+            "name": "v08_logistic_reference_report.json",
             "required_true": ["checks.logistic.passed"],
-            "required_values": {"checks.logistic.method_version": "regression_logistic_v1"},
+            "required_values": {
+                "schema_version": 2,
+                "report_scope": "method_specific",
+                "selected_section": "logistic",
+                "checks.logistic.method_version": "regression_logistic_v1",
+            },
             "source_paths": ["validation/v08_extended_methods_reference.py"],
             "companions": [{
                 "path": "validation/results/v08_regression_logistic_quickpls.json",

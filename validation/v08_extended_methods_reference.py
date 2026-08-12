@@ -13,6 +13,7 @@ import math
 import random
 import subprocess
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 
@@ -20,7 +21,15 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "validation" / "results"
 DATA = RESULTS / "v08_extended_methods_fixture.csv"
-OUTPUT = RESULTS / "v08_extended_methods_reference_report.json"
+AGGREGATE_OUTPUT_NAME = "v08_extended_methods_reference_report.json"
+METHOD_OUTPUT_NAMES = {
+    "pca": "v08_pca_reference_report.json",
+    "ols": "v08_ols_reference_report.json",
+    "logistic": "v08_logistic_reference_report.json",
+    "process": "v08_process_reference_report.json",
+    "nca": "v08_nca_reference_report.json",
+    "gsca": "v08_gsca_reference_report.json",
+}
 CONFIGURED_CLI = os.environ.get("QUICKPLS_CLI_PATH", "").strip()
 CLI_EXE = Path(CONFIGURED_CLI).resolve() if CONFIGURED_CLI else ROOT / "target" / "debug" / "qpls.exe"
 CLI_READY = False
@@ -455,6 +464,89 @@ CHECKS = {
 }
 
 
+def build_report(selected_section: str, checks: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    """Build an aggregate or single-method report with an explicit scope.
+
+    A method report always contains exactly one matching check. This prevents a
+    promotion gate from accidentally accepting evidence left by another
+    ``--section`` invocation.
+    """
+
+    if selected_section != "all":
+        if selected_section not in CHECKS:
+            raise ValueError(f"unknown v0.8 reference section: {selected_section}")
+        if set(checks) != {selected_section}:
+            raise ValueError(
+                f"method report {selected_section!r} must contain only its matching check"
+            )
+    elif set(checks) != set(CHECKS):
+        raise ValueError("aggregate v0.8 report must contain every registered check")
+
+    nca_only = selected_section == "nca"
+    return {
+        "passed": all(item.get("passed") is True for item in checks.values()),
+        "schema_version": 2,
+        "report_scope": "aggregate" if selected_section == "all" else "method_specific",
+        "target": (
+            "nca_v2 bounded backend qualification"
+            if nca_only
+            else (
+                "v0.8 extended methods mixed-status reference"
+                if selected_section == "all"
+                else f"v0.8 {selected_section} method reference"
+            )
+        ),
+        "selected_section": selected_section,
+        "tolerance": TOL,
+        "checks": checks,
+        "note": (
+            "NCA v2 evidence is limited to the documented standalone observed numeric X/Y CE-FDH/CR-FDH scope; packaged-native acceptance and broader method parity are separate gates."
+            if nca_only
+            else (
+                "Each method keeps its own documented promotion status; this aggregate fixture does not promote broader variants."
+                if selected_section == "all"
+                else "This file is method-specific evidence and is not overwritten by other --section runs. Broader variants require separate promotion evidence."
+            )
+        ),
+    }
+
+
+def _write_json_atomic(path: Path, value: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
+    temporary.replace(path)
+
+
+def write_scoped_reports(
+    selected_section: str,
+    checks: dict[str, dict[str, Any]],
+    results: Path = RESULTS,
+) -> dict[str, Path]:
+    """Persist reports without allowing single-section runs to clobber peers.
+
+    ``all`` refreshes the historical aggregate and every method report. A
+    single section writes only that method's report; it deliberately leaves
+    the aggregate and all peer reports untouched.
+    """
+
+    report = build_report(selected_section, checks)
+    written: dict[str, Path] = {}
+    if selected_section == "all":
+        aggregate_path = results / AGGREGATE_OUTPUT_NAME
+        _write_json_atomic(aggregate_path, report)
+        written["all"] = aggregate_path
+        for method, check in checks.items():
+            method_path = results / METHOD_OUTPUT_NAMES[method]
+            _write_json_atomic(method_path, build_report(method, {method: check}))
+            written[method] = method_path
+    else:
+        method_path = results / METHOD_OUTPUT_NAMES[selected_section]
+        _write_json_atomic(method_path, report)
+        written[selected_section] = method_path
+    return written
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--section", choices=[*CHECKS.keys(), "all"], default="all")
@@ -462,21 +554,8 @@ def main():
     write_dataset()
     selected = CHECKS.keys() if args.section == "all" else [args.section]
     checks = {name: CHECKS[name]() for name in selected}
-    nca_only = args.section == "nca"
-    report = {
-        "passed": all(item["passed"] for item in checks.values()),
-        "schema_version": 1,
-        "target": "nca_v2 bounded backend qualification" if nca_only else "v0.8 extended methods mixed-status reference",
-        "selected_section": args.section,
-        "tolerance": TOL,
-        "checks": checks,
-        "note": (
-            "NCA v2 evidence is limited to the documented standalone observed numeric X/Y CE-FDH/CR-FDH scope; packaged-native acceptance and broader method parity are separate gates."
-            if nca_only
-            else "Each method keeps its own documented promotion status; this shared fixture does not promote broader variants."
-        ),
-    }
-    OUTPUT.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    report = build_report(args.section, checks)
+    write_scoped_reports(args.section, checks)
     print(json.dumps(report, indent=2))
     if not report["passed"]:
         raise SystemExit(1)

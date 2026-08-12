@@ -237,12 +237,15 @@ commands = [
 ]
 executable_gates_passed = all(item["passed"] for item in commands)
 
-reference = load_json(RESULTS / "v08_extended_methods_reference_report.json")
+reference = load_json(RESULTS / "v08_nca_reference_report.json")
 nca_reference = reference.get("checks", {}).get("nca", {})
 reference_contract_passed = (
     reference.get("passed") is True
+    and reference.get("schema_version") == 2
+    and reference.get("report_scope") == "method_specific"
     and reference.get("target") == "nca_v2 bounded backend qualification"
     and reference.get("selected_section") == "nca"
+    and set(reference.get("checks", {})) == {"nca"}
     and nca_reference.get("passed") is True
     and nca_reference.get("method_version") == METHOD_VERSION
     and nca_reference.get("max_abs_difference", math.inf) <= 1e-6
@@ -686,7 +689,7 @@ raise SystemExit(
         "nca",
         "Standalone observed numeric X/Y NCA v2 with exact CE-FDH record-high peers, CR-FDH OLS through those peers, seeded permutation p values, observed-range bottlenecks, strict archive persistence, and no phantom SEM model; broader variants and parity claims are excluded.",
         [
-            "v08_extended_methods_reference_report.json",
+            "v08_nca_reference_report.json",
             "v247_tauri_native_acceptance.json",
         ],
         ["NCA_V2.md", "NCA_V1.md"],

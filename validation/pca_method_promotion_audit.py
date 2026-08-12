@@ -418,13 +418,22 @@ def implementation_contract_check():
 
 
 def integrated_v08_check():
-    report_path = "validation/results/v08_extended_methods_reference_report.json"
+    report_path = "validation/results/v08_pca_reference_report.json"
     proc = run(["python", "validation/v08_extended_methods_reference.py", "--section", "pca"])
     report = json.loads((ROOT / report_path).read_text(encoding="utf-8"))
     pca = report.get("checks", {}).get("pca", {})
     return {
         "path": report_path,
-        "passed": proc.returncode == 0 and report.get("passed") is True and pca.get("passed") is True and pca.get("method_version") == "pca_v1",
+        "passed": (
+            proc.returncode == 0
+            and report.get("passed") is True
+            and report.get("schema_version") == 2
+            and report.get("report_scope") == "method_specific"
+            and report.get("selected_section") == "pca"
+            and set(report.get("checks", {})) == {"pca"}
+            and pca.get("passed") is True
+            and pca.get("method_version") == "pca_v1"
+        ),
         "max_abs_difference": pca.get("max_abs_difference"),
         "retained_components": pca.get("retained_components"),
     }

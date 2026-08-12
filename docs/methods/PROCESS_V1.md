@@ -24,4 +24,4 @@ Status: validated for the documented QuickPLS v1.2.2 bounded mediation/moderatio
 
 ## Validation
 
-`npm run qpls:process:reference` checks the bounded effects against independent Python OLS equations. `npm run qpls:promotion:process` verifies Python equations, R base-lm component parity, mediation/moderation fixtures, product enforcement, and the moderated-mediation exclusion.
+`npm run qpls:process:reference` checks the bounded effects against independent Python OLS equations and writes the method-specific `validation/results/v08_process_reference_report.json`. `npm run qpls:promotion:process` fails closed unless that exact current report is bound to `regression_process_v1`; evidence from another v0.8 section is not accepted. The promotion also verifies R base-lm component parity, mediation/moderation fixtures, product enforcement, and the moderated-mediation exclusion.
