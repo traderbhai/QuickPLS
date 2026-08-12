@@ -12,5 +12,12 @@ __pycache__/
 *.log
 *.qpls
 *.qpls.bak
+*.qpls.autosave
 *.qplsr
+*.exe
+*.msi
+release/
+release_artifacts_backup_before_clean/
+validation/results/screens/
+validation/results/*.xlsx
 .DS_Store
