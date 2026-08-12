@@ -919,19 +919,19 @@
       "stable_output": false,
       "owner_track": "engine",
       "priority": 9,
-      "summary": "Standalone PCA and OLS regression are validated for their documented scopes. Current NCA execution uses corrected nca_v2 ceiling geometry. Current GSCA execution uses independently checked gsca_als_v2 joint global least-squares ALS with genuine packaged setup, results, XLSX export, strict save, and same-run reopen evidence; gsca_v1 is legacy preview-only. Logistic regression and PROCESS retain their existing bounded promotion status.",
+      "summary": "Standalone PCA and OLS regression are validated for their documented scopes. Current binary logistic execution uses release-qualified regression_logistic_v2 while regression_logistic_v1 is archive-only. Current NCA execution uses corrected nca_v2 ceiling geometry. Current GSCA execution uses independently checked gsca_als_v2 joint global least-squares ALS with genuine packaged setup, results, XLSX export, strict save, and same-run reopen evidence; gsca_v1 is legacy preview-only. PROCESS retains historical bounded engine/archive evidence but not QuickPLS 3.0 native release qualification.",
       "gates": [
         {
           "track": "specification",
           "name": "Method specifications",
           "status": "passed",
-          "evidence": "docs/methods/PCA_V1.md, docs/methods/REGRESSION_OLS_V1.md, docs/methods/REGRESSION_LOGISTIC_V1.md, docs/methods/PROCESS_V1.md, docs/methods/NCA_V2.md, legacy-compatibility docs/methods/NCA_V1.md, current docs/methods/GSCA_ALS_V2.md, and legacy docs/methods/GSCA_V1.md"
+          "evidence": "docs/methods/PCA_V1.md, docs/methods/REGRESSION_OLS_V1.md, current docs/methods/REGRESSION_LOGISTIC_V2.md, archive-only docs/methods/REGRESSION_LOGISTIC_V1.md, docs/methods/PROCESS_V1.md, docs/methods/NCA_V2.md, legacy-compatibility docs/methods/NCA_V1.md, current docs/methods/GSCA_ALS_V2.md, and legacy docs/methods/GSCA_V1.md"
         },
         {
           "track": "engine",
           "name": "Typed v0.8 method payloads",
           "status": "passed",
-          "evidence": "pca_v1, regression_ols_v1, regression_logistic_v1, regression_process_v1, current nca_v2 with explicit nca_v1 archive compatibility, and current gsca_als_v2 with explicit gsca_v1 legacy compatibility from qpls-estimation"
+          "evidence": "pca_v1, regression_ols_v1, current regression_logistic_v2 with explicit regression_logistic_v1 archive compatibility, regression_process_v1, current nca_v2 with explicit nca_v1 archive compatibility, and current gsca_als_v2 with explicit gsca_v1 legacy compatibility from qpls-estimation"
         },
         {
           "track": "validation",
@@ -1697,7 +1697,7 @@
           "track": "validation",
           "name": "Logistic regression promotion audit",
           "status": "passed",
-          "evidence": "validation/logistic_method_promotion_audit.py writes validation/results/logistic_method_promotion_audit.json and verifies binary numeric IRLS reference, R glm scope, edge guards, and product/export evidence."
+          "evidence": "validation/logistic_method_promotion_audit.py writes validation/results/logistic_method_promotion_audit.json and verifies feature qpls3.standalone.logistic at regression_logistic_v2 against independent Python and validation-only R glm arithmetic, strict recipe/archive guards, three browser viewports, genuine packaged execution, native XLSX, explicit save, and same-run reopen."
         },
         {
           "track": "validation",

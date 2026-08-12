@@ -608,8 +608,27 @@ describe("advanced validated backend family mappings", () => {
     });
     expect(ols.settings).toMatchObject({ weighting_scheme: "path", preprocessing: "unstandardized", confidence_level: 0.95 });
 
-    const logistic = buildNativeAnalysisRecipe(makeInput("regression", { ...common, regressionType: "logistic" }));
-    expect(logistic.method_config).toMatchObject({ kind: "regression", model: { type: "logistic" } });
+    const logistic = buildNativeAnalysisRecipe(makeInput("regression", { ...common, regressionType: "logistic", workers: 8 }));
+    expect(logistic.schema_version).toBe(3);
+    expect(logistic.metadata).toEqual({ status: "validated_regression_logistic_v2_bounded_scope" });
+    expect(logistic.method_config).toEqual({
+      kind: "regression",
+      outcome: "y",
+      predictors: ["x", "z"],
+      controls: ["age"],
+      model: { type: "logistic" },
+    });
+    expect(logistic.settings).toMatchObject({
+      method: "regression",
+      weighting_scheme: "path",
+      preprocessing: "unstandardized",
+      bootstrap_samples: 0,
+      studentized_inner_samples: 0,
+      permutation_samples: 0,
+      workers: 1,
+      confidence_level: 0.95,
+      case_weight_column: null,
+    });
 
     const mediation = buildNativeAnalysisRecipe(makeInput("regression", {
       ...common,

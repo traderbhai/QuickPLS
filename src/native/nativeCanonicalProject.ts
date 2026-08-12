@@ -345,6 +345,11 @@ function canonicalMethodLabel(
     if (version === LEGACY_PLS_PREDICT_METHOD_VERSION) return NATIVE_LEGACY_PREDICTION_METHOD_LABEL;
     return version ? `Prediction result (${version})` : "Prediction result";
   }
+  if (recipe.settings.method === "regression") {
+    const version = envelope.provenance.method_version;
+    if (version === "regression_logistic_v2") return "Binary Logistic Regression";
+    if (version === "regression_logistic_v1") return "Legacy binary logistic regression (v1)";
+  }
   if (recipe.settings.method === "pls_pm") {
     if (hasBootstrap || recipe.settings.bootstrap_samples > 0) return "PLS-SEM Bootstrapping";
     if (hasPermutation || recipe.settings.permutation_samples > 0) return "Structural Path Randomization";

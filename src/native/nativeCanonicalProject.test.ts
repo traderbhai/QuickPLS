@@ -244,6 +244,99 @@ describe("canonical native project reconciliation", () => {
     expect(nativeRunFromCanonicalResult(bootstrapEnvelope, bootstrapRecipe)?.method).toBe("PLS-SEM Bootstrapping");
   });
 
+  it("reopens current and legacy logistic results as model-free versioned runs", () => {
+    const baseEnvelope = envelope();
+    const basePayload = baseEnvelope.payload as Extract<AnalysisResultEnvelope["payload"], { kind: "pls_pm_v1" }>;
+    const logisticRecipe = recipe({
+      schema_version: 3,
+      settings: {
+        ...recipe().settings,
+        method: "regression",
+        preprocessing: "unstandardized",
+      },
+      method_config: {
+        kind: "regression",
+        outcome: "converted",
+        predictors: ["score"],
+        controls: [],
+        model: { type: "logistic" },
+      },
+      metadata: { status: "validated_regression_logistic_v2_bounded_scope" },
+    });
+    const legacyLogisticRecipe = recipe({
+      schema_version: 2,
+      id: "recipe-logistic-v1",
+      settings: {
+        ...recipe().settings,
+        method: "regression",
+        preprocessing: "standardized",
+      },
+      metadata: {
+        regression_type: "logistic",
+        regression_outcome: "converted",
+        regression_predictors: "score",
+      },
+    });
+    const logisticEnvelope = (
+      version: "regression_logistic_v2" | "regression_logistic_v1",
+      canonicalRecipe: NativeCanonicalAnalysisRecipe,
+    ): AnalysisResultEnvelope => ({
+      ...baseEnvelope,
+      id: `result-${version}`,
+      provenance: {
+        ...baseEnvelope.provenance,
+        recipe_id: canonicalRecipe.id,
+        method: "regression",
+        method_version: version,
+        settings: canonicalRecipe.settings,
+      },
+      payload: {
+        ...basePayload,
+        estimation: {
+          ...basePayload.estimation,
+          method_version: version,
+          used_observations: 6,
+          omitted_observations: 0,
+          regression: {
+            method_version: version,
+            regression_type: "logistic",
+            outcome: "converted",
+            predictors: ["score"],
+            controls: [],
+            observations: 6,
+            coefficients: [],
+            fit: { aic: 10, bic: 9.5 },
+            predictions: [],
+            process: null,
+            warnings: [],
+          },
+        },
+      },
+    });
+
+    const current = nativeRunFromCanonicalResult(logisticEnvelope("regression_logistic_v2", logisticRecipe), logisticRecipe);
+    expect(current).toMatchObject({
+      modelId: null,
+      method: "Binary Logistic Regression",
+      name: "Binary Logistic Regression run",
+    });
+    expect(current?.modelSnapshot).toBeUndefined();
+
+    expect(legacyLogisticRecipe).toMatchObject({
+      schema_version: 2,
+      settings: { method: "regression", preprocessing: "standardized" },
+      metadata: { regression_type: "logistic", regression_outcome: "converted", regression_predictors: "score" },
+    });
+    expect(legacyLogisticRecipe.method_config).toBeUndefined();
+    const legacy = nativeRunFromCanonicalResult(logisticEnvelope("regression_logistic_v1", legacyLogisticRecipe), legacyLogisticRecipe);
+    expect(legacy).toMatchObject({
+      modelId: null,
+      method: "Legacy binary logistic regression (v1)",
+      name: "Legacy binary logistic regression (v1) run",
+    });
+    expect(legacy?.modelSnapshot).toBeUndefined();
+  });
+
   it("hydrates current and legacy prediction archives without relabeling v1 as current CVPAT", () => {
     const basePayload = envelope().payload as Extract<AnalysisResultEnvelope["payload"], { kind: "pls_pm_v1" }>;
     const predictionRecipe = recipe({ settings: { ...recipe().settings, method: "predict" } });

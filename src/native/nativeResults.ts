@@ -21,6 +21,10 @@ import {
 import { NATIVE_NCA_ENGINE_SCOPE_WARNING, NATIVE_STANDALONE_ASSESSMENT_WARNING } from "./nativeNca";
 import { NATIVE_PCA_ENGINE_SCOPE_WARNING } from "./nativePca";
 import { NATIVE_OLS_ENGINE_SCOPE_WARNING } from "./nativeOls";
+import {
+  NATIVE_LEGACY_LOGISTIC_ENGINE_SCOPE_WARNING,
+  NATIVE_LOGISTIC_ENGINE_SCOPE_WARNING,
+} from "./nativeLogistic";
 import { isStandaloneNativeAnalysis } from "./nativeStandaloneAnalysis";
 import {
   NATIVE_GSCA_ALGORITHM_VERSION,
@@ -124,6 +128,32 @@ export interface NativeOlsResultProjection {
   coefficients: RegressionAnalysis["coefficients"];
   fit: RegressionAnalysis["fit"];
   predictionsStored: number;
+  warnings: string[];
+}
+
+export interface NativeLogisticResultProjection {
+  methodVersion: "regression_logistic_v2";
+  outcome: string;
+  predictors: string[];
+  controls: string[];
+  observations: number;
+  coefficients: RegressionAnalysis["coefficients"];
+  fit: RegressionAnalysis["fit"];
+  predictions: RegressionAnalysis["predictions"];
+  diagnostics: NonNullable<RegressionAnalysis["logistic"]>;
+  warnings: string[];
+}
+
+export interface NativeLegacyLogisticResultProjection {
+  methodVersion: "regression_logistic_v1";
+  recordedPreprocessing: "standardized" | "unstandardized";
+  outcome: string;
+  predictors: string[];
+  controls: string[];
+  observations: number;
+  coefficients: RegressionAnalysis["coefficients"];
+  fit: RegressionAnalysis["fit"];
+  predictions: RegressionAnalysis["predictions"];
   warnings: string[];
 }
 
@@ -287,6 +317,23 @@ const OLS_RESULT_IDS = [
   "ols_coefficients",
   "ols_model_fit",
   "ols_scope",
+] as const;
+
+const LOGISTIC_RESULT_IDS = [
+  "logistic_coefficients",
+  "logistic_fit",
+  "logistic_classification",
+  "logistic_outcome_profile",
+  "logistic_convergence",
+  "logistic_probabilities",
+  "logistic_scope",
+] as const;
+
+const LEGACY_LOGISTIC_RESULT_IDS = [
+  "legacy_logistic_coefficients",
+  "legacy_logistic_fit",
+  "legacy_logistic_probabilities",
+  "legacy_logistic_scope",
 ] as const;
 
 const CBSEM_RESULT_IDS = [
@@ -859,6 +906,7 @@ export function nativeOlsResultProjection(run: AnalysisRun | null | undefined): 
     || result.used_observations !== regression.observations
     || regression.coefficients.length !== expectedTerms.length
     || regression.predictions.length !== regression.observations
+    || regression.logistic
     || regression.process) return null;
   for (const [index, coefficient] of regression.coefficients.entries()) {
     if (coefficient.term !== expectedTerms[index]
@@ -873,7 +921,9 @@ export function nativeOlsResultProjection(run: AnalysisRun | null | undefined): 
       || !isFiniteNumber(coefficient.confidence_interval_upper)
       || coefficient.confidence_interval_lower > coefficient.estimate
       || coefficient.confidence_interval_upper < coefficient.estimate
-      || coefficient.odds_ratio != null) return null;
+      || coefficient.odds_ratio != null
+      || coefficient.odds_ratio_confidence_interval_lower != null
+      || coefficient.odds_ratio_confidence_interval_upper != null) return null;
   }
   const fit = regression.fit;
   if (!isFiniteNumber(fit.r_squared)
@@ -883,7 +933,14 @@ export function nativeOlsResultProjection(run: AnalysisRun | null | undefined): 
     || !isFiniteNumber(fit.bic)
     || !isFiniteNumber(fit.rmse)
     || fit.log_likelihood != null
-    || fit.pseudo_r_squared != null) return null;
+    || fit.pseudo_r_squared != null
+    || fit.null_log_likelihood != null
+    || fit.deviance != null
+    || fit.null_deviance != null
+    || fit.likelihood_ratio_chi_square != null
+    || fit.likelihood_ratio_degrees_of_freedom != null
+    || fit.likelihood_ratio_p_value != null
+    || fit.pseudo_r_squared_method != null) return null;
   for (const [index, prediction] of regression.predictions.entries()) {
     if (prediction.observation !== index
       || !isFiniteNumber(prediction.fitted)
@@ -901,6 +958,285 @@ export function nativeOlsResultProjection(run: AnalysisRun | null | undefined): 
     coefficients: regression.coefficients,
     fit,
     predictionsStored: regression.predictions.length,
+    warnings,
+  };
+}
+
+export function nativeLogisticResultProjection(
+  run: AnalysisRun | null | undefined,
+): NativeLogisticResultProjection | null {
+  if (!isCompletedResultRun(run) || run.modelId || run.modelSnapshot) return null;
+  const provenance = run.provenance;
+  const result = run.result;
+  const regression = result.regression;
+  if (!regression
+    || provenance?.method !== "regression"
+    || provenance.method_version !== "regression_logistic_v2"
+    || provenance.settings.method !== "regression"
+    || provenance.settings.weighting_scheme !== "path"
+    || provenance.settings.preprocessing !== "unstandardized"
+    || provenance.settings.bootstrap_samples !== 0
+    || provenance.settings.studentized_inner_samples !== 0
+    || provenance.settings.permutation_samples !== 0
+    || provenance.settings.workers !== 1
+    || provenance.settings.case_weight_column !== null
+    || !numbersClose(provenance.settings.confidence_level, 0.95)
+    || result.method_version !== "regression_logistic_v2"
+    || regression.method_version !== "regression_logistic_v2"
+    || regression.regression_type !== "logistic"
+    || regression.process
+    || !regression.logistic) return null;
+  if (run.assessment?.method_version !== "assessment_not_applicable_v1"
+    || run.assessment.warnings.length !== 1
+    || run.assessment.warnings[0] !== NATIVE_STANDALONE_ASSESSMENT_WARNING) return null;
+
+  const outcome = regression.outcome.trim();
+  const predictors = regression.predictors.filter(hasText);
+  const controls = regression.controls.filter(hasText);
+  const variables = [outcome, ...predictors, ...controls];
+  const expectedTerms = ["intercept", ...predictors, ...controls];
+  if (!outcome
+    || predictors.length < 1
+    || new Set(variables).size !== variables.length
+    || !isPositiveInteger(regression.observations)
+    || regression.observations <= expectedTerms.length
+    || result.used_observations !== regression.observations
+    || regression.coefficients.length !== expectedTerms.length
+    || regression.predictions.length !== regression.observations) return null;
+
+  for (const [index, coefficient] of regression.coefficients.entries()) {
+    const expectedStatistic = coefficient.estimate / coefficient.standard_error;
+    const expectedPValue = chiSquareSurvival(expectedStatistic * expectedStatistic, 1);
+    const expectedLower = coefficient.estimate - NORMAL_95_PERCENT_CRITICAL_VALUE * coefficient.standard_error;
+    const expectedUpper = coefficient.estimate + NORMAL_95_PERCENT_CRITICAL_VALUE * coefficient.standard_error;
+    if (coefficient.term !== expectedTerms[index]
+      || !isFiniteNumber(coefficient.estimate)
+      || !isFiniteNumber(coefficient.standard_error)
+      || coefficient.standard_error <= 0
+      || !isFiniteNumber(coefficient.statistic)
+      || !numbersClose(coefficient.statistic, expectedStatistic)
+      || !isProbability(coefficient.p_value_two_sided)
+      || !scientificNumbersClose(coefficient.p_value_two_sided, expectedPValue)
+      || !isFiniteNumber(coefficient.confidence_interval_lower)
+      || !isFiniteNumber(coefficient.confidence_interval_upper)
+      || !scientificNumbersClose(coefficient.confidence_interval_lower, expectedLower)
+      || !scientificNumbersClose(coefficient.confidence_interval_upper, expectedUpper)
+      || !isFiniteNumber(coefficient.odds_ratio)
+      || coefficient.odds_ratio <= 0
+      || !numbersClose(coefficient.odds_ratio, Math.exp(coefficient.estimate))
+      || !isFiniteNumber(coefficient.odds_ratio_confidence_interval_lower)
+      || !isFiniteNumber(coefficient.odds_ratio_confidence_interval_upper)
+      || !numbersClose(coefficient.odds_ratio_confidence_interval_lower, Math.exp(coefficient.confidence_interval_lower))
+      || !numbersClose(coefficient.odds_ratio_confidence_interval_upper, Math.exp(coefficient.confidence_interval_upper))) return null;
+  }
+
+  const fit = regression.fit;
+  const parameterCount = expectedTerms.length;
+  if (fit.r_squared != null
+    || fit.adjusted_r_squared != null
+    || fit.f_statistic != null
+    || fit.rmse != null
+    || !isFiniteNumber(fit.log_likelihood)
+    || !isFiniteNumber(fit.null_log_likelihood)
+    || !isFiniteNumber(fit.pseudo_r_squared)
+    || !isFiniteNumber(fit.deviance)
+    || !isFiniteNumber(fit.null_deviance)
+    || !isFiniteNumber(fit.likelihood_ratio_chi_square)
+    || fit.likelihood_ratio_chi_square < 0
+    || fit.likelihood_ratio_degrees_of_freedom !== expectedTerms.length - 1
+    || !isProbability(fit.likelihood_ratio_p_value)
+    || !scientificNumbersClose(
+      fit.likelihood_ratio_p_value,
+      chiSquareSurvival(fit.likelihood_ratio_chi_square, fit.likelihood_ratio_degrees_of_freedom),
+    )
+    || fit.pseudo_r_squared_method !== "mcfadden_v1"
+    || !isFiniteNumber(fit.aic)
+    || !isFiniteNumber(fit.bic)
+    || !numbersClose(fit.pseudo_r_squared, 1 - fit.log_likelihood / fit.null_log_likelihood)
+    || !numbersClose(fit.deviance, -2 * fit.log_likelihood)
+    || !numbersClose(fit.null_deviance, -2 * fit.null_log_likelihood)
+    || !numbersClose(fit.likelihood_ratio_chi_square, fit.null_deviance - fit.deviance)
+    || !numbersClose(fit.aic, fit.deviance + 2 * parameterCount)
+    || !numbersClose(fit.bic, fit.deviance + Math.log(regression.observations) * parameterCount)) return null;
+
+  const diagnostics = regression.logistic;
+  const profile = diagnostics.outcome_profile;
+  if (profile.outcome !== outcome
+    || profile.coding !== "numeric_0_1_exact_v1"
+    || profile.readiness !== "ready"
+    || profile.complete_cases !== regression.observations
+    || profile.omitted_cases !== result.omitted_observations
+    || profile.zero_count + profile.one_count !== profile.complete_cases
+    || profile.zero_count < 1
+    || profile.one_count < 1
+    || profile.invalid_count !== 0
+    || !isProbability(profile.prevalence)
+    || !numbersClose(profile.prevalence, profile.one_count / profile.complete_cases)) return null;
+
+  const convergence = diagnostics.convergence;
+  if (convergence.algorithm !== "deterministic_newton_irls_v1"
+    || !convergence.converged
+    || !isPositiveInteger(convergence.iterations)
+    || convergence.max_iterations !== 100
+    || convergence.iterations > convergence.max_iterations
+    || !numbersClose(convergence.tolerance, 1e-8)
+    || !isFiniteNumber(convergence.final_max_abs_step)
+    || convergence.final_max_abs_step < 0
+    || convergence.final_max_abs_step >= convergence.tolerance
+    || !numbersClose(convergence.separation_probability_tolerance, 1e-9)) return null;
+
+  let truePositive = 0;
+  let trueNegative = 0;
+  let falsePositive = 0;
+  let falseNegative = 0;
+  let observedZeroCount = 0;
+  let observedOneCount = 0;
+  let reconstructedLogLikelihood = 0;
+  const threshold = diagnostics.classification.threshold;
+  if (!numbersClose(threshold, 0.5)) return null;
+  for (const [index, prediction] of regression.predictions.entries()) {
+    if (prediction.observation !== index
+      || !isProbability(prediction.fitted)
+      || !isFiniteNumber(prediction.residual)
+      || !isProbability(prediction.probability)
+      || !numbersClose(prediction.fitted, prediction.probability)
+      || prediction.probability < convergence.separation_probability_tolerance
+      || prediction.probability > 1 - convergence.separation_probability_tolerance) return null;
+    const observed = prediction.probability + prediction.residual;
+    if (!numbersClose(observed, 0) && !numbersClose(observed, 1)) return null;
+    const observedOne = numbersClose(observed, 1);
+    if (observedOne) observedOneCount += 1;
+    else observedZeroCount += 1;
+    reconstructedLogLikelihood += observedOne
+      ? Math.log(prediction.probability)
+      : Math.log(1 - prediction.probability);
+    const predictedOne = prediction.probability >= threshold;
+    if (observedOne && predictedOne) truePositive += 1;
+    else if (!observedOne && !predictedOne) trueNegative += 1;
+    else if (!observedOne && predictedOne) falsePositive += 1;
+    else falseNegative += 1;
+  }
+  const classification = diagnostics.classification;
+  const reconstructedPrevalence = observedOneCount / regression.observations;
+  const reconstructedNullLogLikelihood = observedOneCount * Math.log(reconstructedPrevalence)
+    + observedZeroCount * Math.log(1 - reconstructedPrevalence);
+  if (profile.zero_count !== observedZeroCount
+    || profile.one_count !== observedOneCount
+    || !numbersClose(profile.prevalence, reconstructedPrevalence)
+    || !numbersClose(fit.log_likelihood, reconstructedLogLikelihood)
+    || !numbersClose(fit.null_log_likelihood, reconstructedNullLogLikelihood)
+    || !numbersClose(fit.likelihood_ratio_chi_square, Math.max(0, 2 * (reconstructedLogLikelihood - reconstructedNullLogLikelihood)))
+    || classification.true_positive !== truePositive
+    || classification.true_negative !== trueNegative
+    || classification.false_positive !== falsePositive
+    || classification.false_negative !== falseNegative
+    || !isProbability(classification.accuracy)
+    || !isProbability(classification.sensitivity)
+    || !isProbability(classification.specificity)
+    || !numbersClose(classification.accuracy, (truePositive + trueNegative) / regression.observations)
+    || !numbersClose(classification.sensitivity, truePositive / (truePositive + falseNegative))
+    || !numbersClose(classification.specificity, trueNegative / (trueNegative + falsePositive))) return null;
+
+  const warnings = regression.warnings.map((warning) => warning.trim()).filter(Boolean);
+  if (!warnings.includes(NATIVE_LOGISTIC_ENGINE_SCOPE_WARNING)) return null;
+  return {
+    methodVersion: "regression_logistic_v2",
+    outcome,
+    predictors,
+    controls,
+    observations: regression.observations,
+    coefficients: regression.coefficients,
+    fit,
+    predictions: regression.predictions,
+    diagnostics,
+    warnings,
+  };
+}
+
+export function nativeLegacyLogisticResultProjection(
+  run: AnalysisRun | null | undefined,
+): NativeLegacyLogisticResultProjection | null {
+  if (!isCompletedResultRun(run) || run.modelId || run.modelSnapshot) return null;
+  const provenance = run.provenance;
+  const result = run.result;
+  const regression = result.regression;
+  if (!regression
+    || provenance?.method !== "regression"
+    || provenance.method_version !== "regression_logistic_v1"
+    || provenance.settings.method !== "regression"
+    || provenance.settings.weighting_scheme !== "path"
+    || (provenance.settings.preprocessing !== "standardized" && provenance.settings.preprocessing !== "unstandardized")
+    || provenance.settings.bootstrap_samples !== 0
+    || provenance.settings.studentized_inner_samples !== 0
+    || provenance.settings.permutation_samples !== 0
+    || provenance.settings.case_weight_column !== null
+    || !numbersClose(provenance.settings.confidence_level, 0.95)
+    || result.method_version !== "regression_logistic_v1"
+    || regression.method_version !== "regression_logistic_v1"
+    || regression.regression_type !== "logistic"
+    || regression.logistic
+    || regression.process) return null;
+  if (run.assessment?.method_version !== "assessment_not_applicable_v1"
+    || run.assessment.warnings.length !== 1
+    || run.assessment.warnings[0] !== NATIVE_STANDALONE_ASSESSMENT_WARNING) return null;
+
+  const outcome = regression.outcome.trim();
+  const predictors = regression.predictors.filter(hasText);
+  const controls = regression.controls.filter(hasText);
+  const variables = [outcome, ...predictors, ...controls];
+  const expectedTerms = ["intercept", ...predictors, ...controls];
+  if (!outcome
+    || predictors.length < 1
+    || new Set(variables).size !== variables.length
+    || !isPositiveInteger(regression.observations)
+    || result.used_observations !== regression.observations
+    || regression.coefficients.length !== expectedTerms.length
+    || regression.predictions.length !== regression.observations) return null;
+  if (regression.coefficients.some((row, index) => row.term !== expectedTerms[index]
+    || !isFiniteNumber(row.estimate)
+    || !isFiniteNumber(row.standard_error)
+    || row.standard_error <= 0
+    || !isFiniteNumber(row.statistic)
+    || !isProbability(row.p_value_two_sided)
+    || !isFiniteNumber(row.confidence_interval_lower)
+    || !isFiniteNumber(row.confidence_interval_upper)
+    || !isFiniteNumber(row.odds_ratio)
+    || row.odds_ratio <= 0
+    || row.odds_ratio_confidence_interval_lower != null
+    || row.odds_ratio_confidence_interval_upper != null)) return null;
+  const fit = regression.fit;
+  if (fit.r_squared != null
+    || fit.adjusted_r_squared != null
+    || fit.f_statistic != null
+    || fit.rmse != null
+    || !isFiniteNumber(fit.log_likelihood)
+    || !isFiniteNumber(fit.pseudo_r_squared)
+    || !isFiniteNumber(fit.aic)
+    || !isFiniteNumber(fit.bic)
+    || fit.null_log_likelihood != null
+    || fit.deviance != null
+    || fit.null_deviance != null
+    || fit.likelihood_ratio_chi_square != null
+    || fit.likelihood_ratio_degrees_of_freedom != null
+    || fit.likelihood_ratio_p_value != null
+    || fit.pseudo_r_squared_method != null) return null;
+  if (regression.predictions.some((row, index) => row.observation !== index
+    || !isProbability(row.fitted)
+    || !isFiniteNumber(row.residual)
+    || !isProbability(row.probability)
+    || !numbersClose(row.fitted, row.probability))) return null;
+  const warnings = regression.warnings.map((warning) => warning.trim()).filter(Boolean);
+  if (!warnings.includes(NATIVE_LEGACY_LOGISTIC_ENGINE_SCOPE_WARNING)) return null;
+  return {
+    methodVersion: "regression_logistic_v1",
+    recordedPreprocessing: provenance.settings.preprocessing,
+    outcome,
+    predictors,
+    controls,
+    observations: regression.observations,
+    coefficients: regression.coefficients,
+    fit,
+    predictions: regression.predictions,
     warnings,
   };
 }
@@ -990,8 +1326,10 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
     addPcaResultTables(tables, run);
     return tables;
   }
-  if (run.provenance?.method === "regression" || result.regression || result.method_version === "regression_ols_v1") {
-    addOlsResultTables(tables, run);
+  if (run.provenance?.method === "regression" || result.regression || result.method_version.startsWith("regression_")) {
+    if (result.method_version === "regression_logistic_v2") addLogisticResultTables(tables, run);
+    else if (result.method_version === "regression_logistic_v1") addLegacyLogisticResultTables(tables, run);
+    else addOlsResultTables(tables, run);
     return tables;
   }
   if (run.provenance?.method === "cbsem" || result.cbsem) {
@@ -1614,7 +1952,15 @@ export function buildNativeResultTree(run: AnalysisRun | null | undefined, table
   addTableGroup(groups, "importance_performance", "Importance-performance map", IPMA_RESULT_IDS, byId);
   addTableGroup(groups, "necessary_conditions", "Necessary conditions", NCA_RESULT_IDS, byId);
   addTableGroup(groups, "components", "Principal components", PCA_RESULT_IDS, byId);
-  addTableGroup(groups, "regression", "OLS regression", OLS_RESULT_IDS, byId);
+  const logistic = nativeLogisticResultProjection(run);
+  const legacyLogistic = nativeLegacyLogisticResultProjection(run);
+  addTableGroup(
+    groups,
+    "regression",
+    logistic ? "Binary logistic regression" : legacyLogistic ? "Legacy binary logistic regression (v1)" : "OLS regression",
+    logistic ? LOGISTIC_RESULT_IDS : legacyLogistic ? LEGACY_LOGISTIC_RESULT_IDS : OLS_RESULT_IDS,
+    byId,
+  );
   addTableGroup(groups, "covariance_sem", "CB-SEM / CFA", CBSEM_RESULT_IDS, byId);
   addTableGroup(groups, "gsca_component_model", "GSCA component model", GSCA_RESULT_IDS, byId);
   addTableGroup(groups, "assessment", "Assessment", CCA_ASSESSMENT_IDS, byId);
@@ -1649,6 +1995,8 @@ export function buildNativeResultNavigation(run: AnalysisRun | null | undefined)
   const ncaDefault = NCA_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
   const pcaDefault = PCA_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
   const olsDefault = OLS_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
+  const logisticDefault = LOGISTIC_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
+  const legacyLogisticDefault = LEGACY_LOGISTIC_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
   const cbsemDefault = CBSEM_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
   const gscaDefault = GSCA_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
   const higherOrderDefault = HIGHER_ORDER_IDS.find((id) => tables.some((table) => table.id === id));
@@ -1656,7 +2004,7 @@ export function buildNativeResultNavigation(run: AnalysisRun | null | undefined)
   const fallbackDefault = run.result.mga || standalone ? tables[0]?.id ?? null : "model_estimates";
   return {
     runId: run.id,
-    defaultItemId: groupDefault ?? ipmaDefault ?? ncaDefault ?? pcaDefault ?? olsDefault ?? cbsemDefault ?? gscaDefault ?? ccaDefault ?? predictionDefault ?? higherOrderDefault ?? fallbackDefault,
+    defaultItemId: groupDefault ?? ipmaDefault ?? ncaDefault ?? pcaDefault ?? logisticDefault ?? legacyLogisticDefault ?? olsDefault ?? cbsemDefault ?? gscaDefault ?? ccaDefault ?? predictionDefault ?? higherOrderDefault ?? fallbackDefault,
     groups: buildNativeResultTree(run, tables),
     tables,
   };
@@ -2965,6 +3313,197 @@ function addOlsResultTables(
   });
 }
 
+function addLogisticResultTables(
+  tables: ResultTable[],
+  run: AnalysisRun & { result: NonNullable<AnalysisRun["result"]> },
+) {
+  const projection = nativeLogisticResultProjection(run);
+  if (!projection) return;
+  const { classification, convergence, outcome_profile: profile } = projection.diagnostics;
+  const classificationWarning = "In-sample descriptive classification; not out-of-sample predictive performance.";
+
+  addTable(tables, {
+    id: "logistic_coefficients",
+    title: "Coefficients, Wald inference, and odds ratios",
+    warning: null,
+    columns: ["Term", "Estimate", "ML SE", "Wald z", "p (two-sided)", "95% CI lower", "95% CI upper", "Odds ratio", "OR 95% CI lower", "OR 95% CI upper"],
+    rows: projection.coefficients.map((row) => [
+      row.term === "intercept" ? "Intercept" : row.term,
+      formatNumber(row.estimate),
+      formatNumber(row.standard_error),
+      formatNumber(row.statistic),
+      formatPValue(row.p_value_two_sided),
+      formatNumber(row.confidence_interval_lower),
+      formatNumber(row.confidence_interval_upper),
+      formatNumber(row.odds_ratio!),
+      formatNumber(row.odds_ratio_confidence_interval_lower!),
+      formatNumber(row.odds_ratio_confidence_interval_upper!),
+    ]),
+  });
+
+  addTable(tables, {
+    id: "logistic_fit",
+    title: "Model fit and likelihood-ratio inference",
+    warning: null,
+    columns: ["Metric", "Value"],
+    rows: [
+      ["Analyzed observations", String(projection.observations)],
+      ["Log likelihood", formatNumber(projection.fit.log_likelihood!)],
+      ["Null log likelihood", formatNumber(projection.fit.null_log_likelihood!)],
+      ["Deviance", formatNumber(projection.fit.deviance!)],
+      ["Null deviance", formatNumber(projection.fit.null_deviance!)],
+      ["Likelihood-ratio chi-square", formatNumber(projection.fit.likelihood_ratio_chi_square!)],
+      ["Likelihood-ratio df", String(projection.fit.likelihood_ratio_degrees_of_freedom!)],
+      ["Likelihood-ratio p", formatPValue(projection.fit.likelihood_ratio_p_value!)],
+      ["McFadden pseudo-R²", formatNumber(projection.fit.pseudo_r_squared!)],
+      ["AIC", formatNumber(projection.fit.aic)],
+      ["BIC", formatNumber(projection.fit.bic)],
+    ],
+  });
+
+  addTable(tables, {
+    id: "logistic_classification",
+    title: "Classification at probability threshold 0.5",
+    warning: classificationWarning,
+    columns: ["True positive", "True negative", "False positive", "False negative", "Accuracy", "Sensitivity", "Specificity"],
+    rows: [[
+      String(classification.true_positive),
+      String(classification.true_negative),
+      String(classification.false_positive),
+      String(classification.false_negative),
+      formatNumber(classification.accuracy, 4),
+      formatNumber(classification.sensitivity, 4),
+      formatNumber(classification.specificity, 4),
+    ]],
+  });
+
+  addTable(tables, {
+    id: "logistic_outcome_profile",
+    title: "Binary outcome profile",
+    warning: null,
+    columns: ["Outcome", "Coding", "Complete cases", "Omitted cases", "Class 0", "Class 1", "Class 1 prevalence", "Readiness"],
+    rows: [[
+      profile.outcome,
+      "Numeric 0/1 (exact)",
+      String(profile.complete_cases),
+      String(profile.omitted_cases),
+      String(profile.zero_count),
+      String(profile.one_count),
+      formatNumber(profile.prevalence!, 4),
+      "Ready",
+    ]],
+  });
+
+  addTable(tables, {
+    id: "logistic_convergence",
+    title: "Estimator convergence",
+    warning: null,
+    columns: ["Algorithm", "Converged", "Iterations", "Maximum iterations", "Tolerance", "Final maximum absolute step", "Separation probability tolerance"],
+    rows: [[
+      "Deterministic Newton IRLS",
+      convergence.converged ? "Yes" : "No",
+      String(convergence.iterations),
+      String(convergence.max_iterations),
+      String(convergence.tolerance),
+      formatNumber(convergence.final_max_abs_step, 10),
+      String(convergence.separation_probability_tolerance),
+    ]],
+  });
+
+  addTable(tables, {
+    id: "logistic_probabilities",
+    title: "Complete-case fitted probabilities",
+    warning: null,
+    columns: ["Complete-case observation", "Fitted probability", "Residual"],
+    rows: projection.predictions.map((row) => [
+      String(row.observation + 1),
+      formatNumber(row.probability!),
+      formatNumber(row.residual!),
+    ]),
+  });
+
+  addTable(tables, {
+    id: "logistic_scope",
+    title: "Calculation scope",
+    warning: projection.warnings.join(" "),
+    columns: ["Field", "Value"],
+    rows: [
+      ["Outcome", projection.outcome],
+      ["Predictors", projection.predictors.join(", ")],
+      ["Controls", projection.controls.length ? projection.controls.join(", ") : "None"],
+      ["Estimator", "Binary logistic maximum likelihood with intercept"],
+      ["Execution", "Deterministic Newton IRLS; one worker"],
+      ["Coefficient inference", "Maximum-likelihood SE; Wald z; two-sided 95% confidence intervals"],
+      ["Classification threshold", "0.5"],
+      ["Classification interpretation", classificationWarning],
+      ["Variable data", "Unstandardized observed numeric values"],
+      ["Missing data", "Listwise deletion"],
+      ["Method version", projection.methodVersion],
+    ],
+  });
+}
+
+function addLegacyLogisticResultTables(
+  tables: ResultTable[],
+  run: AnalysisRun & { result: NonNullable<AnalysisRun["result"]> },
+) {
+  const projection = nativeLegacyLogisticResultProjection(run);
+  if (!projection) return;
+  const legacyWarning = `Historical v1 output is retained as originally computed and is not reinterpreted as current v2 evidence. ${projection.warnings.join(" ")}`;
+
+  addTable(tables, {
+    id: "legacy_logistic_coefficients",
+    title: "Legacy v1 coefficients and odds ratios",
+    warning: legacyWarning,
+    columns: ["Term", "Estimate", "ML SE", "Wald z", "p (two-sided)", "95% CI lower", "95% CI upper", "Odds ratio"],
+    rows: projection.coefficients.map((row) => [
+      row.term === "intercept" ? "Intercept" : row.term,
+      formatNumber(row.estimate),
+      formatNumber(row.standard_error),
+      formatNumber(row.statistic),
+      formatPValue(row.p_value_two_sided),
+      formatNumber(row.confidence_interval_lower),
+      formatNumber(row.confidence_interval_upper),
+      formatNumber(row.odds_ratio!),
+    ]),
+  });
+  addTable(tables, {
+    id: "legacy_logistic_fit",
+    title: "Legacy v1 model fit",
+    warning: legacyWarning,
+    columns: ["Metric", "Value"],
+    rows: [
+      ["Analyzed observations", String(projection.observations)],
+      ["Log likelihood", formatNumber(projection.fit.log_likelihood!)],
+      ["McFadden pseudo-R²", formatNumber(projection.fit.pseudo_r_squared!)],
+      ["AIC", formatNumber(projection.fit.aic)],
+      ["BIC", formatNumber(projection.fit.bic)],
+    ],
+  });
+  addTable(tables, {
+    id: "legacy_logistic_probabilities",
+    title: "Legacy v1 fitted probabilities",
+    warning: legacyWarning,
+    columns: ["Complete-case observation", "Fitted probability", "Residual"],
+    rows: projection.predictions.map((row) => [String(row.observation + 1), formatNumber(row.probability!), formatNumber(row.residual!)]),
+  });
+  addTable(tables, {
+    id: "legacy_logistic_scope",
+    title: "Legacy binary logistic regression (v1)",
+    warning: legacyWarning,
+    columns: ["Field", "Value"],
+    rows: [
+      ["Outcome", projection.outcome],
+      ["Predictors", projection.predictors.join(", ")],
+      ["Controls", projection.controls.length ? projection.controls.join(", ") : "None"],
+      ["Recorded historical preprocessing", projection.recordedPreprocessing],
+      ["Historical preprocessing handling", "Recorded for archive provenance only; non-operative for this preserved v1 result"],
+      ["Historical handling", "Readable and exportable under its original version; not promoted to v2 evidence"],
+      ["Method version", projection.methodVersion],
+    ],
+  });
+}
+
 function addMgaResultTables(
   tables: ResultTable[],
   run: AnalysisRun & { result: NonNullable<AnalysisRun["result"]> },
@@ -3783,6 +4322,80 @@ function numbersClose(left: unknown, right: unknown): boolean {
   return isFiniteNumber(left)
     && isFiniteNumber(right)
     && Math.abs(left - right) <= 1e-10 * Math.max(1, Math.abs(left), Math.abs(right));
+}
+
+const NORMAL_95_PERCENT_CRITICAL_VALUE = 1.959963984540054;
+const GAMMA_EPSILON = 1e-14;
+const GAMMA_MAX_ITERATIONS = 200;
+const GAMMA_MIN_DENOMINATOR = 1e-300;
+
+function scientificNumbersClose(left: unknown, right: unknown): boolean {
+  return isFiniteNumber(left)
+    && isFiniteNumber(right)
+    && Math.abs(left - right) <= 1e-9 * Math.max(1, Math.abs(left), Math.abs(right));
+}
+
+function logGamma(value: number): number {
+  const coefficients = [
+    676.5203681218851,
+    -1259.1392167224028,
+    771.3234287776531,
+    -176.6150291621406,
+    12.507343278686905,
+    -0.13857109526572012,
+    9.984369578019572e-6,
+    1.5056327351493116e-7,
+  ];
+  if (value < 0.5) {
+    return Math.log(Math.PI) - Math.log(Math.sin(Math.PI * value)) - logGamma(1 - value);
+  }
+  const shifted = value - 1;
+  let series = 0.9999999999998099;
+  coefficients.forEach((coefficient, index) => {
+    series += coefficient / (shifted + index + 1);
+  });
+  const base = shifted + coefficients.length - 0.5;
+  return 0.5 * Math.log(2 * Math.PI) + (shifted + 0.5) * Math.log(base) - base + Math.log(series);
+}
+
+function regularizedGammaQ(shape: number, value: number): number {
+  if (!Number.isFinite(shape) || shape <= 0 || !Number.isFinite(value) || value < 0) return Number.NaN;
+  if (value === 0) return 1;
+  const logScale = -value + shape * Math.log(value) - logGamma(shape);
+  if (value < shape + 1) {
+    let term = 1 / shape;
+    let sum = term;
+    let denominator = shape;
+    for (let iteration = 1; iteration <= GAMMA_MAX_ITERATIONS; iteration += 1) {
+      denominator += 1;
+      term *= value / denominator;
+      sum += term;
+      if (Math.abs(term) <= Math.abs(sum) * GAMMA_EPSILON) break;
+    }
+    return Math.min(1, Math.max(0, 1 - sum * Math.exp(logScale)));
+  }
+
+  let offset = value + 1 - shape;
+  let continuedNumerator = 1 / GAMMA_MIN_DENOMINATOR;
+  let continuedDenominator = 1 / Math.max(Math.abs(offset), GAMMA_MIN_DENOMINATOR) * Math.sign(offset || 1);
+  let fraction = continuedDenominator;
+  for (let iteration = 1; iteration <= GAMMA_MAX_ITERATIONS; iteration += 1) {
+    const coefficient = -iteration * (iteration - shape);
+    offset += 2;
+    continuedDenominator = coefficient * continuedDenominator + offset;
+    if (Math.abs(continuedDenominator) < GAMMA_MIN_DENOMINATOR) continuedDenominator = GAMMA_MIN_DENOMINATOR;
+    continuedNumerator = offset + coefficient / continuedNumerator;
+    if (Math.abs(continuedNumerator) < GAMMA_MIN_DENOMINATOR) continuedNumerator = GAMMA_MIN_DENOMINATOR;
+    continuedDenominator = 1 / continuedDenominator;
+    const change = continuedDenominator * continuedNumerator;
+    fraction *= change;
+    if (Math.abs(change - 1) <= GAMMA_EPSILON) break;
+  }
+  return Math.min(1, Math.max(0, Math.exp(logScale) * fraction));
+}
+
+function chiSquareSurvival(value: number, degreesOfFreedom: number): number {
+  return regularizedGammaQ(degreesOfFreedom / 2, value / 2);
 }
 
 function hasText(value: unknown): value is string {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { AnalysisUiSettings } from "../types";
 import { createNativeCalculationRequest, parseNativeCalculationRequest } from "./nativeCalculationRequest";
+import type { NativeLogisticProfile } from "./nativeLogistic";
 
 const settings: AnalysisUiSettings = {
   method: "plsc",
@@ -10,6 +11,22 @@ const settings: AnalysisUiSettings = {
   seed: 20_260_718,
   workers: 1,
   confidenceLevel: 0.95,
+};
+
+const logisticProfile: NativeLogisticProfile = {
+  datasetId: "data-1",
+  datasetFingerprint: "sha256:logistic",
+  outcome: "converted",
+  predictors: ["score"],
+  controls: [],
+  expectedRows: 8,
+  scannedRows: 8,
+  completeCases: 8,
+  omittedRows: 0,
+  zeroCases: 4,
+  oneCases: 4,
+  invalidOutcomeRows: 0,
+  constantTerms: [],
 };
 
 describe("native calculation request", () => {
@@ -55,5 +72,31 @@ describe("native calculation request", () => {
     });
     expect(parseNativeCalculationRequest({ kind: "plsc" })).toBeNull();
     expect(parseNativeCalculationRequest(null)).toBeNull();
+  });
+
+  it("carries a cloned full-profile proof only for binary logistic dispatch", () => {
+    const logisticSettings: AnalysisUiSettings = {
+      ...settings,
+      method: "regression",
+      regressionType: "logistic",
+      regressionOutcome: "converted",
+      regressionPredictors: "score",
+      regressionControls: null,
+    };
+    const submittedProfile = { ...logisticProfile, predictors: [...logisticProfile.predictors] };
+    const request = createNativeCalculationRequest("regression", logisticSettings, submittedProfile);
+    submittedProfile.predictors[0] = "tampered-after-create";
+    expect(request).toMatchObject({
+      kind: "regression",
+      logisticProfile: { datasetFingerprint: "sha256:logistic", predictors: ["score"], expectedRows: 8, scannedRows: 8 },
+    });
+    expect(parseNativeCalculationRequest(request)).toEqual(request);
+
+    const malformed = {
+      ...request,
+      logisticProfile: { ...request.logisticProfile, scannedRows: 7 },
+    };
+    expect(parseNativeCalculationRequest(malformed)).toBeNull();
+    expect(createNativeCalculationRequest("plsc", settings, request.logisticProfile)).not.toHaveProperty("logisticProfile");
   });
 });

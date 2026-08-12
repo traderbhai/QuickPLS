@@ -431,8 +431,8 @@ describe("NativeCalculationDialog contracts", () => {
     }));
 
     expect(markup).toMatch(/id="nd-calculation-method-regression"[^>]*role="option"[^>]*aria-selected="true"/);
-    expect(markup).toContain("Ordinary Least Squares Regression");
-    expect(markup).toContain('id="nd-calculation-ols-outcome"');
+    expect(markup).toContain('<h3 id="nd-calculation-panel-regression-title">Regression</h3>');
+    expect(markup).toContain('id="nd-calculation-regression-outcome"');
     expect(markup).toContain('<option value="y" selected="">y</option>');
     expect(markup).toContain("Predictors (1 selected)");
     expect(markup).toContain("Controls (1 selected, optional)");
@@ -443,6 +443,62 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).not.toContain('id="nd-calculation-preprocessing"');
     expect(markup).not.toContain('id="nd-calculation-max-iterations"');
     expect(markup).not.toContain('id="nd-calculation-tolerance"');
+    expect(markup).not.toContain('id="nd-calculation-seed"');
+    expect(markup).not.toContain('id="nd-calculation-workers"');
+  });
+
+  it("renders strict model-free binary logistic setup with a complete 0/1 profile", () => {
+    const rows = Array.from({ length: 12 }, (_, index) => ({
+      converted: index % 3 === 0 ? 1 : 0,
+      score: index + 1,
+      age: 22 + index,
+      segment: index % 2 ? "B" : "A",
+    }));
+    const logisticDataset: Dataset = {
+      id: "logistic-data",
+      name: "logistic.csv",
+      columns: ["converted", "score", "age", "segment"],
+      rows,
+      rowCount: rows.length,
+      missing: 0,
+      fingerprint: "sha256:logistic",
+      kind: "raw",
+      columnMetadata: [metadata("converted", "numeric"), metadata("score", "numeric"), metadata("age", "numeric"), metadata("segment", "text")],
+    };
+    const markup = renderToStaticMarkup(createElement(NativeCalculationDialog, {
+      kind: "regression",
+      setKind: () => undefined,
+      settings: {
+        ...settings,
+        method: "regression",
+        preprocessing: "unstandardized",
+        workers: 1,
+        confidenceLevel: 0.95,
+        regressionType: "logistic",
+        regressionOutcome: "converted",
+        regressionPredictors: "score",
+        regressionControls: "age",
+        robustSe: "none",
+      },
+      setSettings: () => undefined,
+      readiness: { canRun: true, summary: "Ready", blockers: [], warnings: [], items: [] },
+      runMonitor,
+      dataset: logisticDataset,
+      analysisColumns: [],
+      nodes: [],
+      edges: [],
+      start: () => undefined,
+      cancel: () => undefined,
+      close: () => undefined,
+    }));
+
+    expect(markup).toContain('id="nd-calculation-regression-type"');
+    expect(markup).toContain('<option value="logistic" selected="">Binary logistic (outcome coded 0/1)</option>');
+    expect(markup).toContain('id="nd-calculation-logistic-profile"');
+    expect(markup).toContain("12 complete cases: 8 class 0 and 4 class 1; 0 omitted by listwise deletion");
+    expect(markup).toContain("Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)");
+    expect(markup).toContain("The outcome must be coded exactly 0/1");
+    expect(markup).toContain("Start binary logistic regression");
     expect(markup).not.toContain('id="nd-calculation-seed"');
     expect(markup).not.toContain('id="nd-calculation-workers"');
   });

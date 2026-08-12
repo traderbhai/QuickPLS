@@ -1748,3 +1748,12 @@ No statistical engines, formulas, result schemas, recipes, project format, valid
 - Scope: native-shell frontend/product binding only.
 - Evidence: `validation/results/v245_mockup_feature_completion_smoke.json` and `validation/results/v245_mockup_feature_completion_audit.json`.
 - Notes: Data tabs, Model explorer/bottom panes, Setup evidence drawer, Run output preview, and Trust release integrity now use live/default-shell state instead of fixed mockup placeholders. No numerical backend behavior changed.
+
+## QuickPLS 3.0 parity program — Wave 1 logistic checkpoint
+
+- `qpls3.standalone.logistic` is the first parity-ledger capability to reach `release_qualified` under the catalogue snapshot dated 2026-08-12.
+- Current execution emits `regression_logistic_v2` from a typed recipe-v3 standalone Regression contract; `regression_logistic_v1` remains readable historical output and cannot be appended as current evidence.
+- Accepted scope is an exactly coded numeric 0/1 outcome with both classes in the listwise-complete sample, deterministic single-worker Newton IRLS, fixed 95% Wald inference, odds-ratio intervals, likelihood diagnostics, fitted probabilities, convergence evidence, and explicitly in-sample descriptive classification.
+- Independent Python and validation-only R `glm` arithmetic, strict archive-v5 append/save/reopen/tamper gates, browser setup at 1024×700, 1280×720, and 1440×900, real packaged Tauri execution, native XLSX, strict-profile failure recovery, explicit save, and same-run reopen pass.
+- Evidence: `validation/results/logistic_v2_reference_report.json`, `validation/results/logistic_method_promotion_audit.json`, and `validation/results/logistic_v2_packaged_acceptance.json`.
+- This checkpoint does not change the package/release version. Wave 1 remains open for regression bootstrapping and the full graph-defined PROCESS workflow; no new installer is claimed.

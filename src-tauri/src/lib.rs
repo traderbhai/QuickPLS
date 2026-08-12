@@ -536,7 +536,11 @@ fn safe_sheet_name(title: &str, index: usize) -> String {
     } else {
         trimmed
     };
-    name.chars().take(31).collect()
+    name.chars()
+        .take(31)
+        .collect::<String>()
+        .trim_end()
+        .to_string()
 }
 
 #[tauri::command]
@@ -3670,6 +3674,10 @@ mod desktop_job_tests {
         assert_eq!(range.get((0, 0)).unwrap().to_string(), "WPLS weights");
         assert_eq!(range.get((1, 1)).unwrap().to_string(), "validated_scope");
         assert_eq!(range.get((5, 1)).unwrap().to_string(), "case_wt");
+        assert_eq!(
+            safe_sheet_name("Model fit and likelihood-ratio test", 0),
+            "Model fit and likelihood-ratio"
+        );
 
         let collision_path = directory.path().join("micom-tables.xlsx");
         let collision_tables = vec![

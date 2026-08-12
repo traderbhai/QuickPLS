@@ -1,0 +1,111 @@
+{
+  "schema_version": "quickpls.packaged_acceptance.v1",
+  "kind": "quickpls3_scoped_tauri_logistic_v2_acceptance",
+  "passed": true,
+  "generated_at_utc": "2026-08-12T11:31:20.078Z",
+  "completed_at_utc": "2026-08-12T11:34:27.229Z",
+  "feature_id": "qpls3.standalone.logistic",
+  "method_version": "regression_logistic_v2",
+  "catalogue_snapshot_date": "2026-08-12",
+  "target": "windows_10_11_x64_packaged_tauri",
+  "runtime": "tauri-webview2-cdp",
+  "endpoint": "http://127.0.0.1:9222",
+  "generator": "validation/v247_tauri_native_acceptance.mjs",
+  "checks": {
+    "workflow": {
+      "passed": true,
+      "full_data_profiled": true,
+      "active_lifecycle_captured": true,
+      "model_free": true,
+      "source_check": "logisticWorkflow"
+    },
+    "results": {
+      "passed": true,
+      "coefficient_rows": 4,
+      "probability_rows": 140,
+      "in_sample_disclaimer": "In-sample descriptive classification; not out-of-sample predictive performance.",
+      "source_check": "logisticResult"
+    },
+    "export": {
+      "passed": true,
+      "workbook_sheets": [
+        "Coefficients, Wald inference, a",
+        "Model fit and likelihood-ratio",
+        "Classification at probability t",
+        "Binary outcome profile",
+        "Estimator convergence",
+        "Complete-case fitted probabilit",
+        "Calculation scope",
+        "Run provenance"
+      ],
+      "in_sample_disclaimer_included": true,
+      "artifact_sha256": "91f712e442fa9b7214ab881c0597d6c89dbbbfc2b7e5fafe8c6cfacd91e47fdb",
+      "source_check": "logisticExport"
+    },
+    "save_reopen": {
+      "passed": true,
+      "same_run_restored": true,
+      "project_checksum_matches": true,
+      "archive_sha256": "80940815a1024a8760b61ecdbc28b69fc96466e719cdde38eb32c257268e4ef0",
+      "source_check": "logisticSaveReopen"
+    },
+    "failure_lifecycle": {
+      "passed": true,
+      "boundary": "strict_nonbinary_outcome_profile_rejected_then_valid_profile_recovered",
+      "source_check": "logisticFailureLifecycle"
+    },
+    "legacy_v1": {
+      "passed": true,
+      "boundary": "current_packaged_v2_result_is_not_reinterpreted_as_historical_v1",
+      "historical_archive_readability_evidence": "backend_persistence_gate",
+      "source_check": "logisticLegacyV1"
+    }
+  },
+  "artifacts": {
+    "xlsx": {
+      "path": "validation/results/v247-native-logistic-20260812-170118164.xlsx",
+      "size": 16134,
+      "sha256": "91f712e442fa9b7214ab881c0597d6c89dbbbfc2b7e5fafe8c6cfacd91e47fdb"
+    },
+    "project_archive": {
+      "path": "validation/results/v247-native-logistic-1786534280072-60296.qpls",
+      "size": 20226,
+      "sha256": "80940815a1024a8760b61ecdbc28b69fc96466e719cdde38eb32c257268e4ef0"
+    },
+    "screenshots": [
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/150-tauri-native-logistic-fixture-data-1536x794.png",
+        "size": 292324,
+        "sha256": "629a325c18d9fd856e2bd9b8ca68d7eb72d5c909f068ea3e22c2f70200967860"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/151-tauri-native-logistic-dialog-1536x794.png",
+        "size": 284712,
+        "sha256": "2c0bd4a2d78b931214e18218112d96460a05294c038081462860f821a56b3a60"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/152-tauri-native-logistic-running-1536x794.png",
+        "size": 229199,
+        "sha256": "68578e95310b629f1ff52e6a85fec421e1de215b3abf8e8c08953c6db9f9e3da"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/153-tauri-native-logistic-results-1536x794.png",
+        "size": 90649,
+        "sha256": "3d982ca36ce4770b9a43472b23ccbe840a693bc7ee508b8768877e4eebfcfd1c"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/154-tauri-native-logistic-export-1536x794.png",
+        "size": 116167,
+        "sha256": "24da548f3c6d50ba8a0eefa970c33e4f0cfc529ab90e35cf4eff0ead877b1e22"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/155-tauri-native-logistic-reopened-1536x794.png",
+        "size": 97916,
+        "sha256": "221d795533bba8f9e633cc1a446387e5cd492c959d7f00ed1d14f5553ff55635"
+      }
+    ]
+  },
+  "console_errors": [],
+  "failures": [],
+  "source_report": "validation/results/v247_tauri_native_acceptance_logistic.json"
+}

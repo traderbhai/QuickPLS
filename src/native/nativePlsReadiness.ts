@@ -11,6 +11,7 @@ import {
 import { nativeNcaReadiness } from "./nativeNca";
 import { nativePcaReadiness } from "./nativePca";
 import { nativeOlsReadiness } from "./nativeOls";
+import { nativeLogisticReadiness } from "./nativeLogistic";
 import { NATIVE_HIGHER_ORDER_SCOPE_LABEL, nativeHigherOrderScopeProblems } from "./nativeHigherOrder";
 
 export type NativePlsReadinessStatus = "ready" | "warning" | "blocked";
@@ -74,13 +75,16 @@ export function nativePlsReadiness(input: NativePlsReadinessInput): NativePlsRea
     ]);
   }
   if (settings.method === "regression") {
-    const assessment = nativeOlsReadiness(dataset, settings);
+    const logistic = settings.regressionType === "logistic";
+    const assessment = logistic
+      ? nativeLogisticReadiness(dataset, settings)
+      : nativeOlsReadiness(dataset, settings);
     return readinessFromItems([
       runtimeItem(nativeDesktop),
       dataItem(dataset),
       {
         id: "calculation",
-        label: "Ordinary least squares regression",
+        label: logistic ? "Binary logistic regression" : "Ordinary least squares regression",
         detail: assessment.detail,
         status: assessment.canRun ? "ready" : "blocked",
       },

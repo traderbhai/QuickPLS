@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "target": "binary_logistic_regression_v2_reference",
+  "feature_id": "qpls3.standalone.logistic",
+  "catalogue_snapshot_date": "2026-08-12",
+  "method_version": "regression_logistic_v2",
+  "tolerance": 2e-06,
+  "passed": true,
+  "checks": {
+    "quickpls_v2_exact_contract": true,
+    "independent_python_full_arithmetic": true,
+    "external_r_glm_full_arithmetic": true,
+    "seed_invariant_deterministic_result": true,
+    "non_binary_outcome_rejected": true,
+    "single_class_outcome_rejected": true,
+    "rank_deficiency_rejected": true,
+    "complete_separation_rejected": true,
+    "nondefault_worker_count_rejected": true
+  },
+  "scope": {
+    "outcome_coding": "exact numeric 0 and 1",
+    "predictors_and_controls": "numeric observed variables",
+    "intercept": true,
+    "missing_data": "listwise_deletion",
+    "confidence": "two_sided_95_percent_fixed",
+    "classification_threshold": 0.5,
+    "workers": 1,
+    "multinomial_or_ordinal": false,
+    "automatic_categorical_encoding": false,
+    "weights_or_clusters": false,
+    "firth_or_penalized_fit": false
+  },
+  "fixture": {
+    "rows": 180,
+    "complete_cases": 175,
+    "omitted_cases": 5,
+    "zero_count": 71,
+    "one_count": 104
+  },
+  "maximum_absolute_difference_python": 1.3029169743106195e-08,
+  "maximum_absolute_difference_r": 1.3284388460377272e-06,
+  "r_reference": {
+    "available": true,
+    "passed": true,
+    "version": "Rscript (R) version 4.6.1 (2026-06-24)"
+  },
+  "negative_guards": {
+    "non_binary": {
+      "passed": true,
+      "exit_code": 1,
+      "expected_text": "exact numeric 0 and 1",
+      "stderr_tail": "Error: PLS estimation failed: unsupported estimation method: logistic regression outcome must contain only exact numeric 0 and 1 values after listwise deletion\n"
+    },
+    "single_class": {
+      "passed": true,
+      "exit_code": 1,
+      "expected_text": "both 0 and 1",
+      "stderr_tail": "Error: PLS estimation failed: unsupported estimation method: logistic regression outcome must contain both 0 and 1 after listwise deletion\n"
+    },
+    "rank_deficient": {
+      "passed": true,
+      "exit_code": 1,
+      "expected_text": "rank",
+      "stderr_tail": "Error: PLS estimation failed: rank-deficient regression for construct: outcome\n"
+    },
+    "separation": {
+      "passed": true,
+      "exit_code": 1,
+      "expected_text": "separation",
+      "stderr_tail": "Error: PLS estimation failed: numerical failure: logistic regression produced extreme fitted probabilities; possible separation or unstable scaling\n"
+    },
+    "workers_fixed": {
+      "passed": true,
+      "exit_code": 1,
+      "expected_text": "worker",
+      "stderr_tail": "Error: regression.single_worker_required: Standalone regression uses deterministic single-worker estimation\n"
+    }
+  },
+  "artifacts": {
+    "fixture": "validation/results/logistic_v2_reference.csv",
+    "recipe": "validation/results/logistic_v2_reference.recipe.json",
+    "quickpls_result": "validation/results/logistic_v2_reference_quickpls.json"
+  },
+  "runtime_boundary": "Python, SciPy, and R glm are validation-only references and are not bundled or required by the QuickPLS desktop application."
+}

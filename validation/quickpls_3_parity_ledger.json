@@ -951,6 +951,105 @@
         ]
       },
       "release_evidence": null
+    },
+    {
+      "id": "qpls3.standalone.logistic",
+      "catalog_kind": "regression",
+      "label": "Binary Logistic Regression",
+      "official_family": "Logistic regression",
+      "quickpls_scope": "Binary logistic maximum-likelihood regression with an intercept, exact numeric 0/1 complete-case outcome profiling, numeric predictors and controls, deterministic Newton-IRLS, Wald inference, odds ratios, probabilities, classification diagnostics, and likelihood fit statistics.",
+      "method_version": "regression_logistic_v2",
+      "state": "release_qualified",
+      "known_differences": [
+        "The first bounded native release fixes two-sided 95% Wald inference, a 0.5 classification threshold, 100 IRLS iterations, a 1e-8 stopping tolerance, and one worker instead of exposing every SmartPLS calculation option.",
+        "Automatic categorical encoding, multinomial or ordinal outcomes, survey or case weights, clustered covariance, Firth or penalized estimation, and copied SmartPLS project files are not supported."
+      ],
+      "evidence": {
+        "engine": [
+          {
+            "description": "Current logistic v2 method version is defined in source.",
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "contains": "pub const REGRESSION_LOGISTIC_METHOD_VERSION: &str = \"regression_logistic_v2\";"
+          },
+          {
+            "description": "The scoped v2 promotion audit binds the current method identity.",
+            "path": "validation/results/logistic_method_promotion_audit.json",
+            "pointer": "/method_version",
+            "equals": "regression_logistic_v2"
+          }
+        ],
+        "archive": [
+          {
+            "description": "A genuine packaged logistic v2 run must save and reopen.",
+            "path": "validation/results/logistic_v2_packaged_acceptance.json",
+            "pointer": "/checks/save_reopen/passed",
+            "equals": true
+          }
+        ],
+        "native": [
+          {
+            "description": "The packaged logistic workflow must pass.",
+            "path": "validation/results/logistic_v2_packaged_acceptance.json",
+            "pointer": "/checks/workflow/passed",
+            "equals": true
+          }
+        ]
+      },
+      "release_evidence": {
+        "current_scoped_method_audit": {
+          "path": "validation/results/logistic_method_promotion_audit.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        },
+        "packaged_acceptance": {
+          "path": "validation/results/logistic_v2_packaged_acceptance.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        }
+      }
+    },
+    {
+      "id": "qpls3.standalone.process",
+      "catalog_kind": "regression",
+      "label": "Graph-defined Path Analysis and PROCESS",
+      "official_family": "PROCESS",
+      "quickpls_scope": "Planned Wave 1 graph-defined multiple-equation path analysis, mediation, moderation, moderated mediation, conditional effects, simple slopes, Johnson-Neyman regions, and bootstrap inference without copied numbered macros.",
+      "method_version": "regression_process_v2",
+      "state": "absent",
+      "known_differences": [
+        "The current historical regression_process_v1 preview is not the Wave 1 multiple-equation or bootstrap-qualified workflow and is not current evidence.",
+        "QuickPLS will author equivalent relationships visually and will not copy proprietary numbered PROCESS templates or SmartPLS project files."
+      ],
+      "evidence": {
+        "engine": [
+          {
+            "description": "The future PROCESS v2 method version must exist before promotion.",
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "contains": "pub const REGRESSION_PROCESS_METHOD_VERSION: &str = \"regression_process_v2\";"
+          }
+        ],
+        "archive": [
+          {
+            "description": "A genuine packaged PROCESS v2 run must save and reopen.",
+            "path": "validation/results/v246_tauri_native_acceptance.json",
+            "pointer": "/checks/processSaveReopen/sameRunRestored",
+            "equals": true
+          }
+        ],
+        "native": [
+          {
+            "description": "The packaged PROCESS workflow must pass.",
+            "path": "validation/results/v246_tauri_native_acceptance.json",
+            "pointer": "/checks/processWorkflow/passed",
+            "equals": true
+          }
+        ]
+      },
+      "release_evidence": null
     }
   ]
 }

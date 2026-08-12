@@ -275,7 +275,7 @@ describe("result export tables", () => {
 
     const logisticTables = methodResultTables({
       ...result,
-      method_version: "regression_logistic_v1",
+      method_version: "regression_logistic_v2",
       wpls: undefined,
       cca: undefined,
       cta_pls: undefined,
@@ -283,6 +283,30 @@ describe("result export tables", () => {
       segmentation: undefined,
       mga: undefined,
       ipma: undefined,
+      regression: {
+        method_version: "regression_logistic_v2",
+        regression_type: "logistic",
+        outcome: "y",
+        predictors: ["x"],
+        controls: [],
+        observations: 10,
+        coefficients: [{ term: "x", estimate: 2, standard_error: 0.1, statistic: 20, p_value_two_sided: 0.00001, confidence_interval_lower: 1.8, confidence_interval_upper: 2.2, odds_ratio: 7.389 }],
+        fit: { pseudo_r_squared: 0.8, aic: 12, bic: 13 },
+        predictions: [{ observation: 0, fitted: 0.8, probability: 0.8 }],
+        logistic: {
+          outcome_profile: { outcome: "y", coding: "numeric_0_1_exact_v1", complete_cases: 10, omitted_cases: 0, zero_count: 5, one_count: 5, invalid_count: 0, prevalence: 0.5, readiness: "ready" },
+          convergence: { algorithm: "deterministic_newton_irls_v1", converged: true, iterations: 5, max_iterations: 100, tolerance: 1e-8, final_max_abs_step: 1e-10, separation_probability_tolerance: 1e-9 },
+          classification: { threshold: 0.5, true_positive: 4, true_negative: 4, false_positive: 1, false_negative: 1, accuracy: 0.8, sensitivity: 0.8, specificity: 0.8 },
+        },
+        process: null,
+        warnings: ["Logistic regression v2 is validated for the documented binary numeric complete-case scope."],
+      },
+    });
+    expect(logisticTables.every((table) => table.status === "validated")).toBe(true);
+
+    const legacyLogisticTables = methodResultTables({
+      ...result,
+      method_version: "regression_logistic_v1",
       regression: {
         method_version: "regression_logistic_v1",
         regression_type: "logistic",
@@ -294,10 +318,14 @@ describe("result export tables", () => {
         fit: { pseudo_r_squared: 0.8, aic: 12, bic: 13 },
         predictions: [{ observation: 0, fitted: 0.8, probability: 0.8 }],
         process: null,
-        warnings: ["Logistic regression v1 is validated for the documented QuickPLS v1.2.2 binary numeric complete-case scope."],
+        warnings: ["Historical logistic v1 archive."],
       },
     });
-    expect(logisticTables.every((table) => table.status === "validated")).toBe(true);
+    expect(
+      legacyLogisticTables
+        .filter((table) => table.id === "regression_coefficients" || table.id === "regression_fit")
+        .every((table) => table.status === "experimental"),
+    ).toBe(true);
 
     const processTables = methodResultTables({
       ...result,

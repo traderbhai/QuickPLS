@@ -174,6 +174,12 @@
       "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\17-ols-standalone-dialog-1024x700.png"
     },
     {
+      "state": "logistic-standalone-dialog",
+      "viewport": "1024x700",
+      "runtime": "chromium-preview",
+      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\18-logistic-standalone-dialog-1024x700.png"
+    },
+    {
       "state": "empty-results",
       "viewport": "1024x700",
       "runtime": "chromium-preview",
@@ -348,6 +354,12 @@
       "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\17-ols-standalone-dialog-1280x720.png"
     },
     {
+      "state": "logistic-standalone-dialog",
+      "viewport": "1280x720",
+      "runtime": "chromium-preview",
+      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\18-logistic-standalone-dialog-1280x720.png"
+    },
+    {
       "state": "empty-results",
       "viewport": "1280x720",
       "runtime": "chromium-preview",
@@ -514,6 +526,12 @@
       "viewport": "1440x900",
       "runtime": "chromium-preview",
       "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\17-ols-standalone-dialog-1440x900.png"
+    },
+    {
+      "state": "logistic-standalone-dialog",
+      "viewport": "1440x900",
+      "runtime": "chromium-preview",
+      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\18-logistic-standalone-dialog-1440x900.png"
     },
     {
       "state": "empty-results",
@@ -850,6 +868,18 @@
       },
       {
         "state": "ols-standalone-dialog",
+        "viewport": "1024x700",
+        "documentWidth": 1024,
+        "bodyWidth": 1008,
+        "viewportWidth": 1024,
+        "horizontalOverflow": false,
+        "visibleHtmlTitlebars": 0,
+        "visibleLegacyRibbons": 0,
+        "obsoleteVisibleStrings": [],
+        "fabricatedIterationRows": 0
+      },
+      {
+        "state": "logistic-standalone-dialog",
         "viewport": "1024x700",
         "documentWidth": 1024,
         "bodyWidth": 1008,
@@ -1209,6 +1239,18 @@
         "fabricatedIterationRows": 0
       },
       {
+        "state": "logistic-standalone-dialog",
+        "viewport": "1280x720",
+        "documentWidth": 1280,
+        "bodyWidth": 1264,
+        "viewportWidth": 1280,
+        "horizontalOverflow": false,
+        "visibleHtmlTitlebars": 0,
+        "visibleLegacyRibbons": 0,
+        "obsoleteVisibleStrings": [],
+        "fabricatedIterationRows": 0
+      },
+      {
         "state": "empty-results",
         "viewport": "1280x720",
         "documentWidth": 1280,
@@ -1545,6 +1587,18 @@
         "fabricatedIterationRows": 0
       },
       {
+        "state": "logistic-standalone-dialog",
+        "viewport": "1440x900",
+        "documentWidth": 1440,
+        "bodyWidth": 1424,
+        "viewportWidth": 1440,
+        "horizontalOverflow": false,
+        "visibleHtmlTitlebars": 0,
+        "visibleLegacyRibbons": 0,
+        "obsoleteVisibleStrings": [],
+        "fabricatedIterationRows": 0
+      },
+      {
         "state": "empty-results",
         "viewport": "1440x900",
         "documentWidth": 1440,
@@ -1799,6 +1853,14 @@
         "accessibleName": "Calculate"
       },
       {
+        "dialog": "calculation",
+        "viewport": "1024x700",
+        "count": 1,
+        "ariaModal": "true",
+        "labelledBy": "nd-dialog-title",
+        "accessibleName": "Calculate"
+      },
+      {
         "dialog": "export",
         "viewport": "1024x700",
         "count": 1,
@@ -1951,6 +2013,14 @@
         "accessibleName": "Calculate"
       },
       {
+        "dialog": "calculation",
+        "viewport": "1280x720",
+        "count": 1,
+        "ariaModal": "true",
+        "labelledBy": "nd-dialog-title",
+        "accessibleName": "Calculate"
+      },
+      {
         "dialog": "export",
         "viewport": "1280x720",
         "count": 1,
@@ -1997,6 +2067,14 @@
         "ariaModal": "true",
         "labelledBy": "nd-dialog-title",
         "accessibleName": "Create Higher-Order Construct"
+      },
+      {
+        "dialog": "calculation",
+        "viewport": "1440x900",
+        "count": 1,
+        "ariaModal": "true",
+        "labelledBy": "nd-dialog-title",
+        "accessibleName": "Calculate"
       },
       {
         "dialog": "calculation",
@@ -2395,7 +2473,7 @@
       {
         "state": "nca-standalone-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 47,
+        "visibleInteractiveCount": 49,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2423,7 +2501,7 @@
       {
         "state": "pca-standalone-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 55,
+        "visibleInteractiveCount": 57,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2437,7 +2515,21 @@
       {
         "state": "ols-standalone-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 57,
+        "visibleInteractiveCount": 60,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "logistic-standalone-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 60,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2801,7 +2893,7 @@
       {
         "state": "nca-standalone-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 52,
+        "visibleInteractiveCount": 54,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2829,7 +2921,7 @@
       {
         "state": "pca-standalone-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 60,
+        "visibleInteractiveCount": 62,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2843,7 +2935,21 @@
       {
         "state": "ols-standalone-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 62,
+        "visibleInteractiveCount": 65,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "logistic-standalone-dialog",
+        "viewport": "1280x720",
+        "visibleInteractiveCount": 65,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3193,7 +3299,7 @@
       {
         "state": "nca-standalone-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 52,
+        "visibleInteractiveCount": 54,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3221,7 +3327,7 @@
       {
         "state": "pca-standalone-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 60,
+        "visibleInteractiveCount": 62,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3235,7 +3341,21 @@
       {
         "state": "ols-standalone-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 62,
+        "visibleInteractiveCount": 65,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "logistic-standalone-dialog",
+        "viewport": "1440x900",
+        "visibleInteractiveCount": 65,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -4557,7 +4677,7 @@
           "PLSpredict / CVPAT",
           "Necessary Condition Analysis",
           "Principal Component Analysis",
-          "Ordinary Least Squares Regression"
+          "Regression"
         ],
         "expectedLabels": [
           "PLS-SEM Algorithm",
@@ -4573,7 +4693,7 @@
           "PLSpredict / CVPAT",
           "Necessary Condition Analysis",
           "Principal Component Analysis",
-          "Ordinary Least Squares Regression"
+          "Regression"
         ],
         "countStatus": "14 methods",
         "searchAliases": [
@@ -4661,10 +4781,10 @@
           {
             "query": "ordinary least squares hc3",
             "expectedKind": "regression",
-            "expectedLabel": "Ordinary Least Squares Regression",
+            "expectedLabel": "Regression",
             "optionCount": 1,
             "optionId": "nd-calculation-method-regression",
-            "optionLabel": "Ordinary Least Squares Regression",
+            "optionLabel": "Regression",
             "status": "1 method"
           }
         ],
@@ -4831,7 +4951,7 @@
           "PLSpredict / CVPAT",
           "Necessary Condition Analysis",
           "Principal Component Analysis",
-          "Ordinary Least Squares Regression"
+          "Regression"
         ],
         "expectedLabels": [
           "PLS-SEM Algorithm",
@@ -4847,7 +4967,7 @@
           "PLSpredict / CVPAT",
           "Necessary Condition Analysis",
           "Principal Component Analysis",
-          "Ordinary Least Squares Regression"
+          "Regression"
         ],
         "countStatus": "14 methods",
         "searchAliases": [
@@ -4935,10 +5055,10 @@
           {
             "query": "ordinary least squares hc3",
             "expectedKind": "regression",
-            "expectedLabel": "Ordinary Least Squares Regression",
+            "expectedLabel": "Regression",
             "optionCount": 1,
             "optionId": "nd-calculation-method-regression",
-            "optionLabel": "Ordinary Least Squares Regression",
+            "optionLabel": "Regression",
             "status": "1 method"
           }
         ],
@@ -5105,7 +5225,7 @@
           "PLSpredict / CVPAT",
           "Necessary Condition Analysis",
           "Principal Component Analysis",
-          "Ordinary Least Squares Regression"
+          "Regression"
         ],
         "expectedLabels": [
           "PLS-SEM Algorithm",
@@ -5121,7 +5241,7 @@
           "PLSpredict / CVPAT",
           "Necessary Condition Analysis",
           "Principal Component Analysis",
-          "Ordinary Least Squares Regression"
+          "Regression"
         ],
         "countStatus": "14 methods",
         "searchAliases": [
@@ -5209,10 +5329,10 @@
           {
             "query": "ordinary least squares hc3",
             "expectedKind": "regression",
-            "expectedLabel": "Ordinary Least Squares Regression",
+            "expectedLabel": "Regression",
             "optionCount": 1,
             "optionId": "nd-calculation-method-regression",
-            "optionLabel": "Ordinary Least Squares Regression",
+            "optionLabel": "Regression",
             "status": "1 method"
           }
         ],
@@ -7178,19 +7298,19 @@
         "analyzeCommandCount": 1,
         "dialogOpened": true,
         "catalogCount": 14,
-        "selectedMethod": "Ordinary Least Squares Regression",
+        "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
-          "expectedLabel": "Ordinary Least Squares Regression",
+          "expectedLabel": "Regression",
           "selectedCount": 1,
           "selectedId": "nd-calculation-method-regression",
-          "selectedLabel": "Ordinary Least Squares Regression",
+          "selectedLabel": "Regression",
           "panelCount": 1,
           "panelId": "nd-calculation-panel",
           "panelLabelledBy": "nd-calculation-panel-regression-title",
           "headingCount": 1,
           "headingId": "nd-calculation-panel-regression-title",
-          "headingLabel": "Ordinary Least Squares Regression",
+          "headingLabel": "Regression",
           "linkage": true
         },
         "category": "Standalone analysis",
@@ -7303,19 +7423,19 @@
         "analyzeCommandCount": 1,
         "dialogOpened": true,
         "catalogCount": 14,
-        "selectedMethod": "Ordinary Least Squares Regression",
+        "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
-          "expectedLabel": "Ordinary Least Squares Regression",
+          "expectedLabel": "Regression",
           "selectedCount": 1,
           "selectedId": "nd-calculation-method-regression",
-          "selectedLabel": "Ordinary Least Squares Regression",
+          "selectedLabel": "Regression",
           "panelCount": 1,
           "panelId": "nd-calculation-panel",
           "panelLabelledBy": "nd-calculation-panel-regression-title",
           "headingCount": 1,
           "headingId": "nd-calculation-panel-regression-title",
-          "headingLabel": "Ordinary Least Squares Regression",
+          "headingLabel": "Regression",
           "linkage": true
         },
         "category": "Standalone analysis",
@@ -7428,19 +7548,19 @@
         "analyzeCommandCount": 1,
         "dialogOpened": true,
         "catalogCount": 14,
-        "selectedMethod": "Ordinary Least Squares Regression",
+        "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
-          "expectedLabel": "Ordinary Least Squares Regression",
+          "expectedLabel": "Regression",
           "selectedCount": 1,
           "selectedId": "nd-calculation-method-regression",
-          "selectedLabel": "Ordinary Least Squares Regression",
+          "selectedLabel": "Regression",
           "panelCount": 1,
           "panelId": "nd-calculation-panel",
           "panelLabelledBy": "nd-calculation-panel-regression-title",
           "headingCount": 1,
           "headingId": "nd-calculation-panel-regression-title",
-          "headingLabel": "Ordinary Least Squares Regression",
+          "headingLabel": "Regression",
           "linkage": true
         },
         "category": "Standalone analysis",
@@ -7510,6 +7630,272 @@
         "startCommandDisabled": true,
         "runtimeBlockerVisible": true,
         "noModelBlocker": true,
+        "truthAndOverflow": {
+          "fabricatedRunState": {
+            "statusSections": 0,
+            "progressElements": 0,
+            "calculationLogs": 0,
+            "iterationRows": 0
+          },
+          "noFabricatedRunState": true,
+          "horizontalOverflow": {
+            "dialogScrollWidth": 848,
+            "dialogClientWidth": 848,
+            "dialogOutsideViewport": false,
+            "dialogContentOverflow": false,
+            "pageOverflow": false
+          },
+          "noHorizontalOverflow": true
+        },
+        "closeFocus": {
+          "closeButtonCount": 1,
+          "dialogClosed": true,
+          "focusRestored": true
+        }
+      }
+    ],
+    "logistic": [
+      {
+        "viewport": "1024x700",
+        "fixtureApiPresent": true,
+        "fixture": {
+          "variables": 5,
+          "models": 0
+        },
+        "dataSurface": true,
+        "visibleModelNodes": 0,
+        "analyzeCommandCount": 1,
+        "dialogOpened": true,
+        "catalogCount": 14,
+        "selectedMethod": "Regression",
+        "linkage": {
+          "expectedKind": "regression",
+          "expectedLabel": "Regression",
+          "selectedCount": 1,
+          "selectedId": "nd-calculation-method-regression",
+          "selectedLabel": "Regression",
+          "panelCount": 1,
+          "panelId": "nd-calculation-panel",
+          "panelLabelledBy": "nd-calculation-panel-regression-title",
+          "headingCount": 1,
+          "headingId": "nd-calculation-panel-regression-title",
+          "headingLabel": "Regression",
+          "linkage": true
+        },
+        "category": "Standalone analysis",
+        "regressionTypeOptions": [
+          {
+            "value": "ols",
+            "label": "Ordinary least squares"
+          },
+          {
+            "value": "logistic",
+            "label": "Binary logistic (outcome coded 0/1)"
+          }
+        ],
+        "regressionType": "logistic",
+        "outcome": "outcome",
+        "predictors": [
+          "predictor"
+        ],
+        "controls": [],
+        "calculationBasis": "Binary logistic maximum likelihood with intercept (fixed)",
+        "variableData": "Unstandardized numeric values (fixed)",
+        "uncertainty": "Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)",
+        "profile": {
+          "text": "Complete-dataset outcome profile36 complete cases: 0 class 0 and 0 class 1; 0 omitted by listwise deletion",
+          "role": "status",
+          "ariaLive": "polite",
+          "ariaBusy": "false"
+        },
+        "validatedScope": "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, and Firth-corrected models are not included.",
+        "unsupportedControlCount": 0,
+        "startCommandCount": 1,
+        "startCommandDisabled": true,
+        "strictProfileBlockers": [
+          "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.",
+          "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
+          "36 non-missing outcome rows are not coded exactly 0 or 1",
+          "The listwise-complete outcome must contain both class 0 and class 1"
+        ],
+        "noModelBlocker": true,
+        "noPhantomResult": true,
+        "truthAndOverflow": {
+          "fabricatedRunState": {
+            "statusSections": 0,
+            "progressElements": 0,
+            "calculationLogs": 0,
+            "iterationRows": 0
+          },
+          "noFabricatedRunState": true,
+          "horizontalOverflow": {
+            "dialogScrollWidth": 848,
+            "dialogClientWidth": 848,
+            "dialogOutsideViewport": false,
+            "dialogContentOverflow": false,
+            "pageOverflow": false
+          },
+          "noHorizontalOverflow": true
+        },
+        "closeFocus": {
+          "closeButtonCount": 1,
+          "dialogClosed": true,
+          "focusRestored": true
+        }
+      },
+      {
+        "viewport": "1280x720",
+        "fixtureApiPresent": true,
+        "fixture": {
+          "variables": 5,
+          "models": 0
+        },
+        "dataSurface": true,
+        "visibleModelNodes": 0,
+        "analyzeCommandCount": 1,
+        "dialogOpened": true,
+        "catalogCount": 14,
+        "selectedMethod": "Regression",
+        "linkage": {
+          "expectedKind": "regression",
+          "expectedLabel": "Regression",
+          "selectedCount": 1,
+          "selectedId": "nd-calculation-method-regression",
+          "selectedLabel": "Regression",
+          "panelCount": 1,
+          "panelId": "nd-calculation-panel",
+          "panelLabelledBy": "nd-calculation-panel-regression-title",
+          "headingCount": 1,
+          "headingId": "nd-calculation-panel-regression-title",
+          "headingLabel": "Regression",
+          "linkage": true
+        },
+        "category": "Standalone analysis",
+        "regressionTypeOptions": [
+          {
+            "value": "ols",
+            "label": "Ordinary least squares"
+          },
+          {
+            "value": "logistic",
+            "label": "Binary logistic (outcome coded 0/1)"
+          }
+        ],
+        "regressionType": "logistic",
+        "outcome": "outcome",
+        "predictors": [
+          "predictor"
+        ],
+        "controls": [],
+        "calculationBasis": "Binary logistic maximum likelihood with intercept (fixed)",
+        "variableData": "Unstandardized numeric values (fixed)",
+        "uncertainty": "Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)",
+        "profile": {
+          "text": "Complete-dataset outcome profile36 complete cases: 0 class 0 and 0 class 1; 0 omitted by listwise deletion",
+          "role": "status",
+          "ariaLive": "polite",
+          "ariaBusy": "false"
+        },
+        "validatedScope": "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, and Firth-corrected models are not included.",
+        "unsupportedControlCount": 0,
+        "startCommandCount": 1,
+        "startCommandDisabled": true,
+        "strictProfileBlockers": [
+          "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.",
+          "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
+          "36 non-missing outcome rows are not coded exactly 0 or 1",
+          "The listwise-complete outcome must contain both class 0 and class 1"
+        ],
+        "noModelBlocker": true,
+        "noPhantomResult": true,
+        "truthAndOverflow": {
+          "fabricatedRunState": {
+            "statusSections": 0,
+            "progressElements": 0,
+            "calculationLogs": 0,
+            "iterationRows": 0
+          },
+          "noFabricatedRunState": true,
+          "horizontalOverflow": {
+            "dialogScrollWidth": 848,
+            "dialogClientWidth": 848,
+            "dialogOutsideViewport": false,
+            "dialogContentOverflow": false,
+            "pageOverflow": false
+          },
+          "noHorizontalOverflow": true
+        },
+        "closeFocus": {
+          "closeButtonCount": 1,
+          "dialogClosed": true,
+          "focusRestored": true
+        }
+      },
+      {
+        "viewport": "1440x900",
+        "fixtureApiPresent": true,
+        "fixture": {
+          "variables": 5,
+          "models": 0
+        },
+        "dataSurface": true,
+        "visibleModelNodes": 0,
+        "analyzeCommandCount": 1,
+        "dialogOpened": true,
+        "catalogCount": 14,
+        "selectedMethod": "Regression",
+        "linkage": {
+          "expectedKind": "regression",
+          "expectedLabel": "Regression",
+          "selectedCount": 1,
+          "selectedId": "nd-calculation-method-regression",
+          "selectedLabel": "Regression",
+          "panelCount": 1,
+          "panelId": "nd-calculation-panel",
+          "panelLabelledBy": "nd-calculation-panel-regression-title",
+          "headingCount": 1,
+          "headingId": "nd-calculation-panel-regression-title",
+          "headingLabel": "Regression",
+          "linkage": true
+        },
+        "category": "Standalone analysis",
+        "regressionTypeOptions": [
+          {
+            "value": "ols",
+            "label": "Ordinary least squares"
+          },
+          {
+            "value": "logistic",
+            "label": "Binary logistic (outcome coded 0/1)"
+          }
+        ],
+        "regressionType": "logistic",
+        "outcome": "outcome",
+        "predictors": [
+          "predictor"
+        ],
+        "controls": [],
+        "calculationBasis": "Binary logistic maximum likelihood with intercept (fixed)",
+        "variableData": "Unstandardized numeric values (fixed)",
+        "uncertainty": "Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)",
+        "profile": {
+          "text": "Complete-dataset outcome profile36 complete cases: 0 class 0 and 0 class 1; 0 omitted by listwise deletion",
+          "role": "status",
+          "ariaLive": "polite",
+          "ariaBusy": "false"
+        },
+        "validatedScope": "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, and Firth-corrected models are not included.",
+        "unsupportedControlCount": 0,
+        "startCommandCount": 1,
+        "startCommandDisabled": true,
+        "strictProfileBlockers": [
+          "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.",
+          "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
+          "36 non-missing outcome rows are not coded exactly 0 or 1",
+          "The listwise-complete outcome must contain both class 0 and class 1"
+        ],
+        "noModelBlocker": true,
+        "noPhantomResult": true,
         "truthAndOverflow": {
           "fabricatedRunState": {
             "statusSections": 0,
@@ -8580,12 +8966,12 @@
         "indicators": 80
       },
       "metrics": {
-        "fixtureRenderMs": 115.7,
-        "selectionMs": 321.4,
-        "dragMs": 541.9,
-        "panMs": 226.2,
-        "zoomMs": 311.9,
-        "workspaceRoundTripMs": 351
+        "fixtureRenderMs": 115.9,
+        "selectionMs": 354.9,
+        "dragMs": 495.3,
+        "panMs": 241.4,
+        "zoomMs": 301.9,
+        "workspaceRoundTripMs": 355.9
       },
       "budgetsMs": {
         "fixtureRender": 5000,
@@ -8661,6 +9047,12 @@
       "requiredNativeFollowUp": "Run a deterministic raw numeric OLS fixture with no editable model through the packaged Tauri application."
     },
     {
+      "id": "logistic-completed-results-browser",
+      "reason": "The browser preview proves strict 0/1 readiness and responsive setup without synthesizing logistic output. Genuine ML estimation, lifecycle, tables, XLSX, save, archive inspection, and reopen remain packaged-Tauri checks.",
+      "viewport": "1024x700",
+      "requiredNativeFollowUp": "Run the full 140-row binary fixture with no editable model through the focused packaged-Tauri logistic gate."
+    },
+    {
       "id": "completed-moderation-browser-fixture",
       "reason": "The production browser smoke API exposes the checked-in Corporate Reputation mediation/bootstrap run, which has no moderation payload.",
       "viewport": "1024x700",
@@ -8719,6 +9111,12 @@
       "requiredNativeFollowUp": "Run a deterministic raw numeric OLS fixture with no editable model through the packaged Tauri application."
     },
     {
+      "id": "logistic-completed-results-browser",
+      "reason": "The browser preview proves strict 0/1 readiness and responsive setup without synthesizing logistic output. Genuine ML estimation, lifecycle, tables, XLSX, save, archive inspection, and reopen remain packaged-Tauri checks.",
+      "viewport": "1280x720",
+      "requiredNativeFollowUp": "Run the full 140-row binary fixture with no editable model through the focused packaged-Tauri logistic gate."
+    },
+    {
       "id": "completed-moderation-browser-fixture",
       "reason": "The production browser smoke API exposes the checked-in Corporate Reputation mediation/bootstrap run, which has no moderation payload.",
       "viewport": "1280x720",
@@ -8777,6 +9175,12 @@
       "requiredNativeFollowUp": "Run a deterministic raw numeric OLS fixture with no editable model through the packaged Tauri application."
     },
     {
+      "id": "logistic-completed-results-browser",
+      "reason": "The browser preview proves strict 0/1 readiness and responsive setup without synthesizing logistic output. Genuine ML estimation, lifecycle, tables, XLSX, save, archive inspection, and reopen remain packaged-Tauri checks.",
+      "viewport": "1440x900",
+      "requiredNativeFollowUp": "Run the full 140-row binary fixture with no editable model through the focused packaged-Tauri logistic gate."
+    },
+    {
       "id": "completed-moderation-browser-fixture",
       "reason": "The production browser smoke API exposes the checked-in Corporate Reputation mediation/bootstrap run, which has no moderation payload.",
       "viewport": "1440x900",
@@ -8815,6 +9219,7 @@
       "mga-dialog",
       "pca-standalone-dialog",
       "ols-standalone-dialog",
+      "logistic-standalone-dialog",
       "empty-results",
       "completed-results",
       "mediation-results",
@@ -8831,8 +9236,8 @@
       "1280x720",
       "1440x900"
     ],
-    "expectedRegularScreenshotCount": 76,
-    "capturedRegularScreenshotCount": 76,
+    "expectedRegularScreenshotCount": 79,
+    "capturedRegularScreenshotCount": 79,
     "missingMatrix": [],
     "missingFiles": [],
     "runningCapture": {

@@ -61,6 +61,7 @@ import {
   type NativeWorkbenchAnalysisKind,
 } from "./nativeAnalysisCatalog";
 import { createNativeCalculationRequest } from "./nativeCalculationRequest";
+import type { NativeLogisticProfile } from "./nativeLogistic";
 import { nativeCalculationPhaseLabel } from "./nativeCalculationLifecycle";
 import { nativeRunSettingApplicability } from "./nativeExportTables";
 import type { NativeDataImportRequest } from "./nativeDataImport";
@@ -708,10 +709,10 @@ export function NativeDesktopApp() {
     return () => { delete window.__QUICKPLS_SMOKE__; };
   }, [addRun, completedRuns.length, loadProject, navigate, setProjectMeta]);
 
-  const startCalculation = () => {
+  const startCalculation = (logisticProfile?: NativeLogisticProfile) => {
     if (!calculationReadiness.canRun || ["queued", "validating", "running", "cancelling"].includes(runMonitor.status)) return;
     setAnalysisSettings(calculationSettings);
-    commandEvent("run-analysis", createNativeCalculationRequest(calculationKind, calculationSettings));
+    commandEvent("run-analysis", createNativeCalculationRequest(calculationKind, calculationSettings, logisticProfile));
   };
 
   const createProject = () => {

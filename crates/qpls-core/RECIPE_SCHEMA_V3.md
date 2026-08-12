@@ -82,6 +82,16 @@ HC3 is an OLS-only requirement. Every PROCESS relationship variable must be a
 declared predictor, must differ from the outcome, and must be distinct from the
 other relationship variables.
 
+The logistic member of that envelope is the exact binary numeric contract:
+after listwise deletion the outcome must contain both `0` and `1` and no other
+finite value. Dataset-dependent readiness is reported by the estimation input
+profiler rather than guessed by recipe validation. Categorical auto-encoding,
+weights, Firth correction, multinomial and ordinal models remain outside the
+typed schema-v3 logistic scope.
+All standalone regression variants also freeze `workers = 1`; their current
+estimators are deterministic single-worker workflows rather than parallel
+resampling jobs.
+
 CB-SEM `bootstrap_samples` is required on the v3 wire even when its value is
 zero. This keeps an omitted inference choice distinguishable from an explicit
 request for no bootstrap; optional grouping and invariance fields retain their

@@ -43,6 +43,7 @@ import {
   type CalculationMonitorPatch,
 } from "./nativeCalculationLifecycle";
 import { nativePlsReadiness } from "./nativePlsReadiness";
+import { nativeLogisticReadiness } from "./nativeLogistic";
 import { createAnalysisModelSnapshot } from "./nativeRunModelSnapshot";
 import { useWorkspace } from "../store";
 import type {
@@ -685,8 +686,19 @@ export function NativeDesktopController() {
   const runAnalysis = async (request: NativeCalculationRequest) => {
     const submittedSettings = request.settings;
     const readiness = nativePlsReadiness({ dataset, nodes, edges, settings: submittedSettings, nativeDesktop: isNativeDesktop() });
-    if (!readiness.canRun) {
-      const message = readiness.blockers[0]?.detail ?? readiness.summary;
+    const logisticDispatch = request.kind === "regression" && submittedSettings.regressionType === "logistic";
+    const logisticAssessment = logisticDispatch
+      ? nativeLogisticReadiness(dataset, submittedSettings, request.logisticProfile ?? null)
+      : null;
+    const logisticDispatchError = !logisticDispatch
+      ? null
+      : !request.logisticProfile
+        ? "Return to Calculate and profile every dataset row before starting binary logistic regression."
+        : !logisticAssessment?.canRun || logisticAssessment.profileRequired
+          ? logisticAssessment?.blockers[0] ?? logisticAssessment?.detail ?? "The verified binary logistic profile is no longer current."
+          : null;
+    if (!readiness.canRun || logisticDispatchError) {
+      const message = logisticDispatchError ?? readiness.blockers[0]?.detail ?? readiness.summary;
       transitionRunMonitor({
         status: "blocked",
         phase: "Blocked",
@@ -703,7 +715,9 @@ export function NativeDesktopController() {
 
     const standalone = isStandaloneNativeAnalysis(request.kind);
     const modelSnapshot = standalone ? undefined : createAnalysisModelSnapshot(nodes, edges, diagramLayout);
-    const methodName = nativeAnalysisRecipeDescriptor(request.kind).label;
+    const methodName = request.kind === "regression" && submittedSettings.regressionType === "logistic"
+      ? "Binary Logistic Regression"
+      : nativeAnalysisRecipeDescriptor(request.kind).label;
     const startedAt = new Date().toISOString();
     transitionRunMonitor({
       status: "queued",

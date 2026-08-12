@@ -2,6 +2,7 @@ import {
   Calculator,
   ChartScatter,
   CheckCircle2,
+  LoaderCircle,
   Play,
   RotateCcw,
   Scale,
@@ -64,6 +65,15 @@ import {
   nativeOlsCsvValues,
   nativeOlsNumericColumns,
 } from "./nativeOls";
+import {
+  NATIVE_LOGISTIC_MAX_TERMS,
+  NATIVE_LOGISTIC_SCOPE_NOTE,
+  nativeLogisticReadiness,
+  profileNativeLogisticDataset,
+  residentNativeLogisticProfile,
+  type NativeLogisticProfile,
+  type NativeLogisticReadinessAssessment,
+} from "./nativeLogistic";
 import { NATIVE_GSCA_SCOPE_NOTE } from "./nativeGsca";
 
 export interface NativeCalculationDialogProps {
@@ -77,7 +87,7 @@ export interface NativeCalculationDialogProps {
   analysisColumns: string[];
   nodes: readonly Node<ConstructData>[];
   edges: readonly Edge[];
-  start: () => void;
+  start: (logisticProfile?: NativeLogisticProfile) => void;
   cancel: () => void;
   close: () => void;
 }
@@ -126,6 +136,11 @@ type GroupProfileState =
   | { status: "idle" | "loading"; profile: null; error: null }
   | { status: "ready"; profile: DatasetGroupProfile; error: null }
   | { status: "failed"; profile: null; error: string };
+
+type LogisticProfileState =
+  | { status: "idle" | "loading"; key: string; profile: null; error: null }
+  | { status: "ready"; key: string; profile: NativeLogisticProfile; error: null }
+  | { status: "failed"; key: string; profile: null; error: string };
 
 export const NATIVE_RESAMPLING_SAMPLE_INPUT_CONSTRAINTS = {
   bootstrap: {
@@ -186,6 +201,7 @@ export default function NativeCalculationDialog({
   const [query, setQuery] = useState("");
   const [focusedKind, setFocusedKind] = useState<NativeWorkbenchAnalysisKind>(kind);
   const [groupProfileState, setGroupProfileState] = useState<GroupProfileState>({ status: "idle", profile: null, error: null });
+  const [logisticProfileState, setLogisticProfileState] = useState<LogisticProfileState>({ status: "idle", key: "", profile: null, error: null });
   const searchRef = useRef<HTMLInputElement>(null);
   const optionRefs = useRef<Partial<Record<NativeWorkbenchAnalysisKind, HTMLButtonElement | null>>>({});
   const filteredMethods = useMemo(() => filterNativeAnalysisCatalog(query), [query]);
@@ -211,6 +227,38 @@ export default function NativeCalculationDialog({
     () => nativeMgaProfileAssessment(groupProfileState.profile, settings),
     [groupProfileState.profile, settings],
   );
+  const logisticSelected = kind === "regression" && settings.regressionType === "logistic";
+  const logisticProfileKey = useMemo(() => [
+    dataset.id,
+    dataset.fingerprint ?? "",
+    String(dataset.rowCount ?? dataset.rows.length),
+    settings.regressionOutcome?.trim() ?? "",
+    settings.regressionPredictors ?? "",
+    settings.regressionControls ?? "",
+  ].join("\u0000"), [
+    dataset.fingerprint,
+    dataset.id,
+    dataset.rowCount,
+    dataset.rows.length,
+    settings.regressionControls,
+    settings.regressionOutcome,
+    settings.regressionPredictors,
+  ]);
+  const residentLogisticProfile = useMemo(
+    () => logisticSelected ? residentNativeLogisticProfile(dataset, settings) : null,
+    [dataset, logisticProfileKey, logisticSelected, settings],
+  );
+  const currentLogisticProfileState: LogisticProfileState = residentLogisticProfile
+    ? { status: "ready", key: logisticProfileKey, profile: residentLogisticProfile, error: null }
+    : logisticProfileState.key === logisticProfileKey
+      ? logisticProfileState
+      : { status: "idle", key: logisticProfileKey, profile: null, error: null };
+  const logisticProfileAssessment = useMemo(
+    () => logisticSelected
+      ? nativeLogisticReadiness(dataset, settings, currentLogisticProfileState.status === "ready" ? currentLogisticProfileState.profile : null)
+      : null,
+    [currentLogisticProfileState, dataset, logisticSelected, settings],
+  );
   const groupProfileBlockers = kind !== "mga"
     ? []
     : groupProfileState.status === "loading"
@@ -220,7 +268,25 @@ export default function NativeCalculationDialog({
         : groupProfileState.status === "idle"
           ? ["Choose a grouping variable to load complete-dataset counts."]
           : groupProfileAssessment.blockers;
-  const canStart = readiness.canRun && (kind !== "mga" || (groupProfileState.status === "ready" && groupProfileAssessment.canRun));
+  const logisticProfileBlockers = !logisticSelected
+    ? []
+    : logisticProfileAssessment && !logisticProfileAssessment.canRun
+      ? logisticProfileAssessment.blockers
+      : currentLogisticProfileState.status === "failed"
+      ? [currentLogisticProfileState.error]
+      : currentLogisticProfileState.status !== "ready"
+        ? ["Profile all dataset rows before starting binary logistic regression."]
+        : [];
+  const methodProfileBlockers = [...new Set([...groupProfileBlockers, ...logisticProfileBlockers])];
+  const canStart = readiness.canRun
+    && (kind !== "mga" || (groupProfileState.status === "ready" && groupProfileAssessment.canRun))
+    && logisticProfileBlockers.length === 0;
+  const verifiedLogisticProfile = logisticSelected
+    && currentLogisticProfileState.status === "ready"
+    && logisticProfileAssessment?.canRun
+    && !logisticProfileAssessment.profileRequired
+    ? currentLogisticProfileState.profile
+    : undefined;
 
   useEffect(() => {
     if (kind !== "mga" || !groupColumn) {
@@ -258,6 +324,38 @@ export default function NativeCalculationDialog({
       });
     return () => { active = false; };
   }, [analysisColumnKey, dataset, groupColumn, kind]);
+
+  useEffect(() => {
+    if (!logisticSelected || residentLogisticProfile || !logisticProfileAssessment?.canRun) {
+      return;
+    }
+    if (!isNativeDesktop()) {
+      setLogisticProfileState({
+        status: "failed",
+        key: logisticProfileKey,
+        profile: null,
+        error: "Open the installed desktop app to profile every row for binary logistic regression.",
+      });
+      return;
+    }
+
+    let cancelled = false;
+    setLogisticProfileState({ status: "loading", key: logisticProfileKey, profile: null, error: null });
+    void profileNativeLogisticDataset(dataset, settings, undefined, () => cancelled)
+      .then((profile) => {
+        if (!cancelled) setLogisticProfileState({ status: "ready", key: logisticProfileKey, profile, error: null });
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setLogisticProfileState({
+          status: "failed",
+          key: logisticProfileKey,
+          profile: null,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      });
+    return () => { cancelled = true; };
+  }, [dataset, logisticProfileAssessment?.canRun, logisticProfileKey, logisticSelected, residentLogisticProfile, settings]);
 
   useEffect(() => {
     if (kind !== "mga" || groupProfileState.status !== "ready") return;
@@ -351,7 +449,7 @@ export default function NativeCalculationDialog({
       className="nd-calculation-dialog"
       onSubmit={(event) => {
         event.preventDefault();
-        if (!running && canStart) start();
+        if (!running && canStart) start(verifiedLogisticProfile);
       }}
     >
       <aside className="nd-dialog-sidebar" aria-label="Analysis methods">
@@ -450,15 +548,19 @@ export default function NativeCalculationDialog({
                 edges={edges}
                 groupProfileState={groupProfileState}
                 groupProfileAssessment={groupProfileAssessment}
+                logisticProfileState={currentLogisticProfileState}
+                logisticProfileAssessment={logisticProfileAssessment}
               />
             </section>
 
-            {!readiness.canRun || groupProfileBlockers.length ? (
+            {!readiness.canRun || methodProfileBlockers.length ? (
               <div className="nd-blocker" role="alert">
                 <strong>Cannot start this calculation</strong>
                 <ul>
-                  {readiness.blockers.map((blocker) => <li key={blocker.id}>{blocker.detail}</li>)}
-                  {groupProfileBlockers.map((blocker) => <li key={blocker}>{blocker}</li>)}
+                  {[...new Set([
+                    ...readiness.blockers.map((blocker) => blocker.detail),
+                    ...methodProfileBlockers,
+                  ])].map((blocker) => <li key={blocker}>{blocker}</li>)}
                 </ul>
               </div>
             ) : null}
@@ -480,7 +582,7 @@ export default function NativeCalculationDialog({
             <button type="button" onClick={close}>Close</button>
             <button className="primary" type="submit" disabled={!canStart}>
               <Play size={14} aria-hidden="true" />
-              {nativeAnalysisStartLabel(kind, retry)}
+              {nativeAnalysisStartLabel(kind, retry, settings.regressionType)}
             </button>
           </>
         )}
@@ -497,11 +599,15 @@ function MethodSettings({
   analysisColumns,
   groupProfileState,
   groupProfileAssessment,
+  logisticProfileState,
+  logisticProfileAssessment,
   nodes,
   edges,
 }: Pick<NativeCalculationDialogProps, "kind" | "settings" | "setSettings" | "dataset" | "analysisColumns" | "nodes" | "edges"> & {
   groupProfileState: GroupProfileState;
   groupProfileAssessment: NativeMgaProfileAssessment;
+  logisticProfileState: LogisticProfileState;
+  logisticProfileAssessment: NativeLogisticReadinessAssessment | null;
 }) {
   const numericColumns = useMemo(() => nativeNumericCaseWeightColumns(dataset), [dataset]);
   const ncaNumericColumns = useMemo(() => nativeNcaNumericColumns(dataset), [dataset]);
@@ -528,6 +634,8 @@ function MethodSettings({
   const selectedOlsControls = nativeOlsCsvValues(settings.regressionControls);
   const selectedOlsPredictorSet = new Set(selectedOlsPredictors);
   const selectedOlsControlSet = new Set(selectedOlsControls);
+  const logisticRegression = settings.regressionType === "logistic";
+  const regressionTermLimit = logisticRegression ? NATIVE_LOGISTIC_MAX_TERMS : NATIVE_OLS_MAX_TERMS;
   const initializedPcaSelection = useRef(false);
   const initializedOlsSelection = useRef(false);
   useEffect(() => {
@@ -542,14 +650,14 @@ function MethodSettings({
     initializedOlsSelection.current = true;
     if (!selectedOlsOutcome && !selectedOlsPredictors.length && olsNumericColumns.length >= 2) {
       setSettings({
-        regressionType: "ols",
+        regressionType: logisticRegression ? "logistic" : "ols",
         regressionOutcome: olsNumericColumns[0],
         regressionPredictors: olsNumericColumns[1],
         regressionControls: null,
-        robustSe: "hc3",
+        robustSe: logisticRegression ? "none" : "hc3",
       });
     }
-  }, [kind, olsNumericColumns, selectedOlsOutcome, selectedOlsPredictors.length, setSettings]);
+  }, [kind, logisticRegression, olsNumericColumns, selectedOlsOutcome, selectedOlsPredictors.length, setSettings]);
 
   const setPcaVariableSelected = (variable: string, selected: boolean) => {
     const next = selected
@@ -572,7 +680,7 @@ function MethodSettings({
         {kind === "nca" || kind === "pca" || kind === "regression" ? (
           <div className="nd-setting-note">
             <span>Calculation basis</span>
-            <strong>{kind === "pca" ? "Correlation matrix (fixed)" : kind === "regression" ? "Raw-value OLS with intercept (fixed)" : "Observed variables (fixed)"}</strong>
+            <strong>{kind === "pca" ? "Correlation matrix (fixed)" : kind === "regression" ? logisticRegression ? "Binary logistic maximum likelihood with intercept (fixed)" : "Raw-value OLS with intercept (fixed)" : "Observed variables (fixed)"}</strong>
           </div>
         ) : kind === "ipma" || kind === "mga" || kind === "cbsem" || kind === "gsca" ? (
           <div className="nd-setting-note">
@@ -981,9 +1089,22 @@ function MethodSettings({
 
         {kind === "regression" ? (
           <div className="nd-pca-settings nd-ols-settings wide">
-            <label htmlFor="nd-calculation-ols-outcome">Outcome variable
+            <label htmlFor="nd-calculation-regression-type">Regression type
               <select
-                id="nd-calculation-ols-outcome"
+                id="nd-calculation-regression-type"
+                value={logisticRegression ? "logistic" : "ols"}
+                onChange={(event) => setSettings({
+                  regressionType: event.target.value as "ols" | "logistic",
+                  robustSe: event.target.value === "ols" ? "hc3" : "none",
+                })}
+              >
+                <option value="ols">Ordinary least squares</option>
+                <option value="logistic">Binary logistic (outcome coded 0/1)</option>
+              </select>
+            </label>
+            <label htmlFor="nd-calculation-regression-outcome">Outcome variable
+              <select
+                id="nd-calculation-regression-outcome"
                 required
                 value={selectedOlsOutcome}
                 onChange={(event) => {
@@ -1007,7 +1128,7 @@ function MethodSettings({
                     <input
                       type="checkbox"
                       checked={selectedOlsPredictorSet.has(variable)}
-                      disabled={variable === selectedOlsOutcome || selectedOlsControlSet.has(variable) || (!selectedOlsPredictorSet.has(variable) && selectedOlsPredictors.length + selectedOlsControls.length >= NATIVE_OLS_MAX_TERMS)}
+                      disabled={variable === selectedOlsOutcome || selectedOlsControlSet.has(variable) || (!selectedOlsPredictorSet.has(variable) && selectedOlsPredictors.length + selectedOlsControls.length >= regressionTermLimit)}
                       onChange={(event) => setOlsRoleSelected("predictor", variable, event.target.checked)}
                     />
                     <span>{variable}</span>
@@ -1023,7 +1144,7 @@ function MethodSettings({
                     <input
                       type="checkbox"
                       checked={selectedOlsControlSet.has(variable)}
-                      disabled={variable === selectedOlsOutcome || selectedOlsPredictorSet.has(variable) || (!selectedOlsControlSet.has(variable) && selectedOlsPredictors.length + selectedOlsControls.length >= NATIVE_OLS_MAX_TERMS)}
+                      disabled={variable === selectedOlsOutcome || selectedOlsPredictorSet.has(variable) || (!selectedOlsControlSet.has(variable) && selectedOlsPredictors.length + selectedOlsControls.length >= regressionTermLimit)}
                       onChange={(event) => setOlsRoleSelected("control", variable, event.target.checked)}
                     />
                     <span>{variable}</span>
@@ -1033,11 +1154,33 @@ function MethodSettings({
             </fieldset>
             <div className="nd-setting-note">
               <span>Uncertainty</span>
-              <strong>HC3 robust SE; two-sided 95% CI (fixed)</strong>
+              <strong>{logisticRegression
+                ? "Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)"
+                : "HC3 robust SE; two-sided 95% CI (fixed)"}</strong>
             </div>
+            {logisticRegression ? (
+              <div
+                id="nd-calculation-logistic-profile"
+                className="nd-setting-note wide"
+                role="status"
+                aria-live="polite"
+                aria-busy={logisticProfileState.status === "loading"}
+              >
+                <span>Complete-dataset outcome profile</span>
+                <strong>
+                  {logisticProfileState.status === "ready" && logisticProfileAssessment?.profile
+                    ? `${logisticProfileAssessment.profile.completeCases} complete cases: ${logisticProfileAssessment.profile.zeroCases} class 0 and ${logisticProfileAssessment.profile.oneCases} class 1; ${logisticProfileAssessment.profile.omittedRows} omitted by listwise deletion`
+                    : logisticProfileState.status === "loading"
+                      ? <><LoaderCircle className="nd-spin" size={14} aria-hidden="true" /> Profiling bounded row pages…</>
+                      : logisticProfileState.status === "failed"
+                        ? "Profile unavailable; review the blocking message below."
+                        : "Choose a numeric outcome and predictors to verify exact 0/1 coding across every row."}
+                </strong>
+              </div>
+            ) : null}
             <div className="nd-setting-note wide">
               <span>Validated scope</span>
-              <strong>{NATIVE_OLS_SCOPE_NOTE}</strong>
+              <strong>{logisticRegression ? NATIVE_LOGISTIC_SCOPE_NOTE : NATIVE_OLS_SCOPE_NOTE}</strong>
             </div>
           </div>
         ) : null}

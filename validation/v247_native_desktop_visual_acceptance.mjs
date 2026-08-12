@@ -65,12 +65,13 @@ const nativeCalculationMethods = [
   { kind: "predict", label: "PLSpredict / CVPAT" },
   { kind: "nca", label: "Necessary Condition Analysis" },
   { kind: "pca", label: "Principal Component Analysis" },
-  { kind: "regression", label: "Ordinary Least Squares Regression" },
+  { kind: "regression", label: "Regression" },
 ];
 
 const nativeNcaScopeNote = "Numeric observed-variable CE-FDH and CR-FDH analysis with observed-range bottlenecks. Multiple conditions, latent-score NCA, cIPMA, and broader ceiling variants are not included.";
 const nativePcaScopeNote = "Correlation-matrix PCA of 2 to 50 selected numeric variables with listwise deletion, deterministic component orientation, and no rotation or inferential resampling.";
 const nativeOlsScopeNote = "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Categorical encoding, weights, clusters, resampling, logistic regression, and PROCESS models are not included.";
+const nativeLogisticScopeNote = "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, and Firth-corrected models are not included.";
 
 const obsoleteRibbonStrings = [
   "Open Setup",
@@ -131,6 +132,7 @@ const evidence = {
     nca: [],
     pca: [],
     ols: [],
+    logistic: [],
     structuralPathRandomization: [],
     mga: [],
     prediction: [],
@@ -1720,7 +1722,7 @@ async function auditCalculationCatalogDialog(page, viewport, sequence, trigger, 
       { query: "multigroup", expectedKind: "mga", expectedLabel: "MICOM and Two-Group Permutation MGA" },
       { query: "ce-fdh bottleneck", expectedKind: "nca", expectedLabel: "Necessary Condition Analysis" },
       { query: "principal component eigenvalue", expectedKind: "pca", expectedLabel: "Principal Component Analysis" },
-      { query: "ordinary least squares hc3", expectedKind: "regression", expectedLabel: "Ordinary Least Squares Regression" },
+      { query: "ordinary least squares hc3", expectedKind: "regression", expectedLabel: "Regression" },
     ]) {
       await search.fill(alias.query);
       await page.waitForFunction((expectedId) => {
@@ -2877,12 +2879,14 @@ async function auditOlsStandaloneDialogFromData(page, viewport, sequence) {
     check.catalogCount = await listbox.getByRole("option").count();
     const option = calculationOption(dialog, "regression");
     if (await option.getAttribute("aria-selected") !== "true") await option.click();
-    await dialog.locator("#nd-calculation-ols-outcome").waitFor({ state: "visible", timeout: 1_000 }).catch(() => null);
+    const regressionType = dialog.locator("#nd-calculation-regression-type");
+    await regressionType.waitFor({ state: "visible", timeout: 1_000 }).catch(() => null);
+    if (await regressionType.inputValue().catch(() => "") !== "ols") await regressionType.selectOption("ols");
     check.selectedMethod = compactCalculationText(await listbox.getByRole("option", { selected: true }).locator("strong").textContent().catch(() => ""));
     check.linkage = await inspectSelectedMethodLinkage(dialog, "regression");
     check.category = compactCalculationText(await dialog.locator("#nd-calculation-category-standalone").textContent().catch(() => ""));
 
-    const outcome = dialog.locator("#nd-calculation-ols-outcome");
+    const outcome = dialog.locator("#nd-calculation-regression-outcome");
     check.outcomeOptions = await outcome.locator('option:not([value=""])').allTextContents();
     check.outcome = await outcome.inputValue();
     const roleFieldsets = dialog.locator(".nd-ols-settings fieldset.nd-pca-variables");
@@ -2940,7 +2944,7 @@ async function auditOlsStandaloneDialogFromData(page, viewport, sequence) {
     recordFailure("ols-data-only-fixture", `OLS did not launch from the deterministic five-variable Data workspace with zero editable models at ${viewport.id}.`, check);
   }
   if (check.analyzeCommandCount !== 1 || !check.dialogOpened || check.catalogCount !== nativeCalculationMethods.length
-    || check.selectedMethod !== "Ordinary Least Squares Regression" || !check.linkage?.linkage || check.category !== "Standalone analysis") {
+    || check.selectedMethod !== "Regression" || !check.linkage?.linkage || check.category !== "Standalone analysis") {
     recordFailure("ols-data-analyze-command", `Data did not open the shared twelve-method catalog with OLS selected at ${viewport.id}.`, check);
   }
   if (JSON.stringify(check.outcomeOptions.map(compactCalculationText)) !== JSON.stringify(expectedNumeric)
@@ -2963,6 +2967,158 @@ async function auditOlsStandaloneDialogFromData(page, viewport, sequence) {
   if (!check.truthAndOverflow?.noFabricatedRunState || !check.truthAndOverflow?.noHorizontalOverflow
     || !check.closeFocus?.dialogClosed || !check.closeFocus?.focusRestored) {
     recordFailure("ols-browser-truth-layout", `The idle standalone OLS workflow exposed fabricated run state, overflow, or broken close focus at ${viewport.id}.`, check);
+  }
+}
+
+async function auditLogisticStandaloneDialogFromData(page, viewport, sequence) {
+  const check = {
+    viewport: viewport.id,
+    fixtureApiPresent: false,
+    fixture: null,
+    dataSurface: false,
+    visibleModelNodes: null,
+    analyzeCommandCount: 0,
+    dialogOpened: false,
+    catalogCount: 0,
+    selectedMethod: "",
+    linkage: null,
+    category: "",
+    regressionTypeOptions: [],
+    regressionType: "",
+    outcome: "",
+    predictors: [],
+    controls: [],
+    calculationBasis: "",
+    variableData: "",
+    uncertainty: "",
+    profile: null,
+    validatedScope: "",
+    unsupportedControlCount: 0,
+    startCommandCount: 0,
+    startCommandDisabled: false,
+    strictProfileBlockers: [],
+    noModelBlocker: false,
+    noPhantomResult: false,
+    truthAndOverflow: null,
+    closeFocus: null,
+  };
+  const dialog = page.locator('.nd-dialog-calculation[role="dialog"]');
+  let trigger = null;
+  try {
+    check.fixtureApiPresent = await page.evaluate(() => typeof window.__QUICKPLS_SMOKE__?.loadOlsFixture === "function");
+    if (!check.fixtureApiPresent) {
+      recordFailure("logistic-browser-fixture-api", `The data-only numeric smoke fixture was not exposed at ${viewport.id}.`, check);
+      return;
+    }
+    check.fixture = await page.evaluate(() => window.__QUICKPLS_SMOKE__?.loadOlsFixture());
+    await page.locator('.nd-app[data-surface="data"]').waitFor({ state: "visible", timeout: 1_000 }).catch(() => null);
+    check.dataSurface = await page.locator('.nd-app[data-surface="data"]').count() === 1;
+    check.visibleModelNodes = await page.locator(".react-flow__node-latent").count();
+
+    trigger = page.locator('.nd-commandbar[role="toolbar"] button').filter({ hasText: /^Analyze(?:\u2026|\.\.\.)?$/i });
+    check.analyzeCommandCount = await trigger.count();
+    if (check.analyzeCommandCount !== 1) return;
+    await trigger.focus();
+    await trigger.click();
+    await dialog.waitFor({ state: "visible", timeout: 1_000 }).catch(() => null);
+    check.dialogOpened = await dialog.isVisible().catch(() => false);
+    if (!check.dialogOpened) return;
+
+    const listbox = dialog.getByRole("listbox", { name: "Available calculation methods", exact: true });
+    check.catalogCount = await listbox.getByRole("option").count();
+    const option = calculationOption(dialog, "regression");
+    if (await option.getAttribute("aria-selected") !== "true") await option.click();
+    const regressionType = dialog.locator("#nd-calculation-regression-type");
+    await regressionType.waitFor({ state: "visible", timeout: 1_000 }).catch(() => null);
+    await regressionType.selectOption("logistic");
+    check.selectedMethod = compactCalculationText(await listbox.getByRole("option", { selected: true }).locator("strong").textContent().catch(() => ""));
+    check.linkage = await inspectSelectedMethodLinkage(dialog, "regression");
+    check.category = compactCalculationText(await dialog.locator("#nd-calculation-category-standalone").textContent().catch(() => ""));
+    check.regressionTypeOptions = await regressionType.locator("option").evaluateAll((options) => options.map((entry) => ({
+      value: entry.value,
+      label: entry.textContent?.replace(/\s+/g, " ").trim() ?? "",
+    })));
+    check.regressionType = await regressionType.inputValue();
+    const outcome = dialog.locator("#nd-calculation-regression-outcome");
+    await outcome.selectOption("outcome");
+    check.outcome = await outcome.inputValue();
+    const roleFieldsets = dialog.locator(".nd-ols-settings fieldset.nd-pca-variables");
+    const inspectRoles = async (fieldset) => fieldset.locator("label").evaluateAll((labels) => labels.filter((label) => (
+      label.querySelector('input[type="checkbox"]')?.checked
+    )).map((label) => label.querySelector("span")?.textContent?.replace(/\s+/g, " ").trim() ?? ""));
+    check.predictors = await inspectRoles(roleFieldsets.nth(0));
+    check.controls = await inspectRoles(roleFieldsets.nth(1));
+    const noteValue = async (label) => compactCalculationText(await dialog.locator(".nd-setting-note")
+      .filter({ hasText: label }).locator("strong").textContent().catch(() => ""));
+    check.calculationBasis = await noteValue("Calculation basis");
+    check.variableData = await noteValue("Variable data");
+    check.uncertainty = await noteValue("Uncertainty");
+    const profile = dialog.locator("#nd-calculation-logistic-profile");
+    check.profile = {
+      text: compactCalculationText(await profile.textContent().catch(() => "")),
+      role: await profile.getAttribute("role"),
+      ariaLive: await profile.getAttribute("aria-live"),
+      ariaBusy: await profile.getAttribute("aria-busy"),
+    };
+    check.validatedScope = await noteValue("Validated scope");
+    check.unsupportedControlCount = await dialog.locator([
+      "#nd-calculation-weighting", "#nd-calculation-preprocessing", "#nd-calculation-max-iterations",
+      "#nd-calculation-tolerance", "#nd-calculation-bootstrap-samples", "#nd-calculation-permutations",
+      "#nd-calculation-seed", "#nd-calculation-workers", "#nd-calculation-case-weight",
+    ].join(", ")).count();
+    const start = dialog.getByRole("button", { name: "Start binary logistic regression", exact: true });
+    check.startCommandCount = await start.count();
+    check.startCommandDisabled = check.startCommandCount === 1 && await start.isDisabled();
+    check.strictProfileBlockers = (await dialog.locator(".nd-blocker li").allTextContents()).map(compactCalculationText);
+    const blockerText = check.strictProfileBlockers.join(" ");
+    check.noModelBlocker = !/construct|structural path|editable model|active model/i.test(blockerText);
+    check.noPhantomResult = await page.locator(".nd-run-select select option").count() === 0;
+    check.truthAndOverflow = await inspectCalculationTruthAndOverflow(dialog);
+    await capture(page, "logistic-standalone-dialog", sequence, viewport, { dialog: "calculation" });
+    check.closeFocus = await closeCalculationAndCheckFocus(page, dialog, trigger);
+  } finally {
+    if (await dialog.isVisible().catch(() => false)) await closeCalculationAndCheckFocus(page, dialog, trigger).catch(() => null);
+    evidence.checks.logistic.push(check);
+    recordSkip("logistic-completed-results-browser", "The browser preview proves strict 0/1 readiness and responsive setup without synthesizing logistic output. Genuine ML estimation, lifecycle, tables, XLSX, save, archive inspection, and reopen remain packaged-Tauri checks.", {
+      viewport: viewport.id,
+      requiredNativeFollowUp: "Run the full 140-row binary fixture with no editable model through the focused packaged-Tauri logistic gate.",
+    });
+  }
+
+  const expectedTypeOptions = [
+    { value: "ols", label: "Ordinary least squares" },
+    { value: "logistic", label: "Binary logistic (outcome coded 0/1)" },
+  ];
+  if (JSON.stringify(check.fixture) !== JSON.stringify({ variables: 5, models: 0 })
+    || !check.dataSurface || check.visibleModelNodes !== 0) {
+    recordFailure("logistic-data-only-fixture", `Logistic setup did not begin from a numeric data-only workspace with zero editable models at ${viewport.id}.`, check);
+  }
+  if (check.analyzeCommandCount !== 1 || !check.dialogOpened || check.catalogCount !== nativeCalculationMethods.length
+    || check.selectedMethod !== "Regression" || !check.linkage?.linkage || check.category !== "Standalone analysis") {
+    recordFailure("logistic-data-analyze-command", `Data did not open the shared method catalog with Regression selected at ${viewport.id}.`, check);
+  }
+  if (JSON.stringify(check.regressionTypeOptions) !== JSON.stringify(expectedTypeOptions)
+    || check.regressionType !== "logistic" || check.outcome !== "outcome"
+    || JSON.stringify(check.predictors) !== JSON.stringify(["predictor"])
+    || check.controls.length !== 0) {
+    recordFailure("logistic-variable-role-contract", `Logistic setup did not preserve its explicit type, outcome, predictor, and optional-control roles at ${viewport.id}.`, check);
+  }
+  if (check.calculationBasis !== "Binary logistic maximum likelihood with intercept (fixed)"
+    || check.variableData !== "Unstandardized numeric values (fixed)"
+    || check.uncertainty !== "Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)"
+    || check.validatedScope !== nativeLogisticScopeNote || check.unsupportedControlCount !== 0) {
+    recordFailure("logistic-bounded-scope-contract", `Logistic setup did not disclose its exact raw/listwise/ML/Wald/odds-ratio scope at ${viewport.id}.`, check);
+  }
+  if (check.profile?.role !== "status" || check.profile?.ariaLive !== "polite" || check.profile?.ariaBusy !== "false"
+    || !check.profile?.text.includes("36 complete cases: 0 class 0 and 0 class 1; 0 omitted by listwise deletion")
+    || !check.strictProfileBlockers.some((message) => /not coded exactly 0 or 1/i.test(message))
+    || !check.strictProfileBlockers.some((message) => /must contain both class 0 and class 1/i.test(message))
+    || check.startCommandCount !== 1 || !check.startCommandDisabled || !check.noModelBlocker) {
+    recordFailure("logistic-strict-profile-contract", `The full resident browser fixture was not truthfully rejected for failing exact numeric 0/1 outcome profiling at ${viewport.id}.`, check);
+  }
+  if (!check.noPhantomResult || !check.truthAndOverflow?.noFabricatedRunState || !check.truthAndOverflow?.noHorizontalOverflow
+    || !check.closeFocus?.dialogClosed || !check.closeFocus?.focusRestored) {
+    recordFailure("logistic-browser-truth-layout", `The idle rejected logistic setup exposed a phantom result, fabricated run state, overflow, or broken close focus at ${viewport.id}.`, check);
   }
 }
 
@@ -3498,6 +3654,7 @@ async function exerciseViewport(browser, viewport) {
     await auditNcaStandaloneDialogFromData(page, viewport, 14);
     await auditPcaStandaloneDialogFromData(page, viewport, 16);
     await auditOlsStandaloneDialogFromData(page, viewport, 17);
+    await auditLogisticStandaloneDialogFromData(page, viewport, 18);
 
     await page.evaluate(() => window.__QUICKPLS_SMOKE__?.loadEmptyProject());
     await setSurface(page, "results");
@@ -3748,7 +3905,7 @@ async function exerciseLargeModelFixture(browser) {
   }
 }
 async function finalizeCoverage() {
-  const requiredStates = ["launcher", "workspace-explorer", "workspace-explorer-context-menu", "workspace-explorer-rename-dialog", "data", "recode-dialog", "import-data-dialog", "model", "moderating-effect-dialog", "higher-order-dialog", "calculation-dialog", "plsc-dialog", "wpls-dialog", "gsca-dialog", "cca-dialog", "cbsem-dialog", "structural-path-randomization-dialog", "prediction-dialog", "mga-dialog", "pca-standalone-dialog", "ols-standalone-dialog", "empty-results", "completed-results", "mediation-results", "export-dialog"];
+  const requiredStates = ["launcher", "workspace-explorer", "workspace-explorer-context-menu", "workspace-explorer-rename-dialog", "data", "recode-dialog", "import-data-dialog", "model", "moderating-effect-dialog", "higher-order-dialog", "calculation-dialog", "plsc-dialog", "wpls-dialog", "gsca-dialog", "cca-dialog", "cbsem-dialog", "structural-path-randomization-dialog", "prediction-dialog", "mga-dialog", "pca-standalone-dialog", "ols-standalone-dialog", "logistic-standalone-dialog", "empty-results", "completed-results", "mediation-results", "export-dialog"];
   const requiredCompactStates = [{ viewport: "1024x700", state: "mediation-bootstrap-inference" }];
   const expectedMatrix = [
     ...viewports.flatMap((viewport) => requiredStates.map((state) => ({ viewport: viewport.id, state }))),

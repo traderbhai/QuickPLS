@@ -45,6 +45,33 @@ EXPECTED_CATALOG_KINDS = frozenset(
     }
 )
 
+# The catalog is a closed UI inventory, while a single entry may expose more
+# than one independently qualified analytical capability. Regression is the
+# first such entry: OLS, logistic, and PROCESS must never share one promotion
+# state merely because they share a launcher.
+EXPECTED_CATALOG_CAPABILITIES = {
+    "pls_algorithm": frozenset({"qpls3.pls.algorithm"}),
+    "plsc": frozenset({"qpls3.pls.consistent"}),
+    "wpls": frozenset({"qpls3.pls.weighted"}),
+    "gsca": frozenset({"qpls3.gsca.als"}),
+    "cca": frozenset({"qpls3.assessment.cca_residuals"}),
+    "ipma": frozenset({"qpls3.assessment.ipma"}),
+    "cbsem": frozenset({"qpls3.cbsem.ml"}),
+    "pls_bootstrap": frozenset({"qpls3.inference.bootstrap"}),
+    "pls_permutation": frozenset({"qpls3.inference.structural_path_randomization"}),
+    "mga": frozenset({"qpls3.groups.micom_permutation_mga"}),
+    "predict": frozenset({"qpls3.prediction.plspredict_cvpat"}),
+    "nca": frozenset({"qpls3.standalone.nca"}),
+    "pca": frozenset({"qpls3.standalone.pca"}),
+    "regression": frozenset(
+        {
+            "qpls3.standalone.ols",
+            "qpls3.standalone.logistic",
+            "qpls3.standalone.process",
+        }
+    ),
+}
+
 FEATURE_ID = re.compile(r"^qpls3\.[a-z0-9][a-z0-9_.-]*$")
 
 
@@ -273,8 +300,12 @@ def _schema_errors(document: dict[str, Any]) -> list[str]:
     features = document.get("features")
     if not isinstance(features, list):
         return errors + ["features must be a list"]
-    if len(features) != 14:
-        errors.append(f"features must contain exactly 14 entries, found {len(features)}")
+    expected_feature_ids = set().union(*EXPECTED_CATALOG_CAPABILITIES.values())
+    if len(features) != len(expected_feature_ids):
+        errors.append(
+            f"features must contain exactly {len(expected_feature_ids)} analytical capabilities, "
+            f"found {len(features)}"
+        )
 
     ids: list[str] = []
     kinds: list[str] = []
@@ -313,15 +344,30 @@ def _schema_errors(document: dict[str, Any]) -> list[str]:
             errors.append(f"{prefix}.evidence must be an object")
 
     duplicate_ids = sorted(key for key, count in Counter(ids).items() if count > 1)
-    duplicate_kinds = sorted(key for key, count in Counter(kinds).items() if count > 1)
     if duplicate_ids:
         errors.append(f"duplicate feature IDs: {', '.join(duplicate_ids)}")
-    if duplicate_kinds:
-        errors.append(f"duplicate catalog kinds: {', '.join(duplicate_kinds)}")
+    actual_feature_ids = set(ids)
+    if actual_feature_ids != expected_feature_ids:
+        missing = sorted(expected_feature_ids - actual_feature_ids)
+        extra = sorted(actual_feature_ids - expected_feature_ids)
+        errors.append(
+            f"capability IDs differ from the frozen inventory (missing={missing}, extra={extra})"
+        )
     if set(kinds) != EXPECTED_CATALOG_KINDS:
         missing = sorted(EXPECTED_CATALOG_KINDS - set(kinds))
         extra = sorted(set(kinds) - EXPECTED_CATALOG_KINDS)
         errors.append(f"catalog kinds differ from the accepted 14 (missing={missing}, extra={extra})")
+    for kind, expected_ids in EXPECTED_CATALOG_CAPABILITIES.items():
+        actual_ids = {
+            feature.get("id")
+            for feature in features
+            if isinstance(feature, dict) and feature.get("catalog_kind") == kind
+        }
+        if actual_ids != expected_ids:
+            errors.append(
+                f"catalog capability mapping differs for {kind} "
+                f"(expected={sorted(expected_ids)}, actual={sorted(actual_ids)})"
+            )
     return errors
 
 

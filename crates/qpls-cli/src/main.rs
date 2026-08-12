@@ -2445,6 +2445,7 @@ fn write_v08_extended_methods_evidence(output: Option<&Path>) -> Result<()> {
     let artifacts = [
         "docs/methods/PCA_V1.md",
         "docs/methods/REGRESSION_OLS_V1.md",
+        "docs/methods/REGRESSION_LOGISTIC_V2.md",
         "docs/methods/REGRESSION_LOGISTIC_V1.md",
         "docs/methods/PROCESS_V1.md",
         "docs/methods/NCA_V2.md",

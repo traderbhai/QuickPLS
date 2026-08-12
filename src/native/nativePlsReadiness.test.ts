@@ -648,4 +648,51 @@ describe("nativePlsReadiness", () => {
     expect(blocked.canRun).toBe(false);
     expect(blocked.blockers[0].detail).toContain("number of selected variables");
   });
+
+  it("routes model-free binary logistic regression through exact 0/1 readiness", () => {
+    const logisticDataset: Dataset = {
+      ...dataset,
+      columns: ["converted", "score", "control"],
+      rows: Array.from({ length: 12 }, (_, index) => ({
+        converted: index % 2,
+        score: index + 1,
+        control: index % 3,
+      })),
+      rowCount: 12,
+      columnMetadata: ["converted", "score", "control"].map(numericMetadata),
+    };
+    const logisticSettings: AnalysisUiSettings = {
+      ...settings,
+      method: "regression",
+      preprocessing: "unstandardized",
+      regressionType: "logistic",
+      regressionOutcome: "converted",
+      regressionPredictors: "score",
+      regressionControls: "control",
+      robustSe: "none",
+    };
+
+    const ready = readiness({ dataset: logisticDataset, nodes: [], edges: [], settings: logisticSettings });
+    expect(ready.canRun).toBe(true);
+    expect(ready.items.map((item) => item.id)).toEqual(["runtime", "data", "calculation"]);
+    expect(ready.items.find((item) => item.id === "calculation")).toMatchObject({
+      label: "Binary logistic regression",
+      status: "ready",
+    });
+    expect(ready.items.find((item) => item.id === "calculation")?.detail).toContain("6 class 0 and 6 class 1");
+
+    const invalid = readiness({
+      dataset: {
+        ...logisticDataset,
+        rows: logisticDataset.rows.map((row, index) => index === 4 ? { ...row, converted: 2 } : row),
+      },
+      nodes: [],
+      edges: [],
+      settings: logisticSettings,
+    });
+    expect(invalid.canRun).toBe(false);
+    expect(invalid.blockers).toHaveLength(1);
+    expect(invalid.blockers[0]).toMatchObject({ id: "calculation", label: "Binary logistic regression" });
+    expect(invalid.blockers[0].detail).toContain("not coded exactly 0 or 1");
+  });
 });

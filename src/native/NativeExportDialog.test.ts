@@ -164,7 +164,8 @@ describe("NativeExportDialog export scope", () => {
     expect(markup).not.toContain("quickpls-model.svg");
   });
 
-  it("keeps standalone PCA exports table-only", () => {
+  it("keeps standalone PCA and binary logistic exports table-only", () => {
+    vi.stubGlobal("window", {});
     const run = completedNcaRun();
     const pcaRun: AnalysisRun = {
       ...run,
@@ -174,13 +175,28 @@ describe("NativeExportDialog export scope", () => {
       includeModelDiagram: false,
       reviewerPackDetail: "Results tables and run provenance",
     });
-    const olsRun: AnalysisRun = {
+    const logisticRun: AnalysisRun = {
       ...run,
-      provenance: { ...run.provenance!, method: "regression", settings: { ...run.provenance!.settings, method: "regression" } },
+      method: "Binary Logistic Regression",
+      provenance: {
+        ...run.provenance!,
+        method: "regression",
+        method_version: "regression_logistic_v2",
+        settings: { ...run.provenance!.settings, method: "regression" },
+      },
     };
-    expect(nativeExportScope(olsRun)).toMatchObject({
+    expect(nativeExportScope(logisticRun)).toMatchObject({
       includeModelDiagram: false,
       reviewerPackDetail: "Results tables and run provenance",
     });
+    const markup = renderToStaticMarkup(createElement(NativeExportDialog, {
+      run: logisticRun,
+      tables: [],
+      close: () => undefined,
+    }));
+    expect(["CSV tables", "HTML report", "Reviewer pack", "XLSX workbook", "Print / PDF"]
+      .every((label) => markup.includes(label))).toBe(true);
+    expect(markup).not.toContain("Model diagram");
+    expect(markup).not.toContain("quickpls-model.svg");
   });
 });

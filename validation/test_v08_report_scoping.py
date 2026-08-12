@@ -106,12 +106,13 @@ class ScopedReferenceReportTests(unittest.TestCase):
 
 
 class PromotionBindingTests(unittest.TestCase):
-    def test_logistic_and_process_gates_bind_exact_method_reports(self) -> None:
+    def test_current_logistic_and_historical_process_gates_bind_exact_method_reports(self) -> None:
         logistic = (VALIDATION / "logistic_method_promotion_audit.py").read_text(encoding="utf-8")
         process = (VALIDATION / "process_method_promotion_audit.py").read_text(encoding="utf-8")
-        self.assertIn('"name": "v08_logistic_reference_report.json"', logistic)
-        self.assertIn('"selected_section": "logistic"', logistic)
-        self.assertIn('"report_scope": "method_specific"', logistic)
+        self.assertIn('REFERENCE_REPORT_NAME = "logistic_v2_reference_report.json"', logistic)
+        self.assertIn('METHOD_VERSION = "regression_logistic_v2"', logistic)
+        self.assertIn('PACKAGED_REPORT_NAME = "logistic_v2_packaged_acceptance.json"', logistic)
+        self.assertNotIn("v08_logistic_reference_report.json", logistic)
         self.assertNotIn("v08_extended_methods_reference_report.json", logistic)
         self.assertIn('"name": "v08_process_reference_report.json"', process)
         self.assertIn('"selected_section": "process"', process)

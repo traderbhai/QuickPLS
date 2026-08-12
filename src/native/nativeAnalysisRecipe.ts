@@ -241,6 +241,7 @@ function buildSettings(
   const weightingScheme = kind === "nca" || kind === "pca" || kind === "regression" || kind === "cbsem" || kind === "gsca" ? "path" : (source.weightingScheme ?? "path");
   const tolerance = kind === "gsca" ? 1e-7 : (source.tolerance ?? 1e-7);
   const maxIterations = kind === "gsca" ? 3_000 : (source.maxIterations ?? 3_000);
+  const workers = kind === "regression" ? 1 : source.workers;
   const preprocessing = kind === "nca" || kind === "regression"
     ? "unstandardized"
     : kind === "pca" || kind === "cbsem" || kind === "gsca"
@@ -251,7 +252,7 @@ function buildSettings(
   assertNumberInRange("tolerance", tolerance, NATIVE_ANALYSIS_RECIPE_BOUNDS.tolerance.minimum, NATIVE_ANALYSIS_RECIPE_BOUNDS.tolerance.maximum);
   assertIntegerInRange("maxIterations", maxIterations, NATIVE_ANALYSIS_RECIPE_BOUNDS.maxIterations.minimum, NATIVE_ANALYSIS_RECIPE_BOUNDS.maxIterations.maximum);
   assertIntegerInRange("seed", source.seed, NATIVE_ANALYSIS_RECIPE_BOUNDS.seed.minimum, NATIVE_ANALYSIS_RECIPE_BOUNDS.seed.maximum);
-  assertIntegerInRange("workers", source.workers, NATIVE_ANALYSIS_RECIPE_BOUNDS.workers.minimum, NATIVE_ANALYSIS_RECIPE_BOUNDS.workers.maximum);
+  assertIntegerInRange("workers", workers, NATIVE_ANALYSIS_RECIPE_BOUNDS.workers.minimum, NATIVE_ANALYSIS_RECIPE_BOUNDS.workers.maximum);
   assertNumberInRange("confidenceLevel", source.confidenceLevel, NATIVE_ANALYSIS_RECIPE_BOUNDS.confidenceLevel.minimum, NATIVE_ANALYSIS_RECIPE_BOUNDS.confidenceLevel.maximum);
   assertEnum("preprocessing", preprocessing, ["standardized", "mean_centered", "unstandardized"] as const);
 
@@ -295,7 +296,7 @@ function buildSettings(
     studentized_inner_samples: studentizedInnerSamples,
     permutation_samples: permutationSamples,
     seed: source.seed,
-    workers: kind === "cbsem" || kind === "gsca" ? 1 : source.workers,
+    workers: kind === "cbsem" || kind === "gsca" ? 1 : workers,
     confidence_level: source.confidenceLevel,
     preprocessing,
     missing_data: "listwise_deletion",
@@ -349,10 +350,13 @@ function buildMetadata(
   scopeMetadata: string,
   methodConfig: NativeAnalysisMethodConfig,
 ): Record<string, string> {
-  const status = methodConfig.kind === "regression"
-    && methodConfig.model.type === "process"
-    ? `validated_v1_2_2_process_${methodConfig.model.relationship.model}_bounded_scope`
-    : scopeMetadata;
+  const status = methodConfig.kind !== "regression"
+    ? scopeMetadata
+    : methodConfig.model.type === "process"
+      ? `validated_v1_2_2_process_${methodConfig.model.relationship.model}_bounded_scope`
+      : methodConfig.model.type === "logistic"
+        ? "validated_regression_logistic_v2_bounded_scope"
+        : scopeMetadata;
   return { status };
 }
 

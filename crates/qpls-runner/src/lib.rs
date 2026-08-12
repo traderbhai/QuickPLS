@@ -347,7 +347,7 @@ fn map_permutation_error(error: PlsPermutationError) -> RunnerError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use qpls_core::{AnalysisMethod, AnalysisPayload, MethodConfig};
+    use qpls_core::{AnalysisMethod, AnalysisPayload, MethodConfig, Preprocessing};
     use qpls_data::{ImportOptions, import_delimited_bytes};
     use std::sync::{
         Mutex,
@@ -369,6 +369,22 @@ mod tests {
         } else {
             recipe.migrated_v3().unwrap()
         }
+    }
+
+    fn logistic_fixture() -> (Dataset, AnalysisRecipe) {
+        let dataset = import_delimited_bytes(
+            include_bytes!("../../../validation/results/v08_extended_methods_fixture.csv"),
+            "v08_extended_methods_fixture.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe = migrated_execution_recipe(include_bytes!(
+            "../../../validation/results/v08_regression_logistic.recipe.json"
+        ));
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        recipe.settings.preprocessing = Preprocessing::Unstandardized;
+        (dataset, recipe)
     }
 
     fn assert_estimator_version_is_in_provenance(result: &AnalysisResult, expected: &str) {
@@ -418,6 +434,81 @@ mod tests {
             )
         );
         assert_estimator_version_is_in_provenance(&left, PLS_METHOD_VERSION);
+    }
+
+    #[test]
+    fn logistic_v2_is_deterministic_and_reports_exact_provenance_progress_and_diagnostics() {
+        let (dataset, recipe) = logistic_fixture();
+        let progress = Mutex::new(Vec::new());
+        let left = run_pls_analysis(
+            &dataset,
+            &recipe,
+            || false,
+            |update| progress.lock().unwrap().push(update),
+        )
+        .unwrap();
+        let right = run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+        assert_eq!(left.payload, right.payload);
+        assert_eq!(
+            left.provenance.method_version,
+            REGRESSION_LOGISTIC_METHOD_VERSION
+        );
+        assert_eq!(left.provenance.method, AnalysisMethod::Regression);
+        assert!(
+            progress
+                .lock()
+                .unwrap()
+                .iter()
+                .any(|update| update.phase == "iterating")
+        );
+        let estimation = match &left.payload {
+            AnalysisPayload::PlsPmV1 { estimation, .. } => estimation,
+            other => panic!("expected standalone logistic payload, got {other:?}"),
+        };
+        assert_eq!(
+            estimation["regression"]["method_version"],
+            REGRESSION_LOGISTIC_METHOD_VERSION
+        );
+        assert_eq!(
+            estimation["regression"]["logistic"]["outcome_profile"]["readiness"],
+            "ready"
+        );
+        assert_eq!(
+            estimation["regression"]["logistic"]["convergence"]["algorithm"],
+            "deterministic_newton_irls_v1"
+        );
+        assert_eq!(
+            estimation["regression"]["fit"]["pseudo_r_squared_method"],
+            "mcfadden_v1"
+        );
+    }
+
+    #[test]
+    fn logistic_v2_honors_cancellation_inside_irls() {
+        let (dataset, recipe) = logistic_fixture();
+        let iterating_updates = AtomicUsize::new(0);
+        let cancelled = run_pls_analysis(
+            &dataset,
+            &recipe,
+            || iterating_updates.load(Ordering::SeqCst) > 0,
+            |update| {
+                if update.phase == "iterating" {
+                    iterating_updates.fetch_add(1, Ordering::SeqCst);
+                }
+            },
+        );
+        assert!(matches!(cancelled, Err(RunnerError::Cancelled)));
+        assert_eq!(iterating_updates.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn logistic_nonconvergence_uses_method_specific_runner_message() {
+        let message = RunnerError::Estimation(
+            qpls_estimation::EstimationError::LogisticNonConvergence(100).to_string(),
+        )
+        .to_string();
+        assert!(message.contains("logistic regression did not converge"));
+        assert!(!message.contains("PLS weights"));
     }
 
     #[test]

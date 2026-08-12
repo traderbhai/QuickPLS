@@ -27,6 +27,24 @@ export type NativeWorkbenchAnalysisKind =
 
 export type NativeAnalysisCategoryId = "estimation" | "component_models" | "assessment" | "covariance" | "inference" | "groups" | "prediction" | "standalone";
 
+export type NativeAnalysisCapabilityId =
+  | "qpls3.pls.algorithm"
+  | "qpls3.pls.consistent"
+  | "qpls3.pls.weighted"
+  | "qpls3.gsca.als"
+  | "qpls3.assessment.cca_residuals"
+  | "qpls3.assessment.ipma"
+  | "qpls3.cbsem.ml"
+  | "qpls3.inference.bootstrap"
+  | "qpls3.inference.structural_path_randomization"
+  | "qpls3.groups.micom_permutation_mga"
+  | "qpls3.prediction.plspredict_cvpat"
+  | "qpls3.standalone.nca"
+  | "qpls3.standalone.pca"
+  | "qpls3.standalone.ols"
+  | "qpls3.standalone.logistic"
+  | "qpls3.standalone.process";
+
 export interface NativeAnalysisCatalogItem {
   kind: NativeWorkbenchAnalysisKind;
   categoryId: NativeAnalysisCategoryId;
@@ -34,6 +52,8 @@ export interface NativeAnalysisCatalogItem {
   label: string;
   description: string;
   keywords: readonly string[];
+  /** Stable machine-audit linkage; not rendered as user-facing availability. */
+  capabilityIds: readonly NativeAnalysisCapabilityId[];
 }
 
 interface CatalogItemDraft extends Omit<NativeAnalysisCatalogItem, "label"> {
@@ -47,6 +67,7 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     categoryLabel: "PLS-SEM estimation",
     description: "Estimate composite scores, paths, loadings, weights, and model quality.",
     keywords: ["pls", "algorithm", "composite", "path modeling"],
+    capabilityIds: ["qpls3.pls.algorithm"],
   },
   {
     kind: "plsc",
@@ -54,6 +75,7 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     categoryLabel: "PLS-SEM estimation",
     description: "Apply consistent PLS correction to reflective measurement models.",
     keywords: ["plsc", "consistent pls", "reflective", "correction"],
+    capabilityIds: ["qpls3.pls.consistent"],
   },
   {
     kind: "wpls",
@@ -61,6 +83,7 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     categoryLabel: "PLS-SEM estimation",
     description: "Estimate a reflective PLS model using positive case weights.",
     keywords: ["wpls", "weighted pls", "case weights", "survey weights"],
+    capabilityIds: ["qpls3.pls.weighted"],
   },
   {
     kind: "gsca",
@@ -68,6 +91,7 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     categoryLabel: "Component models",
     description: "Estimate a bounded generalized structured component model with reflective or formative blocks and recursive structural paths.",
     keywords: ["gsca", "generalized structured component analysis", "component model", "alternating least squares", "als"],
+    capabilityIds: ["qpls3.gsca.als"],
   },
   {
     kind: "cca",
@@ -75,6 +99,7 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     categoryLabel: "Assessment",
     description: "Inspect descriptive residuals between observed and model-reproduced composite correlations.",
     keywords: ["cca", "composite residual", "residual diagnostics", "confirmatory composite analysis", "assessment"],
+    capabilityIds: ["qpls3.assessment.cca_residuals"],
   },
   {
     kind: "ipma",
@@ -82,6 +107,7 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     categoryLabel: "Assessment",
     description: "Map each structural predecessor's total importance against observed-range construct performance for one endogenous target.",
     keywords: ["ipma", "importance performance", "priority map", "target", "assessment"],
+    capabilityIds: ["qpls3.assessment.ipma"],
   },
   {
     kind: "cbsem",
@@ -89,6 +115,7 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     categoryLabel: "Covariance-based SEM",
     description: "Estimate a bounded single-group reflective CFA or recursive latent SEM with maximum likelihood.",
     keywords: ["cbsem", "cb-sem", "cfa", "confirmatory factor analysis", "maximum likelihood", "covariance", "model fit"],
+    capabilityIds: ["qpls3.cbsem.ml"],
   },
   {
     kind: "pls_bootstrap",
@@ -96,6 +123,7 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     categoryLabel: "Inference",
     description: "Estimate confidence intervals and significance with deterministic resampling.",
     keywords: ["bootstrap", "confidence interval", "significance", "inference"],
+    capabilityIds: ["qpls3.inference.bootstrap"],
   },
   {
     kind: "pls_permutation",
@@ -103,6 +131,7 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     categoryLabel: "Inference",
     description: "Run single-model Freedman–Lane randomization inference for structural path coefficients.",
     keywords: ["freedman lane", "permutation", "randomization", "path significance", "inference"],
+    capabilityIds: ["qpls3.inference.structural_path_randomization"],
   },
   {
     kind: "mga",
@@ -110,6 +139,7 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     categoryLabel: "Groups",
     description: "Assess MICOM measurement invariance and compare Group A minus Group B paths, loadings, and weights.",
     keywords: ["micom", "measurement invariance", "mga", "multigroup", "group a", "group b", "permutation mga", "inference"],
+    capabilityIds: ["qpls3.groups.micom_permutation_mga"],
   },
   {
     kind: "predict",
@@ -117,6 +147,7 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     categoryLabel: "Prediction",
     description: NATIVE_PREDICTION_SCOPE_DESCRIPTION,
     keywords: ["plspredict", "cvpat", "prediction", "indicator", "indicator average", "linear model", "holdout", "cross validation"],
+    capabilityIds: ["qpls3.prediction.plspredict_cvpat"],
   },
   {
     kind: "nca",
@@ -124,6 +155,7 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     categoryLabel: "Standalone analysis",
     description: "Analyze whether one numeric observed condition is necessary for one numeric observed outcome with bounded ceiling lines and bottlenecks.",
     keywords: ["nca", "necessary condition", "ce-fdh", "cr-fdh", "ceiling", "bottleneck", "observed variable"],
+    capabilityIds: ["qpls3.standalone.nca"],
   },
   {
     kind: "pca",
@@ -131,19 +163,21 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     categoryLabel: "Standalone analysis",
     description: "Reduce selected numeric variables to orthogonal principal components using a correlation-matrix eigensystem.",
     keywords: ["pca", "principal component", "dimension reduction", "eigenvalue", "kaiser", "variance", "observed variable"],
+    capabilityIds: ["qpls3.standalone.pca"],
   },
   {
     kind: "regression",
     categoryId: "standalone",
     categoryLabel: "Standalone analysis",
-    description: "Fit raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed 95% intervals.",
-    keywords: ["ols", "ordinary least squares", "linear regression", "hc3", "robust standard errors", "observed variable"],
+    description: "Fit raw numeric OLS or strict 0/1 binary logistic regression as a model-free observed-variable analysis.",
+    keywords: ["ols", "ordinary least squares", "linear regression", "logistic", "binary", "odds ratio", "wald", "probability", "hc3", "observed variable"],
+    capabilityIds: ["qpls3.standalone.ols", "qpls3.standalone.logistic", "qpls3.standalone.process"],
   },
 ] as const;
 
 export const NATIVE_ANALYSIS_CATALOG: readonly NativeAnalysisCatalogItem[] = CATALOG_DRAFTS.map((item) => ({
   ...item,
-  label: nativeAnalysisRecipeDescriptor(item.kind).label,
+  label: item.kind === "regression" ? "Regression" : nativeAnalysisRecipeDescriptor(item.kind).label,
 }));
 
 const workbenchKinds = new Set<string>(NATIVE_ANALYSIS_CATALOG.map((item) => item.kind));
@@ -411,11 +445,11 @@ export function nativeAnalysisSettingsForWorkbenchKind(
       workers: 1,
       confidenceLevel: 0.95,
       caseWeightColumn: null,
-      regressionType: "ols",
+      regressionType: normalized.regressionType === "logistic" ? "logistic" : "ols",
       regressionOutcome: normalized.regressionOutcome?.trim() || null,
       regressionPredictors: normalizeCsv(normalized.regressionPredictors) || null,
       regressionControls: normalizeCsv(normalized.regressionControls) || null,
-      robustSe: "hc3",
+      robustSe: normalized.regressionType === "logistic" ? "none" : "hc3",
       processX: null,
       processM: null,
       processW: null,
@@ -435,7 +469,11 @@ export function nativeAnalysisSettingsForWorkbenchKind(
   };
 }
 
-export function nativeAnalysisStartLabel(kind: NativeWorkbenchAnalysisKind, retry: boolean): string {
+export function nativeAnalysisStartLabel(
+  kind: NativeWorkbenchAnalysisKind,
+  retry: boolean,
+  regressionType?: AnalysisUiSettings["regressionType"],
+): string {
   const verb = retry ? "Retry" : "Start";
   if (kind === "pls_bootstrap") return `${verb} bootstrapping`;
   if (kind === "pls_permutation") return `${verb} path randomization`;
@@ -449,6 +487,6 @@ export function nativeAnalysisStartLabel(kind: NativeWorkbenchAnalysisKind, retr
   if (kind === "gsca") return `${verb} GSCA`;
   if (kind === "nca") return `${verb} necessary condition analysis`;
   if (kind === "pca") return `${verb} principal component analysis`;
-  if (kind === "regression") return `${verb} OLS regression`;
+  if (kind === "regression") return `${verb} ${regressionType === "logistic" ? "binary logistic regression" : "OLS regression"}`;
   return `${verb} calculation`;
 }

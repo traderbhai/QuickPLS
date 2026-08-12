@@ -32,11 +32,18 @@ class ParityLedgerTests(unittest.TestCase):
         report = validate_ledger(LEDGER, REPOSITORY_ROOT)
 
         self.assertTrue(report["passed"], report["errors"])
-        self.assertEqual(report["feature_count"], 14)
-        self.assertEqual(report["declared_states"], {"engine_only": 1, "native_qualified": 13})
-        self.assertEqual(report["derived_states"], {"engine_only": 1, "native_qualified": 13})
-        self.assertFalse(
-            any(feature["declared_state"] == "release_qualified" for feature in report["features"])
+        self.assertEqual(report["feature_count"], 16)
+        self.assertEqual(
+            report["declared_states"],
+            {"absent": 1, "engine_only": 1, "native_qualified": 13, "release_qualified": 1},
+        )
+        self.assertEqual(
+            report["derived_states"],
+            {"absent": 1, "engine_only": 1, "native_qualified": 13, "release_qualified": 1},
+        )
+        self.assertEqual(
+            [feature["id"] for feature in report["features"] if feature["declared_state"] == "release_qualified"],
+            ["qpls3.standalone.logistic"],
         )
 
     def test_duplicate_feature_id_is_rejected(self) -> None:
@@ -47,6 +54,21 @@ class ParityLedgerTests(unittest.TestCase):
 
         self.assertFalse(report["passed"])
         self.assertTrue(any("duplicate feature IDs" in error for error in report["errors"]))
+
+    def test_shared_catalog_entry_requires_exact_capability_mapping(self) -> None:
+        document = load_json(LEDGER)
+        logistic = next(
+            feature for feature in document["features"]
+            if feature["id"] == "qpls3.standalone.logistic"
+        )
+        logistic["catalog_kind"] = "pca"
+
+        report = validate_ledger_document(document, REPOSITORY_ROOT)
+
+        self.assertFalse(report["passed"])
+        self.assertTrue(
+            any("catalog capability mapping differs" in error for error in report["errors"])
+        )
 
     def test_release_claim_without_fresh_reports_is_rejected(self) -> None:
         document = deepcopy(load_json(LEDGER))

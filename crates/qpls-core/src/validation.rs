@@ -1666,6 +1666,14 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
                 None,
             ));
         }
+        if recipe.settings.workers != 1 {
+            issues.push(issue(
+                "regression.single_worker_required",
+                Severity::Error,
+                "Standalone regression uses deterministic single-worker estimation",
+                Some(recipe.settings.workers.to_string()),
+            ));
+        }
         if !recipe.model.constructs.is_empty()
             || !recipe.model.paths.is_empty()
             || !recipe.model.controls.is_empty()
@@ -3131,6 +3139,7 @@ mod tests {
             drift.settings.case_weight_column = Some("weight".into());
             drift.settings.bootstrap_samples = 999;
             drift.settings.confidence_level = 0.90;
+            drift.settings.workers = 2;
             drift
                 .model
                 .constructs
@@ -3142,6 +3151,7 @@ mod tests {
                 "regression.case_weights_unsupported",
                 "regression.resampling_unsupported",
                 "regression.confidence_fixed",
+                "regression.single_worker_required",
                 "regression.empty_model_required",
             ] {
                 assert!(

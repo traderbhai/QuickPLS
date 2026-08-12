@@ -35,9 +35,9 @@ use qpls_estimation::{
     PLS_TWO_STAGE_MODERATION_METHOD_VERSION, PLSC_METHOD_VERSION, PLSC_METHOD_VERSION_V1,
     PcaAnalysis, PlsPredictAnalysis, PlsPredictCvpatBenchmarkAssessment, PlsPredictErrorMetrics,
     PlsPredictIndicatorTarget, PlsResult, REGRESSION_LOGISTIC_METHOD_VERSION,
-    REGRESSION_OLS_METHOD_VERSION, REGRESSION_PROCESS_METHOD_VERSION, RegressionAnalysis,
-    WPLS_METHOD_VERSION, analyze_mediation_effects_with_tolerance, analyze_moderation,
-    nca_analysis_matches_v2_contract,
+    REGRESSION_LOGISTIC_METHOD_VERSION_V1, REGRESSION_OLS_METHOD_VERSION,
+    REGRESSION_PROCESS_METHOD_VERSION, RegressionAnalysis, WPLS_METHOD_VERSION,
+    analyze_mediation_effects_with_tolerance, analyze_moderation, nca_analysis_matches_v2_contract,
 };
 use qpls_resampling::{
     PERMUTATION_METHOD_VERSION, PlsBootstrapResult, PlsPermutationResult,
@@ -327,6 +327,14 @@ impl Project {
         {
             return Err(ProjectError::Invalid(
                 "historical gsca_v1 preview results are archive-readable but cannot be appended as new GSCA evidence"
+                    .into(),
+            ));
+        }
+        if result.provenance.method == AnalysisMethod::Regression
+            && result.provenance.method_version == REGRESSION_LOGISTIC_METHOD_VERSION_V1
+        {
+            return Err(ProjectError::Invalid(
+                "historical regression_logistic_v1 results are archive-readable but cannot be appended as new scientific evidence"
                     .into(),
             ));
         }
@@ -1557,6 +1565,7 @@ fn validate_ipma_payload_contract(
         || recipe.settings.bootstrap_samples > 0
         || recipe.settings.studentized_inner_samples > 0
         || recipe.settings.permutation_samples > 0
+        || recipe.settings.workers != 1
         || (recipe.settings.confidence_level - 0.95).abs() > 1e-12
         || !recipe.model.interactions.is_empty()
         || !recipe.model.higher_order_constructs.is_empty()
@@ -2350,13 +2359,16 @@ impl RegressionPersistenceKind {
         }
     }
 
-    fn scope_warning(&self) -> &'static str {
+    fn scope_warning(&self, method_version: &str) -> &'static str {
         match self {
             Self::Ols => {
                 "OLS regression v1 is validated for the documented QuickPLS v1.2 OLS scope; unsupported shapes remain blocked."
             }
-            Self::Logistic => {
+            Self::Logistic if method_version == REGRESSION_LOGISTIC_METHOD_VERSION_V1 => {
                 "Logistic regression v1 is validated for the documented QuickPLS v1.2.2 binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, and Firth-corrected models remain unsupported."
+            }
+            Self::Logistic => {
+                "Logistic regression v2 is validated for the documented QuickPLS binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, categorical auto-encoding, and Firth-corrected models remain unsupported."
             }
             Self::Process(_) => {
                 "PROCESS-style regression v1 is validated for the documented QuickPLS v1.2.2 bounded mediation/moderation workflow scope; moderated mediation and the full Hayes model catalogue remain experimental."
@@ -2530,7 +2542,22 @@ fn validate_regression_payload_contract(
         }
         _ => true,
     };
-    let expected_method_version = contract.kind.method_version();
+    let expected_method_version = match &contract.kind {
+        RegressionPersistenceKind::Logistic
+            if contract.current_typed
+                && result.provenance.method_version == REGRESSION_LOGISTIC_METHOD_VERSION =>
+        {
+            REGRESSION_LOGISTIC_METHOD_VERSION
+        }
+        RegressionPersistenceKind::Logistic
+            if !contract.current_typed
+                && result.provenance.method_version == REGRESSION_LOGISTIC_METHOD_VERSION_V1 =>
+        {
+            REGRESSION_LOGISTIC_METHOD_VERSION_V1
+        }
+        RegressionPersistenceKind::Logistic => return false,
+        _ => contract.kind.method_version(),
+    };
     if recipe.settings.method != AnalysisMethod::Regression
         || contract.outcome.is_empty()
         || contract.predictors.is_empty()
@@ -2548,6 +2575,7 @@ fn validate_regression_payload_contract(
         || recipe.settings.bootstrap_samples > 0
         || recipe.settings.studentized_inner_samples > 0
         || recipe.settings.permutation_samples > 0
+        || (contract.current_typed && recipe.settings.workers != 1)
         || (recipe.settings.confidence_level - 0.95).abs() > 1e-12
         || !recipe.model.constructs.is_empty()
         || !recipe.model.paths.is_empty()
@@ -2584,7 +2612,7 @@ fn validate_regression_payload_contract(
         || estimation.gsca.is_some()
         || !estimation.r_squared.is_empty()
         || estimation.warnings.len() != 1
-        || estimation.warnings[0] != contract.kind.scope_warning()
+        || estimation.warnings[0] != contract.kind.scope_warning(expected_method_version)
     {
         return false;
     }
@@ -2605,10 +2633,12 @@ fn validate_regression_payload_contract(
         ),
         RegressionPersistenceKind::Logistic => validate_logistic_analysis_contract(
             regression,
+            expected_method_version,
             &contract.outcome,
             &contract.predictors,
             &contract.controls,
             estimation.used_observations,
+            estimation.omitted_observations,
             recipe.settings.confidence_level,
         ),
         RegressionPersistenceKind::Process(process) => {
@@ -2658,6 +2688,7 @@ fn validate_linear_regression_analysis_contract(
         || observations <= parameter_count
         || regression.coefficients.len() != parameter_count
         || regression.predictions.len() != observations
+        || regression.logistic.is_some()
         || regression.process.is_some() != process_required
         || regression.warnings.is_empty()
     {
@@ -2684,6 +2715,8 @@ fn validate_linear_regression_analysis_contract(
             || !coefficient.confidence_interval_lower.is_finite()
             || !coefficient.confidence_interval_upper.is_finite()
             || coefficient.odds_ratio.is_some()
+            || coefficient.odds_ratio_confidence_interval_lower.is_some()
+            || coefficient.odds_ratio_confidence_interval_upper.is_some()
             || !close_enough(coefficient.statistic, expected_statistic)
             || !close_enough(coefficient.p_value_two_sided, expected_p)
             || !close_enough(
@@ -2714,6 +2747,13 @@ fn validate_linear_regression_analysis_contract(
         || f_statistic < 0.0
         || fit.log_likelihood.is_some()
         || fit.pseudo_r_squared.is_some()
+        || fit.null_log_likelihood.is_some()
+        || fit.deviance.is_some()
+        || fit.null_deviance.is_some()
+        || fit.likelihood_ratio_chi_square.is_some()
+        || fit.likelihood_ratio_degrees_of_freedom.is_some()
+        || fit.likelihood_ratio_p_value.is_some()
+        || fit.pseudo_r_squared_method.is_some()
         || !fit.aic.is_finite()
         || !fit.bic.is_finite()
         || !rmse.is_finite()
@@ -2770,14 +2810,20 @@ fn validate_linear_regression_analysis_contract(
 
 fn validate_logistic_analysis_contract(
     regression: &RegressionAnalysis,
+    expected_method_version: &str,
     outcome: &str,
     predictors: &[String],
     controls: &[String],
     observations: usize,
+    omitted_observations: usize,
     confidence_level: f64,
 ) -> bool {
+    let is_legacy_v1 = expected_method_version == REGRESSION_LOGISTIC_METHOD_VERSION_V1;
+    if !is_legacy_v1 && expected_method_version != REGRESSION_LOGISTIC_METHOD_VERSION {
+        return false;
+    }
     let parameter_count = 1 + predictors.len() + controls.len();
-    if regression.method_version != REGRESSION_LOGISTIC_METHOD_VERSION
+    if regression.method_version != expected_method_version
         || regression.regression_type != "logistic"
         || regression.outcome != outcome
         || regression.predictors != predictors
@@ -2788,6 +2834,8 @@ fn validate_logistic_analysis_contract(
         || regression.predictions.len() != observations
         || regression.process.is_some()
         || regression.warnings.is_empty()
+        || (is_legacy_v1 && regression.logistic.is_some())
+        || (!is_legacy_v1 && regression.logistic.is_none())
     {
         return false;
     }
@@ -2812,6 +2860,25 @@ fn validate_logistic_analysis_contract(
                 !odds_ratio.is_finite()
                     || odds_ratio <= 0.0
                     || !close_enough(odds_ratio, coefficient.estimate.exp())
+            })
+            || (if is_legacy_v1 {
+                coefficient.odds_ratio_confidence_interval_lower.is_some()
+                    || coefficient.odds_ratio_confidence_interval_upper.is_some()
+            } else {
+                coefficient
+                    .odds_ratio_confidence_interval_lower
+                    .is_none_or(|value| {
+                        !value.is_finite()
+                            || value <= 0.0
+                            || !close_enough(value, coefficient.confidence_interval_lower.exp())
+                    })
+                    || coefficient
+                        .odds_ratio_confidence_interval_upper
+                        .is_none_or(|value| {
+                            !value.is_finite()
+                                || value <= 0.0
+                                || !close_enough(value, coefficient.confidence_interval_upper.exp())
+                        })
             })
             || !close_enough(coefficient.statistic, expected_statistic)
             || !close_enough(coefficient.p_value_two_sided, expected_p)
@@ -2878,11 +2945,19 @@ fn validate_logistic_analysis_contract(
         .iter()
         .map(|value| value * mean.ln() + (1.0 - value) * (1.0 - mean).ln())
         .sum::<f64>();
-    close_enough(log_likelihood, expected_log_likelihood)
-        && close_enough(
-            pseudo_r_squared,
-            1.0 - expected_log_likelihood / null_log_likelihood,
-        )
+    let expected_pseudo_r_squared = 1.0 - expected_log_likelihood / null_log_likelihood;
+    let expected_deviance = -2.0 * expected_log_likelihood;
+    let expected_null_deviance = -2.0 * null_log_likelihood;
+    let expected_likelihood_ratio =
+        (2.0 * (expected_log_likelihood - null_log_likelihood)).max(0.0);
+    let likelihood_ratio_df = parameter_count - 1;
+    let Ok(likelihood_ratio_distribution) = ChiSquared::new(likelihood_ratio_df as f64) else {
+        return false;
+    };
+    let expected_likelihood_ratio_p =
+        (1.0 - likelihood_ratio_distribution.cdf(expected_likelihood_ratio)).clamp(0.0, 1.0);
+    let base_fit_valid = close_enough(log_likelihood, expected_log_likelihood)
+        && close_enough(pseudo_r_squared, expected_pseudo_r_squared)
         && close_enough(
             fit.aic,
             -2.0 * expected_log_likelihood + 2.0 * parameter_count as f64,
@@ -2890,7 +2965,95 @@ fn validate_logistic_analysis_contract(
         && close_enough(
             fit.bic,
             -2.0 * expected_log_likelihood + (observations as f64).ln() * parameter_count as f64,
-        )
+        );
+    if !base_fit_valid {
+        return false;
+    }
+    if is_legacy_v1 {
+        return fit.null_log_likelihood.is_none()
+            && fit.deviance.is_none()
+            && fit.null_deviance.is_none()
+            && fit.likelihood_ratio_chi_square.is_none()
+            && fit.likelihood_ratio_degrees_of_freedom.is_none()
+            && fit.likelihood_ratio_p_value.is_none()
+            && fit.pseudo_r_squared_method.is_none();
+    }
+
+    let Some(logistic) = regression.logistic.as_ref() else {
+        return false;
+    };
+    let zero_count = actual.iter().filter(|value| **value == 0.0).count();
+    let one_count = actual.iter().filter(|value| **value == 1.0).count();
+    let profile = &logistic.outcome_profile;
+    if profile.outcome != outcome
+        || profile.coding != "numeric_0_1_exact_v1"
+        || profile.complete_cases != observations
+        || profile.omitted_cases != omitted_observations
+        || profile.zero_count != zero_count
+        || profile.one_count != one_count
+        || profile.invalid_count != 0
+        || profile.prevalence.is_none_or(|value| {
+            !value.is_finite() || !close_enough(value, one_count as f64 / observations as f64)
+        })
+        || profile.readiness != qpls_estimation::LogisticOutcomeReadiness::Ready
+    {
+        return false;
+    }
+    let convergence = &logistic.convergence;
+    if convergence.algorithm != "deterministic_newton_irls_v1"
+        || !convergence.converged
+        || !(1..=100).contains(&convergence.iterations)
+        || convergence.max_iterations != 100
+        || convergence.tolerance.to_bits() != 1e-8_f64.to_bits()
+        || !convergence.final_max_abs_step.is_finite()
+        || convergence.final_max_abs_step < 0.0
+        || convergence.final_max_abs_step >= convergence.tolerance
+        || convergence.separation_probability_tolerance.to_bits() != 1e-9_f64.to_bits()
+    {
+        return false;
+    }
+    let classification = &logistic.classification;
+    let mut true_positive = 0;
+    let mut true_negative = 0;
+    let mut false_positive = 0;
+    let mut false_negative = 0;
+    for (actual, prediction) in actual.iter().zip(&regression.predictions) {
+        let predicted_positive = prediction.probability.unwrap() >= 0.5;
+        match (*actual == 1.0, predicted_positive) {
+            (true, true) => true_positive += 1,
+            (false, false) => true_negative += 1,
+            (false, true) => false_positive += 1,
+            (true, false) => false_negative += 1,
+        }
+    }
+    let expected_accuracy = (true_positive + true_negative) as f64 / observations as f64;
+    let expected_sensitivity = true_positive as f64 / (true_positive + false_negative) as f64;
+    let expected_specificity = true_negative as f64 / (true_negative + false_positive) as f64;
+    classification.threshold.to_bits() == 0.5_f64.to_bits()
+        && classification.true_positive == true_positive
+        && classification.true_negative == true_negative
+        && classification.false_positive == false_positive
+        && classification.false_negative == false_negative
+        && close_enough(classification.accuracy, expected_accuracy)
+        && close_enough(classification.sensitivity, expected_sensitivity)
+        && close_enough(classification.specificity, expected_specificity)
+        && fit
+            .null_log_likelihood
+            .is_some_and(|value| close_enough(value, null_log_likelihood))
+        && fit
+            .deviance
+            .is_some_and(|value| close_enough(value, expected_deviance))
+        && fit
+            .null_deviance
+            .is_some_and(|value| close_enough(value, expected_null_deviance))
+        && fit
+            .likelihood_ratio_chi_square
+            .is_some_and(|value| close_enough(value, expected_likelihood_ratio))
+        && fit.likelihood_ratio_degrees_of_freedom == Some(likelihood_ratio_df)
+        && fit
+            .likelihood_ratio_p_value
+            .is_some_and(|value| close_enough(value, expected_likelihood_ratio_p))
+        && fit.pseudo_r_squared_method.as_deref() == Some("mcfadden_v1")
 }
 
 fn validate_process_analysis_contract(
@@ -4796,6 +4959,15 @@ fn compatibility_notices(results: &[AnalysisResult]) -> Vec<ProjectCompatibility
                 code: "gsca.legacy_preview".into(),
                 level: DiagnosticLevel::Warning,
                 message: "This archive contains the historical gsca_v1 PLS-derived preview with ad-hoc fit summaries and placeholder intervals. It remains readable for compatibility but is not GSCA ALS evidence; rerun with gsca_als_v2."
+                    .into(),
+            })
+        } else if result.provenance.method == AnalysisMethod::Regression
+            && result.provenance.method_version == REGRESSION_LOGISTIC_METHOD_VERSION_V1
+        {
+            Some(Diagnostic {
+                code: "regression.logistic.legacy_method_version".into(),
+                level: DiagnosticLevel::Warning,
+                message: "This result uses the historical regression_logistic_v1 contract. It remains readable for archive compatibility but lacks the v2 complete-case outcome profile, convergence record, classification diagnostics, odds-ratio intervals, and expanded likelihood fit identities; rerun to obtain regression_logistic_v2."
                     .into(),
             })
         } else {
@@ -7418,6 +7590,44 @@ mod tests {
         ))
     }
 
+    fn legacy_logistic_v1_result(mut result: AnalysisResult) -> AnalysisResult {
+        const LEGACY_WARNING: &str = "Logistic regression v1 is validated for the documented QuickPLS v1.2.2 binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, and Firth-corrected models remain unsupported.";
+        result.provenance.method_version = REGRESSION_LOGISTIC_METHOD_VERSION_V1.into();
+        for diagnostic in &mut result.diagnostics {
+            if diagnostic.message.starts_with("Logistic regression v2") {
+                diagnostic.message = LEGACY_WARNING.into();
+            }
+        }
+        let estimation = estimation_payload_mut(&mut result);
+        estimation["method_version"] = serde_json::json!(REGRESSION_LOGISTIC_METHOD_VERSION_V1);
+        estimation["warnings"] = serde_json::json!([LEGACY_WARNING]);
+        let regression = estimation["regression"].as_object_mut().unwrap();
+        regression.insert(
+            "method_version".into(),
+            serde_json::json!(REGRESSION_LOGISTIC_METHOD_VERSION_V1),
+        );
+        regression.insert("warnings".into(), serde_json::json!([LEGACY_WARNING]));
+        regression.remove("logistic");
+        for coefficient in regression["coefficients"].as_array_mut().unwrap() {
+            let coefficient = coefficient.as_object_mut().unwrap();
+            coefficient.remove("odds_ratio_confidence_interval_lower");
+            coefficient.remove("odds_ratio_confidence_interval_upper");
+        }
+        let fit = regression["fit"].as_object_mut().unwrap();
+        for field in [
+            "null_log_likelihood",
+            "deviance",
+            "null_deviance",
+            "likelihood_ratio_chi_square",
+            "likelihood_ratio_degrees_of_freedom",
+            "likelihood_ratio_p_value",
+            "pseudo_r_squared_method",
+        ] {
+            fit.remove(field);
+        }
+        result
+    }
+
     fn runner_generated_process() -> (Dataset, AnalysisRecipe, AnalysisResult) {
         runner_generated_regression_fixture(include_bytes!(
             "../../../validation/results/v08_process.recipe.json"
@@ -9276,6 +9486,164 @@ mod tests {
             assert!(rejected.recipes.is_empty());
             assert!(rejected.results.is_empty());
         }
+    }
+
+    #[test]
+    fn logistic_v2_append_save_reopen_and_arithmetic_contract_fail_closed() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("logistic-v2.qpls");
+        let (dataset, recipe, result) = runner_generated_logistic();
+        assert_eq!(recipe.schema_version, ANALYSIS_RECIPE_SCHEMA_VERSION);
+        assert!(matches!(
+            &recipe.method_config,
+            Some(qpls_core::MethodConfig::Regression {
+                model: qpls_core::RegressionModelConfig::Logistic,
+                ..
+            })
+        ));
+        assert_eq!(
+            result.provenance.method_version,
+            REGRESSION_LOGISTIC_METHOD_VERSION
+        );
+        let regression = &estimation_payload(&result)["regression"];
+        assert_eq!(
+            regression["logistic"]["outcome_profile"]["readiness"],
+            "ready"
+        );
+        assert_eq!(
+            regression["logistic"]["convergence"]["algorithm"],
+            "deterministic_newton_irls_v1"
+        );
+        assert_eq!(regression["fit"]["pseudo_r_squared_method"], "mcfadden_v1");
+
+        let mut project = Project::new("Logistic v2 persistence");
+        project.datasets.push(dataset);
+        project
+            .append_validated_result(recipe.clone(), result.clone())
+            .unwrap();
+        save_project(&path, &project).unwrap();
+        let reopened = load_project(&path).unwrap();
+        assert_eq!(reopened.results.len(), 1);
+        assert_eq!(reopened.results[0].id, result.id);
+        assert_eq!(
+            reopened.results[0].provenance.method_version,
+            REGRESSION_LOGISTIC_METHOD_VERSION
+        );
+        let saved_archive = fs::read(&path).unwrap();
+
+        let reject_atomically = |tampered: AnalysisResult| {
+            let mut rejected = Project::new("Rejected logistic v2");
+            assert!(matches!(
+                rejected.append_validated_result(recipe.clone(), tampered),
+                Err(ProjectError::Invalid(_))
+            ));
+            assert!(rejected.recipes.is_empty());
+            assert!(rejected.results.is_empty());
+        };
+        let mut tampered_profile = result.clone();
+        estimation_payload_mut(&mut tampered_profile)["regression"]["logistic"]["outcome_profile"]
+            ["one_count"] = serde_json::json!(999);
+        reject_atomically(tampered_profile);
+
+        let mut tampered_convergence = result.clone();
+        estimation_payload_mut(&mut tampered_convergence)["regression"]["logistic"]["convergence"]
+            ["final_max_abs_step"] = serde_json::json!(0.25);
+        reject_atomically(tampered_convergence);
+
+        let mut tampered_classification = result.clone();
+        estimation_payload_mut(&mut tampered_classification)["regression"]["logistic"]["classification"]
+            ["true_positive"] = serde_json::json!(999);
+        reject_atomically(tampered_classification);
+
+        let mut tampered_odds_ratio_interval = result.clone();
+        estimation_payload_mut(&mut tampered_odds_ratio_interval)["regression"]["coefficients"]
+            [0]["odds_ratio_confidence_interval_lower"] = serde_json::json!(0.123);
+        reject_atomically(tampered_odds_ratio_interval);
+
+        let mut tampered_fit = result.clone();
+        estimation_payload_mut(&mut tampered_fit)["regression"]["fit"]["null_log_likelihood"] =
+            serde_json::json!(-0.123);
+        reject_atomically(tampered_fit);
+
+        let mut tampered_probability = result.clone();
+        estimation_payload_mut(&mut tampered_probability)["regression"]["predictions"][0]["probability"] =
+            serde_json::json!(0.75);
+        reject_atomically(tampered_probability);
+
+        let mut tampered_for_save = reopened;
+        estimation_payload_mut(&mut tampered_for_save.results[0])["regression"]["logistic"]["classification"]
+            ["accuracy"] = serde_json::json!(0.0);
+        assert!(matches!(
+            save_project(&path, &tampered_for_save),
+            Err(ProjectError::Invalid(_))
+        ));
+        assert_eq!(fs::read(&path).unwrap(), saved_archive);
+        assert_eq!(load_project(&path).unwrap().results[0].id, result.id);
+    }
+
+    #[test]
+    fn logistic_v1_remains_archive_readable_but_cannot_be_appended() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("logistic-v1-archive.qpls");
+        let (dataset, recipe, current) = runner_generated_logistic();
+        let legacy = legacy_logistic_v1_result(current.clone());
+
+        let mut rejected = Project::new("Rejected logistic v1 append");
+        assert!(matches!(
+            rejected.append_validated_result(recipe.clone(), legacy.clone()),
+            Err(ProjectError::Invalid(message)) if message.contains("archive-readable")
+        ));
+        assert!(rejected.results.is_empty());
+
+        let mut historical_recipe = recipe.clone();
+        let legacy_metadata = historical_recipe.effective_metadata().unwrap();
+        historical_recipe.schema_version = 2;
+        historical_recipe.metadata = legacy_metadata;
+        historical_recipe.method_config = None;
+        let mut archive = Project::new("Historical logistic v1");
+        archive.datasets.push(dataset);
+        archive.recipes.push(historical_recipe);
+        archive.results.push(legacy.clone());
+        save_project(&path, &archive).unwrap();
+        let reopened = load_project(&path).unwrap();
+        assert_eq!(reopened.results.len(), 1);
+        assert_eq!(reopened.results[0].id, legacy.id);
+        assert_eq!(
+            reopened.results[0].provenance.method_version,
+            REGRESSION_LOGISTIC_METHOD_VERSION_V1
+        );
+        assert!(reopened.compatibility_notices.iter().any(|notice| {
+            notice.diagnostic.code == "regression.logistic.legacy_method_version"
+        }));
+
+        let (_, current_recipe, current_result) = runner_generated_logistic();
+        let typed_v3_with_v1 = legacy_logistic_v1_result(current_result);
+        let mut invalid_archive = Project::new("Invalid typed v1 pairing");
+        invalid_archive.recipes.push(current_recipe);
+        invalid_archive.results.push(typed_v3_with_v1);
+        assert!(matches!(
+            save_project(
+                &directory.path().join("invalid-typed-v1.qpls"),
+                &invalid_archive
+            ),
+            Err(ProjectError::Invalid(_))
+        ));
+
+        let mut historical_recipe = recipe;
+        let legacy_metadata = historical_recipe.effective_metadata().unwrap();
+        historical_recipe.schema_version = 2;
+        historical_recipe.metadata = legacy_metadata;
+        historical_recipe.method_config = None;
+        let mut invalid_archive = Project::new("Invalid legacy v2 pairing");
+        invalid_archive.recipes.push(historical_recipe);
+        invalid_archive.results.push(current);
+        assert!(matches!(
+            save_project(
+                &directory.path().join("invalid-legacy-v2.qpls"),
+                &invalid_archive
+            ),
+            Err(ProjectError::Invalid(_))
+        ));
     }
 
     #[test]

@@ -52,8 +52,31 @@ describe("native analysis catalog", () => {
     ]);
     expect(new Set(NATIVE_ANALYSIS_CATALOG.map((item) => item.kind)).size).toBe(NATIVE_ANALYSIS_CATALOG.length);
     for (const item of NATIVE_ANALYSIS_CATALOG) {
-      expect(item.label).toBe(nativeAnalysisRecipeDescriptor(item.kind).label);
+      expect(item.label).toBe(item.kind === "regression" ? "Regression" : nativeAnalysisRecipeDescriptor(item.kind).label);
     }
+    expect(NATIVE_ANALYSIS_CATALOG).toHaveLength(14);
+  });
+
+  it("links each catalog kind to an exact ordered tuple of unique parity capabilities", () => {
+    expect(NATIVE_ANALYSIS_CATALOG.map(({ kind, capabilityIds }) => [kind, capabilityIds])).toEqual([
+      ["pls_algorithm", ["qpls3.pls.algorithm"]],
+      ["plsc", ["qpls3.pls.consistent"]],
+      ["wpls", ["qpls3.pls.weighted"]],
+      ["gsca", ["qpls3.gsca.als"]],
+      ["cca", ["qpls3.assessment.cca_residuals"]],
+      ["ipma", ["qpls3.assessment.ipma"]],
+      ["cbsem", ["qpls3.cbsem.ml"]],
+      ["pls_bootstrap", ["qpls3.inference.bootstrap"]],
+      ["pls_permutation", ["qpls3.inference.structural_path_randomization"]],
+      ["mga", ["qpls3.groups.micom_permutation_mga"]],
+      ["predict", ["qpls3.prediction.plspredict_cvpat"]],
+      ["nca", ["qpls3.standalone.nca"]],
+      ["pca", ["qpls3.standalone.pca"]],
+      ["regression", ["qpls3.standalone.ols", "qpls3.standalone.logistic", "qpls3.standalone.process"]],
+    ]);
+    const capabilityIds = NATIVE_ANALYSIS_CATALOG.flatMap((item) => item.capabilityIds);
+    expect(capabilityIds).toHaveLength(16);
+    expect(new Set(capabilityIds).size).toBe(capabilityIds.length);
   });
 
   it("filters labels, descriptions, categories, and method aliases without mutating order", () => {
@@ -199,7 +222,7 @@ describe("native analysis catalog", () => {
       pcaVarianceThreshold: 0.999,
     });
 
-    const ols = nativeAnalysisSettingsForWorkbenchKind({
+    const logistic = nativeAnalysisSettingsForWorkbenchKind({
       ...settings,
       regressionType: "logistic",
       regressionOutcome: " y ",
@@ -209,13 +232,13 @@ describe("native analysis catalog", () => {
       preprocessing: "standardized",
       confidenceLevel: 0.9,
     }, "regression");
-    expect(ols).toMatchObject({
+    expect(logistic).toMatchObject({
       method: "regression",
-      regressionType: "ols",
+      regressionType: "logistic",
       regressionOutcome: "y",
       regressionPredictors: "x,m",
       regressionControls: "z",
-      robustSe: "hc3",
+      robustSe: "none",
       weightingScheme: "path",
       preprocessing: "unstandardized",
       confidenceLevel: 0.95,
@@ -299,5 +322,6 @@ describe("native analysis catalog", () => {
     expect(nativeAnalysisStartLabel("mga", false)).toBe("Start group analysis");
     expect(nativeAnalysisStartLabel("nca", true)).toBe("Retry necessary condition analysis");
     expect(nativeAnalysisStartLabel("pca", false)).toBe("Start principal component analysis");
+    expect(nativeAnalysisStartLabel("regression", false, "logistic")).toBe("Start binary logistic regression");
   });
 });

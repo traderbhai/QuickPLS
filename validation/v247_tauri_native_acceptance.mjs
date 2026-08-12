@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { execFile, spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
@@ -9,12 +10,13 @@ const execFileAsync = promisify(execFile);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const screenshotDir = path.join(root, "validation", "results", "screens", "v247-native-desktop-acceptance");
 const reportPath = path.join(root, "validation", "results", "v247_tauri_native_acceptance.json");
+const logisticPackagedReportPath = path.join(root, "validation", "results", "logistic_v2_packaged_acceptance.json");
 const validationResultsDir = path.join(root, "validation", "results");
 const windowsNativeSaveHelperPath = path.join(root, "validation", "windows_native_save_export.py");
 const endpoint = process.env.QUICKPLS_CDP_ENDPOINT ?? "http://127.0.0.1:9222";
 const acceptanceScope = process.env.QUICKPLS_ACCEPTANCE_SCOPE?.trim().toLocaleLowerCase() || "full";
-if (!["full", "mga", "nca", "prediction", "hoc", "pca", "ols", "cbsem", "gsca"].includes(acceptanceScope)) {
-  throw new Error(`QUICKPLS_ACCEPTANCE_SCOPE must be "full", "mga", "nca", "prediction", "hoc", "pca", "ols", "cbsem", or "gsca"; received ${acceptanceScope}.`);
+if (!["full", "mga", "nca", "prediction", "hoc", "pca", "ols", "logistic", "cbsem", "gsca"].includes(acceptanceScope)) {
+  throw new Error(`QUICKPLS_ACCEPTANCE_SCOPE must be "full", "mga", "nca", "prediction", "hoc", "pca", "ols", "logistic", "cbsem", or "gsca"; received ${acceptanceScope}.`);
 }
 const ncaOnly = acceptanceScope === "nca";
 const mgaOnly = acceptanceScope === "mga";
@@ -22,9 +24,10 @@ const predictionOnly = acceptanceScope === "prediction";
 const hocOnly = acceptanceScope === "hoc";
 const pcaOnly = acceptanceScope === "pca";
 const olsOnly = acceptanceScope === "ols";
+const logisticOnly = acceptanceScope === "logistic";
 const cbsemOnly = acceptanceScope === "cbsem";
 const gscaOnly = acceptanceScope === "gsca";
-const focusedOnly = ncaOnly || mgaOnly || predictionOnly || hocOnly || pcaOnly || olsOnly || cbsemOnly || gscaOnly;
+const focusedOnly = ncaOnly || mgaOnly || predictionOnly || hocOnly || pcaOnly || olsOnly || logisticOnly || cbsemOnly || gscaOnly;
 const scopedReportPath = focusedOnly
   ? path.join(root, "validation", "results", `v247_tauri_native_acceptance_${acceptanceScope}.json`)
   : reportPath;
@@ -88,6 +91,21 @@ const olsMethodVersion = "regression_ols_v1";
 const olsOutcome = "y";
 const olsPredictors = ["x", "m"];
 const olsControls = ["z"];
+const logisticFixtureCsvPath = path.join(root, "validation", "results", "v08_extended_methods_fixture.csv");
+const logisticProjectPath = path.join(root, "validation", "results", `v247-native-logistic-${Date.now()}-${process.pid}.qpls`);
+const logisticProjectName = "Native Logistic Acceptance";
+const logisticMethodVersion = "regression_logistic_v2";
+const logisticFeatureId = "qpls3.standalone.logistic";
+const logisticCatalogueSnapshotDate = "2026-08-12";
+const logisticEvidenceKind = "quickpls3_scoped_tauri_logistic_v2_acceptance";
+const logisticOutcome = "bin_y";
+const logisticPredictors = ["x", "z"];
+const logisticControls = ["w"];
+const logisticObservations = 140;
+const logisticZeroCases = 71;
+const logisticOneCases = 69;
+const logisticClassificationDisclaimer = "In-sample descriptive classification; not out-of-sample predictive performance.";
+const logisticScopeWarning = "Logistic regression v2 is validated for the documented QuickPLS binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, categorical auto-encoding, and Firth-corrected models remain unsupported.";
 const cbsemFixtureCsvPath = path.join(root, "validation", "results", "lavaan_latent_regression_sem.csv");
 const cbsemProjectPath = path.join(root, "validation", "results", `v247-native-cbsem-${Date.now()}-${process.pid}.qpls`);
 const cbsemProjectName = "Native CB-SEM Acceptance";
@@ -120,6 +138,7 @@ const requestedPredictionNativeExportPath = process.env.QUICKPLS_PREDICTION_NATI
 const requestedHocNativeExportPath = process.env.QUICKPLS_HOC_NATIVE_EXPORT_PATH?.trim() ?? "";
 const requestedPcaNativeExportPath = process.env.QUICKPLS_PCA_NATIVE_EXPORT_PATH?.trim() ?? "";
 const requestedOlsNativeExportPath = process.env.QUICKPLS_OLS_NATIVE_EXPORT_PATH?.trim() ?? "";
+const requestedLogisticNativeExportPath = process.env.QUICKPLS_LOGISTIC_NATIVE_EXPORT_PATH?.trim() ?? "";
 const requestedCbsemNativeExportPath = process.env.QUICKPLS_CBSEM_NATIVE_EXPORT_PATH?.trim() ?? "";
 const requestedGscaNativeExportPath = process.env.QUICKPLS_GSCA_NATIVE_EXPORT_PATH?.trim() ?? "";
 const pythonExecutable = process.env.QUICKPLS_PYTHON?.trim() || "python";
@@ -134,6 +153,12 @@ if (focusedOnly) {
 }
 
 const evidence = {
+  ...(logisticOnly ? {
+    schema_version: "quickpls.packaged_acceptance.v1",
+    feature_id: logisticFeatureId,
+    method_version: logisticMethodVersion,
+    catalogue_snapshot_date: logisticCatalogueSnapshotDate,
+  } : {}),
   passed: false,
   generatedAt: new Date().toISOString(),
   endpoint,
@@ -155,6 +180,8 @@ const evidence = {
             ? !/\\11[0-7]-tauri-native-pca-/i.test(file)
           : acceptanceScope === "ols"
             ? !/\\12[0-7]-tauri-native-ols-/i.test(file)
+          : acceptanceScope === "logistic"
+            ? !/\\15[0-9]-tauri-native-logistic-/i.test(file)
           : acceptanceScope === "cbsem"
             ? !/\\13[0-6]-tauri-native-cbsem-/i.test(file)
           : acceptanceScope === "gsca"
@@ -169,6 +196,115 @@ async function writeAcceptanceEvidence() {
   const serialized = JSON.stringify(evidence, null, 2) + "\n";
   await fs.writeFile(reportPath, serialized, "utf8");
   if (scopedReportPath !== reportPath) await fs.writeFile(scopedReportPath, serialized, "utf8");
+  if (logisticOnly) await writeLogisticPackagedEvidence();
+}
+
+async function artifactDigest(filePath) {
+  if (!filePath) return null;
+  try {
+    const [file, contents] = await Promise.all([fs.stat(filePath), fs.readFile(filePath)]);
+    if (!file.isFile() || file.size <= 0) return null;
+    return {
+      path: path.relative(root, filePath).replaceAll("\\", "/"),
+      size: file.size,
+      sha256: createHash("sha256").update(contents).digest("hex"),
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function writeLogisticPackagedEvidence() {
+  const source = evidence.checks;
+  const workflowPassed = source.logisticWorkflow?.passed === true
+    && source.logisticWorkflow?.feature_id === logisticFeatureId
+    && source.logisticWorkflow?.method_version === logisticMethodVersion
+    && source.logisticWorkflow?.catalogue_snapshot_date === logisticCatalogueSnapshotDate;
+  const resultsPassed = Boolean(source.logisticResult)
+    && source.logisticResult?.initialSelectedTable === "logistic_coefficients"
+    && source.logisticResult?.noPlaceholder === true
+    && source.logisticResult?.noSemResultGroups === true
+    && source.logisticResult?.editModelCommand?.count === 0;
+  const exportPassed = source.logisticExport?.nativeXlsx?.attempted === true
+    && source.logisticExport?.nativeXlsx?.file?.isFile === true
+    && source.logisticExport?.nativeXlsx?.file?.size > 0
+    && source.logisticExport?.inSampleDisclaimerIncluded === true;
+  const saveReopenPassed = source.logisticSaveReopen?.sameRunRestored === true
+    && source.logisticSaveReopen?.archive?.manifest?.projectChecksumMatches === true;
+  const failureLifecyclePassed = source.logisticFailureLifecycle?.passed === true;
+  const legacyV1Passed = source.logisticLegacyV1?.passed === true;
+  const xlsxPath = source.logisticExport?.nativeXlsx?.targetPath ?? "";
+  const screenshotPaths = evidence.screenshots.filter((file) => /\\15[0-9]-tauri-native-logistic-/i.test(file));
+  const [xlsx, projectArchive, ...screenshots] = await Promise.all([
+    artifactDigest(xlsxPath),
+    artifactDigest(logisticProjectPath),
+    ...screenshotPaths.map(artifactDigest),
+  ]);
+  const checks = {
+    workflow: {
+      passed: workflowPassed,
+      full_data_profiled: source.logisticWorkflow?.fullDataProfiled === true,
+      active_lifecycle_captured: source.logisticWorkflow?.activeLifecycleCaptured === true,
+      model_free: source.logisticWorkflow?.modelFree === true,
+      source_check: "logisticWorkflow",
+    },
+    results: {
+      passed: resultsPassed,
+      coefficient_rows: source.logisticResult?.coefficients?.rows ?? null,
+      probability_rows: source.logisticResult?.probabilities?.totalRows ?? null,
+      in_sample_disclaimer: source.logisticResult?.classification?.warning ?? null,
+      source_check: "logisticResult",
+    },
+    export: {
+      passed: exportPassed && xlsx !== null,
+      workbook_sheets: source.logisticExport?.nativeXlsx?.workbookSheets ?? [],
+      in_sample_disclaimer_included: source.logisticExport?.inSampleDisclaimerIncluded === true,
+      artifact_sha256: xlsx?.sha256 ?? null,
+      source_check: "logisticExport",
+    },
+    save_reopen: {
+      passed: saveReopenPassed && projectArchive !== null,
+      same_run_restored: source.logisticSaveReopen?.sameRunRestored === true,
+      project_checksum_matches: source.logisticSaveReopen?.archive?.manifest?.projectChecksumMatches === true,
+      archive_sha256: projectArchive?.sha256 ?? null,
+      source_check: "logisticSaveReopen",
+    },
+    failure_lifecycle: {
+      passed: failureLifecyclePassed,
+      boundary: "strict_nonbinary_outcome_profile_rejected_then_valid_profile_recovered",
+      source_check: "logisticFailureLifecycle",
+    },
+    legacy_v1: {
+      passed: legacyV1Passed,
+      boundary: "current_packaged_v2_result_is_not_reinterpreted_as_historical_v1",
+      historical_archive_readability_evidence: "backend_persistence_gate",
+      source_check: "logisticLegacyV1",
+    },
+  };
+  const report = {
+    schema_version: "quickpls.packaged_acceptance.v1",
+    kind: logisticEvidenceKind,
+    passed: evidence.passed && Object.values(checks).every((check) => check.passed),
+    generated_at_utc: evidence.generatedAt,
+    completed_at_utc: evidence.focusedRun?.completedAt ?? null,
+    feature_id: logisticFeatureId,
+    method_version: logisticMethodVersion,
+    catalogue_snapshot_date: logisticCatalogueSnapshotDate,
+    target: "windows_10_11_x64_packaged_tauri",
+    runtime: evidence.runtime,
+    endpoint: evidence.endpoint,
+    generator: "validation/v247_tauri_native_acceptance.mjs",
+    checks,
+    artifacts: {
+      xlsx,
+      project_archive: projectArchive,
+      screenshots: screenshots.filter(Boolean),
+    },
+    console_errors: evidence.consoleErrors,
+    failures: evidence.failures,
+    source_report: path.relative(root, scopedReportPath).replaceAll("\\", "/"),
+  };
+  await fs.writeFile(logisticPackagedReportPath, JSON.stringify(report, null, 2) + "\n", "utf8");
 }
 
 const expectedOptionLabels = [
@@ -185,7 +321,7 @@ const expectedOptionLabels = [
   "PLSpredict / CVPAT",
   "Necessary Condition Analysis",
   "Principal Component Analysis",
-  "Ordinary Least Squares Regression",
+  "Regression",
 ];
 
 await fs.mkdir(screenshotDir, { recursive: true });
@@ -433,6 +569,12 @@ try {
       sourceCsv: olsFixtureCsvPath,
       projectPath: olsProjectPath,
       projectName: olsProjectName,
+    });
+  } else if (logisticOnly) {
+    evidence.checks.logisticFixtureProvisioning = await provisionDisposableProject({
+      sourceCsv: logisticFixtureCsvPath,
+      projectPath: logisticProjectPath,
+      projectName: logisticProjectName,
     });
   } else if (pcaOnly) {
     evidence.checks.pcaFixtureProvisioning = await provisionDisposableProject({
@@ -2063,7 +2205,7 @@ async function readNcaArchive(projectPath) {
       maxBuffer: 4 * 1024 * 1024,
     }),
   ]);
-  return { project: JSON.parse(projectText), manifest: JSON.parse(manifestText) };
+  return { project: JSON.parse(projectText), manifest: JSON.parse(manifestText), projectText };
 }
 
 async function inspectInitialNcaArchive(projectPath) {
@@ -2665,6 +2807,284 @@ async function inspectSavedOlsArchive(projectPath, runId) {
   return contract;
 }
 
+function logisticNumberClose(actual, expected, tolerance = 1e-8) {
+  return Number.isFinite(actual) && Number.isFinite(expected)
+    && Math.abs(actual - expected) <= tolerance * Math.max(1, Math.abs(actual), Math.abs(expected));
+}
+
+async function inspectInitialLogisticArchive(projectPath) {
+  const { project, manifest } = await readNcaArchive(projectPath);
+  const workspace = project.layouts?.workspace;
+  const contract = {
+    manifestSchemaVersion: manifest.schema_version ?? null,
+    manifestEngineVersion: manifest.engine_version ?? null,
+    checksumAlgorithm: manifest.checksum_algorithm ?? null,
+    packageVersion,
+    models: project.models?.length ?? null,
+    recipes: project.recipes?.length ?? null,
+    results: project.results?.length ?? null,
+    activeModelId: workspace?.activeModelId ?? null,
+    nodes: workspace?.nodes?.length ?? 0,
+    edges: workspace?.edges?.length ?? 0,
+  };
+  if (contract.manifestSchemaVersion !== 5 || contract.manifestEngineVersion !== packageVersion
+    || contract.checksumAlgorithm !== "sha256"
+    || contract.models !== 0 || contract.recipes !== 0 || contract.results !== 0
+    || contract.activeModelId !== null || contract.nodes !== 0 || contract.edges !== 0) {
+    throw new Error(`The imported logistic fixture was not a canonical checksummed data-only project: ${JSON.stringify(contract)}`);
+  }
+  return contract;
+}
+
+async function inspectSavedLogisticArchive(projectPath, runId) {
+  const { project, manifest, projectText } = await readNcaArchive(projectPath);
+  const workspace = project.layouts?.workspace;
+  const result = project.results?.find((candidate) => candidate.id === runId);
+  if (!result) throw new Error(`The saved logistic archive did not contain result ${runId}.`);
+  const recipe = project.recipes?.find((candidate) => candidate.id === result.provenance?.recipe_id);
+  const run = workspace?.runs?.find((candidate) => candidate.id === runId);
+  const estimation = result.payload?.estimation;
+  const regression = estimation?.regression;
+  const coefficients = Array.isArray(regression?.coefficients) ? regression.coefficients : [];
+  const predictions = Array.isArray(regression?.predictions) ? regression.predictions : [];
+  const diagnostics = regression?.logistic;
+  const profile = diagnostics?.outcome_profile;
+  const convergence = diagnostics?.convergence;
+  const classification = diagnostics?.classification;
+  const fit = regression?.fit;
+  const assessment = result.payload?.assessment;
+  const expectedTerms = ["intercept", ...logisticPredictors, ...logisticControls];
+
+  const coefficientContract = coefficients.length === expectedTerms.length && coefficients.every((row, index) => (
+    row.term === expectedTerms[index]
+    && [
+      row.estimate,
+      row.standard_error,
+      row.statistic,
+      row.p_value_two_sided,
+      row.confidence_interval_lower,
+      row.confidence_interval_upper,
+      row.odds_ratio,
+      row.odds_ratio_confidence_interval_lower,
+      row.odds_ratio_confidence_interval_upper,
+    ].every(Number.isFinite)
+    && row.standard_error > 0
+    && row.p_value_two_sided >= 0 && row.p_value_two_sided <= 1
+    && logisticNumberClose(row.statistic, row.estimate / row.standard_error)
+    && row.confidence_interval_lower <= row.estimate && row.confidence_interval_upper >= row.estimate
+    && row.odds_ratio > 0
+    && logisticNumberClose(row.odds_ratio, Math.exp(row.estimate))
+    && logisticNumberClose(row.odds_ratio_confidence_interval_lower, Math.exp(row.confidence_interval_lower))
+    && logisticNumberClose(row.odds_ratio_confidence_interval_upper, Math.exp(row.confidence_interval_upper))
+  ));
+
+  let reconstructedLogLikelihood = 0;
+  let reconstructedTruePositive = 0;
+  let reconstructedTrueNegative = 0;
+  let reconstructedFalsePositive = 0;
+  let reconstructedFalseNegative = 0;
+  let reconstructedZeroCases = 0;
+  let reconstructedOneCases = 0;
+  const predictionContract = predictions.length === logisticObservations && predictions.every((row, index) => {
+    if (row.observation !== index || !Number.isFinite(row.fitted) || !Number.isFinite(row.residual)
+      || !Number.isFinite(row.probability) || row.probability < 0 || row.probability > 1
+      || !logisticNumberClose(row.fitted, row.probability)) return false;
+    const observed = row.probability + row.residual;
+    const observedOne = logisticNumberClose(observed, 1);
+    const observedZero = logisticNumberClose(observed, 0);
+    if (!observedOne && !observedZero) return false;
+    if (observedOne) reconstructedOneCases += 1;
+    else reconstructedZeroCases += 1;
+    reconstructedLogLikelihood += observedOne ? Math.log(row.probability) : Math.log(1 - row.probability);
+    const predictedOne = row.probability >= 0.5;
+    if (observedOne && predictedOne) reconstructedTruePositive += 1;
+    else if (observedZero && !predictedOne) reconstructedTrueNegative += 1;
+    else if (observedZero && predictedOne) reconstructedFalsePositive += 1;
+    else reconstructedFalseNegative += 1;
+    return true;
+  });
+
+  const parameterCount = expectedTerms.length;
+  const fitContract = Boolean(fit)
+    && [
+      fit.log_likelihood,
+      fit.null_log_likelihood,
+      fit.pseudo_r_squared,
+      fit.deviance,
+      fit.null_deviance,
+      fit.likelihood_ratio_chi_square,
+      fit.likelihood_ratio_p_value,
+      fit.aic,
+      fit.bic,
+    ].every(Number.isFinite)
+    && fit.r_squared == null && fit.adjusted_r_squared == null && fit.f_statistic == null && fit.rmse == null
+    && fit.pseudo_r_squared_method === "mcfadden_v1"
+    && fit.likelihood_ratio_degrees_of_freedom === parameterCount - 1
+    && fit.likelihood_ratio_p_value >= 0 && fit.likelihood_ratio_p_value <= 1
+    && logisticNumberClose(fit.log_likelihood, reconstructedLogLikelihood)
+    && logisticNumberClose(fit.pseudo_r_squared, 1 - fit.log_likelihood / fit.null_log_likelihood)
+    && logisticNumberClose(fit.deviance, -2 * fit.log_likelihood)
+    && logisticNumberClose(fit.null_deviance, -2 * fit.null_log_likelihood)
+    && logisticNumberClose(fit.likelihood_ratio_chi_square, fit.null_deviance - fit.deviance)
+    && logisticNumberClose(fit.aic, fit.deviance + 2 * parameterCount)
+    && logisticNumberClose(fit.bic, fit.deviance + Math.log(logisticObservations) * parameterCount);
+
+  const profileContract = Boolean(profile)
+    && profile.outcome === logisticOutcome
+    && profile.coding === "numeric_0_1_exact_v1"
+    && profile.complete_cases === logisticObservations
+    && profile.omitted_cases === 0
+    && profile.zero_count === logisticZeroCases
+    && profile.one_count === logisticOneCases
+    && profile.invalid_count === 0
+    && profile.readiness === "ready"
+    && logisticNumberClose(profile.prevalence, logisticOneCases / logisticObservations)
+    && profile.zero_count === reconstructedZeroCases
+    && profile.one_count === reconstructedOneCases;
+
+  const convergenceContract = Boolean(convergence)
+    && convergence.algorithm === "deterministic_newton_irls_v1"
+    && convergence.converged === true
+    && Number.isInteger(convergence.iterations) && convergence.iterations > 0 && convergence.iterations <= 100
+    && convergence.max_iterations === 100
+    && logisticNumberClose(convergence.tolerance, 1e-8)
+    && Number.isFinite(convergence.final_max_abs_step) && convergence.final_max_abs_step >= 0
+    && convergence.final_max_abs_step < convergence.tolerance
+    && logisticNumberClose(convergence.separation_probability_tolerance, 1e-9);
+
+  const classificationContract = Boolean(classification)
+    && logisticNumberClose(classification.threshold, 0.5)
+    && classification.true_positive === reconstructedTruePositive
+    && classification.true_negative === reconstructedTrueNegative
+    && classification.false_positive === reconstructedFalsePositive
+    && classification.false_negative === reconstructedFalseNegative
+    && logisticNumberClose(classification.accuracy, (reconstructedTruePositive + reconstructedTrueNegative) / logisticObservations)
+    && logisticNumberClose(classification.sensitivity, reconstructedTruePositive / (reconstructedTruePositive + reconstructedFalseNegative))
+    && logisticNumberClose(classification.specificity, reconstructedTrueNegative / (reconstructedTrueNegative + reconstructedFalsePositive));
+
+  const unrelatedPayloads = [
+    "cbsem", "cca", "cta_pls", "endogeneity", "fimix", "gsca", "ipma", "mga", "mga_permutation",
+    "micom", "moderated_mediation", "nca", "nonlinear_effects", "pca", "plsc", "predict", "segmentation", "wpls",
+  ].filter((key) => estimation?.[key] != null);
+  const projectChecksum = createHash("sha256").update(projectText, "utf8").digest("hex");
+  const methodConfig = recipe?.method_config;
+  const contract = {
+    manifest: {
+      schemaVersion: manifest.schema_version ?? null,
+      engineVersion: manifest.engine_version ?? null,
+      checksumAlgorithm: manifest.checksum_algorithm ?? null,
+      declaredProjectChecksum: manifest.checksums?.["project.json"] ?? null,
+      calculatedProjectChecksum: projectChecksum,
+      projectChecksumMatches: manifest.checksums?.["project.json"] === projectChecksum,
+    },
+    packageVersion,
+    resultId: result.id ?? null,
+    resultStatus: result.status ?? null,
+    provenanceMethod: result.provenance?.method ?? null,
+    provenanceMethodVersion: result.provenance?.method_version ?? null,
+    provenanceEngineVersion: result.provenance?.engine_version ?? null,
+    payloadKind: result.payload?.kind ?? null,
+    estimationMethodVersion: estimation?.method_version ?? null,
+    usedObservations: estimation?.used_observations ?? null,
+    omittedObservations: estimation?.omitted_observations ?? null,
+    assessment: assessment ? { methodVersion: assessment.method_version ?? null, warnings: assessment.warnings ?? null } : null,
+    regressionMethodVersion: regression?.method_version ?? null,
+    regressionType: regression?.regression_type ?? null,
+    outcome: regression?.outcome ?? null,
+    predictors: regression?.predictors ?? null,
+    controls: regression?.controls ?? null,
+    observations: regression?.observations ?? null,
+    coefficientCount: coefficients.length,
+    predictionCount: predictions.length,
+    coefficientContract,
+    predictionContract,
+    fitContract,
+    profileContract,
+    convergenceContract,
+    classificationContract,
+    profile,
+    convergence,
+    classification,
+    process: regression?.process ?? null,
+    warnings: regression?.warnings ?? null,
+    unrelatedPayloads,
+    recipe: recipe ? {
+      schemaVersion: recipe.schema_version ?? null,
+      status: recipe.metadata?.status ?? null,
+      methodConfig,
+      method: recipe.settings?.method ?? null,
+      weightingScheme: recipe.settings?.weighting_scheme ?? null,
+      preprocessing: recipe.settings?.preprocessing ?? null,
+      missingData: recipe.settings?.missing_data ?? null,
+      confidenceLevel: recipe.settings?.confidence_level ?? null,
+      bootstrapSamples: recipe.settings?.bootstrap_samples ?? null,
+      studentizedInnerSamples: recipe.settings?.studentized_inner_samples ?? null,
+      permutationSamples: recipe.settings?.permutation_samples ?? null,
+      workers: recipe.settings?.workers ?? null,
+      caseWeightColumn: recipe.settings?.case_weight_column ?? null,
+      constructs: recipe.model?.constructs?.length ?? null,
+      paths: recipe.model?.paths?.length ?? null,
+      controlsCount: recipe.model?.controls?.length ?? null,
+      interactions: recipe.model?.interactions?.length ?? null,
+      higherOrderConstructs: recipe.model?.higher_order_constructs?.length ?? null,
+    } : null,
+    project: {
+      models: project.models?.length ?? null,
+      activeModelId: workspace?.activeModelId ?? null,
+      nodes: workspace?.nodes?.length ?? null,
+      edges: workspace?.edges?.length ?? null,
+    },
+    run: run ? {
+      method: run.method ?? null,
+      status: run.status ?? null,
+      logs: run.logs?.length ?? 0,
+      modelId: run.modelId ?? null,
+      modelSnapshot: run.modelSnapshot ?? null,
+    } : null,
+  };
+
+  if (contract.manifest.schemaVersion !== 5 || contract.manifest.engineVersion !== packageVersion
+    || contract.manifest.checksumAlgorithm !== "sha256" || !contract.manifest.projectChecksumMatches
+    || contract.resultStatus !== "completed" || contract.provenanceMethod !== "regression"
+    || contract.provenanceMethodVersion !== logisticMethodVersion || contract.provenanceEngineVersion !== packageVersion
+    || contract.payloadKind !== "pls_pm_v1" || contract.estimationMethodVersion !== logisticMethodVersion
+    || contract.regressionMethodVersion !== logisticMethodVersion || contract.regressionType !== "logistic"
+    || contract.usedObservations !== logisticObservations || contract.omittedObservations !== 0
+    || contract.assessment?.methodVersion !== "assessment_not_applicable_v1"
+    || JSON.stringify(contract.assessment?.warnings) !== JSON.stringify(["PLS assessment is not applicable to standalone raw-data analyses."])
+    || contract.outcome !== logisticOutcome
+    || JSON.stringify(contract.predictors) !== JSON.stringify(logisticPredictors)
+    || JSON.stringify(contract.controls) !== JSON.stringify(logisticControls)
+    || contract.observations !== logisticObservations || contract.coefficientCount !== expectedTerms.length
+    || contract.predictionCount !== logisticObservations || !contract.coefficientContract || !contract.predictionContract
+    || !contract.fitContract || !contract.profileContract || !contract.convergenceContract || !contract.classificationContract
+    || contract.process !== null || JSON.stringify(contract.warnings) !== JSON.stringify([logisticScopeWarning])
+    || contract.unrelatedPayloads.length !== 0
+    || contract.recipe?.schemaVersion !== 3 || contract.recipe?.status !== "validated_regression_logistic_v2_bounded_scope"
+    || JSON.stringify(contract.recipe?.methodConfig) !== JSON.stringify({
+      kind: "regression",
+      outcome: logisticOutcome,
+      predictors: logisticPredictors,
+      controls: logisticControls,
+      model: { type: "logistic" },
+    })
+    || contract.recipe?.method !== "regression" || contract.recipe?.weightingScheme !== "path"
+    || contract.recipe?.preprocessing !== "unstandardized" || contract.recipe?.missingData !== "listwise_deletion"
+    || contract.recipe?.confidenceLevel !== 0.95 || contract.recipe?.bootstrapSamples !== 0
+    || contract.recipe?.studentizedInnerSamples !== 0 || contract.recipe?.permutationSamples !== 0
+    || contract.recipe?.workers !== 1 || contract.recipe?.caseWeightColumn !== null
+    || contract.recipe?.constructs !== 0 || contract.recipe?.paths !== 0 || contract.recipe?.controlsCount !== 0
+    || contract.recipe?.interactions !== 0 || contract.recipe?.higherOrderConstructs !== 0
+    || contract.project.models !== 0 || contract.project.activeModelId !== null
+    || contract.project.nodes !== 0 || contract.project.edges !== 0
+    || contract.run?.method !== "Binary Logistic Regression" || contract.run?.status !== "completed"
+    || !Number.isInteger(contract.run?.logs) || contract.run.logs < 1
+    || contract.run?.modelId !== null || contract.run?.modelSnapshot !== null) {
+    throw new Error(`The saved logistic archive did not retain the exact typed v3, arithmetic, checksum, and model-free v2 contract: ${JSON.stringify(contract)}`);
+  }
+  return contract;
+}
+
 async function inspectInitialCbsemArchive(projectPath) {
   const { project, manifest } = await readNcaArchive(projectPath);
   const workspace = project.layouts?.workspace;
@@ -3025,6 +3445,10 @@ async function inspectSavedGscaArchive(projectPath, runId) {
 
 function olsCaptureName(sequence, state) {
   return `${String(sequence).padStart(2, "0")}-tauri-native-ols-${state}-${nativeViewportLabel}.png`;
+}
+
+function logisticCaptureName(sequence, state) {
+  return `${String(sequence).padStart(2, "0")}-tauri-native-logistic-${state}-${nativeViewportLabel}.png`;
 }
 
 function pcaCaptureName(sequence, state) {
@@ -3659,7 +4083,9 @@ async function runFocusedOlsAcceptance() {
   await calculation.locator("#nd-calculation-method-regression").click();
   const olsSettings = calculation.locator(".nd-ols-settings");
   await olsSettings.waitFor({ state: "visible", timeout: 10_000 });
-  const outcome = calculation.locator("#nd-calculation-ols-outcome");
+  const regressionType = calculation.locator("#nd-calculation-regression-type");
+  if (await regressionType.inputValue().catch(() => "") !== "ols") await regressionType.selectOption("ols");
+  const outcome = calculation.locator("#nd-calculation-regression-outcome");
   await outcome.selectOption(olsOutcome);
   const roleFieldsets = olsSettings.locator("fieldset.nd-pca-variables");
   const roleLabels = (fieldset) => fieldset.locator("label");
@@ -3708,7 +4134,7 @@ async function runFocusedOlsAcceptance() {
     startEnabled: await start.isEnabled(),
   };
   if (evidence.checks.olsDialog.catalogCount !== 12
-    || evidence.checks.olsDialog.selectedMethod !== "Ordinary Least Squares Regression"
+    || evidence.checks.olsDialog.selectedMethod !== "Regression"
     || evidence.checks.olsDialog.category !== "Standalone analysis"
     || evidence.checks.olsDialog.outcome !== olsOutcome
     || JSON.stringify(selectedPredictors) !== JSON.stringify(olsPredictors)
@@ -3883,6 +4309,416 @@ async function runFocusedOlsAcceptance() {
   }
   await openResultTable("Coefficients");
   await capture(olsCaptureName(125, "reopened"));
+}
+
+async function runFocusedLogisticAcceptance() {
+  evidence.checks.logisticWorkflow = {
+    passed: false,
+    feature_id: logisticFeatureId,
+    method_version: logisticMethodVersion,
+    catalogue_snapshot_date: logisticCatalogueSnapshotDate,
+  };
+  if (!requestedLogisticNativeExportPath) {
+    throw new Error("QUICKPLS_LOGISTIC_NATIVE_EXPORT_PATH is required for focused packaged logistic acceptance; enabled-button assertions do not replace a genuine native XLSX Save and workbook-content check.");
+  }
+  const exportTargetPath = await validateRequestedNativeExportPath(
+    requestedLogisticNativeExportPath,
+    "QUICKPLS_LOGISTIC_NATIVE_EXPORT_PATH",
+  );
+  await seedRecentProject({ name: logisticProjectName, path: logisticProjectPath, openedAt: "2026-08-12T00:00:00.000Z" });
+  await reloadToLauncher();
+  await openRecentProject(logisticProjectName);
+  await waitForSurface("data");
+  await page.locator(".nd-data-table").waitFor({ state: "visible", timeout: 15_000 });
+  const status = compactVisibleText(await page.locator(".nd-statusbar").textContent());
+  const columns = (await page.locator(".nd-data-table thead th").allTextContents()).map(compactVisibleText);
+  const initialArchive = await inspectInitialLogisticArchive(logisticProjectPath);
+  const expectedColumns = ["#", "x", "m", "w", "y", "z", "bin_y", "g1", "g2", "g3", "h1", "h2"];
+  evidence.checks.logisticFixture = {
+    projectPath: logisticProjectPath,
+    sourceCsv: logisticFixtureCsvPath,
+    status,
+    cases: status.includes(`${logisticObservations} cases`) ? logisticObservations : null,
+    columns,
+    visibleModelNodes: await page.locator(".react-flow__node-latent").count(),
+    initialArchive,
+  };
+  if (evidence.checks.logisticFixture.cases !== logisticObservations
+    || JSON.stringify(columns) !== JSON.stringify(expectedColumns)
+    || evidence.checks.logisticFixture.visibleModelNodes !== 0
+    || initialArchive.models !== 0 || initialArchive.activeModelId !== null) {
+    throw new Error(`The focused logistic fixture did not expose the canonical 140-row data-only project: ${JSON.stringify(evidence.checks.logisticFixture)}`);
+  }
+  await capture(logisticCaptureName(150, "fixture-data"));
+
+  const calculation = await openAnalysisFromDataToolbar();
+  const listbox = calculation.getByRole("listbox", { name: "Available calculation methods", exact: true });
+  const options = listbox.getByRole("option");
+  await calculation.locator("#nd-calculation-method-regression").click();
+  const regressionSettings = calculation.locator(".nd-ols-settings");
+  await regressionSettings.waitFor({ state: "visible", timeout: 10_000 });
+  const regressionType = calculation.locator("#nd-calculation-regression-type");
+  await regressionType.selectOption("logistic");
+  const outcome = calculation.locator("#nd-calculation-regression-outcome");
+  await outcome.selectOption("y");
+  const failureProfile = calculation.locator("#nd-calculation-logistic-profile");
+  await failureProfile.waitFor({ state: "visible", timeout: 10_000 });
+  await page.waitForFunction(() => {
+    const node = document.querySelector("#nd-calculation-logistic-profile");
+    return node?.getAttribute("aria-busy") === "false"
+      && node.textContent?.replace(/\s+/g, " ").includes("140 complete cases: 0 class 0 and 0 class 1");
+  }, null, { timeout: 30_000 });
+  const failureBlockers = (await calculation.locator(".nd-blocker li").allTextContents()).map(compactVisibleText);
+  const failureStart = calculation.getByRole("button", { name: "Start binary logistic regression", exact: true });
+  evidence.checks.logisticFailureLifecycle = {
+    passed: await failureStart.isDisabled()
+      && failureBlockers.some((message) => /not coded exactly 0 or 1/i.test(message))
+      && failureBlockers.some((message) => /must contain both class 0 and class 1/i.test(message)),
+    rejectedOutcome: "y",
+    profileText: compactVisibleText(await failureProfile.textContent()),
+    blockers: failureBlockers,
+    startDisabled: await failureStart.isDisabled(),
+    resultCountBeforeRecovery: await page.locator(".nd-run-select select option").count(),
+  };
+  if (!evidence.checks.logisticFailureLifecycle.passed
+    || evidence.checks.logisticFailureLifecycle.resultCountBeforeRecovery !== 0) {
+    throw new Error(`The packaged strict-0/1 logistic failure boundary did not reject the full nonbinary outcome without creating a result: ${JSON.stringify(evidence.checks.logisticFailureLifecycle)}`);
+  }
+  await outcome.selectOption(logisticOutcome);
+  const roleFieldsets = regressionSettings.locator("fieldset.nd-pca-variables");
+  for (const fieldset of [roleFieldsets.nth(0), roleFieldsets.nth(1)]) {
+    const checked = fieldset.locator('input[type="checkbox"]:checked');
+    while (await checked.count()) await checked.first().uncheck();
+  }
+  for (const variable of logisticPredictors) {
+    const label = roleFieldsets.nth(0).locator("label").filter({ hasText: new RegExp(`^\\s*${variable}\\s*$`) });
+    if (await label.count() !== 1) throw new Error(`Logistic predictor ${variable} was not exposed as exactly one checkbox.`);
+    await label.getByRole("checkbox").check();
+  }
+  for (const variable of logisticControls) {
+    const label = roleFieldsets.nth(1).locator("label").filter({ hasText: new RegExp(`^\\s*${variable}\\s*$`) });
+    if (await label.count() !== 1) throw new Error(`Logistic control ${variable} was not exposed as exactly one checkbox.`);
+    await label.getByRole("checkbox").check();
+  }
+  const profile = calculation.locator("#nd-calculation-logistic-profile");
+  await profile.waitFor({ state: "visible", timeout: 10_000 });
+  await page.waitForFunction(({ expected }) => {
+    const node = document.querySelector("#nd-calculation-logistic-profile");
+    return node?.getAttribute("aria-busy") === "false"
+      && node.textContent?.replace(/\s+/g, " ").includes(expected);
+  }, { expected: `${logisticObservations} complete cases: ${logisticZeroCases} class 0 and ${logisticOneCases} class 1; 0 omitted by listwise deletion` }, { timeout: 30_000 });
+  const inspectRole = async (fieldset) => fieldset.locator("label").evaluateAll((labels) => labels.filter((label) => (
+    label.querySelector('input[type="checkbox"]')?.checked
+  )).map((label) => label.querySelector("span")?.textContent?.replace(/\s+/g, " ").trim() ?? ""));
+  const selectedPredictors = await inspectRole(roleFieldsets.nth(0));
+  const selectedControls = await inspectRole(roleFieldsets.nth(1));
+  const noteValue = async (label) => compactVisibleText(await calculation.locator(".nd-setting-note")
+    .filter({ hasText: label }).locator("strong").textContent().catch(() => ""));
+  const start = calculation.getByRole("button", { name: "Start binary logistic regression", exact: true });
+  const blockerText = compactVisibleText(await calculation.locator('.nd-blocker[role="alert"]').textContent().catch(() => ""));
+  evidence.checks.logisticDialog = {
+    catalogCount: await options.count(),
+    selectedMethod: compactVisibleText(await listbox.getByRole("option", { selected: true }).locator("strong").textContent()),
+    category: compactVisibleText(await calculation.locator("#nd-calculation-category-standalone").textContent()),
+    regressionType: await regressionType.inputValue(),
+    outcome: await outcome.inputValue(),
+    selectedPredictors,
+    selectedControls,
+    calculationBasis: await noteValue("Calculation basis"),
+    variableData: await noteValue("Variable data"),
+    uncertainty: await noteValue("Uncertainty"),
+    profile: {
+      text: compactVisibleText(await profile.textContent()),
+      ariaBusy: await profile.getAttribute("aria-busy"),
+      ariaLive: await profile.getAttribute("aria-live"),
+    },
+    validatedScope: await noteValue("Validated scope"),
+    unsupportedControls: await calculation.locator([
+      "#nd-calculation-weighting", "#nd-calculation-preprocessing", "#nd-calculation-max-iterations",
+      "#nd-calculation-tolerance", "#nd-calculation-bootstrap-samples", "#nd-calculation-permutations",
+      "#nd-calculation-seed", "#nd-calculation-workers", "#nd-calculation-case-weight",
+    ].join(", ")).count(),
+    blockers: await calculation.locator(".nd-blocker li").allTextContents(),
+    blockerText,
+    noModelBlocker: !/construct|structural path|editable model|active model/i.test(blockerText),
+    startEnabled: await start.isEnabled(),
+  };
+  if (evidence.checks.logisticDialog.catalogCount !== 14
+    || evidence.checks.logisticDialog.selectedMethod !== "Regression"
+    || evidence.checks.logisticDialog.category !== "Standalone analysis"
+    || evidence.checks.logisticDialog.regressionType !== "logistic"
+    || evidence.checks.logisticDialog.outcome !== logisticOutcome
+    || JSON.stringify(selectedPredictors) !== JSON.stringify(logisticPredictors)
+    || JSON.stringify(selectedControls) !== JSON.stringify(logisticControls)
+    || evidence.checks.logisticDialog.calculationBasis !== "Binary logistic maximum likelihood with intercept (fixed)"
+    || evidence.checks.logisticDialog.variableData !== "Unstandardized numeric values (fixed)"
+    || evidence.checks.logisticDialog.uncertainty !== "Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)"
+    || !evidence.checks.logisticDialog.profile.text.includes(`${logisticZeroCases} class 0 and ${logisticOneCases} class 1`)
+    || evidence.checks.logisticDialog.profile.ariaBusy !== "false" || evidence.checks.logisticDialog.profile.ariaLive !== "polite"
+    || !/^Binary logistic regression with an intercept, raw numeric predictors, listwise deletion/i.test(evidence.checks.logisticDialog.validatedScope)
+    || evidence.checks.logisticDialog.unsupportedControls !== 0 || evidence.checks.logisticDialog.blockers.length !== 0
+    || !evidence.checks.logisticDialog.noModelBlocker || !evidence.checks.logisticDialog.startEnabled) {
+    throw new Error(`The focused logistic dialog did not match the exact typed-v3 strict-0/1 model-free contract: ${JSON.stringify(evidence.checks.logisticDialog)}`);
+  }
+  await capture(logisticCaptureName(151, "dialog"));
+
+  const activeCapture = captureActiveCalculation(calculation, logisticCaptureName(152, "running"), "binary logistic regression")
+    .then((state) => ({ captured: true, ...state }))
+    .catch((error) => ({ captured: false, detail: error instanceof Error ? error.message : String(error) }));
+  await start.click();
+  await waitForSurface("results", 120_000);
+  evidence.checks.logisticProgress = await activeCapture;
+  if (!evidence.checks.logisticProgress.captured
+    || !["queued", "validating", "running", "cancelling"].includes(evidence.checks.logisticProgress.status)) {
+    throw new Error(`The packaged logistic run did not expose a genuine active lifecycle state: ${JSON.stringify(evidence.checks.logisticProgress)}`);
+  }
+
+  const selectedRun = page.locator(".nd-run-select select option:checked");
+  await selectedRun.waitFor({ state: "attached", timeout: 30_000 });
+  const runId = await page.locator(".nd-run-select select").inputValue();
+  if (!runId) throw new Error("The completed logistic run had no identifier.");
+  const initialSelectedTable = await page.locator('.nd-result-tree [role="treeitem"][aria-selected="true"]').getAttribute("data-result-tree-item-id");
+  const readTable = async (title) => {
+    const rows = await openResultTable(title);
+    return {
+      rows,
+      headers: (await page.locator(".nd-result-table thead th").allTextContents()).map(compactVisibleText),
+      values: await page.locator(".nd-result-table tbody tr").evaluateAll((tableRows) => tableRows.map((row) => Array.from(
+        row.querySelectorAll("th,td"), (cell) => cell.textContent?.replace(/\s+/g, " ").trim() ?? "",
+      ))),
+      warning: compactVisibleText(await page.locator(".nd-inline-warning").textContent().catch(() => "")),
+    };
+  };
+  const coefficients = await readTable("Coefficients, Wald inference, and odds ratios");
+  const fit = await readTable("Model fit and likelihood-ratio inference");
+  const classification = await readTable("Classification at probability threshold 0.5");
+  const outcomeProfile = await readTable("Binary outcome profile");
+  const convergence = await readTable("Estimator convergence");
+  const probabilities = await readTable("Complete-case fitted probabilities");
+  const scope = await readTable("Calculation scope");
+  const scopeValues = Object.fromEntries(scope.values.map((row) => [row[0], row[1]]));
+  const fitValues = Object.fromEntries(fit.values.map((row) => [row[0], row[1]]));
+  const treeItems = (await page.locator('.nd-result-tree [role="treeitem"]').allTextContents()).map(compactVisibleText);
+  const runDetails = await inspectCurrentRunDetails();
+  const editDataCommand = page.locator(".nd-commandbar button").filter({ hasText: /^Edit Data$/i });
+  const editModelCommand = page.locator(".nd-commandbar button").filter({ hasText: /^Edit Model$/i });
+  const visibleNumber = (value) => Number.isFinite(Number(value));
+  const visiblePValue = (value) => /^<0\.0001$/.test(value) || (visibleNumber(value) && Number(value) >= 0 && Number(value) <= 1);
+  const coefficientValuesValid = coefficients.values.every((row) => row.length === 10 && row.slice(1).every((value, index) => (
+    index === 3 ? visiblePValue(value) : visibleNumber(value)
+  )) && Number(row[7]) > 0 && Number(row[8]) > 0 && Number(row[9]) > 0);
+  const classificationValues = classification.values[0] ?? [];
+  const classificationCount = classificationValues.slice(0, 4).reduce((sum, value) => sum + Number(value), 0);
+  const classificationMetricsValid = classificationValues.slice(4).every((value) => visibleNumber(value) && Number(value) >= 0 && Number(value) <= 1);
+  const probabilityValuesValid = probabilities.values.every((row, index) => (
+    row[0] === String(index + 1) && visibleNumber(row[1]) && Number(row[1]) >= 0 && Number(row[1]) <= 1 && visibleNumber(row[2])
+  ));
+  const convergenceValues = convergence.values[0] ?? [];
+  const resultText = [coefficients, fit, classification, outcomeProfile, convergence, probabilities, scope]
+    .flatMap((table) => [table.headers, ...table.values]).flat().join(" ");
+  evidence.checks.logisticResult = {
+    runId,
+    runLabel: compactVisibleText(await selectedRun.textContent()),
+    initialSelectedTable,
+    treeItems,
+    coefficients,
+    fit,
+    classification,
+    outcomeProfile,
+    convergence,
+    probabilities: { ...probabilities, values: probabilities.values.slice(0, 3), totalRows: probabilities.rows },
+    scope,
+    scopeValues,
+    fitValues,
+    runDetails,
+    editDataCommand: { count: await editDataCommand.count(), enabled: await editDataCommand.isEnabled().catch(() => false) },
+    editModelCommand: { count: await editModelCommand.count() },
+    noPlaceholder: !/\bN\/?A\b|NaN|Infinity/i.test(resultText),
+    noSemResultGroups: !/Model estimates|Quality criteria|Mediation|Moderation|Prediction/i.test(treeItems.join(" ")),
+  };
+  const expectedTree = [
+    "Binary logistic regression",
+    "Coefficients, Wald inference, and odds ratios",
+    "Model fit and likelihood-ratio inference",
+    "Classification at probability threshold 0.5",
+    "Binary outcome profile",
+    "Estimator convergence",
+    "Complete-case fitted probabilities",
+    "Calculation scope",
+  ];
+  if (initialSelectedTable !== "logistic_coefficients" || JSON.stringify(treeItems) !== JSON.stringify(expectedTree)
+    || coefficients.rows !== 4
+    || JSON.stringify(coefficients.headers) !== JSON.stringify(["Term", "Estimate", "ML SE", "Wald z", "p (two-sided)", "95% CI lower", "95% CI upper", "Odds ratio", "OR 95% CI lower", "OR 95% CI upper"])
+    || JSON.stringify(coefficients.values.map((row) => row[0])) !== JSON.stringify(["Intercept", ...logisticPredictors, ...logisticControls])
+    || !coefficientValuesValid || fit.rows !== 11
+    || fitValues["Analyzed observations"] !== String(logisticObservations)
+    || fitValues["Likelihood-ratio df"] !== "3" || !visiblePValue(fitValues["Likelihood-ratio p"])
+    || !Object.entries(fitValues).filter(([label]) => label !== "Likelihood-ratio p").every(([, value]) => visibleNumber(value))
+    || classification.rows !== 1 || classification.warning !== logisticClassificationDisclaimer
+    || JSON.stringify(classification.headers) !== JSON.stringify(["True positive", "True negative", "False positive", "False negative", "Accuracy", "Sensitivity", "Specificity"])
+    || classificationCount !== logisticObservations || !classificationMetricsValid
+    || outcomeProfile.rows !== 1
+    || JSON.stringify(outcomeProfile.values[0]) !== JSON.stringify([logisticOutcome, "Numeric 0/1 (exact)", "140", "0", "71", "69", "0.4929", "Ready"])
+    || convergence.rows !== 1 || convergenceValues[0] !== "Deterministic Newton IRLS" || convergenceValues[1] !== "Yes"
+    || !(Number(convergenceValues[2]) > 0 && Number(convergenceValues[2]) <= 100)
+    || convergenceValues[3] !== "100" || Number(convergenceValues[4]) !== 1e-8
+    || !(Number(convergenceValues[5]) >= 0 && Number(convergenceValues[5]) < 1e-8)
+    || Number(convergenceValues[6]) !== 1e-9
+    || probabilities.rows !== logisticObservations
+    || JSON.stringify(probabilities.headers) !== JSON.stringify(["Complete-case observation", "Fitted probability", "Residual"])
+    || !probabilityValuesValid || scope.rows !== 11 || scopeValues.Outcome !== logisticOutcome
+    || scopeValues.Predictors !== logisticPredictors.join(", ") || scopeValues.Controls !== logisticControls.join(", ")
+    || scopeValues.Estimator !== "Binary logistic maximum likelihood with intercept"
+    || scopeValues.Execution !== "Deterministic Newton IRLS; one worker"
+    || scopeValues["Classification threshold"] !== "0.5"
+    || scopeValues["Classification interpretation"] !== logisticClassificationDisclaimer
+    || scopeValues["Method version"] !== logisticMethodVersion
+    || runDetails.properties.Method !== "Binary Logistic Regression"
+    || runDetails.properties["Method version"] !== logisticMethodVersion
+    || runDetails.properties.Weighting !== "path" || runDetails.properties.Preprocessing !== "unstandardized"
+    || evidence.checks.logisticResult.editDataCommand.count !== 1 || !evidence.checks.logisticResult.editDataCommand.enabled
+    || evidence.checks.logisticResult.editModelCommand.count !== 0
+    || !evidence.checks.logisticResult.noPlaceholder || !evidence.checks.logisticResult.noSemResultGroups) {
+    throw new Error(`The completed logistic result did not expose the exact Wald, odds-ratio, fit, profile, convergence, classification, probability, disclaimer, and model-free contract: ${JSON.stringify(evidence.checks.logisticResult)}`);
+  }
+  await openResultTable("Coefficients, Wald inference, and odds ratios");
+  await capture(logisticCaptureName(153, "results"));
+
+  const exportCommand = page.locator(".nd-commandbar button").filter({ hasText: /^Export/i });
+  await exportCommand.click();
+  const exportDialog = page.locator('.nd-dialog-export[role="dialog"]');
+  await exportDialog.waitFor({ state: "visible", timeout: 10_000 });
+  const xlsxExport = exportDialog.getByRole("button", { name: /XLSX workbook/i });
+  const tableTitles = [
+    "Coefficients, Wald inference, and odds ratios",
+    "Model fit and likelihood-ratio inference",
+    "Classification at probability threshold 0.5",
+    "Binary outcome profile",
+    "Estimator convergence",
+    "Complete-case fitted probabilities",
+    "Calculation scope",
+  ];
+  const expectedSheets = [...tableTitles.map((title) => title.slice(0, 31).trimEnd()), "Run provenance"];
+  evidence.checks.logisticExport = {
+    xlsxEnabled: await xlsxExport.isEnabled(),
+    buttonCount: await exportDialog.locator(".nd-export-list button").count(),
+    modelDiagramFormats: await exportDialog.getByRole("button", { name: /diagram|svg/i }).count(),
+    inSampleDisclaimerExpected: classification.warning === logisticClassificationDisclaimer,
+    inSampleDisclaimerIncluded: false,
+    nativeXlsx: null,
+  };
+  if (!evidence.checks.logisticExport.xlsxEnabled || evidence.checks.logisticExport.buttonCount !== 5
+    || evidence.checks.logisticExport.modelDiagramFormats !== 0 || !evidence.checks.logisticExport.inSampleDisclaimerExpected) {
+    throw new Error(`The model-free logistic result did not expose exactly five table-only export formats with its in-sample disclaimer: ${JSON.stringify(evidence.checks.logisticExport)}`);
+  }
+  const nativeSaveHelper = startWindowsNativeSaveExportHelper({
+    targetPath: exportTargetPath,
+    windowTitle: evidence.checks.runtime.title,
+    expectedSheets,
+    expectedSharedStrings: [
+      "Run provenance", "ML SE", "Odds ratio", "Deterministic Newton IRLS", logisticClassificationDisclaimer, logisticMethodVersion,
+    ],
+  });
+  let helperCompleted = false;
+  try {
+    const ready = await nativeSaveHelper.ready;
+    if (!ready.passed || ready.event !== "ready") throw new Error(`Native logistic XLSX Save helper did not become ready: ${JSON.stringify(ready)}`);
+    await xlsxExport.click();
+    const completion = await nativeSaveHelper.completed;
+    helperCompleted = true;
+    if (!completion.passed) throw new Error(`Native logistic XLSX Save/export verification failed: ${JSON.stringify(completion)}`);
+    const expectedFeedback = `Saved ${path.basename(exportTargetPath)}.`;
+    const feedback = exportDialog.locator("#nd-export-feedback").filter({ hasText: expectedFeedback });
+    await feedback.waitFor({ state: "visible", timeout: 15_000 });
+    const file = await fs.stat(exportTargetPath);
+    const workbookSheets = await inspectXlsxWorkbookSheets(exportTargetPath);
+    evidence.checks.logisticExport.nativeXlsx = {
+      attempted: true,
+      targetPath: exportTargetPath,
+      helper: { ready, completion },
+      appFeedback: compactVisibleText(await feedback.textContent()),
+      file: { size: file.size, isFile: file.isFile() },
+      workbookSheets,
+    };
+    evidence.checks.logisticExport.inSampleDisclaimerIncluded = completion.passed;
+    if (!file.isFile() || file.size <= 0 || evidence.checks.logisticExport.nativeXlsx.appFeedback !== expectedFeedback
+      || JSON.stringify(workbookSheets) !== JSON.stringify(expectedSheets)) {
+      throw new Error(`The genuine logistic XLSX did not contain every diagnostic, probability, scope, and provenance sheet exactly once: ${JSON.stringify(evidence.checks.logisticExport)}`);
+    }
+  } finally {
+    if (!helperCompleted) nativeSaveHelper.stop();
+  }
+  await capture(logisticCaptureName(154, "export"));
+  await exportDialog.getByRole("button", { name: "Close", exact: true }).click();
+
+  await page.keyboard.press("Control+S");
+  await page.locator(".nd-toast").filter({ hasText: /Project saved/i }).last().waitFor({ state: "visible", timeout: 15_000 });
+  await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
+  const savedArchive = await inspectSavedLogisticArchive(logisticProjectPath, runId);
+  evidence.checks.logisticLegacyV1 = {
+    passed: savedArchive.provenanceMethodVersion === logisticMethodVersion
+      && savedArchive.regressionMethodVersion === logisticMethodVersion
+      && savedArchive.recipe?.schemaVersion === 3
+      && savedArchive.recipe?.methodConfig?.model?.type === "logistic"
+      && !treeItems.some((item) => /legacy|regression_logistic_v1/i.test(item)),
+    currentResultVersion: savedArchive.provenanceMethodVersion,
+    typedRecipeSchema: savedArchive.recipe?.schemaVersion ?? null,
+    legacyResultTreeItems: treeItems.filter((item) => /legacy|regression_logistic_v1/i.test(item)),
+    scope: "This packaged v2 gate proves that current typed-v3 output is not reinterpreted as historical v1. Historical v1 archive readability is covered by the backend persistence gate.",
+  };
+  if (!evidence.checks.logisticLegacyV1.passed) {
+    throw new Error(`The packaged current logistic result was confused with historical v1 output: ${JSON.stringify(evidence.checks.logisticLegacyV1)}`);
+  }
+  await reloadToLauncher();
+  await openRecentProject(logisticProjectName);
+  await openMenuItem("View", "Results");
+  await waitForSurface("results");
+  const reopenedOption = page.locator(".nd-run-select select option").filter({ hasText: /Binary Logistic Regression/i }).first();
+  await reopenedOption.waitFor({ state: "attached", timeout: 15_000 });
+  const reopenedRunId = await reopenedOption.getAttribute("value");
+  if (!reopenedRunId) throw new Error("The reopened logistic result had no run identifier.");
+  await page.locator(".nd-run-select select").selectOption(reopenedRunId);
+  const reopenedRows = {
+    coefficients: await openResultTable("Coefficients, Wald inference, and odds ratios"),
+    fit: await openResultTable("Model fit and likelihood-ratio inference"),
+    classification: await openResultTable("Classification at probability threshold 0.5"),
+    profile: await openResultTable("Binary outcome profile"),
+    convergence: await openResultTable("Estimator convergence"),
+    probabilities: await openResultTable("Complete-case fitted probabilities"),
+    scope: await openResultTable("Calculation scope"),
+  };
+  evidence.checks.logisticSaveReopen = {
+    expectedRunId: runId,
+    selectedRunId: reopenedRunId,
+    sameRunRestored: reopenedRunId === runId,
+    rows: reopenedRows,
+    archive: savedArchive,
+  };
+  if (!evidence.checks.logisticSaveReopen.sameRunRestored
+    || JSON.stringify(reopenedRows) !== JSON.stringify({
+      coefficients: 4,
+      fit: 11,
+      classification: 1,
+      profile: 1,
+      convergence: 1,
+      probabilities: logisticObservations,
+      scope: 11,
+    })) {
+    throw new Error(`The exact model-free logistic v2 run did not survive explicit save, checksum inspection, reload, and reopen: ${JSON.stringify(evidence.checks.logisticSaveReopen)}`);
+  }
+  await openResultTable("Coefficients, Wald inference, and odds ratios");
+  await capture(logisticCaptureName(155, "reopened"));
+  evidence.checks.logisticWorkflow = {
+    passed: true,
+    feature_id: logisticFeatureId,
+    method_version: logisticMethodVersion,
+    catalogue_snapshot_date: logisticCatalogueSnapshotDate,
+    fullDataProfiled: true,
+    activeLifecycleCaptured: true,
+    modelFree: true,
+    realXlsxSaved: true,
+    explicitSaveAndSameRunReopen: true,
+  };
 }
 
 async function runFocusedPcaAcceptance() {
@@ -4686,6 +5522,8 @@ try {
     await runFocusedGscaAcceptance();
   } else if (cbsemOnly) {
     await runFocusedCbsemAcceptance();
+  } else if (logisticOnly) {
+    await runFocusedLogisticAcceptance();
   } else if (olsOnly) {
     await runFocusedOlsAcceptance();
   } else if (pcaOnly) {

@@ -5,6 +5,11 @@ import type { AnalysisRun } from "../types";
 import { NATIVE_NCA_ENGINE_SCOPE_WARNING, NATIVE_STANDALONE_ASSESSMENT_WARNING } from "./nativeNca";
 import { NATIVE_PCA_ENGINE_SCOPE_WARNING } from "./nativePca";
 import { NATIVE_OLS_ENGINE_SCOPE_WARNING } from "./nativeOls";
+import {
+  NATIVE_LEGACY_LOGISTIC_ENGINE_SCOPE_WARNING,
+  NATIVE_LOGISTIC_ENGINE_SCOPE_WARNING,
+} from "./nativeLogistic";
+import { nativeRunProvenanceTable } from "./nativeExportTables";
 import { completedCbsemRun } from "./nativeCbsem.testFixture";
 import { completedGscaRun } from "./nativeGsca.testFixture";
 import {
@@ -18,6 +23,8 @@ import {
   nativeNcaResultProjection,
   nativePcaResultProjection,
   nativeOlsResultProjection,
+  nativeLogisticResultProjection,
+  nativeLegacyLogisticResultProjection,
   nativeResultTables,
   resolveSelectedCompletedRun,
   resultTableForItem,
@@ -431,6 +438,205 @@ function completedOlsRun(): AnalysisRun {
   };
 }
 
+function completedLogisticRun(): AnalysisRun {
+  const base = completedSamplePlsRun();
+  const outcomes = [0, 0, 0, 1, 1, 1];
+  const probabilities = [0.2, 0.4, 0.6, 0.4, 0.7, 0.8];
+  const logLikelihood = outcomes.reduce((sum, outcome, index) => {
+    const probability = probabilities[index];
+    return sum + (outcome ? Math.log(probability) : Math.log(1 - probability));
+  }, 0);
+  const nullLogLikelihood = outcomes.length * Math.log(0.5);
+  const deviance = -2 * logLikelihood;
+  const nullDeviance = -2 * nullLogLikelihood;
+  const coefficient = (
+    term: string,
+    estimate: number,
+    standardError: number,
+    lower: number,
+    upper: number,
+    pValue: number,
+  ) => ({
+    term,
+    estimate,
+    standard_error: standardError,
+    statistic: estimate / standardError,
+    p_value_two_sided: pValue,
+    confidence_interval_lower: lower,
+    confidence_interval_upper: upper,
+    odds_ratio: Math.exp(estimate),
+    odds_ratio_confidence_interval_lower: Math.exp(lower),
+    odds_ratio_confidence_interval_upper: Math.exp(upper),
+  });
+  return {
+    ...base,
+    id: "logistic-v2-result",
+    modelId: null,
+    modelSnapshot: undefined,
+    name: "Binary Logistic Regression run",
+    method: "Binary Logistic Regression",
+    assessment: {
+      method_version: "assessment_not_applicable_v1",
+      warnings: [NATIVE_STANDALONE_ASSESSMENT_WARNING],
+    } as NonNullable<AnalysisRun["assessment"]>,
+    bootstrap: undefined,
+    permutation: undefined,
+    provenance: {
+      recipe_id: "recipe-logistic-v2",
+      dataset_fingerprint: "sha256:logistic-fixture",
+      method: "regression",
+      method_version: "regression_logistic_v2",
+      engine_version: "2.46.0",
+      seed: 7,
+      settings: {
+        method: "regression",
+        weighting_scheme: "path",
+        tolerance: 1e-7,
+        max_iterations: 3_000,
+        preprocessing: "unstandardized",
+        bootstrap_samples: 0,
+        studentized_inner_samples: 0,
+        permutation_samples: 0,
+        seed: 7,
+        workers: 1,
+        confidence_level: 0.95,
+        missing_data: "listwise_deletion",
+        case_weight_column: null,
+      },
+      started_at: "2026-08-12T01:00:00.000Z",
+      completed_at: "2026-08-12T01:00:01.000Z",
+    },
+    result: {
+      ...base.result!,
+      method_version: "regression_logistic_v2",
+      used_observations: 6,
+      omitted_observations: 2,
+      regression: {
+        method_version: "regression_logistic_v2",
+        regression_type: "logistic",
+        outcome: "converted",
+        predictors: ["score"],
+        controls: [],
+        observations: 6,
+        coefficients: [
+          coefficient("intercept", -0.5, 0.25, -0.9899909961350135, -0.010009003864986488, 0.04550026389635843),
+          coefficient("score", 0.8, 0.2, 0.40800720309198923, 1.1919927969080109, 0.00006334248366623993),
+        ],
+        fit: {
+          r_squared: null,
+          adjusted_r_squared: null,
+          f_statistic: null,
+          log_likelihood: logLikelihood,
+          pseudo_r_squared: 1 - logLikelihood / nullLogLikelihood,
+          aic: deviance + 4,
+          bic: deviance + Math.log(6) * 2,
+          rmse: null,
+          null_log_likelihood: nullLogLikelihood,
+          deviance,
+          null_deviance: nullDeviance,
+          likelihood_ratio_chi_square: nullDeviance - deviance,
+          likelihood_ratio_degrees_of_freedom: 1,
+          likelihood_ratio_p_value: 0.15472608195962645,
+          pseudo_r_squared_method: "mcfadden_v1",
+        },
+        predictions: probabilities.map((probability, observation) => ({
+          observation,
+          fitted: probability,
+          probability,
+          residual: outcomes[observation] - probability,
+        })),
+        logistic: {
+          outcome_profile: {
+            outcome: "converted",
+            coding: "numeric_0_1_exact_v1",
+            complete_cases: 6,
+            omitted_cases: 2,
+            zero_count: 3,
+            one_count: 3,
+            invalid_count: 0,
+            prevalence: 0.5,
+            readiness: "ready",
+          },
+          convergence: {
+            algorithm: "deterministic_newton_irls_v1",
+            converged: true,
+            iterations: 5,
+            max_iterations: 100,
+            tolerance: 1e-8,
+            final_max_abs_step: 1e-9,
+            separation_probability_tolerance: 1e-9,
+          },
+          classification: {
+            threshold: 0.5,
+            true_positive: 2,
+            true_negative: 2,
+            false_positive: 1,
+            false_negative: 1,
+            accuracy: 4 / 6,
+            sensitivity: 2 / 3,
+            specificity: 2 / 3,
+          },
+        },
+        process: null,
+        warnings: [NATIVE_LOGISTIC_ENGINE_SCOPE_WARNING],
+      },
+    },
+  };
+}
+
+function completedLegacyLogisticRun(): AnalysisRun {
+  const current = completedLogisticRun();
+  const regression = current.result!.regression!;
+  return {
+    ...current,
+    id: "logistic-v1-result",
+    name: "Legacy binary logistic regression (v1) run",
+    method: "Legacy binary logistic regression (v1)",
+    provenance: {
+      ...current.provenance!,
+      recipe_id: "recipe-logistic-v1",
+      method_version: "regression_logistic_v1",
+      engine_version: "1.2.2",
+      settings: { ...current.provenance!.settings, preprocessing: "standardized" },
+    },
+    result: {
+      ...current.result!,
+      method_version: "regression_logistic_v1",
+      regression: {
+        method_version: "regression_logistic_v1",
+        regression_type: "logistic",
+        outcome: regression.outcome,
+        predictors: [...regression.predictors],
+        controls: [...regression.controls],
+        observations: regression.observations,
+        coefficients: regression.coefficients.map((row) => ({
+          term: row.term,
+          estimate: row.estimate,
+          standard_error: row.standard_error,
+          statistic: row.statistic,
+          p_value_two_sided: row.p_value_two_sided,
+          confidence_interval_lower: row.confidence_interval_lower,
+          confidence_interval_upper: row.confidence_interval_upper,
+          odds_ratio: row.odds_ratio,
+        })),
+        fit: {
+          r_squared: null,
+          adjusted_r_squared: null,
+          f_statistic: null,
+          log_likelihood: -3,
+          pseudo_r_squared: 0.25,
+          aic: 10,
+          bic: 6 + Math.log(6) * 2,
+          rmse: null,
+        },
+        predictions: regression.predictions.map((row) => ({ ...row })),
+        process: null,
+        warnings: [NATIVE_LEGACY_LOGISTIC_ENGINE_SCOPE_WARNING],
+      },
+    },
+  };
+}
+
 describe("native result navigation", () => {
   it("projects exact nca_v2 output into standalone tables and an accessible ceiling plot", () => {
     const run = completedNcaRun();
@@ -581,6 +787,137 @@ describe("native result navigation", () => {
     const tampered = completedOlsRun();
     tampered.result!.regression!.coefficients[1].odds_ratio = 2;
     expect(nativeResultTables(tampered)).toEqual([]);
+  });
+
+  it("projects exact regression_logistic_v2 output into model-free diagnostic tables", () => {
+    const run = completedLogisticRun();
+    expect(nativeLogisticResultProjection(run)).toMatchObject({
+      methodVersion: "regression_logistic_v2",
+      outcome: "converted",
+      predictors: ["score"],
+      controls: [],
+      observations: 6,
+      diagnostics: {
+        outcome_profile: { zero_count: 3, one_count: 3, invalid_count: 0, readiness: "ready" },
+        convergence: { algorithm: "deterministic_newton_irls_v1", converged: true, iterations: 5 },
+        classification: { true_positive: 2, true_negative: 2, false_positive: 1, false_negative: 1 },
+      },
+    });
+
+    const navigation = buildNativeResultNavigation(run);
+    const table = (id: string) => navigation.tables.find((candidate) => candidate.id === id);
+    expect(navigation.defaultItemId).toBe("logistic_coefficients");
+    expect(navigation.groups.map((group) => group.id)).toEqual(["regression"]);
+    expect(navigation.groups[0]).toMatchObject({ title: "Binary logistic regression" });
+    expect(navigation.groups[0].items.map((item) => item.id)).toEqual([
+      "logistic_coefficients",
+      "logistic_fit",
+      "logistic_classification",
+      "logistic_outcome_profile",
+      "logistic_convergence",
+      "logistic_probabilities",
+      "logistic_scope",
+    ]);
+    expect(table("logistic_coefficients")).toMatchObject({
+      title: "Coefficients, Wald inference, and odds ratios",
+      columns: ["Term", "Estimate", "ML SE", "Wald z", "p (two-sided)", "95% CI lower", "95% CI upper", "Odds ratio", "OR 95% CI lower", "OR 95% CI upper"],
+    });
+    expect(table("logistic_fit")?.rows).toEqual(expect.arrayContaining([
+      ["Likelihood-ratio chi-square", "2.025028"],
+      ["Likelihood-ratio df", "1"],
+      ["McFadden pseudo-R²", "0.243458"],
+    ]));
+    expect(table("logistic_classification")).toMatchObject({
+      warning: "In-sample descriptive classification; not out-of-sample predictive performance.",
+      rows: [["2", "2", "1", "1", "0.6667", "0.6667", "0.6667"]],
+    });
+    expect(table("logistic_outcome_profile")?.rows).toEqual([[
+      "converted", "Numeric 0/1 (exact)", "6", "2", "3", "3", "0.5000", "Ready",
+    ]]);
+    expect(table("logistic_convergence")?.rows[0]).toEqual(expect.arrayContaining([
+      "Deterministic Newton IRLS", "Yes", "5", "100",
+    ]));
+    expect(table("logistic_probabilities")?.rows).toHaveLength(6);
+    expect(table("logistic_probabilities")?.rows[0]).toEqual(["1", "0.200000", "-0.200000"]);
+    expect(table("logistic_scope")?.rows).toEqual(expect.arrayContaining([
+      ["Outcome", "converted"],
+      ["Predictors", "score"],
+      ["Controls", "None"],
+      ["Execution", "Deterministic Newton IRLS; one worker"],
+      ["Classification interpretation", "In-sample descriptive classification; not out-of-sample predictive performance."],
+      ["Method version", "regression_logistic_v2"],
+    ]));
+    expect(navigation.groups.some((group) => group.id === "graphical" || group.id === "quality_criteria")).toBe(false);
+    expect(tablesToCsv(navigation.tables)).not.toContain("N/A");
+  });
+
+  it("rejects tampered v2 logistic arithmetic instead of fabricating partial results", () => {
+    const badClassification = completedLogisticRun();
+    badClassification.result!.regression!.logistic!.classification.true_positive = 3;
+    expect(nativeLogisticResultProjection(badClassification)).toBeNull();
+    expect(nativeResultTables(badClassification)).toEqual([]);
+
+    const coherentlyTamperedFit = completedLogisticRun();
+    const fit = coherentlyTamperedFit.result!.regression!.fit;
+    fit.log_likelihood = -3.2;
+    fit.deviance = 6.4;
+    fit.pseudo_r_squared = 1 - fit.log_likelihood / fit.null_log_likelihood!;
+    fit.likelihood_ratio_chi_square = fit.null_deviance! - fit.deviance;
+    fit.aic = fit.deviance + 4;
+    fit.bic = fit.deviance + Math.log(6) * 2;
+    expect(nativeLogisticResultProjection(coherentlyTamperedFit)).toBeNull();
+    expect(nativeResultTables(coherentlyTamperedFit)).toEqual([]);
+
+    const badWaldInference = completedLogisticRun();
+    badWaldInference.result!.regression!.coefficients[1].p_value_two_sided = 0.25;
+    expect(nativeLogisticResultProjection(badWaldInference)).toBeNull();
+
+    const badLikelihoodRatioInference = completedLogisticRun();
+    badLikelihoodRatioInference.result!.regression!.fit.likelihood_ratio_p_value = 0.25;
+    expect(nativeLogisticResultProjection(badLikelihoodRatioInference)).toBeNull();
+
+    const badOddsRatioInterval = completedLogisticRun();
+    badOddsRatioInterval.result!.regression!.coefficients[1].odds_ratio_confidence_interval_upper = 999;
+    expect(nativeLogisticResultProjection(badOddsRatioInterval)).toBeNull();
+    expect(buildNativeResultNavigation(badOddsRatioInterval)).toMatchObject({
+      defaultItemId: null,
+      groups: [],
+      tables: [],
+    });
+  });
+
+  it("keeps regression_logistic_v1 readable as explicitly legacy archive output", () => {
+    const run = completedLegacyLogisticRun();
+    expect(nativeLegacyLogisticResultProjection(run)).toMatchObject({
+      methodVersion: "regression_logistic_v1",
+      recordedPreprocessing: "standardized",
+      outcome: "converted",
+      observations: 6,
+    });
+    expect(nativeLogisticResultProjection(run)).toBeNull();
+
+    const navigation = buildNativeResultNavigation(run);
+    expect(navigation.defaultItemId).toBe("legacy_logistic_coefficients");
+    expect(navigation.groups).toHaveLength(1);
+    expect(navigation.groups[0]).toMatchObject({ title: "Legacy binary logistic regression (v1)" });
+    expect(navigation.groups[0].items.map((item) => item.id)).toEqual([
+      "legacy_logistic_coefficients",
+      "legacy_logistic_fit",
+      "legacy_logistic_probabilities",
+      "legacy_logistic_scope",
+    ]);
+    expect(navigation.tables.some((table) => table.id.includes("classification") || table.id.includes("convergence"))).toBe(false);
+    expect(navigation.tables.every((table) => table.warning?.includes("not reinterpreted as current v2 evidence"))).toBe(true);
+    expect(navigation.tables.find((table) => table.id === "legacy_logistic_scope")?.rows).toEqual(expect.arrayContaining([
+      ["Recorded historical preprocessing", "standardized"],
+      ["Historical preprocessing handling", "Recorded for archive provenance only; non-operative for this preserved v1 result"],
+    ]));
+    expect(nativeRunProvenanceTable(run).rows).toEqual(expect.arrayContaining([
+      ["Historical result", "Legacy binary logistic regression (v1)"],
+      ["Recorded historical preprocessing", "standardized"],
+      ["Historical preprocessing handling", "Recorded for archive provenance only; non-operative for this preserved v1 result"],
+    ]));
+    expect(tablesToCsv(navigation.tables)).not.toContain("N/A");
   });
 
   it("projects exact MICOM v2 and permutation MGA v2 output into truthful group tables", () => {

@@ -13,6 +13,8 @@ import {
   nativePcaComponentRuleLabel,
   nativePcaResultProjection,
   nativeOlsResultProjection,
+  nativeLogisticResultProjection,
+  nativeLegacyLogisticResultProjection,
 } from "./nativeResults";
 
 export interface NativeRunSettingApplicability {
@@ -29,9 +31,11 @@ export function nativeRunSettingApplicability(run: AnalysisRun): NativeRunSettin
   const usesNcaPermutation = run.provenance?.method === "nca" && run.result?.nca?.method_version === "nca_v2";
   const usesPredictionResampling = currentPredictionResult(run) !== null;
   const usesOlsConfidence = nativeOlsResultProjection(run) !== null;
+  const usesLogisticConfidence = nativeLogisticResultProjection(run) !== null
+    || nativeLegacyLogisticResultProjection(run) !== null;
   return {
     usesSeed: usesBootstrap || usesPermutation || usesGroupPermutation || usesNcaPermutation || usesPredictionResampling,
-    usesConfidenceLevel: usesBootstrap || usesGroupPermutation || usesPredictionResampling || usesOlsConfidence,
+    usesConfidenceLevel: usesBootstrap || usesGroupPermutation || usesPredictionResampling || usesOlsConfidence || usesLogisticConfidence,
     usesWorkers: usesBootstrap || usesPermutation,
   };
 }
@@ -44,6 +48,8 @@ export function nativeRunProvenanceTable(
   const nca = nativeNcaResultProjection(run);
   const pca = nativePcaResultProjection(run);
   const ols = nativeOlsResultProjection(run);
+  const logistic = nativeLogisticResultProjection(run);
+  const legacyLogistic = nativeLegacyLogisticResultProjection(run);
   const cbsem = nativeCbsemResultProjection(run);
   const gsca = nativeGscaResultProjection(run);
   const prediction = currentPredictionResult(run);
@@ -91,6 +97,35 @@ export function nativeRunProvenanceTable(
         ["Estimator", "Ordinary least squares with intercept"],
         ["Standard errors", "HC3 heteroskedasticity-consistent"],
         ["Preprocessing", "unstandardized"],
+        ["Missing data", "listwise deletion"],
+      );
+    } else if (logistic) {
+      rows.push(
+        ["Outcome", logistic.outcome],
+        ["Predictors", logistic.predictors.join(", ")],
+        ["Controls", logistic.controls.length ? logistic.controls.join(", ") : "None"],
+        ["Analyzed observations", String(logistic.observations)],
+        ["Estimator", "Binary logistic maximum likelihood with intercept"],
+        ["Algorithm", "Deterministic Newton IRLS"],
+        ["Converged", "Yes"],
+        ["Optimizer iterations", String(logistic.diagnostics.convergence.iterations)],
+        ["Outcome coding", "Numeric 0/1 (exact)"],
+        ["Classification threshold", "0.5"],
+        ["Coefficient inference", "Maximum-likelihood SE; Wald z; two-sided 95% confidence intervals"],
+        ["Pseudo-R-squared", "McFadden"],
+        ["Preprocessing", "unstandardized"],
+        ["Missing data", "listwise deletion"],
+      );
+    } else if (legacyLogistic) {
+      rows.push(
+        ["Historical result", "Legacy binary logistic regression (v1)"],
+        ["Outcome", legacyLogistic.outcome],
+        ["Predictors", legacyLogistic.predictors.join(", ")],
+        ["Controls", legacyLogistic.controls.length ? legacyLogistic.controls.join(", ") : "None"],
+        ["Analyzed observations", String(legacyLogistic.observations)],
+        ["Version handling", "Readable and exportable under its original version; not reinterpreted as v2 evidence"],
+        ["Recorded historical preprocessing", legacyLogistic.recordedPreprocessing],
+        ["Historical preprocessing handling", "Recorded for archive provenance only; non-operative for this preserved v1 result"],
         ["Missing data", "listwise deletion"],
       );
     } else if (cbsem) {

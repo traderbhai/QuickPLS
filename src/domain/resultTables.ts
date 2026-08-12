@@ -682,7 +682,10 @@ function experimentalWarnings(values: string[]) {
 }
 
 function regressionScopeStatus(regression: NonNullable<PlsResult["regression"]>): ResultTable["status"] {
-  if (regression.regression_type === "ols" || regression.regression_type === "logistic") return "validated";
+  if (regression.regression_type === "ols") return "validated";
+  if (regression.regression_type === "logistic") {
+    return regression.method_version === "regression_logistic_v2" ? "validated" : "experimental";
+  }
   if (regression.regression_type === "process" && regression.process?.model !== "moderated_mediation") return "validated";
   return "experimental";
 }
@@ -695,7 +698,7 @@ function resultScopeStatus(result: PlsResult): ResultTable["status"] {
   ) {
     return "experimental";
   }
-  if (result.method_version.startsWith("pls_pm_v1") || result.method_version === "pca_v1" || result.method_version === "plsc_v2" || result.method_version === "wpls_case_weighted_v1" || result.method_version === "plspredict_holdout_v1" || result.method_version === "ipma_v1" || result.method_version === "nca_v2" || result.method_version === "regression_logistic_v1" || result.method_version === "regression_process_v1" || result.method_version === "cca_composite_residual_v1" || result.method_version === "cta_pls_tetrad_v1" || result.method_version === "gaussian_copula_endogeneity_v1" || result.method_version === "pls_quadratic_nonlinear_effects_v1" || result.method_version === "pls_moderated_mediation_v1" || result.method_version === "cbsem_ml_v1" || result.method_version === "cfa_ml_v1" || result.method_version === "gsca_v1") return "validated";
+  if (result.method_version.startsWith("pls_pm_v1") || result.method_version === "pca_v1" || result.method_version === "plsc_v2" || result.method_version === "wpls_case_weighted_v1" || result.method_version === "plspredict_holdout_v1" || result.method_version === "ipma_v1" || result.method_version === "nca_v2" || result.method_version === "regression_logistic_v2" || result.method_version === "regression_process_v1" || result.method_version === "cca_composite_residual_v1" || result.method_version === "cta_pls_tetrad_v1" || result.method_version === "gaussian_copula_endogeneity_v1" || result.method_version === "pls_quadratic_nonlinear_effects_v1" || result.method_version === "pls_moderated_mediation_v1" || result.method_version === "cbsem_ml_v1" || result.method_version === "cfa_ml_v1" || result.method_version === "gsca_v1") return "validated";
   if (result.mga || result.micom || result.mga_permutation || result.fimix || result.segmentation) return "validated";
   if (result.regression && regressionScopeStatus(result.regression) === "validated") return "validated";
   return "experimental";

@@ -25,7 +25,7 @@ const methodDocs: Record<string, string> = {
   cbsem: "docs/methods/CBSEM_ML_V1.md; docs/methods/CFA_ML_V1.md",
   pca: "docs/methods/PCA_V1.md",
   gsca: "docs/methods/GSCA_ALS_V2.md",
-  regression: "docs/methods/REGRESSION_OLS_V1.md; docs/methods/REGRESSION_LOGISTIC_V1.md; docs/methods/PROCESS_V1.md",
+  regression: "docs/methods/REGRESSION_OLS_V1.md; docs/methods/REGRESSION_LOGISTIC_V2.md; docs/methods/REGRESSION_LOGISTIC_V1.md (legacy compatibility); docs/methods/PROCESS_V1.md",
   nca: "docs/methods/NCA_V2.md; docs/methods/NCA_V1.md (legacy compatibility)",
 };
 

@@ -61,7 +61,8 @@ pub const GSCA_METHOD_VERSION_V1: &str = "gsca_v1";
 pub const GSCA_METHOD_VERSION: &str = "gsca_als_v2";
 pub const GSCA_ALGORITHM_VERSION: &str = "alternating_least_squares_v1";
 pub const REGRESSION_OLS_METHOD_VERSION: &str = "regression_ols_v1";
-pub const REGRESSION_LOGISTIC_METHOD_VERSION: &str = "regression_logistic_v1";
+pub const REGRESSION_LOGISTIC_METHOD_VERSION_V1: &str = "regression_logistic_v1";
+pub const REGRESSION_LOGISTIC_METHOD_VERSION: &str = "regression_logistic_v2";
 pub const REGRESSION_PROCESS_METHOD_VERSION: &str = "regression_process_v1";
 pub const NCA_METHOD_VERSION_V1: &str = "nca_v1";
 pub const NCA_METHOD_VERSION: &str = "nca_v2";
@@ -106,6 +107,8 @@ pub enum EstimationError {
     IsolatedConstruct(String),
     #[error("PLS weights did not converge after {0} iterations")]
     NonConvergence(u32),
+    #[error("logistic regression did not converge after {0} IRLS iterations")]
+    LogisticNonConvergence(u32),
     #[error("numerical failure: {0}")]
     Numerical(String),
 }
@@ -1057,6 +1060,8 @@ pub struct RegressionAnalysis {
     pub coefficients: Vec<RegressionCoefficient>,
     pub fit: RegressionFit,
     pub predictions: Vec<RegressionPrediction>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub logistic: Option<LogisticRegressionDiagnostics>,
     #[serde(default)]
     pub process: Option<ProcessAnalysis>,
     pub warnings: Vec<String>,
@@ -1073,6 +1078,10 @@ pub struct RegressionCoefficient {
     pub confidence_interval_upper: f64,
     #[serde(default)]
     pub odds_ratio: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub odds_ratio_confidence_interval_lower: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub odds_ratio_confidence_interval_upper: Option<f64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -1085,6 +1094,20 @@ pub struct RegressionFit {
     pub aic: f64,
     pub bic: f64,
     pub rmse: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub null_log_likelihood: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub deviance: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub null_deviance: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub likelihood_ratio_chi_square: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub likelihood_ratio_degrees_of_freedom: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub likelihood_ratio_p_value: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pseudo_r_squared_method: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -1094,6 +1117,57 @@ pub struct RegressionPrediction {
     pub residual: Option<f64>,
     #[serde(default)]
     pub probability: Option<f64>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum LogisticOutcomeReadiness {
+    Ready,
+    NonBinaryValues,
+    SingleObservedClass,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct LogisticOutcomeProfile {
+    pub outcome: String,
+    pub coding: String,
+    pub complete_cases: usize,
+    pub omitted_cases: usize,
+    pub zero_count: usize,
+    pub one_count: usize,
+    pub invalid_count: usize,
+    pub prevalence: Option<f64>,
+    pub readiness: LogisticOutcomeReadiness,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct LogisticConvergence {
+    pub algorithm: String,
+    pub converged: bool,
+    pub iterations: u32,
+    pub max_iterations: u32,
+    pub tolerance: f64,
+    pub final_max_abs_step: f64,
+    pub separation_probability_tolerance: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct LogisticClassification {
+    pub threshold: f64,
+    pub true_positive: usize,
+    pub true_negative: usize,
+    pub false_positive: usize,
+    pub false_negative: usize,
+    pub accuracy: f64,
+    pub sensitivity: f64,
+    pub specificity: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct LogisticRegressionDiagnostics {
+    pub outcome_profile: LogisticOutcomeProfile,
+    pub convergence: LogisticConvergence,
+    pub classification: LogisticClassification,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -1682,7 +1756,7 @@ fn estimate_standalone_pca(
         0,
         variables.len() as u64,
     )?;
-    let prepared = prepare_raw_numeric_data(dataset, &variables, true)?;
+    let prepared = prepare_raw_numeric_data(dataset, &variables, true, false)?;
     let rows = prepared.columns.first().map(Vec::len).unwrap_or(0);
     let covariance = covariance_matrix(&prepared.columns);
     let component_rule = recipe
@@ -1812,7 +1886,8 @@ fn estimate_regression_method(
         0,
         variables.len() as u64,
     )?;
-    let prepared = prepare_raw_numeric_data(dataset, &variables, false)?;
+    let prepared =
+        prepare_raw_numeric_data(dataset, &variables, false, regression_type == "logistic")?;
     let y = prepared.columns[0].clone();
     let x = prepared.columns[1..].to_vec();
     let terms = predictors
@@ -1820,10 +1895,25 @@ fn estimate_regression_method(
         .chain(controls.iter())
         .cloned()
         .collect::<Vec<_>>();
-    let (coefficients, fit, predictions) = if regression_type == "logistic" {
-        logistic_regression(&x, &y, &terms, &outcome, recipe.settings.confidence_level)?
+    let (coefficients, fit, predictions, logistic) = if regression_type == "logistic" {
+        let profile = logistic_outcome_profile(&outcome, &y, prepared.omitted);
+        require_ready_logistic_outcome(&profile)?;
+        let (coefficients, fit, predictions, diagnostics) = logistic_regression(
+            &x,
+            &y,
+            &terms,
+            &outcome,
+            recipe.settings.confidence_level,
+            profile,
+            LOGISTIC_MAX_ITERATIONS,
+            LOGISTIC_CONVERGENCE_TOLERANCE,
+            control,
+        )?;
+        (coefficients, fit, predictions, Some(diagnostics))
     } else {
-        ols_regression(&x, &y, &terms, &outcome, recipe.settings.confidence_level)?
+        let (coefficients, fit, predictions) =
+            ols_regression(&x, &y, &terms, &outcome, recipe.settings.confidence_level)?;
+        (coefficients, fit, predictions, None)
     };
     let process = (regression_type == "process")
         .then(|| process_analysis(dataset, recipe))
@@ -1831,7 +1921,7 @@ fn estimate_regression_method(
     let status_warning = if regression_type == "ols" {
         "OLS regression v1 is validated for the documented QuickPLS v1.2 OLS scope; unsupported shapes remain blocked."
     } else if regression_type == "logistic" {
-        "Logistic regression v1 is validated for the documented QuickPLS v1.2.2 binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, and Firth-corrected models remain unsupported."
+        "Logistic regression v2 is validated for the documented QuickPLS binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, categorical auto-encoding, and Firth-corrected models remain unsupported."
     } else {
         "PROCESS-style regression v1 is validated for the documented QuickPLS v1.2.2 bounded mediation/moderation workflow scope; moderated mediation and the full Hayes model catalogue remain experimental."
     };
@@ -1857,6 +1947,7 @@ fn estimate_regression_method(
         coefficients,
         fit,
         predictions,
+        logistic,
         process,
         warnings: result.warnings.clone(),
     });
@@ -1871,7 +1962,8 @@ fn estimate_nca_method(
     let x_name = metadata_required(recipe, "nca_x")?;
     let y_name = metadata_required(recipe, "nca_y")?;
     checkpoint(control, EstimationPhase::PreparingIndicators, 0, 2)?;
-    let prepared = prepare_raw_numeric_data(dataset, &[x_name.clone(), y_name.clone()], false)?;
+    let prepared =
+        prepare_raw_numeric_data(dataset, &[x_name.clone(), y_name.clone()], false, false)?;
     let x = &prepared.columns[0];
     let y = &prepared.columns[1];
     if sample_sd(x) <= f64::EPSILON || sample_sd(y) <= f64::EPSILON {
@@ -4367,6 +4459,7 @@ fn prepare_raw_numeric_data(
     dataset: &Dataset,
     variables: &[String],
     standardize: bool,
+    allow_constant_first_column: bool,
 ) -> Result<PreparedData, EstimationError> {
     let schema = dataset.batch.schema();
     let arrays = variables
@@ -4415,13 +4508,16 @@ fn prepare_raw_numeric_data(
     let transforms = variables
         .iter()
         .zip(&mut columns)
-        .map(|(name, column)| {
+        .enumerate()
+        .map(|(index, (name, column))| {
             let mean = vector_mean(column);
             let scale = sample_sd(column);
             if scale <= f64::EPSILON || !scale.is_finite() {
-                return Err(EstimationError::ConstantIndicator(name.clone()));
+                if !(allow_constant_first_column && index == 0) {
+                    return Err(EstimationError::ConstantIndicator(name.clone()));
+                }
             }
-            if standardize {
+            if standardize && scale > f64::EPSILON && scale.is_finite() {
                 for value in column.iter_mut() {
                     *value = (*value - mean) / scale;
                 }
@@ -8456,6 +8552,8 @@ fn ols_regression(
                 confidence_interval_lower: estimate - z * se,
                 confidence_interval_upper: estimate + z * se,
                 odds_ratio: None,
+                odds_ratio_confidence_interval_lower: None,
+                odds_ratio_confidence_interval_upper: None,
             }
         })
         .collect::<Vec<_>>();
@@ -8482,8 +8580,102 @@ fn ols_regression(
             aic: n as f64 * sigma2.max(1e-12).ln() + 2.0 * p as f64,
             bic: n as f64 * sigma2.max(1e-12).ln() + (n as f64).ln() * p as f64,
             rmse: Some((rss / n as f64).sqrt()),
+            null_log_likelihood: None,
+            deviance: None,
+            null_deviance: None,
+            likelihood_ratio_chi_square: None,
+            likelihood_ratio_degrees_of_freedom: None,
+            likelihood_ratio_p_value: None,
+            pseudo_r_squared_method: None,
         },
         predictions,
+    ))
+}
+
+const LOGISTIC_MAX_ITERATIONS: u32 = 100;
+const LOGISTIC_CONVERGENCE_TOLERANCE: f64 = 1e-8;
+const LOGISTIC_SEPARATION_PROBABILITY_TOLERANCE: f64 = 1e-9;
+const LOGISTIC_CLASSIFICATION_THRESHOLD: f64 = 0.5;
+
+fn logistic_outcome_profile(
+    outcome_name: &str,
+    outcome: &[f64],
+    omitted_cases: usize,
+) -> LogisticOutcomeProfile {
+    let zero_count = outcome.iter().filter(|value| **value == 0.0).count();
+    let one_count = outcome.iter().filter(|value| **value == 1.0).count();
+    let invalid_count = outcome.len().saturating_sub(zero_count + one_count);
+    let readiness = if invalid_count > 0 {
+        LogisticOutcomeReadiness::NonBinaryValues
+    } else if zero_count == 0 || one_count == 0 {
+        LogisticOutcomeReadiness::SingleObservedClass
+    } else {
+        LogisticOutcomeReadiness::Ready
+    };
+    LogisticOutcomeProfile {
+        outcome: outcome_name.into(),
+        coding: "numeric_0_1_exact_v1".into(),
+        complete_cases: outcome.len(),
+        omitted_cases,
+        zero_count,
+        one_count,
+        invalid_count,
+        prevalence: (invalid_count == 0 && !outcome.is_empty())
+            .then_some(one_count as f64 / outcome.len() as f64),
+        readiness,
+    }
+}
+
+fn require_ready_logistic_outcome(profile: &LogisticOutcomeProfile) -> Result<(), EstimationError> {
+    match profile.readiness {
+        LogisticOutcomeReadiness::Ready => Ok(()),
+        LogisticOutcomeReadiness::NonBinaryValues => Err(EstimationError::UnsupportedMethod(
+            "logistic regression outcome must contain only exact numeric 0 and 1 values after listwise deletion"
+                .into(),
+        )),
+        LogisticOutcomeReadiness::SingleObservedClass => {
+            Err(EstimationError::UnsupportedMethod(
+                "logistic regression outcome must contain both 0 and 1 after listwise deletion"
+                    .into(),
+            ))
+        }
+    }
+}
+
+/// Profiles the exact complete-case sample that the bounded native logistic
+/// estimator will use. A non-ready profile is returned as data, not converted
+/// into a fabricated fit.
+pub fn profile_logistic_outcome(
+    dataset: &Dataset,
+    outcome: &str,
+    predictors: &[String],
+    controls: &[String],
+) -> Result<LogisticOutcomeProfile, EstimationError> {
+    if outcome.trim().is_empty()
+        || predictors.is_empty()
+        || predictors
+            .iter()
+            .chain(controls)
+            .any(|name| name.trim().is_empty())
+    {
+        return Err(EstimationError::UnsupportedMethod(
+            "logistic outcome, predictors, and controls must use non-empty names, with at least one predictor"
+                .into(),
+        ));
+    }
+    let mut variables = vec![outcome.to_owned()];
+    variables.extend(predictors.iter().cloned());
+    variables.extend(controls.iter().cloned());
+    if variables.iter().collect::<HashSet<_>>().len() != variables.len() {
+        return Err(EstimationError::UnsupportedMethod(
+            "logistic outcome, predictors, and controls must be distinct".into(),
+        ));
+    }
+    let prepared = prepare_raw_numeric_data(dataset, &variables, false, true)?;
+    Ok(logistic_outcome_profile(
+        outcome,
+        &prepared.columns[0],
+        prepared.omitted,
     ))
 }
 
@@ -8493,33 +8685,46 @@ fn logistic_regression(
     terms: &[String],
     subject: &str,
     confidence_level: f64,
+    outcome_profile: LogisticOutcomeProfile,
+    max_iterations: u32,
+    convergence_tolerance: f64,
+    control: &mut dyn FnMut(EstimationProgress) -> bool,
 ) -> Result<
     (
         Vec<RegressionCoefficient>,
         RegressionFit,
         Vec<RegressionPrediction>,
+        LogisticRegressionDiagnostics,
     ),
     EstimationError,
 > {
     let n = outcome.len();
-    if outcome
-        .iter()
-        .any(|value| !(*value == 0.0 || *value == 1.0))
-    {
-        return Err(EstimationError::UnsupportedMethod(
-            "logistic regression outcome must be coded 0/1".into(),
-        ));
-    }
+    require_ready_logistic_outcome(&outcome_profile)?;
     let p = predictors.len() + 1;
+    if n <= p {
+        return Err(EstimationError::RankDeficient(subject.into()));
+    }
     let design = regression_design_matrix(predictors);
     let mut beta = vec![0.0; p];
     let mut converged = false;
-    for _ in 0..100 {
+    let mut iterations = 0;
+    let mut final_max_abs_step = f64::INFINITY;
+    for iteration in 0..max_iterations {
+        checkpoint(
+            control,
+            EstimationPhase::Iterating,
+            iteration as u64,
+            max_iterations as u64,
+        )?;
         let eta = design.iter().map(|row| dot(row, &beta)).collect::<Vec<_>>();
         let mu = eta.iter().map(|value| logistic(*value)).collect::<Vec<_>>();
-        if mu.iter().any(|value| *value < 1e-9 || *value > 1.0 - 1e-9) {
+        if mu.iter().any(|value| {
+            *value < LOGISTIC_SEPARATION_PROBABILITY_TOLERANCE
+                || *value > 1.0 - LOGISTIC_SEPARATION_PROBABILITY_TOLERANCE
+        }) {
             return Err(EstimationError::Numerical(
-                "logistic regression separation or near-separation detected".into(),
+                "logistic regression produced extreme fitted probabilities; possible separation or unstable scaling"
+                    .into(),
             ));
         }
         let mut hessian = vec![vec![0.0; p]; p];
@@ -8534,26 +8739,37 @@ fn logistic_regression(
             }
         }
         let step = solve_linear_system(hessian, gradient, subject)?;
-        let max_step = step.iter().map(|value| value.abs()).fold(0.0, f64::max);
+        final_max_abs_step = step.iter().map(|value| value.abs()).fold(0.0, f64::max);
         for index in 0..p {
             beta[index] += step[index];
         }
-        if max_step < 1e-8 {
+        iterations = iteration + 1;
+        if final_max_abs_step < convergence_tolerance {
             converged = true;
             break;
         }
     }
     if !converged {
-        return Err(EstimationError::NonConvergence(100));
+        return Err(EstimationError::LogisticNonConvergence(max_iterations));
     }
+    checkpoint(control, EstimationPhase::Assembling, 0, 1)?;
     let eta = design.iter().map(|row| dot(row, &beta)).collect::<Vec<_>>();
     let mu = eta.iter().map(|value| logistic(*value)).collect::<Vec<_>>();
+    if mu.iter().any(|value| {
+        *value < LOGISTIC_SEPARATION_PROBABILITY_TOLERANCE
+            || *value > 1.0 - LOGISTIC_SEPARATION_PROBABILITY_TOLERANCE
+    }) {
+        return Err(EstimationError::Numerical(
+            "logistic regression produced extreme fitted probabilities; possible separation or unstable scaling"
+                .into(),
+        ));
+    }
     let log_likelihood = outcome
         .iter()
         .zip(&mu)
         .map(|(actual, prob)| actual * prob.ln() + (1.0 - actual) * (1.0 - prob).ln())
         .sum::<f64>();
-    let mean_y = vector_mean(outcome).clamp(1e-9, 1.0 - 1e-9);
+    let mean_y = vector_mean(outcome);
     let null_ll = outcome
         .iter()
         .map(|actual| actual * mean_y.ln() + (1.0 - actual) * (1.0 - mean_y).ln())
@@ -8588,6 +8804,8 @@ fn logistic_regression(
                 confidence_interval_lower: estimate - zcrit * se,
                 confidence_interval_upper: estimate + zcrit * se,
                 odds_ratio: Some(estimate.exp()),
+                odds_ratio_confidence_interval_lower: Some((estimate - zcrit * se).exp()),
+                odds_ratio_confidence_interval_upper: Some((estimate + zcrit * se).exp()),
             }
         })
         .collect::<Vec<_>>();
@@ -8600,7 +8818,23 @@ fn logistic_regression(
             residual: Some(outcome[observation] - probability),
             probability: Some(*probability),
         })
-        .collect();
+        .collect::<Vec<_>>();
+    let classification = logistic_classification(outcome, &mu);
+    let likelihood_ratio_chi_square = (2.0 * (log_likelihood - null_ll)).max(0.0);
+    let likelihood_ratio_degrees_of_freedom = p - 1;
+    let likelihood_ratio_distribution = ChiSquared::new(likelihood_ratio_degrees_of_freedom as f64)
+        .map_err(|error| EstimationError::Numerical(error.to_string()))?;
+    let likelihood_ratio_p_value =
+        (1.0 - likelihood_ratio_distribution.cdf(likelihood_ratio_chi_square)).clamp(0.0, 1.0);
+    let convergence = LogisticConvergence {
+        algorithm: "deterministic_newton_irls_v1".into(),
+        converged,
+        iterations,
+        max_iterations,
+        tolerance: convergence_tolerance,
+        final_max_abs_step,
+        separation_probability_tolerance: LOGISTIC_SEPARATION_PROBABILITY_TOLERANCE,
+    };
     Ok((
         coefficients,
         RegressionFit {
@@ -8612,9 +8846,50 @@ fn logistic_regression(
             aic: -2.0 * log_likelihood + 2.0 * p as f64,
             bic: -2.0 * log_likelihood + (n as f64).ln() * p as f64,
             rmse: None,
+            null_log_likelihood: Some(null_ll),
+            deviance: Some(-2.0 * log_likelihood),
+            null_deviance: Some(-2.0 * null_ll),
+            likelihood_ratio_chi_square: Some(likelihood_ratio_chi_square),
+            likelihood_ratio_degrees_of_freedom: Some(likelihood_ratio_degrees_of_freedom),
+            likelihood_ratio_p_value: Some(likelihood_ratio_p_value),
+            pseudo_r_squared_method: Some("mcfadden_v1".into()),
         },
         predictions,
+        LogisticRegressionDiagnostics {
+            outcome_profile,
+            convergence,
+            classification,
+        },
     ))
+}
+
+fn logistic_classification(outcome: &[f64], probability: &[f64]) -> LogisticClassification {
+    let mut true_positive = 0;
+    let mut true_negative = 0;
+    let mut false_positive = 0;
+    let mut false_negative = 0;
+    for (actual, predicted_probability) in outcome.iter().zip(probability) {
+        match (
+            *actual == 1.0,
+            *predicted_probability >= LOGISTIC_CLASSIFICATION_THRESHOLD,
+        ) {
+            (true, true) => true_positive += 1,
+            (false, false) => true_negative += 1,
+            (false, true) => false_positive += 1,
+            (true, false) => false_negative += 1,
+        }
+    }
+    let observations = outcome.len() as f64;
+    LogisticClassification {
+        threshold: LOGISTIC_CLASSIFICATION_THRESHOLD,
+        true_positive,
+        true_negative,
+        false_positive,
+        false_negative,
+        accuracy: (true_positive + true_negative) as f64 / observations,
+        sensitivity: true_positive as f64 / (true_positive + false_negative) as f64,
+        specificity: true_negative as f64 / (true_negative + false_positive) as f64,
+    }
 }
 
 fn regression_design_matrix(predictors: &[Vec<f64>]) -> Vec<Vec<f64>> {
@@ -8696,7 +8971,7 @@ fn process_analysis(
     if model == "mediation" || model == "moderated_mediation" {
         let m = metadata_required(recipe, "process_m")?;
         let prepared =
-            prepare_raw_numeric_data(dataset, &[x.clone(), m.clone(), y.clone()], false)?;
+            prepare_raw_numeric_data(dataset, &[x.clone(), m.clone(), y.clone()], false, false)?;
         let a = ols_regression(
             &[prepared.columns[0].clone()],
             &prepared.columns[1],
@@ -8736,7 +9011,8 @@ fn process_analysis(
     }
     if model == "moderation" || model == "moderated_mediation" {
         let w = metadata_required(recipe, "process_w")?;
-        let prepared = prepare_raw_numeric_data(dataset, &[x.clone(), w.clone(), y.clone()], true)?;
+        let prepared =
+            prepare_raw_numeric_data(dataset, &[x.clone(), w.clone(), y.clone()], true, false)?;
         let product = prepared.columns[0]
             .iter()
             .zip(&prepared.columns[1])
@@ -11734,6 +12010,115 @@ mod tests {
     use std::sync::Arc;
     use std::time::Instant;
     use uuid::Uuid;
+
+    fn logistic_recipe(dataset: &Dataset) -> AnalysisRecipe {
+        let mut settings = AnalysisSettings::default();
+        settings.method = AnalysisMethod::Regression;
+        settings.preprocessing = Preprocessing::Unstandardized;
+        settings.confidence_level = 0.95;
+        AnalysisRecipe {
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
+            id: Uuid::new_v4(),
+            created_at: Utc::now(),
+            dataset_fingerprint: dataset.fingerprint.0.clone(),
+            model: ModelSpec {
+                id: Uuid::new_v4(),
+                name: "Logistic v2".into(),
+                constructs: Vec::new(),
+                paths: Vec::new(),
+                controls: Vec::new(),
+                higher_order_constructs: Vec::new(),
+                interactions: Vec::new(),
+            },
+            settings,
+            method_config: Some(MethodConfig::Regression {
+                outcome: "y".into(),
+                predictors: vec!["x".into()],
+                controls: Vec::new(),
+                model: qpls_core::RegressionModelConfig::Logistic,
+            }),
+            metadata: BTreeMap::new(),
+        }
+    }
+
+    #[test]
+    fn logistic_input_profile_fails_closed_for_nonbinary_and_single_class_outcomes() {
+        let nonbinary = import_delimited_bytes(
+            b"y,x\n0,1\n2,2\n1,3\n0,4\n1,5\n",
+            "logistic-nonbinary.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let profile = profile_logistic_outcome(&nonbinary, "y", &["x".into()], &[]).unwrap();
+        assert_eq!(profile.complete_cases, 5);
+        assert_eq!(profile.zero_count, 2);
+        assert_eq!(profile.one_count, 2);
+        assert_eq!(profile.invalid_count, 1);
+        assert_eq!(profile.prevalence, None);
+        assert_eq!(profile.readiness, LogisticOutcomeReadiness::NonBinaryValues);
+        assert!(matches!(
+            estimate_pls(&nonbinary, &logistic_recipe(&nonbinary)),
+            Err(EstimationError::UnsupportedMethod(message))
+                if message.contains("only exact numeric 0 and 1")
+        ));
+
+        let single_class = import_delimited_bytes(
+            b"y,x\n0,1\n0,2\n0,3\n0,4\n0,5\n",
+            "logistic-single-class.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let profile = profile_logistic_outcome(&single_class, "y", &["x".into()], &[]).unwrap();
+        assert_eq!(
+            profile.readiness,
+            LogisticOutcomeReadiness::SingleObservedClass
+        );
+        assert!(matches!(
+            estimate_pls(&single_class, &logistic_recipe(&single_class)),
+            Err(EstimationError::UnsupportedMethod(message))
+                if message.contains("both 0 and 1")
+        ));
+    }
+
+    #[test]
+    fn logistic_v2_reports_extreme_probabilities_without_claiming_separation_proof() {
+        let separated = import_delimited_bytes(
+            b"y,x\n0,-3\n0,-2\n0,-1\n1,1\n1,2\n1,3\n",
+            "logistic-separated.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let error = estimate_pls(&separated, &logistic_recipe(&separated)).unwrap_err();
+        assert!(matches!(
+            error,
+            EstimationError::Numerical(message)
+                if message == "logistic regression produced extreme fitted probabilities; possible separation or unstable scaling"
+        ));
+    }
+
+    #[test]
+    fn logistic_v2_nonconvergence_returns_no_partial_fit() {
+        let outcome = vec![0.0, 1.0, 0.0, 1.0, 0.0, 1.0];
+        let predictors = vec![vec![-2.0, -1.0, 0.0, 0.5, 1.0, 2.0]];
+        let profile = logistic_outcome_profile("y", &outcome, 0);
+        let mut control = |_| true;
+        let error = logistic_regression(
+            &predictors,
+            &outcome,
+            &["x".into()],
+            "y",
+            0.95,
+            profile,
+            1,
+            1e-30,
+            &mut control,
+        )
+        .unwrap_err();
+        assert_eq!(error, EstimationError::LogisticNonConvergence(1));
+    }
 
     #[test]
     fn nca_v2_uses_record_high_ce_fdh_peers_and_regresses_cr_fdh_through_them() {

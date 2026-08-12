@@ -665,11 +665,45 @@ export interface RegressionAnalysis {
   predictors: string[];
   controls: string[];
   observations: number;
-  coefficients: Array<{ term: string; estimate: number; standard_error: number; statistic: number; p_value_two_sided: number; confidence_interval_lower: number; confidence_interval_upper: number; odds_ratio?: number | null }>;
-  fit: { r_squared?: number | null; adjusted_r_squared?: number | null; f_statistic?: number | null; log_likelihood?: number | null; pseudo_r_squared?: number | null; aic: number; bic: number; rmse?: number | null };
+  coefficients: Array<{ term: string; estimate: number; standard_error: number; statistic: number; p_value_two_sided: number; confidence_interval_lower: number; confidence_interval_upper: number; odds_ratio?: number | null; odds_ratio_confidence_interval_lower?: number | null; odds_ratio_confidence_interval_upper?: number | null }>;
+  fit: { r_squared?: number | null; adjusted_r_squared?: number | null; f_statistic?: number | null; log_likelihood?: number | null; pseudo_r_squared?: number | null; aic: number; bic: number; rmse?: number | null; null_log_likelihood?: number | null; deviance?: number | null; null_deviance?: number | null; likelihood_ratio_chi_square?: number | null; likelihood_ratio_degrees_of_freedom?: number | null; likelihood_ratio_p_value?: number | null; pseudo_r_squared_method?: string | null };
   predictions: Array<{ observation: number; fitted: number; residual?: number | null; probability?: number | null }>;
+  logistic?: LogisticRegressionDiagnostics | null;
   process?: { method_version: string; model: string; effects: Array<{ effect: string; estimate: number; lower_percentile?: number | null; upper_percentile?: number | null }>; simple_slopes: Array<{ moderator_value: number; slope: number }>; warnings: string[] } | null;
   warnings: string[];
+}
+
+export interface LogisticRegressionDiagnostics {
+  outcome_profile: {
+    outcome: string;
+    coding: string;
+    complete_cases: number;
+    omitted_cases: number;
+    zero_count: number;
+    one_count: number;
+    invalid_count: number;
+    prevalence: number | null;
+    readiness: "ready" | "non_binary_values" | "single_observed_class";
+  };
+  convergence: {
+    algorithm: string;
+    converged: boolean;
+    iterations: number;
+    max_iterations: number;
+    tolerance: number;
+    final_max_abs_step: number;
+    separation_probability_tolerance: number;
+  };
+  classification: {
+    threshold: number;
+    true_positive: number;
+    true_negative: number;
+    false_positive: number;
+    false_negative: number;
+    accuracy: number;
+    sensitivity: number;
+    specificity: number;
+  };
 }
 
 export interface NcaAnalysis {
