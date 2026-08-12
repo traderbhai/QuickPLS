@@ -86,19 +86,19 @@ pub const METHOD_CAPABILITIES: &[MethodCapability] = &[
     MethodCapability {
         id: "predict",
         family: "Prediction",
-        name: "PLSpredict holdout / repeated k-fold",
+        name: "PLSpredict indicators / CVPAT benchmarks",
         status: MethodStatus::Validated,
     },
     MethodCapability {
         id: "mga",
         family: "Groups",
-        name: "MICOM / permutation MGA",
+        name: "Two-group MGA / permutation MGA",
         status: MethodStatus::Validated,
     },
     MethodCapability {
         id: "ipma",
         family: "Prediction",
-        name: "IPMA / cIPMA",
+        name: "Importance-performance map analysis",
         status: MethodStatus::Validated,
     },
     MethodCapability {

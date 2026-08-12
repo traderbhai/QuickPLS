@@ -162,7 +162,9 @@ enum Command {
         recipe_id: Option<String>,
         #[arg(long)]
         output: PathBuf,
-        #[arg(long)]
+        // Retained as a hidden no-op so existing validation automation keeps
+        // working after bounded PLS inference was promoted to validated.
+        #[arg(long, hide = true)]
         allow_experimental: bool,
         #[arg(long)]
         bootstrap_samples: Option<u32>,
@@ -1026,6 +1028,44 @@ fn push_experimental_method_payloads(estimation: &serde_json::Value, rows: &mut 
                         }
                     }
                 }
+                if let Some(estimates) = group
+                    .get("outer_estimates")
+                    .and_then(|value| value.as_array())
+                {
+                    for estimate in estimates {
+                        for metric in ["weight", "loading"] {
+                            if let Some(value) = estimate.get(metric) {
+                                rows.push(row(
+                                    "mga_group_measurement",
+                                    &json_str(group, "group"),
+                                    &json_str(estimate, "indicator"),
+                                    &json_str(estimate, "construct"),
+                                    "",
+                                    metric,
+                                    json_value(value),
+                                ));
+                            }
+                        }
+                    }
+                }
+                if let Some(transforms) = group.get("transforms").and_then(|value| value.as_array())
+                {
+                    for transform in transforms {
+                        for metric in ["mean", "scale"] {
+                            if let Some(value) = transform.get(metric) {
+                                rows.push(row(
+                                    "mga_group_transform",
+                                    &json_str(group, "group"),
+                                    &json_str(transform, "indicator"),
+                                    "",
+                                    "",
+                                    metric,
+                                    json_value(value),
+                                ));
+                            }
+                        }
+                    }
+                }
             }
         }
         if let Some(comparisons) = mga.get("comparisons").and_then(|value| value.as_array()) {
@@ -1055,6 +1095,32 @@ fn push_experimental_method_payloads(estimation: &serde_json::Value, rows: &mut 
                 }
             }
         }
+        if let Some(comparisons) = mga
+            .get("measurement_comparisons")
+            .and_then(|value| value.as_array())
+        {
+            for comparison in comparisons {
+                for metric in [
+                    "group_a",
+                    "group_b",
+                    "estimate_a",
+                    "estimate_b",
+                    "difference",
+                ] {
+                    if let Some(value) = comparison.get(metric) {
+                        rows.push(row(
+                            "mga_measurement_comparison",
+                            &json_str(comparison, "construct"),
+                            &json_str(comparison, "indicator"),
+                            "",
+                            "",
+                            &format!("{}_{}", json_str(comparison, "parameter"), metric),
+                            json_value(value),
+                        ));
+                    }
+                }
+            }
+        }
         push_json_warnings("mga", mga.get("warnings"), rows);
     }
     if let Some(micom) = estimation.get("micom").and_then(|value| value.as_object()) {
@@ -1063,9 +1129,27 @@ fn push_experimental_method_payloads(estimation: &serde_json::Value, rows: &mut 
             "group_column",
             "permutation_samples",
             "usable_permutations",
+            "attempted_permutations",
+            "failed_permutations",
+            "confidence_level",
         ] {
             if let Some(value) = micom.get(metric) {
                 rows.push(row("micom", "", "", "", "", metric, json_value(value)));
+            }
+        }
+        if let Some(groups) = micom.get("groups").and_then(|value| value.as_array()) {
+            for group in groups {
+                if let Some(value) = group.get("observations") {
+                    rows.push(row(
+                        "micom_group",
+                        &json_str(group, "group"),
+                        "",
+                        "",
+                        "",
+                        "observations",
+                        json_value(value),
+                    ));
+                }
             }
         }
         if let Some(constructs) = micom.get("constructs").and_then(|value| value.as_array()) {
@@ -1074,10 +1158,21 @@ fn push_experimental_method_payloads(estimation: &serde_json::Value, rows: &mut 
                     "configural_invariance",
                     "compositional_correlation",
                     "compositional_p_value",
+                    "compositional_correlation_lower",
+                    "mean_a",
+                    "mean_b",
                     "mean_difference",
                     "mean_p_value",
+                    "mean_difference_lower",
+                    "mean_difference_upper",
+                    "variance_a",
+                    "variance_b",
                     "variance_difference",
                     "variance_p_value",
+                    "variance_difference_lower",
+                    "variance_difference_upper",
+                    "equal_means",
+                    "equal_variances",
                     "partial_invariance",
                     "full_invariance",
                 ] {
@@ -1106,6 +1201,8 @@ fn push_experimental_method_payloads(estimation: &serde_json::Value, rows: &mut 
             "group_column",
             "permutation_samples",
             "usable_permutations",
+            "attempted_permutations",
+            "failed_permutations",
         ] {
             if let Some(value) = mga_permutation.get(metric) {
                 rows.push(row(
@@ -1117,6 +1214,30 @@ fn push_experimental_method_payloads(estimation: &serde_json::Value, rows: &mut 
                     metric,
                     json_value(value),
                 ));
+            }
+        }
+        if let Some(comparisons) = mga_permutation
+            .get("measurement_comparisons")
+            .and_then(|value| value.as_array())
+        {
+            for comparison in comparisons {
+                for metric in [
+                    "original_difference",
+                    "empirical_p_value_two_sided",
+                    "percentile_rank",
+                ] {
+                    if let Some(value) = comparison.get(metric) {
+                        rows.push(row(
+                            "mga_permutation_measurement_comparison",
+                            &json_str(comparison, "construct"),
+                            &json_str(comparison, "indicator"),
+                            "",
+                            "",
+                            &format!("{}_{}", json_str(comparison, "parameter"), metric),
+                            json_value(value),
+                        ));
+                    }
+                }
             }
         }
         if let Some(comparisons) = mga_permutation
@@ -2314,8 +2435,9 @@ fn write_v08_extended_methods_evidence(output: Option<&Path>) -> Result<()> {
         "docs/methods/REGRESSION_OLS_V1.md",
         "docs/methods/REGRESSION_LOGISTIC_V1.md",
         "docs/methods/PROCESS_V1.md",
+        "docs/methods/NCA_V2.md",
         "docs/methods/NCA_V1.md",
-        "docs/methods/GSCA_V1.md",
+        "docs/methods/GSCA_ALS_V2.md",
         "validation/results/v08_extended_methods_reference_report.json",
     ];
     let artifact_status = artifacts
@@ -4294,7 +4416,7 @@ fn build_demo_project(root: &Path) -> Result<(Project, serde_json::Value)> {
         ]),
     };
     let result = run_demo_recipe(&dataset, &recipe)?;
-    let mut project = Project::new("QuickPLS v0.4 Demo Evidence Project");
+    let mut project = Project::new("Corporate Reputation Sample");
     project.datasets.push(dataset);
     project.models.push(model);
     project.recipes.push(recipe);
@@ -4549,20 +4671,12 @@ fn run_analysis(
     data_path: Option<&Path>,
     recipe_id: Option<&str>,
     output: &Path,
-    allow_experimental: bool,
+    _allow_experimental: bool,
     bootstrap_samples: Option<u32>,
     studentized_inner_samples: Option<u32>,
     permutation_samples: Option<u32>,
     workers: Option<usize>,
 ) -> Result<()> {
-    let requests_experimental_inference = bootstrap_samples.unwrap_or(0) > 0
-        || studentized_inner_samples.unwrap_or(0) > 0
-        || permutation_samples.unwrap_or(0) > 0;
-    if !allow_experimental && requests_experimental_inference {
-        bail!(
-            "PLS inference add-ons are experimental; rerun with --allow-experimental after reviewing the validation status"
-        );
-    }
     let (dataset, mut recipe) = if input
         .extension()
         .and_then(|value| value.to_str())
@@ -4693,7 +4807,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn cli_analysis_payload_is_exactly_worker_invariant() {
+    fn validated_cli_inference_is_worker_invariant_without_legacy_opt_in() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         let recipe = root.join("validation/fixtures/simple_reflective.recipe.json");
         let data = root.join("validation/fixtures/simple_reflective.csv");
@@ -4705,7 +4819,7 @@ mod tests {
             Some(&data),
             None,
             &serial_path,
-            true,
+            false,
             Some(24),
             None,
             Some(99),
@@ -4717,7 +4831,7 @@ mod tests {
             Some(&data),
             None,
             &parallel_path,
-            true,
+            false,
             Some(24),
             None,
             Some(99),
@@ -5130,6 +5244,9 @@ mod tests {
         let expected = directory.path().join("demo.expected.json");
         let validation = directory.path().join("demo.validation.json");
         create_demo_project(Some(&project), Some(&expected)).unwrap();
+        let (saved_project, recovery) = load_project_with_autosave(&project).unwrap();
+        assert!(recovery.is_none());
+        assert_eq!(saved_project.manifest.name, "Corporate Reputation Sample");
         validate_demo_project(Some(&project), Some(&expected), Some(&validation)).unwrap();
         let report: serde_json::Value =
             serde_json::from_slice(&fs::read(validation).unwrap()).unwrap();

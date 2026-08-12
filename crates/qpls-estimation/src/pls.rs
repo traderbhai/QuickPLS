@@ -5,11 +5,16 @@ use arrow::{
 };
 use faer::{Mat, prelude::*};
 use qpls_core::{
-    AnalysisMethod, AnalysisRecipe, HigherOrderMethod, InteractionMethod, MeasurementMode,
-    MissingDataPolicy, ModelSpec, Preprocessing, WeightingScheme,
+    AnalysisMethod, AnalysisRecipe, DIJKSTRA_HENSELER_RHO_A_METHOD_VERSION, HigherOrderMethod,
+    InteractionMethod, MeasurementMode, MissingDataPolicy, ModelSpec, Preprocessing,
+    WeightingScheme, dijkstra_henseler_rho_a_from_normalized, ipma_predecessor_constructs,
+    resolve_ipma_targets,
 };
 use qpls_data::{ColumnMetadata, ColumnType, DataFingerprint, DataKind, Dataset, ScaleType};
+use rand::{Rng, SeedableRng};
+use rand_chacha::ChaCha20Rng;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use statrs::distribution::{ChiSquared, ContinuousCDF, Normal, StudentsT};
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
@@ -18,7 +23,8 @@ use std::{
 use thiserror::Error;
 
 pub const PLS_METHOD_VERSION: &str = "pls_pm_v1";
-pub const PLSC_METHOD_VERSION: &str = "plsc_v1";
+pub const PLSC_METHOD_VERSION_V1: &str = "plsc_v1";
+pub const PLSC_METHOD_VERSION: &str = "plsc_v2";
 pub const WPLS_METHOD_VERSION: &str = "wpls_case_weighted_v1";
 pub const CCA_METHOD_VERSION: &str = "cca_composite_residual_v1";
 pub const GAUSSIAN_COPULA_ENDOGENEITY_METHOD_VERSION: &str = "gaussian_copula_endogeneity_v1";
@@ -27,14 +33,22 @@ pub const MODERATED_MEDIATION_METHOD_VERSION: &str = "pls_moderated_mediation_v1
 pub const CTA_PLS_METHOD_VERSION: &str = "cta_pls_tetrad_v1";
 pub const PLS_MEDIATION_METHOD_VERSION: &str = "pls_mediation_v1";
 pub const PLS_TWO_STAGE_MODERATION_METHOD_VERSION: &str = "pls_two_stage_moderation_v1";
-pub const PLS_PREDICT_METHOD_VERSION: &str = "plspredict_holdout_v1";
+pub const PLS_PREDICT_METHOD_VERSION_V1: &str = "plspredict_holdout_v1";
+pub const PLS_PREDICT_METHOD_VERSION: &str = "plspredict_indicator_v2";
+pub const PLS_PREDICT_REPEATED_KFOLD_METHOD_VERSION: &str =
+    "plspredict_repeated_kfold_indicator_v2";
+pub const CVPAT_INDICATOR_BENCHMARK_METHOD_VERSION: &str = "cvpat_indicator_benchmarks_v2";
 pub const PLS_SEGMENTATION_METHOD_VERSION: &str = "pls_pos_bounded_v1";
 pub const PLS_POS_METHOD_VERSION: &str = "pls_pos_v1";
-pub const PLS_MGA_METHOD_VERSION: &str = "pls_mga_two_group_v1";
-pub const PLS_MGA_PERMUTATION_METHOD_VERSION: &str = "pls_mga_permutation_v1";
-pub const MICOM_METHOD_VERSION: &str = "micom_v1";
+pub const PLS_MGA_METHOD_VERSION_V1: &str = "pls_mga_two_group_v1";
+pub const PLS_MGA_METHOD_VERSION: &str = "pls_mga_two_group_v2";
+pub const PLS_MGA_PERMUTATION_METHOD_VERSION_V1: &str = "pls_mga_permutation_v1";
+pub const PLS_MGA_PERMUTATION_METHOD_VERSION: &str = "pls_mga_permutation_v2";
+pub const MICOM_METHOD_VERSION_V1: &str = "micom_v1";
+pub const MICOM_METHOD_VERSION: &str = "micom_v2";
 pub const FIMIX_PLS_METHOD_VERSION: &str = "fimix_pls_v1";
 pub const IPMA_METHOD_VERSION: &str = "ipma_v1";
+pub const IPMA_PERFORMANCE_SCALE: &str = "min_max_0_100_from_standardized_scores_v1";
 pub const CFA_ML_METHOD_VERSION: &str = "cfa_ml_v1";
 pub const CBSEM_ML_METHOD_VERSION: &str = "cbsem_ml_v1";
 pub const CBSEM_FIT_METHOD_VERSION: &str = "cbsem_fit_v1";
@@ -43,11 +57,14 @@ pub const CBSEM_BOOTSTRAP_METHOD_VERSION: &str = "cbsem_bootstrap_v1";
 pub const CBSEM_MULTIGROUP_METHOD_VERSION: &str = "cbsem_multigroup_v1";
 pub const CBSEM_INVARIANCE_METHOD_VERSION: &str = "cbsem_invariance_v1";
 pub const PCA_METHOD_VERSION: &str = "pca_v1";
-pub const GSCA_METHOD_VERSION: &str = "gsca_v1";
+pub const GSCA_METHOD_VERSION_V1: &str = "gsca_v1";
+pub const GSCA_METHOD_VERSION: &str = "gsca_als_v2";
+pub const GSCA_ALGORITHM_VERSION: &str = "alternating_least_squares_v1";
 pub const REGRESSION_OLS_METHOD_VERSION: &str = "regression_ols_v1";
 pub const REGRESSION_LOGISTIC_METHOD_VERSION: &str = "regression_logistic_v1";
 pub const REGRESSION_PROCESS_METHOD_VERSION: &str = "regression_process_v1";
-pub const NCA_METHOD_VERSION: &str = "nca_v1";
+pub const NCA_METHOD_VERSION_V1: &str = "nca_v1";
+pub const NCA_METHOD_VERSION: &str = "nca_v2";
 
 #[derive(Debug, Error, PartialEq)]
 pub enum EstimationError {
@@ -440,11 +457,15 @@ impl Default for CcaAnalysis {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct PlsPredictAnalysis {
     pub method_version: String,
+    #[serde(default)]
+    pub primary_analysis: String,
     pub split: String,
     pub training_observations: usize,
     pub test_observations: usize,
     pub benchmark: String,
     pub targets: Vec<PlsPredictTarget>,
+    #[serde(default)]
+    pub indicator_targets: Vec<PlsPredictIndicatorTarget>,
     #[serde(default)]
     pub repeated_kfold: Option<PlsPredictRepeatedKfold>,
     pub warnings: Vec<String>,
@@ -473,11 +494,79 @@ pub struct PlsPredictRepeatedKfold {
     pub folds: usize,
     pub repeats: usize,
     pub assignment: String,
+    #[serde(default)]
+    pub seed: u64,
+    #[serde(default)]
+    pub assignment_digest: String,
     pub total_test_observations: usize,
     pub targets: Vec<PlsPredictTarget>,
     #[serde(default)]
+    pub indicator_targets: Vec<PlsPredictIndicatorTarget>,
+    /// Historical v1 construct-score paired-loss rows. Current v2 execution
+    /// leaves this empty so these rows cannot be mistaken for CVPAT.
+    #[serde(default)]
     pub cvpat: Vec<CvpatComparison>,
+    #[serde(default)]
+    pub cvpat_benchmark_assessments: Vec<PlsPredictCvpatBenchmarkAssessment>,
+    #[serde(default)]
+    pub paired_loss_diagnostics: Vec<CvpatComparison>,
     pub warnings: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct PlsPredictIndicatorTarget {
+    pub construct: String,
+    pub indicator: String,
+    pub predictor_scope: String,
+    pub predictor_count: usize,
+    pub pls: PlsPredictErrorMetrics,
+    pub indicator_average: PlsPredictErrorMetrics,
+    pub linear_model: PlsPredictBenchmarkMetrics,
+    pub q_squared_predict: Option<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct PlsPredictErrorMetrics {
+    pub observations: usize,
+    pub squared_error_sum: f64,
+    pub absolute_error_sum: f64,
+    pub rmse: f64,
+    pub mae: f64,
+    pub absolute_percentage_error_sum: Option<f64>,
+    pub mape_observations: usize,
+    pub mape_percent: Option<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct PlsPredictBenchmarkMetrics {
+    pub status: String,
+    pub metrics: Option<PlsPredictErrorMetrics>,
+    pub reason: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct PlsPredictCvpatBenchmarkAssessment {
+    pub method_version: String,
+    pub comparison_kind: String,
+    pub target_scope: String,
+    pub benchmark: String,
+    pub loss: String,
+    pub alternative: String,
+    pub confidence_level: f64,
+    pub mean_loss_pls: Option<f64>,
+    pub mean_loss_benchmark: Option<f64>,
+    pub mean_loss_difference: Option<f64>,
+    pub loss_difference_sum_of_squares: Option<f64>,
+    pub standard_error: Option<f64>,
+    pub t_statistic: Option<f64>,
+    pub p_value_one_sided: Option<f64>,
+    pub confidence_interval_lower: Option<f64>,
+    pub confidence_interval_upper: Option<f64>,
+    pub observations: usize,
+    pub indicator_count: usize,
+    pub status: String,
+    pub preferred_model: Option<String>,
+    pub reason: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -544,6 +633,8 @@ pub struct PlsMgaAnalysis {
     pub group_column: String,
     pub groups: Vec<PlsMgaGroupSummary>,
     pub comparisons: Vec<PlsMgaPathComparison>,
+    #[serde(default)]
+    pub measurement_comparisons: Vec<PlsMgaMeasurementComparison>,
     pub warnings: Vec<String>,
 }
 
@@ -553,6 +644,10 @@ pub struct PlsMgaGroupSummary {
     pub observations: usize,
     pub paths: Vec<PathEstimate>,
     pub r_squared: BTreeMap<String, f64>,
+    #[serde(default)]
+    pub outer_estimates: Vec<OuterEstimate>,
+    #[serde(default)]
+    pub transforms: Vec<IndicatorTransform>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -571,11 +666,29 @@ pub struct PlsMgaPathComparison {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct PlsMgaMeasurementComparison {
+    pub parameter: String,
+    pub construct: String,
+    pub indicator: String,
+    pub group_a: String,
+    pub group_b: String,
+    pub estimate_a: f64,
+    pub estimate_b: f64,
+    pub difference: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MicomAnalysis {
     pub method_version: String,
     pub group_column: String,
     pub permutation_samples: usize,
     pub usable_permutations: usize,
+    #[serde(default)]
+    pub attempted_permutations: Option<usize>,
+    #[serde(default)]
+    pub failed_permutations: Option<usize>,
+    #[serde(default)]
+    pub confidence_level: Option<f64>,
     pub groups: Vec<MicomGroupSummary>,
     pub constructs: Vec<MicomConstructResult>,
     pub warnings: Vec<String>,
@@ -593,10 +706,32 @@ pub struct MicomConstructResult {
     pub configural_invariance: bool,
     pub compositional_correlation: f64,
     pub compositional_p_value: Option<f64>,
+    #[serde(default)]
+    pub compositional_correlation_lower: Option<f64>,
+    #[serde(default)]
+    pub mean_a: Option<f64>,
+    #[serde(default)]
+    pub mean_b: Option<f64>,
     pub mean_difference: f64,
     pub mean_p_value: Option<f64>,
+    #[serde(default)]
+    pub mean_difference_lower: Option<f64>,
+    #[serde(default)]
+    pub mean_difference_upper: Option<f64>,
+    #[serde(default)]
+    pub variance_a: Option<f64>,
+    #[serde(default)]
+    pub variance_b: Option<f64>,
     pub variance_difference: f64,
     pub variance_p_value: Option<f64>,
+    #[serde(default)]
+    pub variance_difference_lower: Option<f64>,
+    #[serde(default)]
+    pub variance_difference_upper: Option<f64>,
+    #[serde(default)]
+    pub equal_means: Option<bool>,
+    #[serde(default)]
+    pub equal_variances: Option<bool>,
     pub partial_invariance: bool,
     pub full_invariance: bool,
 }
@@ -607,7 +742,13 @@ pub struct PlsMgaPermutationAnalysis {
     pub group_column: String,
     pub permutation_samples: usize,
     pub usable_permutations: usize,
+    #[serde(default)]
+    pub attempted_permutations: Option<usize>,
+    #[serde(default)]
+    pub failed_permutations: Option<usize>,
     pub comparisons: Vec<PlsMgaPermutationComparison>,
+    #[serde(default)]
+    pub measurement_comparisons: Vec<PlsMgaPermutationMeasurementComparison>,
     pub warnings: Vec<String>,
 }
 
@@ -615,6 +756,16 @@ pub struct PlsMgaPermutationAnalysis {
 pub struct PlsMgaPermutationComparison {
     pub source: String,
     pub target: String,
+    pub original_difference: f64,
+    pub empirical_p_value_two_sided: Option<f64>,
+    pub percentile_rank: Option<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct PlsMgaPermutationMeasurementComparison {
+    pub parameter: String,
+    pub construct: String,
+    pub indicator: String,
     pub original_difference: f64,
     pub empirical_p_value_two_sided: Option<f64>,
     pub percentile_rank: Option<f64>,
@@ -713,7 +864,7 @@ impl Default for PlscAnalysis {
     fn default() -> Self {
         Self {
             method_version: PLSC_METHOD_VERSION.to_string(),
-            reliability_method_version: "dijkstra_henseler_rho_a_v1".into(),
+            reliability_method_version: DIJKSTRA_HENSELER_RHO_A_METHOD_VERSION.into(),
             tolerance: 1e-12,
             reliabilities: Vec::new(),
             construct_correlations: Vec::new(),
@@ -979,9 +1130,27 @@ pub struct NcaAnalysis {
     pub x: String,
     pub y: String,
     pub observations: usize,
+    #[serde(default)]
+    pub scope: NcaScope,
+    #[serde(default)]
+    pub ce_fdh_peers: Vec<NcaCeilingPoint>,
     pub ceilings: Vec<NcaCeilingResult>,
     pub bottlenecks: Vec<NcaBottleneck>,
     pub warnings: Vec<String>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+pub struct NcaScope {
+    pub minimum_x: f64,
+    pub maximum_x: f64,
+    pub minimum_y: f64,
+    pub maximum_y: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct NcaCeilingPoint {
+    pub x: f64,
+    pub y: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -989,25 +1158,58 @@ pub struct NcaCeilingResult {
     pub ceiling: String,
     pub effect_size: f64,
     pub permutation_p_value: Option<f64>,
+    pub slope: Option<f64>,
+    pub intercept: Option<f64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct NcaBottleneck {
+    #[serde(default)]
+    pub ceiling: String,
     pub outcome_percent: f64,
-    pub required_x_percent: f64,
+    pub required_x_percent: Option<f64>,
+    #[serde(default)]
+    pub status: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct GscaAnalysis {
     pub method_version: String,
+    #[serde(default)]
+    pub algorithm: String,
+    #[serde(default)]
+    pub converged: bool,
     pub iterations: u32,
+    #[serde(default)]
+    pub stop_criterion: f64,
+    #[serde(default)]
+    pub final_change: f64,
+    #[serde(default)]
+    pub objective: f64,
     pub fit: f64,
+    #[serde(default)]
+    pub measurement_fit: f64,
+    #[serde(default)]
+    pub structural_fit: f64,
     pub adjusted_fit: f64,
     pub gfi: f64,
+    #[serde(default)]
+    pub srmr: f64,
+    #[serde(default)]
+    pub covariance_discrepancy: f64,
+    #[serde(default)]
+    pub covariance_sample_total: f64,
+    #[serde(default)]
+    pub standardized_residual_sum: f64,
+    #[serde(default)]
+    pub observations: usize,
+    #[serde(default)]
+    pub free_parameters: usize,
     pub weights: Vec<OuterEstimate>,
     pub loadings: Vec<OuterEstimate>,
     pub paths: Vec<PathEstimate>,
     pub r_squared: BTreeMap<String, f64>,
+    #[serde(default)]
     pub bootstrap_intervals: Vec<GscaBootstrapInterval>,
     pub warnings: Vec<String>,
 }
@@ -1196,6 +1398,9 @@ fn estimate_pls_internal(
     if recipe.settings.method == AnalysisMethod::Nca {
         return estimate_nca_method(dataset, recipe, control);
     }
+    if recipe.settings.method == AnalysisMethod::Gsca {
+        return estimate_gsca_method(dataset, recipe, control);
+    }
     if recipe
         .model
         .higher_order_constructs
@@ -1329,11 +1534,6 @@ fn estimate_pls_internal(
     } else {
         None
     };
-    let gsca_inputs = if recipe.settings.method == AnalysisMethod::Gsca {
-        Some((weights.clone(), scores.clone()))
-    } else {
-        None
-    };
     let mut result = assemble_result(
         dataset,
         &execution_recipe,
@@ -1374,9 +1574,9 @@ fn estimate_pls_internal(
         apply_fimix_pls(&execution_recipe, &mut result)?;
     }
     if recipe.settings.method == AnalysisMethod::Mga {
-        apply_two_group_mga(dataset, &execution_recipe, &mut result)?;
-        apply_micom(dataset, &execution_recipe, &mut result)?;
-        apply_mga_permutation(dataset, &execution_recipe, &mut result)?;
+        apply_two_group_mga(dataset, &execution_recipe, &mut result, control)?;
+        apply_mga_permutation(dataset, &execution_recipe, &mut result, control)?;
+        apply_micom(&execution_recipe, &result)?;
     }
     if let Some((indicator_names, columns)) = ipma_inputs {
         apply_ipma(&execution_recipe, &indicator_names, &columns, &mut result)?;
@@ -1389,9 +1589,6 @@ fn estimate_pls_internal(
             dataset,
             &mut result,
         )?;
-    }
-    if let Some((weights, scores)) = gsca_inputs {
-        apply_gsca(&execution_recipe, &weights, &scores, &mut result)?;
     }
     Ok(result)
 }
@@ -1447,14 +1644,7 @@ fn estimate_standalone_pca(
 ) -> Result<PlsResult, EstimationError> {
     let variables = metadata_list(recipe, "pca_variables")
         .or_else(|| metadata_list(recipe, "pca.variables"))
-        .unwrap_or_else(|| {
-            recipe
-                .model
-                .constructs
-                .iter()
-                .flat_map(|construct| construct.indicators.clone())
-                .collect()
-        });
+        .unwrap_or_default();
     if variables.len() < 2 {
         return Err(EstimationError::UnsupportedMethod(
             "PCA requires at least two variables".into(),
@@ -1468,9 +1658,6 @@ fn estimate_standalone_pca(
     )?;
     let prepared = prepare_raw_numeric_data(dataset, &variables, true)?;
     let rows = prepared.columns.first().map(Vec::len).unwrap_or(0);
-    if rows <= variables.len() {
-        return Err(EstimationError::InsufficientObservations);
-    }
     let covariance = covariance_matrix(&prepared.columns);
     let component_rule = recipe
         .metadata
@@ -1503,21 +1690,10 @@ fn estimate_standalone_pca(
         }
         orient_component(&mut vector);
         let explained = eigenvalue / total_variance.max(f64::EPSILON);
-        cumulative += explained;
         if component_rule == "kaiser" && eigenvalue < 1.0 && !components.is_empty() {
             break;
         }
-        if component_rule == "variance_threshold" {
-            let threshold = recipe
-                .metadata
-                .get("pca_variance_threshold")
-                .and_then(|value| value.parse::<f64>().ok())
-                .unwrap_or(0.80)
-                .clamp(0.01, 0.999);
-            if !components.is_empty() && cumulative > threshold {
-                break;
-            }
-        }
+        cumulative += explained;
         let component = format!("PC{}", component_index + 1);
         components.push(PcaComponent {
             component: component.clone(),
@@ -1547,6 +1723,16 @@ fn estimate_standalone_pca(
             });
         }
         deflate_matrix(&mut matrix, eigenvalue, &vector);
+        if component_rule == "variance_threshold" {
+            let threshold = recipe
+                .metadata
+                .get("pca_variance_threshold")
+                .and_then(|value| value.parse::<f64>().ok())
+                .unwrap_or(0.80);
+            if cumulative + 1e-12 >= threshold {
+                break;
+            }
+        }
     }
     checkpoint(control, EstimationPhase::Assembling, 1, 1)?;
     let mut result = empty_method_result(
@@ -1673,31 +1859,57 @@ fn estimate_nca_method(
         .cloned()
         .unwrap_or_else(|| "both".into());
     let permutations = metadata_usize(recipe, "nca_permutation_samples", 999).min(10_000);
+    let methods = nca_requested_ceilings(&ceiling).ok_or_else(|| {
+        EstimationError::UnsupportedMethod(format!(
+            "NCA v2 does not support ceiling technique {ceiling}"
+        ))
+    })?;
+    let scope = nca_scope(x, y);
+    let peers = nca_ce_fdh_peers(x, y);
+    let cr_line = nca_cr_fdh_line(&peers);
     let mut ceilings = Vec::new();
-    for method in ["ce_fdh", "cr_fdh"] {
-        if ceiling == "both" || ceiling == method {
-            let effect = nca_effect_size(x, y, method);
-            let p = nca_permutation_p_value(x, y, method, effect, permutations);
-            ceilings.push(NcaCeilingResult {
-                ceiling: method.into(),
-                effect_size: effect,
-                permutation_p_value: Some(p),
-            });
-        }
+    let total_permutation_units = methods.len().saturating_mul(permutations);
+    checkpoint(
+        control,
+        EstimationPhase::ComputingEffects,
+        0,
+        total_permutation_units as u64,
+    )?;
+    for (method_index, method) in methods.iter().enumerate() {
+        let (effect_size, slope, intercept) =
+            nca_ceiling_parameters(&scope, &peers, method, cr_line);
+        let p_value = nca_permutation_p_value(
+            x,
+            y,
+            method,
+            effect_size,
+            permutations,
+            recipe.settings.seed,
+            method_index.saturating_mul(permutations),
+            total_permutation_units,
+            control,
+        )?;
+        ceilings.push(NcaCeilingResult {
+            ceiling: (*method).into(),
+            effect_size,
+            permutation_p_value: Some(p_value),
+            slope,
+            intercept,
+        });
     }
-    let bottlenecks = (10..=90)
-        .step_by(10)
-        .map(|level| NcaBottleneck {
-            outcome_percent: level as f64,
-            required_x_percent: nca_required_x_percent(x, y, level as f64),
-        })
-        .collect();
+    checkpoint(
+        control,
+        EstimationPhase::ComputingEffects,
+        total_permutation_units as u64,
+        total_permutation_units as u64,
+    )?;
+    let bottlenecks = nca_bottleneck_rows(&scope, &peers, &methods, cr_line);
     let mut result = empty_method_result(
         NCA_METHOD_VERSION,
         prepared.used,
         prepared.omitted,
         vec![
-            "NCA v1 is validated for the documented QuickPLS v1.2.1 numeric CE-FDH/CR-FDH scope; broader NCA variants remain unsupported."
+            "NCA v2 is limited to the documented numeric X/Y CE-FDH and CR-FDH scope with observed-range bottlenecks; multiple conditions, latent-score NCA, cIPMA, and broader ceiling variants remain unsupported."
                 .into(),
         ],
     );
@@ -1709,6 +1921,8 @@ fn estimate_nca_method(
         x: x_name,
         y: y_name,
         observations: prepared.used,
+        scope,
+        ce_fdh_peers: peers,
         ceilings,
         bottlenecks,
         warnings: result.warnings.clone(),
@@ -2196,7 +2410,7 @@ fn apply_plsc_correction(
     result.mediation = analyze_mediation_effects_with_tolerance(&result.effects, 1e-12);
     result.plsc = Some(PlscAnalysis {
         method_version: PLSC_METHOD_VERSION.into(),
-        reliability_method_version: "dijkstra_henseler_rho_a_v1".into(),
+        reliability_method_version: DIJKSTRA_HENSELER_RHO_A_METHOD_VERSION.into(),
         tolerance: 1e-12,
         reliabilities,
         construct_correlations,
@@ -2225,19 +2439,27 @@ fn plsc_rho_a(columns: &[&[f64]], weights: &[f64]) -> Result<f64, EstimationErro
             indicator_correlation[column][row] = value;
         }
     }
-    let numerator = quadratic_form(weights, &indicator_correlation).powi(2);
-    let squared_weight_sum = weights.iter().map(|weight| weight * weight).sum::<f64>();
-    let mut error_correlation = indicator_correlation.clone();
-    for index in 0..count {
-        error_correlation[index][index] = 1.0 - squared_weight_sum;
-    }
-    let denominator = numerator + quadratic_form(weights, &error_correlation);
-    if denominator.abs() <= f64::EPSILON {
+    let score_variance = quadratic_form(weights, &indicator_correlation);
+    let score_variance_tolerance = 64.0
+        * f64::EPSILON
+        * weights
+            .iter()
+            .map(|value| value.abs().powi(2))
+            .sum::<f64>()
+            .max(1.0);
+    if !score_variance.is_finite() || score_variance <= score_variance_tolerance {
         return Err(EstimationError::Numerical(
-            "PLSc rho_A denominator is zero".into(),
+            "PLSc rho_A score variance is invalid".into(),
         ));
     }
-    Ok(numerator / denominator)
+    let divisor = score_variance.sqrt();
+    let normalized_weights = weights
+        .iter()
+        .map(|weight| weight / divisor)
+        .collect::<Vec<_>>();
+    dijkstra_henseler_rho_a_from_normalized(&indicator_correlation, &normalized_weights)
+        .map(|result| result.value)
+        .map_err(|error| EstimationError::Numerical(format!("invalid PLSc rho_A: {error}")))
 }
 
 fn quadratic_form(weights: &[f64], matrix: &[Vec<f64>]) -> f64 {
@@ -2907,74 +3129,698 @@ fn apply_cca(
     Ok(())
 }
 
-fn apply_gsca(
+fn estimate_gsca_method(
+    dataset: &Dataset,
     recipe: &AnalysisRecipe,
-    weights: &[Vec<f64>],
-    scores: &[Vec<f64>],
-    result: &mut PlsResult,
-) -> Result<(), EstimationError> {
-    if recipe.settings.case_weight_column.is_some() {
-        return Err(EstimationError::UnsupportedMethod(
-            "GSCA v1 does not support case weights".into(),
-        ));
-    }
-    if !recipe.model.interactions.is_empty() || !recipe.model.higher_order_constructs.is_empty() {
-        return Err(EstimationError::UnsupportedMethod(
-            "GSCA v1 does not support generated interaction or higher-order constructs".into(),
-        ));
-    }
-    let total_r2 = result.r_squared.values().copied().sum::<f64>();
-    let fit = if result.r_squared.is_empty() {
-        0.0
-    } else {
-        total_r2 / result.r_squared.len() as f64
-    };
-    let parameter_count = result.outer_estimates.len() + result.paths.len();
-    let n = result.used_observations.max(parameter_count + 2);
-    let adjusted_fit = 1.0
-        - (1.0 - fit) * (n as f64 - 1.0) / (n.saturating_sub(parameter_count + 1) as f64).max(1.0);
-    let loading_fit = if result.outer_estimates.is_empty() {
-        0.0
-    } else {
-        result
-            .outer_estimates
-            .iter()
-            .map(|estimate| estimate.loading * estimate.loading)
-            .sum::<f64>()
-            / result.outer_estimates.len() as f64
-    };
-    let bootstrap_intervals = result
-        .paths
+    control: &mut dyn FnMut(EstimationProgress) -> bool,
+) -> Result<PlsResult, EstimationError> {
+    validate_gsca_execution_contract(recipe)?;
+    validate_acyclic(recipe)?;
+    let indicator_names = collect_indicators(recipe)?;
+    checkpoint(control, EstimationPhase::Validating, 1, 1)?;
+    let prepared = prepare_data(
+        dataset,
+        &indicator_names,
+        &Preprocessing::Standardized,
+        &MissingDataPolicy::ListwiseDeletion,
+        None,
+        control,
+    )?;
+    let indicator_index = indicator_names
         .iter()
-        .map(|path| GscaBootstrapInterval {
-            parameter: format!("{}->{}", path.source, path.target),
-            original: path.coefficient,
-            lower_percentile: path.coefficient - 0.05,
-            upper_percentile: path.coefficient + 0.05,
+        .enumerate()
+        .map(|(index, name)| (name.as_str(), index))
+        .collect::<HashMap<_, _>>();
+    let blocks = recipe
+        .model
+        .constructs
+        .iter()
+        .map(|construct| {
+            construct
+                .indicators
+                .iter()
+                .map(|indicator| indicator_index[indicator.as_str()])
+                .collect::<Vec<_>>()
         })
         .collect::<Vec<_>>();
-    let _ = (weights, scores);
-    result.method_version = GSCA_METHOD_VERSION.into();
-    result.gsca = Some(GscaAnalysis {
-        method_version: GSCA_METHOD_VERSION.into(),
-        iterations: result.iterations,
-        fit: fit.clamp(0.0, 1.0),
-        adjusted_fit: adjusted_fit.clamp(0.0, 1.0),
-        gfi: loading_fit.clamp(0.0, 1.0),
-        weights: result.outer_estimates.clone(),
-        loadings: result.outer_estimates.clone(),
-        paths: result.paths.clone(),
-        r_squared: result.r_squared.clone(),
-        bootstrap_intervals,
-        warnings: vec![
-            "GSCA v1 is validated for the documented QuickPLS v1.2.4 bounded deterministic component-model scope; unrestricted GSCA variants remain unsupported.".into(),
-        ],
-    });
-    result.warnings.push(
-        "GSCA v1 is validated for the documented QuickPLS v1.2.4 bounded deterministic component-model scope; unsupported shapes remain blocked."
-            .into(),
+    let unit_scale = ((prepared.used - 1) as f64).sqrt();
+    let unit_columns = prepared
+        .columns
+        .iter()
+        .map(|column| {
+            column
+                .iter()
+                .map(|value| value / unit_scale)
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>();
+    let mut weights = blocks
+        .iter()
+        .map(|block| gsca_normalize_weights(&unit_columns, block, vec![1.0; block.len()]))
+        .collect::<Result<Vec<_>, _>>()?;
+    let mut scores = gsca_scores(&unit_columns, &blocks, &weights)?;
+    let mut coefficients = gsca_fit_coefficients(recipe, &unit_columns, &scores, &indicator_index)?;
+    let mut previous_objective = f64::INFINITY;
+    let mut final_change = f64::INFINITY;
+    let mut iterations = 0;
+    let iteration_units =
+        recipe.settings.max_iterations as u64 * recipe.model.constructs.len().max(1) as u64;
+    let mut converged = false;
+
+    for iteration in 1..=recipe.settings.max_iterations {
+        let previous_weights = weights.clone();
+        for construct_index in 0..recipe.model.constructs.len() {
+            checkpoint(
+                control,
+                EstimationPhase::Iterating,
+                (iteration - 1) as u64 * recipe.model.constructs.len() as u64
+                    + construct_index as u64,
+                iteration_units,
+            )?;
+            let candidate = gsca_update_weight_block(
+                recipe,
+                &unit_columns,
+                &blocks,
+                &scores,
+                &coefficients,
+                construct_index,
+            )?;
+            weights[construct_index] = candidate;
+            scores[construct_index] = gsca_score(
+                &unit_columns,
+                &blocks[construct_index],
+                &weights[construct_index],
+            )?;
+        }
+        coefficients = gsca_fit_coefficients(recipe, &unit_columns, &scores, &indicator_index)?;
+        let (objective, _, _) = gsca_objective(
+            recipe,
+            &unit_columns,
+            &scores,
+            &coefficients,
+            &indicator_index,
+        );
+        if !objective.is_finite() {
+            return Err(EstimationError::Numerical(
+                "GSCA ALS produced a non-finite objective".into(),
+            ));
+        }
+        let relative_objective_change = if previous_objective.is_finite() {
+            (previous_objective - objective).abs() / previous_objective.abs().max(1.0)
+        } else {
+            f64::INFINITY
+        };
+        let maximum_weight_change = weights
+            .iter()
+            .zip(&previous_weights)
+            .flat_map(|(current, previous)| current.iter().zip(previous))
+            .map(|(current, previous)| (current - previous).abs())
+            .fold(0.0_f64, f64::max);
+        // Objective convergence alone can stop on a locally flat surface while
+        // the identified component weights are still moving materially.  The
+        // published GSCA criterion remains the optimization target; requiring
+        // both its relative change and the largest normalized-weight change to
+        // satisfy the fixed criterion makes the reported parameters stable.
+        final_change = relative_objective_change.max(maximum_weight_change);
+        if objective > previous_objective + 1e-10 * previous_objective.abs().max(1.0) {
+            return Err(EstimationError::Numerical(
+                "GSCA ALS objective increased beyond numerical tolerance".into(),
+            ));
+        }
+        iterations = iteration;
+        if final_change <= recipe.settings.tolerance {
+            converged = true;
+            break;
+        }
+        previous_objective = objective;
+    }
+    if !converged {
+        return Err(EstimationError::NonConvergence(
+            recipe.settings.max_iterations,
+        ));
+    }
+
+    for construct_index in 0..weights.len() {
+        if weights[construct_index].iter().sum::<f64>() < 0.0 {
+            for weight in &mut weights[construct_index] {
+                *weight = -*weight;
+            }
+            for score in &mut scores[construct_index] {
+                *score = -*score;
+            }
+        }
+    }
+    coefficients = gsca_fit_coefficients(recipe, &unit_columns, &scores, &indicator_index)?;
+    let (objective, measurement_residual, structural_residual) = gsca_objective(
+        recipe,
+        &unit_columns,
+        &scores,
+        &coefficients,
+        &indicator_index,
     );
+    let observed_total = unit_columns
+        .iter()
+        .flatten()
+        .map(|value| value * value)
+        .sum::<f64>();
+    let component_total = scores
+        .iter()
+        .flatten()
+        .map(|value| value * value)
+        .sum::<f64>();
+    let fit = 1.0 - objective / (observed_total + component_total);
+    let measurement_fit = 1.0 - measurement_residual / observed_total;
+    let structural_fit = 1.0 - structural_residual / component_total;
+    let free_parameters = blocks
+        .iter()
+        .map(|block| block.len().saturating_sub(1))
+        .sum::<usize>()
+        + recipe
+            .model
+            .constructs
+            .iter()
+            .filter(|construct| construct.mode == MeasurementMode::Reflective)
+            .map(|construct| construct.indicators.len())
+            .sum::<usize>()
+        + recipe.model.paths.len();
+    let null_degrees = prepared.used * indicator_names.len();
+    if null_degrees <= free_parameters {
+        return Err(EstimationError::Numerical(
+            "GSCA adjusted FIT requires more data degrees of freedom than free parameters".into(),
+        ));
+    }
+    let adjusted_fit =
+        1.0 - (1.0 - fit) * null_degrees as f64 / (null_degrees - free_parameters) as f64;
+    let (gfi, srmr, covariance_discrepancy, covariance_sample_total, standardized_residual_sum) =
+        gsca_covariance_fit(
+            recipe,
+            &unit_columns,
+            &scores,
+            &coefficients,
+            &indicator_index,
+        )?;
+
+    let construct_index = recipe
+        .model
+        .constructs
+        .iter()
+        .enumerate()
+        .map(|(index, construct)| (construct.id.as_str(), index))
+        .collect::<HashMap<_, _>>();
+    let mut outer_estimates = Vec::with_capacity(indicator_names.len());
+    for (construct_position, construct) in recipe.model.constructs.iter().enumerate() {
+        for (within, indicator) in construct.indicators.iter().enumerate() {
+            let indicator_position = indicator_index[indicator.as_str()];
+            outer_estimates.push(OuterEstimate {
+                construct: construct.id.clone(),
+                indicator: indicator.clone(),
+                weight: weights[construct_position][within],
+                loading: dot(
+                    &unit_columns[indicator_position],
+                    &scores[construct_position],
+                ),
+            });
+        }
+    }
+    let paths = recipe
+        .model
+        .paths
+        .iter()
+        .map(|path| PathEstimate {
+            source: path.source.clone(),
+            target: path.target.clone(),
+            coefficient: coefficients[construct_index[path.source.as_str()]]
+                [indicator_names.len() + construct_index[path.target.as_str()]],
+        })
+        .collect::<Vec<_>>();
+    let mut r_squared = BTreeMap::new();
+    for (target, construct) in recipe.model.constructs.iter().enumerate() {
+        let incoming = recipe
+            .model
+            .paths
+            .iter()
+            .filter(|path| path.target == construct.id)
+            .collect::<Vec<_>>();
+        if incoming.is_empty() {
+            continue;
+        }
+        let mut prediction = vec![0.0; prepared.used];
+        for path in incoming {
+            let source = construct_index[path.source.as_str()];
+            add_scaled(
+                &mut prediction,
+                &scores[source],
+                coefficients[source][indicator_names.len() + target],
+            );
+        }
+        let residual = scores[target]
+            .iter()
+            .zip(prediction)
+            .map(|(actual, predicted)| (actual - predicted).powi(2))
+            .sum::<f64>();
+        r_squared.insert(construct.id.clone(), 1.0 - residual);
+    }
+    let construct_scores = recipe
+        .model
+        .constructs
+        .iter()
+        .enumerate()
+        .map(|(index, construct)| {
+            (
+                construct.id.clone(),
+                scores[index]
+                    .iter()
+                    .map(|value| value * unit_scale)
+                    .collect::<Vec<_>>(),
+            )
+        })
+        .collect::<BTreeMap<_, _>>();
+    let scope_warning = "GSCA ALS v2 is bounded to standardized raw data, listwise deletion, disjoint reflective/formative blocks, and recursive single-group structural models; inference and broader GSCA variants are not included.".to_string();
+    let mut warnings = vec![scope_warning.clone()];
+    if prepared.omitted > 0 {
+        warnings.push(format!(
+            "{} observations were omitted listwise",
+            prepared.omitted
+        ));
+    }
+    let analysis = GscaAnalysis {
+        method_version: GSCA_METHOD_VERSION.into(),
+        algorithm: GSCA_ALGORITHM_VERSION.into(),
+        converged,
+        iterations,
+        stop_criterion: recipe.settings.tolerance,
+        final_change,
+        objective,
+        fit,
+        measurement_fit,
+        structural_fit,
+        adjusted_fit,
+        gfi,
+        srmr,
+        covariance_discrepancy,
+        covariance_sample_total,
+        standardized_residual_sum,
+        observations: prepared.used,
+        free_parameters,
+        weights: outer_estimates.clone(),
+        loadings: outer_estimates.clone(),
+        paths: paths.clone(),
+        r_squared: r_squared.clone(),
+        bootstrap_intervals: Vec::new(),
+        warnings: vec![scope_warning],
+    };
+    checkpoint(control, EstimationPhase::Assembling, 1, 1)?;
+    Ok(PlsResult {
+        method_version: GSCA_METHOD_VERSION.into(),
+        converged,
+        iterations,
+        used_observations: prepared.used,
+        omitted_observations: prepared.omitted,
+        transforms: prepared.transforms,
+        construct_scores,
+        outer_estimates,
+        paths,
+        control_estimates: Vec::new(),
+        effects: Vec::new(),
+        mediation: MediationAnalysis::default(),
+        moderation: ModerationAnalysis::default(),
+        plsc: None,
+        endogeneity: None,
+        nonlinear_effects: None,
+        moderated_mediation: None,
+        cta_pls: None,
+        wpls: None,
+        cca: None,
+        predict: None,
+        segmentation: None,
+        mga: None,
+        micom: None,
+        mga_permutation: None,
+        fimix: None,
+        ipma: None,
+        cbsem: None,
+        pca: None,
+        regression: None,
+        nca: None,
+        gsca: Some(analysis),
+        r_squared,
+        warnings,
+    })
+}
+
+fn validate_gsca_execution_contract(recipe: &AnalysisRecipe) -> Result<(), EstimationError> {
+    let settings = &recipe.settings;
+    if settings.weighting_scheme != WeightingScheme::Path
+        || settings.preprocessing != Preprocessing::Standardized
+        || settings.missing_data != MissingDataPolicy::ListwiseDeletion
+        || settings.case_weight_column.is_some()
+        || settings.bootstrap_samples > 0
+        || settings.studentized_inner_samples > 0
+        || settings.permutation_samples > 0
+        || settings.workers != 1
+        || settings.max_iterations != 3_000
+        || (settings.tolerance - 1e-7).abs() > f64::EPSILON
+    {
+        return Err(EstimationError::UnsupportedMethod(
+            "GSCA ALS v2 requires fixed path-settings sentinel, standardized raw data, listwise deletion, one worker, 3,000 iterations, a 1e-7 stop criterion, and no resampling or case weights"
+                .into(),
+        ));
+    }
+    if recipe.model.constructs.len() < 2 || recipe.model.paths.is_empty() {
+        return Err(EstimationError::UnsupportedMethod(
+            "GSCA ALS v2 requires at least two constructs and one structural path".into(),
+        ));
+    }
+    if !recipe.model.controls.is_empty()
+        || !recipe.model.interactions.is_empty()
+        || !recipe.model.higher_order_constructs.is_empty()
+    {
+        return Err(EstimationError::UnsupportedMethod(
+            "GSCA ALS v2 does not support controls, interactions, or higher-order constructs"
+                .into(),
+        ));
+    }
+    let connected = recipe
+        .model
+        .paths
+        .iter()
+        .flat_map(|path| [path.source.as_str(), path.target.as_str()])
+        .collect::<HashSet<_>>();
+    if recipe
+        .model
+        .constructs
+        .iter()
+        .any(|construct| !connected.contains(construct.id.as_str()))
+    {
+        return Err(EstimationError::UnsupportedMethod(
+            "GSCA ALS v2 does not support isolated constructs".into(),
+        ));
+    }
     Ok(())
+}
+
+fn gsca_normalize_weights(
+    columns: &[Vec<f64>],
+    block: &[usize],
+    mut weights: Vec<f64>,
+) -> Result<Vec<f64>, EstimationError> {
+    let score = gsca_linear_combination(columns, block, &weights);
+    let norm = dot(&score, &score).sqrt();
+    if !norm.is_finite() || norm <= 1e-12 {
+        return Err(EstimationError::Numerical(
+            "GSCA component weights produce a zero-norm score".into(),
+        ));
+    }
+    for weight in &mut weights {
+        *weight /= norm;
+    }
+    Ok(weights)
+}
+
+fn gsca_linear_combination(columns: &[Vec<f64>], block: &[usize], weights: &[f64]) -> Vec<f64> {
+    let mut score = vec![0.0; columns[0].len()];
+    for (column, weight) in block.iter().zip(weights) {
+        add_scaled(&mut score, &columns[*column], *weight);
+    }
+    score
+}
+
+fn gsca_score(
+    columns: &[Vec<f64>],
+    block: &[usize],
+    weights: &[f64],
+) -> Result<Vec<f64>, EstimationError> {
+    let score = gsca_linear_combination(columns, block, weights);
+    let norm = dot(&score, &score).sqrt();
+    if !norm.is_finite() || norm <= 1e-12 {
+        return Err(EstimationError::Numerical(
+            "GSCA component score has zero norm".into(),
+        ));
+    }
+    Ok(score.into_iter().map(|value| value / norm).collect())
+}
+
+fn gsca_scores(
+    columns: &[Vec<f64>],
+    blocks: &[Vec<usize>],
+    weights: &[Vec<f64>],
+) -> Result<Vec<Vec<f64>>, EstimationError> {
+    blocks
+        .iter()
+        .zip(weights)
+        .map(|(block, weights)| gsca_score(columns, block, weights))
+        .collect()
+}
+
+fn gsca_fit_coefficients(
+    recipe: &AnalysisRecipe,
+    columns: &[Vec<f64>],
+    scores: &[Vec<f64>],
+    indicator_index: &HashMap<&str, usize>,
+) -> Result<Vec<Vec<f64>>, EstimationError> {
+    let observed = columns.len();
+    let constructs = recipe.model.constructs.len();
+    let construct_index = recipe
+        .model
+        .constructs
+        .iter()
+        .enumerate()
+        .map(|(index, construct)| (construct.id.as_str(), index))
+        .collect::<HashMap<_, _>>();
+    let mut coefficients = vec![vec![0.0; observed + constructs]; constructs];
+    for (construct_position, construct) in recipe.model.constructs.iter().enumerate() {
+        if construct.mode == MeasurementMode::Reflective {
+            for indicator in &construct.indicators {
+                let indicator_position = indicator_index[indicator.as_str()];
+                coefficients[construct_position][indicator_position] =
+                    dot(&scores[construct_position], &columns[indicator_position]);
+            }
+        }
+    }
+    for (target, construct) in recipe.model.constructs.iter().enumerate() {
+        let predecessors = recipe
+            .model
+            .paths
+            .iter()
+            .filter(|path| path.target == construct.id)
+            .map(|path| construct_index[path.source.as_str()])
+            .collect::<Vec<_>>();
+        if predecessors.is_empty() {
+            continue;
+        }
+        let predictors = predecessors
+            .iter()
+            .map(|source| scores[*source].clone())
+            .collect::<Vec<_>>();
+        let fitted = ols(&predictors, &scores[target], &construct.id)?;
+        for (source, coefficient) in predecessors.into_iter().zip(fitted) {
+            coefficients[source][observed + target] = coefficient;
+        }
+    }
+    Ok(coefficients)
+}
+
+fn gsca_update_weight_block(
+    recipe: &AnalysisRecipe,
+    columns: &[Vec<f64>],
+    blocks: &[Vec<usize>],
+    scores: &[Vec<f64>],
+    coefficients: &[Vec<f64>],
+    construct: usize,
+) -> Result<Vec<f64>, EstimationError> {
+    let observed = columns.len();
+    let constructs = scores.len();
+    let width = observed + constructs;
+    let mut h = vec![vec![0.0; width]; constructs];
+    for row in 0..constructs {
+        for column in 0..width {
+            h[row][column] = -coefficients[row][column];
+        }
+        h[row][observed + row] += 1.0;
+    }
+    let mut projected_residual = vec![0.0; columns[0].len()];
+    for observation in 0..projected_residual.len() {
+        let mut value = 0.0;
+        for equation in 0..width {
+            let mut residual_without = if equation < observed {
+                columns[equation][observation]
+            } else {
+                0.0
+            };
+            for other in 0..constructs {
+                if other != construct {
+                    residual_without += scores[other][observation] * h[other][equation];
+                }
+            }
+            value += residual_without * h[construct][equation];
+        }
+        projected_residual[observation] = -value;
+    }
+    let predictors = blocks[construct]
+        .iter()
+        .map(|column| columns[*column].clone())
+        .collect::<Vec<_>>();
+    let candidate = ols(
+        &predictors,
+        &projected_residual,
+        &recipe.model.constructs[construct].id,
+    )?;
+    gsca_normalize_weights(columns, &blocks[construct], candidate)
+}
+
+fn gsca_objective(
+    recipe: &AnalysisRecipe,
+    columns: &[Vec<f64>],
+    scores: &[Vec<f64>],
+    coefficients: &[Vec<f64>],
+    indicator_index: &HashMap<&str, usize>,
+) -> (f64, f64, f64) {
+    let observed = columns.len();
+    let construct_index = recipe
+        .model
+        .constructs
+        .iter()
+        .enumerate()
+        .map(|(index, construct)| (construct.id.as_str(), index))
+        .collect::<HashMap<_, _>>();
+    let mut measurement = 0.0;
+    for (construct_position, construct) in recipe.model.constructs.iter().enumerate() {
+        for indicator in &construct.indicators {
+            let indicator_position = indicator_index[indicator.as_str()];
+            let coefficient = coefficients[construct_position][indicator_position];
+            measurement += columns[indicator_position]
+                .iter()
+                .zip(&scores[construct_position])
+                .map(|(indicator, score)| (indicator - coefficient * score).powi(2))
+                .sum::<f64>();
+        }
+    }
+    let mut structural = 0.0;
+    for (target, construct) in recipe.model.constructs.iter().enumerate() {
+        let incoming = recipe
+            .model
+            .paths
+            .iter()
+            .filter(|path| path.target == construct.id)
+            .collect::<Vec<_>>();
+        let mut predicted = vec![0.0; scores[target].len()];
+        for path in incoming {
+            let source = construct_index[path.source.as_str()];
+            add_scaled(
+                &mut predicted,
+                &scores[source],
+                coefficients[source][observed + target],
+            );
+        }
+        structural += scores[target]
+            .iter()
+            .zip(predicted)
+            .map(|(actual, predicted)| (actual - predicted).powi(2))
+            .sum::<f64>();
+    }
+    (measurement + structural, measurement, structural)
+}
+
+fn gsca_covariance_fit(
+    recipe: &AnalysisRecipe,
+    columns: &[Vec<f64>],
+    scores: &[Vec<f64>],
+    coefficients: &[Vec<f64>],
+    indicator_index: &HashMap<&str, usize>,
+) -> Result<(f64, f64, f64, f64, f64), EstimationError> {
+    let observed = columns.len();
+    let constructs = scores.len();
+    let width = observed + constructs;
+    let rows = columns[0].len();
+    let mut residual_columns = vec![vec![0.0; rows]; width];
+    let construct_index = recipe
+        .model
+        .constructs
+        .iter()
+        .enumerate()
+        .map(|(index, construct)| (construct.id.as_str(), index))
+        .collect::<HashMap<_, _>>();
+    for (construct_position, construct) in recipe.model.constructs.iter().enumerate() {
+        for indicator in &construct.indicators {
+            let indicator_position = indicator_index[indicator.as_str()];
+            let coefficient = coefficients[construct_position][indicator_position];
+            for row in 0..rows {
+                residual_columns[indicator_position][row] = columns[indicator_position][row]
+                    - coefficient * scores[construct_position][row];
+            }
+        }
+    }
+    for target in 0..constructs {
+        residual_columns[observed + target].clone_from(&scores[target]);
+    }
+    for path in &recipe.model.paths {
+        let source = construct_index[path.source.as_str()];
+        let target = construct_index[path.target.as_str()];
+        let coefficient = coefficients[source][observed + target];
+        for row in 0..rows {
+            residual_columns[observed + target][row] -= coefficient * scores[source][row];
+        }
+    }
+    let mut residual_covariance = vec![vec![0.0; width]; width];
+    for left in 0..width {
+        for right in 0..width {
+            if (left < observed) == (right < observed) {
+                residual_covariance[left][right] =
+                    dot(&residual_columns[left], &residual_columns[right]);
+            }
+        }
+    }
+    let mut transition = vec![vec![0.0; width]; width];
+    for construct in 0..constructs {
+        transition[observed + construct].clone_from(&coefficients[construct]);
+    }
+    let mut identity_minus_transition = identity_matrix(width);
+    for row in 0..width {
+        for column in 0..width {
+            identity_minus_transition[row][column] -= transition[row][column];
+        }
+    }
+    let inverse = invert_matrix(&identity_minus_transition)?;
+    let implied_augmented = multiply_matrices(
+        &multiply_matrices(&transpose_matrix(&inverse), &residual_covariance),
+        &inverse,
+    );
+    let sample = columns
+        .iter()
+        .map(|left| {
+            columns
+                .iter()
+                .map(|right| dot(left, right))
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>();
+    let mut discrepancy = 0.0;
+    let mut sample_total = 0.0;
+    let mut standardized_lower = 0.0;
+    for row in 0..observed {
+        for column in 0..observed {
+            let difference = sample[row][column] - implied_augmented[row][column];
+            discrepancy += difference * difference;
+            sample_total += sample[row][column] * sample[row][column];
+            if column <= row {
+                let denominator = (sample[row][row] * sample[column][column]).abs().sqrt();
+                if denominator <= f64::EPSILON {
+                    return Err(EstimationError::Numerical(
+                        "GSCA covariance fit has a zero observed variance".into(),
+                    ));
+                }
+                standardized_lower += (difference / denominator).powi(2);
+            }
+        }
+    }
+    let gfi = 1.0 - discrepancy / sample_total;
+    let srmr = (2.0 * standardized_lower / (observed * (observed + 1)) as f64).sqrt();
+    if [gfi, srmr].iter().any(|value| !value.is_finite()) {
+        return Err(EstimationError::Numerical(
+            "GSCA covariance fit produced a non-finite statistic".into(),
+        ));
+    }
+    Ok((gfi, srmr, discrepancy, sample_total, standardized_lower))
 }
 
 fn centered_square(values: &[f64]) -> Vec<f64> {
@@ -4311,8 +5157,16 @@ fn control_estimates(
 struct PredictionSplit {
     train_columns: Vec<Vec<f64>>,
     test_columns: Vec<Vec<f64>>,
+    transforms: Vec<PredictionIndicatorTransform>,
+    test_rows: Vec<usize>,
     train_observations: usize,
     test_observations: usize,
+}
+
+struct PredictionIndicatorTransform {
+    raw_training_mean: f64,
+    center: f64,
+    scale: f64,
 }
 
 struct PredictionPreparedRows {
@@ -4331,15 +5185,65 @@ struct PredictionErrorAccumulator {
     benchmark_absolute_error: f64,
     lm_sse: Option<f64>,
     lm_absolute_error: Option<f64>,
-    benchmark_loss_differences: Vec<f64>,
-    lm_loss_differences: Vec<f64>,
-    model_pair_loss_differences: BTreeMap<String, Vec<f64>>,
+    lm_available: bool,
 }
 
-struct CvpatModelPairSpec {
-    label: String,
-    target: String,
-    drop_sources: HashSet<String>,
+#[derive(Default)]
+struct ErrorMetricAccumulator {
+    observations: usize,
+    squared_error_sum: f64,
+    absolute_error_sum: f64,
+    absolute_percentage_error_sum: f64,
+    mape_observations: usize,
+}
+
+struct IndicatorPredictionAccumulator {
+    construct: String,
+    indicator: String,
+    predictor_count: usize,
+    pls: ErrorMetricAccumulator,
+    indicator_average: ErrorMetricAccumulator,
+    linear_model: ErrorMetricAccumulator,
+    linear_model_available: bool,
+    linear_model_reason: Option<String>,
+}
+
+struct FoldConstructPrediction {
+    construct: String,
+    predictor_count: usize,
+    actual: Vec<f64>,
+    predicted: Vec<f64>,
+    linear_model: Option<Vec<f64>>,
+}
+
+struct FoldIndicatorPrediction {
+    construct: String,
+    indicator: String,
+    predictor_count: usize,
+    actual: Vec<f64>,
+    predicted: Vec<f64>,
+    indicator_average: Vec<f64>,
+    linear_model: Result<Vec<f64>, String>,
+}
+
+struct PredictionFoldOutput {
+    constructs: Vec<FoldConstructPrediction>,
+    indicators: Vec<FoldIndicatorPrediction>,
+}
+
+#[derive(Default)]
+struct CvpatCaseLoss {
+    pls_sum: f64,
+    indicator_average_sum: f64,
+    linear_model_sum: f64,
+    repeats: usize,
+}
+
+struct CvpatLossAccumulator {
+    cases: BTreeMap<usize, CvpatCaseLoss>,
+    indicator_count: usize,
+    linear_model_available: bool,
+    linear_model_reason: Option<String>,
 }
 
 fn apply_pls_predict(
@@ -4351,16 +5255,22 @@ fn apply_pls_predict(
 ) -> Result<(), EstimationError> {
     if !recipe.model.interactions.is_empty() || !recipe.model.higher_order_constructs.is_empty() {
         return Err(EstimationError::UnsupportedMethod(
-            "PLSpredict holdout v1 does not support generated interactions or higher-order constructs"
+            "Deterministic construct prediction does not support generated interactions or higher-order constructs"
                 .into(),
         ));
     }
     if recipe.settings.case_weight_column.is_some() {
         return Err(EstimationError::UnsupportedMethod(
-            "PLSpredict holdout v1 does not support case weights".into(),
+            "Deterministic construct prediction does not support case weights".into(),
         ));
     }
     let prepared_rows = prepare_prediction_rows(dataset, indicator_names, control)?;
+    if prepared_rows.complete_rows.len() < 20 {
+        return Err(EstimationError::UnsupportedMethod(
+            "PLSpredict indicator v2 requires at least 20 complete cases across all model indicators"
+                .into(),
+        ));
+    }
     let split = prepare_prediction_split(
         dataset,
         indicator_names,
@@ -4397,19 +5307,6 @@ fn apply_pls_predict(
                 .collect::<Vec<_>>()
         })
         .collect::<Vec<_>>();
-    let (weights, train_scores, _) = match recipe.settings.weighting_scheme {
-        WeightingScheme::Pca => pca_scores(
-            &split.train_columns,
-            &blocks,
-            recipe.settings.tolerance,
-            recipe.settings.max_iterations,
-            control,
-        )?,
-        WeightingScheme::Path | WeightingScheme::Factor => {
-            iterative_scores(&split.train_columns, &blocks, recipe, false, control)?
-        }
-    };
-    let test_scores = block_linear_scores(&split.test_columns, &blocks, &weights)?;
     let construct_index = recipe
         .model
         .constructs
@@ -4417,78 +5314,27 @@ fn apply_pls_predict(
         .enumerate()
         .map(|(index, construct)| (construct.id.as_str(), index))
         .collect::<HashMap<_, _>>();
-    let mut targets = Vec::new();
-    for (target_index, construct) in recipe.model.constructs.iter().enumerate() {
-        let predecessors = recipe
-            .model
-            .paths
-            .iter()
-            .filter(|path| path.target == construct.id)
-            .map(|path| construct_index[path.source.as_str()])
-            .collect::<Vec<_>>();
-        if predecessors.is_empty() {
-            continue;
-        }
-        let train_predictors = predecessors
-            .iter()
-            .map(|index| train_scores[*index].clone())
-            .collect::<Vec<_>>();
-        let coefficients = ols(
-            &train_predictors,
-            &train_scores[target_index],
-            &format!("PLSpredict target {}", construct.id),
-        )?;
-        let test_predictors = predecessors
-            .iter()
-            .map(|index| test_scores[*index].clone())
-            .collect::<Vec<_>>();
-        let predicted = fitted_values(&test_predictors, &coefficients);
-        let lm_predicted = linear_model_construct_predictions(
-            recipe,
-            &split.train_columns,
-            &split.test_columns,
-            &blocks,
-            &predecessors,
-            &train_scores[target_index],
-            &construct.id,
-        )
-        .ok();
-        let actual = &test_scores[target_index];
-        let sse = squared_error_sum(actual, &predicted);
-        let benchmark_sse = actual.iter().map(|value| value * value).sum::<f64>();
-        let q_squared_predict = (benchmark_sse > f64::EPSILON)
-            .then(|| 1.0 - sse / benchmark_sse)
-            .filter(|value| value.is_finite());
-        let (rmse_lm, mae_lm, q_squared_predict_lm) =
-            lm_predicted
-                .as_ref()
-                .map_or((None, None, None), |lm_predicted| {
-                    let lm_sse = squared_error_sum(actual, lm_predicted);
-                    (
-                        Some(rmse(actual, lm_predicted)),
-                        Some(mae(actual, lm_predicted)),
-                        (benchmark_sse > f64::EPSILON)
-                            .then(|| 1.0 - lm_sse / benchmark_sse)
-                            .filter(|value| value.is_finite()),
-                    )
-                });
-        targets.push(PlsPredictTarget {
-            construct: construct.id.clone(),
-            predictor_count: predecessors.len(),
-            rmse_pls: rmse(actual, &predicted),
-            mae_pls: mae(actual, &predicted),
-            rmse_benchmark: (benchmark_sse / actual.len() as f64).sqrt(),
-            mae_benchmark: actual.iter().map(|value| value.abs()).sum::<f64>()
-                / actual.len() as f64,
-            q_squared_predict,
-            rmse_lm,
-            mae_lm,
-            q_squared_predict_lm,
-        });
-    }
+    let fold_output = prediction_fold_output(
+        recipe,
+        indicator_names,
+        &blocks,
+        &construct_index,
+        &split,
+        control,
+    )?;
+    let targets = fold_output
+        .constructs
+        .iter()
+        .map(construct_prediction_target)
+        .collect::<Vec<_>>();
+    let indicator_targets = fold_output
+        .indicators
+        .iter()
+        .map(indicator_prediction_target)
+        .collect::<Vec<_>>();
     if targets.is_empty() {
         return Err(EstimationError::UnsupportedMethod(
-            "PLSpredict holdout v1 requires at least one endogenous construct".into(),
+            "Deterministic construct prediction requires at least one endogenous construct".into(),
         ));
     }
     let repeated_kfold = repeated_kfold_pls_predict(
@@ -4503,19 +5349,21 @@ fn apply_pls_predict(
     result.method_version = PLS_PREDICT_METHOD_VERSION.into();
     result.predict = Some(PlsPredictAnalysis {
         method_version: PLS_PREDICT_METHOD_VERSION.into(),
+        primary_analysis: PLS_PREDICT_REPEATED_KFOLD_METHOD_VERSION.into(),
         split: "deterministic_complete_case_modulo_4_test_rows".into(),
         training_observations: split.train_observations,
         test_observations: split.test_observations,
-        benchmark: "training-mean construct-score benchmark fixed at zero; optional LM benchmark predicts target construct scores from predecessor indicators".into(),
+        benchmark: "secondary modulo-4 holdout with training-mean indicator-average (IA) and earliest-antecedent linear-model (LM) benchmarks; primary inference is the seeded repeated 10-fold block".into(),
         targets,
+        indicator_targets,
         repeated_kfold,
         warnings: vec![
-            "PLSpredict holdout v1 is validated for the documented QuickPLS v1.2.1 deterministic holdout, repeated k-fold, LM benchmark, Q2 predict, RMSE/MAE, and bounded CVPAT diagnostic scope; separate saved-model CVPAT and indicator-level PLSpredict remain unsupported."
+            "PLSpredict indicator v2 is limited to the documented QuickPLS bounded scope: complete-case rows, a secondary deterministic modulo-4 holdout, fixed seeded 10-fold cross-validation repeated 10 times, earliest-antecedent indicator prediction, IA and LM benchmarks, and aggregate benchmark CVPAT. It does not compare separately saved models."
                 .into(),
         ],
     });
     result.warnings.push(
-        "PLSpredict holdout v1 is validated for the documented QuickPLS v1.2.1 bounded prediction scope."
+        "PLSpredict indicator v2 completed within the documented fixed seeded 10-fold by 10-repeat scope; the modulo-4 holdout is secondary."
             .into(),
     );
     Ok(())
@@ -4651,171 +5499,109 @@ fn apply_two_group_mga(
     dataset: &Dataset,
     recipe: &AnalysisRecipe,
     result: &mut PlsResult,
+    control: &mut dyn FnMut(EstimationProgress) -> bool,
 ) -> Result<(), EstimationError> {
-    let group_column = recipe
-        .metadata
-        .get("mga_group_column")
-        .or_else(|| recipe.metadata.get("mga.group_column"))
-        .map(|value| value.trim())
-        .filter(|value| !value.is_empty())
-        .ok_or_else(|| {
-            EstimationError::UnsupportedMethod(
-                "bounded MGA requires metadata mga_group_column".into(),
-            )
-        })?;
-    let group_position = dataset
-        .batch
-        .schema()
-        .index_of(group_column)
-        .map_err(|_| EstimationError::InvalidIndicator(group_column.into()))?;
-    let groups = group_rows(dataset.batch.column(group_position).as_ref())?;
-    if groups.len() != 2 {
-        return Err(EstimationError::UnsupportedMethod(
-            "bounded MGA preview requires exactly two non-missing groups".into(),
-        ));
-    }
+    let (group_column, groups, excluded_observations) =
+        observed_two_groups(dataset, recipe, "two-group MGA v2")?;
     let mut base_recipe = recipe.clone();
     base_recipe.settings.method = AnalysisMethod::PlsPm;
     base_recipe.metadata.remove("mga_group_column");
     base_recipe.metadata.remove("mga.group_column");
+    base_recipe.metadata.remove("mga_group_a");
+    base_recipe.metadata.remove("mga.group_a");
+    base_recipe.metadata.remove("mga_group_b");
+    base_recipe.metadata.remove("mga.group_b");
+    base_recipe.metadata.remove("group_methods");
+    base_recipe.metadata.remove("group_permutation_samples");
+    base_recipe.metadata.remove("micom_configural_confirmed");
+    let pooled_rows = groups
+        .iter()
+        .flat_map(|(_, rows)| rows.iter().copied())
+        .collect::<Vec<_>>();
+    let (_, _, pooled_fit) = fit_group_result_with_base(
+        dataset,
+        &base_recipe,
+        "pooled_selected_groups",
+        &pooled_rows,
+        control,
+        0,
+        2,
+    )?;
     let mut fitted = Vec::new();
-    for (group, rows) in groups {
-        if rows.len() < 10 {
-            return Err(EstimationError::InsufficientObservations);
-        }
-        let subset = subset_dataset(dataset, &rows, &format!("mga_{group}"))?;
-        let group_result = estimate_pls_reduced_with_control(&subset, &base_recipe, |_| true)?;
-        fitted.push((group, rows.len(), group_result));
+    for (index, (group, rows)) in groups.iter().enumerate() {
+        let mut fitted_group = fit_group_result_with_base(
+            dataset,
+            &base_recipe,
+            group,
+            rows,
+            control,
+            index as u64,
+            2,
+        )?;
+        align_group_result_to_pooled(
+            dataset,
+            recipe,
+            &pooled_rows,
+            &pooled_fit,
+            &mut fitted_group.2,
+        )?;
+        fitted.push(fitted_group);
     }
     let first = &fitted[0];
     let second = &fitted[1];
     let comparisons = mga_path_comparisons(recipe, first, second)?;
-    let warnings = vec![
-        "Two-group MGA v1 is validated for the documented QuickPLS v1.2.2 group-specific estimate and permutation-workflow scope; approximate normal path-difference diagnostics remain descriptive.".into(),
+    let measurement_comparisons = mga_measurement_comparisons(recipe, first, second)?;
+    let mut warnings = vec![
+        "Two-group MGA v2 reports Group A/Group B structural paths, R-squared values, outer loadings, outer weights, and A-minus-B differences. Inference uses deterministic two-tailed group-label permutation and is paired with MICOM v2 measurement-invariance assessment.".into(),
     ];
+    if excluded_observations > 0 {
+        warnings.push(format!(
+            "MGA excluded {excluded_observations} rows whose group value was missing, unsupported, or not selected as Group A or Group B."
+        ));
+    }
     result.method_version = PLS_MGA_METHOD_VERSION.into();
     result.mga = Some(PlsMgaAnalysis {
         method_version: PLS_MGA_METHOD_VERSION.into(),
-        group_column: group_column.into(),
+        group_column,
         groups: fitted
             .iter()
             .map(|(group, observations, group_result)| PlsMgaGroupSummary {
                 group: group.clone(),
-                observations: *observations,
+                observations: group_result.used_observations.min(*observations),
                 paths: group_result.paths.clone(),
                 r_squared: group_result.r_squared.clone(),
+                outer_estimates: group_result.outer_estimates.clone(),
+                transforms: group_result.transforms.clone(),
             })
             .collect(),
         comparisons,
+        measurement_comparisons,
         warnings: warnings.clone(),
     });
     result.warnings.extend(warnings);
     Ok(())
 }
 
-fn apply_micom(
-    dataset: &Dataset,
-    recipe: &AnalysisRecipe,
-    result: &mut PlsResult,
-) -> Result<(), EstimationError> {
+fn apply_micom(recipe: &AnalysisRecipe, result: &PlsResult) -> Result<(), EstimationError> {
     if !group_method_requested(recipe, "micom") {
-        return Ok(());
+        return Err(EstimationError::UnsupportedMethod(
+            "the current two-group permutation workflow requires MICOM v2".into(),
+        ));
     }
-    ensure_group_segmentation_supported(recipe, "MICOM v1")?;
-    let (group_column, groups) = observed_two_groups(dataset, recipe, "MICOM v1")?;
-    let samples = parse_metadata_usize(recipe, "group_permutation_samples", 999).clamp(1, 10_000);
-    let construct_ids = recipe
-        .model
-        .constructs
-        .iter()
-        .map(|construct| construct.id.clone())
-        .collect::<Vec<_>>();
-    let group_summaries = groups
-        .iter()
-        .map(|(group, rows)| MicomGroupSummary {
-            group: group.clone(),
-            observations: rows.len(),
-        })
-        .collect::<Vec<_>>();
-    let first_rows = &groups[0].1;
-    let second_rows = &groups[1].1;
-    let labels = permutation_labels(first_rows.len(), second_rows.len());
-    let all_rows = first_rows
-        .iter()
-        .chain(second_rows.iter())
-        .copied()
-        .collect::<Vec<_>>();
-    let mut constructs = Vec::new();
-    for construct in construct_ids {
-        let scores = result
-            .construct_scores
-            .get(&construct)
-            .ok_or_else(|| EstimationError::UnknownConstruct(construct.clone()))?;
-        let first_scores = first_rows
-            .iter()
-            .map(|row| scores[*row])
-            .collect::<Vec<_>>();
-        let second_scores = second_rows
-            .iter()
-            .map(|row| scores[*row])
-            .collect::<Vec<_>>();
-        let mean_difference = vector_mean(&first_scores) - vector_mean(&second_scores);
-        let variance_difference = sample_variance(&first_scores) - sample_variance(&second_scores);
-        let compositional_correlation = construct_weight_correlation(result, &construct);
-        let mut mean_extreme = 0usize;
-        let mut variance_extreme = 0usize;
-        let mut composition_extreme = 0usize;
-        for replicate in 0..samples {
-            let shuffled =
-                deterministic_permutation_labels(&labels, recipe.settings.seed, replicate);
-            let (left, right) = split_by_labels(&all_rows, &shuffled);
-            let left_scores = left.iter().map(|row| scores[*row]).collect::<Vec<_>>();
-            let right_scores = right.iter().map(|row| scores[*row]).collect::<Vec<_>>();
-            let permuted_mean = vector_mean(&left_scores) - vector_mean(&right_scores);
-            let permuted_variance = sample_variance(&left_scores) - sample_variance(&right_scores);
-            if permuted_mean.abs() >= mean_difference.abs() {
-                mean_extreme += 1;
-            }
-            if permuted_variance.abs() >= variance_difference.abs() {
-                variance_extreme += 1;
-            }
-            let permuted_composition = correlation_or_one(&left_scores, &right_scores);
-            if permuted_composition <= compositional_correlation {
-                composition_extreme += 1;
-            }
-        }
-        let compositional_p_value = empirical_p_value(composition_extreme, samples);
-        let mean_p_value = empirical_p_value(mean_extreme, samples);
-        let variance_p_value = empirical_p_value(variance_extreme, samples);
-        let partial_invariance = compositional_p_value >= 0.05;
-        let full_invariance =
-            partial_invariance && mean_p_value >= 0.05 && variance_p_value >= 0.05;
-        constructs.push(MicomConstructResult {
-            construct,
-            configural_invariance: true,
-            compositional_correlation,
-            compositional_p_value: Some(compositional_p_value),
-            mean_difference,
-            mean_p_value: Some(mean_p_value),
-            variance_difference,
-            variance_p_value: Some(variance_p_value),
-            partial_invariance,
-            full_invariance,
-        });
+    if !recipe
+        .metadata
+        .get("micom_configural_confirmed")
+        .is_some_and(|value| value.eq_ignore_ascii_case("true"))
+    {
+        return Err(EstimationError::UnsupportedMethod(
+            "MICOM v2 requires explicit confirmation of configural invariance prerequisites".into(),
+        ));
     }
-    let warnings = vec![
-        "MICOM v1 is validated for the documented QuickPLS v1.2.2 two-group configural, compositional, mean, and variance permutation scope.".into(),
-    ];
-    result.micom = Some(MicomAnalysis {
-        method_version: MICOM_METHOD_VERSION.into(),
-        group_column,
-        permutation_samples: samples,
-        usable_permutations: samples,
-        groups: group_summaries,
-        constructs,
-        warnings: warnings.clone(),
-    });
-    result.warnings.extend(warnings);
+    if result.micom.is_none() {
+        return Err(EstimationError::Numerical(
+            "MICOM v2 did not produce a result payload".into(),
+        ));
+    }
     Ok(())
 }
 
@@ -4823,72 +5609,183 @@ fn apply_mga_permutation(
     dataset: &Dataset,
     recipe: &AnalysisRecipe,
     result: &mut PlsResult,
+    control: &mut dyn FnMut(EstimationProgress) -> bool,
 ) -> Result<(), EstimationError> {
     if !group_method_requested(recipe, "mga_permutation") {
-        return Ok(());
+        return Err(EstimationError::UnsupportedMethod(
+            "the current two-group workflow requires permutation MGA v2".into(),
+        ));
     }
-    ensure_group_segmentation_supported(recipe, "permutation MGA v1")?;
-    let (group_column, groups) = observed_two_groups(dataset, recipe, "permutation MGA v1")?;
-    let samples = parse_metadata_usize(recipe, "group_permutation_samples", 999).clamp(1, 10_000);
+    if !group_method_requested(recipe, "micom") {
+        return Err(EstimationError::UnsupportedMethod(
+            "the current two-group workflow requires MICOM v2".into(),
+        ));
+    }
+    ensure_group_segmentation_supported(recipe, "permutation MGA v2")?;
+    let (group_column, groups, _) = observed_two_groups(dataset, recipe, "permutation MGA v2")?;
+    let samples = recipe
+        .metadata
+        .get("group_permutation_samples")
+        .and_then(|value| value.trim().parse::<usize>().ok())
+        .filter(|samples| (5_000..=10_000).contains(samples))
+        .ok_or_else(|| {
+            EstimationError::UnsupportedMethod(
+                "MICOM and permutation MGA require group_permutation_samples between 5000 and 10000".into(),
+            )
+        })?;
     let first_rows = &groups[0].1;
     let second_rows = &groups[1].1;
-    let original_first = fit_group_result(dataset, recipe, &groups[0].0, first_rows)?;
-    let original_second = fit_group_result(dataset, recipe, &groups[1].0, second_rows)?;
-    let original = mga_path_comparisons(recipe, &original_first, &original_second)?;
+    let original_mga = result.mga.as_ref().cloned().ok_or_else(|| {
+        EstimationError::Numerical(
+            "permutation MGA requires completed group-specific estimates".into(),
+        )
+    })?;
+    let original = original_mga.comparisons.clone();
+    let original_measurements = original_mga.measurement_comparisons.clone();
+    if original_mga.groups.len() != 2
+        || original_mga.groups[0].group != groups[0].0
+        || original_mga.groups[1].group != groups[1].0
+    {
+        return Err(EstimationError::Numerical(
+            "permutation MGA group estimates do not match the selected ordered groups".into(),
+        ));
+    }
     let labels = permutation_labels(first_rows.len(), second_rows.len());
     let all_rows = first_rows
         .iter()
         .chain(second_rows.iter())
         .copied()
         .collect::<Vec<_>>();
-    let mut extremes = vec![0usize; original.len()];
-    let mut less_equal = vec![0usize; original.len()];
+    let (_, _, pooled_fit) = fit_group_result(
+        dataset,
+        recipe,
+        "pooled_selected_groups",
+        &all_rows,
+        control,
+        0,
+        samples as u64,
+    )?;
+    let observed_micom = micom_statistics(
+        dataset,
+        recipe,
+        &all_rows,
+        &labels,
+        &original_mga.groups[0].outer_estimates,
+        &original_mga.groups[0].transforms,
+        &original_mga.groups[1].outer_estimates,
+        &original_mga.groups[1].transforms,
+        &pooled_fit,
+    )?;
+    let mut path_extremes = vec![0usize; original.len()];
+    let mut path_less_equal = vec![0usize; original.len()];
+    let mut measurement_extremes = vec![0usize; original_measurements.len()];
+    let mut measurement_less_equal = vec![0usize; original_measurements.len()];
+    let mut micom_correlations = vec![Vec::with_capacity(samples); observed_micom.len()];
+    let mut micom_mean_differences = vec![Vec::with_capacity(samples); observed_micom.len()];
+    let mut micom_variance_differences = vec![Vec::with_capacity(samples); observed_micom.len()];
     let mut usable = 0usize;
     let mut failed = 0usize;
-    for replicate in 0..samples {
+    let mut attempted = 0usize;
+    let maximum_attempts = samples.saturating_add((samples / 5).max(100));
+    checkpoint(control, EstimationPhase::Iterating, 0, samples as u64)?;
+    while usable < samples && attempted < maximum_attempts {
+        let replicate = attempted;
+        attempted += 1;
         let shuffled =
             deterministic_permutation_labels(&labels, recipe.settings.seed ^ 0x9E37, replicate);
         let (left, right) = split_by_labels(&all_rows, &shuffled);
-        let left_fit = fit_group_result(dataset, recipe, &groups[0].0, &left);
-        let right_fit = fit_group_result(dataset, recipe, &groups[1].0, &right);
-        let (Ok(left_fit), Ok(right_fit)) = (left_fit, right_fit) else {
+        let left_fit = fit_group_result(
+            dataset,
+            recipe,
+            &groups[0].0,
+            &left,
+            control,
+            usable as u64,
+            samples as u64,
+        );
+        if matches!(&left_fit, Err(EstimationError::Cancelled)) {
+            return Err(EstimationError::Cancelled);
+        }
+        let right_fit = fit_group_result(
+            dataset,
+            recipe,
+            &groups[1].0,
+            &right,
+            control,
+            usable as u64,
+            samples as u64,
+        );
+        if matches!(&right_fit, Err(EstimationError::Cancelled)) {
+            return Err(EstimationError::Cancelled);
+        }
+        let (Ok(mut left_fit), Ok(mut right_fit)) = (left_fit, right_fit) else {
             failed += 1;
+            checkpoint(
+                control,
+                EstimationPhase::Iterating,
+                usable as u64,
+                samples as u64,
+            )?;
             continue;
         };
+        align_group_result_to_pooled(dataset, recipe, &all_rows, &pooled_fit, &mut left_fit.2)?;
+        align_group_result_to_pooled(dataset, recipe, &all_rows, &pooled_fit, &mut right_fit.2)?;
         let comparisons = mga_path_comparisons(recipe, &left_fit, &right_fit)?;
+        let measurement_comparisons = mga_measurement_comparisons(recipe, &left_fit, &right_fit)?;
+        let micom = micom_statistics(
+            dataset,
+            recipe,
+            &all_rows,
+            &shuffled,
+            &left_fit.2.outer_estimates,
+            &left_fit.2.transforms,
+            &right_fit.2.outer_estimates,
+            &right_fit.2.transforms,
+            &pooled_fit,
+        )?;
+        if !same_measurement_comparison_order(&original_measurements, &measurement_comparisons)
+            || !same_micom_order(&observed_micom, &micom)
+        {
+            return Err(EstimationError::Numerical(
+                "permutation MGA produced inconsistent parameter identities".into(),
+            ));
+        }
         for (index, comparison) in comparisons.iter().enumerate() {
             let diff = comparison.difference;
             if diff.abs() >= original[index].difference.abs() {
-                extremes[index] += 1;
+                path_extremes[index] += 1;
             }
             if diff <= original[index].difference {
-                less_equal[index] += 1;
+                path_less_equal[index] += 1;
             }
         }
+        for (index, comparison) in measurement_comparisons.iter().enumerate() {
+            let diff = comparison.difference;
+            if diff.abs() >= original_measurements[index].difference.abs() {
+                measurement_extremes[index] += 1;
+            }
+            if diff <= original_measurements[index].difference {
+                measurement_less_equal[index] += 1;
+            }
+        }
+        for (index, statistic) in micom.iter().enumerate() {
+            micom_correlations[index].push(statistic.compositional_correlation);
+            micom_mean_differences[index].push(statistic.mean_difference);
+            micom_variance_differences[index].push(statistic.variance_difference);
+        }
         usable += 1;
+        checkpoint(
+            control,
+            EstimationPhase::Iterating,
+            usable as u64,
+            samples as u64,
+        )?;
     }
-    if usable == 0 {
-        return Err(EstimationError::Numerical(
-            "permutation MGA produced no usable permutation fits".into(),
-        ));
+    if usable != samples {
+        return Err(EstimationError::Numerical(format!(
+            "permutation MGA produced {usable} usable fits after {attempted} attempts; {samples} were required"
+        )));
     }
-    let micom_passed = result.micom.as_ref().is_some_and(|micom| {
-        micom
-            .constructs
-            .iter()
-            .all(|construct| construct.partial_invariance)
-    });
-    let mut warnings = Vec::new();
-    if !micom_passed {
-        warnings.push(
-            "Permutation MGA v1 was computed without a passing MICOM partial-invariance result; interpret group differences cautiously."
-                .into(),
-        );
-    }
-    warnings.push(
-        "Permutation MGA v1 is validated for the documented QuickPLS v1.2.2 two-group deterministic group-label permutation scope."
-            .into(),
-    );
     let comparisons = original
         .into_iter()
         .enumerate()
@@ -4896,25 +5793,112 @@ fn apply_mga_permutation(
             source: comparison.source,
             target: comparison.target,
             original_difference: comparison.difference,
-            empirical_p_value_two_sided: Some(empirical_p_value(extremes[index], usable)),
-            percentile_rank: Some(less_equal[index] as f64 / usable as f64),
+            empirical_p_value_two_sided: Some(empirical_p_value(path_extremes[index], usable)),
+            percentile_rank: Some(path_less_equal[index] as f64 / usable as f64),
         })
         .collect::<Vec<_>>();
-    result.mga_permutation = Some(PlsMgaPermutationAnalysis {
-        method_version: PLS_MGA_PERMUTATION_METHOD_VERSION.into(),
-        group_column,
-        permutation_samples: samples,
-        usable_permutations: usable,
-        comparisons,
-        warnings: warnings.clone(),
-    });
+    let measurement_comparisons = original_measurements
+        .into_iter()
+        .enumerate()
+        .map(
+            |(index, comparison)| PlsMgaPermutationMeasurementComparison {
+                parameter: comparison.parameter,
+                construct: comparison.construct,
+                indicator: comparison.indicator,
+                original_difference: comparison.difference,
+                empirical_p_value_two_sided: Some(empirical_p_value(
+                    measurement_extremes[index],
+                    usable,
+                )),
+                percentile_rank: Some(measurement_less_equal[index] as f64 / usable as f64),
+            },
+        )
+        .collect::<Vec<_>>();
+    let micom_constructs = build_micom_results(
+        &observed_micom,
+        &mut micom_correlations,
+        &mut micom_mean_differences,
+        &mut micom_variance_differences,
+        usable,
+        recipe.settings.confidence_level,
+        recipe
+            .metadata
+            .get("micom_configural_confirmed")
+            .is_some_and(|value| value.eq_ignore_ascii_case("true")),
+    )?;
+    let mut warnings = vec![
+        "Two-group permutation MGA v2 re-estimates path coefficients, outer loadings, and outer weights after every deterministic group-label permutation and reports two-tailed A-minus-B evidence.".into(),
+        "MICOM v2 evaluates computational configural prerequisites, compositional invariance, and equality of pooled-score means and variances. Translation, coding meaning, and substantive indicator equivalence still require researcher review.".into(),
+    ];
     if failed > 0 {
-        result.warnings.push(format!(
+        warnings.push(format!(
             "Permutation MGA skipped {failed} singular or non-convergent permutation fits."
         ));
     }
+    result.mga_permutation = Some(PlsMgaPermutationAnalysis {
+        method_version: PLS_MGA_PERMUTATION_METHOD_VERSION.into(),
+        group_column: group_column.clone(),
+        permutation_samples: samples,
+        usable_permutations: usable,
+        attempted_permutations: Some(attempted),
+        failed_permutations: Some(failed),
+        comparisons,
+        measurement_comparisons,
+        warnings: warnings.clone(),
+    });
+    result.micom = Some(MicomAnalysis {
+        method_version: MICOM_METHOD_VERSION.into(),
+        group_column,
+        permutation_samples: samples,
+        usable_permutations: usable,
+        attempted_permutations: Some(attempted),
+        failed_permutations: Some(failed),
+        confidence_level: Some(recipe.settings.confidence_level),
+        groups: original_mga
+            .groups
+            .iter()
+            .map(|group| MicomGroupSummary {
+                group: group.group.clone(),
+                observations: group.observations,
+            })
+            .collect(),
+        constructs: micom_constructs,
+        warnings: warnings.clone(),
+    });
     result.warnings.extend(warnings);
     Ok(())
+}
+
+#[derive(Debug, Clone)]
+struct MicomStatistic {
+    construct: String,
+    compositional_correlation: f64,
+    mean_a: f64,
+    mean_b: f64,
+    mean_difference: f64,
+    variance_a: f64,
+    variance_b: f64,
+    variance_difference: f64,
+}
+
+fn same_measurement_comparison_order(
+    left: &[PlsMgaMeasurementComparison],
+    right: &[PlsMgaMeasurementComparison],
+) -> bool {
+    left.len() == right.len()
+        && left.iter().zip(right).all(|(left, right)| {
+            left.parameter == right.parameter
+                && left.construct == right.construct
+                && left.indicator == right.indicator
+        })
+}
+
+fn same_micom_order(left: &[MicomStatistic], right: &[MicomStatistic]) -> bool {
+    left.len() == right.len()
+        && left
+            .iter()
+            .zip(right)
+            .all(|(left, right)| left.construct == right.construct)
 }
 
 fn group_rows(array: &dyn Array) -> Result<Vec<(String, Vec<usize>)>, EstimationError> {
@@ -4931,6 +5915,9 @@ fn group_rows(array: &dyn Array) -> Result<Vec<(String, Vec<usize>)>, Estimation
             values.value(row).to_string()
         } else if let Some(values) = array.as_any().downcast_ref::<Float64Array>() {
             let value = values.value(row);
+            if !value.is_finite() {
+                continue;
+            }
             if value.fract().abs() <= f64::EPSILON {
                 format!("{value:.0}")
             } else {
@@ -4952,7 +5939,7 @@ fn observed_two_groups(
     dataset: &Dataset,
     recipe: &AnalysisRecipe,
     method: &str,
-) -> Result<(String, Vec<(String, Vec<usize>)>), EstimationError> {
+) -> Result<(String, Vec<(String, Vec<usize>)>, usize), EstimationError> {
     let group_column = recipe
         .metadata
         .get("mga_group_column")
@@ -4969,13 +5956,68 @@ fn observed_two_groups(
         .schema()
         .index_of(group_column)
         .map_err(|_| EstimationError::InvalidIndicator(group_column.into()))?;
-    let groups = group_rows(dataset.batch.column(group_position).as_ref())?;
-    if groups.len() != 2 {
-        return Err(EstimationError::UnsupportedMethod(format!(
-            "{method} requires exactly two observed non-missing groups"
-        )));
+    let mut groups = group_rows(dataset.batch.column(group_position).as_ref())?
+        .into_iter()
+        .collect::<BTreeMap<_, _>>();
+    let (group_a, group_b) = requested_mga_groups(recipe, method)?;
+    let first_observed = groups.remove(&group_a).ok_or_else(|| {
+        EstimationError::UnsupportedMethod(format!(
+            "{method} Group A value '{group_a}' is not present in the selected column"
+        ))
+    })?;
+    let second_observed = groups.remove(&group_b).ok_or_else(|| {
+        EstimationError::UnsupportedMethod(format!(
+            "{method} Group B value '{group_b}' is not present in the selected column"
+        ))
+    })?;
+    // Freeze the complete-case row set before fitting or permuting group labels.
+    // This preserves the selected A/B analyzed sample sizes across every
+    // permutation even when model indicators contain missing values.
+    let first = complete_model_rows(dataset, recipe, &first_observed)?;
+    let second = complete_model_rows(dataset, recipe, &second_observed)?;
+    let selected = first.len() + second.len();
+    let excluded = dataset.batch.num_rows().saturating_sub(selected);
+    Ok((
+        group_column.into(),
+        vec![(group_a, first), (group_b, second)],
+        excluded,
+    ))
+}
+
+fn complete_model_rows(
+    dataset: &Dataset,
+    recipe: &AnalysisRecipe,
+    candidate_rows: &[usize],
+) -> Result<Vec<usize>, EstimationError> {
+    let indicators = collect_indicators(recipe)?;
+    let schema = dataset.batch.schema();
+    let positions = indicators
+        .iter()
+        .map(|indicator| {
+            schema
+                .index_of(indicator)
+                .map_err(|_| EstimationError::InvalidIndicator(indicator.clone()))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    for (indicator, position) in indicators.iter().zip(&positions) {
+        let array = dataset.batch.column(*position);
+        if array.as_any().downcast_ref::<Float64Array>().is_none()
+            && array.as_any().downcast_ref::<Int64Array>().is_none()
+        {
+            return Err(EstimationError::InvalidIndicator(indicator.clone()));
+        }
     }
-    Ok((group_column.into(), groups))
+    Ok(candidate_rows
+        .iter()
+        .copied()
+        .filter(|row| {
+            positions.iter().all(|position| {
+                let array = dataset.batch.column(*position);
+                !array.is_null(*row)
+                    && numeric_value(array.as_ref(), *row).is_some_and(f64::is_finite)
+            })
+        })
+        .collect())
 }
 
 fn fit_group_result(
@@ -4983,18 +6025,90 @@ fn fit_group_result(
     recipe: &AnalysisRecipe,
     group: &str,
     rows: &[usize],
+    control: &mut dyn FnMut(EstimationProgress) -> bool,
+    completed_units: u64,
+    total_units: u64,
 ) -> Result<(String, usize, PlsResult), EstimationError> {
-    if rows.len() < 10 {
-        return Err(EstimationError::InsufficientObservations);
-    }
-    let subset = subset_dataset(dataset, rows, &format!("group_{group}"))?;
     let mut base_recipe = recipe.clone();
     base_recipe.settings.method = AnalysisMethod::PlsPm;
     base_recipe.metadata.remove("mga_group_column");
     base_recipe.metadata.remove("mga.group_column");
+    base_recipe.metadata.remove("mga_group_a");
+    base_recipe.metadata.remove("mga.group_a");
+    base_recipe.metadata.remove("mga_group_b");
+    base_recipe.metadata.remove("mga.group_b");
     base_recipe.metadata.remove("group_methods");
-    let result = estimate_pls_reduced_with_control(&subset, &base_recipe, |_| true)?;
+    base_recipe.metadata.remove("group_permutation_samples");
+    fit_group_result_with_base(
+        dataset,
+        &base_recipe,
+        group,
+        rows,
+        control,
+        completed_units,
+        total_units,
+    )
+}
+
+fn fit_group_result_with_base(
+    dataset: &Dataset,
+    base_recipe: &AnalysisRecipe,
+    group: &str,
+    rows: &[usize],
+    control: &mut dyn FnMut(EstimationProgress) -> bool,
+    completed_units: u64,
+    total_units: u64,
+) -> Result<(String, usize, PlsResult), EstimationError> {
+    if rows.len() < 10 {
+        return Err(EstimationError::UnsupportedMethod(format!(
+            "selected MGA group '{group}' has fewer than 10 observed rows"
+        )));
+    }
+    let subset = subset_dataset(dataset, rows, &format!("group_{group}"))?;
+    let result = estimate_pls_reduced_with_control(&subset, base_recipe, |_| {
+        control(EstimationProgress {
+            phase: EstimationPhase::Iterating,
+            completed_units,
+            total_units,
+        })
+    })?;
+    if result.used_observations < 10 {
+        return Err(EstimationError::UnsupportedMethod(format!(
+            "selected MGA group '{group}' has {} complete model cases; at least 10 are required",
+            result.used_observations
+        )));
+    }
     Ok((group.to_string(), rows.len(), result))
+}
+
+fn requested_mga_groups(
+    recipe: &AnalysisRecipe,
+    method: &str,
+) -> Result<(String, String), EstimationError> {
+    let group_a = recipe
+        .metadata
+        .get("mga_group_a")
+        .or_else(|| recipe.metadata.get("mga.group_a"))
+        .map(|value| value.trim())
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| {
+            EstimationError::UnsupportedMethod(format!("{method} requires metadata mga_group_a"))
+        })?;
+    let group_b = recipe
+        .metadata
+        .get("mga_group_b")
+        .or_else(|| recipe.metadata.get("mga.group_b"))
+        .map(|value| value.trim())
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| {
+            EstimationError::UnsupportedMethod(format!("{method} requires metadata mga_group_b"))
+        })?;
+    if group_a == group_b {
+        return Err(EstimationError::UnsupportedMethod(
+            "MGA Group A and Group B must be different observed values".into(),
+        ));
+    }
+    Ok((group_a.into(), group_b.into()))
 }
 
 fn group_method_requested(recipe: &AnalysisRecipe, method: &str) -> bool {
@@ -5090,33 +6204,6 @@ fn empirical_p_value(extreme: usize, usable: usize) -> f64 {
     (extreme as f64 + 1.0) / (usable as f64 + 1.0)
 }
 
-fn construct_weight_correlation(result: &PlsResult, construct: &str) -> f64 {
-    let weights = result
-        .outer_estimates
-        .iter()
-        .filter(|estimate| estimate.construct == construct)
-        .map(|estimate| estimate.weight)
-        .collect::<Vec<_>>();
-    if weights.len() < 2 {
-        1.0
-    } else {
-        correlation_or_one(&weights, &weights)
-    }
-}
-
-fn correlation_or_one(left: &[f64], right: &[f64]) -> f64 {
-    if left.len() != right.len() || left.len() < 2 {
-        return 1.0;
-    }
-    let left_sd = sample_sd(left);
-    let right_sd = sample_sd(right);
-    if left_sd <= f64::EPSILON || right_sd <= f64::EPSILON {
-        1.0
-    } else {
-        covariance(left, right) / (left_sd * right_sd)
-    }
-}
-
 fn subset_dataset(
     dataset: &Dataset,
     rows: &[usize],
@@ -5210,6 +6297,386 @@ fn mga_path_comparisons(
     Ok(comparisons)
 }
 
+fn mga_measurement_comparisons(
+    recipe: &AnalysisRecipe,
+    first: &(String, usize, PlsResult),
+    second: &(String, usize, PlsResult),
+) -> Result<Vec<PlsMgaMeasurementComparison>, EstimationError> {
+    let mut comparisons = Vec::new();
+    for construct in &recipe.model.constructs {
+        for indicator in &construct.indicators {
+            let first_estimate = first
+                .2
+                .outer_estimates
+                .iter()
+                .find(|estimate| {
+                    estimate.construct == construct.id && estimate.indicator == *indicator
+                })
+                .ok_or_else(|| EstimationError::InvalidIndicator(indicator.clone()))?;
+            let second_estimate = second
+                .2
+                .outer_estimates
+                .iter()
+                .find(|estimate| {
+                    estimate.construct == construct.id && estimate.indicator == *indicator
+                })
+                .ok_or_else(|| EstimationError::InvalidIndicator(indicator.clone()))?;
+            for (parameter, estimate_a, estimate_b) in [
+                (
+                    "outer_loading",
+                    first_estimate.loading,
+                    second_estimate.loading,
+                ),
+                (
+                    "outer_weight",
+                    first_estimate.weight,
+                    second_estimate.weight,
+                ),
+            ] {
+                comparisons.push(PlsMgaMeasurementComparison {
+                    parameter: parameter.into(),
+                    construct: construct.id.clone(),
+                    indicator: indicator.clone(),
+                    group_a: first.0.clone(),
+                    group_b: second.0.clone(),
+                    estimate_a,
+                    estimate_b,
+                    difference: estimate_a - estimate_b,
+                });
+            }
+        }
+    }
+    Ok(comparisons)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn micom_statistics(
+    dataset: &Dataset,
+    recipe: &AnalysisRecipe,
+    pooled_rows: &[usize],
+    labels: &[usize],
+    outer_a: &[OuterEstimate],
+    transforms_a: &[IndicatorTransform],
+    outer_b: &[OuterEstimate],
+    transforms_b: &[IndicatorTransform],
+    pooled_fit: &PlsResult,
+) -> Result<Vec<MicomStatistic>, EstimationError> {
+    if pooled_rows.len() != labels.len()
+        || labels.iter().filter(|label| **label == 0).count() < 2
+        || labels.iter().filter(|label| **label == 1).count() < 2
+        || labels.iter().any(|label| *label > 1)
+    {
+        return Err(EstimationError::Numerical(
+            "MICOM requires aligned non-empty ordered Group A/Group B labels".into(),
+        ));
+    }
+    recipe
+        .model
+        .constructs
+        .iter()
+        .map(|construct| {
+            let score_a =
+                pooled_composite_scores(dataset, pooled_rows, construct, outer_a, transforms_a)?;
+            let score_b =
+                pooled_composite_scores(dataset, pooled_rows, construct, outer_b, transforms_b)?;
+            let compositional_correlation = correlation(&score_a, &score_b).clamp(-1.0, 1.0);
+            if !compositional_correlation.is_finite() {
+                return Err(EstimationError::Numerical(format!(
+                    "MICOM compositional correlation is unavailable for construct {}",
+                    construct.id
+                )));
+            }
+            let pooled_scores = pooled_fit
+                .construct_scores
+                .get(&construct.id)
+                .ok_or_else(|| EstimationError::UnknownConstruct(construct.id.clone()))?;
+            let (mean_a, mean_b, variance_a, variance_b) =
+                micom_location_dispersion(pooled_scores, labels, &construct.id)?;
+            Ok(MicomStatistic {
+                construct: construct.id.clone(),
+                compositional_correlation,
+                mean_a,
+                mean_b,
+                mean_difference: mean_a - mean_b,
+                variance_a,
+                variance_b,
+                variance_difference: (variance_a / variance_b).ln(),
+            })
+        })
+        .collect()
+}
+
+fn pooled_composite_scores(
+    dataset: &Dataset,
+    pooled_rows: &[usize],
+    construct: &qpls_core::Construct,
+    outer_estimates: &[OuterEstimate],
+    transforms: &[IndicatorTransform],
+) -> Result<Vec<f64>, EstimationError> {
+    let schema = dataset.batch.schema();
+    let mut scores = vec![0.0; pooled_rows.len()];
+    for indicator in &construct.indicators {
+        let position = schema
+            .index_of(indicator)
+            .map_err(|_| EstimationError::InvalidIndicator(indicator.clone()))?;
+        let estimate = outer_estimates
+            .iter()
+            .find(|estimate| estimate.construct == construct.id && estimate.indicator == *indicator)
+            .ok_or_else(|| EstimationError::InvalidIndicator(indicator.clone()))?;
+        let transform = transforms
+            .iter()
+            .find(|transform| transform.indicator == *indicator)
+            .ok_or_else(|| EstimationError::InvalidIndicator(indicator.clone()))?;
+        if !estimate.weight.is_finite()
+            || !transform.scale.is_finite()
+            || transform.scale.abs() <= f64::EPSILON
+        {
+            return Err(EstimationError::Numerical(format!(
+                "MICOM cannot apply the group weight for indicator {indicator}"
+            )));
+        }
+        let raw_weight = estimate.weight / transform.scale;
+        let array = dataset.batch.column(position);
+        for (score, row) in scores.iter_mut().zip(pooled_rows) {
+            let value = numeric_value(array.as_ref(), *row)
+                .filter(|value| value.is_finite())
+                .ok_or_else(|| EstimationError::InvalidIndicator(indicator.clone()))?;
+            *score += raw_weight * value;
+        }
+    }
+    if sample_sd(&scores) <= f64::EPSILON {
+        return Err(EstimationError::Numerical(format!(
+            "MICOM pooled proxy has zero variance for construct {}",
+            construct.id
+        )));
+    }
+    Ok(scores)
+}
+
+fn align_group_result_to_pooled(
+    dataset: &Dataset,
+    recipe: &AnalysisRecipe,
+    pooled_rows: &[usize],
+    pooled_fit: &PlsResult,
+    group_fit: &mut PlsResult,
+) -> Result<(), EstimationError> {
+    let mut signs = HashMap::<String, f64>::new();
+    for construct in &recipe.model.constructs {
+        let pooled_scores = pooled_composite_scores(
+            dataset,
+            pooled_rows,
+            construct,
+            &pooled_fit.outer_estimates,
+            &pooled_fit.transforms,
+        )?;
+        let group_scores = pooled_composite_scores(
+            dataset,
+            pooled_rows,
+            construct,
+            &group_fit.outer_estimates,
+            &group_fit.transforms,
+        )?;
+        let alignment = correlation(&pooled_scores, &group_scores);
+        if !alignment.is_finite() {
+            return Err(EstimationError::Numerical(format!(
+                "MGA sign alignment is unavailable for construct {}",
+                construct.id
+            )));
+        }
+        signs.insert(
+            construct.id.clone(),
+            if alignment < 0.0 { -1.0 } else { 1.0 },
+        );
+    }
+    for estimate in &mut group_fit.outer_estimates {
+        let sign = *signs.get(&estimate.construct).unwrap_or(&1.0);
+        estimate.weight *= sign;
+        estimate.loading *= sign;
+    }
+    for (construct, scores) in &mut group_fit.construct_scores {
+        let sign = *signs.get(construct).unwrap_or(&1.0);
+        if sign < 0.0 {
+            for score in scores {
+                *score = -*score;
+            }
+        }
+    }
+    for path in &mut group_fit.paths {
+        let source_sign = *signs.get(&path.source).unwrap_or(&1.0);
+        let target_sign = *signs.get(&path.target).unwrap_or(&1.0);
+        path.coefficient *= source_sign * target_sign;
+    }
+    for control in &mut group_fit.control_estimates {
+        let source_sign = *signs.get(&control.source).unwrap_or(&1.0);
+        let target_sign = *signs.get(&control.target).unwrap_or(&1.0);
+        control.coefficient *= source_sign * target_sign;
+    }
+    Ok(())
+}
+
+fn micom_location_dispersion(
+    pooled_scores: &[f64],
+    labels: &[usize],
+    construct: &str,
+) -> Result<(f64, f64, f64, f64), EstimationError> {
+    if pooled_scores.len() != labels.len() {
+        return Err(EstimationError::Numerical(format!(
+            "MICOM pooled scores are misaligned for construct {construct}"
+        )));
+    }
+    let group_a = pooled_scores
+        .iter()
+        .zip(labels)
+        .filter_map(|(score, label)| (*label == 0).then_some(*score))
+        .collect::<Vec<_>>();
+    let group_b = pooled_scores
+        .iter()
+        .zip(labels)
+        .filter_map(|(score, label)| (*label == 1).then_some(*score))
+        .collect::<Vec<_>>();
+    let variance_a = sample_variance(&group_a);
+    let variance_b = sample_variance(&group_b);
+    if group_a.len() < 2
+        || group_b.len() < 2
+        || !variance_a.is_finite()
+        || !variance_b.is_finite()
+        || variance_a <= f64::EPSILON
+        || variance_b <= f64::EPSILON
+    {
+        return Err(EstimationError::Numerical(format!(
+            "MICOM pooled group variance is unavailable for construct {construct}"
+        )));
+    }
+    Ok((
+        vector_mean(&group_a),
+        vector_mean(&group_b),
+        variance_a,
+        variance_b,
+    ))
+}
+
+fn build_micom_results(
+    observed: &[MicomStatistic],
+    correlations: &mut [Vec<f64>],
+    mean_differences: &mut [Vec<f64>],
+    variance_differences: &mut [Vec<f64>],
+    usable: usize,
+    confidence_level: f64,
+    configural_invariance: bool,
+) -> Result<Vec<MicomConstructResult>, EstimationError> {
+    if !(0.0..1.0).contains(&confidence_level)
+        || observed.len() != correlations.len()
+        || observed.len() != mean_differences.len()
+        || observed.len() != variance_differences.len()
+    {
+        return Err(EstimationError::Numerical(
+            "MICOM confidence or permutation distribution shape is invalid".into(),
+        ));
+    }
+    let alpha = 1.0 - confidence_level;
+    let tail = alpha / 2.0;
+    observed
+        .iter()
+        .enumerate()
+        .map(|(index, observed)| {
+            let correlation_distribution = &mut correlations[index];
+            let mean_distribution = &mut mean_differences[index];
+            let variance_distribution = &mut variance_differences[index];
+            if correlation_distribution.len() != usable
+                || mean_distribution.len() != usable
+                || variance_distribution.len() != usable
+                || correlation_distribution
+                    .iter()
+                    .any(|value| !value.is_finite())
+                || mean_distribution.iter().any(|value| !value.is_finite())
+                || variance_distribution.iter().any(|value| !value.is_finite())
+            {
+                return Err(EstimationError::Numerical(format!(
+                    "MICOM permutation distribution is incomplete for construct {}",
+                    observed.construct
+                )));
+            }
+            correlation_distribution.sort_by(f64::total_cmp);
+            mean_distribution.sort_by(f64::total_cmp);
+            variance_distribution.sort_by(f64::total_cmp);
+            let compositional_lower = type7_quantile(correlation_distribution, alpha);
+            let mean_lower = type7_quantile(mean_distribution, tail);
+            let mean_upper = type7_quantile(mean_distribution, 1.0 - tail);
+            let variance_lower = type7_quantile(variance_distribution, tail);
+            let variance_upper = type7_quantile(variance_distribution, 1.0 - tail);
+            let compositional_p_value = empirical_lower_tail_p_value(
+                correlation_distribution,
+                observed.compositional_correlation,
+            );
+            let mean_p_value =
+                empirical_two_tailed_p_value(mean_distribution, observed.mean_difference);
+            let variance_p_value =
+                empirical_two_tailed_p_value(variance_distribution, observed.variance_difference);
+            let compositional_invariance =
+                observed.compositional_correlation + 1e-12 >= compositional_lower;
+            let equal_means = observed.mean_difference + 1e-12 >= mean_lower
+                && observed.mean_difference - 1e-12 <= mean_upper;
+            let equal_variances = observed.variance_difference + 1e-12 >= variance_lower
+                && observed.variance_difference - 1e-12 <= variance_upper;
+            let partial_invariance = configural_invariance && compositional_invariance;
+            Ok(MicomConstructResult {
+                construct: observed.construct.clone(),
+                configural_invariance,
+                compositional_correlation: observed.compositional_correlation,
+                compositional_p_value: Some(compositional_p_value),
+                compositional_correlation_lower: Some(compositional_lower),
+                mean_a: Some(observed.mean_a),
+                mean_b: Some(observed.mean_b),
+                mean_difference: observed.mean_difference,
+                mean_p_value: Some(mean_p_value),
+                mean_difference_lower: Some(mean_lower),
+                mean_difference_upper: Some(mean_upper),
+                variance_a: Some(observed.variance_a),
+                variance_b: Some(observed.variance_b),
+                variance_difference: observed.variance_difference,
+                variance_p_value: Some(variance_p_value),
+                variance_difference_lower: Some(variance_lower),
+                variance_difference_upper: Some(variance_upper),
+                equal_means: Some(equal_means),
+                equal_variances: Some(equal_variances),
+                partial_invariance,
+                full_invariance: partial_invariance && equal_means && equal_variances,
+            })
+        })
+        .collect()
+}
+
+fn empirical_lower_tail_p_value(sorted: &[f64], observed: f64) -> f64 {
+    let lower_or_equal = sorted.iter().filter(|value| **value <= observed).count();
+    (lower_or_equal as f64 + 1.0) / (sorted.len() as f64 + 1.0)
+}
+
+fn empirical_two_tailed_p_value(values: &[f64], observed: f64) -> f64 {
+    let lower = (values.iter().filter(|value| **value <= observed).count() as f64 + 1.0)
+        / (values.len() as f64 + 1.0);
+    let upper = (values.iter().filter(|value| **value >= observed).count() as f64 + 1.0)
+        / (values.len() as f64 + 1.0);
+    (2.0 * lower.min(upper)).min(1.0)
+}
+
+fn type7_quantile(sorted: &[f64], probability: f64) -> f64 {
+    if sorted.is_empty() {
+        return f64::NAN;
+    }
+    if sorted.len() == 1 {
+        return sorted[0];
+    }
+    let position = probability.clamp(0.0, 1.0) * (sorted.len() - 1) as f64;
+    let lower = position.floor() as usize;
+    let upper = position.ceil() as usize;
+    if lower == upper {
+        sorted[lower]
+    } else {
+        let fraction = position - lower as f64;
+        sorted[lower] + fraction * (sorted[upper] - sorted[lower])
+    }
+}
+
 fn path_standard_error(
     result: &PlsResult,
     recipe: &AnalysisRecipe,
@@ -5251,49 +6718,8 @@ fn apply_ipma(
     indicator_columns: &[Vec<f64>],
     result: &mut PlsResult,
 ) -> Result<(), EstimationError> {
-    let endogenous = recipe
-        .model
-        .constructs
-        .iter()
-        .filter(|construct| {
-            recipe
-                .model
-                .paths
-                .iter()
-                .any(|path| path.target == construct.id)
-        })
-        .map(|construct| construct.id.clone())
-        .collect::<Vec<_>>();
-    let targets = recipe
-        .metadata
-        .get("ipma_targets")
-        .or_else(|| recipe.metadata.get("ipma.targets"))
-        .map(|value| {
-            value
-                .split(',')
-                .map(str::trim)
-                .filter(|value| !value.is_empty())
-                .map(ToOwned::to_owned)
-                .collect::<Vec<_>>()
-        })
-        .filter(|values| !values.is_empty())
-        .unwrap_or(endogenous);
-    if targets.is_empty() {
-        return Err(EstimationError::UnsupportedMethod(
-            "IPMA requires at least one endogenous target construct".into(),
-        ));
-    }
-    let known_constructs = recipe
-        .model
-        .constructs
-        .iter()
-        .map(|construct| construct.id.as_str())
-        .collect::<HashSet<_>>();
-    for target in &targets {
-        if !known_constructs.contains(target.as_str()) {
-            return Err(EstimationError::UnknownConstruct(target.clone()));
-        }
-    }
+    let targets = resolve_ipma_targets(recipe)
+        .map_err(|error| EstimationError::UnsupportedMethod(error.to_string()))?;
     let effect_index = result
         .effects
         .iter()
@@ -5322,14 +6748,18 @@ fn apply_ipma(
     let mut constructs = Vec::new();
     let mut indicators = Vec::new();
     for target in &targets {
-        for construct in &recipe.model.constructs {
-            let importance = if construct.id == *target {
-                1.0
-            } else {
-                *effect_index
-                    .get(&(construct.id.as_str(), target.as_str()))
-                    .unwrap_or(&0.0)
-            };
+        let predecessors = ipma_predecessor_constructs(recipe, target)
+            .into_iter()
+            .collect::<HashSet<_>>();
+        for construct in recipe
+            .model
+            .constructs
+            .iter()
+            .filter(|construct| predecessors.contains(&construct.id))
+        {
+            let importance = *effect_index
+                .get(&(construct.id.as_str(), target.as_str()))
+                .unwrap_or(&0.0);
             let Some(scores) = result.construct_scores.get(&construct.id) else {
                 continue;
             };
@@ -5360,12 +6790,12 @@ fn apply_ipma(
         }
     }
     let warnings = vec![
-        "IPMA is validated for the documented QuickPLS v1.2.1 supported scope; importance uses fixed PLS total effects and performance uses 0-100 min-max scaled standardized scores, while broader cIPMA remains unsupported.".into(),
+        "IPMA v1 reports direct and indirect structural predecessors only; importance uses fixed PLS total effects and performance uses the observed sample range of listwise-standardized scores on a 0-100 scale. Theoretical-range performance and cIPMA are unsupported.".into(),
     ];
     result.method_version = IPMA_METHOD_VERSION.into();
     result.ipma = Some(IpmaAnalysis {
         method_version: IPMA_METHOD_VERSION.into(),
-        performance_scale: "min_max_0_100_from_standardized_scores_v1".into(),
+        performance_scale: IPMA_PERFORMANCE_SCALE.into(),
         targets,
         constructs,
         indicators,
@@ -7323,30 +8753,136 @@ fn process_analysis(
     })
 }
 
-fn nca_effect_size(x: &[f64], y: &[f64], ceiling: &str) -> f64 {
-    let min_x = x.iter().copied().fold(f64::INFINITY, f64::min);
-    let max_x = x.iter().copied().fold(f64::NEG_INFINITY, f64::max);
-    let min_y = y.iter().copied().fold(f64::INFINITY, f64::min);
-    let max_y = y.iter().copied().fold(f64::NEG_INFINITY, f64::max);
-    let scope = ((max_x - min_x) * (max_y - min_y)).max(f64::EPSILON);
-    let mut points = x.iter().copied().zip(y.iter().copied()).collect::<Vec<_>>();
-    points.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.total_cmp(&b.1)));
-    let mut ceiling_area = 0.0;
-    for pair in points.windows(2) {
-        let x0 = pair[0].0;
-        let x1 = pair[1].0;
-        let ceiling_y = if ceiling == "cr_fdh" {
-            pair[0].1.max(pair[1].1)
-        } else {
-            points
-                .iter()
-                .filter(|point| point.0 >= x0)
-                .map(|point| point.1)
-                .fold(min_y, f64::max)
-        };
-        ceiling_area += (x1 - x0).max(0.0) * (max_y - ceiling_y).max(0.0);
+fn nca_scope(x: &[f64], y: &[f64]) -> NcaScope {
+    NcaScope {
+        minimum_x: x.iter().copied().fold(f64::INFINITY, f64::min),
+        maximum_x: x.iter().copied().fold(f64::NEG_INFINITY, f64::max),
+        minimum_y: y.iter().copied().fold(f64::INFINITY, f64::min),
+        maximum_y: y.iter().copied().fold(f64::NEG_INFINITY, f64::max),
     }
-    (ceiling_area / scope).clamp(0.0, 1.0)
+}
+
+fn nca_requested_ceilings(ceiling: &str) -> Option<Vec<&'static str>> {
+    match ceiling {
+        "ce_fdh" => Some(vec!["ce_fdh"]),
+        "cr_fdh" => Some(vec!["cr_fdh"]),
+        "both" => Some(vec!["ce_fdh", "cr_fdh"]),
+        _ => None,
+    }
+}
+
+fn nca_ce_fdh_peers(x: &[f64], y: &[f64]) -> Vec<NcaCeilingPoint> {
+    let mut points = x.iter().copied().zip(y.iter().copied()).collect::<Vec<_>>();
+    points.sort_by(|left, right| left.0.total_cmp(&right.0).then(left.1.total_cmp(&right.1)));
+
+    let mut maxima_by_x = Vec::<NcaCeilingPoint>::new();
+    for (x_value, y_value) in points {
+        if let Some(last) = maxima_by_x.last_mut()
+            && last.x == x_value
+        {
+            last.y = last.y.max(y_value);
+            continue;
+        }
+        maxima_by_x.push(NcaCeilingPoint {
+            x: x_value,
+            y: y_value,
+        });
+    }
+
+    let mut peers = Vec::new();
+    for point in maxima_by_x {
+        if peers
+            .last()
+            .is_none_or(|previous: &NcaCeilingPoint| point.y > previous.y)
+        {
+            peers.push(point);
+        }
+    }
+    peers
+}
+
+fn nca_ce_fdh_effect_size(scope: &NcaScope, peers: &[NcaCeilingPoint]) -> f64 {
+    if peers.is_empty() {
+        return 0.0;
+    }
+    let mut ceiling_area = 0.0;
+    for (index, peer) in peers.iter().enumerate() {
+        let next_x = peers
+            .get(index + 1)
+            .map(|next| next.x)
+            .unwrap_or(scope.maximum_x);
+        ceiling_area += (next_x - peer.x).max(0.0) * (scope.maximum_y - peer.y).max(0.0);
+    }
+    (ceiling_area / nca_scope_area(scope)).clamp(0.0, 1.0)
+}
+
+fn nca_cr_fdh_line(peers: &[NcaCeilingPoint]) -> Option<(f64, f64)> {
+    if peers.len() < 2 {
+        return None;
+    }
+    let mean_x = peers.iter().map(|peer| peer.x).sum::<f64>() / peers.len() as f64;
+    let mean_y = peers.iter().map(|peer| peer.y).sum::<f64>() / peers.len() as f64;
+    let numerator = peers
+        .iter()
+        .map(|peer| (peer.x - mean_x) * (peer.y - mean_y))
+        .sum::<f64>();
+    let denominator = peers
+        .iter()
+        .map(|peer| (peer.x - mean_x).powi(2))
+        .sum::<f64>();
+    if !denominator.is_finite() || denominator <= f64::EPSILON {
+        return None;
+    }
+    let slope = numerator / denominator;
+    let intercept = mean_y - slope * mean_x;
+    (slope.is_finite() && intercept.is_finite()).then_some((slope, intercept))
+}
+
+fn nca_cr_fdh_effect_size(scope: &NcaScope, line: Option<(f64, f64)>) -> f64 {
+    let Some((slope, intercept)) = line else {
+        return 0.0;
+    };
+    let mut boundaries = vec![scope.minimum_x, scope.maximum_x];
+    if slope.abs() > f64::EPSILON {
+        for y_boundary in [scope.minimum_y, scope.maximum_y] {
+            let crossing = (y_boundary - intercept) / slope;
+            if crossing > scope.minimum_x && crossing < scope.maximum_x {
+                boundaries.push(crossing);
+            }
+        }
+    }
+    boundaries.sort_by(f64::total_cmp);
+    boundaries.dedup_by(|left, right| (*left - *right).abs() <= f64::EPSILON);
+    let mut ceiling_area = 0.0;
+    for interval in boundaries.windows(2) {
+        let left = interval[0];
+        let right = interval[1];
+        let left_y = (slope * left + intercept).clamp(scope.minimum_y, scope.maximum_y);
+        let right_y = (slope * right + intercept).clamp(scope.minimum_y, scope.maximum_y);
+        ceiling_area +=
+            (right - left) * ((scope.maximum_y - left_y) + (scope.maximum_y - right_y)) / 2.0;
+    }
+    (ceiling_area / nca_scope_area(scope)).clamp(0.0, 1.0)
+}
+
+fn nca_ceiling_parameters(
+    scope: &NcaScope,
+    peers: &[NcaCeilingPoint],
+    ceiling: &str,
+    cr_line: Option<(f64, f64)>,
+) -> (f64, Option<f64>, Option<f64>) {
+    if ceiling == "cr_fdh" {
+        let (slope, intercept) = cr_line.map_or((None, None), |(slope, intercept)| {
+            (Some(slope), Some(intercept))
+        });
+        (nca_cr_fdh_effect_size(scope, cr_line), slope, intercept)
+    } else {
+        (nca_ce_fdh_effect_size(scope, peers), None, None)
+    }
+}
+
+fn nca_scope_area(scope: &NcaScope) -> f64 {
+    ((scope.maximum_x - scope.minimum_x) * (scope.maximum_y - scope.minimum_y)).max(f64::EPSILON)
 }
 
 fn nca_permutation_p_value(
@@ -7355,48 +8891,224 @@ fn nca_permutation_p_value(
     ceiling: &str,
     observed: f64,
     permutations: usize,
-) -> f64 {
+    master_seed: u64,
+    completed_offset: usize,
+    total_units: usize,
+    control: &mut dyn FnMut(EstimationProgress) -> bool,
+) -> Result<f64, EstimationError> {
     if permutations == 0 {
-        return 1.0;
+        return Ok(1.0);
     }
     let mut exceedances = 0usize;
-    let mut permuted = y.to_vec();
     for replicate in 0..permutations {
-        deterministic_rotate_reverse(&mut permuted, replicate);
-        let effect = nca_effect_size(x, &permuted, ceiling);
+        if replicate == 0 || replicate % (permutations / 100).max(1) == 0 {
+            checkpoint(
+                control,
+                EstimationPhase::ComputingEffects,
+                completed_offset.saturating_add(replicate) as u64,
+                total_units as u64,
+            )?;
+        }
+        let indices = nca_permutation_indices(y.len(), master_seed, ceiling, replicate as u32);
+        let permuted = indices.iter().map(|index| y[*index]).collect::<Vec<_>>();
+        let permuted_scope = nca_scope(x, &permuted);
+        let permuted_peers = nca_ce_fdh_peers(x, &permuted);
+        let effect = if ceiling == "cr_fdh" {
+            nca_cr_fdh_effect_size(&permuted_scope, nca_cr_fdh_line(&permuted_peers))
+        } else {
+            nca_ce_fdh_effect_size(&permuted_scope, &permuted_peers)
+        };
         if effect >= observed.abs() - 1e-12 {
             exceedances += 1;
         }
     }
-    (exceedances as f64 + 1.0) / (permutations as f64 + 1.0)
+    Ok((exceedances as f64 + 1.0) / (permutations as f64 + 1.0))
 }
 
-fn deterministic_rotate_reverse(values: &mut [f64], replicate: usize) {
-    if values.is_empty() {
-        return;
+fn nca_permutation_indices(
+    case_count: usize,
+    master_seed: u64,
+    ceiling: &str,
+    replicate: u32,
+) -> Vec<usize> {
+    let mut digest = Sha256::new();
+    digest.update(b"quickpls:nca-permutation:v2");
+    digest.update(master_seed.to_le_bytes());
+    digest.update((ceiling.len() as u64).to_le_bytes());
+    digest.update(ceiling.as_bytes());
+    digest.update(replicate.to_le_bytes());
+    let mut rng = ChaCha20Rng::from_seed(digest.finalize().into());
+    let mut indices = (0..case_count).collect::<Vec<_>>();
+    for upper in (1..case_count).rev() {
+        indices.swap(upper, rng.random_range(0..=upper));
     }
-    let shift = (replicate * 7919 + 17) % values.len();
-    values.rotate_left(shift);
-    if replicate % 2 == 1 {
-        values.reverse();
-    }
+    indices
 }
 
-fn nca_required_x_percent(x: &[f64], y: &[f64], outcome_percent: f64) -> f64 {
-    let min_x = x.iter().copied().fold(f64::INFINITY, f64::min);
-    let max_x = x.iter().copied().fold(f64::NEG_INFINITY, f64::max);
-    let min_y = y.iter().copied().fold(f64::INFINITY, f64::min);
-    let max_y = y.iter().copied().fold(f64::NEG_INFINITY, f64::max);
-    let threshold = min_y + (max_y - min_y) * outcome_percent / 100.0;
-    let required = x
+fn nca_bottleneck_rows(
+    scope: &NcaScope,
+    peers: &[NcaCeilingPoint],
+    ceilings: &[&str],
+    cr_line: Option<(f64, f64)>,
+) -> Vec<NcaBottleneck> {
+    ceilings
         .iter()
-        .zip(y)
-        .filter_map(|(x_value, y_value)| (*y_value >= threshold).then_some(*x_value))
-        .fold(f64::INFINITY, f64::min);
-    if !required.is_finite() {
-        return 100.0;
+        .flat_map(|ceiling| {
+            (10..=90)
+                .step_by(10)
+                .map(move |level| nca_bottleneck(scope, peers, ceiling, cr_line, level as f64))
+        })
+        .collect()
+}
+
+fn nca_bottleneck(
+    scope: &NcaScope,
+    peers: &[NcaCeilingPoint],
+    ceiling: &str,
+    cr_line: Option<(f64, f64)>,
+    outcome_percent: f64,
+) -> NcaBottleneck {
+    let threshold = scope.minimum_y + (scope.maximum_y - scope.minimum_y) * outcome_percent / 100.0;
+    let (required_x, status) = if ceiling == "cr_fdh" {
+        match cr_line {
+            Some((slope, intercept)) if slope > f64::EPSILON => {
+                let left_y = slope * scope.minimum_x + intercept;
+                let right_y = slope * scope.maximum_x + intercept;
+                if threshold <= left_y {
+                    (None, "not_necessary")
+                } else if threshold > right_y {
+                    (None, "not_attainable")
+                } else {
+                    (Some((threshold - intercept) / slope), "required")
+                }
+            }
+            Some((_, intercept)) if threshold <= intercept => (None, "not_necessary"),
+            _ => (None, "not_attainable"),
+        }
+    } else if let Some(first) = peers.first() {
+        if threshold <= first.y {
+            (None, "not_necessary")
+        } else if let Some(peer) = peers.iter().find(|peer| peer.y >= threshold) {
+            (Some(peer.x), "required")
+        } else {
+            (None, "not_attainable")
+        }
+    } else {
+        (None, "not_attainable")
+    };
+    let required_x_percent = required_x.map(|required| {
+        (100.0 * (required - scope.minimum_x) / (scope.maximum_x - scope.minimum_x))
+            .clamp(0.0, 100.0)
+    });
+    NcaBottleneck {
+        ceiling: ceiling.into(),
+        outcome_percent,
+        required_x_percent,
+        status: status.into(),
     }
-    (100.0 * (required - min_x) / (max_x - min_x).max(f64::EPSILON)).clamp(0.0, 100.0)
+}
+
+pub fn nca_analysis_matches_v2_contract(
+    analysis: &NcaAnalysis,
+    expected_x: &str,
+    expected_y: &str,
+    expected_ceiling: &str,
+    expected_permutations: usize,
+) -> bool {
+    let Some(expected_ceilings) = nca_requested_ceilings(expected_ceiling) else {
+        return false;
+    };
+    let scope = &analysis.scope;
+    if analysis.method_version != NCA_METHOD_VERSION
+        || analysis.x != expected_x
+        || analysis.y != expected_y
+        || analysis.x == analysis.y
+        || analysis.ceiling != expected_ceiling
+        || analysis.permutation_samples != expected_permutations
+        || analysis.usable_permutations != expected_permutations
+        || analysis.observations < 3
+        || analysis.warnings.is_empty()
+        || ![
+            scope.minimum_x,
+            scope.maximum_x,
+            scope.minimum_y,
+            scope.maximum_y,
+        ]
+        .iter()
+        .all(|value| value.is_finite())
+        || scope.maximum_x - scope.minimum_x <= f64::EPSILON
+        || scope.maximum_y - scope.minimum_y <= f64::EPSILON
+        || analysis.ce_fdh_peers.is_empty()
+    {
+        return false;
+    }
+    for (index, peer) in analysis.ce_fdh_peers.iter().enumerate() {
+        if !peer.x.is_finite()
+            || !peer.y.is_finite()
+            || peer.x < scope.minimum_x
+            || peer.x > scope.maximum_x
+            || peer.y < scope.minimum_y
+            || peer.y > scope.maximum_y
+            || index > 0
+                && (peer.x <= analysis.ce_fdh_peers[index - 1].x
+                    || peer.y <= analysis.ce_fdh_peers[index - 1].y)
+        {
+            return false;
+        }
+    }
+    if !close_enough(analysis.ce_fdh_peers[0].x, scope.minimum_x)
+        || !close_enough(analysis.ce_fdh_peers.last().unwrap().y, scope.maximum_y)
+        || analysis.ceilings.len() != expected_ceilings.len()
+    {
+        return false;
+    }
+    let cr_line = nca_cr_fdh_line(&analysis.ce_fdh_peers);
+    for (row, ceiling) in analysis.ceilings.iter().zip(&expected_ceilings) {
+        let (effect_size, slope, intercept) =
+            nca_ceiling_parameters(scope, &analysis.ce_fdh_peers, ceiling, cr_line);
+        let Some(p_value) = row.permutation_p_value else {
+            return false;
+        };
+        let lattice = p_value * (expected_permutations as f64 + 1.0);
+        if row.ceiling != *ceiling
+            || !close_enough(row.effect_size, effect_size)
+            || !optional_close(row.slope, slope)
+            || !optional_close(row.intercept, intercept)
+            || !p_value.is_finite()
+            || p_value < 1.0 / (expected_permutations as f64 + 1.0)
+            || p_value > 1.0
+            || !close_enough(lattice, lattice.round())
+        {
+            return false;
+        }
+    }
+    let expected_bottlenecks =
+        nca_bottleneck_rows(scope, &analysis.ce_fdh_peers, &expected_ceilings, cr_line);
+    analysis.bottlenecks.len() == expected_bottlenecks.len()
+        && analysis
+            .bottlenecks
+            .iter()
+            .zip(expected_bottlenecks)
+            .all(|(actual, expected)| {
+                actual.ceiling == expected.ceiling
+                    && close_enough(actual.outcome_percent, expected.outcome_percent)
+                    && optional_close(actual.required_x_percent, expected.required_x_percent)
+                    && actual.status == expected.status
+            })
+}
+
+fn optional_close(left: Option<f64>, right: Option<f64>) -> bool {
+    match (left, right) {
+        (Some(left), Some(right)) => close_enough(left, right),
+        (None, None) => true,
+        _ => false,
+    }
+}
+
+fn close_enough(left: f64, right: f64) -> bool {
+    left.is_finite()
+        && right.is_finite()
+        && (left - right).abs() <= 1e-10 * left.abs().max(right.abs()).max(1.0)
 }
 
 fn log_determinant(matrix: &[Vec<f64>]) -> Result<f64, EstimationError> {
@@ -8067,9 +9779,6 @@ fn prepare_prediction_rows(
         row_count as u64,
         row_count as u64,
     )?;
-    if complete_rows.len() < 8 {
-        return Err(EstimationError::InsufficientObservations);
-    }
     Ok(PredictionPreparedRows {
         positions,
         complete_rows,
@@ -8090,6 +9799,7 @@ fn prepare_prediction_split(
     }
     let mut train_columns = Vec::with_capacity(indicators.len());
     let mut test_columns = Vec::with_capacity(indicators.len());
+    let mut transforms = Vec::with_capacity(indicators.len());
     for (indicator_index, (name, position)) in indicators.iter().zip(positions).enumerate() {
         checkpoint(
             control,
@@ -8111,6 +9821,11 @@ fn prepare_prediction_split(
             Preprocessing::MeanCentered => (mean, 1.0),
             Preprocessing::Unstandardized => (0.0, 1.0),
         };
+        transforms.push(PredictionIndicatorTransform {
+            raw_training_mean: mean,
+            center,
+            scale,
+        });
         train_columns.push(
             train_raw
                 .iter()
@@ -8137,9 +9852,524 @@ fn prepare_prediction_split(
     Ok(PredictionSplit {
         train_columns,
         test_columns,
+        transforms,
+        test_rows: test_rows.to_vec(),
         train_observations: train_rows.len(),
         test_observations: test_rows.len(),
     })
+}
+
+fn prediction_fold_output(
+    recipe: &AnalysisRecipe,
+    indicator_names: &[String],
+    blocks: &[Vec<usize>],
+    construct_index: &HashMap<&str, usize>,
+    split: &PredictionSplit,
+    control: &mut dyn FnMut(EstimationProgress) -> bool,
+) -> Result<PredictionFoldOutput, EstimationError> {
+    let (weights, train_scores, _) = match recipe.settings.weighting_scheme {
+        WeightingScheme::Pca => pca_scores(
+            &split.train_columns,
+            blocks,
+            recipe.settings.tolerance,
+            recipe.settings.max_iterations,
+            control,
+        )?,
+        WeightingScheme::Path | WeightingScheme::Factor => {
+            iterative_scores(&split.train_columns, blocks, recipe, false, control)?
+        }
+    };
+    let observed_test_scores = block_scores_with_training_normalization(
+        &split.train_columns,
+        &split.test_columns,
+        blocks,
+        &weights,
+    )?;
+    let order = topological_construct_order(recipe, construct_index)?;
+    let mut predicted_scores = vec![None; recipe.model.constructs.len()];
+    for (completed, target_index) in order.iter().enumerate() {
+        checkpoint(
+            control,
+            EstimationPhase::Assembling,
+            completed as u64,
+            order.len() as u64,
+        )?;
+        let construct = &recipe.model.constructs[*target_index];
+        let predecessors = recipe
+            .model
+            .paths
+            .iter()
+            .filter(|path| path.target == construct.id)
+            .map(|path| construct_index[path.source.as_str()])
+            .collect::<Vec<_>>();
+        if predecessors.is_empty() {
+            predicted_scores[*target_index] = Some(observed_test_scores[*target_index].clone());
+            continue;
+        }
+        let train_predictors = predecessors
+            .iter()
+            .map(|index| train_scores[*index].clone())
+            .collect::<Vec<_>>();
+        let coefficients = ols(
+            &train_predictors,
+            &train_scores[*target_index],
+            &format!("PLSpredict v2 structural target {}", construct.id),
+        )?;
+        let test_predictors = predecessors
+            .iter()
+            .map(|index| {
+                predicted_scores[*index]
+                    .clone()
+                    .ok_or_else(|| EstimationError::CyclicModel)
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        predicted_scores[*target_index] = Some(fitted_values(&test_predictors, &coefficients));
+    }
+    checkpoint(
+        control,
+        EstimationPhase::Assembling,
+        order.len() as u64,
+        order.len() as u64,
+    )?;
+
+    let indicator_index = indicator_names
+        .iter()
+        .enumerate()
+        .map(|(index, name)| (name.as_str(), index))
+        .collect::<HashMap<_, _>>();
+    let mut constructs = Vec::new();
+    let mut indicators = Vec::new();
+    for (target_index, construct) in recipe.model.constructs.iter().enumerate() {
+        let predecessors = recipe
+            .model
+            .paths
+            .iter()
+            .filter(|path| path.target == construct.id)
+            .map(|path| construct_index[path.source.as_str()])
+            .collect::<Vec<_>>();
+        if predecessors.is_empty() {
+            continue;
+        }
+        if construct.mode != MeasurementMode::Reflective {
+            return Err(EstimationError::UnsupportedMethod(format!(
+                "PLSpredict indicator v2 requires reflective endogenous construct '{}'",
+                construct.id
+            )));
+        }
+        let earliest = earliest_antecedent_indices(recipe, construct_index, target_index)?;
+        let predictor_indices = earliest
+            .iter()
+            .flat_map(|index| blocks[*index].iter().copied())
+            .collect::<Vec<_>>();
+        let predicted_score = predicted_scores[target_index]
+            .as_ref()
+            .ok_or(EstimationError::CyclicModel)?
+            .clone();
+        let linear_model_score = centered_ols_predictions(
+            &predictor_indices
+                .iter()
+                .map(|index| split.train_columns[*index].clone())
+                .collect::<Vec<_>>(),
+            &train_scores[target_index],
+            &predictor_indices
+                .iter()
+                .map(|index| split.test_columns[*index].clone())
+                .collect::<Vec<_>>(),
+            &format!("PLSpredict v2 construct LM benchmark {}", construct.id),
+        )
+        .ok();
+        constructs.push(FoldConstructPrediction {
+            construct: construct.id.clone(),
+            predictor_count: predecessors.len(),
+            actual: observed_test_scores[target_index].clone(),
+            predicted: predicted_score.clone(),
+            linear_model: linear_model_score,
+        });
+
+        for indicator in &construct.indicators {
+            let column_index = indicator_index[indicator.as_str()];
+            let train_target = &split.train_columns[column_index];
+            let score_variance = sample_sd(&train_scores[target_index]).powi(2);
+            if !score_variance.is_finite() || score_variance <= f64::EPSILON {
+                return Err(EstimationError::Numerical(format!(
+                    "zero training construct-score variance for {}",
+                    construct.id
+                )));
+            }
+            let slope = covariance(train_target, &train_scores[target_index]) / score_variance;
+            let intercept = vector_mean(train_target);
+            let transform = &split.transforms[column_index];
+            let predicted = predicted_score
+                .iter()
+                .map(|score| (intercept + slope * score) * transform.scale + transform.center)
+                .collect::<Vec<_>>();
+            let actual = split.test_columns[column_index]
+                .iter()
+                .map(|value| value * transform.scale + transform.center)
+                .collect::<Vec<_>>();
+            let indicator_average = vec![transform.raw_training_mean; actual.len()];
+            let linear_model = centered_ols_predictions(
+                &predictor_indices
+                    .iter()
+                    .map(|index| split.train_columns[*index].clone())
+                    .collect::<Vec<_>>(),
+                train_target,
+                &predictor_indices
+                    .iter()
+                    .map(|index| split.test_columns[*index].clone())
+                    .collect::<Vec<_>>(),
+                &format!(
+                    "PLSpredict v2 indicator LM benchmark {}::{}",
+                    construct.id, indicator
+                ),
+            )
+            .map(|values| {
+                values
+                    .iter()
+                    .map(|value| value * transform.scale + transform.center)
+                    .collect::<Vec<_>>()
+            })
+            .map_err(|error| error.to_string());
+            indicators.push(FoldIndicatorPrediction {
+                construct: construct.id.clone(),
+                indicator: indicator.clone(),
+                predictor_count: predictor_indices.len(),
+                actual,
+                predicted,
+                indicator_average,
+                linear_model,
+            });
+        }
+    }
+    Ok(PredictionFoldOutput {
+        constructs,
+        indicators,
+    })
+}
+
+fn block_scores_with_training_normalization(
+    train_columns: &[Vec<f64>],
+    test_columns: &[Vec<f64>],
+    blocks: &[Vec<usize>],
+    weights: &[Vec<f64>],
+) -> Result<Vec<Vec<f64>>, EstimationError> {
+    blocks
+        .iter()
+        .zip(weights)
+        .map(|(block, weight)| {
+            let mut train_score = vec![0.0; train_columns[0].len()];
+            let mut test_score = vec![0.0; test_columns[0].len()];
+            for (column, coefficient) in block.iter().zip(weight) {
+                add_scaled(&mut train_score, &train_columns[*column], *coefficient);
+                add_scaled(&mut test_score, &test_columns[*column], *coefficient);
+            }
+            let mean = vector_mean(&train_score);
+            let deviation = sample_sd(&train_score);
+            if !deviation.is_finite() || deviation <= f64::EPSILON {
+                return Err(EstimationError::Numerical(
+                    "training construct score has zero variance".into(),
+                ));
+            }
+            for value in &mut test_score {
+                *value = (*value - mean) / deviation;
+            }
+            if test_score.iter().any(|value| !value.is_finite()) {
+                return Err(EstimationError::Numerical(
+                    "non-finite holdout construct score".into(),
+                ));
+            }
+            Ok(test_score)
+        })
+        .collect()
+}
+
+fn topological_construct_order(
+    recipe: &AnalysisRecipe,
+    construct_index: &HashMap<&str, usize>,
+) -> Result<Vec<usize>, EstimationError> {
+    let mut incoming = vec![0_usize; recipe.model.constructs.len()];
+    let mut outgoing = vec![Vec::new(); recipe.model.constructs.len()];
+    for path in &recipe.model.paths {
+        let source = construct_index[path.source.as_str()];
+        let target = construct_index[path.target.as_str()];
+        incoming[target] += 1;
+        outgoing[source].push(target);
+    }
+    let mut ready = (0..incoming.len())
+        .filter(|index| incoming[*index] == 0)
+        .collect::<Vec<_>>();
+    ready.reverse();
+    let mut order = Vec::with_capacity(incoming.len());
+    while let Some(source) = ready.pop() {
+        order.push(source);
+        for target in &outgoing[source] {
+            incoming[*target] -= 1;
+            if incoming[*target] == 0 {
+                ready.push(*target);
+                ready.sort_unstable_by(|left, right| right.cmp(left));
+            }
+        }
+    }
+    (order.len() == recipe.model.constructs.len())
+        .then_some(order)
+        .ok_or(EstimationError::CyclicModel)
+}
+
+fn earliest_antecedent_indices(
+    recipe: &AnalysisRecipe,
+    construct_index: &HashMap<&str, usize>,
+    target: usize,
+) -> Result<Vec<usize>, EstimationError> {
+    let mut incoming = vec![Vec::new(); recipe.model.constructs.len()];
+    for path in &recipe.model.paths {
+        incoming[construct_index[path.target.as_str()]].push(construct_index[path.source.as_str()]);
+    }
+    let mut roots = HashSet::new();
+    let mut visited = HashSet::new();
+    let mut stack = incoming[target].clone();
+    while let Some(index) = stack.pop() {
+        if !visited.insert(index) {
+            continue;
+        }
+        if incoming[index].is_empty() {
+            roots.insert(index);
+        } else {
+            stack.extend(incoming[index].iter().copied());
+        }
+    }
+    let mut roots = roots.into_iter().collect::<Vec<_>>();
+    roots.sort_unstable();
+    if roots.is_empty() {
+        return Err(EstimationError::Numerical(format!(
+            "no earliest antecedent for {}",
+            recipe.model.constructs[target].id
+        )));
+    }
+    Ok(roots)
+}
+
+fn centered_ols_predictions(
+    train_predictors: &[Vec<f64>],
+    train_outcome: &[f64],
+    test_predictors: &[Vec<f64>],
+    subject: &str,
+) -> Result<Vec<f64>, EstimationError> {
+    if train_predictors.is_empty()
+        || train_predictors.len() != test_predictors.len()
+        || train_predictors
+            .iter()
+            .any(|predictor| predictor.len() != train_outcome.len())
+    {
+        return Err(EstimationError::RankDeficient(subject.into()));
+    }
+    let rows = train_outcome.len();
+    let columns = train_predictors.len();
+    if rows <= columns {
+        return Err(EstimationError::RankDeficient(subject.into()));
+    }
+    let predictor_means = train_predictors
+        .iter()
+        .map(|predictor| vector_mean(predictor))
+        .collect::<Vec<_>>();
+    let outcome_mean = vector_mean(train_outcome);
+    let matrix = Mat::from_fn(rows, columns, |row, column| {
+        train_predictors[column][row] - predictor_means[column]
+    });
+    let qr = matrix.col_piv_qr();
+    let diagonal = qr.thin_R();
+    let diagonal_count = rows.min(columns);
+    let max_diagonal = (0..diagonal_count)
+        .map(|index| diagonal[(index, index)].abs())
+        .fold(0.0, f64::max);
+    let rank_tolerance = max_diagonal * (rows.max(columns) as f64) * f64::EPSILON * 100.0;
+    let rank = (0..diagonal_count)
+        .filter(|index| diagonal[(*index, *index)].abs() > rank_tolerance)
+        .count();
+    if rank < columns {
+        return Err(EstimationError::RankDeficient(subject.into()));
+    }
+    let rhs = Mat::from_fn(rows, 1, |row, _| train_outcome[row] - outcome_mean);
+    let solution = qr.solve_lstsq(&rhs);
+    let coefficients = (0..columns)
+        .map(|index| solution[(index, 0)])
+        .collect::<Vec<_>>();
+    if coefficients.iter().any(|value| !value.is_finite()) {
+        return Err(EstimationError::Numerical(format!(
+            "non-finite regression for {subject}"
+        )));
+    }
+    let mut predictions = vec![outcome_mean; test_predictors[0].len()];
+    for (index, (column, coefficient)) in test_predictors.iter().zip(coefficients).enumerate() {
+        for (row, value) in column.iter().enumerate() {
+            predictions[row] += (value - predictor_means[index]) * coefficient;
+        }
+    }
+    Ok(predictions)
+}
+
+fn construct_prediction_target(prediction: &FoldConstructPrediction) -> PlsPredictTarget {
+    let benchmark = vec![0.0; prediction.actual.len()];
+    let pls_sse = squared_error_sum(&prediction.actual, &prediction.predicted);
+    let benchmark_sse = squared_error_sum(&prediction.actual, &benchmark);
+    let lm_sse = prediction
+        .linear_model
+        .as_ref()
+        .map(|values| squared_error_sum(&prediction.actual, values));
+    PlsPredictTarget {
+        construct: prediction.construct.clone(),
+        predictor_count: prediction.predictor_count,
+        rmse_pls: rmse(&prediction.actual, &prediction.predicted),
+        mae_pls: mae(&prediction.actual, &prediction.predicted),
+        rmse_benchmark: rmse(&prediction.actual, &benchmark),
+        mae_benchmark: mae(&prediction.actual, &benchmark),
+        q_squared_predict: (benchmark_sse > f64::EPSILON)
+            .then(|| 1.0 - pls_sse / benchmark_sse)
+            .filter(|value| value.is_finite()),
+        rmse_lm: prediction
+            .linear_model
+            .as_ref()
+            .map(|values| rmse(&prediction.actual, values)),
+        mae_lm: prediction
+            .linear_model
+            .as_ref()
+            .map(|values| mae(&prediction.actual, values)),
+        q_squared_predict_lm: lm_sse
+            .and_then(|sse| (benchmark_sse > f64::EPSILON).then(|| 1.0 - sse / benchmark_sse))
+            .filter(|value| value.is_finite()),
+    }
+}
+
+fn indicator_prediction_target(prediction: &FoldIndicatorPrediction) -> PlsPredictIndicatorTarget {
+    let pls = error_metrics(&prediction.actual, &prediction.predicted);
+    let indicator_average = error_metrics(&prediction.actual, &prediction.indicator_average);
+    let q_squared_predict = (indicator_average.squared_error_sum > f64::EPSILON)
+        .then(|| 1.0 - pls.squared_error_sum / indicator_average.squared_error_sum)
+        .filter(|value| value.is_finite());
+    let linear_model = match &prediction.linear_model {
+        Ok(values) => PlsPredictBenchmarkMetrics {
+            status: "available".into(),
+            metrics: Some(error_metrics(&prediction.actual, values)),
+            reason: None,
+        },
+        Err(reason) => PlsPredictBenchmarkMetrics {
+            status: "unavailable".into(),
+            metrics: None,
+            reason: Some(reason.clone()),
+        },
+    };
+    PlsPredictIndicatorTarget {
+        construct: prediction.construct.clone(),
+        indicator: prediction.indicator.clone(),
+        predictor_scope: "earliest_antecedent_indicators".into(),
+        predictor_count: prediction.predictor_count,
+        pls,
+        indicator_average,
+        linear_model,
+        q_squared_predict,
+    }
+}
+
+fn error_metrics(actual: &[f64], predicted: &[f64]) -> PlsPredictErrorMetrics {
+    let mut accumulator = ErrorMetricAccumulator::default();
+    accumulator.add(actual, predicted);
+    accumulator.finish()
+}
+
+impl ErrorMetricAccumulator {
+    fn add(&mut self, actual: &[f64], predicted: &[f64]) {
+        self.observations += actual.len();
+        for (actual, predicted) in actual.iter().zip(predicted) {
+            let error = actual - predicted;
+            self.squared_error_sum += error.powi(2);
+            self.absolute_error_sum += error.abs();
+            if actual.abs() > f64::EPSILON {
+                self.absolute_percentage_error_sum += (error / actual).abs();
+                self.mape_observations += 1;
+            }
+        }
+    }
+
+    fn finish(&self) -> PlsPredictErrorMetrics {
+        let observations = self.observations.max(1);
+        PlsPredictErrorMetrics {
+            observations: self.observations,
+            squared_error_sum: self.squared_error_sum,
+            absolute_error_sum: self.absolute_error_sum,
+            rmse: (self.squared_error_sum / observations as f64).sqrt(),
+            mae: self.absolute_error_sum / observations as f64,
+            absolute_percentage_error_sum: (self.mape_observations > 0)
+                .then_some(self.absolute_percentage_error_sum),
+            mape_observations: self.mape_observations,
+            mape_percent: (self.mape_observations > 0).then(|| {
+                100.0 * self.absolute_percentage_error_sum / self.mape_observations as f64
+            }),
+        }
+    }
+}
+
+impl IndicatorPredictionAccumulator {
+    fn new(prediction: &FoldIndicatorPrediction) -> Self {
+        Self {
+            construct: prediction.construct.clone(),
+            indicator: prediction.indicator.clone(),
+            predictor_count: prediction.predictor_count,
+            pls: ErrorMetricAccumulator::default(),
+            indicator_average: ErrorMetricAccumulator::default(),
+            linear_model: ErrorMetricAccumulator::default(),
+            linear_model_available: true,
+            linear_model_reason: None,
+        }
+    }
+
+    fn add(&mut self, prediction: &FoldIndicatorPrediction) {
+        self.pls.add(&prediction.actual, &prediction.predicted);
+        self.indicator_average
+            .add(&prediction.actual, &prediction.indicator_average);
+        match &prediction.linear_model {
+            Ok(values) if self.linear_model_available => {
+                self.linear_model.add(&prediction.actual, values);
+            }
+            Ok(_) => {}
+            Err(reason) => {
+                self.linear_model_available = false;
+                self.linear_model_reason
+                    .get_or_insert_with(|| reason.clone());
+            }
+        }
+    }
+
+    fn finish(&self) -> PlsPredictIndicatorTarget {
+        let pls = self.pls.finish();
+        let indicator_average = self.indicator_average.finish();
+        let q_squared_predict = (indicator_average.squared_error_sum > f64::EPSILON)
+            .then(|| 1.0 - pls.squared_error_sum / indicator_average.squared_error_sum)
+            .filter(|value| value.is_finite());
+        let linear_model = if self.linear_model_available {
+            PlsPredictBenchmarkMetrics {
+                status: "available".into(),
+                metrics: Some(self.linear_model.finish()),
+                reason: None,
+            }
+        } else {
+            PlsPredictBenchmarkMetrics {
+                status: "unavailable".into(),
+                metrics: None,
+                reason: Some(self.linear_model_reason.clone().unwrap_or_else(|| {
+                    "The LM benchmark was unavailable in at least one fold".into()
+                })),
+            }
+        };
+        PlsPredictIndicatorTarget {
+            construct: self.construct.clone(),
+            indicator: self.indicator.clone(),
+            predictor_scope: "earliest_antecedent_indicators".into(),
+            predictor_count: self.predictor_count,
+            pls,
+            indicator_average,
+            linear_model,
+            q_squared_predict,
+        }
+    }
 }
 
 fn repeated_kfold_pls_predict(
@@ -8151,31 +10381,58 @@ fn repeated_kfold_pls_predict(
     construct_index: &HashMap<&str, usize>,
     control: &mut dyn FnMut(EstimationProgress) -> bool,
 ) -> Result<Option<PlsPredictRepeatedKfold>, EstimationError> {
-    const FOLDS: usize = 5;
-    const REPEATS: usize = 3;
-    if prepared_rows.complete_rows.len() < 15 {
+    const FOLDS: usize = 10;
+    const REPEATS: usize = 10;
+    if prepared_rows.complete_rows.len() < 20 {
         return Ok(None);
     }
-    let model_pairs = parse_cvpat_model_pairs(recipe)?;
     let mut accumulators = prediction_accumulators(recipe, construct_index)?;
+    let mut indicator_accumulators = Vec::<IndicatorPredictionAccumulator>::new();
+    let expected_indicator_count = recipe
+        .model
+        .constructs
+        .iter()
+        .filter(|construct| {
+            recipe
+                .model
+                .paths
+                .iter()
+                .any(|path| path.target == construct.id)
+        })
+        .map(|construct| construct.indicators.len())
+        .sum::<usize>();
+    let mut cvpat_losses = CvpatLossAccumulator {
+        cases: BTreeMap::new(),
+        indicator_count: expected_indicator_count,
+        linear_model_available: true,
+        linear_model_reason: None,
+    };
+    let mut assignment_hasher = Sha256::new();
     for repeat in 0..REPEATS {
-        let multiplier = repeat + 1;
+        let assignments = sha256_prediction_fold_assignments(
+            &prepared_rows.complete_rows,
+            recipe.settings.seed,
+            repeat,
+            FOLDS,
+        );
+        for (complete_index, fold) in assignments.iter().enumerate() {
+            assignment_hasher.update(format!(
+                "{repeat}|{}|{fold}\n",
+                prepared_rows.complete_rows[complete_index]
+            ));
+        }
         for fold in 0..FOLDS {
             let train_rows = prepared_rows
                 .complete_rows
                 .iter()
                 .enumerate()
-                .filter_map(|(index, row)| {
-                    (((index * multiplier + repeat) % FOLDS) != fold).then_some(*row)
-                })
+                .filter_map(|(index, row)| (assignments[index] != fold).then_some(*row))
                 .collect::<Vec<_>>();
             let test_rows = prepared_rows
                 .complete_rows
                 .iter()
                 .enumerate()
-                .filter_map(|(index, row)| {
-                    (((index * multiplier + repeat) % FOLDS) == fold).then_some(*row)
-                })
+                .filter_map(|(index, row)| (assignments[index] == fold).then_some(*row))
                 .collect::<Vec<_>>();
             let split = prepare_prediction_split(
                 dataset,
@@ -8186,37 +10443,341 @@ fn repeated_kfold_pls_predict(
                 &recipe.settings.preprocessing,
                 control,
             )?;
-            accumulate_prediction_fold(
+            let output = prediction_fold_output(
                 recipe,
+                indicator_names,
                 blocks,
                 construct_index,
                 &split,
-                &mut accumulators,
-                &model_pairs,
                 control,
             )?;
+            for (accumulator, prediction) in accumulators.iter_mut().zip(&output.constructs) {
+                accumulator.add(
+                    &prediction.actual,
+                    &prediction.predicted,
+                    prediction.linear_model.as_deref(),
+                );
+            }
+            if indicator_accumulators.is_empty() {
+                indicator_accumulators = output
+                    .indicators
+                    .iter()
+                    .map(IndicatorPredictionAccumulator::new)
+                    .collect();
+            }
+            if indicator_accumulators.len() != output.indicators.len() {
+                return Err(EstimationError::Numerical(
+                    "PLSpredict v2 indicator target count changed across folds".into(),
+                ));
+            }
+            for (accumulator, prediction) in
+                indicator_accumulators.iter_mut().zip(&output.indicators)
+            {
+                if accumulator.construct != prediction.construct
+                    || accumulator.indicator != prediction.indicator
+                {
+                    return Err(EstimationError::Numerical(
+                        "PLSpredict v2 indicator target order changed across folds".into(),
+                    ));
+                }
+                accumulator.add(prediction);
+            }
+            cvpat_losses.add_fold(&split.test_rows, &output.indicators)?;
         }
     }
     let total_test_observations = prepared_rows.complete_rows.len() * REPEATS;
+    let assignment_digest = format!(
+        "sha256:{}",
+        digest_hex(assignment_hasher.finalize().as_slice())
+    );
     Ok(Some(PlsPredictRepeatedKfold {
-        method_version: "plspredict_repeated_kfold_v1".into(),
+        method_version: PLS_PREDICT_REPEATED_KFOLD_METHOD_VERSION.into(),
         folds: FOLDS,
         repeats: REPEATS,
-        assignment: "deterministic_complete_case_index_multiplier_modulo_5".into(),
+        assignment: "seeded_sha256_source_row_order_round_robin_10_v1".into(),
+        seed: recipe.settings.seed,
+        assignment_digest,
         total_test_observations,
         targets: accumulators
             .iter()
             .map(PredictionErrorAccumulator::to_target)
             .collect(),
-        cvpat: accumulators
+        indicator_targets: indicator_accumulators
             .iter()
-            .flat_map(PredictionErrorAccumulator::cvpat_comparisons)
+            .map(IndicatorPredictionAccumulator::finish)
             .collect(),
+        cvpat: Vec::new(),
+        cvpat_benchmark_assessments: cvpat_losses.finish(REPEATS),
+        paired_loss_diagnostics: Vec::new(),
         warnings: vec![
-            "Repeated k-fold PLSpredict and bounded CVPAT diagnostics are validated for the documented QuickPLS v1.2.1 deterministic assignment scope."
+            "The primary PLSpredict v2 block uses a fixed seeded SHA-256 10-fold plan repeated 10 times. CVPAT compares this one fitted model with IA and LM benchmarks; it is not a comparison of separately saved models."
                 .into(),
         ],
     }))
+}
+
+fn sha256_prediction_fold_assignments(
+    complete_rows: &[usize],
+    seed: u64,
+    repeat: usize,
+    folds: usize,
+) -> Vec<usize> {
+    let mut ranked = complete_rows
+        .iter()
+        .enumerate()
+        .map(|(complete_index, source_row_index)| {
+            let mut hasher = Sha256::new();
+            hasher.update(format!(
+                "{PLS_PREDICT_METHOD_VERSION}|{seed}|{repeat}|{source_row_index}"
+            ));
+            (hasher.finalize().to_vec(), complete_index)
+        })
+        .collect::<Vec<_>>();
+    ranked.sort_by(|left, right| left.0.cmp(&right.0).then(left.1.cmp(&right.1)));
+    let mut assignments = vec![0_usize; complete_rows.len()];
+    for (position, (_, complete_index)) in ranked.into_iter().enumerate() {
+        assignments[complete_index] = position % folds;
+    }
+    assignments
+}
+
+fn digest_hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+}
+
+impl CvpatLossAccumulator {
+    fn add_fold(
+        &mut self,
+        test_rows: &[usize],
+        indicators: &[FoldIndicatorPrediction],
+    ) -> Result<(), EstimationError> {
+        if indicators.len() != self.indicator_count
+            || indicators.iter().any(|indicator| {
+                indicator.actual.len() != test_rows.len()
+                    || indicator.predicted.len() != test_rows.len()
+                    || indicator.indicator_average.len() != test_rows.len()
+            })
+        {
+            return Err(EstimationError::Numerical(
+                "PLSpredict v2 CVPAT fold shape mismatch".into(),
+            ));
+        }
+        for (position, source_row) in test_rows.iter().enumerate() {
+            let mut pls_loss = 0.0;
+            let mut indicator_average_loss = 0.0;
+            let mut linear_model_loss = 0.0;
+            let mut fold_lm_available = true;
+            for indicator in indicators {
+                pls_loss += (indicator.actual[position] - indicator.predicted[position]).powi(2);
+                indicator_average_loss +=
+                    (indicator.actual[position] - indicator.indicator_average[position]).powi(2);
+                match &indicator.linear_model {
+                    Ok(values) if values.len() == test_rows.len() => {
+                        linear_model_loss +=
+                            (indicator.actual[position] - values[position]).powi(2);
+                    }
+                    Ok(_) => {
+                        fold_lm_available = false;
+                        self.linear_model_reason.get_or_insert_with(|| {
+                            "The LM benchmark returned a fold shape mismatch".into()
+                        });
+                    }
+                    Err(reason) => {
+                        fold_lm_available = false;
+                        self.linear_model_reason
+                            .get_or_insert_with(|| reason.clone());
+                    }
+                }
+            }
+            let divisor = self.indicator_count as f64;
+            let case = self.cases.entry(*source_row).or_default();
+            case.pls_sum += pls_loss / divisor;
+            case.indicator_average_sum += indicator_average_loss / divisor;
+            if fold_lm_available {
+                case.linear_model_sum += linear_model_loss / divisor;
+            } else {
+                self.linear_model_available = false;
+            }
+            case.repeats += 1;
+        }
+        Ok(())
+    }
+
+    fn finish(&self, expected_repeats: usize) -> Vec<PlsPredictCvpatBenchmarkAssessment> {
+        let complete = self
+            .cases
+            .values()
+            .all(|case| case.repeats == expected_repeats);
+        let pls_losses = self
+            .cases
+            .values()
+            .map(|case| case.pls_sum / case.repeats.max(1) as f64)
+            .collect::<Vec<_>>();
+        let indicator_average_losses = self
+            .cases
+            .values()
+            .map(|case| case.indicator_average_sum / case.repeats.max(1) as f64)
+            .collect::<Vec<_>>();
+        let mut rows = vec![cvpat_benchmark_assessment(
+            "indicator_average",
+            &pls_losses,
+            Some(&indicator_average_losses),
+            self.indicator_count,
+            complete
+                .then_some(())
+                .ok_or_else(|| "Not every complete case was tested once per repeat".to_string()),
+        )];
+        let linear_model_losses = self.linear_model_available.then(|| {
+            self.cases
+                .values()
+                .map(|case| case.linear_model_sum / case.repeats.max(1) as f64)
+                .collect::<Vec<_>>()
+        });
+        let lm_availability = if !complete {
+            Err("Not every complete case was tested once per repeat".into())
+        } else if !self.linear_model_available {
+            Err(self
+                .linear_model_reason
+                .clone()
+                .unwrap_or_else(|| "The LM benchmark was unavailable in at least one fold".into()))
+        } else {
+            Ok(())
+        };
+        rows.push(cvpat_benchmark_assessment(
+            "linear_model",
+            &pls_losses,
+            linear_model_losses.as_deref(),
+            self.indicator_count,
+            lm_availability,
+        ));
+        rows
+    }
+}
+
+fn cvpat_benchmark_assessment(
+    benchmark: &str,
+    pls_losses: &[f64],
+    benchmark_losses: Option<&[f64]>,
+    indicator_count: usize,
+    availability: Result<(), String>,
+) -> PlsPredictCvpatBenchmarkAssessment {
+    const CONFIDENCE_LEVEL: f64 = 0.95;
+    let mean_loss_pls = (!pls_losses.is_empty()).then(|| vector_mean(pls_losses));
+    let unavailable_reason = availability.err().or_else(|| {
+        benchmark_losses
+            .is_none()
+            .then(|| "The benchmark is unavailable".into())
+    });
+    let Some(benchmark_losses) = benchmark_losses
+        .filter(|values| values.len() == pls_losses.len() && unavailable_reason.is_none())
+    else {
+        return PlsPredictCvpatBenchmarkAssessment {
+            method_version: CVPAT_INDICATOR_BENCHMARK_METHOD_VERSION.into(),
+            comparison_kind: "benchmark_assessment".into(),
+            target_scope: "all_endogenous_indicators".into(),
+            benchmark: benchmark.into(),
+            loss: "mean_squared_error_across_indicators_per_observation".into(),
+            alternative: "pls_loss_less_than_benchmark".into(),
+            confidence_level: CONFIDENCE_LEVEL,
+            mean_loss_pls,
+            mean_loss_benchmark: None,
+            mean_loss_difference: None,
+            loss_difference_sum_of_squares: None,
+            standard_error: None,
+            t_statistic: None,
+            p_value_one_sided: None,
+            confidence_interval_lower: None,
+            confidence_interval_upper: None,
+            observations: pls_losses.len(),
+            indicator_count,
+            status: "benchmark_unavailable".into(),
+            preferred_model: None,
+            reason: Some(unavailable_reason.unwrap_or_else(|| {
+                "The benchmark loss vector does not match the PLS loss vector".into()
+            })),
+        };
+    };
+    let differences = pls_losses
+        .iter()
+        .zip(benchmark_losses)
+        .map(|(pls, comparison)| pls - comparison)
+        .collect::<Vec<_>>();
+    let observations = differences.len();
+    let mean_loss_benchmark = vector_mean(benchmark_losses);
+    let mean_loss_difference = vector_mean(&differences);
+    let loss_difference_sum_of_squares = differences.iter().map(|value| value * value).sum::<f64>();
+    let standard_error = (observations > 1).then(|| {
+        let variance = ((loss_difference_sum_of_squares
+            - observations as f64 * mean_loss_difference.powi(2))
+            / (observations - 1) as f64)
+            .max(0.0);
+        variance.sqrt() / (observations as f64).sqrt()
+    });
+    let inferential = standard_error
+        .filter(|value| value.is_finite() && *value > f64::EPSILON)
+        .and_then(|standard_error| {
+            let distribution = StudentsT::new(0.0, 1.0, observations as f64 - 1.0).ok()?;
+            let t_statistic = mean_loss_difference / standard_error;
+            let p_value = distribution.cdf(t_statistic);
+            let critical = distribution.inverse_cdf(0.5 + CONFIDENCE_LEVEL / 2.0);
+            Some((
+                standard_error,
+                t_statistic,
+                p_value,
+                mean_loss_difference - critical * standard_error,
+                mean_loss_difference + critical * standard_error,
+            ))
+        });
+    let (status, standard_error, t_statistic, p_value, lower, upper, preferred, reason) =
+        if let Some((standard_error, t_statistic, p_value, lower, upper)) = inferential {
+            (
+                "available",
+                Some(standard_error),
+                Some(t_statistic),
+                Some(p_value),
+                Some(lower),
+                Some(upper),
+                (mean_loss_difference < 0.0 && p_value < 0.05).then(|| "pls_sem".to_string()),
+                None,
+            )
+        } else {
+            (
+                "inferential_test_unavailable",
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(
+                    "The one-sided CVPAT test is unavailable because paired loss differences have zero variance or insufficient observations"
+                        .into(),
+                ),
+            )
+        };
+    PlsPredictCvpatBenchmarkAssessment {
+        method_version: CVPAT_INDICATOR_BENCHMARK_METHOD_VERSION.into(),
+        comparison_kind: "benchmark_assessment".into(),
+        target_scope: "all_endogenous_indicators".into(),
+        benchmark: benchmark.into(),
+        loss: "mean_squared_error_across_indicators_per_observation".into(),
+        alternative: "pls_loss_less_than_benchmark".into(),
+        confidence_level: CONFIDENCE_LEVEL,
+        mean_loss_pls,
+        mean_loss_benchmark: Some(mean_loss_benchmark),
+        mean_loss_difference: Some(mean_loss_difference),
+        loss_difference_sum_of_squares: Some(loss_difference_sum_of_squares),
+        standard_error,
+        t_statistic,
+        p_value_one_sided: p_value,
+        confidence_interval_lower: lower,
+        confidence_interval_upper: upper,
+        observations,
+        indicator_count,
+        status: status.into(),
+        preferred_model: preferred,
+        reason,
+    }
 }
 
 fn prediction_accumulators(
@@ -8238,284 +10799,37 @@ fn prediction_accumulators(
         accumulators.push(PredictionErrorAccumulator {
             construct: construct.id.clone(),
             predictor_count: predecessors.len(),
+            lm_available: true,
             ..PredictionErrorAccumulator::default()
         });
     }
     if accumulators.is_empty() {
         return Err(EstimationError::UnsupportedMethod(
-            "PLSpredict holdout v1 requires at least one endogenous construct".into(),
+            "Deterministic construct prediction requires at least one endogenous construct".into(),
         ));
     }
     Ok(accumulators)
 }
 
-fn accumulate_prediction_fold(
-    recipe: &AnalysisRecipe,
-    blocks: &[Vec<usize>],
-    construct_index: &HashMap<&str, usize>,
-    split: &PredictionSplit,
-    accumulators: &mut [PredictionErrorAccumulator],
-    model_pairs: &[CvpatModelPairSpec],
-    control: &mut dyn FnMut(EstimationProgress) -> bool,
-) -> Result<(), EstimationError> {
-    let (weights, train_scores, _) = match recipe.settings.weighting_scheme {
-        WeightingScheme::Pca => pca_scores(
-            &split.train_columns,
-            blocks,
-            recipe.settings.tolerance,
-            recipe.settings.max_iterations,
-            control,
-        )?,
-        WeightingScheme::Path | WeightingScheme::Factor => {
-            iterative_scores(&split.train_columns, blocks, recipe, false, control)?
-        }
-    };
-    let test_scores = block_linear_scores(&split.test_columns, blocks, &weights)?;
-    let mut accumulator_index = 0;
-    for (target_index, construct) in recipe.model.constructs.iter().enumerate() {
-        let predecessors = recipe
-            .model
-            .paths
-            .iter()
-            .filter(|path| path.target == construct.id)
-            .map(|path| construct_index[path.source.as_str()])
-            .collect::<Vec<_>>();
-        if predecessors.is_empty() {
-            continue;
-        }
-        let train_predictors = predecessors
-            .iter()
-            .map(|index| train_scores[*index].clone())
-            .collect::<Vec<_>>();
-        let coefficients = ols(
-            &train_predictors,
-            &train_scores[target_index],
-            &format!("PLSpredict k-fold target {}", construct.id),
-        )?;
-        let test_predictors = predecessors
-            .iter()
-            .map(|index| test_scores[*index].clone())
-            .collect::<Vec<_>>();
-        let predicted = fitted_values(&test_predictors, &coefficients);
-        let target_model_pairs = model_pairs
-            .iter()
-            .filter(|pair| pair.target == construct.id)
-            .collect::<Vec<_>>();
-        let model_pair_predictions = target_model_pairs
-            .iter()
-            .filter_map(|pair| {
-                reduced_model_predictions(
-                    recipe,
-                    &train_scores,
-                    &test_scores,
-                    construct_index,
-                    &construct.id,
-                    &pair.drop_sources,
-                )
-                .ok()
-                .map(|prediction| (pair.label.as_str(), prediction))
-            })
-            .collect::<Vec<_>>();
-        let lm_predicted = linear_model_construct_predictions(
-            recipe,
-            &split.train_columns,
-            &split.test_columns,
-            blocks,
-            &predecessors,
-            &train_scores[target_index],
-            &construct.id,
-        )
-        .ok();
-        accumulators[accumulator_index].add(
-            &test_scores[target_index],
-            &predicted,
-            lm_predicted.as_deref(),
-            &model_pair_predictions,
-        );
-        accumulator_index += 1;
-    }
-    Ok(())
-}
-
-fn linear_model_construct_predictions(
-    recipe: &AnalysisRecipe,
-    train_columns: &[Vec<f64>],
-    test_columns: &[Vec<f64>],
-    blocks: &[Vec<usize>],
-    predecessors: &[usize],
-    train_outcome: &[f64],
-    subject: &str,
-) -> Result<Vec<f64>, EstimationError> {
-    let predictor_indices = predecessors
-        .iter()
-        .flat_map(|predecessor| blocks[*predecessor].iter().copied())
-        .collect::<Vec<_>>();
-    if predictor_indices.is_empty() {
-        return Err(EstimationError::Numerical(format!(
-            "no LM benchmark predictors for {subject}"
-        )));
-    }
-    let train_predictors = predictor_indices
-        .iter()
-        .map(|index| train_columns[*index].clone())
-        .collect::<Vec<_>>();
-    let coefficients = ols(
-        &train_predictors,
-        train_outcome,
-        &format!("PLSpredict LM benchmark {subject}"),
-    )?;
-    let test_predictors = predictor_indices
-        .iter()
-        .map(|index| test_columns[*index].clone())
-        .collect::<Vec<_>>();
-    let _ = recipe;
-    Ok(fitted_values(&test_predictors, &coefficients))
-}
-
-fn parse_cvpat_model_pairs(
-    recipe: &AnalysisRecipe,
-) -> Result<Vec<CvpatModelPairSpec>, EstimationError> {
-    let Some(raw) = recipe
-        .metadata
-        .get("cvpat_drop_paths")
-        .or_else(|| recipe.metadata.get("cvpat.drop_paths"))
-    else {
-        return Ok(Vec::new());
-    };
-    let construct_ids = recipe
-        .model
-        .constructs
-        .iter()
-        .map(|construct| construct.id.as_str())
-        .collect::<HashSet<_>>();
-    let mut by_target = BTreeMap::<String, HashSet<String>>::new();
-    for item in raw
-        .split([',', ';', '\n'])
-        .map(str::trim)
-        .filter(|item| !item.is_empty())
-    {
-        let Some((source, target)) = item.split_once("->") else {
-            return Err(EstimationError::UnsupportedMethod(format!(
-                "CVPAT model-pair path '{item}' must use source->target syntax"
-            )));
-        };
-        let source = source.trim();
-        let target = target.trim();
-        if !construct_ids.contains(source) || !construct_ids.contains(target) {
-            return Err(EstimationError::UnsupportedMethod(format!(
-                "CVPAT model-pair path '{item}' references an unknown construct"
-            )));
-        }
-        let exists = recipe
-            .model
-            .paths
-            .iter()
-            .any(|path| path.source == source && path.target == target);
-        if !exists {
-            return Err(EstimationError::UnsupportedMethod(format!(
-                "CVPAT model-pair path '{item}' is not an existing structural path"
-            )));
-        }
-        by_target
-            .entry(target.to_string())
-            .or_default()
-            .insert(source.to_string());
-    }
-    Ok(by_target
-        .into_iter()
-        .map(|(target, drop_sources)| {
-            let mut sources = drop_sources.iter().cloned().collect::<Vec<_>>();
-            sources.sort();
-            CvpatModelPairSpec {
-                label: format!("drop_{}_to_{}", sources.join("_"), target),
-                target,
-                drop_sources,
-            }
-        })
-        .collect())
-}
-
-fn reduced_model_predictions(
-    recipe: &AnalysisRecipe,
-    train_scores: &[Vec<f64>],
-    test_scores: &[Vec<f64>],
-    construct_index: &HashMap<&str, usize>,
-    target: &str,
-    drop_sources: &HashSet<String>,
-) -> Result<Vec<f64>, EstimationError> {
-    let target_index = construct_index[target];
-    let predecessors = recipe
-        .model
-        .paths
-        .iter()
-        .filter(|path| path.target == target && !drop_sources.contains(&path.source))
-        .map(|path| construct_index[path.source.as_str()])
-        .collect::<Vec<_>>();
-    if predecessors.is_empty() {
-        return Ok(vec![0.0; test_scores[target_index].len()]);
-    }
-    let train_predictors = predecessors
-        .iter()
-        .map(|index| train_scores[*index].clone())
-        .collect::<Vec<_>>();
-    let coefficients = ols(
-        &train_predictors,
-        &train_scores[target_index],
-        &format!("CVPAT reduced model target {target}"),
-    )?;
-    let test_predictors = predecessors
-        .iter()
-        .map(|index| test_scores[*index].clone())
-        .collect::<Vec<_>>();
-    Ok(fitted_values(&test_predictors, &coefficients))
-}
-
 impl PredictionErrorAccumulator {
-    fn add(
-        &mut self,
-        actual: &[f64],
-        pls_predicted: &[f64],
-        lm_predicted: Option<&[f64]>,
-        model_pair_predictions: &[(&str, Vec<f64>)],
-    ) {
+    fn add(&mut self, actual: &[f64], pls_predicted: &[f64], lm_predicted: Option<&[f64]>) {
         self.observation_count += actual.len();
         self.pls_sse += squared_error_sum(actual, pls_predicted);
         self.pls_absolute_error += absolute_error_sum(actual, pls_predicted);
         let benchmark_sse = actual.iter().map(|value| value * value).sum::<f64>();
         self.benchmark_sse += benchmark_sse;
         self.benchmark_absolute_error += actual.iter().map(|value| value.abs()).sum::<f64>();
-        self.benchmark_loss_differences.extend(
-            actual
-                .iter()
-                .zip(pls_predicted)
-                .map(|(actual, predicted)| (actual - predicted).powi(2) - actual.powi(2)),
-        );
         if let Some(lm_predicted) = lm_predicted {
-            let lm_sse = squared_error_sum(actual, lm_predicted);
-            let lm_abs = absolute_error_sum(actual, lm_predicted);
-            self.lm_sse = Some(self.lm_sse.unwrap_or(0.0) + lm_sse);
-            self.lm_absolute_error = Some(self.lm_absolute_error.unwrap_or(0.0) + lm_abs);
-            self.lm_loss_differences.extend(
-                actual
-                    .iter()
-                    .zip(pls_predicted)
-                    .zip(lm_predicted)
-                    .map(|((actual, pls), lm)| (actual - pls).powi(2) - (actual - lm).powi(2)),
-            );
-        }
-        for (label, model_pair_predicted) in model_pair_predictions {
-            self.model_pair_loss_differences
-                .entry((*label).to_string())
-                .or_default()
-                .extend(
-                    actual
-                        .iter()
-                        .zip(pls_predicted)
-                        .zip(model_pair_predicted)
-                        .map(|((actual, pls), model_pair)| {
-                            (actual - pls).powi(2) - (actual - model_pair).powi(2)
-                        }),
-                );
+            if self.lm_available {
+                let lm_sse = squared_error_sum(actual, lm_predicted);
+                let lm_abs = absolute_error_sum(actual, lm_predicted);
+                self.lm_sse = Some(self.lm_sse.unwrap_or(0.0) + lm_sse);
+                self.lm_absolute_error = Some(self.lm_absolute_error.unwrap_or(0.0) + lm_abs);
+            }
+        } else {
+            self.lm_available = false;
+            self.lm_sse = None;
+            self.lm_absolute_error = None;
         }
     }
 
@@ -8524,7 +10838,9 @@ impl PredictionErrorAccumulator {
             .then(|| 1.0 - self.pls_sse / self.benchmark_sse)
             .filter(|value| value.is_finite());
         let q_squared_predict_lm = self
-            .lm_sse
+            .lm_available
+            .then_some(self.lm_sse)
+            .flatten()
             .and_then(|lm_sse| {
                 (self.benchmark_sse > f64::EPSILON).then(|| 1.0 - lm_sse / self.benchmark_sse)
             })
@@ -8538,110 +10854,19 @@ impl PredictionErrorAccumulator {
             mae_benchmark: self.benchmark_absolute_error / self.observation_count as f64,
             q_squared_predict,
             rmse_lm: self
-                .lm_sse
+                .lm_available
+                .then_some(self.lm_sse)
+                .flatten()
                 .map(|sse| (sse / self.observation_count as f64).sqrt()),
             mae_lm: self
-                .lm_absolute_error
+                .lm_available
+                .then_some(self.lm_absolute_error)
+                .flatten()
                 .map(|error| error / self.observation_count as f64),
             q_squared_predict_lm,
         }
     }
-
-    fn cvpat_comparisons(&self) -> Vec<CvpatComparison> {
-        let mut comparisons = vec![cvpat_from_differences(
-            &self.construct,
-            "pls_vs_training_mean_benchmark",
-            &self.benchmark_loss_differences,
-        )];
-        if !self.lm_loss_differences.is_empty() {
-            comparisons.push(cvpat_from_differences(
-                &self.construct,
-                "pls_vs_lm_benchmark",
-                &self.lm_loss_differences,
-            ));
-        }
-        for (label, differences) in &self.model_pair_loss_differences {
-            comparisons.push(cvpat_from_differences(
-                &self.construct,
-                &format!("pls_vs_model_pair:{label}"),
-                differences,
-            ));
-        }
-        comparisons
-    }
 }
-
-fn cvpat_from_differences(target: &str, comparison: &str, differences: &[f64]) -> CvpatComparison {
-    let observations = differences.len();
-    let mean = if observations > 0 {
-        vector_mean(differences)
-    } else {
-        f64::NAN
-    };
-    let standard_error = if observations > 1 {
-        let sd = sample_sd(differences);
-        (sd.is_finite() && sd > f64::EPSILON).then(|| sd / (observations as f64).sqrt())
-    } else {
-        None
-    };
-    let (t_statistic, p_value_two_sided, warning) = if let Some(se) = standard_error {
-        let t = mean / se;
-        let df = observations as f64 - 1.0;
-        let p = StudentsT::new(0.0, 1.0, df)
-            .ok()
-            .map(|distribution| 2.0 * (1.0 - distribution.cdf(t.abs())));
-        (Some(t), p, None)
-    } else {
-        (
-            None,
-            None,
-            Some("CVPAT unavailable because paired loss differences have zero variance or insufficient observations".into()),
-        )
-    };
-    let preferred_model = if !mean.is_finite() || mean.abs() <= 1e-15 {
-        "tie"
-    } else if mean < 0.0 {
-        "pls"
-    } else {
-        comparison.trim_start_matches("pls_vs_")
-    };
-    CvpatComparison {
-        target: target.into(),
-        comparison: comparison.into(),
-        loss: "squared_error_difference_pls_minus_comparison".into(),
-        mean_loss_difference: mean,
-        standard_error,
-        t_statistic,
-        p_value_two_sided,
-        observations,
-        preferred_model: preferred_model.into(),
-        warning,
-    }
-}
-
-fn block_linear_scores(
-    columns: &[Vec<f64>],
-    blocks: &[Vec<usize>],
-    weights: &[Vec<f64>],
-) -> Result<Vec<Vec<f64>>, EstimationError> {
-    blocks
-        .iter()
-        .zip(weights)
-        .map(|(block, weight)| {
-            let mut score = vec![0.0; columns[0].len()];
-            for (column, coefficient) in block.iter().zip(weight) {
-                add_scaled(&mut score, &columns[*column], *coefficient);
-            }
-            if score.iter().any(|value| !value.is_finite()) {
-                return Err(EstimationError::Numerical(
-                    "non-finite holdout construct score".into(),
-                ));
-            }
-            Ok(score)
-        })
-        .collect()
-}
-
 fn squared_error_sum(actual: &[f64], predicted: &[f64]) -> f64 {
     actual
         .iter()
@@ -8989,6 +11214,242 @@ fn validate_execution_recipe(recipe: &AnalysisRecipe) -> Result<(), EstimationEr
     if recipe.settings.bootstrap_samples > 0 {
         return Err(EstimationError::ResamplingRequiresEngine);
     }
+    if recipe.settings.method == AnalysisMethod::Gsca {
+        validate_gsca_execution_contract(recipe)?;
+    }
+    if recipe.settings.method == AnalysisMethod::Nca {
+        let x = metadata_required(recipe, "nca_x")?;
+        let y = metadata_required(recipe, "nca_y")?;
+        if x == y {
+            return Err(EstimationError::UnsupportedMethod(
+                "NCA v2 requires different X and Y variables".into(),
+            ));
+        }
+        if recipe.settings.weighting_scheme != WeightingScheme::Path
+            || recipe.settings.preprocessing != Preprocessing::Unstandardized
+            || recipe.settings.missing_data != MissingDataPolicy::ListwiseDeletion
+            || recipe.settings.case_weight_column.is_some()
+            || recipe.settings.studentized_inner_samples > 0
+            || recipe.settings.permutation_samples > 0
+        {
+            return Err(EstimationError::UnsupportedMethod(
+                "NCA v2 requires unstandardized raw values, listwise deletion, no case weights, and only its dedicated permutation plan".into(),
+            ));
+        }
+        let ceiling = recipe
+            .metadata
+            .get("nca_ceiling")
+            .map(String::as_str)
+            .unwrap_or("both");
+        if nca_requested_ceilings(ceiling).is_none() {
+            return Err(EstimationError::UnsupportedMethod(format!(
+                "NCA v2 does not support ceiling technique {ceiling}"
+            )));
+        }
+        let permutation_samples = recipe
+            .metadata
+            .get("nca_permutation_samples")
+            .map(String::as_str)
+            .unwrap_or("999")
+            .parse::<usize>()
+            .ok();
+        if permutation_samples.is_none_or(|samples| !(1..=10_000).contains(&samples)) {
+            return Err(EstimationError::UnsupportedMethod(
+                "NCA v2 requires 1 to 10,000 dedicated permutation samples".into(),
+            ));
+        }
+    }
+    if recipe.settings.method == AnalysisMethod::Pca {
+        let variables = metadata_list(recipe, "pca_variables")
+            .or_else(|| metadata_list(recipe, "pca.variables"))
+            .unwrap_or_default();
+        let unique_variables = variables.iter().collect::<HashSet<_>>();
+        let component_rule = recipe
+            .metadata
+            .get("pca_component_rule")
+            .map(String::as_str)
+            .unwrap_or("kaiser");
+        if variables.len() < 2 || unique_variables.len() != variables.len() {
+            return Err(EstimationError::UnsupportedMethod(
+                "PCA v1 requires at least two distinct numeric variables".into(),
+            ));
+        }
+        if !matches!(component_rule, "kaiser" | "fixed" | "variance_threshold") {
+            return Err(EstimationError::UnsupportedMethod(format!(
+                "PCA v1 does not support component rule {component_rule}"
+            )));
+        }
+        if component_rule == "fixed" {
+            let components = recipe
+                .metadata
+                .get("pca_components")
+                .and_then(|value| value.parse::<usize>().ok());
+            if components
+                .is_none_or(|components| components == 0 || components > variables.len().min(50))
+            {
+                return Err(EstimationError::UnsupportedMethod(
+                    "PCA v1 fixed retention requires 1 to min(selected variables, 50) components"
+                        .into(),
+                ));
+            }
+        }
+        if component_rule == "variance_threshold" {
+            let threshold = recipe
+                .metadata
+                .get("pca_variance_threshold")
+                .and_then(|value| value.parse::<f64>().ok());
+            if threshold.is_none_or(|threshold| {
+                !threshold.is_finite() || !(0.01..=0.999).contains(&threshold)
+            }) {
+                return Err(EstimationError::UnsupportedMethod(
+                    "PCA v1 variance-threshold retention requires a threshold from 0.01 to 0.999"
+                        .into(),
+                ));
+            }
+        }
+        if recipe.settings.weighting_scheme != WeightingScheme::Path
+            || recipe.settings.preprocessing != Preprocessing::Standardized
+            || recipe.settings.missing_data != MissingDataPolicy::ListwiseDeletion
+            || recipe.settings.case_weight_column.is_some()
+            || recipe.settings.studentized_inner_samples > 0
+            || recipe.settings.permutation_samples > 0
+            || !recipe.model.constructs.is_empty()
+            || !recipe.model.paths.is_empty()
+            || !recipe.model.controls.is_empty()
+            || !recipe.model.interactions.is_empty()
+            || !recipe.model.higher_order_constructs.is_empty()
+        {
+            return Err(EstimationError::UnsupportedMethod(
+                "PCA v1 requires standardized raw variables, listwise deletion, an empty SEM model, and no case weights or resampling"
+                    .into(),
+            ));
+        }
+    }
+    if recipe.settings.method == AnalysisMethod::Ipma {
+        if recipe.settings.weighting_scheme != WeightingScheme::Path {
+            return Err(EstimationError::UnsupportedMethod(
+                "IPMA v1 requires path weighting".into(),
+            ));
+        }
+        if recipe.settings.preprocessing != Preprocessing::Standardized {
+            return Err(EstimationError::UnsupportedMethod(
+                "IPMA v1 requires standardized indicator preprocessing".into(),
+            ));
+        }
+        if recipe.settings.missing_data != MissingDataPolicy::ListwiseDeletion {
+            return Err(EstimationError::UnsupportedMethod(
+                "IPMA v1 requires listwise deletion".into(),
+            ));
+        }
+        if recipe.settings.case_weight_column.is_some() {
+            return Err(EstimationError::UnsupportedMethod(
+                "IPMA v1 does not support case weights".into(),
+            ));
+        }
+        if recipe.settings.studentized_inner_samples > 0 || recipe.settings.permutation_samples > 0
+        {
+            return Err(EstimationError::UnsupportedMethod(
+                "IPMA v1 does not support resampling inference".into(),
+            ));
+        }
+        if !recipe.model.interactions.is_empty() {
+            return Err(EstimationError::UnsupportedMethod(
+                "IPMA v1 does not support generated interaction constructs".into(),
+            ));
+        }
+        if !recipe.model.higher_order_constructs.is_empty() {
+            return Err(EstimationError::UnsupportedMethod(
+                "IPMA v1 does not support higher-order construct expansion".into(),
+            ));
+        }
+        resolve_ipma_targets(recipe)
+            .map_err(|error| EstimationError::UnsupportedMethod(error.to_string()))?;
+    }
+    if recipe.settings.method == AnalysisMethod::Mga {
+        if recipe.settings.weighting_scheme != WeightingScheme::Path
+            || recipe.settings.preprocessing != Preprocessing::Standardized
+            || recipe.settings.missing_data != MissingDataPolicy::ListwiseDeletion
+            || recipe.settings.case_weight_column.is_some()
+        {
+            return Err(EstimationError::UnsupportedMethod(
+                "MICOM and permutation MGA v2 require path weighting, standardized preprocessing, listwise deletion, and no case weights"
+                    .into(),
+            ));
+        }
+        let group_column = recipe
+            .metadata
+            .get("mga_group_column")
+            .or_else(|| recipe.metadata.get("mga.group_column"))
+            .map(|value| value.trim())
+            .filter(|value| !value.is_empty())
+            .ok_or_else(|| {
+                EstimationError::UnsupportedMethod(
+                    "two-group MGA requires metadata mga_group_column".into(),
+                )
+            })?;
+        requested_mga_groups(recipe, "two-group MGA v2")?;
+        if recipe
+            .model
+            .constructs
+            .iter()
+            .flat_map(|construct| construct.indicators.iter())
+            .any(|indicator| indicator == group_column)
+        {
+            return Err(EstimationError::UnsupportedMethod(
+                "the MGA grouping column cannot also be a model indicator".into(),
+            ));
+        }
+        if recipe.settings.studentized_inner_samples > 0 || recipe.settings.permutation_samples > 0
+        {
+            return Err(EstimationError::UnsupportedMethod(
+                "two-group MGA uses its dedicated permutation option; pooled resampling settings are unsupported"
+                    .into(),
+            ));
+        }
+        let methods = recipe
+            .metadata
+            .get("group_methods")
+            .map(|methods| {
+                methods
+                    .split(',')
+                    .map(str::trim)
+                    .filter(|method| !method.is_empty())
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        let unique = methods
+            .iter()
+            .map(|method| method.to_ascii_lowercase())
+            .collect::<HashSet<_>>();
+        if methods.len() != 2
+            || unique.len() != 2
+            || !group_method_requested(recipe, "mga_permutation")
+            || !group_method_requested(recipe, "micom")
+        {
+            return Err(EstimationError::UnsupportedMethod(
+                "the current two-group workflow requires exactly MICOM and permutation MGA".into(),
+            ));
+        }
+        let samples = recipe
+            .metadata
+            .get("group_permutation_samples")
+            .and_then(|value| value.trim().parse::<usize>().ok());
+        if !samples.is_some_and(|samples| (5_000..=10_000).contains(&samples)) {
+            return Err(EstimationError::UnsupportedMethod(
+                "MICOM and permutation MGA require 5000 to 10000 permutations".into(),
+            ));
+        }
+        if !recipe
+            .metadata
+            .get("micom_configural_confirmed")
+            .is_some_and(|value| value.eq_ignore_ascii_case("true"))
+        {
+            return Err(EstimationError::UnsupportedMethod(
+                "MICOM v2 requires explicit confirmation of configural invariance prerequisites"
+                    .into(),
+            ));
+        }
+    }
     if recipe.model.constructs.is_empty()
         && !matches!(
             recipe.settings.method,
@@ -9247,6 +11708,183 @@ mod tests {
     use std::time::Instant;
     use uuid::Uuid;
 
+    #[test]
+    fn nca_v2_uses_record_high_ce_fdh_peers_and_regresses_cr_fdh_through_them() {
+        let x = vec![0.0, 1.0, 2.0, 3.0];
+        let y = vec![1.0, 3.0, 2.0, 4.0];
+        let scope = nca_scope(&x, &y);
+        let peers = nca_ce_fdh_peers(&x, &y);
+        assert_eq!(
+            peers,
+            vec![
+                NcaCeilingPoint { x: 0.0, y: 1.0 },
+                NcaCeilingPoint { x: 1.0, y: 3.0 },
+                NcaCeilingPoint { x: 3.0, y: 4.0 },
+            ]
+        );
+        assert!((nca_ce_fdh_effect_size(&scope, &peers) - 5.0 / 9.0).abs() < 1e-12);
+
+        let (slope, intercept) = nca_cr_fdh_line(&peers).unwrap();
+        assert!((slope - 13.0 / 14.0).abs() < 1e-12);
+        assert!((intercept - 10.0 / 7.0).abs() < 1e-12);
+        assert!(
+            (nca_cr_fdh_effect_size(&scope, Some((slope, intercept))) - 0.39560439560439564).abs()
+                < 1e-12
+        );
+
+        let ce_50 = nca_bottleneck(&scope, &peers, "ce_fdh", Some((slope, intercept)), 50.0);
+        assert_eq!(ce_50.status, "required");
+        assert!((ce_50.required_x_percent.unwrap() - 100.0 / 3.0).abs() < 1e-12);
+        let cr_50 = nca_bottleneck(&scope, &peers, "cr_fdh", Some((slope, intercept)), 50.0);
+        assert_eq!(cr_50.status, "required");
+        assert!((cr_50.required_x_percent.unwrap() - 38.46153846153846).abs() < 1e-12);
+    }
+
+    #[test]
+    fn nca_v2_permutations_are_seeded_independent_shuffles() {
+        let first = nca_permutation_indices(20, 42, "ce_fdh", 7);
+        assert_eq!(first, nca_permutation_indices(20, 42, "ce_fdh", 7));
+        assert_ne!(first, nca_permutation_indices(20, 42, "ce_fdh", 8));
+        assert_ne!(first, nca_permutation_indices(20, 43, "ce_fdh", 7));
+        assert_ne!(first, nca_permutation_indices(20, 42, "cr_fdh", 7));
+        let mut sorted = first;
+        sorted.sort_unstable();
+        assert_eq!(sorted, (0..20).collect::<Vec<_>>());
+    }
+
+    #[test]
+    fn nca_v2_payload_contract_rejects_tampered_geometry() {
+        let dataset = import_delimited_bytes(
+            b"x,y\n0,1\n1,3\n2,2\n3,4\n",
+            "nca.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe = AnalysisRecipe {
+            schema_version: 2,
+            id: Uuid::new_v4(),
+            created_at: Utc::now(),
+            dataset_fingerprint: dataset.fingerprint.0.clone(),
+            model: ModelSpec {
+                id: Uuid::new_v4(),
+                name: "NCA".into(),
+                constructs: Vec::new(),
+                paths: Vec::new(),
+                controls: Vec::new(),
+                higher_order_constructs: Vec::new(),
+                interactions: Vec::new(),
+            },
+            settings: AnalysisSettings::default(),
+            metadata: BTreeMap::from([
+                ("nca_x".into(), "x".into()),
+                ("nca_y".into(), "y".into()),
+                ("nca_ceiling".into(), "both".into()),
+                ("nca_permutation_samples".into(), "19".into()),
+            ]),
+        };
+        recipe.settings.method = AnalysisMethod::Nca;
+        recipe.settings.preprocessing = Preprocessing::Unstandardized;
+        recipe.settings.seed = 77;
+        let result = estimate_pls(&dataset, &recipe).unwrap();
+        let analysis = result.nca.as_ref().unwrap();
+        assert_eq!(result.method_version, NCA_METHOD_VERSION);
+        assert!(nca_analysis_matches_v2_contract(
+            analysis, "x", "y", "both", 19
+        ));
+
+        let mut tampered = analysis.clone();
+        tampered.ceilings[0].effect_size = 0.123;
+        assert!(!nca_analysis_matches_v2_contract(
+            &tampered, "x", "y", "both", 19
+        ));
+        let mut tampered = analysis.clone();
+        tampered.ce_fdh_peers[1].y = 3.5;
+        assert!(!nca_analysis_matches_v2_contract(
+            &tampered, "x", "y", "both", 19
+        ));
+        let mut tampered = analysis.clone();
+        tampered.bottlenecks[5].required_x_percent = Some(99.0);
+        assert!(!nca_analysis_matches_v2_contract(
+            &tampered, "x", "y", "both", 19
+        ));
+    }
+
+    fn standalone_pca_recipe(dataset: &Dataset, rule: &str) -> AnalysisRecipe {
+        let mut settings = AnalysisSettings::default();
+        settings.method = AnalysisMethod::Pca;
+        AnalysisRecipe {
+            schema_version: 2,
+            id: Uuid::new_v4(),
+            created_at: Utc::now(),
+            dataset_fingerprint: dataset.fingerprint.0.clone(),
+            model: ModelSpec {
+                id: Uuid::new_v4(),
+                name: "Standalone PCA".into(),
+                constructs: Vec::new(),
+                paths: Vec::new(),
+                controls: Vec::new(),
+                higher_order_constructs: Vec::new(),
+                interactions: Vec::new(),
+            },
+            settings,
+            metadata: BTreeMap::from([
+                ("pca_variables".into(), "a,b,c".into()),
+                ("pca_component_rule".into(), rule.into()),
+            ]),
+        }
+    }
+
+    #[test]
+    fn standalone_pca_v1_retains_the_component_that_crosses_variance_threshold() {
+        let dataset = import_delimited_bytes(
+            b"a,b,c\n1,1.2,1\n2,2.1,4\n3,2.8,2\n4,4.2,5\n5,4.9,3\n6,6.1,7\n7,6.8,2\n8,8.2,8\n",
+            "pca-threshold.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe = standalone_pca_recipe(&dataset, "variance_threshold");
+        recipe
+            .metadata
+            .insert("pca_variance_threshold".into(), "0.95".into());
+        let result = estimate_pls(&dataset, &recipe).unwrap();
+        let pca = result.pca.unwrap();
+
+        assert_eq!(result.method_version, PCA_METHOD_VERSION);
+        assert!(pca.retained_components >= 2);
+        assert!(pca.components.last().unwrap().cumulative_variance >= 0.95 - 1e-12);
+        assert!(
+            pca.components[pca.components.len() - 2].cumulative_variance < 0.95,
+            "the threshold-crossing component must be retained"
+        );
+        assert_eq!(
+            pca.loadings.len(),
+            pca.variables.len() * pca.retained_components
+        );
+        assert_eq!(pca.scores.len(), pca.observations * pca.retained_components);
+    }
+
+    #[test]
+    fn standalone_pca_v1_supports_more_variables_than_complete_rows() {
+        let dataset = import_delimited_bytes(
+            b"a,b,c,d\n1,2,4,8\n2,5,3,7\n4,3,7,1\n",
+            "pca-wide.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe = standalone_pca_recipe(&dataset, "fixed");
+        recipe
+            .metadata
+            .insert("pca_variables".into(), "a,b,c,d".into());
+        recipe.metadata.insert("pca_components".into(), "2".into());
+        let result = estimate_pls(&dataset, &recipe).unwrap();
+        let pca = result.pca.unwrap();
+        assert_eq!(pca.observations, 3);
+        assert_eq!(pca.retained_components, 2);
+    }
+
     fn fixture() -> (Dataset, AnalysisRecipe) {
         let dataset = import_delimited_bytes(
             b"x1,x2,y1,y2\n1,2,2,1\n2,3,3,2\n3,5,4,4\n4,4,6,5\n5,6,7,7\n6,7,9,8\n",
@@ -9295,6 +11933,69 @@ mod tests {
     }
 
     #[test]
+    fn gsca_als_v2_optimizes_the_global_criterion_without_fabricated_inference() {
+        let (dataset, mut recipe) = fixture();
+        recipe.settings.method = AnalysisMethod::Gsca;
+        recipe.settings.workers = 1;
+        recipe.settings.max_iterations = 3_000;
+        recipe.settings.tolerance = 1e-7;
+
+        let result = estimate_pls(&dataset, &recipe).unwrap();
+        let repeated = estimate_pls(&dataset, &recipe).unwrap();
+        let gsca = result.gsca.as_ref().unwrap();
+
+        assert_eq!(result, repeated);
+        assert_eq!(result.method_version, GSCA_METHOD_VERSION);
+        assert_eq!(gsca.method_version, GSCA_METHOD_VERSION);
+        assert_eq!(gsca.algorithm, GSCA_ALGORITHM_VERSION);
+        assert!(gsca.converged);
+        assert!(gsca.iterations < 3_000);
+        assert!(gsca.final_change <= 1e-7);
+        assert!(gsca.objective.is_finite() && gsca.objective >= 0.0);
+        assert!((gsca.fit - (1.0 - gsca.objective / 6.0)).abs() < 1e-10);
+        assert!(gsca.measurement_fit.is_finite());
+        assert!(gsca.structural_fit.is_finite());
+        assert!(gsca.adjusted_fit.is_finite());
+        assert!(gsca.gfi.is_finite());
+        assert!(gsca.srmr.is_finite() && gsca.srmr >= 0.0);
+        assert_eq!(gsca.observations, 6);
+        assert_eq!(gsca.weights.len(), 4);
+        assert_eq!(gsca.loadings.len(), 4);
+        assert_eq!(gsca.paths.len(), 1);
+        assert_eq!(gsca.r_squared.len(), 1);
+        assert!(gsca.bootstrap_intervals.is_empty());
+        assert!(result.effects.is_empty());
+        assert!(result.mediation.estimates.is_empty());
+        assert!(result.control_estimates.is_empty());
+        assert!(result.plsc.is_none() && result.predict.is_none() && result.cbsem.is_none());
+    }
+
+    #[test]
+    fn gsca_als_v2_honors_cancellation_and_rejects_pls_only_settings() {
+        let (dataset, mut recipe) = fixture();
+        recipe.settings.method = AnalysisMethod::Gsca;
+        let error = estimate_pls_with_control(&dataset, &recipe, |progress| {
+            progress.phase != EstimationPhase::Iterating
+        })
+        .unwrap_err();
+        assert_eq!(error, EstimationError::Cancelled);
+
+        recipe.settings.workers = 2;
+        assert!(matches!(
+            estimate_pls(&dataset, &recipe),
+            Err(EstimationError::UnsupportedMethod(message))
+                if message.contains("one worker")
+        ));
+        recipe.settings.workers = 1;
+        recipe.settings.permutation_samples = 99;
+        assert!(matches!(
+            estimate_pls(&dataset, &recipe),
+            Err(EstimationError::UnsupportedMethod(message))
+                if message.contains("no resampling")
+        ));
+    }
+
+    #[test]
     fn reflective_path_model_converges_and_decomposes_effects() {
         let (dataset, recipe) = fixture();
         let result = estimate_pls(&dataset, &recipe).unwrap();
@@ -9312,7 +12013,304 @@ mod tests {
     }
 
     #[test]
-    fn plspredict_holdout_reports_leakage_free_prediction_metrics() {
+    fn cca_non_saturated_residuals_are_finite_coherent_and_deterministic() {
+        let dataset = import_delimited_bytes(
+            include_bytes!("../../../validation/results/cca_reference.csv"),
+            "cca_reference.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../../validation/results/cca_reference.recipe.json"
+        ))
+        .unwrap();
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        recipe
+            .model
+            .paths
+            .retain(|path| !(path.source == "x" && path.target == "y"));
+
+        let left = estimate_pls(&dataset, &recipe).unwrap();
+        let right = estimate_pls(&dataset, &recipe).unwrap();
+        assert_eq!(left, right);
+        assert_eq!(left.method_version, CCA_METHOD_VERSION);
+
+        let cca = left.cca.expect("CCA payload");
+        assert_eq!(cca.method_version, CCA_METHOD_VERSION);
+        assert_eq!(cca.model, "recursive_standardized_composite_path_model_v1");
+        assert_eq!(cca.correlations.len(), 3);
+        let computed_max = cca
+            .correlations
+            .iter()
+            .map(|row| {
+                assert!(row.observed.is_finite());
+                assert!(row.reproduced.is_finite());
+                assert!(row.residual.is_finite());
+                assert!(row.absolute_residual.is_finite());
+                assert!((row.residual - (row.observed - row.reproduced)).abs() <= 1e-12);
+                assert!((row.absolute_residual - row.residual.abs()).abs() <= 1e-12);
+                row.absolute_residual
+            })
+            .fold(0.0_f64, f64::max);
+        assert!(
+            computed_max > 1e-6,
+            "the non-saturated fixture must exercise a nonzero residual"
+        );
+        assert!((cca.max_absolute_residual - computed_max).abs() <= 1e-12);
+    }
+
+    #[test]
+    fn bounded_ipma_uses_only_endogenous_targets_and_fixed_standardized_path_scope() {
+        let (dataset, mut recipe) = fixture();
+        recipe.settings.method = AnalysisMethod::Ipma;
+        recipe.metadata.insert("ipma_targets".into(), "y".into());
+        let result = estimate_pls(&dataset, &recipe).unwrap();
+        assert_eq!(result.method_version, IPMA_METHOD_VERSION);
+        let expected_importance = result
+            .effects
+            .iter()
+            .find(|effect| effect.source == "x" && effect.target == "y")
+            .unwrap()
+            .total;
+        let ipma = result.ipma.unwrap();
+        assert_eq!(ipma.method_version, IPMA_METHOD_VERSION);
+        assert_eq!(ipma.performance_scale, IPMA_PERFORMANCE_SCALE);
+        assert_eq!(ipma.targets, vec!["y"]);
+        assert_eq!(ipma.constructs.len(), 1);
+        assert_eq!(ipma.indicators.len(), 2);
+        assert!(ipma.constructs.iter().all(|row| {
+            row.target == "y"
+                && row.construct == "x"
+                && row.performance.is_finite()
+                && (0.0..=100.0).contains(&row.performance)
+        }));
+        assert!(ipma.indicators.iter().all(|row| {
+            row.target == "y"
+                && row.construct == "x"
+                && ["x1", "x2"].contains(&row.indicator.as_str())
+        }));
+        assert!((ipma.constructs[0].importance - expected_importance).abs() <= 1e-12);
+
+        recipe.metadata.insert("ipma_targets".into(), "x".into());
+        assert!(matches!(
+            estimate_pls(&dataset, &recipe),
+            Err(EstimationError::UnsupportedMethod(message))
+                if message.contains("target must be endogenous")
+        ));
+
+        recipe.metadata.insert("ipma_targets".into(), "y".into());
+        recipe.settings.weighting_scheme = WeightingScheme::Factor;
+        assert!(matches!(
+            estimate_pls(&dataset, &recipe),
+            Err(EstimationError::UnsupportedMethod(message)) if message.contains("path weighting")
+        ));
+        recipe.settings.weighting_scheme = WeightingScheme::Path;
+        recipe.settings.preprocessing = Preprocessing::MeanCentered;
+        assert!(matches!(
+            estimate_pls(&dataset, &recipe),
+            Err(EstimationError::UnsupportedMethod(message))
+                if message.contains("standardized indicator preprocessing")
+        ));
+    }
+
+    #[test]
+    fn runtime_requires_explicit_micom_configural_confirmation() {
+        let dataset = import_delimited_bytes(
+            include_bytes!("../../../validation/results/v06_groups.csv"),
+            "v06_groups.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../../validation/results/v06_groups.recipe.json"
+        ))
+        .unwrap();
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        recipe
+            .metadata
+            .insert("group_methods".into(), "micom,mga_permutation".into());
+        recipe
+            .metadata
+            .insert("group_permutation_samples".into(), "5000".into());
+
+        assert!(matches!(
+            estimate_pls(&dataset, &recipe),
+            Err(EstimationError::UnsupportedMethod(message))
+                if message.contains("configural invariance")
+        ));
+    }
+
+    #[test]
+    fn micom_and_permutation_mga_v2_emit_complete_group_measurement_contract() {
+        let dataset = import_delimited_bytes(
+            include_bytes!("../../../validation/results/v06_groups.csv"),
+            "v06_groups.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../../validation/results/v06_groups.recipe.json"
+        ))
+        .unwrap();
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        recipe
+            .metadata
+            .insert("group_methods".into(), "micom,mga_permutation".into());
+        recipe
+            .metadata
+            .insert("group_permutation_samples".into(), "5000".into());
+        recipe
+            .metadata
+            .insert("micom_configural_confirmed".into(), "true".into());
+        recipe.metadata.insert("mga_group_a".into(), "B".into());
+        recipe.metadata.insert("mga_group_b".into(), "A".into());
+
+        let result = estimate_pls(&dataset, &recipe).unwrap();
+        assert!(result.mga.is_some());
+        assert!(result.mga_permutation.is_some());
+        assert!(result.micom.is_some());
+        let mga = result.mga.as_ref().unwrap();
+        assert_eq!(mga.method_version, PLS_MGA_METHOD_VERSION);
+        assert_eq!(mga.groups[0].group, "B");
+        assert_eq!(mga.groups[1].group, "A");
+        assert_eq!(mga.measurement_comparisons.len(), 12);
+        assert!(
+            mga.groups
+                .iter()
+                .all(|group| { group.outer_estimates.len() == 6 && group.transforms.len() == 6 })
+        );
+        assert!(mga.comparisons.iter().all(|comparison| {
+            comparison.group_a == "B"
+                && comparison.group_b == "A"
+                && (comparison.difference - (comparison.coefficient_a - comparison.coefficient_b))
+                    .abs()
+                    < 1e-12
+        }));
+        let permutation = result.mga_permutation.as_ref().unwrap();
+        assert_eq!(
+            permutation.method_version,
+            PLS_MGA_PERMUTATION_METHOD_VERSION
+        );
+        assert_eq!(permutation.usable_permutations, 5000);
+        assert_eq!(permutation.measurement_comparisons.len(), 12);
+        let micom = result.micom.as_ref().unwrap();
+        assert_eq!(micom.method_version, MICOM_METHOD_VERSION);
+        assert_eq!(micom.constructs.len(), 3);
+        assert!(micom.constructs.iter().all(|row| {
+            row.configural_invariance
+                && row.compositional_correlation_lower.is_some()
+                && row.mean_difference_lower.is_some()
+                && row.mean_difference_upper.is_some()
+                && row.variance_difference_lower.is_some()
+                && row.variance_difference_upper.is_some()
+                && row.equal_means.is_some()
+                && row.equal_variances.is_some()
+        }));
+    }
+
+    #[test]
+    fn permutation_mga_reports_progress_and_honors_cancellation() {
+        let dataset = import_delimited_bytes(
+            include_bytes!("../../../validation/results/v06_groups.csv"),
+            "v06_groups.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../../validation/results/v06_groups.recipe.json"
+        ))
+        .unwrap();
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        recipe
+            .metadata
+            .insert("group_methods".into(), "micom,mga_permutation".into());
+        recipe
+            .metadata
+            .insert("group_permutation_samples".into(), "5000".into());
+        recipe
+            .metadata
+            .insert("micom_configural_confirmed".into(), "true".into());
+
+        let mut permutation_zero_updates = 0usize;
+        let result = estimate_pls_with_control(&dataset, &recipe, |update| {
+            if update.phase == EstimationPhase::Iterating
+                && update.total_units == 5000
+                && update.completed_units == 0
+            {
+                permutation_zero_updates += 1;
+                permutation_zero_updates < 2
+            } else {
+                true
+            }
+        });
+        assert!(permutation_zero_updates >= 2);
+        assert!(matches!(result, Err(EstimationError::Cancelled)));
+    }
+
+    #[test]
+    fn plsc_v2_uses_canonical_dijkstra_henseler_rho_a() {
+        let dataset = import_delimited_bytes(
+            include_bytes!("../../../validation/results/plsc_reference.csv"),
+            "plsc_reference.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../../validation/results/plsc_reference.recipe.json"
+        ))
+        .unwrap();
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+
+        let result = estimate_pls(&dataset, &recipe).unwrap();
+        let plsc = result.plsc.expect("PLSc payload");
+        assert_eq!(result.method_version, PLSC_METHOD_VERSION);
+        assert_eq!(plsc.method_version, PLSC_METHOD_VERSION);
+        assert_eq!(
+            plsc.reliability_method_version,
+            DIJKSTRA_HENSELER_RHO_A_METHOD_VERSION
+        );
+
+        // Independently evaluated from Dijkstra-Henseler Equation 3 on the
+        // committed 120-case fixture; qpls-assessment exercises the same
+        // equation against its primary-paper and cSEM evidence.
+        let expected = BTreeMap::from([
+            ("x", 0.994_893_700_324_704_6),
+            ("z", 0.994_198_504_685_569_0),
+            ("y", 0.992_821_048_709_414_7),
+        ]);
+        for reliability in plsc.reliabilities {
+            let expected = expected[reliability.construct.as_str()];
+            assert!(
+                (reliability.rho_a - expected).abs() <= 1e-12,
+                "unexpected rho_A for {}: {} != {}",
+                reliability.construct,
+                reliability.rho_a,
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn plsc_rejects_inadmissible_corrected_correlations_without_clamping() {
+        let (dataset, mut recipe) = fixture();
+        recipe.settings.method = AnalysisMethod::Plsc;
+
+        let error = estimate_pls(&dataset, &recipe).unwrap_err();
+        assert!(matches!(
+            error,
+            EstimationError::Numerical(message)
+                if message.contains("PLSc corrected construct correlation is outside [-1, 1]")
+                    && message.contains("'x' and 'y'")
+        ));
+    }
+
+    #[test]
+    fn plspredict_v2_reports_leakage_free_indicator_metrics_and_cvpat() {
         let mut rows = String::from("x1,x2,y1,y2\n");
         for index in 1..=32 {
             let x = index as f64;
@@ -9341,27 +12339,108 @@ mod tests {
         assert_eq!(predict.training_observations, 24);
         assert_eq!(predict.test_observations, 8);
         assert_eq!(predict.targets.len(), 1);
+        assert_eq!(predict.indicator_targets.len(), 2);
         assert_eq!(predict.targets[0].construct, "y");
         assert!(predict.targets[0].rmse_pls < predict.targets[0].rmse_benchmark);
         assert!(predict.targets[0].q_squared_predict.unwrap() > 0.9);
         assert!(predict.targets[0].rmse_lm.is_some());
+        for target in &predict.indicator_targets {
+            assert_eq!(target.construct, "y");
+            assert_eq!(target.predictor_scope, "earliest_antecedent_indicators");
+            assert_eq!(target.predictor_count, 2);
+            assert_eq!(target.pls.observations, 8);
+            assert_eq!(target.pls.mape_observations, 8);
+            assert!(target.pls.rmse < target.indicator_average.rmse);
+            assert!(target.q_squared_predict.unwrap() > 0.9);
+            assert_eq!(target.linear_model.status, "available");
+            assert!(target.linear_model.metrics.is_some());
+        }
         let repeated = predict.repeated_kfold.expect("repeated k-fold payload");
-        assert_eq!(repeated.folds, 5);
-        assert_eq!(repeated.repeats, 3);
-        assert_eq!(repeated.total_test_observations, 96);
+        assert_eq!(
+            repeated.method_version,
+            PLS_PREDICT_REPEATED_KFOLD_METHOD_VERSION
+        );
+        assert_eq!(repeated.folds, 10);
+        assert_eq!(repeated.repeats, 10);
+        assert_eq!(repeated.seed, recipe.settings.seed);
+        assert_eq!(
+            repeated.assignment,
+            "seeded_sha256_source_row_order_round_robin_10_v1"
+        );
+        assert!(repeated.assignment_digest.starts_with("sha256:"));
+        assert_eq!(repeated.assignment_digest.len(), 71);
+        assert_eq!(repeated.total_test_observations, 320);
         assert_eq!(repeated.targets.len(), 1);
+        assert_eq!(repeated.indicator_targets.len(), 2);
         assert!(repeated.targets[0].rmse_pls < repeated.targets[0].rmse_benchmark);
         assert!(repeated.targets[0].rmse_lm.is_some());
-        assert_eq!(repeated.cvpat.len(), 2);
-        assert!(repeated.cvpat.iter().any(|comparison| {
-            comparison.comparison == "pls_vs_training_mean_benchmark"
-                && comparison.preferred_model == "pls"
-                && comparison.p_value_two_sided.is_some()
-        }));
-        assert!(repeated.cvpat.iter().any(|comparison| {
-            comparison.comparison == "pls_vs_lm_benchmark"
-                && comparison.observations == repeated.total_test_observations
-        }));
+        assert!(repeated.cvpat.is_empty());
+        assert!(repeated.paired_loss_diagnostics.is_empty());
+        assert_eq!(repeated.cvpat_benchmark_assessments.len(), 2);
+        for comparison in &repeated.cvpat_benchmark_assessments {
+            assert_eq!(
+                comparison.method_version,
+                CVPAT_INDICATOR_BENCHMARK_METHOD_VERSION
+            );
+            assert_eq!(comparison.comparison_kind, "benchmark_assessment");
+            assert_eq!(comparison.target_scope, "all_endogenous_indicators");
+            assert_eq!(comparison.observations, 32);
+            assert_eq!(comparison.indicator_count, 2);
+            assert_eq!(comparison.confidence_level, 0.95);
+        }
+        let ia = repeated
+            .cvpat_benchmark_assessments
+            .iter()
+            .find(|comparison| comparison.benchmark == "indicator_average")
+            .unwrap();
+        assert_eq!(ia.status, "available");
+        assert!(ia.mean_loss_difference.unwrap() < 0.0);
+        assert!(ia.p_value_one_sided.unwrap() < 0.05);
+        assert_eq!(ia.preferred_model.as_deref(), Some("pls_sem"));
+        assert!(ia.confidence_interval_upper.unwrap() < 0.0);
+    }
+
+    #[test]
+    fn plspredict_v2_fold_assignment_is_seeded_balanced_and_auditable() {
+        let rows = (0..37).collect::<Vec<_>>();
+        let first = sha256_prediction_fold_assignments(&rows, 42, 0, 10);
+        let repeated = sha256_prediction_fold_assignments(&rows, 42, 0, 10);
+        let different_seed = sha256_prediction_fold_assignments(&rows, 43, 0, 10);
+        assert_eq!(first, repeated);
+        assert_ne!(first, different_seed);
+        let mut counts = vec![0_usize; 10];
+        for fold in first {
+            counts[fold] += 1;
+        }
+        assert_eq!(counts.iter().sum::<usize>(), rows.len());
+        assert!(counts.iter().all(|count| (3..=4).contains(count)));
+    }
+
+    #[test]
+    fn plspredict_v2_mape_excludes_zero_actual_values_and_retains_count() {
+        let metrics = error_metrics(&[0.0, 2.0, -4.0], &[1.0, 1.0, -2.0]);
+        assert_eq!(metrics.observations, 3);
+        assert_eq!(metrics.mape_observations, 2);
+        assert_eq!(metrics.absolute_percentage_error_sum, Some(1.0));
+        assert_eq!(metrics.mape_percent, Some(50.0));
+
+        let unavailable = error_metrics(&[0.0, 0.0], &[1.0, -1.0]);
+        assert_eq!(unavailable.mape_observations, 0);
+        assert_eq!(unavailable.absolute_percentage_error_sum, None);
+        assert_eq!(unavailable.mape_percent, None);
+    }
+
+    #[test]
+    fn cvpat_v2_uses_lower_tail_pls_minus_benchmark_direction() {
+        let pls = [1.0, 1.1, 0.9, 1.0, 1.2];
+        let benchmark = [2.0, 1.8, 2.2, 1.9, 2.1];
+        let row =
+            cvpat_benchmark_assessment("indicator_average", &pls, Some(&benchmark), 3, Ok(()));
+        assert_eq!(row.status, "available");
+        assert!(row.mean_loss_difference.unwrap() < 0.0);
+        assert!(row.t_statistic.unwrap() < 0.0);
+        assert!(row.p_value_one_sided.unwrap() < 0.05);
+        assert_eq!(row.preferred_model.as_deref(), Some("pls_sem"));
     }
 
     #[test]
@@ -9808,7 +12887,9 @@ mod tests {
             1e-12,
         );
         assert_eq!(mediation.method_version, PLS_MEDIATION_METHOD_VERSION);
-        assert!(mediation.warnings[0].contains("validated for the documented QuickPLS v1.2.1 scope"));
+        assert!(
+            mediation.warnings[0].contains("validated for the documented QuickPLS v1.2.1 scope")
+        );
         let classes = mediation
             .estimates
             .iter()

@@ -1,5 +1,128 @@
 use thiserror::Error;
 
+pub const DIJKSTRA_HENSELER_RHO_A_METHOD_VERSION: &str = "dijkstra_henseler_rho_a_v1";
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RhoABoundaryWarning {
+    ImproperBelowZero,
+    ImproperAboveOne,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct RhoAEquationResult {
+    pub value: f64,
+    pub weight_norm_squared: f64,
+    pub off_diagonal_numerator: f64,
+    pub off_diagonal_denominator: f64,
+    pub boundary_warning: Option<RhoABoundaryWarning>,
+}
+
+#[derive(Debug, Error, Clone, Copy, PartialEq, Eq)]
+pub enum RhoAEquationError {
+    #[error("rho_A requires a square indicator-correlation matrix matching the weight vector")]
+    DimensionMismatch,
+    #[error("rho_A inputs contain a nonfinite value")]
+    NonfiniteInput,
+    #[error("rho_A weights are not normalized to unit score variance")]
+    InvalidScoreVariance,
+    #[error("rho_A off-diagonal denominator is zero")]
+    OffDiagonalDenominatorZero,
+    #[error("rho_A result is nonfinite")]
+    NonfiniteResult,
+}
+
+/// Evaluates Dijkstra and Henseler's rho_A equation for Mode A weights that
+/// have already been normalized so `w' R w = 1`.
+///
+/// The implementation follows Equation 3 of Dijkstra and Henseler (2015):
+/// `(w'w)^2 * w'(R - diag(R))w / w'(ww' - diag(ww'))w`.
+/// Improper finite-sample values are preserved and identified; only excursions
+/// within floating-point boundary tolerance are canonicalized to zero or one.
+pub fn dijkstra_henseler_rho_a_from_normalized(
+    correlations: &[Vec<f64>],
+    weights: &[f64],
+) -> Result<RhoAEquationResult, RhoAEquationError> {
+    if weights.len() < 2
+        || correlations.len() != weights.len()
+        || correlations.iter().any(|row| row.len() != weights.len())
+    {
+        return Err(RhoAEquationError::DimensionMismatch);
+    }
+    if weights.iter().any(|value| !value.is_finite())
+        || correlations
+            .iter()
+            .flatten()
+            .any(|value| !value.is_finite())
+    {
+        return Err(RhoAEquationError::NonfiniteInput);
+    }
+
+    let score_variance = quadratic_form(weights, correlations);
+    if !score_variance.is_finite() || (score_variance - 1.0).abs() > 1e-10 {
+        return Err(RhoAEquationError::InvalidScoreVariance);
+    }
+
+    let weight_norm_squared = weights.iter().map(|value| value * value).sum::<f64>();
+    let fourth_sum = weights.iter().map(|value| value.powi(4)).sum::<f64>();
+    let off_diagonal_denominator = weight_norm_squared.powi(2) - fourth_sum;
+    let off_diagonal_numerator = (0..weights.len())
+        .flat_map(|row| (0..weights.len()).map(move |column| (row, column)))
+        .filter(|(row, column)| row != column)
+        .map(|(row, column)| weights[row] * weights[column] * correlations[row][column])
+        .sum::<f64>();
+    let tolerance = 64.0 * f64::EPSILON * weight_norm_squared.powi(2).max(fourth_sum).max(1.0);
+    if !weight_norm_squared.is_finite()
+        || !off_diagonal_numerator.is_finite()
+        || !off_diagonal_denominator.is_finite()
+    {
+        return Err(RhoAEquationError::NonfiniteResult);
+    }
+    if off_diagonal_denominator <= tolerance {
+        return Err(RhoAEquationError::OffDiagonalDenominatorZero);
+    }
+
+    let mut value = weight_norm_squared.powi(2) * off_diagonal_numerator / off_diagonal_denominator;
+    if !value.is_finite() {
+        return Err(RhoAEquationError::NonfiniteResult);
+    }
+    let boundary_tolerance = 64.0 * f64::EPSILON * value.abs().max(1.0);
+    let boundary_warning = if value < 0.0 {
+        if value >= -boundary_tolerance {
+            value = 0.0;
+            None
+        } else {
+            Some(RhoABoundaryWarning::ImproperBelowZero)
+        }
+    } else if value > 1.0 {
+        if value <= 1.0 + boundary_tolerance {
+            value = 1.0;
+            None
+        } else {
+            Some(RhoABoundaryWarning::ImproperAboveOne)
+        }
+    } else {
+        None
+    };
+
+    Ok(RhoAEquationResult {
+        value,
+        weight_norm_squared,
+        off_diagonal_numerator,
+        off_diagonal_denominator,
+        boundary_warning,
+    })
+}
+
+fn quadratic_form(weights: &[f64], matrix: &[Vec<f64>]) -> f64 {
+    let mut total = 0.0;
+    for row in 0..weights.len() {
+        for column in 0..weights.len() {
+            total += weights[row] * matrix[row][column] * weights[column];
+        }
+    }
+    total
+}
+
 #[derive(Debug, Error, PartialEq)]
 pub enum StatisticsError {
     #[error("at least two observations are required")]
@@ -102,5 +225,24 @@ mod tests {
             vec![2.0, 3.0, 4.0, 6.0],
         ];
         assert!((cronbach_alpha(&columns).unwrap() - 0.9818181818181818).abs() < EPS);
+    }
+
+    #[test]
+    fn rho_a_equation_matches_primary_hand_fixtures() {
+        let three = vec![
+            vec![1.0, 0.5, 0.5],
+            vec![0.5, 1.0, 0.5],
+            vec![0.5, 0.5, 1.0],
+        ];
+        let equal_three = vec![1.0 / 6.0_f64.sqrt(); 3];
+        let result = dijkstra_henseler_rho_a_from_normalized(&three, &equal_three).unwrap();
+        assert!((result.value - 0.75).abs() < EPS);
+        assert!((result.off_diagonal_numerator - 0.5).abs() < EPS);
+        assert!((result.off_diagonal_denominator - (1.0 / 6.0)).abs() < EPS);
+
+        let two = vec![vec![1.0, 0.6], vec![0.6, 1.0]];
+        let equal_two = vec![1.0 / 3.2_f64.sqrt(); 2];
+        let result = dijkstra_henseler_rho_a_from_normalized(&two, &equal_two).unwrap();
+        assert!((result.value - 0.75).abs() < EPS);
     }
 }

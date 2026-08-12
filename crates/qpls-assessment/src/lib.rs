@@ -5,7 +5,9 @@ use arrow::{
 };
 use faer::{Mat, prelude::*};
 use qpls_core::{
-    AnalysisMethod, AnalysisRecipe, Construct, HigherOrderMethod, MeasurementMode, WeightingScheme,
+    AnalysisMethod, AnalysisRecipe, Construct, DIJKSTRA_HENSELER_RHO_A_METHOD_VERSION,
+    HigherOrderMethod, MeasurementMode, RhoABoundaryWarning, RhoAEquationError, WeightingScheme,
+    dijkstra_henseler_rho_a_from_normalized,
 };
 use qpls_data::{DataKind, Dataset};
 use qpls_estimation::{
@@ -30,7 +32,7 @@ pub const ASSESSMENT_METHOD_VERSION_V4: &str = "pls_assessment_v4";
 pub const ASSESSMENT_METHOD_VERSION_V5: &str = "pls_assessment_v5";
 pub const ASSESSMENT_METHOD_VERSION_V6: &str = "pls_assessment_v6";
 pub const ASSESSMENT_METHOD_VERSION: &str = "pls_assessment_v7";
-pub const RHO_A_METHOD_VERSION: &str = "dijkstra_henseler_rho_a_v1";
+pub const RHO_A_METHOD_VERSION: &str = DIJKSTRA_HENSELER_RHO_A_METHOD_VERSION;
 pub const HTMT_PLUS_METHOD_VERSION: &str = "ringle_et_al_htmt_plus_v1";
 pub const HTMT_ORIGINAL_METHOD_VERSION: &str = "henseler_et_al_htmt_v1";
 const NESTED_PROGRESS_SCALE: u64 = 1_000_000;
@@ -2271,55 +2273,40 @@ fn rho_a_from_normalized_inputs(
     weights: &[f64],
     score_variance: f64,
 ) -> RhoACalculation {
-    let weight_norm_squared = weights.iter().map(|value| value * value).sum::<f64>();
-    let fourth_sum = weights.iter().map(|value| value.powi(4)).sum::<f64>();
-    let denominator = weight_norm_squared.powi(2) - fourth_sum;
-    let numerator = (0..weights.len())
-        .flat_map(|row| (0..weights.len()).map(move |column| (row, column)))
-        .filter(|(row, column)| row != column)
-        .map(|(row, column)| weights[row] * weights[column] * correlations[row][column])
-        .sum::<f64>();
-    let tolerance = 64.0 * f64::EPSILON * weight_norm_squared.powi(2).max(fourth_sum).max(1.0);
-    if !weight_norm_squared.is_finite() || !numerator.is_finite() || !denominator.is_finite() {
-        return RhoACalculation::unavailable("rho_a.nonfinite_result", Some(score_variance));
-    }
-    if denominator <= tolerance {
-        return RhoACalculation::unavailable(
-            "rho_a.off_diagonal_denominator_zero",
-            Some(score_variance),
-        );
-    }
-    let mut value = weight_norm_squared.powi(2) * numerator / denominator;
-    if !value.is_finite() {
-        return RhoACalculation::unavailable("rho_a.nonfinite_result", Some(score_variance));
-    }
-    let boundary_tolerance = 64.0 * f64::EPSILON * value.abs().max(1.0);
+    let equation = match dijkstra_henseler_rho_a_from_normalized(correlations, weights) {
+        Ok(equation) => equation,
+        Err(RhoAEquationError::OffDiagonalDenominatorZero) => {
+            return RhoACalculation::unavailable(
+                "rho_a.off_diagonal_denominator_zero",
+                Some(score_variance),
+            );
+        }
+        Err(_) => {
+            return RhoACalculation::unavailable("rho_a.nonfinite_result", Some(score_variance));
+        }
+    };
     let mut warning_codes = Vec::new();
-    if value < 0.0 {
-        if value >= -boundary_tolerance {
-            value = 0.0;
-        } else {
+    match equation.boundary_warning {
+        Some(RhoABoundaryWarning::ImproperBelowZero) => {
             warning_codes.push("rho_a.improper_below_zero".into());
         }
-    } else if value > 1.0 {
-        if value <= 1.0 + boundary_tolerance {
-            value = 1.0;
-        } else {
+        Some(RhoABoundaryWarning::ImproperAboveOne) => {
             warning_codes.push("rho_a.improper_above_one".into());
         }
+        None => {}
     }
     if weights.len() == 2 {
         warning_codes.push("rho_a.two_indicator_limited_information".into());
     }
     RhoACalculation {
-        value: Some(value),
+        value: Some(equation.value),
         status: RhoAStatus::Available,
         reason: None,
         warning_codes,
         score_variance: Some(score_variance),
-        weight_norm_squared: Some(weight_norm_squared),
-        numerator: Some(numerator),
-        denominator: Some(denominator),
+        weight_norm_squared: Some(equation.weight_norm_squared),
+        numerator: Some(equation.off_diagonal_numerator),
+        denominator: Some(equation.off_diagonal_denominator),
     }
 }
 

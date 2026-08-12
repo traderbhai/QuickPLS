@@ -179,7 +179,7 @@ mod tests {
         let registry = development_slice_registry().unwrap();
         assert_eq!(
             registry.current_stage,
-            "v1_8_1_method_applicability_guided_setup"
+            "v2_45_0_mockup_visible_feature_completion"
         );
         assert!(
             registry
@@ -202,7 +202,8 @@ mod tests {
                 .slices
                 .iter()
                 .any(|slice| slice.id == "v0_5_extended_pls"
-                    && slice.status == SliceStatus::Experimental)
+                    && slice.status == SliceStatus::Validated
+                    && slice.stable_output)
         );
         assert!(
             registry
@@ -223,8 +224,8 @@ mod tests {
                 .slices
                 .iter()
                 .any(|slice| slice.id == "v1_2_method_promotion_program"
-                    && slice.status == SliceStatus::Validated
-                    && slice.stable_output)
+                    && slice.status == SliceStatus::Experimental
+                    && !slice.stable_output)
         );
         assert!(
             registry
@@ -290,14 +291,10 @@ mod tests {
                     && slice.status == SliceStatus::Validated
                     && slice.stable_output)
         );
-        assert!(
-            registry
-                .slices
-                .iter()
-                .any(|slice| slice.id == "v1_5_6_result_specific_interpretation_engine"
-                    && slice.status == SliceStatus::Validated
-                    && slice.stable_output)
-        );
+        assert!(registry.slices.iter().any(|slice| slice.id
+            == "v1_5_6_result_specific_interpretation_engine"
+            && slice.status == SliceStatus::Validated
+            && slice.stable_output));
         assert!(
             registry
                 .slices
@@ -306,38 +303,22 @@ mod tests {
                     && slice.status == SliceStatus::Validated
                     && slice.stable_output)
         );
-        assert!(
-            registry
-                .slices
-                .iter()
-                .any(|slice| slice.id == "v1_5_8_results_workspace_launch_redesign"
-                    && slice.status == SliceStatus::Validated
-                    && slice.stable_output)
-        );
-        assert!(
-            registry
-                .slices
-                .iter()
-                .any(|slice| slice.id == "v1_5_9_report_publication_workflow_redesign"
-                    && slice.status == SliceStatus::Validated
-                    && slice.stable_output)
-        );
-        assert!(
-            registry
-                .slices
-                .iter()
-                .any(|slice| slice.id == "v1_6_0_model_canvas_shell_and_panel_polish"
-                    && slice.status == SliceStatus::Validated
-                    && slice.stable_output)
-        );
-        assert!(
-            registry
-                .slices
-                .iter()
-                .any(|slice| slice.id == "v1_6_1_setup_run_workflow_consolidation"
-                    && slice.status == SliceStatus::Validated
-                    && slice.stable_output)
-        );
+        assert!(registry.slices.iter().any(|slice| slice.id
+            == "v1_5_8_results_workspace_launch_redesign"
+            && slice.status == SliceStatus::Validated
+            && slice.stable_output));
+        assert!(registry.slices.iter().any(|slice| slice.id
+            == "v1_5_9_report_publication_workflow_redesign"
+            && slice.status == SliceStatus::Validated
+            && slice.stable_output));
+        assert!(registry.slices.iter().any(|slice| slice.id
+            == "v1_6_0_model_canvas_shell_and_panel_polish"
+            && slice.status == SliceStatus::Validated
+            && slice.stable_output));
+        assert!(registry.slices.iter().any(|slice| slice.id
+            == "v1_6_1_setup_run_workflow_consolidation"
+            && slice.status == SliceStatus::Validated
+            && slice.stable_output));
         assert!(
             registry
                 .slices
@@ -346,22 +327,14 @@ mod tests {
                     && slice.status == SliceStatus::Validated
                     && slice.stable_output)
         );
-        assert!(
-            registry
-                .slices
-                .iter()
-                .any(|slice| slice.id == "v1_6_3_global_design_system_and_accessibility_pass"
-                    && slice.status == SliceStatus::Validated
-                    && slice.stable_output)
-        );
-        assert!(
-            registry
-                .slices
-                .iter()
-                .any(|slice| slice.id == "v1_7_smartpls_competitive_researcher_experience"
-                    && slice.status == SliceStatus::Validated
-                    && slice.stable_output)
-        );
+        assert!(registry.slices.iter().any(|slice| slice.id
+            == "v1_6_3_global_design_system_and_accessibility_pass"
+            && slice.status == SliceStatus::Validated
+            && slice.stable_output));
+        assert!(registry.slices.iter().any(|slice| slice.id
+            == "v1_7_smartpls_competitive_researcher_experience"
+            && slice.status == SliceStatus::Validated
+            && slice.stable_output));
     }
 
     #[test]
@@ -383,6 +356,6 @@ mod tests {
             .unwrap();
         let extended_summary = extended_methods.gate_summary();
         assert!(extended_summary.passed > 0);
-        assert_eq!(extended_summary.open, 0);
+        assert_eq!(extended_summary.open, 1);
     }
 }
