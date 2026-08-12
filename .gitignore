@@ -25,4 +25,5 @@ validation/results/*.console.txt
 validation/results/v2*_audit.json
 validation/results/v2*_smoke.json
 validation/results/v247_tauri_native_acceptance.pre-*.json
+docs/screenshots/v2/
 .DS_Store
