@@ -1,0 +1,3838 @@
+{
+  "schema_version": 1,
+  "integrity_contract": "exact_current_reference_packaged_identity_and_artifact_binding_v1",
+  "generated_at_utc": "2026-08-12T14:44:26.633161Z",
+  "target": "quickpls3_regression_bootstrap_v1_promotion",
+  "feature_id": "qpls3.standalone.regression_bootstrap",
+  "method_version": "regression_bootstrap_v1",
+  "catalogue_snapshot_date": "2026-08-12",
+  "passed": true,
+  "reference_report": {
+    "path": "validation\\results\\regression_bootstrap_v1_reference_report.json",
+    "present": true,
+    "bytes": 28934,
+    "sha256": "2c8eb53f18591738df7383bc6e92517597b94a12fa4a3f2d2aa49b320d726c8b",
+    "readable": true,
+    "explicit_pass_state": {
+      "present": true,
+      "passed": true,
+      "states": [
+        {
+          "path": "passed",
+          "present": true,
+          "value": true,
+          "passed": true
+        }
+      ]
+    },
+    "requirement_checks": [
+      {
+        "path": "schema_version",
+        "expected": 1,
+        "observed": 1,
+        "passed": true
+      },
+      {
+        "path": "target",
+        "expected": "regression_bootstrap_v1_reference",
+        "observed": "regression_bootstrap_v1_reference",
+        "passed": true
+      },
+      {
+        "path": "feature_id",
+        "expected": "qpls3.standalone.regression_bootstrap",
+        "observed": "qpls3.standalone.regression_bootstrap",
+        "passed": true
+      },
+      {
+        "path": "method_version",
+        "expected": "regression_bootstrap_v1",
+        "observed": "regression_bootstrap_v1",
+        "passed": true
+      },
+      {
+        "path": "catalogue_snapshot_date",
+        "expected": "2026-08-12",
+        "observed": "2026-08-12",
+        "passed": true
+      },
+      {
+        "path": "scope.base_methods",
+        "expected": [
+          "regression_ols_v1",
+          "regression_logistic_v2"
+        ],
+        "observed": [
+          "regression_ols_v1",
+          "regression_logistic_v2"
+        ],
+        "passed": true
+      },
+      {
+        "path": "scope.algorithm",
+        "expected": "case_resampling_with_replacement",
+        "observed": "case_resampling_with_replacement",
+        "passed": true
+      },
+      {
+        "path": "scope.intervals",
+        "expected": [
+          "percentile_type7_primary",
+          "bca_midrank_conditional"
+        ],
+        "observed": [
+          "percentile_type7_primary",
+          "bca_midrank_conditional"
+        ],
+        "passed": true
+      },
+      {
+        "path": "scope.test_reference",
+        "expected": "standard_normal_bootstrap_ratio_v1",
+        "observed": "standard_normal_bootstrap_ratio_v1",
+        "passed": true
+      },
+      {
+        "path": "scope.alternative",
+        "expected": "two_sided",
+        "observed": "two_sided",
+        "passed": true
+      },
+      {
+        "path": "scope.confidence_level",
+        "expected": 0.95,
+        "observed": 0.95,
+        "passed": true
+      },
+      {
+        "path": "scope.quickpls_replicates",
+        "expected": 1000,
+        "observed": 1000,
+        "passed": true
+      },
+      {
+        "path": "scope.workers_compared",
+        "expected": [
+          1,
+          4
+        ],
+        "observed": [
+          1,
+          4
+        ],
+        "passed": true
+      },
+      {
+        "path": "scope.missing_data",
+        "expected": "listwise_deletion",
+        "observed": "listwise_deletion",
+        "passed": true
+      },
+      {
+        "path": "scope.term_limit_including_intercept",
+        "expected": 51,
+        "observed": 51,
+        "passed": true
+      },
+      {
+        "path": "scope.process_bootstrap",
+        "expected": false,
+        "observed": false,
+        "passed": true
+      },
+      {
+        "path": "scope.studentized_or_custom_alpha",
+        "expected": false,
+        "observed": false,
+        "passed": true
+      },
+      {
+        "path": "artifacts.fixture",
+        "expected": "validation/results/v08_extended_methods_fixture.csv",
+        "observed": "validation/results/v08_extended_methods_fixture.csv",
+        "passed": true
+      },
+      {
+        "path": "artifacts.r_script",
+        "expected": "validation/regression_bootstrap_v1_reference.R",
+        "observed": "validation/regression_bootstrap_v1_reference.R",
+        "passed": true
+      },
+      {
+        "path": "artifacts.ols.recipe",
+        "expected": "validation/results/regression_bootstrap_v1_ols.recipe.json",
+        "observed": "validation/results/regression_bootstrap_v1_ols.recipe.json",
+        "passed": true
+      },
+      {
+        "path": "artifacts.ols.quickpls_result",
+        "expected": "validation/results/regression_bootstrap_v1_ols_quickpls.json",
+        "observed": "validation/results/regression_bootstrap_v1_ols_quickpls.json",
+        "passed": true
+      },
+      {
+        "path": "artifacts.logistic.recipe",
+        "expected": "validation/results/regression_bootstrap_v1_logistic.recipe.json",
+        "observed": "validation/results/regression_bootstrap_v1_logistic.recipe.json",
+        "passed": true
+      },
+      {
+        "path": "artifacts.logistic.quickpls_result",
+        "expected": "validation/results/regression_bootstrap_v1_logistic_quickpls.json",
+        "observed": "validation/results/regression_bootstrap_v1_logistic_quickpls.json",
+        "passed": true
+      },
+      {
+        "path": "checks.deterministic_worker_invariant_logistic",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.deterministic_worker_invariant_ols",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.exact_witness_arithmetic_logistic",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.exact_witness_arithmetic_ols",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.external_r_logistic_resampling",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.external_r_ols_resampling",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.frozen_supplied_type7_bca_normal_ratio_or",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.independent_python_logistic_resampling",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.independent_python_ols_resampling",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.quickpls_logistic_exact_contract",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.quickpls_ols_exact_contract",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.witness_index_partitions_logistic",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.witness_index_partitions_ols",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "external_r.version",
+        "expected": "nonempty",
+        "observed_type": "str",
+        "passed": true
+      }
+    ],
+    "companions": [
+      {
+        "path": "validation/results/regression_bootstrap_v1_ols.recipe.json",
+        "present": true,
+        "bytes": 1399,
+        "sha256": "d56718043fd0772e10c89e7537464cf3b3d9aaa59fa099ba19c04cf49f371457",
+        "readable": true,
+        "checks": [
+          {
+            "path": "schema_version",
+            "expected": 3,
+            "observed": 3,
+            "passed": true
+          },
+          {
+            "path": "settings.method",
+            "expected": "regression",
+            "observed": "regression",
+            "passed": true
+          },
+          {
+            "path": "settings.preprocessing",
+            "expected": "unstandardized",
+            "observed": "unstandardized",
+            "passed": true
+          },
+          {
+            "path": "settings.missing_data",
+            "expected": "listwise_deletion",
+            "observed": "listwise_deletion",
+            "passed": true
+          },
+          {
+            "path": "settings.bootstrap_samples",
+            "expected": 1000,
+            "observed": 1000,
+            "passed": true
+          },
+          {
+            "path": "settings.workers",
+            "expected": 1,
+            "observed": 1,
+            "passed": true
+          },
+          {
+            "path": "settings.confidence_level",
+            "expected": 0.95,
+            "observed": 0.95,
+            "passed": true
+          },
+          {
+            "path": "method_config.kind",
+            "expected": "regression",
+            "observed": "regression",
+            "passed": true
+          },
+          {
+            "path": "method_config.outcome",
+            "expected": "y",
+            "observed": "y",
+            "passed": true
+          },
+          {
+            "path": "method_config.predictors",
+            "expected": [
+              "x",
+              "z"
+            ],
+            "observed": [
+              "x",
+              "z"
+            ],
+            "passed": true
+          },
+          {
+            "path": "method_config.controls",
+            "expected": [
+              "w"
+            ],
+            "observed": [
+              "w"
+            ],
+            "passed": true
+          },
+          {
+            "path": "method_config.model",
+            "expected": {
+              "type": "ols",
+              "robust_se": "hc3"
+            },
+            "observed": {
+              "type": "ols",
+              "robust_se": "hc3"
+            },
+            "passed": true
+          },
+          {
+            "path": "method_config.bootstrap.algorithm",
+            "expected": "case_resampling",
+            "observed": "case_resampling",
+            "passed": true
+          },
+          {
+            "path": "method_config.bootstrap.intervals",
+            "expected": [
+              "percentile",
+              "bca"
+            ],
+            "observed": [
+              "percentile",
+              "bca"
+            ],
+            "passed": true
+          },
+          {
+            "path": "metadata.status",
+            "expected": "validated_regression_bootstrap_v1_bounded_scope",
+            "observed": "validated_regression_bootstrap_v1_bounded_scope",
+            "passed": true
+          },
+          {
+            "path": "model.constructs",
+            "expected": [],
+            "observed": [],
+            "passed": true
+          },
+          {
+            "path": "model.paths",
+            "expected": [],
+            "observed": [],
+            "passed": true
+          },
+          {
+            "path": "dataset_fingerprint",
+            "expected": "nonempty",
+            "observed_type": "str",
+            "passed": true
+          }
+        ],
+        "passed": true
+      },
+      {
+        "path": "validation/results/regression_bootstrap_v1_logistic.recipe.json",
+        "present": true,
+        "bytes": 1381,
+        "sha256": "10a1d582431c5a140518d351a61f44c4131bbf9bc4856f252cdd773a3303e478",
+        "readable": true,
+        "checks": [
+          {
+            "path": "schema_version",
+            "expected": 3,
+            "observed": 3,
+            "passed": true
+          },
+          {
+            "path": "settings.method",
+            "expected": "regression",
+            "observed": "regression",
+            "passed": true
+          },
+          {
+            "path": "settings.preprocessing",
+            "expected": "unstandardized",
+            "observed": "unstandardized",
+            "passed": true
+          },
+          {
+            "path": "settings.missing_data",
+            "expected": "listwise_deletion",
+            "observed": "listwise_deletion",
+            "passed": true
+          },
+          {
+            "path": "settings.bootstrap_samples",
+            "expected": 1000,
+            "observed": 1000,
+            "passed": true
+          },
+          {
+            "path": "settings.workers",
+            "expected": 1,
+            "observed": 1,
+            "passed": true
+          },
+          {
+            "path": "settings.confidence_level",
+            "expected": 0.95,
+            "observed": 0.95,
+            "passed": true
+          },
+          {
+            "path": "method_config.kind",
+            "expected": "regression",
+            "observed": "regression",
+            "passed": true
+          },
+          {
+            "path": "method_config.outcome",
+            "expected": "bin_y",
+            "observed": "bin_y",
+            "passed": true
+          },
+          {
+            "path": "method_config.predictors",
+            "expected": [
+              "x",
+              "z"
+            ],
+            "observed": [
+              "x",
+              "z"
+            ],
+            "passed": true
+          },
+          {
+            "path": "method_config.controls",
+            "expected": [
+              "w"
+            ],
+            "observed": [
+              "w"
+            ],
+            "passed": true
+          },
+          {
+            "path": "method_config.model",
+            "expected": {
+              "type": "logistic"
+            },
+            "observed": {
+              "type": "logistic"
+            },
+            "passed": true
+          },
+          {
+            "path": "method_config.bootstrap.algorithm",
+            "expected": "case_resampling",
+            "observed": "case_resampling",
+            "passed": true
+          },
+          {
+            "path": "method_config.bootstrap.intervals",
+            "expected": [
+              "percentile",
+              "bca"
+            ],
+            "observed": [
+              "percentile",
+              "bca"
+            ],
+            "passed": true
+          },
+          {
+            "path": "metadata.status",
+            "expected": "validated_regression_bootstrap_v1_bounded_scope",
+            "observed": "validated_regression_bootstrap_v1_bounded_scope",
+            "passed": true
+          },
+          {
+            "path": "model.constructs",
+            "expected": [],
+            "observed": [],
+            "passed": true
+          },
+          {
+            "path": "model.paths",
+            "expected": [],
+            "observed": [],
+            "passed": true
+          },
+          {
+            "path": "dataset_fingerprint",
+            "expected": "nonempty",
+            "observed_type": "str",
+            "passed": true
+          }
+        ],
+        "passed": true
+      },
+      {
+        "path": "validation/results/regression_bootstrap_v1_ols_quickpls.json",
+        "present": true,
+        "bytes": 364692,
+        "sha256": "2020b5b0c7710ddb0f6ba2c7a6d1e120f3bbe8b8985103a3a87c9fdee047cf54",
+        "readable": true,
+        "checks": [
+          {
+            "path": "status",
+            "expected": "completed",
+            "observed": "completed",
+            "passed": true
+          },
+          {
+            "path": "provenance.method",
+            "expected": "regression",
+            "observed": "regression",
+            "passed": true
+          },
+          {
+            "path": "provenance.method_version",
+            "expected": "regression_ols_v1+regression_bootstrap_v1",
+            "observed": "regression_ols_v1+regression_bootstrap_v1",
+            "passed": true
+          },
+          {
+            "path": "provenance.settings.bootstrap_samples",
+            "expected": 1000,
+            "observed": 1000,
+            "passed": true
+          },
+          {
+            "path": "provenance.settings.workers",
+            "expected": 1,
+            "observed": 1,
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.method_version",
+            "expected": "regression_ols_v1",
+            "observed": "regression_ols_v1",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.method_version",
+            "expected": "regression_ols_v1",
+            "observed": "regression_ols_v1",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.regression_type",
+            "expected": "ols",
+            "observed": "ols",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.bootstrap.method_version",
+            "expected": "regression_bootstrap_v1",
+            "observed": "regression_bootstrap_v1",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.bootstrap.algorithm",
+            "expected": "indexed_case_resampling_v1",
+            "observed": "indexed_case_resampling_v1",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.bootstrap.stream_token",
+            "expected": "quickpls_indexed_resampling_v1",
+            "observed": "quickpls_indexed_resampling_v1",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.bootstrap.validation_witness.method_version",
+            "expected": "regression_bootstrap_validation_witness_v1",
+            "observed": "regression_bootstrap_validation_witness_v1",
+            "passed": true
+          },
+          {
+            "path": "payload.assessment.method_version",
+            "expected": "assessment_not_applicable_v1",
+            "observed": "assessment_not_applicable_v1",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.bootstrap.coefficients",
+            "expected": "nonempty",
+            "observed_type": "list",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.bootstrap.validation_witness.successful_bootstrap",
+            "expected": "nonempty",
+            "observed_type": "list",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.bootstrap.validation_witness.successful_jackknife",
+            "expected": "nonempty",
+            "observed_type": "list",
+            "passed": true
+          }
+        ],
+        "passed": true
+      },
+      {
+        "path": "validation/results/regression_bootstrap_v1_logistic_quickpls.json",
+        "present": true,
+        "bytes": 370576,
+        "sha256": "091726d35fb5393f8609d5fe1bd7f0acc0d8324d3b403e86cd1d5f8aff8466ac",
+        "readable": true,
+        "checks": [
+          {
+            "path": "status",
+            "expected": "completed",
+            "observed": "completed",
+            "passed": true
+          },
+          {
+            "path": "provenance.method",
+            "expected": "regression",
+            "observed": "regression",
+            "passed": true
+          },
+          {
+            "path": "provenance.method_version",
+            "expected": "regression_logistic_v2+regression_bootstrap_v1",
+            "observed": "regression_logistic_v2+regression_bootstrap_v1",
+            "passed": true
+          },
+          {
+            "path": "provenance.settings.bootstrap_samples",
+            "expected": 1000,
+            "observed": 1000,
+            "passed": true
+          },
+          {
+            "path": "provenance.settings.workers",
+            "expected": 1,
+            "observed": 1,
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.method_version",
+            "expected": "regression_logistic_v2",
+            "observed": "regression_logistic_v2",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.method_version",
+            "expected": "regression_logistic_v2",
+            "observed": "regression_logistic_v2",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.regression_type",
+            "expected": "logistic",
+            "observed": "logistic",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.bootstrap.method_version",
+            "expected": "regression_bootstrap_v1",
+            "observed": "regression_bootstrap_v1",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.bootstrap.algorithm",
+            "expected": "indexed_case_resampling_v1",
+            "observed": "indexed_case_resampling_v1",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.bootstrap.stream_token",
+            "expected": "quickpls_indexed_resampling_v1",
+            "observed": "quickpls_indexed_resampling_v1",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.bootstrap.validation_witness.method_version",
+            "expected": "regression_bootstrap_validation_witness_v1",
+            "observed": "regression_bootstrap_validation_witness_v1",
+            "passed": true
+          },
+          {
+            "path": "payload.assessment.method_version",
+            "expected": "assessment_not_applicable_v1",
+            "observed": "assessment_not_applicable_v1",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.bootstrap.coefficients",
+            "expected": "nonempty",
+            "observed_type": "list",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.bootstrap.validation_witness.successful_bootstrap",
+            "expected": "nonempty",
+            "observed_type": "list",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.bootstrap.validation_witness.successful_jackknife",
+            "expected": "nonempty",
+            "observed_type": "list",
+            "passed": true
+          }
+        ],
+        "passed": true
+      }
+    ],
+    "passed": true,
+    "freshness": {
+      "checked": true,
+      "passed": true,
+      "report_modified_at_utc": "2026-08-12T13:12:39.857658Z",
+      "age_days": 0.063736,
+      "max_age_days": null,
+      "sources": [
+        {
+          "path": "validation\\regression_bootstrap_v1_reference.py",
+          "present": true,
+          "modified_at_utc": "2026-08-12T13:02:03.578864Z"
+        },
+        {
+          "path": "validation\\regression_bootstrap_v1_reference.R",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:22:48.445567Z"
+        },
+        {
+          "path": "crates\\qpls-core\\src\\contract.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:24:19.879121Z"
+        },
+        {
+          "path": "crates\\qpls-core\\src\\validation.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:13:31.460172Z"
+        },
+        {
+          "path": "crates\\qpls-estimation\\src\\pls.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:55:52.911176Z"
+        },
+        {
+          "path": "crates\\qpls-resampling\\src\\lib.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T13:00:54.273888Z"
+        },
+        {
+          "path": "crates\\qpls-project\\src\\lib.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T13:00:54.200718Z"
+        },
+        {
+          "path": "crates\\qpls-runner\\src\\lib.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:04:51.944949Z"
+        }
+      ]
+    },
+    "generated_at": null
+  },
+  "packaged_acceptance": {
+    "path": "validation\\results\\regression_bootstrap_v1_packaged_acceptance.json",
+    "present": true,
+    "bytes": 15506,
+    "sha256": "6fbc7a07d42739f748ce42bf11f533bb9f5c088f1310786ad3bcf1b3ed44af24",
+    "readable": true,
+    "explicit_pass_state": {
+      "present": true,
+      "passed": true,
+      "states": [
+        {
+          "path": "passed",
+          "present": true,
+          "value": true,
+          "passed": true
+        }
+      ]
+    },
+    "requirement_checks": [
+      {
+        "path": "schema_version",
+        "expected": "quickpls.packaged_acceptance.v1",
+        "observed": "quickpls.packaged_acceptance.v1",
+        "passed": true
+      },
+      {
+        "path": "kind",
+        "expected": "quickpls3_scoped_tauri_regression_bootstrap_v1_acceptance",
+        "observed": "quickpls3_scoped_tauri_regression_bootstrap_v1_acceptance",
+        "passed": true
+      },
+      {
+        "path": "target",
+        "expected": "windows_10_11_x64_packaged_tauri",
+        "observed": "windows_10_11_x64_packaged_tauri",
+        "passed": true
+      },
+      {
+        "path": "feature_id",
+        "expected": "qpls3.standalone.regression_bootstrap",
+        "observed": "qpls3.standalone.regression_bootstrap",
+        "passed": true
+      },
+      {
+        "path": "method_version",
+        "expected": "regression_bootstrap_v1",
+        "observed": "regression_bootstrap_v1",
+        "passed": true
+      },
+      {
+        "path": "catalogue_snapshot_date",
+        "expected": "2026-08-12",
+        "observed": "2026-08-12",
+        "passed": true
+      },
+      {
+        "path": "runtime",
+        "expected": "tauri-webview2-cdp",
+        "observed": "tauri-webview2-cdp",
+        "passed": true
+      },
+      {
+        "path": "generator",
+        "expected": "validation/v247_tauri_native_acceptance.mjs",
+        "observed": "validation/v247_tauri_native_acceptance.mjs",
+        "passed": true
+      },
+      {
+        "path": "source_report",
+        "expected": "validation/results/v247_tauri_native_acceptance_regression_bootstrap.json",
+        "observed": "validation/results/v247_tauri_native_acceptance_regression_bootstrap.json",
+        "passed": true
+      },
+      {
+        "path": "checks.results.ols_initial_selected_table",
+        "expected": "regression_bootstrap_summary",
+        "observed": "regression_bootstrap_summary",
+        "passed": true
+      },
+      {
+        "path": "checks.results.logistic_initial_selected_table",
+        "expected": "regression_bootstrap_summary",
+        "observed": "regression_bootstrap_summary",
+        "passed": true
+      },
+      {
+        "path": "checks.save_reopen.ols_initial_selected_table",
+        "expected": "regression_bootstrap_summary",
+        "observed": "regression_bootstrap_summary",
+        "passed": true
+      },
+      {
+        "path": "checks.save_reopen.logistic_initial_selected_table",
+        "expected": "regression_bootstrap_summary",
+        "observed": "regression_bootstrap_summary",
+        "passed": true
+      },
+      {
+        "path": "checks.cancellation.passed",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.logistic_export.passed",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.ols_export.passed",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.results.passed",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.save_reopen.passed",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.witness_boundary.passed",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.workflow.passed",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "generated_at_utc",
+        "expected": "nonempty",
+        "observed_type": "str",
+        "passed": true
+      },
+      {
+        "path": "completed_at_utc",
+        "expected": "nonempty",
+        "observed_type": "str",
+        "passed": true
+      }
+    ],
+    "companions": [
+      {
+        "path": "validation/results/v247_tauri_native_acceptance_regression_bootstrap.json",
+        "present": true,
+        "bytes": 446399,
+        "sha256": "d39a39bb59012e12b65cdfe76bbc8c2c948df74fbf9004868bad88ba0603e19e",
+        "readable": true,
+        "checks": [
+          {
+            "path": "schema_version",
+            "expected": "quickpls.packaged_acceptance.v1",
+            "observed": "quickpls.packaged_acceptance.v1",
+            "passed": true
+          },
+          {
+            "path": "feature_id",
+            "expected": "qpls3.standalone.regression_bootstrap",
+            "observed": "qpls3.standalone.regression_bootstrap",
+            "passed": true
+          },
+          {
+            "path": "method_version",
+            "expected": "regression_bootstrap_v1",
+            "observed": "regression_bootstrap_v1",
+            "passed": true
+          },
+          {
+            "path": "catalogue_snapshot_date",
+            "expected": "2026-08-12",
+            "observed": "2026-08-12",
+            "passed": true
+          },
+          {
+            "path": "runtime",
+            "expected": "tauri-webview2-cdp",
+            "observed": "tauri-webview2-cdp",
+            "passed": true
+          },
+          {
+            "path": "checks.regressionBootstrapWorkflow.passed",
+            "expected": true,
+            "observed": true,
+            "passed": true
+          },
+          {
+            "path": "checks.regressionBootstrapWorkflow.feature_id",
+            "expected": "qpls3.standalone.regression_bootstrap",
+            "observed": "qpls3.standalone.regression_bootstrap",
+            "passed": true
+          },
+          {
+            "path": "checks.regressionBootstrapWorkflow.method_version",
+            "expected": "regression_bootstrap_v1",
+            "observed": "regression_bootstrap_v1",
+            "passed": true
+          },
+          {
+            "path": "checks.regressionBootstrapWorkflow.catalogue_snapshot_date",
+            "expected": "2026-08-12",
+            "observed": "2026-08-12",
+            "passed": true
+          },
+          {
+            "path": "checks.regressionBootstrapResults.passed",
+            "expected": true,
+            "observed": true,
+            "passed": true
+          },
+          {
+            "path": "checks.regressionBootstrapResults.olsInitialSelectedTable",
+            "expected": "regression_bootstrap_summary",
+            "observed": "regression_bootstrap_summary",
+            "passed": true
+          },
+          {
+            "path": "checks.regressionBootstrapResults.logisticInitialSelectedTable",
+            "expected": "regression_bootstrap_summary",
+            "observed": "regression_bootstrap_summary",
+            "passed": true
+          },
+          {
+            "path": "checks.regressionBootstrapOlsExport.passed",
+            "expected": true,
+            "observed": true,
+            "passed": true
+          },
+          {
+            "path": "checks.regressionBootstrapLogisticExport.passed",
+            "expected": true,
+            "observed": true,
+            "passed": true
+          },
+          {
+            "path": "checks.regressionBootstrapSaveReopen.passed",
+            "expected": true,
+            "observed": true,
+            "passed": true
+          },
+          {
+            "path": "checks.regressionBootstrapSaveReopen.initialSelectedTables.ols",
+            "expected": "regression_bootstrap_summary",
+            "observed": "regression_bootstrap_summary",
+            "passed": true
+          },
+          {
+            "path": "checks.regressionBootstrapSaveReopen.initialSelectedTables.logistic",
+            "expected": "regression_bootstrap_summary",
+            "observed": "regression_bootstrap_summary",
+            "passed": true
+          },
+          {
+            "path": "checks.regressionBootstrapCancellation.passed",
+            "expected": true,
+            "observed": true,
+            "passed": true
+          },
+          {
+            "path": "checks.regressionBootstrapWitnessBoundary.passed",
+            "expected": true,
+            "observed": true,
+            "passed": true
+          },
+          {
+            "path": "generatedAt",
+            "expected": "nonempty",
+            "observed_type": "str",
+            "passed": true
+          },
+          {
+            "path": "focusedRun.completedAt",
+            "expected": "nonempty",
+            "observed_type": "str",
+            "passed": true
+          },
+          {
+            "path": "screenshots",
+            "expected": "nonempty",
+            "observed_type": "list",
+            "passed": true
+          }
+        ],
+        "passed": true,
+        "explicit_pass_state": {
+          "present": true,
+          "passed": true,
+          "states": [
+            {
+              "path": "passed",
+              "present": true,
+              "value": true,
+              "passed": true
+            }
+          ]
+        }
+      }
+    ],
+    "passed": true,
+    "freshness": {
+      "checked": true,
+      "passed": true,
+      "report_modified_at_utc": "2026-08-12T14:34:56.363588Z",
+      "age_days": 0.0066,
+      "max_age_days": null,
+      "sources": [
+        {
+          "path": "validation\\v247_tauri_native_acceptance.mjs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:32:56.822843Z"
+        },
+        {
+          "path": "validation\\regression_bootstrap_v1_packaged_acceptance.schema.json",
+          "present": true,
+          "modified_at_utc": "2026-08-12T13:41:54.820248Z"
+        },
+        {
+          "path": "validation\\run_v247_regression_bootstrap_native_acceptance.ps1",
+          "present": true,
+          "modified_at_utc": "2026-08-12T13:05:16.582059Z"
+        },
+        {
+          "path": "src\\native\\NativeCalculationDialog.tsx",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:15:49.066542Z"
+        },
+        {
+          "path": "src\\native\\nativeAnalysisCatalog.ts",
+          "present": true,
+          "modified_at_utc": "2026-08-12T11:55:44.695770Z"
+        },
+        {
+          "path": "src\\native\\nativeAnalysisRecipe.ts",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:17:07.266566Z"
+        },
+        {
+          "path": "src\\native\\nativeCalculationRequest.ts",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:17:07.267766Z"
+        },
+        {
+          "path": "src\\native\\nativeRegressionBootstrapWitness.ts",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:22:34.012752Z"
+        },
+        {
+          "path": "src\\native\\nativeOls.ts",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:15:30.663723Z"
+        },
+        {
+          "path": "src\\native\\nativeLogistic.ts",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:15:30.664949Z"
+        },
+        {
+          "path": "src\\native\\nativeResults.ts",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:21:56.720184Z"
+        },
+        {
+          "path": "src\\native\\nativeExportTables.ts",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:04:19.966110Z"
+        },
+        {
+          "path": "src\\native\\NativeDesktopController.tsx",
+          "present": true,
+          "modified_at_utc": "2026-08-12T11:54:18.523347Z"
+        },
+        {
+          "path": "src\\services\\projectService.ts",
+          "present": true,
+          "modified_at_utc": "2026-08-12T08:45:14.057321Z"
+        },
+        {
+          "path": "src-tauri\\src\\lib.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T11:23:58.792103Z"
+        },
+        {
+          "path": "crates\\qpls-core\\src\\contract.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:24:19.879121Z"
+        },
+        {
+          "path": "crates\\qpls-core\\src\\validation.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:13:31.460172Z"
+        },
+        {
+          "path": "crates\\qpls-estimation\\src\\pls.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:55:52.911176Z"
+        },
+        {
+          "path": "crates\\qpls-resampling\\src\\lib.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T13:00:54.273888Z"
+        },
+        {
+          "path": "crates\\qpls-project\\src\\lib.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T13:00:54.200718Z"
+        },
+        {
+          "path": "crates\\qpls-runner\\src\\lib.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:04:51.944949Z"
+        }
+      ]
+    },
+    "generated_at": "2026-08-12T14:33:12.601Z"
+  },
+  "browser_visual_acceptance": {
+    "path": "validation\\results\\v247_native_desktop_visual_acceptance.json",
+    "present": true,
+    "bytes": 370391,
+    "sha256": "590cea3ce20340e7311106d1cf68624d544c5c0e2971cf19eb10d2c4b557965b",
+    "readable": true,
+    "explicit_pass_state": {
+      "present": true,
+      "passed": true,
+      "states": [
+        {
+          "path": "passed",
+          "present": true,
+          "value": true,
+          "passed": true
+        }
+      ]
+    },
+    "requirement_checks": [
+      {
+        "path": "passed",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "consoleErrors",
+        "expected": [],
+        "observed": [],
+        "passed": true
+      },
+      {
+        "path": "failures",
+        "expected": [],
+        "observed": [],
+        "passed": true
+      }
+    ],
+    "companions": [],
+    "passed": true,
+    "freshness": {
+      "checked": true,
+      "passed": true,
+      "report_modified_at_utc": "2026-08-12T14:28:26.537917Z",
+      "age_days": 0.011112,
+      "max_age_days": 2,
+      "sources": [
+        {
+          "path": "validation\\v247_native_desktop_visual_acceptance.mjs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:51:20.492143Z"
+        },
+        {
+          "path": "src\\native\\NativeCalculationDialog.tsx",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:15:49.066542Z"
+        },
+        {
+          "path": "src\\native\\nativeAnalysisCatalog.ts",
+          "present": true,
+          "modified_at_utc": "2026-08-12T11:55:44.695770Z"
+        },
+        {
+          "path": "src\\native\\nativeAnalysisRecipe.ts",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:17:07.266566Z"
+        },
+        {
+          "path": "src\\native\\nativeOls.ts",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:15:30.663723Z"
+        },
+        {
+          "path": "src\\native\\nativeLogistic.ts",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:15:30.664949Z"
+        },
+        {
+          "path": "src\\native\\nativeResults.ts",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:21:56.720184Z"
+        },
+        {
+          "path": "src\\native\\nativeDesktop.css",
+          "present": true,
+          "modified_at_utc": "2026-08-12T04:31:32.285474Z"
+        },
+        {
+          "path": "dist\\assets\\NativeCalculationDialog-BhIuuZFR.js",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+        },
+        {
+          "path": "dist\\assets\\NativeExportDialog-yHRFag4W.js",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+        },
+        {
+          "path": "dist\\assets\\NativeGroupSetupDialog-BsscX1GD.js",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+        },
+        {
+          "path": "dist\\assets\\NativeHigherOrderDialog-BxP4Tc6q.js",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+        },
+        {
+          "path": "dist\\assets\\NativeModerationDialog-DrmW4n3g.js",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+        },
+        {
+          "path": "dist\\assets\\NativeResultsSurface-Bu2R3ocQ.js",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+        },
+        {
+          "path": "dist\\assets\\NativeUtilityDialog-qcy-hRG0.js",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+        },
+        {
+          "path": "dist\\assets\\flow-BN-PNp2v.js",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:26:09.875348Z"
+        },
+        {
+          "path": "dist\\assets\\flow-BnuhLJ6X.css",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:26:09.875348Z"
+        },
+        {
+          "path": "dist\\assets\\icons-B3Zfv1lt.js",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:26:09.875348Z"
+        },
+        {
+          "path": "dist\\assets\\index-BR81HxYg.js",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:26:09.875348Z"
+        },
+        {
+          "path": "dist\\assets\\index-Cv2jalPW.css",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:26:09.875348Z"
+        },
+        {
+          "path": "dist\\assets\\largeModelSmoke-PEBccAlJ.js",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+        },
+        {
+          "path": "dist\\assets\\nativeMga-DgYeq6DN.js",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+        },
+        {
+          "path": "dist\\assets\\publicationDiagram-BEPWhId7.js",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+        },
+        {
+          "path": "dist\\assets\\smokeRun-CMXwsrTO.js",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+        },
+        {
+          "path": "dist\\assets\\tauri-CZBL8huA.js",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:26:09.876827Z"
+        },
+        {
+          "path": "dist\\assets\\vendor-3AznE2Td.js",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:26:09.875348Z"
+        },
+        {
+          "path": "dist\\index.html",
+          "present": true,
+          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+        }
+      ]
+    },
+    "generated_at": null
+  },
+  "failure_boundary_report": {
+    "path": "validation\\results\\regression_bootstrap_failure_boundary_test_report.json",
+    "present": true,
+    "bytes": 5010,
+    "sha256": "2b834acedee85551e4a45f0a21edd2d671f3d224629c3082006c858d95e833e4",
+    "readable": true,
+    "explicit_pass_state": {
+      "present": true,
+      "passed": true,
+      "states": [
+        {
+          "path": "passed",
+          "present": true,
+          "value": true,
+          "passed": true
+        }
+      ]
+    },
+    "requirement_checks": [
+      {
+        "path": "schema_version",
+        "expected": 1,
+        "observed": 1,
+        "passed": true
+      },
+      {
+        "path": "target",
+        "expected": "regression_bootstrap_v1_failure_boundary_rust_tests",
+        "observed": "regression_bootstrap_v1_failure_boundary_rust_tests",
+        "passed": true
+      },
+      {
+        "path": "feature_id",
+        "expected": "qpls3.standalone.regression_bootstrap",
+        "observed": "qpls3.standalone.regression_bootstrap",
+        "passed": true
+      },
+      {
+        "path": "method_version",
+        "expected": "regression_bootstrap_v1",
+        "observed": "regression_bootstrap_v1",
+        "passed": true
+      },
+      {
+        "path": "passed",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "build_commands.qpls_resampling",
+        "expected": [
+          "cargo",
+          "test",
+          "--release",
+          "-p",
+          "qpls-resampling",
+          "--lib",
+          "--no-run",
+          "--message-format=json"
+        ],
+        "observed": [
+          "cargo",
+          "test",
+          "--release",
+          "-p",
+          "qpls-resampling",
+          "--lib",
+          "--no-run",
+          "--message-format=json"
+        ],
+        "passed": true
+      },
+      {
+        "path": "build_commands.qpls_project",
+        "expected": [
+          "cargo",
+          "test",
+          "--release",
+          "-p",
+          "qpls-project",
+          "--lib",
+          "--no-run",
+          "--message-format=json"
+        ],
+        "observed": [
+          "cargo",
+          "test",
+          "--release",
+          "-p",
+          "qpls-project",
+          "--lib",
+          "--no-run",
+          "--message-format=json"
+        ],
+        "passed": true
+      },
+      {
+        "path": "checks.regression_bootstrap_failure_boundary_captures_zero_based_single_class_replicates",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.regression_bootstrap_failure_boundary_listwise_complete_cases_are_the_only_sampling_frame",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.regression_bootstrap_failure_boundary_real_delete_one_failure_disables_all_bca",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.regression_bootstrap_failure_boundary_rejects_below_ninety_percent_usable",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "archive_checks.regression_bootstrap_append_save_reopen_and_tamper_contract_are_atomic",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "archive_checks.regression_bootstrap_json_roundtrip_tolerance_is_narrow",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "generated_at_utc",
+        "expected": "nonempty",
+        "observed_type": "str",
+        "passed": true
+      },
+      {
+        "path": "test_executables.qpls_resampling.path",
+        "expected": "nonempty",
+        "observed_type": "str",
+        "passed": true
+      },
+      {
+        "path": "test_executables.qpls_project.path",
+        "expected": "nonempty",
+        "observed_type": "str",
+        "passed": true
+      },
+      {
+        "path": "executions",
+        "expected": "nonempty",
+        "observed_type": "dict",
+        "passed": true
+      }
+    ],
+    "companions": [],
+    "passed": true,
+    "freshness": {
+      "checked": true,
+      "passed": true,
+      "report_modified_at_utc": "2026-08-12T13:26:49.635370Z",
+      "age_days": 0.0539,
+      "max_age_days": 2,
+      "sources": [
+        {
+          "path": "validation\\regression_bootstrap_failure_boundary_gate.py",
+          "present": true,
+          "modified_at_utc": "2026-08-12T13:11:41.121053Z"
+        },
+        {
+          "path": "crates\\qpls-resampling\\src\\lib.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T13:00:54.273888Z"
+        },
+        {
+          "path": "crates\\qpls-estimation\\src\\pls.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:55:52.911176Z"
+        },
+        {
+          "path": "crates\\qpls-core\\src\\contract.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:24:19.879121Z"
+        },
+        {
+          "path": "crates\\qpls-project\\src\\lib.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T13:00:54.200718Z"
+        },
+        {
+          "path": "crates\\qpls-core\\src\\contract.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T12:24:19.879121Z"
+        }
+      ]
+    },
+    "generated_at": "2026-08-12T13:26:49.603766Z"
+  },
+  "exact_check_sets": {
+    "reference": {
+      "expected": [
+        "deterministic_worker_invariant_logistic",
+        "deterministic_worker_invariant_ols",
+        "exact_witness_arithmetic_logistic",
+        "exact_witness_arithmetic_ols",
+        "external_r_logistic_resampling",
+        "external_r_ols_resampling",
+        "frozen_supplied_type7_bca_normal_ratio_or",
+        "independent_python_logistic_resampling",
+        "independent_python_ols_resampling",
+        "quickpls_logistic_exact_contract",
+        "quickpls_ols_exact_contract",
+        "witness_index_partitions_logistic",
+        "witness_index_partitions_ols"
+      ],
+      "observed": [
+        "deterministic_worker_invariant_logistic",
+        "deterministic_worker_invariant_ols",
+        "exact_witness_arithmetic_logistic",
+        "exact_witness_arithmetic_ols",
+        "external_r_logistic_resampling",
+        "external_r_ols_resampling",
+        "frozen_supplied_type7_bca_normal_ratio_or",
+        "independent_python_logistic_resampling",
+        "independent_python_ols_resampling",
+        "quickpls_logistic_exact_contract",
+        "quickpls_ols_exact_contract",
+        "witness_index_partitions_logistic",
+        "witness_index_partitions_ols"
+      ],
+      "passed": true
+    },
+    "packaged_acceptance": {
+      "expected": [
+        "cancellation",
+        "logistic_export",
+        "ols_export",
+        "results",
+        "save_reopen",
+        "witness_boundary",
+        "workflow"
+      ],
+      "observed": [
+        "cancellation",
+        "logistic_export",
+        "ols_export",
+        "results",
+        "save_reopen",
+        "witness_boundary",
+        "workflow"
+      ],
+      "passed": true
+    }
+  },
+  "reference_attestation": {
+    "checks": {
+      "exact_tolerance_is_frozen": true,
+      "independent_python_point_estimates_within_tolerance": true,
+      "declared_distribution_thresholds_are_frozen": true,
+      "independent_python_ols_distribution_within_thresholds": true,
+      "independent_python_logistic_distribution_within_thresholds": true,
+      "external_r_identified": true,
+      "external_r_ols_distribution_within_thresholds": true,
+      "external_r_logistic_distribution_within_thresholds": true,
+      "tested_release_cli_is_current_and_bound": true
+    },
+    "tested_cli": {
+      "artifact": {
+        "path": "target/release/qpls.exe",
+        "reported_size": 19183104,
+        "reported_sha256": "4fe8265708dd5b1bcb65c0397490fa430b1afa225a6ed2d45e4f99bde57193b8",
+        "present": true,
+        "inside_repository": true,
+        "actual_size": 19183104,
+        "actual_sha256": "4fe8265708dd5b1bcb65c0397490fa430b1afa225a6ed2d45e4f99bde57193b8",
+        "passed": true
+      },
+      "source_freshness": [
+        {
+          "path": "crates/qpls-core/src/contract.rs",
+          "present": true,
+          "binary_not_older": true
+        },
+        {
+          "path": "crates/qpls-core/src/validation.rs",
+          "present": true,
+          "binary_not_older": true
+        },
+        {
+          "path": "crates/qpls-estimation/src/pls.rs",
+          "present": true,
+          "binary_not_older": true
+        },
+        {
+          "path": "crates/qpls-resampling/src/lib.rs",
+          "present": true,
+          "binary_not_older": true
+        },
+        {
+          "path": "crates/qpls-project/src/lib.rs",
+          "present": true,
+          "binary_not_older": true
+        },
+        {
+          "path": "crates/qpls-runner/src/lib.rs",
+          "present": true,
+          "binary_not_older": true
+        }
+      ],
+      "checks": {
+        "exact_path": true,
+        "digest_and_size_match": true,
+        "not_older_than_sources": true
+      },
+      "passed": true
+    },
+    "passed": true
+  },
+  "packaged_attestation": {
+    "checks": {
+      "ordered_utc_timestamps": true,
+      "ols_xlsx_matches_disk": true,
+      "logistic_xlsx_matches_disk": true,
+      "project_archive_matches_disk": true,
+      "screenshot_artifacts_match_disk": true,
+      "artifact_paths_are_unique": true,
+      "ols_export_digest_is_bound": true,
+      "logistic_export_digest_is_bound": true,
+      "archive_digest_is_bound": true,
+      "bootstrap_initial_result_defaults_are_summary": true,
+      "bootstrap_reopen_defaults_are_summary": true,
+      "ols_witness_scan_fail_closed": true,
+      "logistic_witness_scan_fail_closed": true,
+      "tested_desktop_binary_is_current_and_bound": true,
+      "tested_dist_bundle_is_exactly_bound": true,
+      "exact_pid_cleanup_confirmed": true
+    },
+    "artifacts": {
+      "ols_xlsx": {
+        "path": "validation/results/v247-native-regression-bootstrap-ols-20260812-200311090.xlsx",
+        "reported_size": 18280,
+        "reported_sha256": "13c92eac86933bcb186af474ef0d330004f79b7b2bf66064764a3aad2b04419d",
+        "present": true,
+        "inside_repository": true,
+        "actual_size": 18280,
+        "actual_sha256": "13c92eac86933bcb186af474ef0d330004f79b7b2bf66064764a3aad2b04419d",
+        "passed": true
+      },
+      "logistic_xlsx": {
+        "path": "validation/results/v247-native-regression-bootstrap-logistic-20260812-200311090.xlsx",
+        "reported_size": 21908,
+        "reported_sha256": "53b6fc52f226b9d9c88d734bf1d31b41f1a5b9a415a381c730b3715dde44322a",
+        "present": true,
+        "inside_repository": true,
+        "actual_size": 21908,
+        "actual_sha256": "53b6fc52f226b9d9c88d734bf1d31b41f1a5b9a415a381c730b3715dde44322a",
+        "passed": true
+      },
+      "project_archive": {
+        "path": "validation/results/v247-native-regression-bootstrap-1786545192594-50396.qpls",
+        "reported_size": 944490,
+        "reported_sha256": "4db5df2bb3cf131950906bf3ab90f4ef9e24e8376b923b27f11db51c2263bb64",
+        "present": true,
+        "inside_repository": true,
+        "actual_size": 944490,
+        "actual_sha256": "4db5df2bb3cf131950906bf3ab90f4ef9e24e8376b923b27f11db51c2263bb64",
+        "passed": true
+      },
+      "screenshots": [
+        {
+          "path": "validation/results/screens/v247-native-desktop-acceptance/160-tauri-native-regression-bootstrap-fixture-data-1536x794.png",
+          "reported_size": 293913,
+          "reported_sha256": "93818582b7e4d6bb9279d101e7ed103d9916766847aec4ae0bacb7a150bab5ff",
+          "present": true,
+          "inside_repository": true,
+          "actual_size": 293913,
+          "actual_sha256": "93818582b7e4d6bb9279d101e7ed103d9916766847aec4ae0bacb7a150bab5ff",
+          "passed": true
+        },
+        {
+          "path": "validation/results/screens/v247-native-desktop-acceptance/161-tauri-native-regression-bootstrap-cancellation-running-1536x794.png",
+          "reported_size": 230450,
+          "reported_sha256": "d719fc1726728d4e33a8dfee23b2294718d27ac5a4ead79342947efd5089d2db",
+          "present": true,
+          "inside_repository": true,
+          "actual_size": 230450,
+          "actual_sha256": "d719fc1726728d4e33a8dfee23b2294718d27ac5a4ead79342947efd5089d2db",
+          "passed": true
+        },
+        {
+          "path": "validation/results/screens/v247-native-desktop-acceptance/162-tauri-native-regression-bootstrap-cancelled-1536x794.png",
+          "reported_size": 282067,
+          "reported_sha256": "f1210ea52ce4eaa2d8562c11d3a4706b1242dd5aa18ba4cf8f3aff2806faf970",
+          "present": true,
+          "inside_repository": true,
+          "actual_size": 282067,
+          "actual_sha256": "f1210ea52ce4eaa2d8562c11d3a4706b1242dd5aa18ba4cf8f3aff2806faf970",
+          "passed": true
+        },
+        {
+          "path": "validation/results/screens/v247-native-desktop-acceptance/163-tauri-native-regression-bootstrap-ols-dialog-1536x794.png",
+          "reported_size": 298509,
+          "reported_sha256": "2d947e8f53a6171df4e9a7dc469086d6e0cb728c64cb7ec0773848f32b168955",
+          "present": true,
+          "inside_repository": true,
+          "actual_size": 298509,
+          "actual_sha256": "2d947e8f53a6171df4e9a7dc469086d6e0cb728c64cb7ec0773848f32b168955",
+          "passed": true
+        },
+        {
+          "path": "validation/results/screens/v247-native-desktop-acceptance/164-tauri-native-regression-bootstrap-ols-running-1536x794.png",
+          "reported_size": 230450,
+          "reported_sha256": "d719fc1726728d4e33a8dfee23b2294718d27ac5a4ead79342947efd5089d2db",
+          "present": true,
+          "inside_repository": true,
+          "actual_size": 230450,
+          "actual_sha256": "d719fc1726728d4e33a8dfee23b2294718d27ac5a4ead79342947efd5089d2db",
+          "passed": true
+        },
+        {
+          "path": "validation/results/screens/v247-native-desktop-acceptance/165-tauri-native-regression-bootstrap-ols-results-1536x794.png",
+          "reported_size": 111686,
+          "reported_sha256": "118de97ada407dadf48ce06dc07b8e26bed47b09a7370dea0501dae49ca1318b",
+          "present": true,
+          "inside_repository": true,
+          "actual_size": 111686,
+          "actual_sha256": "118de97ada407dadf48ce06dc07b8e26bed47b09a7370dea0501dae49ca1318b",
+          "passed": true
+        },
+        {
+          "path": "validation/results/screens/v247-native-desktop-acceptance/166-tauri-native-regression-bootstrap-ols-export-1536x794.png",
+          "reported_size": 111686,
+          "reported_sha256": "118de97ada407dadf48ce06dc07b8e26bed47b09a7370dea0501dae49ca1318b",
+          "present": true,
+          "inside_repository": true,
+          "actual_size": 111686,
+          "actual_sha256": "118de97ada407dadf48ce06dc07b8e26bed47b09a7370dea0501dae49ca1318b",
+          "passed": true
+        },
+        {
+          "path": "validation/results/screens/v247-native-desktop-acceptance/167-tauri-native-regression-bootstrap-logistic-dialog-1536x794.png",
+          "reported_size": 305319,
+          "reported_sha256": "a208b4ee476745b9d94b39c7481be634b8fe438cfd6009eb5a3fce15ae703a52",
+          "present": true,
+          "inside_repository": true,
+          "actual_size": 305319,
+          "actual_sha256": "a208b4ee476745b9d94b39c7481be634b8fe438cfd6009eb5a3fce15ae703a52",
+          "passed": true
+        },
+        {
+          "path": "validation/results/screens/v247-native-desktop-acceptance/168-tauri-native-regression-bootstrap-logistic-running-1536x794.png",
+          "reported_size": 230450,
+          "reported_sha256": "d719fc1726728d4e33a8dfee23b2294718d27ac5a4ead79342947efd5089d2db",
+          "present": true,
+          "inside_repository": true,
+          "actual_size": 230450,
+          "actual_sha256": "d719fc1726728d4e33a8dfee23b2294718d27ac5a4ead79342947efd5089d2db",
+          "passed": true
+        },
+        {
+          "path": "validation/results/screens/v247-native-desktop-acceptance/169-tauri-native-regression-bootstrap-logistic-results-1536x794.png",
+          "reported_size": 117460,
+          "reported_sha256": "e09160cf83fc9cf91ff937bee07765dd71cb5189426206604ab22b5f45f48233",
+          "present": true,
+          "inside_repository": true,
+          "actual_size": 117460,
+          "actual_sha256": "e09160cf83fc9cf91ff937bee07765dd71cb5189426206604ab22b5f45f48233",
+          "passed": true
+        },
+        {
+          "path": "validation/results/screens/v247-native-desktop-acceptance/170-tauri-native-regression-bootstrap-logistic-export-1536x794.png",
+          "reported_size": 117460,
+          "reported_sha256": "e09160cf83fc9cf91ff937bee07765dd71cb5189426206604ab22b5f45f48233",
+          "present": true,
+          "inside_repository": true,
+          "actual_size": 117460,
+          "actual_sha256": "e09160cf83fc9cf91ff937bee07765dd71cb5189426206604ab22b5f45f48233",
+          "passed": true
+        },
+        {
+          "path": "validation/results/screens/v247-native-desktop-acceptance/171-tauri-native-regression-bootstrap-reopened-1536x794.png",
+          "reported_size": 115751,
+          "reported_sha256": "731954cbc7e2628fa0377340d6389da5d3afc005e82e99b498002dec21e94b9e",
+          "present": true,
+          "inside_repository": true,
+          "actual_size": 115751,
+          "actual_sha256": "731954cbc7e2628fa0377340d6389da5d3afc005e82e99b498002dec21e94b9e",
+          "passed": true
+        }
+      ]
+    },
+    "tested_product": {
+      "quickpls_desktop_exe": {
+        "artifact": {
+          "path": "target/release/quickpls-desktop.exe",
+          "reported_size": 26658304,
+          "reported_sha256": "0d59263690d8b3d81ae055dae4b928da1080c6326e95ece4e5607abde15d59b6",
+          "present": true,
+          "inside_repository": true,
+          "actual_size": 26658304,
+          "actual_sha256": "0d59263690d8b3d81ae055dae4b928da1080c6326e95ece4e5607abde15d59b6",
+          "passed": true
+        },
+        "source_freshness": [
+          {
+            "path": "src/native/NativeCalculationDialog.tsx",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "src/native/nativeAnalysisCatalog.ts",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "src/native/nativeAnalysisRecipe.ts",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "src/native/nativeCalculationRequest.ts",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "src/native/nativeRegressionBootstrapWitness.ts",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "src/native/nativeOls.ts",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "src/native/nativeLogistic.ts",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "src/native/nativeResults.ts",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "src/native/nativeExportTables.ts",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "src/native/NativeDesktopController.tsx",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "src/services/projectService.ts",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "src-tauri/src/lib.rs",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "crates/qpls-core/src/contract.rs",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "crates/qpls-core/src/validation.rs",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "crates/qpls-resampling/src/lib.rs",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "crates/qpls-project/src/lib.rs",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "crates/qpls-runner/src/lib.rs",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "dist/assets/NativeCalculationDialog-BhIuuZFR.js",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "dist/assets/NativeExportDialog-yHRFag4W.js",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "dist/assets/NativeGroupSetupDialog-BsscX1GD.js",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "dist/assets/NativeHigherOrderDialog-BxP4Tc6q.js",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "dist/assets/NativeModerationDialog-DrmW4n3g.js",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "dist/assets/NativeResultsSurface-Bu2R3ocQ.js",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "dist/assets/NativeUtilityDialog-qcy-hRG0.js",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "dist/assets/flow-BN-PNp2v.js",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "dist/assets/flow-BnuhLJ6X.css",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "dist/assets/icons-B3Zfv1lt.js",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "dist/assets/index-BR81HxYg.js",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "dist/assets/index-Cv2jalPW.css",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "dist/assets/largeModelSmoke-PEBccAlJ.js",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "dist/assets/nativeMga-DgYeq6DN.js",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "dist/assets/publicationDiagram-BEPWhId7.js",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "dist/assets/smokeRun-CMXwsrTO.js",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "dist/assets/tauri-CZBL8huA.js",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "dist/assets/vendor-3AznE2Td.js",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "dist/index.html",
+            "present": true,
+            "binary_not_older": true
+          }
+        ],
+        "checks": {
+          "exact_path": true,
+          "digest_and_size_match": true,
+          "not_older_than_sources": true
+        },
+        "passed": true
+      },
+      "dist_bundle": {
+        "reported": {
+          "path": "dist",
+          "size": 1077429,
+          "file_count": 19,
+          "sha256": "a2a1dc51ea5302c104e421f6ff68dcba74e1b96bb2361a4ede9986e9d0fb526c",
+          "manifest": [
+            {
+              "path": "assets/NativeCalculationDialog-BhIuuZFR.js",
+              "size": 32940,
+              "sha256": "99f2780a766bc89aa5a8db774db75a083014781bcf9b767bf1b9dc51c189423d"
+            },
+            {
+              "path": "assets/NativeExportDialog-yHRFag4W.js",
+              "size": 6105,
+              "sha256": "850233ec063f1c3693f9eb684aa723dc2d38793cdbe84716a9974f6f6c561736"
+            },
+            {
+              "path": "assets/NativeGroupSetupDialog-BsscX1GD.js",
+              "size": 6779,
+              "sha256": "5399e036bf35b74f009000f4a2413d0ef306a9942f2c4ab6ae1a866aca58f7e8"
+            },
+            {
+              "path": "assets/NativeHigherOrderDialog-BxP4Tc6q.js",
+              "size": 2944,
+              "sha256": "43ae9529f3e888c702c79e52b05b0b3a9f56cf362acf41efb653381a1fb52192"
+            },
+            {
+              "path": "assets/NativeModerationDialog-DrmW4n3g.js",
+              "size": 3079,
+              "sha256": "640d5f862b4a5d9a76bf0b529e9ccb5497ea0ea964343b8d6c3e08dd8ae5ab9f"
+            },
+            {
+              "path": "assets/NativeResultsSurface-Bu2R3ocQ.js",
+              "size": 21509,
+              "sha256": "760bc38b483cba88845049ee5e91bb269298fce46e4d67dbdb7a3ee53d4557d8"
+            },
+            {
+              "path": "assets/NativeUtilityDialog-qcy-hRG0.js",
+              "size": 4181,
+              "sha256": "ecadb8d38a7e9d442c0606a0afbe0d4f0da51b4d2f2c8cd659025db2a3873561"
+            },
+            {
+              "path": "assets/flow-BN-PNp2v.js",
+              "size": 83921,
+              "sha256": "e96e69cde521273e387064b0ff3ea9f94e29834ea085646f0b8e1fe9e0ea8fde"
+            },
+            {
+              "path": "assets/flow-BnuhLJ6X.css",
+              "size": 15869,
+              "sha256": "1243b61a71923367ce620fb944427c80c9b03e863e18374fcf4f74d6d06f63fc"
+            },
+            {
+              "path": "assets/icons-B3Zfv1lt.js",
+              "size": 20320,
+              "sha256": "44c646ff3a637e2eeb2ce149868b7b46b7407809366f31c77cd3845c34ecfef9"
+            },
+            {
+              "path": "assets/index-BR81HxYg.js",
+              "size": 455975,
+              "sha256": "0c10e8d91fdbf3a01ec3570ecde4782e12cf1e5a9574b7cec1e8bde2458ae574"
+            },
+            {
+              "path": "assets/index-Cv2jalPW.css",
+              "size": 70202,
+              "sha256": "314f0336553173cb32809fea2bb24da191a39e27d0888a09512f3d8dc4db8b97"
+            },
+            {
+              "path": "assets/largeModelSmoke-PEBccAlJ.js",
+              "size": 880,
+              "sha256": "a4977bf130c85a688b570fb1f17f8dac958787116a585c9300f3d4c3fbd6b535"
+            },
+            {
+              "path": "assets/nativeMga-DgYeq6DN.js",
+              "size": 3108,
+              "sha256": "024828f88efaf03205588f9bc34ca763bd8f484b36f5172f92d4a83ac4aa12ff"
+            },
+            {
+              "path": "assets/publicationDiagram-BEPWhId7.js",
+              "size": 8623,
+              "sha256": "6f5666870734aa92b58d381b8c5d1a9f1a6e80495c79c8a36c27d04f4a1b1678"
+            },
+            {
+              "path": "assets/smokeRun-CMXwsrTO.js",
+              "size": 7141,
+              "sha256": "33388a0e9df739d8812f2a03c2980f00a3f49046375ae48c9a854d8f94f7f962"
+            },
+            {
+              "path": "assets/tauri-CZBL8huA.js",
+              "size": 15818,
+              "sha256": "8fbb85b9879fc37af89bc405134891d8b7dec19829e03c6d7900ba79f71dbe77"
+            },
+            {
+              "path": "assets/vendor-3AznE2Td.js",
+              "size": 317214,
+              "sha256": "7dadeaa73f481ffd1ab52c5247997462fd195062a4dbe10353701ffbbc45711f"
+            },
+            {
+              "path": "index.html",
+              "size": 821,
+              "sha256": "4587f53cb53e8589f283ba113dd647c869def5ebc224ef2566eecda9457c894f"
+            }
+          ]
+        },
+        "actual": {
+          "path": "dist",
+          "size": 1077429,
+          "file_count": 19,
+          "sha256": "a2a1dc51ea5302c104e421f6ff68dcba74e1b96bb2361a4ede9986e9d0fb526c",
+          "manifest": [
+            {
+              "path": "assets/NativeCalculationDialog-BhIuuZFR.js",
+              "size": 32940,
+              "sha256": "99f2780a766bc89aa5a8db774db75a083014781bcf9b767bf1b9dc51c189423d"
+            },
+            {
+              "path": "assets/NativeExportDialog-yHRFag4W.js",
+              "size": 6105,
+              "sha256": "850233ec063f1c3693f9eb684aa723dc2d38793cdbe84716a9974f6f6c561736"
+            },
+            {
+              "path": "assets/NativeGroupSetupDialog-BsscX1GD.js",
+              "size": 6779,
+              "sha256": "5399e036bf35b74f009000f4a2413d0ef306a9942f2c4ab6ae1a866aca58f7e8"
+            },
+            {
+              "path": "assets/NativeHigherOrderDialog-BxP4Tc6q.js",
+              "size": 2944,
+              "sha256": "43ae9529f3e888c702c79e52b05b0b3a9f56cf362acf41efb653381a1fb52192"
+            },
+            {
+              "path": "assets/NativeModerationDialog-DrmW4n3g.js",
+              "size": 3079,
+              "sha256": "640d5f862b4a5d9a76bf0b529e9ccb5497ea0ea964343b8d6c3e08dd8ae5ab9f"
+            },
+            {
+              "path": "assets/NativeResultsSurface-Bu2R3ocQ.js",
+              "size": 21509,
+              "sha256": "760bc38b483cba88845049ee5e91bb269298fce46e4d67dbdb7a3ee53d4557d8"
+            },
+            {
+              "path": "assets/NativeUtilityDialog-qcy-hRG0.js",
+              "size": 4181,
+              "sha256": "ecadb8d38a7e9d442c0606a0afbe0d4f0da51b4d2f2c8cd659025db2a3873561"
+            },
+            {
+              "path": "assets/flow-BN-PNp2v.js",
+              "size": 83921,
+              "sha256": "e96e69cde521273e387064b0ff3ea9f94e29834ea085646f0b8e1fe9e0ea8fde"
+            },
+            {
+              "path": "assets/flow-BnuhLJ6X.css",
+              "size": 15869,
+              "sha256": "1243b61a71923367ce620fb944427c80c9b03e863e18374fcf4f74d6d06f63fc"
+            },
+            {
+              "path": "assets/icons-B3Zfv1lt.js",
+              "size": 20320,
+              "sha256": "44c646ff3a637e2eeb2ce149868b7b46b7407809366f31c77cd3845c34ecfef9"
+            },
+            {
+              "path": "assets/index-BR81HxYg.js",
+              "size": 455975,
+              "sha256": "0c10e8d91fdbf3a01ec3570ecde4782e12cf1e5a9574b7cec1e8bde2458ae574"
+            },
+            {
+              "path": "assets/index-Cv2jalPW.css",
+              "size": 70202,
+              "sha256": "314f0336553173cb32809fea2bb24da191a39e27d0888a09512f3d8dc4db8b97"
+            },
+            {
+              "path": "assets/largeModelSmoke-PEBccAlJ.js",
+              "size": 880,
+              "sha256": "a4977bf130c85a688b570fb1f17f8dac958787116a585c9300f3d4c3fbd6b535"
+            },
+            {
+              "path": "assets/nativeMga-DgYeq6DN.js",
+              "size": 3108,
+              "sha256": "024828f88efaf03205588f9bc34ca763bd8f484b36f5172f92d4a83ac4aa12ff"
+            },
+            {
+              "path": "assets/publicationDiagram-BEPWhId7.js",
+              "size": 8623,
+              "sha256": "6f5666870734aa92b58d381b8c5d1a9f1a6e80495c79c8a36c27d04f4a1b1678"
+            },
+            {
+              "path": "assets/smokeRun-CMXwsrTO.js",
+              "size": 7141,
+              "sha256": "33388a0e9df739d8812f2a03c2980f00a3f49046375ae48c9a854d8f94f7f962"
+            },
+            {
+              "path": "assets/tauri-CZBL8huA.js",
+              "size": 15818,
+              "sha256": "8fbb85b9879fc37af89bc405134891d8b7dec19829e03c6d7900ba79f71dbe77"
+            },
+            {
+              "path": "assets/vendor-3AznE2Td.js",
+              "size": 317214,
+              "sha256": "7dadeaa73f481ffd1ab52c5247997462fd195062a4dbe10353701ffbbc45711f"
+            },
+            {
+              "path": "index.html",
+              "size": 821,
+              "sha256": "4587f53cb53e8589f283ba113dd647c869def5ebc224ef2566eecda9457c894f"
+            }
+          ]
+        },
+        "checks": {
+          "exact_path": true,
+          "nonempty_bundle": true,
+          "size_matches": true,
+          "file_count_matches": true,
+          "digest_matches": true,
+          "manifest_matches": true
+        },
+        "passed": true
+      }
+    },
+    "process_cleanup": {
+      "path": "validation\\results\\v247_regression_bootstrap_process_cleanup.json",
+      "fresh_after_packaged_report": true,
+      "launched_pid": 44000,
+      "parent_exit_confirmed": true,
+      "lingering_descendant_pids": [],
+      "passed": true
+    },
+    "passed": true
+  },
+  "visual_attestation": {
+    "checks": {
+      "overall_passed": true,
+      "zero_failures": true,
+      "zero_console_errors": true,
+      "exact_three_viewport_rows": true,
+      "all_method_contracts_pass": true,
+      "exact_screenshot_matrix_and_files": true,
+      "dist_sources_present": true
+    },
+    "rows": [
+      {
+        "viewport": "1024x700",
+        "fixtureApiPresent": true,
+        "fixture": {
+          "variables": 5,
+          "models": 0
+        },
+        "dataSurface": true,
+        "visibleModelNodes": 0,
+        "analyzeCommandCount": 1,
+        "dialogOpened": true,
+        "catalogCount": 14,
+        "selectedMethod": "Regression",
+        "linkage": {
+          "expectedKind": "regression",
+          "expectedLabel": "Regression",
+          "selectedCount": 1,
+          "selectedId": "nd-calculation-method-regression",
+          "selectedLabel": "Regression",
+          "panelCount": 1,
+          "panelId": "nd-calculation-panel",
+          "panelLabelledBy": "nd-calculation-panel-regression-title",
+          "headingCount": 1,
+          "headingId": "nd-calculation-panel-regression-title",
+          "headingLabel": "Regression",
+          "linkage": true
+        },
+        "category": "Standalone analysis",
+        "regressionTypeOptions": [
+          {
+            "value": "ols",
+            "label": "Ordinary least squares"
+          },
+          {
+            "value": "logistic",
+            "label": "Binary logistic (outcome coded 0/1)"
+          }
+        ],
+        "outcome": "outcome",
+        "roles": {
+          "fieldsetCount": 2,
+          "predictors": {
+            "legend": "Predictors (1 selected)",
+            "variables": [
+              {
+                "name": "outcome",
+                "checked": false,
+                "disabled": true
+              },
+              {
+                "name": "predictor",
+                "checked": true,
+                "disabled": false
+              },
+              {
+                "name": "moderator",
+                "checked": false,
+                "disabled": false
+              },
+              {
+                "name": "control",
+                "checked": false,
+                "disabled": true
+              }
+            ]
+          },
+          "controls": {
+            "legend": "Controls (1 selected, optional)",
+            "variables": [
+              {
+                "name": "outcome",
+                "checked": false,
+                "disabled": true
+              },
+              {
+                "name": "predictor",
+                "checked": false,
+                "disabled": true
+              },
+              {
+                "name": "moderator",
+                "checked": false,
+                "disabled": false
+              },
+              {
+                "name": "control",
+                "checked": true,
+                "disabled": false
+              }
+            ]
+          },
+          "selectedPredictors": [
+            "predictor"
+          ],
+          "selectedControls": [
+            "control"
+          ]
+        },
+        "bootstrap": {
+          "value": "enabled",
+          "options": [
+            {
+              "value": "off",
+              "label": "Off"
+            },
+            {
+              "value": "enabled",
+              "label": "Case-resampling bootstrap"
+            }
+          ],
+          "samples": {
+            "count": 1,
+            "value": "10000",
+            "min": "99",
+            "max": "10000",
+            "step": "1"
+          },
+          "workers": {
+            "count": 1,
+            "value": "1",
+            "min": "1",
+            "max": "64",
+            "step": null
+          },
+          "seed": {
+            "count": 1,
+            "value": "20260718",
+            "min": "0",
+            "max": "4294967295",
+            "step": null
+          },
+          "scope": "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.",
+          "toggleFocused": true
+        },
+        "accessibility": {
+          "labeledRegressionType": 1,
+          "labeledOutcome": 1,
+          "labeledBootstrapToggle": 1,
+          "labeledSamples": 1,
+          "labeledWorkers": 1,
+          "labeledSeed": 1,
+          "predictorGroup": 1,
+          "controlGroup": 1,
+          "distinctControlIds": 6
+        },
+        "ols": {
+          "type": "ols",
+          "outcome": "outcome",
+          "roles": {
+            "fieldsetCount": 2,
+            "predictors": {
+              "legend": "Predictors (1 selected)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": true,
+                  "disabled": false
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": false,
+                  "disabled": true
+                }
+              ]
+            },
+            "controls": {
+              "legend": "Controls (1 selected, optional)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": true,
+                  "disabled": false
+                }
+              ]
+            },
+            "selectedPredictors": [
+              "predictor"
+            ],
+            "selectedControls": [
+              "control"
+            ]
+          },
+          "calculationBasis": "Raw-value OLS with intercept (fixed)",
+          "variableData": "Unstandardized numeric values (fixed)",
+          "uncertainty": "HC3 robust SE; two-sided 95% CI (fixed)",
+          "validatedScope": "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa inference. Categorical encoding, weights, clusters, generic PLS resampling, logistic regression, and PROCESS models are not included.",
+          "blockers": {
+            "messages": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
+            ],
+            "runtime": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
+            ],
+            "allowedFixtureProfile": [],
+            "unexpected": [],
+            "model": []
+          },
+          "startCommandCount": 1,
+          "startCommandDisabled": true,
+          "truthAndOverflow": {
+            "fabricatedRunState": {
+              "statusSections": 0,
+              "progressElements": 0,
+              "calculationLogs": 0,
+              "iterationRows": 0
+            },
+            "noFabricatedRunState": true,
+            "horizontalOverflow": {
+              "dialogScrollWidth": 848,
+              "dialogClientWidth": 848,
+              "dialogOutsideViewport": false,
+              "dialogContentOverflow": false,
+              "pageOverflow": false
+            },
+            "noHorizontalOverflow": true
+          },
+          "dialogBounds": {
+            "viewport": {
+              "width": 1024,
+              "height": 700
+            },
+            "rect": {
+              "left": 87,
+              "top": 24,
+              "right": 937,
+              "bottom": 676,
+              "width": 850,
+              "height": 652
+            },
+            "withinHorizontalViewport": true,
+            "verticalScrollAvailable": false,
+            "pageHorizontalOverflow": false
+          },
+          "noPhantomResult": true
+        },
+        "logistic": {
+          "type": "logistic",
+          "typeFocused": true,
+          "outcome": "outcome",
+          "roles": {
+            "fieldsetCount": 2,
+            "predictors": {
+              "legend": "Predictors (1 selected)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": true,
+                  "disabled": false
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": false,
+                  "disabled": true
+                }
+              ]
+            },
+            "controls": {
+              "legend": "Controls (1 selected, optional)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": true,
+                  "disabled": false
+                }
+              ]
+            },
+            "selectedPredictors": [
+              "predictor"
+            ],
+            "selectedControls": [
+              "control"
+            ]
+          },
+          "bootstrapValue": "enabled",
+          "samples": "10000",
+          "workers": "1",
+          "seed": "20260718",
+          "calculationBasis": "Binary logistic maximum likelihood with intercept (fixed)",
+          "variableData": "Unstandardized numeric values (fixed)",
+          "uncertainty": "Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)",
+          "validatedScope": "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa coefficient and odds-ratio inference. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, generic PLS resampling, and Firth-corrected models are not included.",
+          "bootstrapScope": "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.",
+          "profile": {
+            "role": "status",
+            "ariaLive": "polite",
+            "ariaBusy": "false",
+            "text": "Complete-dataset outcome profile36 complete cases: 0 class 0 and 0 class 1; 0 omitted by listwise deletion"
+          },
+          "blockers": {
+            "messages": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.",
+              "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
+              "36 non-missing outcome rows are not coded exactly 0 or 1",
+              "The listwise-complete outcome must contain both class 0 and class 1"
+            ],
+            "runtime": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
+            ],
+            "allowedFixtureProfile": [
+              "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
+              "36 non-missing outcome rows are not coded exactly 0 or 1",
+              "The listwise-complete outcome must contain both class 0 and class 1"
+            ],
+            "unexpected": [],
+            "model": []
+          },
+          "startCommandCount": 1,
+          "startCommandDisabled": true,
+          "truthAndOverflow": {
+            "fabricatedRunState": {
+              "statusSections": 0,
+              "progressElements": 0,
+              "calculationLogs": 0,
+              "iterationRows": 0
+            },
+            "noFabricatedRunState": true,
+            "horizontalOverflow": {
+              "dialogScrollWidth": 848,
+              "dialogClientWidth": 848,
+              "dialogOutsideViewport": false,
+              "dialogContentOverflow": false,
+              "pageOverflow": false
+            },
+            "noHorizontalOverflow": true
+          },
+          "dialogBounds": {
+            "viewport": {
+              "width": 1024,
+              "height": 700
+            },
+            "rect": {
+              "left": 87,
+              "top": 24,
+              "right": 937,
+              "bottom": 676,
+              "width": 850,
+              "height": 652
+            },
+            "withinHorizontalViewport": true,
+            "verticalScrollAvailable": false,
+            "pageHorizontalOverflow": false
+          },
+          "noPhantomResult": true
+        },
+        "closeFocus": {
+          "closeButtonCount": 1,
+          "dialogClosed": true,
+          "focusRestored": true
+        },
+        "completedResult": {
+          "genuineSmokeLoader": null,
+          "inspected": false,
+          "synthesizedByHarness": false,
+          "runOptionCount": 0,
+          "groupCount": 0,
+          "tableCount": 0
+        }
+      },
+      {
+        "viewport": "1280x720",
+        "fixtureApiPresent": true,
+        "fixture": {
+          "variables": 5,
+          "models": 0
+        },
+        "dataSurface": true,
+        "visibleModelNodes": 0,
+        "analyzeCommandCount": 1,
+        "dialogOpened": true,
+        "catalogCount": 14,
+        "selectedMethod": "Regression",
+        "linkage": {
+          "expectedKind": "regression",
+          "expectedLabel": "Regression",
+          "selectedCount": 1,
+          "selectedId": "nd-calculation-method-regression",
+          "selectedLabel": "Regression",
+          "panelCount": 1,
+          "panelId": "nd-calculation-panel",
+          "panelLabelledBy": "nd-calculation-panel-regression-title",
+          "headingCount": 1,
+          "headingId": "nd-calculation-panel-regression-title",
+          "headingLabel": "Regression",
+          "linkage": true
+        },
+        "category": "Standalone analysis",
+        "regressionTypeOptions": [
+          {
+            "value": "ols",
+            "label": "Ordinary least squares"
+          },
+          {
+            "value": "logistic",
+            "label": "Binary logistic (outcome coded 0/1)"
+          }
+        ],
+        "outcome": "outcome",
+        "roles": {
+          "fieldsetCount": 2,
+          "predictors": {
+            "legend": "Predictors (1 selected)",
+            "variables": [
+              {
+                "name": "outcome",
+                "checked": false,
+                "disabled": true
+              },
+              {
+                "name": "predictor",
+                "checked": true,
+                "disabled": false
+              },
+              {
+                "name": "moderator",
+                "checked": false,
+                "disabled": false
+              },
+              {
+                "name": "control",
+                "checked": false,
+                "disabled": true
+              }
+            ]
+          },
+          "controls": {
+            "legend": "Controls (1 selected, optional)",
+            "variables": [
+              {
+                "name": "outcome",
+                "checked": false,
+                "disabled": true
+              },
+              {
+                "name": "predictor",
+                "checked": false,
+                "disabled": true
+              },
+              {
+                "name": "moderator",
+                "checked": false,
+                "disabled": false
+              },
+              {
+                "name": "control",
+                "checked": true,
+                "disabled": false
+              }
+            ]
+          },
+          "selectedPredictors": [
+            "predictor"
+          ],
+          "selectedControls": [
+            "control"
+          ]
+        },
+        "bootstrap": {
+          "value": "enabled",
+          "options": [
+            {
+              "value": "off",
+              "label": "Off"
+            },
+            {
+              "value": "enabled",
+              "label": "Case-resampling bootstrap"
+            }
+          ],
+          "samples": {
+            "count": 1,
+            "value": "10000",
+            "min": "99",
+            "max": "10000",
+            "step": "1"
+          },
+          "workers": {
+            "count": 1,
+            "value": "1",
+            "min": "1",
+            "max": "64",
+            "step": null
+          },
+          "seed": {
+            "count": 1,
+            "value": "20260718",
+            "min": "0",
+            "max": "4294967295",
+            "step": null
+          },
+          "scope": "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.",
+          "toggleFocused": true
+        },
+        "accessibility": {
+          "labeledRegressionType": 1,
+          "labeledOutcome": 1,
+          "labeledBootstrapToggle": 1,
+          "labeledSamples": 1,
+          "labeledWorkers": 1,
+          "labeledSeed": 1,
+          "predictorGroup": 1,
+          "controlGroup": 1,
+          "distinctControlIds": 6
+        },
+        "ols": {
+          "type": "ols",
+          "outcome": "outcome",
+          "roles": {
+            "fieldsetCount": 2,
+            "predictors": {
+              "legend": "Predictors (1 selected)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": true,
+                  "disabled": false
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": false,
+                  "disabled": true
+                }
+              ]
+            },
+            "controls": {
+              "legend": "Controls (1 selected, optional)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": true,
+                  "disabled": false
+                }
+              ]
+            },
+            "selectedPredictors": [
+              "predictor"
+            ],
+            "selectedControls": [
+              "control"
+            ]
+          },
+          "calculationBasis": "Raw-value OLS with intercept (fixed)",
+          "variableData": "Unstandardized numeric values (fixed)",
+          "uncertainty": "HC3 robust SE; two-sided 95% CI (fixed)",
+          "validatedScope": "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa inference. Categorical encoding, weights, clusters, generic PLS resampling, logistic regression, and PROCESS models are not included.",
+          "blockers": {
+            "messages": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
+            ],
+            "runtime": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
+            ],
+            "allowedFixtureProfile": [],
+            "unexpected": [],
+            "model": []
+          },
+          "startCommandCount": 1,
+          "startCommandDisabled": true,
+          "truthAndOverflow": {
+            "fabricatedRunState": {
+              "statusSections": 0,
+              "progressElements": 0,
+              "calculationLogs": 0,
+              "iterationRows": 0
+            },
+            "noFabricatedRunState": true,
+            "horizontalOverflow": {
+              "dialogScrollWidth": 848,
+              "dialogClientWidth": 848,
+              "dialogOutsideViewport": false,
+              "dialogContentOverflow": false,
+              "pageOverflow": false
+            },
+            "noHorizontalOverflow": true
+          },
+          "dialogBounds": {
+            "viewport": {
+              "width": 1280,
+              "height": 720
+            },
+            "rect": {
+              "left": 215,
+              "top": 24,
+              "right": 1065,
+              "bottom": 696,
+              "width": 850,
+              "height": 672
+            },
+            "withinHorizontalViewport": true,
+            "verticalScrollAvailable": false,
+            "pageHorizontalOverflow": false
+          },
+          "noPhantomResult": true
+        },
+        "logistic": {
+          "type": "logistic",
+          "typeFocused": true,
+          "outcome": "outcome",
+          "roles": {
+            "fieldsetCount": 2,
+            "predictors": {
+              "legend": "Predictors (1 selected)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": true,
+                  "disabled": false
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": false,
+                  "disabled": true
+                }
+              ]
+            },
+            "controls": {
+              "legend": "Controls (1 selected, optional)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": true,
+                  "disabled": false
+                }
+              ]
+            },
+            "selectedPredictors": [
+              "predictor"
+            ],
+            "selectedControls": [
+              "control"
+            ]
+          },
+          "bootstrapValue": "enabled",
+          "samples": "10000",
+          "workers": "1",
+          "seed": "20260718",
+          "calculationBasis": "Binary logistic maximum likelihood with intercept (fixed)",
+          "variableData": "Unstandardized numeric values (fixed)",
+          "uncertainty": "Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)",
+          "validatedScope": "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa coefficient and odds-ratio inference. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, generic PLS resampling, and Firth-corrected models are not included.",
+          "bootstrapScope": "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.",
+          "profile": {
+            "role": "status",
+            "ariaLive": "polite",
+            "ariaBusy": "false",
+            "text": "Complete-dataset outcome profile36 complete cases: 0 class 0 and 0 class 1; 0 omitted by listwise deletion"
+          },
+          "blockers": {
+            "messages": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.",
+              "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
+              "36 non-missing outcome rows are not coded exactly 0 or 1",
+              "The listwise-complete outcome must contain both class 0 and class 1"
+            ],
+            "runtime": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
+            ],
+            "allowedFixtureProfile": [
+              "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
+              "36 non-missing outcome rows are not coded exactly 0 or 1",
+              "The listwise-complete outcome must contain both class 0 and class 1"
+            ],
+            "unexpected": [],
+            "model": []
+          },
+          "startCommandCount": 1,
+          "startCommandDisabled": true,
+          "truthAndOverflow": {
+            "fabricatedRunState": {
+              "statusSections": 0,
+              "progressElements": 0,
+              "calculationLogs": 0,
+              "iterationRows": 0
+            },
+            "noFabricatedRunState": true,
+            "horizontalOverflow": {
+              "dialogScrollWidth": 848,
+              "dialogClientWidth": 848,
+              "dialogOutsideViewport": false,
+              "dialogContentOverflow": false,
+              "pageOverflow": false
+            },
+            "noHorizontalOverflow": true
+          },
+          "dialogBounds": {
+            "viewport": {
+              "width": 1280,
+              "height": 720
+            },
+            "rect": {
+              "left": 215,
+              "top": 24,
+              "right": 1065,
+              "bottom": 696,
+              "width": 850,
+              "height": 672
+            },
+            "withinHorizontalViewport": true,
+            "verticalScrollAvailable": false,
+            "pageHorizontalOverflow": false
+          },
+          "noPhantomResult": true
+        },
+        "closeFocus": {
+          "closeButtonCount": 1,
+          "dialogClosed": true,
+          "focusRestored": true
+        },
+        "completedResult": {
+          "genuineSmokeLoader": null,
+          "inspected": false,
+          "synthesizedByHarness": false,
+          "runOptionCount": 0,
+          "groupCount": 0,
+          "tableCount": 0
+        }
+      },
+      {
+        "viewport": "1440x900",
+        "fixtureApiPresent": true,
+        "fixture": {
+          "variables": 5,
+          "models": 0
+        },
+        "dataSurface": true,
+        "visibleModelNodes": 0,
+        "analyzeCommandCount": 1,
+        "dialogOpened": true,
+        "catalogCount": 14,
+        "selectedMethod": "Regression",
+        "linkage": {
+          "expectedKind": "regression",
+          "expectedLabel": "Regression",
+          "selectedCount": 1,
+          "selectedId": "nd-calculation-method-regression",
+          "selectedLabel": "Regression",
+          "panelCount": 1,
+          "panelId": "nd-calculation-panel",
+          "panelLabelledBy": "nd-calculation-panel-regression-title",
+          "headingCount": 1,
+          "headingId": "nd-calculation-panel-regression-title",
+          "headingLabel": "Regression",
+          "linkage": true
+        },
+        "category": "Standalone analysis",
+        "regressionTypeOptions": [
+          {
+            "value": "ols",
+            "label": "Ordinary least squares"
+          },
+          {
+            "value": "logistic",
+            "label": "Binary logistic (outcome coded 0/1)"
+          }
+        ],
+        "outcome": "outcome",
+        "roles": {
+          "fieldsetCount": 2,
+          "predictors": {
+            "legend": "Predictors (1 selected)",
+            "variables": [
+              {
+                "name": "outcome",
+                "checked": false,
+                "disabled": true
+              },
+              {
+                "name": "predictor",
+                "checked": true,
+                "disabled": false
+              },
+              {
+                "name": "moderator",
+                "checked": false,
+                "disabled": false
+              },
+              {
+                "name": "control",
+                "checked": false,
+                "disabled": true
+              }
+            ]
+          },
+          "controls": {
+            "legend": "Controls (1 selected, optional)",
+            "variables": [
+              {
+                "name": "outcome",
+                "checked": false,
+                "disabled": true
+              },
+              {
+                "name": "predictor",
+                "checked": false,
+                "disabled": true
+              },
+              {
+                "name": "moderator",
+                "checked": false,
+                "disabled": false
+              },
+              {
+                "name": "control",
+                "checked": true,
+                "disabled": false
+              }
+            ]
+          },
+          "selectedPredictors": [
+            "predictor"
+          ],
+          "selectedControls": [
+            "control"
+          ]
+        },
+        "bootstrap": {
+          "value": "enabled",
+          "options": [
+            {
+              "value": "off",
+              "label": "Off"
+            },
+            {
+              "value": "enabled",
+              "label": "Case-resampling bootstrap"
+            }
+          ],
+          "samples": {
+            "count": 1,
+            "value": "10000",
+            "min": "99",
+            "max": "10000",
+            "step": "1"
+          },
+          "workers": {
+            "count": 1,
+            "value": "1",
+            "min": "1",
+            "max": "64",
+            "step": null
+          },
+          "seed": {
+            "count": 1,
+            "value": "20260718",
+            "min": "0",
+            "max": "4294967295",
+            "step": null
+          },
+          "scope": "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.",
+          "toggleFocused": true
+        },
+        "accessibility": {
+          "labeledRegressionType": 1,
+          "labeledOutcome": 1,
+          "labeledBootstrapToggle": 1,
+          "labeledSamples": 1,
+          "labeledWorkers": 1,
+          "labeledSeed": 1,
+          "predictorGroup": 1,
+          "controlGroup": 1,
+          "distinctControlIds": 6
+        },
+        "ols": {
+          "type": "ols",
+          "outcome": "outcome",
+          "roles": {
+            "fieldsetCount": 2,
+            "predictors": {
+              "legend": "Predictors (1 selected)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": true,
+                  "disabled": false
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": false,
+                  "disabled": true
+                }
+              ]
+            },
+            "controls": {
+              "legend": "Controls (1 selected, optional)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": true,
+                  "disabled": false
+                }
+              ]
+            },
+            "selectedPredictors": [
+              "predictor"
+            ],
+            "selectedControls": [
+              "control"
+            ]
+          },
+          "calculationBasis": "Raw-value OLS with intercept (fixed)",
+          "variableData": "Unstandardized numeric values (fixed)",
+          "uncertainty": "HC3 robust SE; two-sided 95% CI (fixed)",
+          "validatedScope": "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa inference. Categorical encoding, weights, clusters, generic PLS resampling, logistic regression, and PROCESS models are not included.",
+          "blockers": {
+            "messages": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
+            ],
+            "runtime": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
+            ],
+            "allowedFixtureProfile": [],
+            "unexpected": [],
+            "model": []
+          },
+          "startCommandCount": 1,
+          "startCommandDisabled": true,
+          "truthAndOverflow": {
+            "fabricatedRunState": {
+              "statusSections": 0,
+              "progressElements": 0,
+              "calculationLogs": 0,
+              "iterationRows": 0
+            },
+            "noFabricatedRunState": true,
+            "horizontalOverflow": {
+              "dialogScrollWidth": 848,
+              "dialogClientWidth": 848,
+              "dialogOutsideViewport": false,
+              "dialogContentOverflow": false,
+              "pageOverflow": false
+            },
+            "noHorizontalOverflow": true
+          },
+          "dialogBounds": {
+            "viewport": {
+              "width": 1440,
+              "height": 900
+            },
+            "rect": {
+              "left": 295,
+              "top": 70,
+              "right": 1145,
+              "bottom": 830,
+              "width": 850,
+              "height": 760
+            },
+            "withinHorizontalViewport": true,
+            "verticalScrollAvailable": false,
+            "pageHorizontalOverflow": false
+          },
+          "noPhantomResult": true
+        },
+        "logistic": {
+          "type": "logistic",
+          "typeFocused": true,
+          "outcome": "outcome",
+          "roles": {
+            "fieldsetCount": 2,
+            "predictors": {
+              "legend": "Predictors (1 selected)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": true,
+                  "disabled": false
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": false,
+                  "disabled": true
+                }
+              ]
+            },
+            "controls": {
+              "legend": "Controls (1 selected, optional)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": true,
+                  "disabled": false
+                }
+              ]
+            },
+            "selectedPredictors": [
+              "predictor"
+            ],
+            "selectedControls": [
+              "control"
+            ]
+          },
+          "bootstrapValue": "enabled",
+          "samples": "10000",
+          "workers": "1",
+          "seed": "20260718",
+          "calculationBasis": "Binary logistic maximum likelihood with intercept (fixed)",
+          "variableData": "Unstandardized numeric values (fixed)",
+          "uncertainty": "Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)",
+          "validatedScope": "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa coefficient and odds-ratio inference. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, generic PLS resampling, and Firth-corrected models are not included.",
+          "bootstrapScope": "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.",
+          "profile": {
+            "role": "status",
+            "ariaLive": "polite",
+            "ariaBusy": "false",
+            "text": "Complete-dataset outcome profile36 complete cases: 0 class 0 and 0 class 1; 0 omitted by listwise deletion"
+          },
+          "blockers": {
+            "messages": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.",
+              "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
+              "36 non-missing outcome rows are not coded exactly 0 or 1",
+              "The listwise-complete outcome must contain both class 0 and class 1"
+            ],
+            "runtime": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
+            ],
+            "allowedFixtureProfile": [
+              "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
+              "36 non-missing outcome rows are not coded exactly 0 or 1",
+              "The listwise-complete outcome must contain both class 0 and class 1"
+            ],
+            "unexpected": [],
+            "model": []
+          },
+          "startCommandCount": 1,
+          "startCommandDisabled": true,
+          "truthAndOverflow": {
+            "fabricatedRunState": {
+              "statusSections": 0,
+              "progressElements": 0,
+              "calculationLogs": 0,
+              "iterationRows": 0
+            },
+            "noFabricatedRunState": true,
+            "horizontalOverflow": {
+              "dialogScrollWidth": 848,
+              "dialogClientWidth": 848,
+              "dialogOutsideViewport": false,
+              "dialogContentOverflow": false,
+              "pageOverflow": false
+            },
+            "noHorizontalOverflow": true
+          },
+          "dialogBounds": {
+            "viewport": {
+              "width": 1440,
+              "height": 900
+            },
+            "rect": {
+              "left": 295,
+              "top": 70,
+              "right": 1145,
+              "bottom": 830,
+              "width": 850,
+              "height": 760
+            },
+            "withinHorizontalViewport": true,
+            "verticalScrollAvailable": false,
+            "pageHorizontalOverflow": false
+          },
+          "noPhantomResult": true
+        },
+        "closeFocus": {
+          "closeButtonCount": 1,
+          "dialogClosed": true,
+          "focusRestored": true
+        },
+        "completedResult": {
+          "genuineSmokeLoader": null,
+          "inspected": false,
+          "synthesizedByHarness": false,
+          "runOptionCount": 0,
+          "groupCount": 0,
+          "tableCount": 0
+        }
+      }
+    ],
+    "screenshots": [
+      {
+        "state": "regression-bootstrap-ols-dialog",
+        "viewport": "1024x700",
+        "runtime": "chromium-preview",
+        "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\19-regression-bootstrap-ols-dialog-1024x700.png"
+      },
+      {
+        "state": "regression-bootstrap-logistic-dialog",
+        "viewport": "1024x700",
+        "runtime": "chromium-preview",
+        "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\20-regression-bootstrap-logistic-dialog-1024x700.png"
+      },
+      {
+        "state": "regression-bootstrap-ols-dialog",
+        "viewport": "1280x720",
+        "runtime": "chromium-preview",
+        "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\19-regression-bootstrap-ols-dialog-1280x720.png"
+      },
+      {
+        "state": "regression-bootstrap-logistic-dialog",
+        "viewport": "1280x720",
+        "runtime": "chromium-preview",
+        "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\20-regression-bootstrap-logistic-dialog-1280x720.png"
+      },
+      {
+        "state": "regression-bootstrap-ols-dialog",
+        "viewport": "1440x900",
+        "runtime": "chromium-preview",
+        "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\19-regression-bootstrap-ols-dialog-1440x900.png"
+      },
+      {
+        "state": "regression-bootstrap-logistic-dialog",
+        "viewport": "1440x900",
+        "runtime": "chromium-preview",
+        "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\20-regression-bootstrap-logistic-dialog-1440x900.png"
+      }
+    ],
+    "passed": true
+  },
+  "failure_boundary_execution_attestation": {
+    "checks": {
+      "exact_test_name_set": true,
+      "exact_archive_test_name_set": true,
+      "all_execution_rows_pass": true,
+      "test_executables_are_current_and_bound": true
+    },
+    "test_executables": {
+      "qpls_resampling": {
+        "artifact": {
+          "path": "target/release/deps/qpls_resampling-c4e49d418770bebc.exe",
+          "reported_size": 10044416,
+          "reported_sha256": "45553e2e71628620bfef1c6dc1bef588544361edd9f01780c975c6629161f476",
+          "present": true,
+          "inside_repository": true,
+          "actual_size": 10044416,
+          "actual_sha256": "45553e2e71628620bfef1c6dc1bef588544361edd9f01780c975c6629161f476",
+          "passed": true
+        },
+        "path_pattern_ok": true,
+        "source_freshness": [
+          {
+            "path": "crates/qpls-resampling/src/lib.rs",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "crates/qpls-core/src/contract.rs",
+            "present": true,
+            "binary_not_older": true
+          }
+        ],
+        "passed": true
+      },
+      "qpls_project": {
+        "artifact": {
+          "path": "target/release/deps/qpls_project-f307b35747183d92.exe",
+          "reported_size": 19873280,
+          "reported_sha256": "dda98f2966311e42d4e1e1740e95828f4e395581354836441844211b53f7f02d",
+          "present": true,
+          "inside_repository": true,
+          "actual_size": 19873280,
+          "actual_sha256": "dda98f2966311e42d4e1e1740e95828f4e395581354836441844211b53f7f02d",
+          "passed": true
+        },
+        "path_pattern_ok": true,
+        "source_freshness": [
+          {
+            "path": "crates/qpls-project/src/lib.rs",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "crates/qpls-core/src/contract.rs",
+            "present": true,
+            "binary_not_older": true
+          }
+        ],
+        "passed": true
+      }
+    },
+    "observed_test_names": [
+      "regression_bootstrap_failure_boundary_captures_zero_based_single_class_replicates",
+      "regression_bootstrap_failure_boundary_listwise_complete_cases_are_the_only_sampling_frame",
+      "regression_bootstrap_failure_boundary_real_delete_one_failure_disables_all_bca",
+      "regression_bootstrap_failure_boundary_rejects_below_ninety_percent_usable"
+    ],
+    "observed_archive_test_names": [
+      "regression_bootstrap_append_save_reopen_and_tamper_contract_are_atomic",
+      "regression_bootstrap_json_roundtrip_tolerance_is_narrow"
+    ],
+    "passed": true
+  },
+  "failure_boundary_source_identity": {
+    "expected": [
+      "regression_bootstrap_failure_boundary_captures_zero_based_single_class_replicates",
+      "regression_bootstrap_failure_boundary_listwise_complete_cases_are_the_only_sampling_frame",
+      "regression_bootstrap_failure_boundary_real_delete_one_failure_disables_all_bca",
+      "regression_bootstrap_failure_boundary_rejects_below_ninety_percent_usable"
+    ],
+    "observed": [
+      "regression_bootstrap_failure_boundary_captures_zero_based_single_class_replicates",
+      "regression_bootstrap_failure_boundary_listwise_complete_cases_are_the_only_sampling_frame",
+      "regression_bootstrap_failure_boundary_real_delete_one_failure_disables_all_bca",
+      "regression_bootstrap_failure_boundary_rejects_below_ninety_percent_usable"
+    ],
+    "checks": {
+      "all_named_real_engine_boundaries_present": true,
+      "failed_replicate_reason_is_frozen": true,
+      "zero_based_failed_index_fixture_is_frozen": true
+    },
+    "passed": true
+  },
+  "docs": [
+    {
+      "path": "docs\\methods\\REGRESSION_BOOTSTRAP_V1.md",
+      "present": true,
+      "bytes": 6776,
+      "sha256": "b1b47af36bc1aee50e75c55f83ac210552e3470442cc7b60d5405fca79312a42",
+      "required_phrases": [
+        {
+          "phrase": "regression_bootstrap_v1",
+          "present": true
+        },
+        {
+          "phrase": "indexed_case_resampling_v1",
+          "present": true
+        },
+        {
+          "phrase": "percentile_primary_bca_conditional_v1",
+          "present": true
+        },
+        {
+          "phrase": "standard_normal_bootstrap_ratio_v1",
+          "present": true
+        },
+        {
+          "phrase": "regression_bootstrap_validation_witness_v1",
+          "present": true
+        },
+        {
+          "phrase": "not rendered or exported",
+          "present": true
+        },
+        {
+          "phrase": "at most 50 predictors and controls plus the intercept",
+          "present": true
+        },
+        {
+          "phrase": "Studentized intervals, custom alpha/tails",
+          "present": true
+        },
+        {
+          "phrase": "PROCESS bootstrapping are excluded",
+          "present": true
+        }
+      ],
+      "forbidden_phrases": [],
+      "passed": true
+    },
+    {
+      "path": "docs\\METHOD_COMPATIBILITY.md",
+      "present": true,
+      "bytes": 12962,
+      "sha256": "232f396a42951ad7e12300cd46f769a0507671336f322f3ba2328c560e890ab8",
+      "required_phrases": [
+        {
+          "phrase": "Regression | OLS and binary-logistic bootstrapping",
+          "present": true
+        },
+        {
+          "phrase": "regression_bootstrap_v1",
+          "present": true
+        },
+        {
+          "phrase": "Release-qualified for the bounded v1 scope",
+          "present": true
+        },
+        {
+          "phrase": "genuine packaged OLS and logistic 10,000-resample execution",
+          "present": true
+        },
+        {
+          "phrase": "PROCESS, weights, multinomial, and ordinal inference remain excluded",
+          "present": true
+        }
+      ],
+      "forbidden_phrases": [
+        {
+          "phrase": "native, independent-reference, packaged, and promotion evidence still required before release qualification",
+          "absent": true
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "checks": [
+    {
+      "name": "dedicated_exact_and_independent_reference",
+      "passed": true,
+      "detail": "The dedicated report must bind exact witness arithmetic and independently seeded Python/R OLS and logistic sampling-distribution comparisons."
+    },
+    {
+      "name": "genuine_method_specific_packaged_acceptance",
+      "passed": true,
+      "detail": "The dedicated packaged report must prove both workflows, truthful results, two genuine XLSX exports, cancellation, archive-only witness handling, and same-run save/reopen with bound digests."
+    },
+    {
+      "name": "browser_visual_acceptance_gate_7",
+      "passed": true,
+      "detail": "A fresh production-bundle visual report must pass the exact three-viewport Regression bootstrap OLS/logistic setup, accessibility, focus, and overflow contract."
+    },
+    {
+      "name": "real_engine_failure_boundaries_executed",
+      "passed": true,
+      "detail": "A fresh exact-name four-test report must bind passing real-engine boundaries to its current release-profile Rust test executable."
+    },
+    {
+      "name": "frozen_scope_documented",
+      "passed": true,
+      "detail": "The current method contract, exclusions, archive boundary, term limit, and public release-qualified status must remain explicit and synchronized."
+    }
+  ],
+  "note": "Promotion remains false until current numerical and genuine packaged Windows/Tauri evidence pass with the exact feature, method-version, and catalogue-snapshot identities. Generic, point-only, PLS-bootstrap, or logistic-v2 evidence cannot satisfy this regression-bootstrap audit."
+}

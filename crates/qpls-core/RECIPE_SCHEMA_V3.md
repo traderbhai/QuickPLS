@@ -75,12 +75,11 @@ dedicated method-internal plans such as MGA/MICOM and NCA permutations.
 
 Standalone regression has one shared executable envelope for OLS, logistic,
 and PROCESS recipes: path weighting as a non-operative sentinel,
-unstandardized values, listwise deletion, no case weights or external
-resampling settings, fixed two-sided 95% confidence intervals, and an empty SEM
-model. Outcome, predictor, and control names must all be non-empty and distinct.
-HC3 is an OLS-only requirement. Every PROCESS relationship variable must be a
-declared predictor, must differ from the outcome, and must be distinct from the
-other relationship variables.
+unstandardized values, listwise deletion, no case weights, fixed two-sided 95%
+confidence intervals, and an empty SEM model. Outcome, predictor, and control
+names must all be non-empty and distinct. HC3 is an OLS-only requirement. Every
+PROCESS relationship variable must be a declared predictor, must differ from
+the outcome, and must be distinct from the other relationship variables.
 
 The logistic member of that envelope is the exact binary numeric contract:
 after listwise deletion the outcome must contain both `0` and `1` and no other
@@ -88,9 +87,19 @@ finite value. Dataset-dependent readiness is reported by the estimation input
 profiler rather than guessed by recipe validation. Categorical auto-encoding,
 weights, Firth correction, multinomial and ordinal models remain outside the
 typed schema-v3 logistic scope.
-All standalone regression variants also freeze `workers = 1`; their current
-estimators are deterministic single-worker workflows rather than parallel
-resampling jobs.
+Point-only standalone regression freezes `workers = 1`. OLS and binary
+logistic recipes may instead include the strict typed `bootstrap` object with
+`algorithm = case_resampling` and ordered intervals `[percentile, bca]`, paired
+with 99 to 10,000 `settings.bootstrap_samples` and at most 50 selected
+predictors/controls plus the intercept. That dedicated outer engine
+accepts 1 to 64 workers but derives each with-replacement sample from the fixed
+seed and replicate index, then reduces in index order. It cannot enter the
+generic PLS bootstrap payload. `without_outer_resampling` removes the typed
+bootstrap object, clears the sample count, restores one worker, and revalidates
+the point-only capability used inside each fit. PROCESS, studentized, and
+permutation regression inference remain excluded from this contract. Exact
+result arithmetic and version tokens are frozen in
+`docs/methods/REGRESSION_BOOTSTRAP_V1.md`.
 
 CB-SEM `bootstrap_samples` is required on the v3 wire even when its value is
 zero. This keeps an omitted inference choice distinguishable from an explicit

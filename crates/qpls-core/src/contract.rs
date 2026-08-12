@@ -356,6 +356,30 @@ pub enum RegressionModelConfig {
     },
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum RegressionBootstrapAlgorithm {
+    CaseResampling,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum RegressionBootstrapInterval {
+    Percentile,
+    Bca,
+}
+
+/// Dedicated outer case-resampling for standalone regression. The replicate
+/// count, seed, worker count, and confidence level remain canonical in
+/// `AnalysisSettings`; this typed value makes the scientific workflow
+/// explicit and prevents it from being confused with PLS-PM resampling.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct RegressionBootstrapConfig {
+    pub algorithm: RegressionBootstrapAlgorithm,
+    pub intervals: Vec<RegressionBootstrapInterval>,
+}
+
 impl RegressionModelConfig {
     const fn wire_name(&self) -> &'static str {
         match self {
@@ -438,6 +462,8 @@ pub enum MethodConfig {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         controls: Vec<String>,
         model: RegressionModelConfig,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        bootstrap: Option<RegressionBootstrapConfig>,
     },
     Nca {
         condition: String,
@@ -500,6 +526,8 @@ enum MethodConfigWire {
         #[serde(default)]
         controls: Vec<String>,
         model: RegressionModelConfig,
+        #[serde(default)]
+        bootstrap: Option<RegressionBootstrapConfig>,
     },
     Nca {
         condition: String,
@@ -570,11 +598,13 @@ impl From<MethodConfigWire> for MethodConfig {
                 predictors,
                 controls,
                 model,
+                bootstrap,
             } => Self::Regression {
                 outcome,
                 predictors,
                 controls,
                 model,
+                bootstrap,
             },
             MethodConfigWire::Nca {
                 condition,
@@ -642,7 +672,14 @@ impl<'de> Deserialize<'de> for MethodConfig {
                 "invariance_steps",
             ],
             "pca" => &["kind", "variables", "retention"],
-            "regression" => &["kind", "outcome", "predictors", "controls", "model"],
+            "regression" => &[
+                "kind",
+                "outcome",
+                "predictors",
+                "controls",
+                "model",
+                "bootstrap",
+            ],
             "nca" => &[
                 "kind",
                 "condition",
@@ -764,6 +801,7 @@ impl MethodConfig {
                 model: RegressionModelConfig::Ols {
                     robust_se: RobustStandardError::Hc3,
                 },
+                bootstrap: None,
             },
             AnalysisMethod::Nca => Self::Nca {
                 condition: String::new(),
@@ -911,6 +949,7 @@ impl MethodConfig {
                 predictors,
                 controls,
                 model,
+                ..
             } => {
                 metadata.insert("regression_type".into(), model.wire_name().into());
                 metadata.insert("regression_outcome".into(), outcome.clone());
@@ -1287,6 +1326,7 @@ mod contract_tests {
                 model: RegressionModelConfig::Ols {
                     robust_se: RobustStandardError::Hc3,
                 },
+                bootstrap: None,
             },
             MethodConfig::Nca {
                 condition: "x".into(),
@@ -1341,7 +1381,7 @@ mod contract_tests {
     }
 
     #[test]
-    fn method_config_nested_wire_tags_are_stable() {
+    fn regression_bootstrap_and_method_config_nested_wire_tags_are_stable() {
         assert_eq!(
             serde_json::to_value(MethodConfig::Pca {
                 variables: vec!["x1".into(), "x2".into()],
@@ -1366,6 +1406,7 @@ mod contract_tests {
                         moderator: "w".into(),
                     },
                 },
+                bootstrap: None,
             })
             .unwrap(),
             serde_json::json!({
@@ -1407,6 +1448,46 @@ mod contract_tests {
                 "group_column": "group",
                 "invariance_steps": ["configural", "metric"]
             })
+        );
+
+        let regression_bootstrap = MethodConfig::Regression {
+            outcome: "y".into(),
+            predictors: vec!["x".into()],
+            controls: Vec::new(),
+            model: RegressionModelConfig::Logistic,
+            bootstrap: Some(RegressionBootstrapConfig {
+                algorithm: RegressionBootstrapAlgorithm::CaseResampling,
+                intervals: vec![
+                    RegressionBootstrapInterval::Percentile,
+                    RegressionBootstrapInterval::Bca,
+                ],
+            }),
+        };
+        let encoded = serde_json::to_value(&regression_bootstrap).unwrap();
+        assert_eq!(
+            encoded["bootstrap"],
+            serde_json::json!({
+                "algorithm": "case_resampling",
+                "intervals": ["percentile", "bca"]
+            })
+        );
+        assert_eq!(
+            serde_json::from_value::<MethodConfig>(encoded).unwrap(),
+            regression_bootstrap
+        );
+        assert!(
+            serde_json::from_value::<MethodConfig>(serde_json::json!({
+                "kind": "regression",
+                "outcome": "y",
+                "predictors": ["x"],
+                "model": {"type": "logistic"},
+                "bootstrap": {
+                    "algorithm": "case_resampling",
+                    "intervals": ["percentile", "bca"],
+                    "studentized": true
+                }
+            }))
+            .is_err()
         );
     }
 
@@ -1727,6 +1808,7 @@ mod contract_tests {
                 model: RegressionModelConfig::Ols {
                     robust_se: RobustStandardError::Hc3,
                 },
+                bootstrap: None,
             })
         );
         assert_eq!(
@@ -2797,6 +2879,7 @@ fn legacy_regression_config(
         predictors,
         controls,
         model,
+        bootstrap: None,
     })
 }
 

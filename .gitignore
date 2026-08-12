@@ -13,6 +13,7 @@ __pycache__/
 *.qpls
 *.qpls.bak
 *.qpls.autosave
+*.qpls.autosave.bak
 *.qpls.identity.json
 *.qpls.autosave.identity.json
 *.qpls.transaction.json

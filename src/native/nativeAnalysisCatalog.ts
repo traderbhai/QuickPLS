@@ -43,6 +43,7 @@ export type NativeAnalysisCapabilityId =
   | "qpls3.standalone.pca"
   | "qpls3.standalone.ols"
   | "qpls3.standalone.logistic"
+  | "qpls3.standalone.regression_bootstrap"
   | "qpls3.standalone.process";
 
 export interface NativeAnalysisCatalogItem {
@@ -169,9 +170,9 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     kind: "regression",
     categoryId: "standalone",
     categoryLabel: "Standalone analysis",
-    description: "Fit raw numeric OLS or strict 0/1 binary logistic regression as a model-free observed-variable analysis.",
-    keywords: ["ols", "ordinary least squares", "linear regression", "logistic", "binary", "odds ratio", "wald", "probability", "hc3", "observed variable"],
-    capabilityIds: ["qpls3.standalone.ols", "qpls3.standalone.logistic", "qpls3.standalone.process"],
+    description: "Fit raw numeric OLS or strict 0/1 binary logistic regression, with optional case-resampling inference, as a model-free observed-variable analysis.",
+    keywords: ["ols", "ordinary least squares", "linear regression", "logistic", "binary", "odds ratio", "wald", "probability", "hc3", "case bootstrap", "percentile", "bca", "observed variable"],
+    capabilityIds: ["qpls3.standalone.ols", "qpls3.standalone.logistic", "qpls3.standalone.regression_bootstrap", "qpls3.standalone.process"],
   },
 ] as const;
 
@@ -434,21 +435,32 @@ export function nativeAnalysisSettingsForWorkbenchKind(
       .map((item) => item.trim())
       .filter(Boolean)
       .join(",");
+    const bootstrapEnabled = normalized.regressionBootstrap === true;
     return {
       ...normalized,
       method: "regression",
       weightingScheme: "path",
       preprocessing: "unstandardized",
-      bootstrapSamples: 0,
+      bootstrapSamples: bootstrapEnabled
+        ? boundedInteger(
+            normalized.bootstrapSamples > 0 ? normalized.bootstrapSamples : undefined,
+            NATIVE_ANALYSIS_RECIPE_BOUNDS.regressionBootstrapSamples.default,
+            NATIVE_ANALYSIS_RECIPE_BOUNDS.regressionBootstrapSamples.minimum,
+            NATIVE_ANALYSIS_RECIPE_BOUNDS.regressionBootstrapSamples.maximum,
+          )
+        : 0,
       studentizedInnerSamples: 0,
       permutationSamples: 0,
-      workers: 1,
+      workers: bootstrapEnabled
+        ? boundedInteger(normalized.workers, 1, NATIVE_ANALYSIS_RECIPE_BOUNDS.workers.minimum, NATIVE_ANALYSIS_RECIPE_BOUNDS.workers.maximum)
+        : 1,
       confidenceLevel: 0.95,
       caseWeightColumn: null,
       regressionType: normalized.regressionType === "logistic" ? "logistic" : "ols",
       regressionOutcome: normalized.regressionOutcome?.trim() || null,
       regressionPredictors: normalizeCsv(normalized.regressionPredictors) || null,
       regressionControls: normalizeCsv(normalized.regressionControls) || null,
+      regressionBootstrap: bootstrapEnabled,
       robustSe: normalized.regressionType === "logistic" ? "none" : "hc3",
       processX: null,
       processM: null,
@@ -473,6 +485,7 @@ export function nativeAnalysisStartLabel(
   kind: NativeWorkbenchAnalysisKind,
   retry: boolean,
   regressionType?: AnalysisUiSettings["regressionType"],
+  regressionBootstrap = false,
 ): string {
   const verb = retry ? "Retry" : "Start";
   if (kind === "pls_bootstrap") return `${verb} bootstrapping`;
@@ -487,6 +500,6 @@ export function nativeAnalysisStartLabel(
   if (kind === "gsca") return `${verb} GSCA`;
   if (kind === "nca") return `${verb} necessary condition analysis`;
   if (kind === "pca") return `${verb} principal component analysis`;
-  if (kind === "regression") return `${verb} ${regressionType === "logistic" ? "binary logistic regression" : "OLS regression"}`;
+  if (kind === "regression") return `${verb} ${regressionType === "logistic" ? "binary logistic regression" : "OLS regression"}${regressionBootstrap ? " with bootstrap" : ""}`;
   return `${verb} calculation`;
 }

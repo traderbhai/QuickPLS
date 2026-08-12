@@ -145,6 +145,12 @@ impl ValidatedExecutionRecipe {
         {
             *bootstrap_samples = 0;
         }
+        if let Some(MethodConfig::Regression { bootstrap, .. }) = source.method_config.as_mut() {
+            *bootstrap = None;
+            // Regression point estimation remains deliberately single-worker;
+            // workers above one belong only to the dedicated outer resampler.
+            source.settings.workers = 1;
+        }
         Self::from_current_source(source)
     }
 
@@ -201,6 +207,79 @@ fn validate_v3_method_config(
             ),
             Some(config.kind().into()),
         ));
+    }
+
+    if let crate::MethodConfig::Regression {
+        predictors,
+        controls,
+        model,
+        bootstrap,
+        ..
+    } = config
+    {
+        let requested = recipe.settings.bootstrap_samples;
+        match bootstrap {
+            Some(bootstrap) => {
+                if predictors.len() + controls.len() > 50 {
+                    issues.push(issue(
+                        "regression.bootstrap_terms_bound",
+                        Severity::Error,
+                        "Regression bootstrap v1 supports at most 50 predictors and controls plus the intercept",
+                        Some((predictors.len() + controls.len() + 1).to_string()),
+                    ));
+                }
+                if !matches!(
+                    model,
+                    crate::RegressionModelConfig::Ols { .. }
+                        | crate::RegressionModelConfig::Logistic
+                ) {
+                    issues.push(issue(
+                        "regression.bootstrap_model_unsupported",
+                        Severity::Error,
+                        "Regression bootstrap v1 supports OLS and binary logistic regression only",
+                        None,
+                    ));
+                }
+                if !(99..=10_000).contains(&requested) {
+                    issues.push(issue(
+                        "regression.bootstrap_samples",
+                        Severity::Error,
+                        "Regression bootstrap requires 99 to 10000 case-resampling replicates",
+                        Some(requested.to_string()),
+                    ));
+                }
+                if bootstrap.algorithm != crate::RegressionBootstrapAlgorithm::CaseResampling
+                    || bootstrap.intervals
+                        != [
+                            crate::RegressionBootstrapInterval::Percentile,
+                            crate::RegressionBootstrapInterval::Bca,
+                        ]
+                {
+                    issues.push(issue(
+                        "regression.bootstrap_contract",
+                        Severity::Error,
+                        "Regression bootstrap v1 requires case resampling with percentile primary and conditional BCa intervals",
+                        None,
+                    ));
+                }
+            }
+            None if requested > 0 => issues.push(issue(
+                "regression.bootstrap_config_required",
+                Severity::Error,
+                "Positive regression bootstrap_samples require method_config.regression.bootstrap",
+                Some(requested.to_string()),
+            )),
+            None => {}
+        }
+        if recipe.settings.studentized_inner_samples > 0 || recipe.settings.permutation_samples > 0
+        {
+            issues.push(issue(
+                "regression.bootstrap_inference_unsupported",
+                Severity::Error,
+                "Regression bootstrap v1 excludes studentized intervals and permutation inference",
+                None,
+            ));
+        }
     }
 
     if let crate::MethodConfig::Predict { pls_pos, fimix } = config {
@@ -1443,6 +1522,13 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
         }
     }
     if recipe.settings.method == crate::AnalysisMethod::Regression {
+        let regression_bootstrap_requested = matches!(
+            &recipe.method_config,
+            Some(crate::MethodConfig::Regression {
+                bootstrap: Some(_),
+                ..
+            })
+        );
         let regression_type = recipe
             .metadata
             .get("regression_type")
@@ -1647,14 +1733,14 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
                 None,
             ));
         }
-        if recipe.settings.bootstrap_samples > 0
+        if (!regression_bootstrap_requested && recipe.settings.bootstrap_samples > 0)
             || recipe.settings.studentized_inner_samples > 0
             || recipe.settings.permutation_samples > 0
         {
             issues.push(issue(
                 "regression.resampling_unsupported",
                 Severity::Error,
-                "The validated native regression scope does not accept external resampling settings",
+                "Regression accepts only its typed case-bootstrap plan; studentized, permutation, and untyped resampling settings are unsupported",
                 None,
             ));
         }
@@ -1666,11 +1752,11 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
                 None,
             ));
         }
-        if recipe.settings.workers != 1 {
+        if !regression_bootstrap_requested && recipe.settings.workers != 1 {
             issues.push(issue(
                 "regression.single_worker_required",
                 Severity::Error,
-                "Standalone regression uses deterministic single-worker estimation",
+                "Standalone regression point estimation uses one worker; multiple workers are accepted only by the deterministic indexed bootstrap plan",
                 Some(recipe.settings.workers.to_string()),
             ));
         }
@@ -2353,6 +2439,7 @@ mod tests {
             predictors: predictors.iter().map(|value| (*value).into()).collect(),
             controls: Vec::new(),
             model,
+            bootstrap: None,
         });
         recipe
     }
@@ -3163,6 +3250,106 @@ mod tests {
     }
 
     #[test]
+    fn typed_regression_bootstrap_is_bounded_and_derives_a_point_only_base_recipe() {
+        for model in [
+            crate::RegressionModelConfig::Ols {
+                robust_se: crate::RobustStandardError::Hc3,
+            },
+            crate::RegressionModelConfig::Logistic,
+        ] {
+            let mut recipe = valid_v3_regression_recipe(model, &["x"]);
+            recipe.settings.bootstrap_samples = 999;
+            recipe.settings.seed = 42;
+            recipe.settings.workers = 4;
+            let Some(crate::MethodConfig::Regression { bootstrap, .. }) =
+                recipe.method_config.as_mut()
+            else {
+                unreachable!()
+            };
+            *bootstrap = Some(crate::RegressionBootstrapConfig {
+                algorithm: crate::RegressionBootstrapAlgorithm::CaseResampling,
+                intervals: vec![
+                    crate::RegressionBootstrapInterval::Percentile,
+                    crate::RegressionBootstrapInterval::Bca,
+                ],
+            });
+            assert!(validate_recipe(&recipe).is_empty());
+            let execution = ValidatedExecutionRecipe::from_current_source(recipe).unwrap();
+            let base = execution.without_outer_resampling().unwrap();
+            assert_eq!(base.source().settings.bootstrap_samples, 0);
+            assert_eq!(base.source().settings.workers, 1);
+            assert!(matches!(
+                base.source().method_config,
+                Some(crate::MethodConfig::Regression {
+                    bootstrap: None,
+                    ..
+                })
+            ));
+        }
+
+        let mut missing =
+            valid_v3_regression_recipe(crate::RegressionModelConfig::Logistic, &["x"]);
+        missing.settings.bootstrap_samples = 999;
+        assert!(
+            validate_recipe(&missing)
+                .iter()
+                .any(|issue| { issue.code == "regression.bootstrap_config_required" })
+        );
+
+        let mut process = valid_v3_regression_recipe(
+            crate::RegressionModelConfig::Process {
+                relationship: crate::ProcessRelationshipConfig::Moderation {
+                    x: "x".into(),
+                    moderator: "m".into(),
+                },
+            },
+            &["x", "m"],
+        );
+        process.settings.bootstrap_samples = 999;
+        if let Some(crate::MethodConfig::Regression { bootstrap, .. }) =
+            process.method_config.as_mut()
+        {
+            *bootstrap = Some(crate::RegressionBootstrapConfig {
+                algorithm: crate::RegressionBootstrapAlgorithm::CaseResampling,
+                intervals: vec![
+                    crate::RegressionBootstrapInterval::Percentile,
+                    crate::RegressionBootstrapInterval::Bca,
+                ],
+            });
+        }
+        assert!(
+            validate_recipe(&process)
+                .iter()
+                .any(|issue| { issue.code == "regression.bootstrap_model_unsupported" })
+        );
+
+        let predictors = (0..51).map(|index| format!("x{index}"));
+        let mut oversized =
+            valid_v3_regression_recipe(crate::RegressionModelConfig::Logistic, &["x"]);
+        oversized.settings.bootstrap_samples = 999;
+        if let Some(crate::MethodConfig::Regression {
+            predictors: configured,
+            bootstrap,
+            ..
+        }) = oversized.method_config.as_mut()
+        {
+            *configured = predictors.collect();
+            *bootstrap = Some(crate::RegressionBootstrapConfig {
+                algorithm: crate::RegressionBootstrapAlgorithm::CaseResampling,
+                intervals: vec![
+                    crate::RegressionBootstrapInterval::Percentile,
+                    crate::RegressionBootstrapInterval::Bca,
+                ],
+            });
+        }
+        assert!(
+            validate_recipe(&oversized)
+                .iter()
+                .any(|issue| issue.code == "regression.bootstrap_terms_bound")
+        );
+    }
+
+    #[test]
     fn v3_regression_rejects_empty_and_duplicate_declared_variables() {
         let mut recipe = valid_v3_regression_recipe(crate::RegressionModelConfig::Logistic, &["x"]);
         recipe.method_config = Some(crate::MethodConfig::Regression {
@@ -3170,6 +3357,7 @@ mod tests {
             predictors: vec!["x".into(), "x".into()],
             controls: vec![" ".into()],
             model: crate::RegressionModelConfig::Logistic,
+            bootstrap: None,
         });
 
         let issues = validate_recipe(&recipe);
@@ -3189,6 +3377,7 @@ mod tests {
             predictors: vec![" ".into()],
             controls: Vec::new(),
             model: crate::RegressionModelConfig::Logistic,
+            bootstrap: None,
         });
         let issues = validate_recipe(&recipe);
         assert!(

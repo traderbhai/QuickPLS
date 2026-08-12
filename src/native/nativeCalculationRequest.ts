@@ -8,6 +8,8 @@ import {
   parseNativeLogisticProfile,
   type NativeLogisticProfile,
 } from "./nativeLogistic";
+import { nativeOlsCsvValues } from "./nativeOls";
+import { NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS } from "./nativeRegressionBootstrapWitness";
 
 export interface NativeCalculationRequest {
   kind: NativeWorkbenchAnalysisKind;
@@ -39,6 +41,21 @@ export function parseNativeCalculationRequest(value: unknown): NativeCalculation
   const kind = candidate.kind as NativeWorkbenchAnalysisKind;
   if (candidate.settings.method !== nativeAnalysisRecipeDescriptor(kind).engineMethod) return null;
   const settings = candidate.settings as AnalysisUiSettings;
+  if (kind === "regression" && settings.regressionBootstrap === true) {
+    const selectedTermCount = nativeOlsCsvValues(settings.regressionPredictors).length
+      + nativeOlsCsvValues(settings.regressionControls).length;
+    if ((settings.regressionType !== "ols" && settings.regressionType !== "logistic")
+      || selectedTermCount > NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS
+      || !Number.isInteger(settings.bootstrapSamples)
+      || settings.bootstrapSamples < 99
+      || settings.bootstrapSamples > 10_000
+      || settings.studentizedInnerSamples !== 0
+      || settings.permutationSamples !== 0
+      || settings.confidenceLevel !== 0.95
+      || !Number.isInteger(settings.workers)
+      || settings.workers < 1
+      || settings.workers > 64) return null;
+  }
   const logistic = kind === "regression" && settings.regressionType === "logistic";
   const logisticProfile = logistic ? parseNativeLogisticProfile(candidate.logisticProfile) : null;
   if (logistic && candidate.logisticProfile !== undefined && !logisticProfile) return null;

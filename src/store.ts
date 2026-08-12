@@ -189,7 +189,7 @@ interface WorkspaceState {
 
 const supportedAnalysisMethods = new Set<AnalysisMethodId>(["pls_pm", "bootstrap", "plsc", "wpls", "cca", "cta_pls", "endogeneity", "nonlinear_effects", "moderated_mediation", "predict", "mga", "ipma", "cbsem", "pca", "gsca", "regression", "nca"]);
 
-const defaultAnalysisSettings: AnalysisUiSettings = { method: "pls_pm", bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 0, seed: 20260718, workers: 1, confidenceLevel: 0.95, caseWeightColumn: null, groupColumn: null, groupAValue: null, groupBValue: null, ipmaTargets: null, groupMethods: "micom,mga_permutation", groupPermutationSamples: 5_000, micomConfiguralConfirmed: false, segmentCount: 2, segmentStarts: 10, minimumSegmentShare: 0.10, cbsemModelType: "sem", cbsemMeanStructure: false, cbsemStandardization: "std_all", cbsemGroupColumn: null, cbsemInvarianceSteps: "configural,metric,scalar", cbsemBootstrapSamples: 0, pcaVariables: null, pcaComponentRule: "kaiser", pcaComponents: 2, pcaVarianceThreshold: 0.80, regressionType: "ols", regressionOutcome: null, regressionPredictors: null, regressionControls: null, robustSe: "hc3", processModel: "mediation", processX: null, processM: null, processW: null, ncaX: null, ncaY: null, ncaCeiling: "both", ncaPermutationSamples: 999 };
+const defaultAnalysisSettings: AnalysisUiSettings = { method: "pls_pm", bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 0, seed: 20260718, workers: 1, confidenceLevel: 0.95, caseWeightColumn: null, groupColumn: null, groupAValue: null, groupBValue: null, ipmaTargets: null, groupMethods: "micom,mga_permutation", groupPermutationSamples: 5_000, micomConfiguralConfirmed: false, segmentCount: 2, segmentStarts: 10, minimumSegmentShare: 0.10, cbsemModelType: "sem", cbsemMeanStructure: false, cbsemStandardization: "std_all", cbsemGroupColumn: null, cbsemInvarianceSteps: "configural,metric,scalar", cbsemBootstrapSamples: 0, pcaVariables: null, pcaComponentRule: "kaiser", pcaComponents: 2, pcaVarianceThreshold: 0.80, regressionType: "ols", regressionOutcome: null, regressionPredictors: null, regressionControls: null, regressionBootstrap: false, robustSe: "hc3", processModel: "mediation", processX: null, processM: null, processW: null, ncaX: null, ncaY: null, ncaCeiling: "both", ncaPermutationSamples: 999 };
 const defaultDiagramOverlaySettings: DiagramOverlaySettings = { selectedRunId: null, mode: "model", precision: 3, showLoadings: true, showPathCoefficients: true, showPValues: false, showTValues: false, showRSquared: true, showWarnings: true, showWatermark: true };
 const defaultPublicationDiagramSettings: PublicationDiagramSettings = { mode: "smartpls_result", precision: 3, overlayMode: "paths_r2", aspectRatio: "wide", palette: "grayscale", layoutSource: "current_canvas", showLoadings: true, showPathCoefficients: true, showRSquared: true, showValidationWatermark: true, showUnsupportedWarning: true, showRunProvenance: true };
 const defaultUiPreferences: UiPreferences = {
@@ -377,6 +377,7 @@ const normalizeAnalysisSettings = (settings: Partial<AnalysisUiSettings>): Analy
     regressionOutcome,
     regressionPredictors,
     regressionControls,
+    regressionBootstrap: settings.regressionBootstrap === true,
     robustSe,
     processModel,
     processX,

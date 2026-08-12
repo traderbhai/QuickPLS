@@ -681,6 +681,32 @@ describe("nativePlsReadiness", () => {
     });
     expect(ready.items.find((item) => item.id === "calculation")?.detail).toContain("6 class 0 and 6 class 1");
 
+    const bootstrapped = readiness({
+      dataset: logisticDataset,
+      nodes: [],
+      edges: [],
+      settings: {
+        ...logisticSettings,
+        regressionBootstrap: true,
+        bootstrapSamples: 10_000,
+        workers: 4,
+        confidenceLevel: 0.95,
+      },
+    });
+    expect(bootstrapped.canRun).toBe(true);
+    expect(bootstrapped.items.map((item) => item.id)).toEqual(["runtime", "data", "calculation", "regression-bootstrap"]);
+    expect(bootstrapped.items.at(-1)?.detail).toContain("percentile intervals primary, BCa conditional");
+    expect(bootstrapped.items.at(-1)?.detail).toContain("worker-invariant");
+
+    const invalidBootstrap = readiness({
+      dataset: logisticDataset,
+      nodes: [],
+      edges: [],
+      settings: { ...logisticSettings, regressionBootstrap: true, bootstrapSamples: 98, confidenceLevel: 0.9 },
+    });
+    expect(invalidBootstrap.canRun).toBe(false);
+    expect(invalidBootstrap.blockers.find((item) => item.id === "regression-bootstrap")?.detail).toContain("99 to 10000");
+
     const invalid = readiness({
       dataset: {
         ...logisticDataset,
@@ -694,5 +720,74 @@ describe("nativePlsReadiness", () => {
     expect(invalid.blockers).toHaveLength(1);
     expect(invalid.blockers[0]).toMatchObject({ id: "calculation", label: "Binary logistic regression" });
     expect(invalid.blockers[0].detail).toContain("not coded exactly 0 or 1");
+  });
+
+  it("enforces the 51-coefficient validation-witness cap only for regression bootstrap", () => {
+    const predictorNames = Array.from({ length: 51 }, (_, index) => `x${index + 1}`);
+    const regressionDataset: Dataset = {
+      id: "wide-regression",
+      name: "wide-regression.csv",
+      columns: ["y", ...predictorNames],
+      rows: Array.from({ length: 60 }, (_, rowIndex) => ({
+        y: rowIndex % 2,
+        ...Object.fromEntries(predictorNames.map((name, columnIndex) => [name, rowIndex * (columnIndex + 1) + columnIndex])),
+      })),
+      rowCount: 60,
+      missing: 0,
+      fingerprint: "sha256:wide-regression",
+      kind: "raw",
+      columnMetadata: ["y", ...predictorNames].map(numericMetadata),
+    };
+    const common: AnalysisUiSettings = {
+      ...settings,
+      method: "regression",
+      preprocessing: "unstandardized",
+      regressionOutcome: "y",
+      regressionControls: null,
+      robustSe: "hc3",
+      regressionBootstrap: true,
+      bootstrapSamples: 99,
+      workers: 2,
+      confidenceLevel: 0.95,
+    };
+
+    const maximumOls = readiness({
+      dataset: regressionDataset,
+      nodes: [],
+      edges: [],
+      settings: { ...common, regressionType: "ols", regressionPredictors: predictorNames.slice(0, 50).join(",") },
+    });
+    expect(maximumOls.canRun).toBe(true);
+
+    const overMaximumOls = readiness({
+      dataset: regressionDataset,
+      nodes: [],
+      edges: [],
+      settings: { ...common, regressionType: "ols", regressionPredictors: predictorNames.join(",") },
+    });
+    expect(overMaximumOls.canRun).toBe(false);
+    expect(overMaximumOls.blockers.find((item) => item.id === "calculation")?.detail).toContain("at most 50 predictors and controls (51 coefficient terms including the intercept)");
+
+    const maximumLogistic = readiness({
+      dataset: regressionDataset,
+      nodes: [],
+      edges: [],
+      settings: { ...common, regressionType: "logistic", regressionPredictors: predictorNames.slice(0, 50).join(",") },
+    });
+    expect(maximumLogistic.canRun).toBe(true);
+
+    const legacyPointLimit = readiness({
+      dataset: regressionDataset,
+      nodes: [],
+      edges: [],
+      settings: {
+        ...common,
+        regressionType: "ols",
+        regressionBootstrap: false,
+        regressionPredictors: predictorNames.slice(0, 26).join(","),
+      },
+    });
+    expect(legacyPointLimit.canRun).toBe(false);
+    expect(legacyPointLimit.blockers.find((item) => item.id === "calculation")?.detail).toContain("no more than 25 predictors and controls");
   });
 });

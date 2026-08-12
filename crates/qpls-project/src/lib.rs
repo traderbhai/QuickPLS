@@ -36,17 +36,23 @@ use qpls_estimation::{
     PcaAnalysis, PlsPredictAnalysis, PlsPredictCvpatBenchmarkAssessment, PlsPredictErrorMetrics,
     PlsPredictIndicatorTarget, PlsResult, REGRESSION_LOGISTIC_METHOD_VERSION,
     REGRESSION_LOGISTIC_METHOD_VERSION_V1, REGRESSION_OLS_METHOD_VERSION,
-    REGRESSION_PROCESS_METHOD_VERSION, RegressionAnalysis, WPLS_METHOD_VERSION,
-    analyze_mediation_effects_with_tolerance, analyze_moderation, nca_analysis_matches_v2_contract,
+    REGRESSION_PROCESS_METHOD_VERSION, RegressionAnalysis, RegressionBootstrapAnalysis,
+    RegressionBootstrapBcaInterval, RegressionBootstrapCoefficient, RegressionBootstrapOddsRatio,
+    RegressionBootstrapTest, WPLS_METHOD_VERSION, analyze_mediation_effects_with_tolerance,
+    analyze_moderation, nca_analysis_matches_v2_contract,
 };
 use qpls_resampling::{
     PERMUTATION_METHOD_VERSION, PlsBootstrapResult, PlsPermutationResult,
-    RESAMPLING_METHOD_VERSION, RESAMPLING_METHOD_VERSION_V1, RESAMPLING_METHOD_VERSION_V2,
-    RESAMPLING_METHOD_VERSION_V3, STUDENTIZED_METHOD_VERSION, normal_reference_test,
+    REGRESSION_BOOTSTRAP_ALGORITHM, REGRESSION_BOOTSTRAP_INTERVAL_POLICY,
+    REGRESSION_BOOTSTRAP_METHOD_VERSION, REGRESSION_BOOTSTRAP_MINIMUM_USABLE_FRACTION,
+    REGRESSION_BOOTSTRAP_STREAM_TOKEN, REGRESSION_BOOTSTRAP_TEST_REFERENCE,
+    REGRESSION_BOOTSTRAP_VALIDATION_WITNESS_VERSION, RESAMPLING_METHOD_VERSION,
+    RESAMPLING_METHOD_VERSION_V1, RESAMPLING_METHOD_VERSION_V2, RESAMPLING_METHOD_VERSION_V3,
+    STUDENTIZED_METHOD_VERSION, normal_reference_test, summarize_regression_bootstrap_coefficients,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use statrs::distribution::{ChiSquared, ContinuousCDF, StudentsT};
+use statrs::distribution::{ChiSquared, ContinuousCDF, Normal, StudentsT};
 use std::{
     collections::{BTreeMap, BTreeSet},
     fs::{self, File, OpenOptions},
@@ -2383,6 +2389,7 @@ struct RegressionRecipeContract {
     predictors: Vec<String>,
     controls: Vec<String>,
     kind: RegressionPersistenceKind,
+    bootstrap: bool,
     current_typed: bool,
 }
 
@@ -2393,6 +2400,7 @@ fn regression_recipe_contract(recipe: &AnalysisRecipe) -> Option<RegressionRecip
             predictors,
             controls,
             model,
+            bootstrap,
         } = recipe.method_config.as_ref()?
         else {
             return None;
@@ -2443,6 +2451,7 @@ fn regression_recipe_contract(recipe: &AnalysisRecipe) -> Option<RegressionRecip
                 .map(|value| value.trim().to_string())
                 .collect(),
             kind,
+            bootstrap: bootstrap.is_some(),
             current_typed: true,
         });
     }
@@ -2507,6 +2516,7 @@ fn regression_recipe_contract(recipe: &AnalysisRecipe) -> Option<RegressionRecip
         predictors,
         controls,
         kind,
+        bootstrap: false,
         current_typed: false,
     })
 }
@@ -2542,11 +2552,8 @@ fn validate_regression_payload_contract(
         }
         _ => true,
     };
-    let expected_method_version = match &contract.kind {
-        RegressionPersistenceKind::Logistic
-            if contract.current_typed
-                && result.provenance.method_version == REGRESSION_LOGISTIC_METHOD_VERSION =>
-        {
+    let base_method_version = match &contract.kind {
+        RegressionPersistenceKind::Logistic if contract.current_typed => {
             REGRESSION_LOGISTIC_METHOD_VERSION
         }
         RegressionPersistenceKind::Logistic
@@ -2557,6 +2564,23 @@ fn validate_regression_payload_contract(
         }
         RegressionPersistenceKind::Logistic => return false,
         _ => contract.kind.method_version(),
+    };
+    let expected_method_version = if contract.bootstrap {
+        format!("{base_method_version}+{REGRESSION_BOOTSTRAP_METHOD_VERSION}")
+    } else {
+        base_method_version.to_string()
+    };
+    let bootstrap_settings_valid = if contract.bootstrap {
+        contract.current_typed
+            && matches!(
+                &contract.kind,
+                RegressionPersistenceKind::Ols | RegressionPersistenceKind::Logistic
+            )
+            && (99..=10_000).contains(&recipe.settings.bootstrap_samples)
+            && (1..=64).contains(&recipe.settings.workers)
+    } else {
+        recipe.settings.bootstrap_samples == 0
+            && (!contract.current_typed || recipe.settings.workers == 1)
     };
     if recipe.settings.method != AnalysisMethod::Regression
         || contract.outcome.is_empty()
@@ -2572,17 +2596,16 @@ fn validate_regression_payload_contract(
         || !preprocessing_valid
         || recipe.settings.missing_data != MissingDataPolicy::ListwiseDeletion
         || recipe.settings.case_weight_column.is_some()
-        || recipe.settings.bootstrap_samples > 0
+        || !bootstrap_settings_valid
         || recipe.settings.studentized_inner_samples > 0
         || recipe.settings.permutation_samples > 0
-        || (contract.current_typed && recipe.settings.workers != 1)
         || (recipe.settings.confidence_level - 0.95).abs() > 1e-12
         || !recipe.model.constructs.is_empty()
         || !recipe.model.paths.is_empty()
         || !recipe.model.controls.is_empty()
         || !recipe.model.interactions.is_empty()
         || !recipe.model.higher_order_constructs.is_empty()
-        || estimation.method_version != expected_method_version
+        || estimation.method_version != base_method_version
         || !estimation.converged
         || estimation.iterations != 0
         || estimation.used_observations <= contract.predictors.len() + contract.controls.len() + 1
@@ -2612,7 +2635,7 @@ fn validate_regression_payload_contract(
         || estimation.gsca.is_some()
         || !estimation.r_squared.is_empty()
         || estimation.warnings.len() != 1
-        || estimation.warnings[0] != contract.kind.scope_warning(expected_method_version)
+        || estimation.warnings[0] != contract.kind.scope_warning(base_method_version)
     {
         return false;
     }
@@ -2622,7 +2645,7 @@ fn validate_regression_payload_contract(
     let analysis_valid = match &contract.kind {
         RegressionPersistenceKind::Ols => validate_linear_regression_analysis_contract(
             regression,
-            expected_method_version,
+            base_method_version,
             "ols",
             &contract.outcome,
             &contract.predictors,
@@ -2633,7 +2656,7 @@ fn validate_regression_payload_contract(
         ),
         RegressionPersistenceKind::Logistic => validate_logistic_analysis_contract(
             regression,
-            expected_method_version,
+            base_method_version,
             &contract.outcome,
             &contract.predictors,
             &contract.controls,
@@ -2644,7 +2667,7 @@ fn validate_regression_payload_contract(
         RegressionPersistenceKind::Process(process) => {
             validate_linear_regression_analysis_contract(
                 regression,
-                expected_method_version,
+                base_method_version,
                 "process",
                 &contract.outcome,
                 &contract.predictors,
@@ -2655,7 +2678,501 @@ fn validate_regression_payload_contract(
             ) && validate_process_analysis_contract(regression, process)
         }
     };
-    analysis_valid && regression.warnings == estimation.warnings
+    let bootstrap_valid = match (contract.bootstrap, regression.bootstrap.as_ref()) {
+        (true, Some(bootstrap)) => validate_regression_bootstrap_contract(
+            bootstrap,
+            regression,
+            &contract.kind,
+            &recipe.settings,
+        ),
+        (false, None) => true,
+        _ => false,
+    };
+    analysis_valid && bootstrap_valid && regression.warnings == estimation.warnings
+}
+
+fn validate_regression_bootstrap_contract(
+    bootstrap: &RegressionBootstrapAnalysis,
+    regression: &RegressionAnalysis,
+    kind: &RegressionPersistenceKind,
+    settings: &AnalysisSettings,
+) -> bool {
+    if bootstrap.method_version != REGRESSION_BOOTSTRAP_METHOD_VERSION
+        || bootstrap.algorithm != REGRESSION_BOOTSTRAP_ALGORITHM
+        || bootstrap.confidence_level.to_bits() != 0.95_f64.to_bits()
+        || bootstrap.alternative != "two_sided"
+        || bootstrap.interval_policy != REGRESSION_BOOTSTRAP_INTERVAL_POLICY
+        || bootstrap.test_reference != REGRESSION_BOOTSTRAP_TEST_REFERENCE
+        || bootstrap.test_tolerance_policy
+            != qpls_resampling::REGRESSION_BOOTSTRAP_TEST_TOLERANCE_POLICY
+        || bootstrap.requested_replicates != settings.bootstrap_samples
+        || bootstrap.usable_replicates as usize + bootstrap.failed_replicates.len()
+            != bootstrap.requested_replicates as usize
+        || bootstrap.minimum_usable_fraction.to_bits()
+            != REGRESSION_BOOTSTRAP_MINIMUM_USABLE_FRACTION.to_bits()
+        || bootstrap.usable_replicates
+            < ((bootstrap.requested_replicates as f64
+                * REGRESSION_BOOTSTRAP_MINIMUM_USABLE_FRACTION)
+                .ceil() as u32)
+                .max(2)
+        || bootstrap.jackknife_cases < 3
+        || bootstrap.usable_jackknife_cases > bootstrap.jackknife_cases
+        || bootstrap.seed != settings.seed
+        || bootstrap.workers != settings.workers
+        || bootstrap.stream_token != REGRESSION_BOOTSTRAP_STREAM_TOKEN
+        || bootstrap.coefficients.len() != regression.coefficients.len()
+    {
+        return false;
+    }
+    let failed_indices = bootstrap
+        .failed_replicates
+        .iter()
+        .map(|failure| failure.replicate_index)
+        .collect::<BTreeSet<_>>();
+    if failed_indices.len() != bootstrap.failed_replicates.len()
+        || bootstrap.failed_replicates.iter().any(|failure| {
+            failure.replicate_index >= bootstrap.requested_replicates
+                || failure.reason_code.trim().is_empty()
+                || failure.message.trim().is_empty()
+        })
+    {
+        return false;
+    }
+    let jackknife_failures = bootstrap
+        .jackknife_cases
+        .saturating_sub(bootstrap.usable_jackknife_cases);
+    let mut expected_warnings = vec![
+        "Regression bootstrap v1 uses deterministic indexed case resampling with replacement; percentile intervals are primary and BCa intervals are conditional on stable delete-one fits."
+            .to_string(),
+        "Bootstrap ratio statistics use an independently implemented two-sided standard-normal reference for both OLS and logistic coefficients; they are distinct from point-estimate t or Wald inference."
+            .to_string(),
+    ];
+    if !bootstrap.failed_replicates.is_empty() {
+        expected_warnings.push(format!(
+            "{} of {} bootstrap replicates failed and were excluded from inference.",
+            bootstrap.failed_replicates.len(),
+            bootstrap.requested_replicates
+        ));
+    }
+    if jackknife_failures > 0 {
+        expected_warnings.push(format!(
+            "{jackknife_failures} of {} delete-one fits failed; affected BCa intervals are explicitly unavailable.",
+            bootstrap.jackknife_cases
+        ));
+    }
+    if bootstrap.warnings != expected_warnings {
+        return false;
+    }
+    if !validate_regression_bootstrap_witness(bootstrap, regression, kind) {
+        return false;
+    }
+    let normal = Normal::standard();
+    for (row, point) in bootstrap.coefficients.iter().zip(&regression.coefficients) {
+        let expected_tolerance =
+            64.0 * f64::EPSILON * 1.0_f64.max(row.original.abs()).max(row.replicate_max_abs);
+        let coefficient_lower_bound = -row.replicate_max_abs - row.test_tolerance;
+        let coefficient_upper_bound = row.replicate_max_abs + row.test_tolerance;
+        let degenerate_distribution_valid = row.standard_error > row.test_tolerance
+            || ((row.percentile_upper - row.percentile_lower).abs() <= row.test_tolerance
+                && (row.percentile_lower - row.bootstrap_mean).abs() <= row.test_tolerance
+                && (row.percentile_upper - row.bootstrap_mean).abs() <= row.test_tolerance);
+        if row.term != point.term
+            || !close_enough(row.original, point.estimate)
+            || !row.bootstrap_mean.is_finite()
+            || !row.bias.is_finite()
+            || !close_enough(row.bias, row.bootstrap_mean - row.original)
+            || !row.standard_error.is_finite()
+            || row.standard_error < 0.0
+            || !row.replicate_max_abs.is_finite()
+            || row.replicate_max_abs < 0.0
+            || row.bootstrap_mean.abs() > row.replicate_max_abs + row.test_tolerance
+            || !close_enough(row.test_tolerance, expected_tolerance)
+            || !row.percentile_lower.is_finite()
+            || !row.percentile_upper.is_finite()
+            || row.percentile_lower > row.percentile_upper
+            || row.percentile_lower < coefficient_lower_bound
+            || row.percentile_upper > coefficient_upper_bound
+            || !degenerate_distribution_valid
+            || row.usable_replicates != bootstrap.usable_replicates
+            || !validate_regression_bootstrap_test(
+                &row.test,
+                row.original,
+                row.standard_error,
+                row.test_tolerance,
+                &normal,
+            )
+            || !validate_regression_bca(
+                &row.bca,
+                bootstrap.usable_jackknife_cases,
+                bootstrap.jackknife_cases,
+                coefficient_lower_bound,
+                coefficient_upper_bound,
+            )
+        {
+            return false;
+        }
+        match (kind, row.odds_ratio.as_ref()) {
+            (RegressionPersistenceKind::Logistic, Some(odds_ratio)) => {
+                let odds_ratio_lower_bound = (-row.replicate_max_abs).exp();
+                let odds_ratio_upper_bound = row.replicate_max_abs.exp();
+                if !odds_ratio_lower_bound.is_finite()
+                    || !odds_ratio_upper_bound.is_finite()
+                    || !odds_ratio.original.is_finite()
+                    || odds_ratio.original <= 0.0
+                    || !close_enough(odds_ratio.original, row.original.exp())
+                    || !odds_ratio.percentile_lower.is_finite()
+                    || !odds_ratio.percentile_upper.is_finite()
+                    || odds_ratio.percentile_lower <= 0.0
+                    || odds_ratio.percentile_lower > odds_ratio.percentile_upper
+                    || odds_ratio.percentile_lower + row.test_tolerance < odds_ratio_lower_bound
+                    || odds_ratio.percentile_upper > odds_ratio_upper_bound + row.test_tolerance
+                    || !validate_regression_bca(
+                        &odds_ratio.bca,
+                        bootstrap.usable_jackknife_cases,
+                        bootstrap.jackknife_cases,
+                        odds_ratio_lower_bound,
+                        odds_ratio_upper_bound,
+                    )
+                {
+                    return false;
+                }
+            }
+            (RegressionPersistenceKind::Ols, None) => {}
+            _ => return false,
+        }
+    }
+    true
+}
+
+fn validate_regression_bootstrap_witness(
+    bootstrap: &RegressionBootstrapAnalysis,
+    regression: &RegressionAnalysis,
+    kind: &RegressionPersistenceKind,
+) -> bool {
+    let witness = &bootstrap.validation_witness;
+    let expected_terms = regression
+        .coefficients
+        .iter()
+        .map(|coefficient| coefficient.term.clone())
+        .collect::<Vec<_>>();
+    let logistic = matches!(kind, RegressionPersistenceKind::Logistic);
+    let valid_coefficients = |coefficients: &[f64]| {
+        coefficients.len() == expected_terms.len()
+            && coefficients
+                .iter()
+                .all(|value| value.is_finite() && (!logistic || value.exp().is_finite()))
+    };
+    let bootstrap_indices = witness
+        .successful_bootstrap
+        .iter()
+        .map(|row| row.replicate_index)
+        .collect::<Vec<_>>();
+    let failed_bootstrap_indices = bootstrap
+        .failed_replicates
+        .iter()
+        .map(|row| row.replicate_index)
+        .collect::<Vec<_>>();
+    let successful_jackknife_indices = witness
+        .successful_jackknife
+        .iter()
+        .map(|row| row.omitted_case)
+        .collect::<Vec<_>>();
+    let failed_jackknife_indices = witness
+        .failed_jackknife
+        .iter()
+        .map(|row| row.omitted_case)
+        .collect::<Vec<_>>();
+    let strictly_ascending = |values: &[usize]| values.windows(2).all(|pair| pair[0] < pair[1]);
+    let bootstrap_strictly_ascending = bootstrap_indices.windows(2).all(|pair| pair[0] < pair[1]);
+    if witness.method_version != REGRESSION_BOOTSTRAP_VALIDATION_WITNESS_VERSION
+        || witness.terms != expected_terms
+        || witness.terms.is_empty()
+        || witness.terms.len() > 51
+        || witness.successful_bootstrap.len() != bootstrap.usable_replicates as usize
+        || witness.successful_jackknife.len() != bootstrap.usable_jackknife_cases
+        || witness.failed_jackknife.len()
+            != bootstrap
+                .jackknife_cases
+                .saturating_sub(bootstrap.usable_jackknife_cases)
+        || bootstrap.jackknife_cases != regression.observations
+        || !bootstrap_strictly_ascending
+        || !failed_bootstrap_indices
+            .windows(2)
+            .all(|pair| pair[0] < pair[1])
+        || !strictly_ascending(&successful_jackknife_indices)
+        || !strictly_ascending(&failed_jackknife_indices)
+        || witness
+            .successful_bootstrap
+            .iter()
+            .any(|row| !valid_coefficients(&row.coefficients))
+        || witness
+            .successful_jackknife
+            .iter()
+            .any(|row| !valid_coefficients(&row.coefficients))
+        || witness.failed_jackknife.iter().any(|failure| {
+            failure.omitted_case >= bootstrap.jackknife_cases
+                || failure.reason_code.trim().is_empty()
+                || failure.message.trim().is_empty()
+        })
+    {
+        return false;
+    }
+    let mut all_bootstrap_indices = bootstrap_indices;
+    all_bootstrap_indices.extend(failed_bootstrap_indices);
+    all_bootstrap_indices.sort_unstable();
+    if all_bootstrap_indices != (0..bootstrap.requested_replicates).collect::<Vec<_>>() {
+        return false;
+    }
+    let mut all_jackknife_indices = successful_jackknife_indices;
+    all_jackknife_indices.extend(failed_jackknife_indices);
+    all_jackknife_indices.sort_unstable();
+    if all_jackknife_indices != (0..bootstrap.jackknife_cases).collect::<Vec<_>>() {
+        return false;
+    }
+    let bootstrap_estimates = witness
+        .successful_bootstrap
+        .iter()
+        .map(|row| row.coefficients.clone())
+        .collect::<Vec<_>>();
+    let jackknife_estimates = witness
+        .successful_jackknife
+        .iter()
+        .map(|row| row.coefficients.clone())
+        .collect::<Vec<_>>();
+    summarize_regression_bootstrap_coefficients(
+        &witness.terms,
+        &regression
+            .coefficients
+            .iter()
+            .map(|coefficient| coefficient.estimate)
+            .collect::<Vec<_>>(),
+        &bootstrap_estimates,
+        &jackknife_estimates,
+        bootstrap.jackknife_cases,
+        logistic,
+        bootstrap.confidence_level,
+    )
+    .is_ok_and(|recomputed| {
+        regression_bootstrap_summaries_match_after_json_roundtrip(
+            &recomputed,
+            &bootstrap.coefficients,
+        )
+    })
+}
+
+/// `serde_json`'s decimal round trip can shift a recomputation by a handful
+/// of ULPs even though every persisted witness value is unchanged. Keep all
+/// discrete identities and tagged availability states exact, and allow only a
+/// 64-epsilon finite-number envelope when comparing recomputed summaries.
+fn regression_bootstrap_json_roundtrip_close(left: f64, right: f64) -> bool {
+    left.is_finite()
+        && right.is_finite()
+        && (left - right).abs() <= 64.0 * f64::EPSILON * 1.0_f64.max(left.abs()).max(right.abs())
+}
+
+fn regression_bootstrap_summaries_match_after_json_roundtrip(
+    recomputed: &[RegressionBootstrapCoefficient],
+    stored: &[RegressionBootstrapCoefficient],
+) -> bool {
+    recomputed.len() == stored.len()
+        && recomputed.iter().zip(stored).all(|(left, right)| {
+            left.term == right.term
+                && regression_bootstrap_json_roundtrip_close(left.original, right.original)
+                && regression_bootstrap_json_roundtrip_close(
+                    left.bootstrap_mean,
+                    right.bootstrap_mean,
+                )
+                && regression_bootstrap_json_roundtrip_close(left.bias, right.bias)
+                && regression_bootstrap_json_roundtrip_close(
+                    left.standard_error,
+                    right.standard_error,
+                )
+                && regression_bootstrap_json_roundtrip_close(
+                    left.replicate_max_abs,
+                    right.replicate_max_abs,
+                )
+                && regression_bootstrap_json_roundtrip_close(
+                    left.test_tolerance,
+                    right.test_tolerance,
+                )
+                && regression_bootstrap_tests_match_after_json_roundtrip(&left.test, &right.test)
+                && regression_bootstrap_json_roundtrip_close(
+                    left.percentile_lower,
+                    right.percentile_lower,
+                )
+                && regression_bootstrap_json_roundtrip_close(
+                    left.percentile_upper,
+                    right.percentile_upper,
+                )
+                && left.usable_replicates == right.usable_replicates
+                && regression_bootstrap_bca_matches_after_json_roundtrip(&left.bca, &right.bca)
+                && match (&left.odds_ratio, &right.odds_ratio) {
+                    (Some(left), Some(right)) => {
+                        regression_bootstrap_odds_ratio_matches_after_json_roundtrip(left, right)
+                    }
+                    (None, None) => true,
+                    _ => false,
+                }
+        })
+}
+
+fn regression_bootstrap_tests_match_after_json_roundtrip(
+    left: &RegressionBootstrapTest,
+    right: &RegressionBootstrapTest,
+) -> bool {
+    match (left, right) {
+        (
+            RegressionBootstrapTest::Available {
+                statistic: left_statistic,
+                p_value_two_sided: left_p_value,
+            },
+            RegressionBootstrapTest::Available {
+                statistic: right_statistic,
+                p_value_two_sided: right_p_value,
+            },
+        ) => {
+            regression_bootstrap_json_roundtrip_close(*left_statistic, *right_statistic)
+                && regression_bootstrap_json_roundtrip_close(*left_p_value, *right_p_value)
+        }
+        (
+            RegressionBootstrapTest::Unavailable {
+                reason_code: left_reason,
+                message: left_message,
+            },
+            RegressionBootstrapTest::Unavailable {
+                reason_code: right_reason,
+                message: right_message,
+            },
+        ) => left_reason == right_reason && left_message == right_message,
+        _ => false,
+    }
+}
+
+fn regression_bootstrap_bca_matches_after_json_roundtrip(
+    left: &RegressionBootstrapBcaInterval,
+    right: &RegressionBootstrapBcaInterval,
+) -> bool {
+    match (left, right) {
+        (
+            RegressionBootstrapBcaInterval::Available {
+                bias_correction: left_bias,
+                acceleration: left_acceleration,
+                lower: left_lower,
+                upper: left_upper,
+            },
+            RegressionBootstrapBcaInterval::Available {
+                bias_correction: right_bias,
+                acceleration: right_acceleration,
+                lower: right_lower,
+                upper: right_upper,
+            },
+        ) => {
+            regression_bootstrap_json_roundtrip_close(*left_bias, *right_bias)
+                && regression_bootstrap_json_roundtrip_close(
+                    *left_acceleration,
+                    *right_acceleration,
+                )
+                && regression_bootstrap_json_roundtrip_close(*left_lower, *right_lower)
+                && regression_bootstrap_json_roundtrip_close(*left_upper, *right_upper)
+        }
+        (
+            RegressionBootstrapBcaInterval::Unavailable {
+                reason_code: left_reason,
+                message: left_message,
+            },
+            RegressionBootstrapBcaInterval::Unavailable {
+                reason_code: right_reason,
+                message: right_message,
+            },
+        ) => left_reason == right_reason && left_message == right_message,
+        _ => false,
+    }
+}
+
+fn regression_bootstrap_odds_ratio_matches_after_json_roundtrip(
+    left: &RegressionBootstrapOddsRatio,
+    right: &RegressionBootstrapOddsRatio,
+) -> bool {
+    regression_bootstrap_json_roundtrip_close(left.original, right.original)
+        && regression_bootstrap_json_roundtrip_close(left.percentile_lower, right.percentile_lower)
+        && regression_bootstrap_json_roundtrip_close(left.percentile_upper, right.percentile_upper)
+        && regression_bootstrap_bca_matches_after_json_roundtrip(&left.bca, &right.bca)
+}
+
+fn validate_regression_bootstrap_test(
+    test: &RegressionBootstrapTest,
+    original: f64,
+    standard_error: f64,
+    tolerance: f64,
+    normal: &Normal,
+) -> bool {
+    match test {
+        RegressionBootstrapTest::Available {
+            statistic,
+            p_value_two_sided,
+        } => {
+            standard_error > tolerance
+                && statistic.is_finite()
+                && p_value_two_sided.is_finite()
+                && (0.0..=1.0).contains(p_value_two_sided)
+                && close_enough(*statistic, original / standard_error)
+                && close_enough(
+                    *p_value_two_sided,
+                    (2.0 * normal.sf(statistic.abs())).clamp(0.0, 1.0),
+                )
+        }
+        RegressionBootstrapTest::Unavailable {
+            reason_code,
+            message,
+        } => {
+            standard_error <= tolerance
+                && reason_code == "degenerate_bootstrap_standard_error"
+                && !message.trim().is_empty()
+        }
+    }
+}
+
+fn validate_regression_bca(
+    interval: &RegressionBootstrapBcaInterval,
+    usable_jackknife_cases: usize,
+    jackknife_cases: usize,
+    lower_bound: f64,
+    upper_bound: f64,
+) -> bool {
+    if usable_jackknife_cases < jackknife_cases {
+        return matches!(
+            interval,
+            RegressionBootstrapBcaInterval::Unavailable {
+                reason_code,
+                message,
+            } if reason_code == "incomplete_jackknife" && !message.trim().is_empty()
+        );
+    }
+    match interval {
+        RegressionBootstrapBcaInterval::Available {
+            bias_correction,
+            acceleration,
+            lower,
+            upper,
+        } => {
+            bias_correction.is_finite()
+                && acceleration.is_finite()
+                && lower.is_finite()
+                && upper.is_finite()
+                && lower <= upper
+                && *lower >= lower_bound
+                && *upper <= upper_bound
+        }
+        RegressionBootstrapBcaInterval::Unavailable {
+            reason_code,
+            message,
+        } => {
+            matches!(
+                reason_code.as_str(),
+                "insufficient_jackknife_estimates" | "degenerate_jackknife_acceleration"
+            ) && !message.trim().is_empty()
+        }
+    }
 }
 
 fn csv_values(value: &str) -> Vec<String> {
@@ -7560,6 +8077,7 @@ mod tests {
                 model: qpls_core::RegressionModelConfig::Ols {
                     robust_se: qpls_core::RobustStandardError::Hc3,
                 },
+                bootstrap: None,
             }),
             metadata: BTreeMap::new(),
         };
@@ -7588,6 +8106,34 @@ mod tests {
         runner_generated_regression_fixture(include_bytes!(
             "../../../validation/results/v08_regression_logistic.recipe.json"
         ))
+    }
+
+    fn runner_generated_regression_bootstrap(
+        logistic: bool,
+        workers: usize,
+    ) -> (Dataset, AnalysisRecipe, AnalysisResult) {
+        let (dataset, mut recipe, _) = if logistic {
+            runner_generated_logistic()
+        } else {
+            runner_generated_ols()
+        };
+        recipe.settings.bootstrap_samples = 99;
+        recipe.settings.seed = 91;
+        recipe.settings.workers = workers;
+        let Some(qpls_core::MethodConfig::Regression { bootstrap, .. }) =
+            recipe.method_config.as_mut()
+        else {
+            panic!("fixture must use typed regression")
+        };
+        *bootstrap = Some(qpls_core::RegressionBootstrapConfig {
+            algorithm: qpls_core::RegressionBootstrapAlgorithm::CaseResampling,
+            intervals: vec![
+                qpls_core::RegressionBootstrapInterval::Percentile,
+                qpls_core::RegressionBootstrapInterval::Bca,
+            ],
+        });
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+        (dataset, recipe, result)
     }
 
     fn legacy_logistic_v1_result(mut result: AnalysisResult) -> AnalysisResult {
@@ -9644,6 +10190,250 @@ mod tests {
             ),
             Err(ProjectError::Invalid(_))
         ));
+    }
+
+    #[test]
+    fn regression_bootstrap_json_roundtrip_tolerance_is_narrow() {
+        let near = 1.0 + 32.0 * f64::EPSILON;
+        assert!(regression_bootstrap_json_roundtrip_close(1.0, near));
+        assert!(!regression_bootstrap_json_roundtrip_close(
+            1.0,
+            1.0 + 1.0e-10
+        ));
+        assert!(!regression_bootstrap_json_roundtrip_close(
+            f64::NAN,
+            f64::NAN
+        ));
+    }
+
+    #[test]
+    fn regression_bootstrap_append_save_reopen_and_tamper_contract_are_atomic() {
+        for logistic in [false, true] {
+            let label = if logistic { "logistic" } else { "ols" };
+            let directory = tempfile::tempdir().unwrap();
+            let path = directory.path().join(format!("{label}-bootstrap.qpls"));
+            let (dataset, recipe, result) = runner_generated_regression_bootstrap(logistic, 2);
+            let expected_base = if logistic {
+                REGRESSION_LOGISTIC_METHOD_VERSION
+            } else {
+                REGRESSION_OLS_METHOD_VERSION
+            };
+            assert_eq!(
+                result.provenance.method_version,
+                format!("{expected_base}+{REGRESSION_BOOTSTRAP_METHOD_VERSION}")
+            );
+            assert!(matches!(result.payload, AnalysisPayload::PlsPmV1 { .. }));
+            let bootstrap = &estimation_payload(&result)["regression"]["bootstrap"];
+            assert_eq!(bootstrap["requested_replicates"], 99);
+            assert_eq!(bootstrap["seed"], 91);
+            assert_eq!(bootstrap["workers"], 2);
+            assert_eq!(
+                bootstrap["test_tolerance_policy"],
+                qpls_resampling::REGRESSION_BOOTSTRAP_TEST_TOLERANCE_POLICY
+            );
+            if logistic {
+                assert!(bootstrap["coefficients"][0]["odds_ratio"].is_object());
+            } else {
+                assert!(bootstrap["coefficients"][0].get("odds_ratio").is_none());
+            }
+
+            let mut project = Project::new(format!("{label} bootstrap persistence"));
+            project.datasets.push(dataset);
+            project
+                .append_validated_result(recipe.clone(), result.clone())
+                .unwrap();
+            save_project(&path, &project).unwrap();
+            let reopened = load_project(&path).unwrap();
+            assert_eq!(reopened.results[0].id, result.id);
+            assert_eq!(reopened.recipes[0], recipe);
+            let saved = fs::read(&path).unwrap();
+
+            let reject_atomically = |tampered: AnalysisResult| {
+                let mut rejected = Project::new("Rejected regression bootstrap");
+                assert!(matches!(
+                    rejected.append_validated_result(recipe.clone(), tampered),
+                    Err(ProjectError::Invalid(_))
+                ));
+                assert!(rejected.recipes.is_empty());
+                assert!(rejected.results.is_empty());
+            };
+            let reject_unknown_field =
+                |mut tampered: AnalysisResult, mutate: &dyn Fn(&mut serde_json::Value)| {
+                    mutate(estimation_payload_mut(&mut tampered));
+                    reject_atomically(tampered);
+                };
+            reject_unknown_field(result.clone(), &|estimation| {
+                estimation["regression"]["bootstrap"]["undeclared"] = serde_json::json!(true);
+            });
+            reject_unknown_field(result.clone(), &|estimation| {
+                estimation["regression"]["bootstrap"]["coefficients"][0]["undeclared"] =
+                    serde_json::json!(true);
+            });
+            reject_unknown_field(result.clone(), &|estimation| {
+                estimation["regression"]["bootstrap"]["validation_witness"]["undeclared"] =
+                    serde_json::json!(true);
+            });
+            reject_unknown_field(result.clone(), &|estimation| {
+                estimation["regression"]["bootstrap"]["validation_witness"]["successful_bootstrap"]
+                    [0]["undeclared"] = serde_json::json!(true);
+            });
+            reject_unknown_field(result.clone(), &|estimation| {
+                estimation["regression"]["bootstrap"]["validation_witness"]["successful_jackknife"]
+                    [0]["undeclared"] = serde_json::json!(true);
+            });
+            reject_unknown_field(result.clone(), &|estimation| {
+                estimation["regression"]["bootstrap"]["failed_replicates"] = serde_json::json!([{
+                    "replicate_index": 0,
+                    "reason_code": "single_class_resample",
+                    "message": "fixture",
+                    "undeclared": true
+                }]);
+            });
+            reject_unknown_field(result.clone(), &|estimation| {
+                estimation["regression"]["bootstrap"]["validation_witness"]["failed_jackknife"] = serde_json::json!([{
+                    "omitted_case": 0,
+                    "reason_code": "single_class_resample",
+                    "message": "fixture",
+                    "undeclared": true
+                }]);
+            });
+            reject_unknown_field(result.clone(), &|estimation| {
+                estimation["regression"]["bootstrap"]["coefficients"][0]["test"]["undeclared"] =
+                    serde_json::json!(true);
+            });
+            reject_unknown_field(result.clone(), &|estimation| {
+                estimation["regression"]["bootstrap"]["coefficients"][0]["bca"]["undeclared"] =
+                    serde_json::json!(true);
+            });
+            if logistic {
+                reject_unknown_field(result.clone(), &|estimation| {
+                    estimation["regression"]["bootstrap"]["coefficients"][0]["odds_ratio"]["undeclared"] =
+                        serde_json::json!(true);
+                });
+            }
+            let mut count = result.clone();
+            estimation_payload_mut(&mut count)["regression"]["bootstrap"]["usable_replicates"] =
+                serde_json::json!(1);
+            reject_atomically(count);
+
+            let mut bias = result.clone();
+            estimation_payload_mut(&mut bias)["regression"]["bootstrap"]["coefficients"][0]["bias"] =
+                serde_json::json!(99.0);
+            reject_atomically(bias);
+
+            let mut tolerance = result.clone();
+            estimation_payload_mut(&mut tolerance)["regression"]["bootstrap"]["coefficients"][0]
+                ["test_tolerance"] = serde_json::json!(0.25);
+            reject_atomically(tolerance);
+
+            let mut impossible_mean = result.clone();
+            estimation_payload_mut(&mut impossible_mean)["regression"]["bootstrap"]["coefficients"]
+                [0]["bootstrap_mean"] = serde_json::json!(1.0e100);
+            reject_atomically(impossible_mean);
+
+            let mut impossible_percentile = result.clone();
+            estimation_payload_mut(&mut impossible_percentile)["regression"]["bootstrap"]["coefficients"]
+                [0]["percentile_upper"] = serde_json::json!(1.0e100);
+            reject_atomically(impossible_percentile);
+
+            let mut witness_value = result.clone();
+            estimation_payload_mut(&mut witness_value)["regression"]["bootstrap"]["validation_witness"]
+                ["successful_bootstrap"][0]["coefficients"][0] = serde_json::json!(12345.0);
+            reject_atomically(witness_value);
+
+            let mut witness_index = result.clone();
+            estimation_payload_mut(&mut witness_index)["regression"]["bootstrap"]["validation_witness"]
+                ["successful_bootstrap"][0]["replicate_index"] = serde_json::json!(999);
+            reject_atomically(witness_index);
+
+            let mut witness_terms = result.clone();
+            estimation_payload_mut(&mut witness_terms)["regression"]["bootstrap"]["validation_witness"]
+                ["terms"][0] = serde_json::json!("tampered");
+            reject_atomically(witness_terms);
+
+            let mut impossible_bca = result.clone();
+            let bca = &mut estimation_payload_mut(&mut impossible_bca)["regression"]["bootstrap"]["coefficients"]
+                [0]["bca"];
+            if bca["status"] == "available" {
+                bca["upper"] = serde_json::json!(1.0e100);
+                reject_atomically(impossible_bca);
+            }
+
+            if logistic {
+                let mut impossible_odds = result.clone();
+                estimation_payload_mut(&mut impossible_odds)["regression"]["bootstrap"]["coefficients"]
+                    [0]["odds_ratio"]["percentile_upper"] = serde_json::json!(1.0e100);
+                reject_atomically(impossible_odds);
+            }
+
+            let mut test = result.clone();
+            estimation_payload_mut(&mut test)["regression"]["bootstrap"]["coefficients"][0]["test"] = serde_json::json!({
+                "status": "available",
+                "statistic": 123.0,
+                "p_value_two_sided": 0.5
+            });
+            reject_atomically(test);
+
+            let mut bca = result.clone();
+            estimation_payload_mut(&mut bca)["regression"]["bootstrap"]["coefficients"][0]["bca"] = serde_json::json!({
+                "status": "unavailable",
+                "reason_code": "unknown_reason",
+                "message": "tampered"
+            });
+            reject_atomically(bca);
+
+            let mut tampered_saved = reopened.clone();
+            estimation_payload_mut(&mut tampered_saved.results[0])["regression"]["bootstrap"]["stream_token"] =
+                serde_json::json!("tampered");
+            assert!(matches!(
+                save_project(&path, &tampered_saved),
+                Err(ProjectError::Invalid(_))
+            ));
+            assert_eq!(fs::read(&path).unwrap(), saved);
+
+            let mut unknown_for_save = reopened.clone();
+            estimation_payload_mut(&mut unknown_for_save.results[0])["regression"]["bootstrap"]["undeclared"] =
+                serde_json::json!(true);
+            assert!(matches!(
+                save_project(
+                    &directory.path().join("unknown-bootstrap-save.qpls"),
+                    &unknown_for_save
+                ),
+                Err(ProjectError::Invalid(_))
+            ));
+
+            let unknown_load_path = directory.path().join("unknown-bootstrap-load.qpls");
+            fs::copy(&path, &unknown_load_path).unwrap();
+            rewrite_zip_entry_with_manifest_checksum(
+                &unknown_load_path,
+                PROJECT_ENTRY_NAME,
+                |bytes| {
+                    let mut document: serde_json::Value = serde_json::from_slice(bytes).unwrap();
+                    document["results"][0]["payload"]["estimation"]["regression"]["bootstrap"]["validation_witness"]
+                        ["successful_bootstrap"][0]["undeclared"] = serde_json::json!(true);
+                    serde_json::to_vec_pretty(&document).unwrap()
+                },
+            );
+            assert!(matches!(
+                load_project(&unknown_load_path),
+                Err(ProjectError::Invalid(_))
+            ));
+
+            let mut historical = recipe.clone();
+            historical.metadata = historical.effective_metadata().unwrap();
+            historical.schema_version = 2;
+            historical.method_config = None;
+            let mut legacy_pairing = Project::new("Invalid historical bootstrap pairing");
+            legacy_pairing.recipes.push(historical);
+            legacy_pairing.results.push(result);
+            assert!(matches!(
+                save_project(
+                    &directory.path().join("legacy-bootstrap-pairing.qpls"),
+                    &legacy_pairing
+                ),
+                Err(ProjectError::Invalid(_))
+            ));
+        }
     }
 
     #[test]

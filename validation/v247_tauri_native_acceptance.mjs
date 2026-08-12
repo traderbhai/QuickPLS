@@ -11,12 +11,13 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const screenshotDir = path.join(root, "validation", "results", "screens", "v247-native-desktop-acceptance");
 const reportPath = path.join(root, "validation", "results", "v247_tauri_native_acceptance.json");
 const logisticPackagedReportPath = path.join(root, "validation", "results", "logistic_v2_packaged_acceptance.json");
+const regressionBootstrapPackagedReportPath = path.join(root, "validation", "results", "regression_bootstrap_v1_packaged_acceptance.json");
 const validationResultsDir = path.join(root, "validation", "results");
 const windowsNativeSaveHelperPath = path.join(root, "validation", "windows_native_save_export.py");
 const endpoint = process.env.QUICKPLS_CDP_ENDPOINT ?? "http://127.0.0.1:9222";
 const acceptanceScope = process.env.QUICKPLS_ACCEPTANCE_SCOPE?.trim().toLocaleLowerCase() || "full";
-if (!["full", "mga", "nca", "prediction", "hoc", "pca", "ols", "logistic", "cbsem", "gsca"].includes(acceptanceScope)) {
-  throw new Error(`QUICKPLS_ACCEPTANCE_SCOPE must be "full", "mga", "nca", "prediction", "hoc", "pca", "ols", "logistic", "cbsem", or "gsca"; received ${acceptanceScope}.`);
+if (!["full", "mga", "nca", "prediction", "hoc", "pca", "ols", "logistic", "regression_bootstrap", "cbsem", "gsca"].includes(acceptanceScope)) {
+  throw new Error(`QUICKPLS_ACCEPTANCE_SCOPE must be "full", "mga", "nca", "prediction", "hoc", "pca", "ols", "logistic", "regression_bootstrap", "cbsem", or "gsca"; received ${acceptanceScope}.`);
 }
 const ncaOnly = acceptanceScope === "nca";
 const mgaOnly = acceptanceScope === "mga";
@@ -25,9 +26,10 @@ const hocOnly = acceptanceScope === "hoc";
 const pcaOnly = acceptanceScope === "pca";
 const olsOnly = acceptanceScope === "ols";
 const logisticOnly = acceptanceScope === "logistic";
+const regressionBootstrapOnly = acceptanceScope === "regression_bootstrap";
 const cbsemOnly = acceptanceScope === "cbsem";
 const gscaOnly = acceptanceScope === "gsca";
-const focusedOnly = ncaOnly || mgaOnly || predictionOnly || hocOnly || pcaOnly || olsOnly || logisticOnly || cbsemOnly || gscaOnly;
+const focusedOnly = ncaOnly || mgaOnly || predictionOnly || hocOnly || pcaOnly || olsOnly || logisticOnly || regressionBootstrapOnly || cbsemOnly || gscaOnly;
 const scopedReportPath = focusedOnly
   ? path.join(root, "validation", "results", `v247_tauri_native_acceptance_${acceptanceScope}.json`)
   : reportPath;
@@ -106,6 +108,26 @@ const logisticZeroCases = 71;
 const logisticOneCases = 69;
 const logisticClassificationDisclaimer = "In-sample descriptive classification; not out-of-sample predictive performance.";
 const logisticScopeWarning = "Logistic regression v2 is validated for the documented QuickPLS binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, categorical auto-encoding, and Firth-corrected models remain unsupported.";
+const regressionBootstrapFixtureCsvPath = path.join(root, "validation", "results", "v08_extended_methods_fixture.csv");
+const regressionBootstrapProjectPath = path.join(root, "validation", "results", `v247-native-regression-bootstrap-${Date.now()}-${process.pid}.qpls`);
+const regressionBootstrapProjectName = "Native Regression Bootstrap Acceptance";
+const regressionBootstrapFeatureId = "qpls3.standalone.regression_bootstrap";
+const regressionBootstrapMethodVersion = "regression_bootstrap_v1";
+const regressionBootstrapWitnessVersion = "regression_bootstrap_validation_witness_v1";
+const regressionBootstrapCatalogueSnapshotDate = "2026-08-12";
+const regressionBootstrapEvidenceKind = "quickpls3_scoped_tauri_regression_bootstrap_v1_acceptance";
+const regressionBootstrapDefaultTableId = "regression_bootstrap_summary";
+const regressionBootstrapSamples = 10_000;
+const regressionBootstrapSeed = 20_260_812;
+const regressionBootstrapWorkers = 2;
+const regressionBootstrapPredictors = ["x", "z"];
+const regressionBootstrapControls = ["w"];
+const regressionBootstrapTerms = ["intercept", ...regressionBootstrapPredictors, ...regressionBootstrapControls];
+const regressionBootstrapObservations = 140;
+const testedDesktopExecutablePath = process.env.QUICKPLS_DESKTOP_EXE_PATH?.trim()
+  ? path.resolve(process.env.QUICKPLS_DESKTOP_EXE_PATH.trim())
+  : path.join(root, "target", "release", "quickpls-desktop.exe");
+const testedDistDirectory = path.join(root, "dist");
 const cbsemFixtureCsvPath = path.join(root, "validation", "results", "lavaan_latent_regression_sem.csv");
 const cbsemProjectPath = path.join(root, "validation", "results", `v247-native-cbsem-${Date.now()}-${process.pid}.qpls`);
 const cbsemProjectName = "Native CB-SEM Acceptance";
@@ -139,6 +161,8 @@ const requestedHocNativeExportPath = process.env.QUICKPLS_HOC_NATIVE_EXPORT_PATH
 const requestedPcaNativeExportPath = process.env.QUICKPLS_PCA_NATIVE_EXPORT_PATH?.trim() ?? "";
 const requestedOlsNativeExportPath = process.env.QUICKPLS_OLS_NATIVE_EXPORT_PATH?.trim() ?? "";
 const requestedLogisticNativeExportPath = process.env.QUICKPLS_LOGISTIC_NATIVE_EXPORT_PATH?.trim() ?? "";
+const requestedRegressionBootstrapOlsExportPath = process.env.QUICKPLS_REGRESSION_BOOTSTRAP_OLS_EXPORT_PATH?.trim() ?? "";
+const requestedRegressionBootstrapLogisticExportPath = process.env.QUICKPLS_REGRESSION_BOOTSTRAP_LOGISTIC_EXPORT_PATH?.trim() ?? "";
 const requestedCbsemNativeExportPath = process.env.QUICKPLS_CBSEM_NATIVE_EXPORT_PATH?.trim() ?? "";
 const requestedGscaNativeExportPath = process.env.QUICKPLS_GSCA_NATIVE_EXPORT_PATH?.trim() ?? "";
 const pythonExecutable = process.env.QUICKPLS_PYTHON?.trim() || "python";
@@ -158,6 +182,11 @@ const evidence = {
     feature_id: logisticFeatureId,
     method_version: logisticMethodVersion,
     catalogue_snapshot_date: logisticCatalogueSnapshotDate,
+  } : regressionBootstrapOnly ? {
+    schema_version: "quickpls.packaged_acceptance.v1",
+    feature_id: regressionBootstrapFeatureId,
+    method_version: regressionBootstrapMethodVersion,
+    catalogue_snapshot_date: regressionBootstrapCatalogueSnapshotDate,
   } : {}),
   passed: false,
   generatedAt: new Date().toISOString(),
@@ -182,6 +211,8 @@ const evidence = {
             ? !/\\12[0-7]-tauri-native-ols-/i.test(file)
           : acceptanceScope === "logistic"
             ? !/\\15[0-9]-tauri-native-logistic-/i.test(file)
+          : acceptanceScope === "regression_bootstrap"
+            ? !/\\(?:16[0-9]|17[0-2])-tauri-native-regression-bootstrap-/i.test(file)
           : acceptanceScope === "cbsem"
             ? !/\\13[0-6]-tauri-native-cbsem-/i.test(file)
           : acceptanceScope === "gsca"
@@ -197,6 +228,7 @@ async function writeAcceptanceEvidence() {
   await fs.writeFile(reportPath, serialized, "utf8");
   if (scopedReportPath !== reportPath) await fs.writeFile(scopedReportPath, serialized, "utf8");
   if (logisticOnly) await writeLogisticPackagedEvidence();
+  if (regressionBootstrapOnly) await writeRegressionBootstrapPackagedEvidence();
 }
 
 async function artifactDigest(filePath) {
@@ -208,6 +240,42 @@ async function artifactDigest(filePath) {
       path: path.relative(root, filePath).replaceAll("\\", "/"),
       size: file.size,
       sha256: createHash("sha256").update(contents).digest("hex"),
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function directoryManifestDigest(directoryPath) {
+  const visit = async (current) => {
+    const entries = await fs.readdir(current, { withFileTypes: true });
+    const files = [];
+    for (const entry of entries) {
+      const absolute = path.join(current, entry.name);
+      if (entry.isDirectory()) files.push(...await visit(absolute));
+      else if (entry.isFile()) files.push(absolute);
+    }
+    return files;
+  };
+  try {
+    const files = (await visit(directoryPath)).sort((left, right) => left < right ? -1 : left > right ? 1 : 0);
+    if (files.length === 0) return null;
+    const manifest = [];
+    let size = 0;
+    for (const file of files) {
+      const contents = await fs.readFile(file);
+      const relative = path.relative(directoryPath, file).replaceAll("\\", "/");
+      const sha256 = createHash("sha256").update(contents).digest("hex");
+      size += contents.length;
+      manifest.push({ path: relative, size: contents.length, sha256 });
+    }
+    const canonical = manifest.map((item) => `${item.path}\0${item.size}\0${item.sha256}\n`).join("");
+    return {
+      path: path.relative(root, directoryPath).replaceAll("\\", "/"),
+      size,
+      file_count: manifest.length,
+      sha256: createHash("sha256").update(canonical).digest("hex"),
+      manifest,
     };
   } catch {
     return null;
@@ -305,6 +373,138 @@ async function writeLogisticPackagedEvidence() {
     source_report: path.relative(root, scopedReportPath).replaceAll("\\", "/"),
   };
   await fs.writeFile(logisticPackagedReportPath, JSON.stringify(report, null, 2) + "\n", "utf8");
+}
+
+async function writeRegressionBootstrapPackagedEvidence() {
+  const source = evidence.checks;
+  const workflowPassed = source.regressionBootstrapWorkflow?.passed === true
+    && source.regressionBootstrapWorkflow?.feature_id === regressionBootstrapFeatureId
+    && source.regressionBootstrapWorkflow?.method_version === regressionBootstrapMethodVersion
+    && source.regressionBootstrapWorkflow?.catalogue_snapshot_date === regressionBootstrapCatalogueSnapshotDate;
+  const resultsPassed = source.regressionBootstrapResults?.passed === true
+    && source.regressionBootstrapResults?.olsInitialSelectedTable === regressionBootstrapDefaultTableId
+    && source.regressionBootstrapResults?.logisticInitialSelectedTable === regressionBootstrapDefaultTableId;
+  const olsExportPassed = source.regressionBootstrapOlsExport?.passed === true
+    && source.regressionBootstrapOlsExport?.nativeXlsx?.attempted === true
+    && source.regressionBootstrapOlsExport?.nativeXlsx?.file?.isFile === true
+    && source.regressionBootstrapOlsExport?.nativeXlsx?.file?.size > 0
+    && source.regressionBootstrapOlsExport?.validationWitnessExcluded === true;
+  const logisticExportPassed = source.regressionBootstrapLogisticExport?.passed === true
+    && source.regressionBootstrapLogisticExport?.nativeXlsx?.attempted === true
+    && source.regressionBootstrapLogisticExport?.nativeXlsx?.file?.isFile === true
+    && source.regressionBootstrapLogisticExport?.nativeXlsx?.file?.size > 0
+    && source.regressionBootstrapLogisticExport?.validationWitnessExcluded === true;
+  const saveReopenPassed = source.regressionBootstrapSaveReopen?.passed === true
+    && source.regressionBootstrapSaveReopen?.archive?.manifest?.projectChecksumMatches === true
+    && source.regressionBootstrapSaveReopen?.initialSelectedTables?.ols === regressionBootstrapDefaultTableId
+    && source.regressionBootstrapSaveReopen?.initialSelectedTables?.logistic === regressionBootstrapDefaultTableId;
+  const cancellationPassed = source.regressionBootstrapCancellation?.passed === true;
+  const witnessPassed = source.regressionBootstrapWitnessBoundary?.passed === true;
+  const screenshotPaths = evidence.screenshots.filter((file) => /\\(?:16[0-9]|17[0-2])-tauri-native-regression-bootstrap-/i.test(file));
+  const [olsXlsx, logisticXlsx, projectArchive, testedDesktopExecutable, testedDistBundle, ...screenshots] = await Promise.all([
+    artifactDigest(source.regressionBootstrapOlsExport?.nativeXlsx?.targetPath ?? ""),
+    artifactDigest(source.regressionBootstrapLogisticExport?.nativeXlsx?.targetPath ?? ""),
+    artifactDigest(regressionBootstrapProjectPath),
+    artifactDigest(testedDesktopExecutablePath),
+    directoryManifestDigest(testedDistDirectory),
+    ...screenshotPaths.map(artifactDigest),
+  ]);
+  const checks = {
+    workflow: {
+      passed: workflowPassed,
+      ols_completed: source.regressionBootstrapWorkflow?.olsCompleted === true,
+      logistic_completed: source.regressionBootstrapWorkflow?.logisticCompleted === true,
+      active_lifecycle_captured: source.regressionBootstrapWorkflow?.activeLifecycleCaptured === true,
+      model_free: source.regressionBootstrapWorkflow?.modelFree === true,
+      source_check: "regressionBootstrapWorkflow",
+    },
+    results: {
+      passed: resultsPassed,
+      ols_initial_selected_table: source.regressionBootstrapResults?.olsInitialSelectedTable ?? null,
+      logistic_initial_selected_table: source.regressionBootstrapResults?.logisticInitialSelectedTable ?? null,
+      ols_coefficient_rows: source.regressionBootstrapResults?.olsCoefficientRows ?? null,
+      logistic_coefficient_rows: source.regressionBootstrapResults?.logisticCoefficientRows ?? null,
+      percentile_primary_present: source.regressionBootstrapResults?.percentilePrimaryPresent === true,
+      bca_conditional_present: source.regressionBootstrapResults?.bcaConditionalPresent === true,
+      failure_disclosure_truthful: source.regressionBootstrapResults?.failureDisclosureTruthful === true,
+      validation_witness_not_rendered: source.regressionBootstrapResults?.validationWitnessNotRendered === true,
+      no_na_fabrication: source.regressionBootstrapResults?.noNaFabrication === true,
+      source_check: "regressionBootstrapResults",
+    },
+    ols_export: {
+      passed: olsExportPassed && olsXlsx !== null,
+      workbook_sheets: source.regressionBootstrapOlsExport?.nativeXlsx?.workbookSheets ?? [],
+      validation_witness_excluded: source.regressionBootstrapOlsExport?.validationWitnessExcluded === true,
+      witness_scan: source.regressionBootstrapOlsExport?.nativeXlsx?.witnessScan ?? null,
+      artifact_sha256: olsXlsx?.sha256 ?? null,
+      source_check: "regressionBootstrapOlsExport",
+    },
+    logistic_export: {
+      passed: logisticExportPassed && logisticXlsx !== null,
+      workbook_sheets: source.regressionBootstrapLogisticExport?.nativeXlsx?.workbookSheets ?? [],
+      validation_witness_excluded: source.regressionBootstrapLogisticExport?.validationWitnessExcluded === true,
+      witness_scan: source.regressionBootstrapLogisticExport?.nativeXlsx?.witnessScan ?? null,
+      artifact_sha256: logisticXlsx?.sha256 ?? null,
+      source_check: "regressionBootstrapLogisticExport",
+    },
+    save_reopen: {
+      passed: saveReopenPassed && projectArchive !== null,
+      ols_same_run_restored: source.regressionBootstrapSaveReopen?.olsSameRunRestored === true,
+      logistic_same_run_restored: source.regressionBootstrapSaveReopen?.logisticSameRunRestored === true,
+      ols_initial_selected_table: source.regressionBootstrapSaveReopen?.initialSelectedTables?.ols ?? null,
+      logistic_initial_selected_table: source.regressionBootstrapSaveReopen?.initialSelectedTables?.logistic ?? null,
+      project_checksum_matches: source.regressionBootstrapSaveReopen?.archive?.manifest?.projectChecksumMatches === true,
+      archive_witness_validated: source.regressionBootstrapSaveReopen?.archive?.witnessBoundary?.passed === true,
+      archive_sha256: projectArchive?.sha256 ?? null,
+      source_check: "regressionBootstrapSaveReopen",
+    },
+    cancellation: {
+      passed: cancellationPassed,
+      active_lifecycle_captured: source.regressionBootstrapCancellation?.activeLifecycleCaptured === true,
+      no_partial_result: source.regressionBootstrapCancellation?.noPartialResult === true,
+      source_check: "regressionBootstrapCancellation",
+    },
+    witness_boundary: {
+      passed: witnessPassed,
+      archive_only: source.regressionBootstrapWitnessBoundary?.archiveOnly === true,
+      term_order_exact: source.regressionBootstrapWitnessBoundary?.termOrderExact === true,
+      bootstrap_index_partition_exact: source.regressionBootstrapWitnessBoundary?.bootstrapIndexPartitionExact === true,
+      jackknife_index_partition_exact: source.regressionBootstrapWitnessBoundary?.jackknifeIndexPartitionExact === true,
+      excluded_from_results: source.regressionBootstrapWitnessBoundary?.excludedFromResults === true,
+      excluded_from_exports: source.regressionBootstrapWitnessBoundary?.excludedFromExports === true,
+      source_check: "regressionBootstrapWitnessBoundary",
+    },
+  };
+  const report = {
+    schema_version: "quickpls.packaged_acceptance.v1",
+    kind: regressionBootstrapEvidenceKind,
+    passed: evidence.passed && Object.values(checks).every((check) => check.passed)
+      && testedDesktopExecutable !== null && testedDistBundle !== null,
+    generated_at_utc: evidence.generatedAt,
+    completed_at_utc: evidence.focusedRun?.completedAt ?? null,
+    feature_id: regressionBootstrapFeatureId,
+    method_version: regressionBootstrapMethodVersion,
+    catalogue_snapshot_date: regressionBootstrapCatalogueSnapshotDate,
+    target: "windows_10_11_x64_packaged_tauri",
+    runtime: evidence.runtime,
+    endpoint: evidence.endpoint,
+    generator: "validation/v247_tauri_native_acceptance.mjs",
+    tested_product: {
+      quickpls_desktop_exe: testedDesktopExecutable,
+      dist_bundle: testedDistBundle,
+    },
+    checks,
+    artifacts: {
+      ols_xlsx: olsXlsx,
+      logistic_xlsx: logisticXlsx,
+      project_archive: projectArchive,
+      screenshots: screenshots.filter(Boolean),
+    },
+    console_errors: evidence.consoleErrors,
+    failures: evidence.failures,
+    source_report: path.relative(root, scopedReportPath).replaceAll("\\", "/"),
+  };
+  await fs.writeFile(regressionBootstrapPackagedReportPath, JSON.stringify(report, null, 2) + "\n", "utf8");
 }
 
 const expectedOptionLabels = [
@@ -576,6 +776,12 @@ try {
       projectPath: logisticProjectPath,
       projectName: logisticProjectName,
     });
+  } else if (regressionBootstrapOnly) {
+    evidence.checks.regressionBootstrapFixtureProvisioning = await provisionDisposableProject({
+      sourceCsv: regressionBootstrapFixtureCsvPath,
+      projectPath: regressionBootstrapProjectPath,
+      projectName: regressionBootstrapProjectName,
+    });
   } else if (pcaOnly) {
     evidence.checks.pcaFixtureProvisioning = await provisionDisposableProject({
       sourceCsv: pcaFixtureCsvPath,
@@ -766,10 +972,19 @@ async function reloadToLauncher() {
   await waitForSurface("launcher");
 }
 
-async function openRecentProject(projectName) {
-  const row = page.locator(".nd-recent-projects .nd-project-row").filter({ hasText: projectName });
+async function openRecentProject(projectName, projectPath = null) {
+  let row = page.locator(".nd-recent-projects .nd-project-row").filter({
+    has: page.locator("strong").filter({ hasText: exactVisibleText(projectName) }),
+  });
+  if (projectPath) {
+    row = row.filter({
+      has: page.locator("small").filter({ hasText: exactVisibleText(projectPath) }),
+    });
+  }
   await row.waitFor({ state: "visible", timeout: 10_000 });
-  if (await row.count() !== 1) throw new Error(`${projectName} was not exposed as exactly one visible Recent Projects row.`);
+  if (await row.count() !== 1) {
+    throw new Error(`${projectName}${projectPath ? ` at ${projectPath}` : ""} was not exposed as exactly one visible Recent Projects row.`);
+  }
   await row.click();
   await page.locator(".nd-window-project").filter({ hasText: projectName }).waitFor({ state: "visible", timeout: 15_000 });
 }
@@ -2636,6 +2851,70 @@ async function inspectXlsxWorkbookSheets(filePath) {
   return [...stdout.matchAll(/<sheet\s+name="([^"]+)"/g)].map((match) => match[1]);
 }
 
+async function xlsxExcludesValidationWitness(filePath) {
+  const listed = await execFileAsync("tar", ["-tf", filePath], {
+    cwd: root,
+    windowsHide: true,
+    maxBuffer: 16 * 1024 * 1024,
+  });
+  const allMembers = listed.stdout.split(/\r?\n/).map((member) => member.trim()).filter(Boolean);
+  const uniqueMembers = [...new Set(allMembers)];
+  const scannedMembers = uniqueMembers.filter((member) => /(?:\.xml|\.rels)$/i.test(member));
+  const worksheetMembers = scannedMembers.filter((member) => /^xl\/worksheets\/[^/]+\.xml$/i.test(member));
+  if (uniqueMembers.length !== allMembers.length
+    || !scannedMembers.includes("xl/workbook.xml") || worksheetMembers.length === 0) {
+    throw new Error(`The XLSX package inventory is incomplete or ambiguous: ${JSON.stringify({
+      totalMembers: allMembers.length,
+      uniqueMembers: uniqueMembers.length,
+      workbookPresent: scannedMembers.includes("xl/workbook.xml"),
+      worksheetMembers,
+    })}`);
+  }
+  const forbidden = /validation[_ ]witness|regression_bootstrap_validation_witness_v1|successful_bootstrap|successful_jackknife|failed_jackknife/i;
+  const forbiddenMatches = [];
+  const worksheetRowCounts = {};
+  const extractionRoot = await fs.mkdtemp(path.join(validationResultsDir, ".regression-bootstrap-xlsx-scan-"));
+  const extractionErrors = [];
+  try {
+    await execFileAsync("tar", ["-xf", filePath, "-C", extractionRoot], {
+      cwd: root,
+      windowsHide: true,
+      maxBuffer: 32 * 1024 * 1024,
+    });
+    for (const member of scannedMembers) {
+      const normalizedMember = member.replaceAll("\\", "/");
+      const extractedPath = path.resolve(extractionRoot, ...normalizedMember.split("/"));
+      const relative = path.relative(extractionRoot, extractedPath);
+      if (relative.startsWith("..") || path.isAbsolute(relative)) {
+        extractionErrors.push({ member, reason: "member_resolves_outside_scan_root" });
+        continue;
+      }
+      let extractedText;
+      try {
+        extractedText = await fs.readFile(extractedPath, "utf8");
+      } catch (error) {
+        extractionErrors.push({ member, reason: String(error) });
+        continue;
+      }
+      if (forbidden.test(extractedText)) forbiddenMatches.push(member);
+      if (worksheetMembers.includes(member)) {
+        worksheetRowCounts[member] = [...extractedText.matchAll(/<row(?:\s|>)/g)].length;
+      }
+    }
+  } finally {
+    await fs.rm(extractionRoot, { recursive: true, force: true });
+  }
+  return {
+    passed: forbiddenMatches.length === 0 && extractionErrors.length === 0,
+    total_members: uniqueMembers.length,
+    scanned_xml_and_rels_members: scannedMembers,
+    worksheet_members: worksheetMembers,
+    worksheet_row_counts: worksheetRowCounts,
+    forbidden_matches: forbiddenMatches,
+    extraction_errors: extractionErrors,
+  };
+}
+
 function mediationCaptureName(sequence, state) {
   return `${String(sequence).padStart(2, "0")}-tauri-native-${state}-${nativeViewportLabel}.png`;
 }
@@ -3085,6 +3364,250 @@ async function inspectSavedLogisticArchive(projectPath, runId) {
   return contract;
 }
 
+function exactZeroBasedPartition(successes, failures, total, key) {
+  const success = successes.map((row) => row?.[key]);
+  const failed = failures.map((row) => row?.[key]);
+  const ascending = (values) => values.every((value) => Number.isInteger(value) && value >= 0)
+    && values.every((value, index) => index === 0 || values[index - 1] < value);
+  const combined = [...success, ...failed].sort((left, right) => left - right);
+  return ascending(success)
+    && ascending(failed)
+    && combined.length === total
+    && combined.every((value, index) => value === index);
+}
+
+async function inspectSavedRegressionBootstrapArchive(projectPath, runIds) {
+  const { project, manifest, projectText } = await readNcaArchive(projectPath);
+  const workspace = project.layouts?.workspace;
+  const projectChecksum = createHash("sha256").update(projectText, "utf8").digest("hex");
+  const inspectRun = (model, runId) => {
+    const result = project.results?.find((candidate) => candidate.id === runId);
+    if (!result) throw new Error(`The saved regression bootstrap archive did not contain ${model} result ${runId}.`);
+    const recipe = project.recipes?.find((candidate) => candidate.id === result.provenance?.recipe_id);
+    const run = workspace?.runs?.find((candidate) => candidate.id === runId);
+    const estimation = result.payload?.estimation;
+    const regression = estimation?.regression;
+    const bootstrap = regression?.bootstrap;
+    const witness = bootstrap?.validation_witness;
+    const coefficients = Array.isArray(bootstrap?.coefficients) ? bootstrap.coefficients : [];
+    const failedReplicates = Array.isArray(bootstrap?.failed_replicates) ? bootstrap.failed_replicates : [];
+    const successfulBootstrap = Array.isArray(witness?.successful_bootstrap) ? witness.successful_bootstrap : [];
+    const successfulJackknife = Array.isArray(witness?.successful_jackknife) ? witness.successful_jackknife : [];
+    const failedJackknife = Array.isArray(witness?.failed_jackknife) ? witness.failed_jackknife : [];
+    const logistic = model === "logistic";
+    const baseMethodVersion = logistic ? "regression_logistic_v2" : "regression_ols_v1";
+    const provenanceMethodVersion = `${baseMethodVersion}+${regressionBootstrapMethodVersion}`;
+    const outcome = logistic ? "bin_y" : "y";
+    const vectorsValid = [...successfulBootstrap, ...successfulJackknife].every((row) => (
+      Array.isArray(row.coefficients)
+      && row.coefficients.length === regressionBootstrapTerms.length
+      && row.coefficients.every((value) => Number.isFinite(value) && (!logistic || Number.isFinite(Math.exp(value))))
+    ));
+    const reasonsValid = [...failedReplicates, ...failedJackknife].every((row) => (
+      typeof row.reason_code === "string" && row.reason_code.trim()
+      && typeof row.message === "string" && row.message.trim()
+    ));
+    const bootstrapPartitionExact = exactZeroBasedPartition(
+      successfulBootstrap,
+      failedReplicates,
+      regressionBootstrapSamples,
+      "replicate_index",
+    );
+    const jackknifePartitionExact = exactZeroBasedPartition(
+      successfulJackknife,
+      failedJackknife,
+      regressionBootstrapObservations,
+      "omitted_case",
+    );
+    const publicCoefficientContract = coefficients.length === regressionBootstrapTerms.length
+      && coefficients.every((row, index) => (
+        row.term === regressionBootstrapTerms[index]
+        && [
+          row.original, row.bootstrap_mean, row.bias, row.standard_error, row.replicate_max_abs,
+          row.test_tolerance, row.percentile_lower, row.percentile_upper,
+        ].every(Number.isFinite)
+        && row.usable_replicates === bootstrap.usable_replicates
+        && ["available", "unavailable"].includes(row.test?.status)
+        && ["available", "unavailable"].includes(row.bca?.status)
+        && (logistic
+          ? row.odds_ratio != null
+            && [row.odds_ratio.original, row.odds_ratio.percentile_lower, row.odds_ratio.percentile_upper].every(Number.isFinite)
+            && ["available", "unavailable"].includes(row.odds_ratio.bca?.status)
+          : row.odds_ratio == null)
+      ));
+    const methodConfig = recipe?.method_config;
+    const contract = {
+      model,
+      runId,
+      baseMethodVersion,
+      provenanceMethodVersion: result.provenance?.method_version ?? null,
+      estimationMethodVersion: estimation?.method_version ?? null,
+      regressionMethodVersion: regression?.method_version ?? null,
+      resultStatus: result.status ?? null,
+      runStatus: run?.status ?? null,
+      payloadKind: result.payload?.kind ?? null,
+      genericPlsBootstrapAbsent: result.payload?.bootstrap == null,
+      processAbsent: regression?.process == null,
+      outcome: regression?.outcome ?? null,
+      predictors: regression?.predictors ?? null,
+      controls: regression?.controls ?? null,
+      observations: regression?.observations ?? null,
+      bootstrap: bootstrap ? {
+        methodVersion: bootstrap.method_version ?? null,
+        algorithm: bootstrap.algorithm ?? null,
+        streamToken: bootstrap.stream_token ?? null,
+        intervalPolicy: bootstrap.interval_policy ?? null,
+        testReference: bootstrap.test_reference ?? null,
+        testTolerancePolicy: bootstrap.test_tolerance_policy ?? null,
+        alternative: bootstrap.alternative ?? null,
+        confidenceLevel: bootstrap.confidence_level ?? null,
+        requestedReplicates: bootstrap.requested_replicates ?? null,
+        usableReplicates: bootstrap.usable_replicates ?? null,
+        failedReplicates: failedReplicates.length,
+        minimumUsableFraction: bootstrap.minimum_usable_fraction ?? null,
+        jackknifeCases: bootstrap.jackknife_cases ?? null,
+        usableJackknifeCases: bootstrap.usable_jackknife_cases ?? null,
+        seed: bootstrap.seed ?? null,
+        workers: bootstrap.workers ?? null,
+        coefficientCount: coefficients.length,
+        publicCoefficientContract,
+      } : null,
+      witness: witness ? {
+        methodVersion: witness.method_version ?? null,
+        terms: witness.terms ?? null,
+        successfulBootstrap: successfulBootstrap.length,
+        successfulJackknife: successfulJackknife.length,
+        failedJackknife: failedJackknife.length,
+        vectorsValid,
+        reasonsValid,
+        bootstrapPartitionExact,
+        jackknifePartitionExact,
+      } : null,
+      recipe: recipe ? {
+        schemaVersion: recipe.schema_version ?? null,
+        status: recipe.metadata?.status ?? null,
+        bootstrapSamples: recipe.settings?.bootstrap_samples ?? null,
+        workers: recipe.settings?.workers ?? null,
+        seed: recipe.settings?.seed ?? null,
+        confidenceLevel: recipe.settings?.confidence_level ?? null,
+        preprocessing: recipe.settings?.preprocessing ?? null,
+        missingData: recipe.settings?.missing_data ?? null,
+        methodConfig,
+      } : null,
+      modelFree: project.models?.length === 0
+        && workspace?.activeModelId == null
+        && (workspace?.nodes?.length ?? 0) === 0
+        && (workspace?.edges?.length ?? 0) === 0
+        && run?.modelId == null
+        && run?.modelSnapshot == null,
+    };
+    const expectedMethodConfig = {
+      kind: "regression",
+      outcome,
+      predictors: regressionBootstrapPredictors,
+      controls: regressionBootstrapControls,
+      model: logistic ? { type: "logistic" } : { type: "ols", robust_se: "hc3" },
+      bootstrap: { algorithm: "case_resampling", intervals: ["percentile", "bca"] },
+    };
+    const valid = contract.resultStatus === "completed"
+      && contract.runStatus === "completed"
+      && result.provenance?.method === "regression"
+      && contract.provenanceMethodVersion === provenanceMethodVersion
+      && contract.estimationMethodVersion === baseMethodVersion
+      && contract.regressionMethodVersion === baseMethodVersion
+      && contract.payloadKind === "pls_pm_v1"
+      && contract.genericPlsBootstrapAbsent
+      && contract.processAbsent
+      && contract.outcome === outcome
+      && JSON.stringify(contract.predictors) === JSON.stringify(regressionBootstrapPredictors)
+      && JSON.stringify(contract.controls) === JSON.stringify(regressionBootstrapControls)
+      && contract.observations === regressionBootstrapObservations
+      && contract.bootstrap?.methodVersion === regressionBootstrapMethodVersion
+      && contract.bootstrap?.algorithm === "indexed_case_resampling_v1"
+      && contract.bootstrap?.streamToken === "quickpls_indexed_resampling_v1"
+      && contract.bootstrap?.intervalPolicy === "percentile_primary_bca_conditional_v1"
+      && contract.bootstrap?.testReference === "standard_normal_bootstrap_ratio_v1"
+      && contract.bootstrap?.testTolerancePolicy === "64eps_max_1_original_replicates_v1"
+      && contract.bootstrap?.alternative === "two_sided"
+      && contract.bootstrap?.confidenceLevel === 0.95
+      && contract.bootstrap?.requestedReplicates === regressionBootstrapSamples
+      && contract.bootstrap?.usableReplicates + contract.bootstrap?.failedReplicates === regressionBootstrapSamples
+      && contract.bootstrap?.usableReplicates >= Math.ceil(0.9 * regressionBootstrapSamples)
+      && contract.bootstrap?.minimumUsableFraction === 0.9
+      && contract.bootstrap?.jackknifeCases === regressionBootstrapObservations
+      && contract.bootstrap?.usableJackknifeCases === successfulJackknife.length
+      && contract.bootstrap?.seed === regressionBootstrapSeed
+      && contract.bootstrap?.workers === regressionBootstrapWorkers
+      && contract.bootstrap?.publicCoefficientContract
+      && contract.witness?.methodVersion === regressionBootstrapWitnessVersion
+      && JSON.stringify(contract.witness?.terms) === JSON.stringify(regressionBootstrapTerms)
+      && contract.witness?.successfulBootstrap === contract.bootstrap?.usableReplicates
+      && contract.witness?.successfulJackknife === contract.bootstrap?.usableJackknifeCases
+      && contract.witness?.failedJackknife === regressionBootstrapObservations - contract.bootstrap?.usableJackknifeCases
+      && contract.witness?.vectorsValid
+      && contract.witness?.reasonsValid
+      && contract.witness?.bootstrapPartitionExact
+      && contract.witness?.jackknifePartitionExact
+      && contract.recipe?.schemaVersion === 3
+      && contract.recipe?.status === "validated_regression_bootstrap_v1_bounded_scope"
+      && contract.recipe?.bootstrapSamples === regressionBootstrapSamples
+      && contract.recipe?.workers === regressionBootstrapWorkers
+      && contract.recipe?.seed === regressionBootstrapSeed
+      && contract.recipe?.confidenceLevel === 0.95
+      && contract.recipe?.preprocessing === "unstandardized"
+      && contract.recipe?.missingData === "listwise_deletion"
+      && JSON.stringify(contract.recipe?.methodConfig) === JSON.stringify(expectedMethodConfig)
+      && contract.modelFree;
+    if (!valid) {
+      throw new Error(`The saved ${model} regression bootstrap archive contract was invalid: ${JSON.stringify(contract)}`);
+    }
+    return contract;
+  };
+  const ols = inspectRun("ols", runIds.ols);
+  const logistic = inspectRun("logistic", runIds.logistic);
+  const witnessBoundary = {
+    passed: ols.witness?.methodVersion === regressionBootstrapWitnessVersion
+      && logistic.witness?.methodVersion === regressionBootstrapWitnessVersion
+      && JSON.stringify(ols.witness?.terms) === JSON.stringify(regressionBootstrapTerms)
+      && JSON.stringify(logistic.witness?.terms) === JSON.stringify(regressionBootstrapTerms)
+      && ols.witness?.bootstrapPartitionExact === true
+      && logistic.witness?.bootstrapPartitionExact === true
+      && ols.witness?.jackknifePartitionExact === true
+      && logistic.witness?.jackknifePartitionExact === true,
+    termOrderExact: JSON.stringify(ols.witness?.terms) === JSON.stringify(regressionBootstrapTerms)
+      && JSON.stringify(logistic.witness?.terms) === JSON.stringify(regressionBootstrapTerms),
+    bootstrapIndexPartitionExact: ols.witness?.bootstrapPartitionExact === true
+      && logistic.witness?.bootstrapPartitionExact === true,
+    jackknifeIndexPartitionExact: ols.witness?.jackknifePartitionExact === true
+      && logistic.witness?.jackknifePartitionExact === true,
+  };
+  const contract = {
+    manifest: {
+      schemaVersion: manifest.schema_version ?? null,
+      engineVersion: manifest.engine_version ?? null,
+      checksumAlgorithm: manifest.checksum_algorithm ?? null,
+      declaredProjectChecksum: manifest.checksums?.["project.json"] ?? null,
+      calculatedProjectChecksum: projectChecksum,
+      projectChecksumMatches: manifest.checksums?.["project.json"] === projectChecksum,
+    },
+    resultCount: project.results?.length ?? null,
+    recipeCount: project.recipes?.length ?? null,
+    modelCount: project.models?.length ?? null,
+    ols,
+    logistic,
+    witnessBoundary,
+  };
+  if (contract.manifest.schemaVersion !== 5
+    || contract.manifest.engineVersion !== packageVersion
+    || contract.manifest.checksumAlgorithm !== "sha256"
+    || !contract.manifest.projectChecksumMatches
+    || contract.resultCount !== 2 || contract.recipeCount !== 2 || contract.modelCount !== 0
+    || !witnessBoundary.passed) {
+    throw new Error(`The saved regression bootstrap project did not retain two exact checksummed model-free runs: ${JSON.stringify(contract)}`);
+  }
+  return contract;
+}
+
 async function inspectInitialCbsemArchive(projectPath) {
   const { project, manifest } = await readNcaArchive(projectPath);
   const workspace = project.layouts?.workspace;
@@ -3449,6 +3972,10 @@ function olsCaptureName(sequence, state) {
 
 function logisticCaptureName(sequence, state) {
   return `${String(sequence).padStart(2, "0")}-tauri-native-logistic-${state}-${nativeViewportLabel}.png`;
+}
+
+function regressionBootstrapCaptureName(sequence, state) {
+  return `${String(sequence).padStart(2, "0")}-tauri-native-regression-bootstrap-${state}-${nativeViewportLabel}.png`;
 }
 
 function pcaCaptureName(sequence, state) {
@@ -4721,6 +5248,479 @@ async function runFocusedLogisticAcceptance() {
   };
 }
 
+async function runFocusedRegressionBootstrapAcceptance() {
+  evidence.checks.regressionBootstrapWorkflow = {
+    passed: false,
+    feature_id: regressionBootstrapFeatureId,
+    method_version: regressionBootstrapMethodVersion,
+    catalogue_snapshot_date: regressionBootstrapCatalogueSnapshotDate,
+  };
+  if (!requestedRegressionBootstrapOlsExportPath || !requestedRegressionBootstrapLogisticExportPath) {
+    throw new Error("QUICKPLS_REGRESSION_BOOTSTRAP_OLS_EXPORT_PATH and QUICKPLS_REGRESSION_BOOTSTRAP_LOGISTIC_EXPORT_PATH are both required; enabled-button assertions do not replace two genuine native XLSX saves.");
+  }
+  const olsExportTarget = await validateRequestedNativeExportPath(
+    requestedRegressionBootstrapOlsExportPath,
+    "QUICKPLS_REGRESSION_BOOTSTRAP_OLS_EXPORT_PATH",
+  );
+  const logisticExportTarget = await validateRequestedNativeExportPath(
+    requestedRegressionBootstrapLogisticExportPath,
+    "QUICKPLS_REGRESSION_BOOTSTRAP_LOGISTIC_EXPORT_PATH",
+  );
+  if (olsExportTarget.toLocaleLowerCase() === logisticExportTarget.toLocaleLowerCase()) {
+    throw new Error("Regression bootstrap OLS and logistic exports must use different .xlsx paths.");
+  }
+
+  await seedRecentProject({
+    name: regressionBootstrapProjectName,
+    path: regressionBootstrapProjectPath,
+    openedAt: "2026-08-12T00:00:00.000Z",
+  });
+  await reloadToLauncher();
+  await openRecentProject(regressionBootstrapProjectName, regressionBootstrapProjectPath);
+  await waitForSurface("data");
+  await page.locator(".nd-data-table").waitFor({ state: "visible", timeout: 15_000 });
+  const fixtureStatus = compactVisibleText(await page.locator(".nd-statusbar").textContent());
+  const fixtureColumns = (await page.locator(".nd-data-table thead th").allTextContents()).map(compactVisibleText);
+  const initialArchive = await inspectInitialLogisticArchive(regressionBootstrapProjectPath);
+  evidence.checks.regressionBootstrapFixture = {
+    projectPath: regressionBootstrapProjectPath,
+    sourceCsv: regressionBootstrapFixtureCsvPath,
+    status: fixtureStatus,
+    cases: fixtureStatus.includes(`${regressionBootstrapObservations} cases`) ? regressionBootstrapObservations : null,
+    columns: fixtureColumns,
+    modelFree: initialArchive.models === 0 && initialArchive.activeModelId === null,
+    initialArchive,
+  };
+  if (evidence.checks.regressionBootstrapFixture.cases !== regressionBootstrapObservations
+    || !fixtureColumns.includes("y") || !fixtureColumns.includes("bin_y")
+    || !fixtureColumns.includes("x") || !fixtureColumns.includes("z") || !fixtureColumns.includes("w")
+    || !evidence.checks.regressionBootstrapFixture.modelFree) {
+    throw new Error(`The regression bootstrap fixture was not a canonical 140-row model-free project: ${JSON.stringify(evidence.checks.regressionBootstrapFixture)}`);
+  }
+  await capture(regressionBootstrapCaptureName(160, "fixture-data"));
+
+  const configure = async (model, samples = regressionBootstrapSamples) => {
+    const calculation = await openAnalysisFromDataToolbar();
+    const listbox = calculation.getByRole("listbox", { name: "Available calculation methods", exact: true });
+    await calculation.locator("#nd-calculation-method-regression").click();
+    const settings = calculation.locator(".nd-ols-settings");
+    await settings.waitFor({ state: "visible", timeout: 10_000 });
+    const regressionType = calculation.locator("#nd-calculation-regression-type");
+    await regressionType.selectOption(model);
+    const outcome = calculation.locator("#nd-calculation-regression-outcome");
+    await outcome.selectOption(model === "logistic" ? "bin_y" : "y");
+    const roleFieldsets = settings.locator("fieldset.nd-pca-variables");
+    for (const fieldset of [roleFieldsets.nth(0), roleFieldsets.nth(1)]) {
+      const checked = fieldset.locator('input[type="checkbox"]:checked');
+      while (await checked.count()) await checked.first().uncheck();
+    }
+    const selectRole = async (fieldset, variables, role) => {
+      for (const variable of variables) {
+        const label = fieldset.locator("label").filter({ hasText: new RegExp(`^\\s*${variable}\\s*$`) });
+        if (await label.count() !== 1) throw new Error(`Regression bootstrap ${role} ${variable} was not exposed exactly once.`);
+        await label.getByRole("checkbox").check();
+      }
+    };
+    await selectRole(roleFieldsets.nth(0), regressionBootstrapPredictors, "predictor");
+    await selectRole(roleFieldsets.nth(1), regressionBootstrapControls, "control");
+    await calculation.locator("#nd-calculation-regression-bootstrap").selectOption("enabled");
+    await calculation.locator("#nd-calculation-regression-bootstrap-samples").fill(String(samples));
+    await calculation.locator("#nd-calculation-regression-bootstrap-workers").fill(String(regressionBootstrapWorkers));
+    await calculation.locator("#nd-calculation-seed").fill(String(regressionBootstrapSeed));
+    if (model === "logistic") {
+      await page.waitForFunction(({ expected }) => {
+        const node = document.querySelector("#nd-calculation-logistic-profile");
+        return node?.getAttribute("aria-busy") === "false" && node.textContent?.replace(/\s+/g, " ").includes(expected);
+      }, { expected: "140 complete cases: 71 class 0 and 69 class 1; 0 omitted by listwise deletion" }, { timeout: 30_000 });
+    }
+    const selectedRole = async (fieldset) => fieldset.locator("label").evaluateAll((labels) => labels.filter((label) => (
+      label.querySelector('input[type="checkbox"]')?.checked
+    )).map((label) => label.querySelector("span")?.textContent?.replace(/\s+/g, " ").trim() ?? ""));
+    const scope = compactVisibleText(await calculation.locator("#nd-calculation-regression-bootstrap-scope strong").textContent());
+    const startLabel = model === "logistic"
+      ? "Start binary logistic regression with bootstrap"
+      : "Start OLS regression with bootstrap";
+    const start = calculation.getByRole("button", { name: startLabel, exact: true });
+    const contract = {
+      catalogCount: await listbox.getByRole("option").count(),
+      selectedMethod: compactVisibleText(await listbox.getByRole("option", { selected: true }).locator("strong").textContent()),
+      regressionType: await regressionType.inputValue(),
+      outcome: await outcome.inputValue(),
+      predictors: await selectedRole(roleFieldsets.nth(0)),
+      controls: await selectedRole(roleFieldsets.nth(1)),
+      bootstrap: await calculation.locator("#nd-calculation-regression-bootstrap").inputValue(),
+      samples: await calculation.locator("#nd-calculation-regression-bootstrap-samples").inputValue(),
+      workers: await calculation.locator("#nd-calculation-regression-bootstrap-workers").inputValue(),
+      seed: await calculation.locator("#nd-calculation-seed").inputValue(),
+      scope,
+      blockers: (await calculation.locator(".nd-blocker li").allTextContents()).map(compactVisibleText),
+      startEnabled: await start.isEnabled(),
+      modelFree: !/construct|structural path|active model/i.test(compactVisibleText(await calculation.locator('.nd-blocker[role="alert"]').textContent().catch(() => ""))),
+    };
+    if (contract.catalogCount !== 14 || contract.selectedMethod !== "Regression"
+      || contract.regressionType !== model || contract.outcome !== (model === "logistic" ? "bin_y" : "y")
+      || JSON.stringify(contract.predictors) !== JSON.stringify(regressionBootstrapPredictors)
+      || JSON.stringify(contract.controls) !== JSON.stringify(regressionBootstrapControls)
+      || contract.bootstrap !== "enabled" || contract.samples !== String(samples)
+      || contract.workers !== String(regressionBootstrapWorkers) || contract.seed !== String(regressionBootstrapSeed)
+      || !/10,000 resamples are recommended for final results/i.test(contract.scope)
+      || !/Percentile intervals are primary/i.test(contract.scope)
+      || !/BCa is reported when delete-one refits support it/i.test(contract.scope)
+      || !/worker-invariant/i.test(contract.scope)
+      || contract.blockers.length !== 0 || !contract.startEnabled || !contract.modelFree) {
+      throw new Error(`The ${model} regression bootstrap dialog contract was invalid: ${JSON.stringify(contract)}`);
+    }
+    return { calculation, start, contract };
+  };
+
+  const cancelledSetup = await configure("logistic");
+  const cancellationActive = captureActiveCalculation(
+    cancelledSetup.calculation,
+    regressionBootstrapCaptureName(161, "cancellation-running"),
+    "binary logistic regression bootstrap cancellation",
+  ).then((state) => ({ captured: true, ...state }))
+    .catch((error) => ({ captured: false, detail: error instanceof Error ? error.message : String(error) }));
+  await cancelledSetup.start.click();
+  const activeState = await cancellationActive;
+  const cancelButton = cancelledSetup.calculation.getByRole("button", { name: "Cancel calculation", exact: true });
+  await cancelButton.waitFor({ state: "visible", timeout: 15_000 });
+  await cancelButton.click();
+  const cancelled = cancelledSetup.calculation.locator(".nd-run-progress.cancelled");
+  await cancelled.waitFor({ state: "visible", timeout: 30_000 });
+  const partialResults = await page.locator(".nd-run-select select option").count();
+  evidence.checks.regressionBootstrapCancellation = {
+    passed: activeState.captured && partialResults === 0,
+    activeLifecycleCaptured: activeState.captured,
+    activeState,
+    cancelledMessage: compactVisibleText(await cancelled.textContent()),
+    noPartialResult: partialResults === 0,
+    partialResults,
+  };
+  if (!evidence.checks.regressionBootstrapCancellation.passed) {
+    throw new Error(`Regression bootstrap cancellation left a partial result or missed active lifecycle evidence: ${JSON.stringify(evidence.checks.regressionBootstrapCancellation)}`);
+  }
+  await capture(regressionBootstrapCaptureName(162, "cancelled"));
+  await cancelledSetup.calculation.getByRole("button", { name: "Close", exact: true }).click();
+
+  const readTable = async (title) => {
+    const rows = await openResultTable(title);
+    return {
+      rows,
+      headers: (await page.locator(".nd-result-table thead th").allTextContents()).map(compactVisibleText),
+      values: await page.locator(".nd-result-table tbody tr").evaluateAll((tableRows) => tableRows.map((row) => Array.from(
+        row.querySelectorAll("th,td"), (cell) => cell.textContent?.replace(/\s+/g, " ").trim() ?? "",
+      ))),
+      warning: compactVisibleText(await page.locator(".nd-inline-warning").textContent().catch(() => "")),
+    };
+  };
+  const inspectCompletedResult = async (model) => {
+    const selectedRun = page.locator(".nd-run-select select option:checked");
+    await selectedRun.waitFor({ state: "attached", timeout: 30_000 });
+    const runId = await page.locator(".nd-run-select select").inputValue();
+    const initialSelectedTable = await page.locator('.nd-result-tree [role="treeitem"][aria-selected="true"]').getAttribute("data-result-tree-item-id");
+    const treeItems = (await page.locator('.nd-result-tree [role="treeitem"]').allTextContents()).map(compactVisibleText);
+    const summary = await readTable("Regression bootstrap summary");
+    const coefficientInference = await readTable("Bootstrap coefficient inference");
+    const percentile = await readTable("Percentile confidence intervals (primary)");
+    const bca = await readTable("BCa confidence intervals (conditional)");
+    const oddsRatio = model === "logistic" ? await readTable("Bootstrap odds-ratio intervals") : null;
+    const summaryValues = Object.fromEntries(summary.values.map((row) => [row[0], row[1]]));
+    const failedCount = Number(summaryValues["Failed replicates"]);
+    const failureTreePresent = treeItems.includes("Failed bootstrap replicates");
+    const failures = failureTreePresent ? await readTable("Failed bootstrap replicates") : null;
+    const failureDisclosureTruthful = Number.isInteger(failedCount) && failedCount >= 0
+      && (failedCount === 0
+        ? !failureTreePresent
+        : failureTreePresent && failures?.rows === failedCount && failures.values.every((row) => row.length === 3 && row.every(Boolean)));
+    const allVisibleText = [summary, coefficientInference, percentile, bca, ...(oddsRatio ? [oddsRatio] : []), ...(failures ? [failures] : [])]
+      .flatMap((table) => [table.headers, ...table.values, table.warning]).flat().join(" ");
+    const contract = {
+      model,
+      runId,
+      runLabel: compactVisibleText(await selectedRun.textContent()),
+      initialSelectedTable,
+      treeItems,
+      summary,
+      summaryValues,
+      coefficientInference,
+      percentile,
+      bca,
+      oddsRatio,
+      failures,
+      failureDisclosureTruthful,
+      validationWitnessNotRendered: !/validation[_ ]witness|regression_bootstrap_validation_witness_v1|successful_bootstrap|successful_jackknife|failed_jackknife/i.test(`${treeItems.join(" ")} ${allVisibleText}`),
+      noNaFabrication: !/\bN\/?A\b|NaN|Infinity/i.test(allVisibleText),
+      modelFree: await page.locator(".nd-commandbar button").filter({ hasText: /^Edit Model$/i }).count() === 0,
+    };
+    const baseGroup = model === "logistic" ? "Binary logistic regression with bootstrap" : "OLS regression with bootstrap";
+    const expectedBaseTitles = model === "logistic"
+      ? [
+          "Coefficients, Wald inference, and odds ratios", "Model fit and likelihood-ratio inference",
+          "Classification at probability threshold 0.5", "Binary outcome profile", "Estimator convergence",
+          "Complete-case fitted probabilities", "Calculation scope",
+        ]
+      : ["Coefficients", "Model fit", "Calculation scope"];
+    const expectedBootstrapTitles = [
+      "Regression bootstrap summary",
+      ...(failedCount > 0 ? ["Failed bootstrap replicates"] : []),
+      "Bootstrap coefficient inference",
+      "Percentile confidence intervals (primary)",
+      "BCa confidence intervals (conditional)",
+      ...(model === "logistic" ? ["Bootstrap odds-ratio intervals"] : []),
+    ];
+    const expectedTree = [baseGroup, ...expectedBaseTitles, ...expectedBootstrapTitles];
+    const valid = Boolean(runId)
+      && initialSelectedTable === "regression_bootstrap_summary"
+      && JSON.stringify(treeItems) === JSON.stringify(expectedTree)
+      && summary.rows === 17
+      && summaryValues["Method version"] === regressionBootstrapMethodVersion
+      && summaryValues.Sampling === "Case resampling with replacement"
+      && summaryValues.Algorithm === "indexed_case_resampling_v1"
+      && summaryValues.Stream === "quickpls_indexed_resampling_v1"
+      && summaryValues.Alternative === "Two-sided"
+      && summaryValues["Test reference"] === "Standard normal bootstrap ratio"
+      && summaryValues["Confidence level"] === "95% (fixed)"
+      && summaryValues["Interval policy"] === "Percentile primary; BCa conditional"
+      && summaryValues["Requested replicates"] === String(regressionBootstrapSamples)
+      && Number(summaryValues["Usable replicates"]) + failedCount === regressionBootstrapSamples
+      && summaryValues["Delete-one fits required"] === String(regressionBootstrapObservations)
+      && summaryValues.Seed === String(regressionBootstrapSeed)
+      && summaryValues.Workers === String(regressionBootstrapWorkers)
+      && coefficientInference.rows === regressionBootstrapTerms.length
+      && percentile.rows === regressionBootstrapTerms.length
+      && bca.rows === regressionBootstrapTerms.length
+      && (model !== "logistic" || oddsRatio?.rows === regressionBootstrapTerms.length)
+      && contract.failureDisclosureTruthful
+      && contract.validationWitnessNotRendered
+      && contract.noNaFabrication
+      && contract.modelFree;
+    if (!valid) throw new Error(`The completed ${model} regression bootstrap result was invalid: ${JSON.stringify(contract)}`);
+    return contract;
+  };
+
+  const exportCompletedResult = async (model, targetPath, result) => {
+    const exportCommand = page.locator(".nd-commandbar button").filter({ hasText: /^Export/i });
+    await exportCommand.click();
+    const dialog = page.locator('.nd-dialog-export[role="dialog"]');
+    await dialog.waitFor({ state: "visible", timeout: 10_000 });
+    const xlsx = dialog.getByRole("button", { name: /XLSX workbook/i });
+    const baseTitles = model === "logistic"
+      ? [
+          "Coefficients, Wald inference, and odds ratios", "Model fit and likelihood-ratio inference",
+          "Classification at probability threshold 0.5", "Binary outcome profile", "Estimator convergence",
+          "Complete-case fitted probabilities", "Calculation scope",
+        ]
+      : ["Coefficients", "Model fit", "Calculation scope"];
+    const bootstrapTitles = [
+      "Regression bootstrap summary",
+      ...(result.failures ? ["Failed bootstrap replicates"] : []),
+      "Bootstrap coefficient inference", "Percentile confidence intervals (primary)",
+      "BCa confidence intervals (conditional)",
+      ...(model === "logistic" ? ["Bootstrap odds-ratio intervals"] : []),
+    ];
+    const supplemental = model === "ols" ? ["Fitted values and residuals"] : [];
+    const expectedSheets = [...baseTitles, ...bootstrapTitles, ...supplemental]
+      .map((title) => title.slice(0, 31).trimEnd()).concat("Run provenance");
+    const helper = startWindowsNativeSaveExportHelper({
+      targetPath,
+      windowTitle: evidence.checks.runtime.title,
+      expectedSheets,
+      expectedSharedStrings: [
+        "Regression bootstrap summary", "Bootstrap coefficient inference", regressionBootstrapMethodVersion,
+        "Case resampling with replacement", "Percentile primary; BCa conditional", "Run provenance",
+      ],
+    });
+    let helperCompleted = false;
+    let nativeXlsx = null;
+    try {
+      const ready = await helper.ready;
+      if (!ready.passed || ready.event !== "ready") throw new Error(`Native ${model} regression bootstrap XLSX helper did not become ready: ${JSON.stringify(ready)}`);
+      await xlsx.click();
+      const completion = await helper.completed;
+      helperCompleted = true;
+      if (!completion.passed) throw new Error(`Native ${model} regression bootstrap XLSX verification failed: ${JSON.stringify(completion)}`);
+      const expectedFeedback = `Saved ${path.basename(targetPath)}.`;
+      const feedback = dialog.locator("#nd-export-feedback").filter({ hasText: expectedFeedback });
+      await feedback.waitFor({ state: "visible", timeout: 15_000 });
+      const file = await fs.stat(targetPath);
+      const workbookSheets = await inspectXlsxWorkbookSheets(targetPath);
+      nativeXlsx = {
+        attempted: true,
+        targetPath,
+        helper: { ready, completion },
+        appFeedback: compactVisibleText(await feedback.textContent()),
+        file: { size: file.size, isFile: file.isFile() },
+        workbookSheets,
+      };
+      if (!file.isFile() || file.size <= 0 || nativeXlsx.appFeedback !== expectedFeedback
+        || JSON.stringify(workbookSheets) !== JSON.stringify(expectedSheets)) {
+        throw new Error(`The genuine ${model} regression bootstrap XLSX sheets were invalid: ${JSON.stringify(nativeXlsx)}`);
+      }
+    } finally {
+      if (!helperCompleted) helper.stop();
+    }
+    const witnessScan = await xlsxExcludesValidationWitness(targetPath);
+    const validationWitnessExcluded = witnessScan.passed;
+    nativeXlsx.witnessScan = witnessScan;
+    if (!validationWitnessExcluded) throw new Error(`The internal validation witness leaked into the ${model} XLSX.`);
+    await dialog.getByRole("button", { name: "Close", exact: true }).click();
+    return { passed: true, nativeXlsx, validationWitnessExcluded, expectedSheets };
+  };
+
+  const olsSetup = await configure("ols");
+  await capture(regressionBootstrapCaptureName(163, "ols-dialog"));
+  const olsActive = captureActiveCalculation(
+    olsSetup.calculation,
+    regressionBootstrapCaptureName(164, "ols-running"),
+    "OLS regression with bootstrap",
+  ).then((state) => ({ captured: true, ...state }))
+    .catch((error) => ({ captured: false, detail: error instanceof Error ? error.message : String(error) }));
+  await olsSetup.start.click();
+  await waitForSurface("results", 600_000);
+  const olsActiveState = await olsActive;
+  if (!olsActiveState.captured) throw new Error(`The OLS regression bootstrap active lifecycle was not captured: ${JSON.stringify(olsActiveState)}`);
+  const olsResult = await inspectCompletedResult("ols");
+  await openResultTable("Bootstrap coefficient inference");
+  await capture(regressionBootstrapCaptureName(165, "ols-results"));
+  evidence.checks.regressionBootstrapOlsExport = await exportCompletedResult("ols", olsExportTarget, olsResult);
+  await capture(regressionBootstrapCaptureName(166, "ols-export"));
+
+  await openMenuItem("View", "Data");
+  await waitForSurface("data");
+  const logisticSetup = await configure("logistic");
+  await capture(regressionBootstrapCaptureName(167, "logistic-dialog"));
+  const logisticActive = captureActiveCalculation(
+    logisticSetup.calculation,
+    regressionBootstrapCaptureName(168, "logistic-running"),
+    "binary logistic regression with bootstrap",
+  ).then((state) => ({ captured: true, ...state }))
+    .catch((error) => ({ captured: false, detail: error instanceof Error ? error.message : String(error) }));
+  await logisticSetup.start.click();
+  await waitForSurface("results", 600_000);
+  const logisticActiveState = await logisticActive;
+  if (!logisticActiveState.captured) throw new Error(`The logistic regression bootstrap active lifecycle was not captured: ${JSON.stringify(logisticActiveState)}`);
+  const logisticResult = await inspectCompletedResult("logistic");
+  await openResultTable("Bootstrap odds-ratio intervals");
+  await capture(regressionBootstrapCaptureName(169, "logistic-results"));
+  evidence.checks.regressionBootstrapLogisticExport = await exportCompletedResult("logistic", logisticExportTarget, logisticResult);
+  await capture(regressionBootstrapCaptureName(170, "logistic-export"));
+
+  evidence.checks.regressionBootstrapResults = {
+    passed: olsResult.failureDisclosureTruthful && logisticResult.failureDisclosureTruthful
+      && olsResult.validationWitnessNotRendered && logisticResult.validationWitnessNotRendered
+      && olsResult.noNaFabrication && logisticResult.noNaFabrication
+      && olsResult.initialSelectedTable === regressionBootstrapDefaultTableId
+      && logisticResult.initialSelectedTable === regressionBootstrapDefaultTableId,
+    olsInitialSelectedTable: olsResult.initialSelectedTable,
+    logisticInitialSelectedTable: logisticResult.initialSelectedTable,
+    olsCoefficientRows: olsResult.coefficientInference.rows,
+    logisticCoefficientRows: logisticResult.coefficientInference.rows,
+    percentilePrimaryPresent: olsResult.percentile.rows === regressionBootstrapTerms.length
+      && logisticResult.percentile.rows === regressionBootstrapTerms.length,
+    bcaConditionalPresent: olsResult.bca.rows === regressionBootstrapTerms.length
+      && logisticResult.bca.rows === regressionBootstrapTerms.length,
+    failureDisclosureTruthful: olsResult.failureDisclosureTruthful && logisticResult.failureDisclosureTruthful,
+    validationWitnessNotRendered: olsResult.validationWitnessNotRendered && logisticResult.validationWitnessNotRendered,
+    noNaFabrication: olsResult.noNaFabrication && logisticResult.noNaFabrication,
+    ols: olsResult,
+    logistic: logisticResult,
+  };
+  if (!evidence.checks.regressionBootstrapResults.passed) {
+    throw new Error(`Regression bootstrap result evidence was incomplete: ${JSON.stringify(evidence.checks.regressionBootstrapResults)}`);
+  }
+
+  await page.keyboard.press("Control+S");
+  await page.locator(".nd-toast").filter({ hasText: /Project saved/i }).last().waitFor({ state: "visible", timeout: 30_000 });
+  await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 30_000 });
+  const archive = await inspectSavedRegressionBootstrapArchive(regressionBootstrapProjectPath, {
+    ols: olsResult.runId,
+    logistic: logisticResult.runId,
+  });
+  evidence.checks.regressionBootstrapWitnessBoundary = {
+    passed: archive.witnessBoundary.passed
+      && olsResult.validationWitnessNotRendered && logisticResult.validationWitnessNotRendered
+      && evidence.checks.regressionBootstrapOlsExport.validationWitnessExcluded
+      && evidence.checks.regressionBootstrapLogisticExport.validationWitnessExcluded,
+    archiveOnly: archive.witnessBoundary.passed,
+    termOrderExact: archive.witnessBoundary.termOrderExact,
+    bootstrapIndexPartitionExact: archive.witnessBoundary.bootstrapIndexPartitionExact,
+    jackknifeIndexPartitionExact: archive.witnessBoundary.jackknifeIndexPartitionExact,
+    excludedFromResults: olsResult.validationWitnessNotRendered && logisticResult.validationWitnessNotRendered,
+    excludedFromExports: evidence.checks.regressionBootstrapOlsExport.validationWitnessExcluded
+      && evidence.checks.regressionBootstrapLogisticExport.validationWitnessExcluded,
+  };
+  if (!evidence.checks.regressionBootstrapWitnessBoundary.passed) {
+    throw new Error(`The regression bootstrap witness crossed its archive-only boundary: ${JSON.stringify(evidence.checks.regressionBootstrapWitnessBoundary)}`);
+  }
+
+  await reloadToLauncher();
+  await openRecentProject(regressionBootstrapProjectName, regressionBootstrapProjectPath);
+  await openMenuItem("View", "Results");
+  await waitForSurface("results");
+  const runSelect = page.locator(".nd-run-select select");
+  const olsOption = runSelect.locator("option").filter({ hasText: /Ordinary Least Squares Regression with Bootstrap/i }).first();
+  const logisticOption = runSelect.locator("option").filter({ hasText: /Binary Logistic Regression with Bootstrap/i }).first();
+  await olsOption.waitFor({ state: "attached", timeout: 30_000 });
+  await logisticOption.waitFor({ state: "attached", timeout: 30_000 });
+  const reopenedOlsId = await olsOption.getAttribute("value");
+  const reopenedLogisticId = await logisticOption.getAttribute("value");
+  await runSelect.selectOption(reopenedOlsId);
+  await page.waitForFunction((runId) => document.querySelector(".nd-run-select select")?.value === runId, reopenedOlsId, { timeout: 30_000 });
+  const reopenedOlsSelectedTable = page.locator('.nd-result-tree [role="treeitem"][aria-selected="true"]');
+  await reopenedOlsSelectedTable.waitFor({ state: "visible", timeout: 30_000 });
+  const reopenedOlsInitialSelectedTable = await reopenedOlsSelectedTable.getAttribute("data-result-tree-item-id");
+  const reopenedOlsSummaryRows = await openResultTable("Regression bootstrap summary");
+  const reopenedOlsCoefficientRows = await openResultTable("Bootstrap coefficient inference");
+  await runSelect.selectOption(reopenedLogisticId);
+  await page.waitForFunction((runId) => document.querySelector(".nd-run-select select")?.value === runId, reopenedLogisticId, { timeout: 30_000 });
+  const reopenedLogisticSelectedTable = page.locator('.nd-result-tree [role="treeitem"][aria-selected="true"]');
+  await reopenedLogisticSelectedTable.waitFor({ state: "visible", timeout: 30_000 });
+  const reopenedLogisticInitialSelectedTable = await reopenedLogisticSelectedTable.getAttribute("data-result-tree-item-id");
+  const reopenedLogisticSummaryRows = await openResultTable("Regression bootstrap summary");
+  const reopenedLogisticOddsRows = await openResultTable("Bootstrap odds-ratio intervals");
+  evidence.checks.regressionBootstrapSaveReopen = {
+    passed: reopenedOlsId === olsResult.runId
+      && reopenedLogisticId === logisticResult.runId
+      && reopenedOlsSummaryRows === 17
+      && reopenedOlsCoefficientRows === regressionBootstrapTerms.length
+      && reopenedLogisticSummaryRows === 17
+      && reopenedLogisticOddsRows === regressionBootstrapTerms.length
+      && reopenedOlsInitialSelectedTable === regressionBootstrapDefaultTableId
+      && reopenedLogisticInitialSelectedTable === regressionBootstrapDefaultTableId
+      && archive.manifest.projectChecksumMatches
+      && archive.witnessBoundary.passed,
+    olsSameRunRestored: reopenedOlsId === olsResult.runId,
+    logisticSameRunRestored: reopenedLogisticId === logisticResult.runId,
+    initialSelectedTables: {
+      ols: reopenedOlsInitialSelectedTable,
+      logistic: reopenedLogisticInitialSelectedTable,
+    },
+    rows: {
+      olsSummary: reopenedOlsSummaryRows,
+      olsCoefficients: reopenedOlsCoefficientRows,
+      logisticSummary: reopenedLogisticSummaryRows,
+      logisticOddsRatios: reopenedLogisticOddsRows,
+    },
+    archive,
+  };
+  if (!evidence.checks.regressionBootstrapSaveReopen.passed) {
+    throw new Error(`The two exact regression bootstrap runs did not survive save/reopen: ${JSON.stringify(evidence.checks.regressionBootstrapSaveReopen)}`);
+  }
+  await capture(regressionBootstrapCaptureName(171, "reopened"));
+  evidence.checks.regressionBootstrapWorkflow = {
+    passed: true,
+    feature_id: regressionBootstrapFeatureId,
+    method_version: regressionBootstrapMethodVersion,
+    catalogue_snapshot_date: regressionBootstrapCatalogueSnapshotDate,
+    olsCompleted: true,
+    logisticCompleted: true,
+    activeLifecycleCaptured: activeState.captured && olsActiveState.captured && logisticActiveState.captured,
+    modelFree: olsResult.modelFree && logisticResult.modelFree,
+    realXlsxSaved: true,
+    explicitSaveAndSameRunReopen: true,
+  };
+}
+
 async function runFocusedPcaAcceptance() {
   if (!requestedPcaNativeExportPath) {
     throw new Error("QUICKPLS_PCA_NATIVE_EXPORT_PATH is required for focused packaged PCA acceptance; enabled-button assertions do not replace a genuine native XLSX Save and workbook-content check.");
@@ -5524,6 +6524,8 @@ try {
     await runFocusedCbsemAcceptance();
   } else if (logisticOnly) {
     await runFocusedLogisticAcceptance();
+  } else if (regressionBootstrapOnly) {
+    await runFocusedRegressionBootstrapAcceptance();
   } else if (olsOnly) {
     await runFocusedOlsAcceptance();
   } else if (pcaOnly) {

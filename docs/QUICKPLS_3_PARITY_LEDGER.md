@@ -2,13 +2,13 @@
 
 `validation/quickpls_3_parity_ledger.json` is the machine-readable source of truth for the QuickPLS 3 feature-equivalence program. It freezes the comparison reference to the official SmartPLS algorithms and techniques catalogue dated 12 August 2026 and records a stable QuickPLS feature ID, current method version, bounded scope, known differences, evidence rules, and promotion state for each analytical capability exposed through the 14 accepted native calculation catalogue entries.
 
-A catalogue entry and a scientific capability are deliberately different things. One launcher may contain multiple independently promoted workflows. For example, the single Regression entry maps to separate OLS, binary logistic, and PROCESS capability IDs. The validator still enforces the exact 14-entry catalogue, and separately enforces the exact capability mapping and globally unique IDs. Sharing a launcher can never let OLS evidence promote logistic or PROCESS.
+A catalogue entry and a scientific capability are deliberately different things. One launcher may contain multiple independently promoted workflows. For example, the single Regression entry maps to separate OLS, binary logistic, regression-bootstrap, and PROCESS capability IDs. The validator still enforces the exact 14-entry catalogue, and separately enforces the exact capability mapping and globally unique IDs. Sharing a launcher can never let evidence for one Regression workflow promote another.
 
 The state ladder is:
 
 `absent -> engine_only -> archive_qualified -> native_qualified -> release_qualified`
 
-The current ledger derives 13 preserved capabilities as `native_qualified`. Structural Path Randomization remains `engine_only`: its engine audit and responsive native setup exist, but the current packaged report does not contain a completed method-specific result, export, and same-run reopen. Binary Logistic Regression v2 is the first Wave 1 capability to become `release_qualified`, based on its independent Python/R reference, strict persistence gate, responsive browser acceptance, and genuine method-specific packaged Windows execution/export/save/reopen report. Newly introduced Wave capabilities begin at `absent` or the highest state their current evidence actually derives.
+The current ledger derives 13 preserved capabilities as `native_qualified`. Structural Path Randomization remains `engine_only`: its engine audit and responsive native setup exist, but the current packaged report does not contain a completed method-specific result, export, and same-run reopen. Binary Logistic Regression v2 and Regression Bootstrapping v1 are `release_qualified`, based on independent numerical references, strict persistence gates, responsive browser acceptance, and genuine method-specific packaged Windows execution/export/save/reopen reports. Graph-defined PROCESS remains `absent` until its vertical slice produces evidence; newly introduced Wave capabilities begin at `absent` or the highest state their current evidence actually derives.
 
 ## Enforcement
 

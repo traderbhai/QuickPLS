@@ -14,6 +14,7 @@ import {
   type NativeCalculationMode,
 } from "./nativeCalculationMode";
 import { nativeIpmaTargetOptions } from "./nativeIpma";
+import { NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS } from "./nativeRegressionBootstrapWitness";
 
 /**
  * Wire-level recipe contract consumed by the Tauri `start_pls_job` command.
@@ -74,6 +75,7 @@ export const NATIVE_ANALYSIS_RECIPE_BOUNDS = {
   tolerance: { minimum: 1e-12, maximum: 0.01 },
   maxIterations: { minimum: 100, maximum: 100_000 },
   bootstrapSamples: { minimum: 100, maximum: 10_000, default: 10_000 },
+  regressionBootstrapSamples: { minimum: 99, maximum: 10_000, default: 10_000 },
   studentizedInnerSamples: { minimum: 99, maximum: 999 },
   permutationSamples: { minimum: 99, maximum: 10_000, default: 999 },
   workers: { minimum: 1, maximum: 64 },
@@ -241,7 +243,8 @@ function buildSettings(
   const weightingScheme = kind === "nca" || kind === "pca" || kind === "regression" || kind === "cbsem" || kind === "gsca" ? "path" : (source.weightingScheme ?? "path");
   const tolerance = kind === "gsca" ? 1e-7 : (source.tolerance ?? 1e-7);
   const maxIterations = kind === "gsca" ? 3_000 : (source.maxIterations ?? 3_000);
-  const workers = kind === "regression" ? 1 : source.workers;
+  const regressionBootstrap = kind === "regression" && source.regressionBootstrap === true;
+  const workers = kind === "regression" && !regressionBootstrap ? 1 : source.workers;
   const preprocessing = kind === "nca" || kind === "regression"
     ? "unstandardized"
     : kind === "pca" || kind === "cbsem" || kind === "gsca"
@@ -281,6 +284,20 @@ function buildSettings(
     studentizedInnerSamples = normalized.studentizedInnerSamples;
     permutationSamples = normalized.permutationSamples;
     if (kind === "pls_bootstrap") validateBootstrapPlan(bootstrapSamples, studentizedInnerSamples);
+  } else if (regressionBootstrap) {
+    bootstrapSamples = source.bootstrapSamples;
+    assertIntegerInRange(
+      "bootstrapSamples",
+      bootstrapSamples,
+      NATIVE_ANALYSIS_RECIPE_BOUNDS.regressionBootstrapSamples.minimum,
+      NATIVE_ANALYSIS_RECIPE_BOUNDS.regressionBootstrapSamples.maximum,
+    );
+    if (source.studentizedInnerSamples !== 0 || source.permutationSamples !== 0) {
+      fail("bootstrapSamples", "Regression case-resampling cannot be combined with studentized or permutation settings.");
+    }
+    if (source.confidenceLevel !== 0.95) {
+      fail("confidenceLevel", "The qualified regression bootstrap slice uses fixed two-sided 95% inference.");
+    }
   }
 
   const caseWeightColumn = kind === "wpls"
@@ -352,6 +369,8 @@ function buildMetadata(
 ): Record<string, string> {
   const status = methodConfig.kind !== "regression"
     ? scopeMetadata
+    : methodConfig.bootstrap
+      ? "validated_regression_bootstrap_v1_bounded_scope"
     : methodConfig.model.type === "process"
       ? `validated_v1_2_2_process_${methodConfig.model.relationship.model}_bounded_scope`
       : methodConfig.model.type === "logistic"
@@ -457,6 +476,12 @@ function buildMethodConfig(
         predictors: values.regression_predictors.split(","),
         ...(values.regression_controls ? { controls: values.regression_controls.split(",") } : {}),
         model,
+        ...(settings.regressionBootstrap === true ? {
+          bootstrap: {
+            algorithm: "case_resampling",
+            intervals: ["percentile", "bca"],
+          } as const,
+        } : {}),
       };
     }
     case "nca": {
@@ -630,6 +655,18 @@ function regressionMetadata(settings: Readonly<AnalysisUiSettings>): Record<stri
 
   if (regressionType === "ols" && settings.robustSe && settings.robustSe !== "hc3") {
     fail("robustSe", "The validated native OLS scope computes HC3 standard errors; the selected alternative is not implemented.");
+  }
+  if (regressionType === "process" && settings.regressionBootstrap === true) {
+    fail("regressionBootstrap", "The current regression bootstrap slice applies only to OLS and binary logistic regression.");
+  }
+  if (settings.regressionBootstrap === true && regressionType !== "process") {
+    const selectedTermCount = predictors.split(",").length + (controls?.split(",").length ?? 0);
+    if (selectedTermCount > NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS) {
+      fail(
+        "regressionPredictors",
+        `Regression bootstrap supports at most ${NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS} predictors and controls (${NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS + 1} coefficient terms including the intercept).`,
+      );
+    }
   }
   if (regressionType !== "process") return metadata;
 

@@ -715,9 +715,12 @@ export function NativeDesktopController() {
 
     const standalone = isStandaloneNativeAnalysis(request.kind);
     const modelSnapshot = standalone ? undefined : createAnalysisModelSnapshot(nodes, edges, diagramLayout);
-    const methodName = request.kind === "regression" && submittedSettings.regressionType === "logistic"
+    const regressionMethodName = request.kind === "regression" && submittedSettings.regressionType === "logistic"
       ? "Binary Logistic Regression"
       : nativeAnalysisRecipeDescriptor(request.kind).label;
+    const methodName = request.kind === "regression" && submittedSettings.regressionBootstrap === true
+      ? `${regressionMethodName} with Bootstrap`
+      : regressionMethodName;
     const startedAt = new Date().toISOString();
     transitionRunMonitor({
       status: "queued",

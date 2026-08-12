@@ -70,8 +70,9 @@ const nativeCalculationMethods = [
 
 const nativeNcaScopeNote = "Numeric observed-variable CE-FDH and CR-FDH analysis with observed-range bottlenecks. Multiple conditions, latent-score NCA, cIPMA, and broader ceiling variants are not included.";
 const nativePcaScopeNote = "Correlation-matrix PCA of 2 to 50 selected numeric variables with listwise deletion, deterministic component orientation, and no rotation or inferential resampling.";
-const nativeOlsScopeNote = "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Categorical encoding, weights, clusters, resampling, logistic regression, and PROCESS models are not included.";
-const nativeLogisticScopeNote = "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, and Firth-corrected models are not included.";
+const nativeOlsScopeNote = "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa inference. Categorical encoding, weights, clusters, generic PLS resampling, logistic regression, and PROCESS models are not included.";
+const nativeLogisticScopeNote = "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa coefficient and odds-ratio inference. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, generic PLS resampling, and Firth-corrected models are not included.";
+const nativeRegressionBootstrapScopeNote = "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.";
 
 const obsoleteRibbonStrings = [
   "Open Setup",
@@ -133,6 +134,7 @@ const evidence = {
     pca: [],
     ols: [],
     logistic: [],
+    regressionBootstrap: [],
     structuralPathRandomization: [],
     mga: [],
     prediction: [],
@@ -3122,6 +3124,346 @@ async function auditLogisticStandaloneDialogFromData(page, viewport, sequence) {
   }
 }
 
+async function auditRegressionBootstrapDialogFromData(page, viewport, olsSequence, logisticSequence) {
+  const check = {
+    viewport: viewport.id,
+    fixtureApiPresent: false,
+    fixture: null,
+    dataSurface: false,
+    visibleModelNodes: null,
+    analyzeCommandCount: 0,
+    dialogOpened: false,
+    catalogCount: 0,
+    selectedMethod: "",
+    linkage: null,
+    category: "",
+    regressionTypeOptions: [],
+    outcome: "",
+    roles: null,
+    bootstrap: null,
+    accessibility: null,
+    ols: null,
+    logistic: null,
+    closeFocus: null,
+    completedResult: null,
+  };
+  const dialog = page.locator('.nd-dialog-calculation[role="dialog"]');
+  let trigger = null;
+
+  const inspectRoleFieldset = async (fieldset) => ({
+    legend: compactCalculationText(await fieldset.locator("legend").textContent().catch(() => "")),
+    variables: await fieldset.locator("label").evaluateAll((labels) => labels.map((label) => ({
+      name: label.querySelector("span")?.textContent?.replace(/\s+/g, " ").trim() ?? "",
+      checked: Boolean(label.querySelector('input[type="checkbox"]')?.checked),
+      disabled: Boolean(label.querySelector('input[type="checkbox"]')?.disabled),
+    }))),
+  });
+  const inspectRoles = async () => {
+    const fieldsets = dialog.locator(".nd-ols-settings fieldset.nd-pca-variables");
+    const predictors = await inspectRoleFieldset(fieldsets.nth(0));
+    const controls = await inspectRoleFieldset(fieldsets.nth(1));
+    return {
+      fieldsetCount: await fieldsets.count(),
+      predictors,
+      controls,
+      selectedPredictors: predictors.variables.filter((entry) => entry.checked).map((entry) => entry.name),
+      selectedControls: controls.variables.filter((entry) => entry.checked).map((entry) => entry.name),
+    };
+  };
+  const inspectNumberInput = async (input) => ({
+    count: await input.count(),
+    value: await input.inputValue().catch(() => ""),
+    min: await input.getAttribute("min"),
+    max: await input.getAttribute("max"),
+    step: await input.getAttribute("step"),
+  });
+  const explicitLabelAssociationCount = (control) => control.evaluate((node) => (
+    Array.from(node.labels ?? []).filter((label) => label.htmlFor === node.id).length
+  ));
+  const readSettingNote = async (label) => compactCalculationText(await dialog.locator(".nd-setting-note")
+    .filter({ hasText: label }).locator("strong").textContent().catch(() => ""));
+  const inspectBlockers = async (allowedProfilePatterns = []) => {
+    const messages = (await dialog.locator(".nd-blocker li").allTextContents()).map(compactCalculationText);
+    const isRuntime = (message) => /Calculations require the offline QuickPLS desktop runtime/i.test(message);
+    const isAllowedProfile = (message) => allowedProfilePatterns.some((pattern) => pattern.test(message));
+    return {
+      messages,
+      runtime: messages.filter(isRuntime),
+      allowedFixtureProfile: messages.filter((message) => isAllowedProfile(message)),
+      unexpected: messages.filter((message) => !isRuntime(message) && !isAllowedProfile(message)),
+      model: messages.filter((message) => /construct|structural path|editable model|active model/i.test(message)),
+    };
+  };
+  const inspectDialogBounds = () => dialog.evaluate((node) => {
+    const rect = node.getBoundingClientRect();
+    return {
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      rect: { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom, width: rect.width, height: rect.height },
+      withinHorizontalViewport: rect.left >= -2 && rect.right <= window.innerWidth + 2,
+      verticalScrollAvailable: node.scrollHeight > node.clientHeight + 2,
+      pageHorizontalOverflow: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth)
+        > document.documentElement.clientWidth + 2,
+    };
+  });
+
+  try {
+    check.fixtureApiPresent = await page.evaluate(() => typeof window.__QUICKPLS_SMOKE__?.loadOlsFixture === "function");
+    if (!check.fixtureApiPresent) {
+      recordFailure("regression-bootstrap-browser-fixture-api", `The genuine data-only regression smoke fixture was not exposed at ${viewport.id}.`, check);
+      return;
+    }
+    check.fixture = await page.evaluate(() => window.__QUICKPLS_SMOKE__?.loadOlsFixture());
+    await page.locator('.nd-app[data-surface="data"]').waitFor({ state: "visible", timeout: 1_000 }).catch(() => null);
+    check.dataSurface = await page.locator('.nd-app[data-surface="data"]').count() === 1;
+    check.visibleModelNodes = await page.locator(".react-flow__node-latent").count();
+
+    trigger = page.locator('.nd-commandbar[role="toolbar"] button').filter({ hasText: /^Analyze(?:\u2026|\.\.\.)?$/i });
+    check.analyzeCommandCount = await trigger.count();
+    if (check.analyzeCommandCount !== 1) {
+      recordFailure("regression-bootstrap-analyze-command", `The Data toolbar did not expose exactly one Analyze command at ${viewport.id}.`, check);
+      return;
+    }
+    await trigger.focus();
+    await trigger.click();
+    await dialog.waitFor({ state: "visible", timeout: 1_000 }).catch(() => null);
+    check.dialogOpened = await dialog.isVisible().catch(() => false);
+    if (!check.dialogOpened) {
+      recordFailure("regression-bootstrap-dialog-open", `Analyze did not open the calculation dialog at ${viewport.id}.`, check);
+      return;
+    }
+
+    const listbox = dialog.getByRole("listbox", { name: "Available calculation methods", exact: true });
+    check.catalogCount = await listbox.getByRole("option").count();
+    const selection = await selectCalculationMethod(dialog, "regression");
+    check.selectedMethod = compactCalculationText(await listbox.getByRole("option", { selected: true }).locator("strong").textContent().catch(() => ""));
+    check.linkage = selection.linkage;
+    check.category = compactCalculationText(await dialog.locator("#nd-calculation-category-standalone").textContent().catch(() => ""));
+
+    const regressionType = dialog.locator("#nd-calculation-regression-type");
+    const outcome = dialog.locator("#nd-calculation-regression-outcome");
+    const bootstrapToggle = dialog.locator("#nd-calculation-regression-bootstrap");
+    await regressionType.selectOption("ols");
+    await outcome.selectOption("outcome");
+    const roleFieldsets = dialog.locator(".nd-ols-settings fieldset.nd-pca-variables");
+    const predictorInput = roleFieldsets.nth(0).locator("label").filter({ hasText: /^predictor$/ }).locator('input[type="checkbox"]');
+    const controlInput = roleFieldsets.nth(1).locator("label").filter({ hasText: /^control$/ }).locator('input[type="checkbox"]');
+    if (!await predictorInput.isChecked()) await predictorInput.check();
+    if (!await controlInput.isChecked()) await controlInput.check();
+    check.regressionTypeOptions = await regressionType.locator("option").evaluateAll((options) => options.map((option) => ({
+      value: option.value,
+      label: option.textContent?.replace(/\s+/g, " ").trim() ?? "",
+    })));
+    check.outcome = await outcome.inputValue();
+    check.roles = await inspectRoles();
+
+    await bootstrapToggle.selectOption("off");
+    await bootstrapToggle.focus();
+    await page.keyboard.press("ArrowDown");
+    await page.waitForFunction(() => document.querySelector("#nd-calculation-regression-bootstrap")?.value === "enabled", null, { timeout: 1_000 }).catch(() => null);
+    const samples = dialog.locator("#nd-calculation-regression-bootstrap-samples");
+    const workers = dialog.locator("#nd-calculation-regression-bootstrap-workers");
+    const seed = dialog.locator("#nd-calculation-seed");
+    await samples.waitFor({ state: "visible", timeout: 1_000 }).catch(() => null);
+    check.bootstrap = {
+      value: await bootstrapToggle.inputValue(),
+      options: await bootstrapToggle.locator("option").evaluateAll((options) => options.map((option) => ({
+        value: option.value,
+        label: option.textContent?.replace(/\s+/g, " ").trim() ?? "",
+      }))),
+      samples: await inspectNumberInput(samples),
+      workers: await inspectNumberInput(workers),
+      seed: await inspectNumberInput(seed),
+      scope: compactCalculationText(await dialog.locator("#nd-calculation-regression-bootstrap-scope strong").textContent().catch(() => "")),
+      toggleFocused: await bootstrapToggle.evaluate((node) => document.activeElement === node),
+    };
+    check.accessibility = {
+      labeledRegressionType: await explicitLabelAssociationCount(regressionType),
+      labeledOutcome: await explicitLabelAssociationCount(outcome),
+      labeledBootstrapToggle: await explicitLabelAssociationCount(bootstrapToggle),
+      labeledSamples: await dialog.getByLabel("Bootstrap samples", { exact: true }).count(),
+      labeledWorkers: await dialog.getByLabel("Parallel workers", { exact: true }).count(),
+      labeledSeed: await dialog.getByLabel("Seed", { exact: true }).count(),
+      predictorGroup: await dialog.getByRole("group", { name: /^Predictors \(1 selected\)$/ }).count(),
+      controlGroup: await dialog.getByRole("group", { name: /^Controls \(1 selected, optional\)$/ }).count(),
+      distinctControlIds: await dialog.locator([
+        "#nd-calculation-regression-type",
+        "#nd-calculation-regression-outcome",
+        "#nd-calculation-regression-bootstrap",
+        "#nd-calculation-regression-bootstrap-samples",
+        "#nd-calculation-regression-bootstrap-workers",
+        "#nd-calculation-seed",
+      ].join(", ")).count(),
+    };
+
+    const olsStart = dialog.getByRole("button", { name: "Start OLS regression with bootstrap", exact: true });
+    check.ols = {
+      type: await regressionType.inputValue(),
+      outcome: await outcome.inputValue(),
+      roles: await inspectRoles(),
+      calculationBasis: await readSettingNote("Calculation basis"),
+      variableData: await readSettingNote("Variable data"),
+      uncertainty: await readSettingNote("Uncertainty"),
+      validatedScope: await readSettingNote("Validated scope"),
+      blockers: await inspectBlockers(),
+      startCommandCount: await olsStart.count(),
+      startCommandDisabled: await olsStart.isDisabled().catch(() => false),
+      truthAndOverflow: await inspectCalculationTruthAndOverflow(dialog),
+      dialogBounds: await inspectDialogBounds(),
+      noPhantomResult: await page.locator(".nd-result-tree, .nd-result-table").count() === 0,
+    };
+    await capture(page, "regression-bootstrap-ols-dialog", olsSequence, viewport, { dialog: "calculation" });
+
+    await regressionType.selectOption("logistic");
+    await regressionType.focus();
+    const logisticProfile = dialog.locator("#nd-calculation-logistic-profile");
+    await logisticProfile.waitFor({ state: "visible", timeout: 1_000 }).catch(() => null);
+    await page.waitForFunction(() => document.querySelector("#nd-calculation-logistic-profile")?.getAttribute("aria-busy") === "false", null, { timeout: 1_000 }).catch(() => null);
+    const logisticStart = dialog.getByRole("button", { name: "Start binary logistic regression with bootstrap", exact: true });
+    check.logistic = {
+      type: await regressionType.inputValue(),
+      typeFocused: await regressionType.evaluate((node) => document.activeElement === node),
+      outcome: await outcome.inputValue(),
+      roles: await inspectRoles(),
+      bootstrapValue: await bootstrapToggle.inputValue(),
+      samples: await samples.inputValue(),
+      workers: await workers.inputValue(),
+      seed: await seed.inputValue(),
+      calculationBasis: await readSettingNote("Calculation basis"),
+      variableData: await readSettingNote("Variable data"),
+      uncertainty: await readSettingNote("Uncertainty"),
+      validatedScope: await readSettingNote("Validated scope"),
+      bootstrapScope: compactCalculationText(await dialog.locator("#nd-calculation-regression-bootstrap-scope strong").textContent().catch(() => "")),
+      profile: {
+        role: await logisticProfile.getAttribute("role"),
+        ariaLive: await logisticProfile.getAttribute("aria-live"),
+        ariaBusy: await logisticProfile.getAttribute("aria-busy"),
+        text: compactCalculationText(await logisticProfile.textContent().catch(() => "")),
+      },
+      blockers: await inspectBlockers([/36 non-missing outcome rows are not coded exactly 0 or 1/i, /must contain both class 0 and class 1/i]),
+      startCommandCount: await logisticStart.count(),
+      startCommandDisabled: await logisticStart.isDisabled().catch(() => false),
+      truthAndOverflow: await inspectCalculationTruthAndOverflow(dialog),
+      dialogBounds: await inspectDialogBounds(),
+      noPhantomResult: await page.locator(".nd-result-tree, .nd-result-table").count() === 0,
+    };
+    await capture(page, "regression-bootstrap-logistic-dialog", logisticSequence, viewport, { dialog: "calculation" });
+    check.closeFocus = await closeCalculationAndCheckFocus(page, dialog, trigger);
+
+    const completedLoaderName = await page.evaluate(() => Object.keys(window.__QUICKPLS_SMOKE__ ?? {}).find((name) => (
+      /load/i.test(name) && /regression/i.test(name) && /bootstrap/i.test(name) && /(completed|result)/i.test(name)
+    )) ?? null);
+    check.completedResult = {
+      genuineSmokeLoader: completedLoaderName,
+      inspected: false,
+      synthesizedByHarness: false,
+      runOptionCount: 0,
+      groupCount: 0,
+      tableCount: 0,
+    };
+    if (completedLoaderName) {
+      await page.evaluate(async (name) => {
+        const loader = window.__QUICKPLS_SMOKE__?.[name];
+        if (typeof loader === "function") await loader();
+      }, completedLoaderName);
+      await setSurface(page, "results");
+      await page.locator(".nd-result-tree").waitFor({ state: "visible", timeout: 5_000 }).catch(() => null);
+      check.completedResult.runOptionCount = await page.locator(".nd-run-select select option").count();
+      check.completedResult.groupCount = await page.getByRole("treeitem", { name: /^(OLS regression|Binary logistic regression) with bootstrap$/ }).count();
+      check.completedResult.tableCount = await page.getByRole("treeitem", { name: /^(Regression bootstrap summary|Bootstrap coefficient inference|Percentile confidence intervals \(primary\)|BCa confidence intervals \(conditional\)|Bootstrap odds-ratio intervals)$/ }).count();
+      check.completedResult.inspected = check.completedResult.runOptionCount > 0
+        && check.completedResult.groupCount === 1
+        && check.completedResult.tableCount >= 4;
+    } else {
+      recordSkip("regression-bootstrap-completed-results-browser", "The smoke runtime provides genuine regression setup data but no completed regression-bootstrap run fixture. The browser harness did not synthesize a run, coefficient, interval, failure, or odds-ratio row.", {
+        viewport: viewport.id,
+        featureId: "qpls3.standalone.regression_bootstrap",
+        methodVersion: "regression_bootstrap_v1",
+        requiredPackagedFollowUp: "Run genuine OLS and binary-logistic case-resampling jobs through packaged Tauri; inspect summary/coefficient/percentile/conditional-BCa tables, conditional failures, logistic odds ratios, XLSX, save, archive witness, and same-run reopen.",
+      });
+    }
+  } finally {
+    if (await dialog.isVisible().catch(() => false)) await closeCalculationAndCheckFocus(page, dialog, trigger).catch(() => null);
+    evidence.checks.regressionBootstrap.push(check);
+  }
+
+  const expectedRegressionTypes = [
+    { value: "ols", label: "Ordinary least squares" },
+    { value: "logistic", label: "Binary logistic (outcome coded 0/1)" },
+  ];
+  const expectedBootstrapOptions = [
+    { value: "off", label: "Off" },
+    { value: "enabled", label: "Case-resampling bootstrap" },
+  ];
+  const expectedContinuousFixtureProfileBlockers = [
+    "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
+    "36 non-missing outcome rows are not coded exactly 0 or 1",
+    "The listwise-complete outcome must contain both class 0 and class 1",
+  ];
+  if (JSON.stringify(check.fixture) !== JSON.stringify({ variables: 5, models: 0 })
+    || !check.dataSurface || check.visibleModelNodes !== 0 || check.analyzeCommandCount !== 1) {
+    recordFailure("regression-bootstrap-data-only-fixture", `Regression bootstrap did not begin from the genuine five-variable, zero-model smoke workspace at ${viewport.id}.`, check);
+  }
+  if (!check.dialogOpened || check.catalogCount !== nativeCalculationMethods.length || check.selectedMethod !== "Regression"
+    || !check.linkage?.linkage || check.category !== "Standalone analysis"
+    || JSON.stringify(check.regressionTypeOptions) !== JSON.stringify(expectedRegressionTypes)) {
+    recordFailure("regression-bootstrap-method-toggle", `Regression bootstrap did not expose the linked Regression catalog entry with exact OLS/logistic choices at ${viewport.id}.`, check);
+  }
+  if (check.outcome !== "outcome" || JSON.stringify(check.roles?.selectedPredictors) !== JSON.stringify(["predictor"])
+    || JSON.stringify(check.roles?.selectedControls) !== JSON.stringify(["control"])
+    || check.roles?.fieldsetCount !== 2 || check.roles?.predictors?.legend !== "Predictors (1 selected)"
+    || check.roles?.controls?.legend !== "Controls (1 selected, optional)") {
+    recordFailure("regression-bootstrap-variable-roles", `Regression bootstrap did not preserve the exact outcome, predictor, and optional-control role contract at ${viewport.id}.`, check);
+  }
+  if (check.bootstrap?.value !== "enabled" || JSON.stringify(check.bootstrap?.options) !== JSON.stringify(expectedBootstrapOptions)
+    || JSON.stringify(check.bootstrap?.samples) !== JSON.stringify({ count: 1, value: "10000", min: "99", max: "10000", step: "1" })
+    || check.bootstrap?.workers?.count !== 1 || check.bootstrap?.workers?.value !== "1"
+    || check.bootstrap?.workers?.min !== "1" || check.bootstrap?.workers?.max !== "64"
+    || check.bootstrap?.seed?.count !== 1 || check.bootstrap?.seed?.value !== "20260718"
+    || check.bootstrap?.seed?.min !== "0" || check.bootstrap?.seed?.max !== "4294967295"
+    || check.bootstrap?.scope !== nativeRegressionBootstrapScopeNote || !check.bootstrap?.toggleFocused) {
+    recordFailure("regression-bootstrap-resampling-controls", `Regression bootstrap did not expose enabled 10,000-sample case resampling with exact worker, seed, range, focus, and scope contracts at ${viewport.id}.`, check);
+  }
+  if (!check.accessibility || Object.values(check.accessibility).some((count) => count !== 1 && count !== 6)
+    || check.accessibility?.distinctControlIds !== 6) {
+    recordFailure("regression-bootstrap-control-accessibility", `Regression bootstrap controls or variable groups were not uniquely labelled and focusable at ${viewport.id}.`, check);
+  }
+  if (check.ols?.type !== "ols" || check.ols?.outcome !== "outcome"
+    || check.ols?.calculationBasis !== "Raw-value OLS with intercept (fixed)"
+    || check.ols?.variableData !== "Unstandardized numeric values (fixed)"
+    || check.ols?.uncertainty !== "HC3 robust SE; two-sided 95% CI (fixed)"
+    || check.ols?.validatedScope !== nativeOlsScopeNote
+    || check.ols?.blockers?.runtime?.length !== 1 || check.ols?.blockers?.unexpected?.length !== 0
+    || check.ols?.blockers?.model?.length !== 0 || check.ols?.startCommandCount !== 1 || !check.ols?.startCommandDisabled) {
+    recordFailure("regression-bootstrap-ols-setup", `The OLS bootstrap state exposed a setup blocker, stale disclosure, or incorrect start contract at ${viewport.id}.`, check);
+  }
+  if (check.logistic?.type !== "logistic" || !check.logistic?.typeFocused || check.logistic?.outcome !== "outcome"
+    || check.logistic?.bootstrapValue !== "enabled" || check.logistic?.samples !== "10000"
+    || check.logistic?.workers !== "1" || check.logistic?.seed !== "20260718"
+    || check.logistic?.calculationBasis !== "Binary logistic maximum likelihood with intercept (fixed)"
+    || check.logistic?.variableData !== "Unstandardized numeric values (fixed)"
+    || check.logistic?.uncertainty !== "Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)"
+    || check.logistic?.validatedScope !== nativeLogisticScopeNote || check.logistic?.bootstrapScope !== nativeRegressionBootstrapScopeNote
+    || check.logistic?.profile?.role !== "status" || check.logistic?.profile?.ariaLive !== "polite" || check.logistic?.profile?.ariaBusy !== "false"
+    || !check.logistic?.profile?.text.includes("36 complete cases: 0 class 0 and 0 class 1; 0 omitted by listwise deletion")
+    || check.logistic?.blockers?.runtime?.length !== 1
+    || JSON.stringify(check.logistic?.blockers?.allowedFixtureProfile) !== JSON.stringify(expectedContinuousFixtureProfileBlockers)
+    || check.logistic?.blockers?.unexpected?.length !== 0 || check.logistic?.blockers?.model?.length !== 0
+    || check.logistic?.startCommandCount !== 1 || !check.logistic?.startCommandDisabled) {
+    recordFailure("regression-bootstrap-logistic-toggle", `The genuine continuous smoke fixture was not truthfully toggled to logistic bootstrap with only its exact 0/1 profile limitations at ${viewport.id}.`, check);
+  }
+  if (!check.ols?.truthAndOverflow?.noFabricatedRunState || !check.ols?.truthAndOverflow?.noHorizontalOverflow
+    || !check.logistic?.truthAndOverflow?.noFabricatedRunState || !check.logistic?.truthAndOverflow?.noHorizontalOverflow
+    || !check.ols?.dialogBounds?.withinHorizontalViewport || check.ols?.dialogBounds?.pageHorizontalOverflow
+    || !check.logistic?.dialogBounds?.withinHorizontalViewport || check.logistic?.dialogBounds?.pageHorizontalOverflow
+    || !check.ols?.noPhantomResult || !check.logistic?.noPhantomResult
+    || !check.closeFocus?.dialogClosed || !check.closeFocus?.focusRestored) {
+    recordFailure("regression-bootstrap-browser-truth-layout", `Regression bootstrap exposed fabricated results, responsive overflow, or broken close focus at ${viewport.id}.`, check);
+  }
+  if (check.completedResult?.genuineSmokeLoader && !check.completedResult?.inspected) {
+    recordFailure("regression-bootstrap-genuine-result-inspection", `A genuine completed regression-bootstrap smoke loader was present but its result navigation was incomplete at ${viewport.id}.`, check.completedResult);
+  }
+}
+
 async function auditStructuralPathRandomizationDialog(page, viewport, sequence, trigger) {
   const dialog = page.locator('.nd-dialog-calculation[role="dialog"]');
   const check = {
@@ -3655,6 +3997,7 @@ async function exerciseViewport(browser, viewport) {
     await auditPcaStandaloneDialogFromData(page, viewport, 16);
     await auditOlsStandaloneDialogFromData(page, viewport, 17);
     await auditLogisticStandaloneDialogFromData(page, viewport, 18);
+    await auditRegressionBootstrapDialogFromData(page, viewport, 19, 20);
 
     await page.evaluate(() => window.__QUICKPLS_SMOKE__?.loadEmptyProject());
     await setSurface(page, "results");
@@ -3905,7 +4248,7 @@ async function exerciseLargeModelFixture(browser) {
   }
 }
 async function finalizeCoverage() {
-  const requiredStates = ["launcher", "workspace-explorer", "workspace-explorer-context-menu", "workspace-explorer-rename-dialog", "data", "recode-dialog", "import-data-dialog", "model", "moderating-effect-dialog", "higher-order-dialog", "calculation-dialog", "plsc-dialog", "wpls-dialog", "gsca-dialog", "cca-dialog", "cbsem-dialog", "structural-path-randomization-dialog", "prediction-dialog", "mga-dialog", "pca-standalone-dialog", "ols-standalone-dialog", "logistic-standalone-dialog", "empty-results", "completed-results", "mediation-results", "export-dialog"];
+  const requiredStates = ["launcher", "workspace-explorer", "workspace-explorer-context-menu", "workspace-explorer-rename-dialog", "data", "recode-dialog", "import-data-dialog", "model", "moderating-effect-dialog", "higher-order-dialog", "calculation-dialog", "plsc-dialog", "wpls-dialog", "gsca-dialog", "cca-dialog", "cbsem-dialog", "structural-path-randomization-dialog", "prediction-dialog", "mga-dialog", "pca-standalone-dialog", "ols-standalone-dialog", "logistic-standalone-dialog", "regression-bootstrap-ols-dialog", "regression-bootstrap-logistic-dialog", "empty-results", "completed-results", "mediation-results", "export-dialog"];
   const requiredCompactStates = [{ viewport: "1024x700", state: "mediation-bootstrap-inference" }];
   const expectedMatrix = [
     ...viewports.flatMap((viewport) => requiredStates.map((state) => ({ viewport: viewport.id, state }))),

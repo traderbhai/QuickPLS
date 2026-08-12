@@ -539,6 +539,25 @@ describe("model editor state", () => {
     expect(state.diagramLayout.constructLayouts.competence).toMatchObject({ x: state.nodes.find((node) => node.id === "competence")?.position.x });
   });
 
+  it("persists the explicit regression-bootstrap setup flag", () => {
+    useWorkspace.getState().setAnalysisSettings({
+      method: "regression",
+      regressionType: "logistic",
+      regressionBootstrap: true,
+      bootstrapSamples: 10_000,
+      workers: 4,
+    });
+    expect(useWorkspace.getState().analysisSettings).toMatchObject({
+      method: "regression",
+      regressionType: "logistic",
+      regressionBootstrap: true,
+      bootstrapSamples: 10_000,
+      workers: 4,
+    });
+    useWorkspace.getState().setAnalysisSettings({ regressionBootstrap: false, bootstrapSamples: 0 });
+    expect(useWorkspace.getState().analysisSettings.regressionBootstrap).toBe(false);
+  });
+
   it("persists toolbar view preferences without changing the engine model", () => {
     const originalNodes = useWorkspace.getState().nodes;
     const originalEdges = useWorkspace.getState().edges;

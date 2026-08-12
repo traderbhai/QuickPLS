@@ -1,0 +1,56 @@
+{
+  "schema_version": 3,
+  "id": "00000000-0000-0000-0000-000000003101",
+  "created_at": "2026-08-12T00:00:00Z",
+  "dataset_fingerprint": "v2:b5f52a1093a0277acb29a8dd50958f7fd0180635d011a56a5fdff7d6979a76bb",
+  "model": {
+    "id": "00000000-0000-0000-0000-000000031001",
+    "name": "Regression bootstrap v1 reference",
+    "constructs": [],
+    "paths": [],
+    "controls": [],
+    "higher_order_constructs": [],
+    "interactions": []
+  },
+  "settings": {
+    "method": "regression",
+    "weighting_scheme": "path",
+    "tolerance": 1e-07,
+    "max_iterations": 3000,
+    "bootstrap_samples": 1000,
+    "studentized_inner_samples": 0,
+    "permutation_samples": 0,
+    "seed": 20260812,
+    "workers": 1,
+    "confidence_level": 0.95,
+    "preprocessing": "unstandardized",
+    "missing_data": "listwise_deletion",
+    "case_weight_column": null
+  },
+  "method_config": {
+    "kind": "regression",
+    "outcome": "y",
+    "predictors": [
+      "x",
+      "z"
+    ],
+    "controls": [
+      "w"
+    ],
+    "model": {
+      "type": "ols",
+      "robust_se": "hc3"
+    },
+    "bootstrap": {
+      "algorithm": "case_resampling",
+      "intervals": [
+        "percentile",
+        "bca"
+      ]
+    }
+  },
+  "metadata": {
+    "status": "validated_regression_bootstrap_v1_bounded_scope",
+    "fixture": "regression_bootstrap_v1_reference"
+  }
+}

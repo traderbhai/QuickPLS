@@ -54,6 +54,12 @@ describe("native desktop result contracts", () => {
 });
 
 describe("native desktop multi-model shell contracts", () => {
+  it("reapplies an asynchronously hydrated result default without requiring a run-id change", () => {
+    const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
+    expect(source).toContain('setSelectedTableId(resultNavigation.defaultItemId ?? "")');
+    expect(source).toContain("[resultNavigation.defaultItemId, resultNavigation.runId]");
+  });
+
   it("routes Data Analyze through the shared catalog with standalone NCA selected", () => {
     const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
     expect(source).toContain('const preferredKind = surface === "data" ? "nca"');

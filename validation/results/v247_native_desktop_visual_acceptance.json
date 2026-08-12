@@ -180,6 +180,18 @@
       "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\18-logistic-standalone-dialog-1024x700.png"
     },
     {
+      "state": "regression-bootstrap-ols-dialog",
+      "viewport": "1024x700",
+      "runtime": "chromium-preview",
+      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\19-regression-bootstrap-ols-dialog-1024x700.png"
+    },
+    {
+      "state": "regression-bootstrap-logistic-dialog",
+      "viewport": "1024x700",
+      "runtime": "chromium-preview",
+      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\20-regression-bootstrap-logistic-dialog-1024x700.png"
+    },
+    {
       "state": "empty-results",
       "viewport": "1024x700",
       "runtime": "chromium-preview",
@@ -360,6 +372,18 @@
       "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\18-logistic-standalone-dialog-1280x720.png"
     },
     {
+      "state": "regression-bootstrap-ols-dialog",
+      "viewport": "1280x720",
+      "runtime": "chromium-preview",
+      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\19-regression-bootstrap-ols-dialog-1280x720.png"
+    },
+    {
+      "state": "regression-bootstrap-logistic-dialog",
+      "viewport": "1280x720",
+      "runtime": "chromium-preview",
+      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\20-regression-bootstrap-logistic-dialog-1280x720.png"
+    },
+    {
       "state": "empty-results",
       "viewport": "1280x720",
       "runtime": "chromium-preview",
@@ -532,6 +556,18 @@
       "viewport": "1440x900",
       "runtime": "chromium-preview",
       "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\18-logistic-standalone-dialog-1440x900.png"
+    },
+    {
+      "state": "regression-bootstrap-ols-dialog",
+      "viewport": "1440x900",
+      "runtime": "chromium-preview",
+      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\19-regression-bootstrap-ols-dialog-1440x900.png"
+    },
+    {
+      "state": "regression-bootstrap-logistic-dialog",
+      "viewport": "1440x900",
+      "runtime": "chromium-preview",
+      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\20-regression-bootstrap-logistic-dialog-1440x900.png"
     },
     {
       "state": "empty-results",
@@ -880,6 +916,30 @@
       },
       {
         "state": "logistic-standalone-dialog",
+        "viewport": "1024x700",
+        "documentWidth": 1024,
+        "bodyWidth": 1008,
+        "viewportWidth": 1024,
+        "horizontalOverflow": false,
+        "visibleHtmlTitlebars": 0,
+        "visibleLegacyRibbons": 0,
+        "obsoleteVisibleStrings": [],
+        "fabricatedIterationRows": 0
+      },
+      {
+        "state": "regression-bootstrap-ols-dialog",
+        "viewport": "1024x700",
+        "documentWidth": 1024,
+        "bodyWidth": 1008,
+        "viewportWidth": 1024,
+        "horizontalOverflow": false,
+        "visibleHtmlTitlebars": 0,
+        "visibleLegacyRibbons": 0,
+        "obsoleteVisibleStrings": [],
+        "fabricatedIterationRows": 0
+      },
+      {
+        "state": "regression-bootstrap-logistic-dialog",
         "viewport": "1024x700",
         "documentWidth": 1024,
         "bodyWidth": 1008,
@@ -1251,6 +1311,30 @@
         "fabricatedIterationRows": 0
       },
       {
+        "state": "regression-bootstrap-ols-dialog",
+        "viewport": "1280x720",
+        "documentWidth": 1280,
+        "bodyWidth": 1264,
+        "viewportWidth": 1280,
+        "horizontalOverflow": false,
+        "visibleHtmlTitlebars": 0,
+        "visibleLegacyRibbons": 0,
+        "obsoleteVisibleStrings": [],
+        "fabricatedIterationRows": 0
+      },
+      {
+        "state": "regression-bootstrap-logistic-dialog",
+        "viewport": "1280x720",
+        "documentWidth": 1280,
+        "bodyWidth": 1264,
+        "viewportWidth": 1280,
+        "horizontalOverflow": false,
+        "visibleHtmlTitlebars": 0,
+        "visibleLegacyRibbons": 0,
+        "obsoleteVisibleStrings": [],
+        "fabricatedIterationRows": 0
+      },
+      {
         "state": "empty-results",
         "viewport": "1280x720",
         "documentWidth": 1280,
@@ -1599,6 +1683,30 @@
         "fabricatedIterationRows": 0
       },
       {
+        "state": "regression-bootstrap-ols-dialog",
+        "viewport": "1440x900",
+        "documentWidth": 1440,
+        "bodyWidth": 1424,
+        "viewportWidth": 1440,
+        "horizontalOverflow": false,
+        "visibleHtmlTitlebars": 0,
+        "visibleLegacyRibbons": 0,
+        "obsoleteVisibleStrings": [],
+        "fabricatedIterationRows": 0
+      },
+      {
+        "state": "regression-bootstrap-logistic-dialog",
+        "viewport": "1440x900",
+        "documentWidth": 1440,
+        "bodyWidth": 1424,
+        "viewportWidth": 1440,
+        "horizontalOverflow": false,
+        "visibleHtmlTitlebars": 0,
+        "visibleLegacyRibbons": 0,
+        "obsoleteVisibleStrings": [],
+        "fabricatedIterationRows": 0
+      },
+      {
         "state": "empty-results",
         "viewport": "1440x900",
         "documentWidth": 1440,
@@ -1861,6 +1969,22 @@
         "accessibleName": "Calculate"
       },
       {
+        "dialog": "calculation",
+        "viewport": "1024x700",
+        "count": 1,
+        "ariaModal": "true",
+        "labelledBy": "nd-dialog-title",
+        "accessibleName": "Calculate"
+      },
+      {
+        "dialog": "calculation",
+        "viewport": "1024x700",
+        "count": 1,
+        "ariaModal": "true",
+        "labelledBy": "nd-dialog-title",
+        "accessibleName": "Calculate"
+      },
+      {
         "dialog": "export",
         "viewport": "1024x700",
         "count": 1,
@@ -2021,6 +2145,22 @@
         "accessibleName": "Calculate"
       },
       {
+        "dialog": "calculation",
+        "viewport": "1280x720",
+        "count": 1,
+        "ariaModal": "true",
+        "labelledBy": "nd-dialog-title",
+        "accessibleName": "Calculate"
+      },
+      {
+        "dialog": "calculation",
+        "viewport": "1280x720",
+        "count": 1,
+        "ariaModal": "true",
+        "labelledBy": "nd-dialog-title",
+        "accessibleName": "Calculate"
+      },
+      {
         "dialog": "export",
         "viewport": "1280x720",
         "count": 1,
@@ -2067,6 +2207,22 @@
         "ariaModal": "true",
         "labelledBy": "nd-dialog-title",
         "accessibleName": "Create Higher-Order Construct"
+      },
+      {
+        "dialog": "calculation",
+        "viewport": "1440x900",
+        "count": 1,
+        "ariaModal": "true",
+        "labelledBy": "nd-dialog-title",
+        "accessibleName": "Calculate"
+      },
+      {
+        "dialog": "calculation",
+        "viewport": "1440x900",
+        "count": 1,
+        "ariaModal": "true",
+        "labelledBy": "nd-dialog-title",
+        "accessibleName": "Calculate"
       },
       {
         "dialog": "calculation",
@@ -2515,7 +2671,7 @@
       {
         "state": "ols-standalone-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 60,
+        "visibleInteractiveCount": 61,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2529,7 +2685,35 @@
       {
         "state": "logistic-standalone-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 60,
+        "visibleInteractiveCount": 61,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "regression-bootstrap-ols-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 64,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "regression-bootstrap-logistic-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 64,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2935,7 +3119,7 @@
       {
         "state": "ols-standalone-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 65,
+        "visibleInteractiveCount": 66,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2949,7 +3133,35 @@
       {
         "state": "logistic-standalone-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 65,
+        "visibleInteractiveCount": 66,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "regression-bootstrap-ols-dialog",
+        "viewport": "1280x720",
+        "visibleInteractiveCount": 69,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "regression-bootstrap-logistic-dialog",
+        "viewport": "1280x720",
+        "visibleInteractiveCount": 69,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3341,7 +3553,7 @@
       {
         "state": "ols-standalone-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 65,
+        "visibleInteractiveCount": 66,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3355,7 +3567,35 @@
       {
         "state": "logistic-standalone-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 65,
+        "visibleInteractiveCount": 66,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "regression-bootstrap-ols-dialog",
+        "viewport": "1440x900",
+        "visibleInteractiveCount": 69,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "regression-bootstrap-logistic-dialog",
+        "viewport": "1440x900",
+        "visibleInteractiveCount": 69,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -7374,7 +7614,7 @@
         "calculationBasis": "Raw-value OLS with intercept (fixed)",
         "variableData": "Unstandardized numeric values (fixed)",
         "uncertainty": "HC3 robust SE; two-sided 95% CI (fixed)",
-        "validatedScope": "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Categorical encoding, weights, clusters, resampling, logistic regression, and PROCESS models are not included.",
+        "validatedScope": "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa inference. Categorical encoding, weights, clusters, generic PLS resampling, logistic regression, and PROCESS models are not included.",
         "unsupportedControlCount": 0,
         "startCommandCount": 1,
         "startCommandDisabled": true,
@@ -7499,7 +7739,7 @@
         "calculationBasis": "Raw-value OLS with intercept (fixed)",
         "variableData": "Unstandardized numeric values (fixed)",
         "uncertainty": "HC3 robust SE; two-sided 95% CI (fixed)",
-        "validatedScope": "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Categorical encoding, weights, clusters, resampling, logistic regression, and PROCESS models are not included.",
+        "validatedScope": "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa inference. Categorical encoding, weights, clusters, generic PLS resampling, logistic regression, and PROCESS models are not included.",
         "unsupportedControlCount": 0,
         "startCommandCount": 1,
         "startCommandDisabled": true,
@@ -7624,7 +7864,7 @@
         "calculationBasis": "Raw-value OLS with intercept (fixed)",
         "variableData": "Unstandardized numeric values (fixed)",
         "uncertainty": "HC3 robust SE; two-sided 95% CI (fixed)",
-        "validatedScope": "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Categorical encoding, weights, clusters, resampling, logistic regression, and PROCESS models are not included.",
+        "validatedScope": "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa inference. Categorical encoding, weights, clusters, generic PLS resampling, logistic regression, and PROCESS models are not included.",
         "unsupportedControlCount": 0,
         "startCommandCount": 1,
         "startCommandDisabled": true,
@@ -7708,7 +7948,7 @@
           "ariaLive": "polite",
           "ariaBusy": "false"
         },
-        "validatedScope": "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, and Firth-corrected models are not included.",
+        "validatedScope": "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa coefficient and odds-ratio inference. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, generic PLS resampling, and Firth-corrected models are not included.",
         "unsupportedControlCount": 0,
         "startCommandCount": 1,
         "startCommandDisabled": true,
@@ -7796,7 +8036,7 @@
           "ariaLive": "polite",
           "ariaBusy": "false"
         },
-        "validatedScope": "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, and Firth-corrected models are not included.",
+        "validatedScope": "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa coefficient and odds-ratio inference. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, generic PLS resampling, and Firth-corrected models are not included.",
         "unsupportedControlCount": 0,
         "startCommandCount": 1,
         "startCommandDisabled": true,
@@ -7884,7 +8124,7 @@
           "ariaLive": "polite",
           "ariaBusy": "false"
         },
-        "validatedScope": "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, and Firth-corrected models are not included.",
+        "validatedScope": "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa coefficient and odds-ratio inference. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, generic PLS resampling, and Firth-corrected models are not included.",
         "unsupportedControlCount": 0,
         "startCommandCount": 1,
         "startCommandDisabled": true,
@@ -7917,6 +8157,1232 @@
           "closeButtonCount": 1,
           "dialogClosed": true,
           "focusRestored": true
+        }
+      }
+    ],
+    "regressionBootstrap": [
+      {
+        "viewport": "1024x700",
+        "fixtureApiPresent": true,
+        "fixture": {
+          "variables": 5,
+          "models": 0
+        },
+        "dataSurface": true,
+        "visibleModelNodes": 0,
+        "analyzeCommandCount": 1,
+        "dialogOpened": true,
+        "catalogCount": 14,
+        "selectedMethod": "Regression",
+        "linkage": {
+          "expectedKind": "regression",
+          "expectedLabel": "Regression",
+          "selectedCount": 1,
+          "selectedId": "nd-calculation-method-regression",
+          "selectedLabel": "Regression",
+          "panelCount": 1,
+          "panelId": "nd-calculation-panel",
+          "panelLabelledBy": "nd-calculation-panel-regression-title",
+          "headingCount": 1,
+          "headingId": "nd-calculation-panel-regression-title",
+          "headingLabel": "Regression",
+          "linkage": true
+        },
+        "category": "Standalone analysis",
+        "regressionTypeOptions": [
+          {
+            "value": "ols",
+            "label": "Ordinary least squares"
+          },
+          {
+            "value": "logistic",
+            "label": "Binary logistic (outcome coded 0/1)"
+          }
+        ],
+        "outcome": "outcome",
+        "roles": {
+          "fieldsetCount": 2,
+          "predictors": {
+            "legend": "Predictors (1 selected)",
+            "variables": [
+              {
+                "name": "outcome",
+                "checked": false,
+                "disabled": true
+              },
+              {
+                "name": "predictor",
+                "checked": true,
+                "disabled": false
+              },
+              {
+                "name": "moderator",
+                "checked": false,
+                "disabled": false
+              },
+              {
+                "name": "control",
+                "checked": false,
+                "disabled": true
+              }
+            ]
+          },
+          "controls": {
+            "legend": "Controls (1 selected, optional)",
+            "variables": [
+              {
+                "name": "outcome",
+                "checked": false,
+                "disabled": true
+              },
+              {
+                "name": "predictor",
+                "checked": false,
+                "disabled": true
+              },
+              {
+                "name": "moderator",
+                "checked": false,
+                "disabled": false
+              },
+              {
+                "name": "control",
+                "checked": true,
+                "disabled": false
+              }
+            ]
+          },
+          "selectedPredictors": [
+            "predictor"
+          ],
+          "selectedControls": [
+            "control"
+          ]
+        },
+        "bootstrap": {
+          "value": "enabled",
+          "options": [
+            {
+              "value": "off",
+              "label": "Off"
+            },
+            {
+              "value": "enabled",
+              "label": "Case-resampling bootstrap"
+            }
+          ],
+          "samples": {
+            "count": 1,
+            "value": "10000",
+            "min": "99",
+            "max": "10000",
+            "step": "1"
+          },
+          "workers": {
+            "count": 1,
+            "value": "1",
+            "min": "1",
+            "max": "64",
+            "step": null
+          },
+          "seed": {
+            "count": 1,
+            "value": "20260718",
+            "min": "0",
+            "max": "4294967295",
+            "step": null
+          },
+          "scope": "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.",
+          "toggleFocused": true
+        },
+        "accessibility": {
+          "labeledRegressionType": 1,
+          "labeledOutcome": 1,
+          "labeledBootstrapToggle": 1,
+          "labeledSamples": 1,
+          "labeledWorkers": 1,
+          "labeledSeed": 1,
+          "predictorGroup": 1,
+          "controlGroup": 1,
+          "distinctControlIds": 6
+        },
+        "ols": {
+          "type": "ols",
+          "outcome": "outcome",
+          "roles": {
+            "fieldsetCount": 2,
+            "predictors": {
+              "legend": "Predictors (1 selected)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": true,
+                  "disabled": false
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": false,
+                  "disabled": true
+                }
+              ]
+            },
+            "controls": {
+              "legend": "Controls (1 selected, optional)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": true,
+                  "disabled": false
+                }
+              ]
+            },
+            "selectedPredictors": [
+              "predictor"
+            ],
+            "selectedControls": [
+              "control"
+            ]
+          },
+          "calculationBasis": "Raw-value OLS with intercept (fixed)",
+          "variableData": "Unstandardized numeric values (fixed)",
+          "uncertainty": "HC3 robust SE; two-sided 95% CI (fixed)",
+          "validatedScope": "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa inference. Categorical encoding, weights, clusters, generic PLS resampling, logistic regression, and PROCESS models are not included.",
+          "blockers": {
+            "messages": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
+            ],
+            "runtime": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
+            ],
+            "allowedFixtureProfile": [],
+            "unexpected": [],
+            "model": []
+          },
+          "startCommandCount": 1,
+          "startCommandDisabled": true,
+          "truthAndOverflow": {
+            "fabricatedRunState": {
+              "statusSections": 0,
+              "progressElements": 0,
+              "calculationLogs": 0,
+              "iterationRows": 0
+            },
+            "noFabricatedRunState": true,
+            "horizontalOverflow": {
+              "dialogScrollWidth": 848,
+              "dialogClientWidth": 848,
+              "dialogOutsideViewport": false,
+              "dialogContentOverflow": false,
+              "pageOverflow": false
+            },
+            "noHorizontalOverflow": true
+          },
+          "dialogBounds": {
+            "viewport": {
+              "width": 1024,
+              "height": 700
+            },
+            "rect": {
+              "left": 87,
+              "top": 24,
+              "right": 937,
+              "bottom": 676,
+              "width": 850,
+              "height": 652
+            },
+            "withinHorizontalViewport": true,
+            "verticalScrollAvailable": false,
+            "pageHorizontalOverflow": false
+          },
+          "noPhantomResult": true
+        },
+        "logistic": {
+          "type": "logistic",
+          "typeFocused": true,
+          "outcome": "outcome",
+          "roles": {
+            "fieldsetCount": 2,
+            "predictors": {
+              "legend": "Predictors (1 selected)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": true,
+                  "disabled": false
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": false,
+                  "disabled": true
+                }
+              ]
+            },
+            "controls": {
+              "legend": "Controls (1 selected, optional)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": true,
+                  "disabled": false
+                }
+              ]
+            },
+            "selectedPredictors": [
+              "predictor"
+            ],
+            "selectedControls": [
+              "control"
+            ]
+          },
+          "bootstrapValue": "enabled",
+          "samples": "10000",
+          "workers": "1",
+          "seed": "20260718",
+          "calculationBasis": "Binary logistic maximum likelihood with intercept (fixed)",
+          "variableData": "Unstandardized numeric values (fixed)",
+          "uncertainty": "Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)",
+          "validatedScope": "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa coefficient and odds-ratio inference. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, generic PLS resampling, and Firth-corrected models are not included.",
+          "bootstrapScope": "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.",
+          "profile": {
+            "role": "status",
+            "ariaLive": "polite",
+            "ariaBusy": "false",
+            "text": "Complete-dataset outcome profile36 complete cases: 0 class 0 and 0 class 1; 0 omitted by listwise deletion"
+          },
+          "blockers": {
+            "messages": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.",
+              "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
+              "36 non-missing outcome rows are not coded exactly 0 or 1",
+              "The listwise-complete outcome must contain both class 0 and class 1"
+            ],
+            "runtime": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
+            ],
+            "allowedFixtureProfile": [
+              "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
+              "36 non-missing outcome rows are not coded exactly 0 or 1",
+              "The listwise-complete outcome must contain both class 0 and class 1"
+            ],
+            "unexpected": [],
+            "model": []
+          },
+          "startCommandCount": 1,
+          "startCommandDisabled": true,
+          "truthAndOverflow": {
+            "fabricatedRunState": {
+              "statusSections": 0,
+              "progressElements": 0,
+              "calculationLogs": 0,
+              "iterationRows": 0
+            },
+            "noFabricatedRunState": true,
+            "horizontalOverflow": {
+              "dialogScrollWidth": 848,
+              "dialogClientWidth": 848,
+              "dialogOutsideViewport": false,
+              "dialogContentOverflow": false,
+              "pageOverflow": false
+            },
+            "noHorizontalOverflow": true
+          },
+          "dialogBounds": {
+            "viewport": {
+              "width": 1024,
+              "height": 700
+            },
+            "rect": {
+              "left": 87,
+              "top": 24,
+              "right": 937,
+              "bottom": 676,
+              "width": 850,
+              "height": 652
+            },
+            "withinHorizontalViewport": true,
+            "verticalScrollAvailable": false,
+            "pageHorizontalOverflow": false
+          },
+          "noPhantomResult": true
+        },
+        "closeFocus": {
+          "closeButtonCount": 1,
+          "dialogClosed": true,
+          "focusRestored": true
+        },
+        "completedResult": {
+          "genuineSmokeLoader": null,
+          "inspected": false,
+          "synthesizedByHarness": false,
+          "runOptionCount": 0,
+          "groupCount": 0,
+          "tableCount": 0
+        }
+      },
+      {
+        "viewport": "1280x720",
+        "fixtureApiPresent": true,
+        "fixture": {
+          "variables": 5,
+          "models": 0
+        },
+        "dataSurface": true,
+        "visibleModelNodes": 0,
+        "analyzeCommandCount": 1,
+        "dialogOpened": true,
+        "catalogCount": 14,
+        "selectedMethod": "Regression",
+        "linkage": {
+          "expectedKind": "regression",
+          "expectedLabel": "Regression",
+          "selectedCount": 1,
+          "selectedId": "nd-calculation-method-regression",
+          "selectedLabel": "Regression",
+          "panelCount": 1,
+          "panelId": "nd-calculation-panel",
+          "panelLabelledBy": "nd-calculation-panel-regression-title",
+          "headingCount": 1,
+          "headingId": "nd-calculation-panel-regression-title",
+          "headingLabel": "Regression",
+          "linkage": true
+        },
+        "category": "Standalone analysis",
+        "regressionTypeOptions": [
+          {
+            "value": "ols",
+            "label": "Ordinary least squares"
+          },
+          {
+            "value": "logistic",
+            "label": "Binary logistic (outcome coded 0/1)"
+          }
+        ],
+        "outcome": "outcome",
+        "roles": {
+          "fieldsetCount": 2,
+          "predictors": {
+            "legend": "Predictors (1 selected)",
+            "variables": [
+              {
+                "name": "outcome",
+                "checked": false,
+                "disabled": true
+              },
+              {
+                "name": "predictor",
+                "checked": true,
+                "disabled": false
+              },
+              {
+                "name": "moderator",
+                "checked": false,
+                "disabled": false
+              },
+              {
+                "name": "control",
+                "checked": false,
+                "disabled": true
+              }
+            ]
+          },
+          "controls": {
+            "legend": "Controls (1 selected, optional)",
+            "variables": [
+              {
+                "name": "outcome",
+                "checked": false,
+                "disabled": true
+              },
+              {
+                "name": "predictor",
+                "checked": false,
+                "disabled": true
+              },
+              {
+                "name": "moderator",
+                "checked": false,
+                "disabled": false
+              },
+              {
+                "name": "control",
+                "checked": true,
+                "disabled": false
+              }
+            ]
+          },
+          "selectedPredictors": [
+            "predictor"
+          ],
+          "selectedControls": [
+            "control"
+          ]
+        },
+        "bootstrap": {
+          "value": "enabled",
+          "options": [
+            {
+              "value": "off",
+              "label": "Off"
+            },
+            {
+              "value": "enabled",
+              "label": "Case-resampling bootstrap"
+            }
+          ],
+          "samples": {
+            "count": 1,
+            "value": "10000",
+            "min": "99",
+            "max": "10000",
+            "step": "1"
+          },
+          "workers": {
+            "count": 1,
+            "value": "1",
+            "min": "1",
+            "max": "64",
+            "step": null
+          },
+          "seed": {
+            "count": 1,
+            "value": "20260718",
+            "min": "0",
+            "max": "4294967295",
+            "step": null
+          },
+          "scope": "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.",
+          "toggleFocused": true
+        },
+        "accessibility": {
+          "labeledRegressionType": 1,
+          "labeledOutcome": 1,
+          "labeledBootstrapToggle": 1,
+          "labeledSamples": 1,
+          "labeledWorkers": 1,
+          "labeledSeed": 1,
+          "predictorGroup": 1,
+          "controlGroup": 1,
+          "distinctControlIds": 6
+        },
+        "ols": {
+          "type": "ols",
+          "outcome": "outcome",
+          "roles": {
+            "fieldsetCount": 2,
+            "predictors": {
+              "legend": "Predictors (1 selected)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": true,
+                  "disabled": false
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": false,
+                  "disabled": true
+                }
+              ]
+            },
+            "controls": {
+              "legend": "Controls (1 selected, optional)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": true,
+                  "disabled": false
+                }
+              ]
+            },
+            "selectedPredictors": [
+              "predictor"
+            ],
+            "selectedControls": [
+              "control"
+            ]
+          },
+          "calculationBasis": "Raw-value OLS with intercept (fixed)",
+          "variableData": "Unstandardized numeric values (fixed)",
+          "uncertainty": "HC3 robust SE; two-sided 95% CI (fixed)",
+          "validatedScope": "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa inference. Categorical encoding, weights, clusters, generic PLS resampling, logistic regression, and PROCESS models are not included.",
+          "blockers": {
+            "messages": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
+            ],
+            "runtime": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
+            ],
+            "allowedFixtureProfile": [],
+            "unexpected": [],
+            "model": []
+          },
+          "startCommandCount": 1,
+          "startCommandDisabled": true,
+          "truthAndOverflow": {
+            "fabricatedRunState": {
+              "statusSections": 0,
+              "progressElements": 0,
+              "calculationLogs": 0,
+              "iterationRows": 0
+            },
+            "noFabricatedRunState": true,
+            "horizontalOverflow": {
+              "dialogScrollWidth": 848,
+              "dialogClientWidth": 848,
+              "dialogOutsideViewport": false,
+              "dialogContentOverflow": false,
+              "pageOverflow": false
+            },
+            "noHorizontalOverflow": true
+          },
+          "dialogBounds": {
+            "viewport": {
+              "width": 1280,
+              "height": 720
+            },
+            "rect": {
+              "left": 215,
+              "top": 24,
+              "right": 1065,
+              "bottom": 696,
+              "width": 850,
+              "height": 672
+            },
+            "withinHorizontalViewport": true,
+            "verticalScrollAvailable": false,
+            "pageHorizontalOverflow": false
+          },
+          "noPhantomResult": true
+        },
+        "logistic": {
+          "type": "logistic",
+          "typeFocused": true,
+          "outcome": "outcome",
+          "roles": {
+            "fieldsetCount": 2,
+            "predictors": {
+              "legend": "Predictors (1 selected)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": true,
+                  "disabled": false
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": false,
+                  "disabled": true
+                }
+              ]
+            },
+            "controls": {
+              "legend": "Controls (1 selected, optional)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": true,
+                  "disabled": false
+                }
+              ]
+            },
+            "selectedPredictors": [
+              "predictor"
+            ],
+            "selectedControls": [
+              "control"
+            ]
+          },
+          "bootstrapValue": "enabled",
+          "samples": "10000",
+          "workers": "1",
+          "seed": "20260718",
+          "calculationBasis": "Binary logistic maximum likelihood with intercept (fixed)",
+          "variableData": "Unstandardized numeric values (fixed)",
+          "uncertainty": "Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)",
+          "validatedScope": "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa coefficient and odds-ratio inference. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, generic PLS resampling, and Firth-corrected models are not included.",
+          "bootstrapScope": "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.",
+          "profile": {
+            "role": "status",
+            "ariaLive": "polite",
+            "ariaBusy": "false",
+            "text": "Complete-dataset outcome profile36 complete cases: 0 class 0 and 0 class 1; 0 omitted by listwise deletion"
+          },
+          "blockers": {
+            "messages": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.",
+              "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
+              "36 non-missing outcome rows are not coded exactly 0 or 1",
+              "The listwise-complete outcome must contain both class 0 and class 1"
+            ],
+            "runtime": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
+            ],
+            "allowedFixtureProfile": [
+              "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
+              "36 non-missing outcome rows are not coded exactly 0 or 1",
+              "The listwise-complete outcome must contain both class 0 and class 1"
+            ],
+            "unexpected": [],
+            "model": []
+          },
+          "startCommandCount": 1,
+          "startCommandDisabled": true,
+          "truthAndOverflow": {
+            "fabricatedRunState": {
+              "statusSections": 0,
+              "progressElements": 0,
+              "calculationLogs": 0,
+              "iterationRows": 0
+            },
+            "noFabricatedRunState": true,
+            "horizontalOverflow": {
+              "dialogScrollWidth": 848,
+              "dialogClientWidth": 848,
+              "dialogOutsideViewport": false,
+              "dialogContentOverflow": false,
+              "pageOverflow": false
+            },
+            "noHorizontalOverflow": true
+          },
+          "dialogBounds": {
+            "viewport": {
+              "width": 1280,
+              "height": 720
+            },
+            "rect": {
+              "left": 215,
+              "top": 24,
+              "right": 1065,
+              "bottom": 696,
+              "width": 850,
+              "height": 672
+            },
+            "withinHorizontalViewport": true,
+            "verticalScrollAvailable": false,
+            "pageHorizontalOverflow": false
+          },
+          "noPhantomResult": true
+        },
+        "closeFocus": {
+          "closeButtonCount": 1,
+          "dialogClosed": true,
+          "focusRestored": true
+        },
+        "completedResult": {
+          "genuineSmokeLoader": null,
+          "inspected": false,
+          "synthesizedByHarness": false,
+          "runOptionCount": 0,
+          "groupCount": 0,
+          "tableCount": 0
+        }
+      },
+      {
+        "viewport": "1440x900",
+        "fixtureApiPresent": true,
+        "fixture": {
+          "variables": 5,
+          "models": 0
+        },
+        "dataSurface": true,
+        "visibleModelNodes": 0,
+        "analyzeCommandCount": 1,
+        "dialogOpened": true,
+        "catalogCount": 14,
+        "selectedMethod": "Regression",
+        "linkage": {
+          "expectedKind": "regression",
+          "expectedLabel": "Regression",
+          "selectedCount": 1,
+          "selectedId": "nd-calculation-method-regression",
+          "selectedLabel": "Regression",
+          "panelCount": 1,
+          "panelId": "nd-calculation-panel",
+          "panelLabelledBy": "nd-calculation-panel-regression-title",
+          "headingCount": 1,
+          "headingId": "nd-calculation-panel-regression-title",
+          "headingLabel": "Regression",
+          "linkage": true
+        },
+        "category": "Standalone analysis",
+        "regressionTypeOptions": [
+          {
+            "value": "ols",
+            "label": "Ordinary least squares"
+          },
+          {
+            "value": "logistic",
+            "label": "Binary logistic (outcome coded 0/1)"
+          }
+        ],
+        "outcome": "outcome",
+        "roles": {
+          "fieldsetCount": 2,
+          "predictors": {
+            "legend": "Predictors (1 selected)",
+            "variables": [
+              {
+                "name": "outcome",
+                "checked": false,
+                "disabled": true
+              },
+              {
+                "name": "predictor",
+                "checked": true,
+                "disabled": false
+              },
+              {
+                "name": "moderator",
+                "checked": false,
+                "disabled": false
+              },
+              {
+                "name": "control",
+                "checked": false,
+                "disabled": true
+              }
+            ]
+          },
+          "controls": {
+            "legend": "Controls (1 selected, optional)",
+            "variables": [
+              {
+                "name": "outcome",
+                "checked": false,
+                "disabled": true
+              },
+              {
+                "name": "predictor",
+                "checked": false,
+                "disabled": true
+              },
+              {
+                "name": "moderator",
+                "checked": false,
+                "disabled": false
+              },
+              {
+                "name": "control",
+                "checked": true,
+                "disabled": false
+              }
+            ]
+          },
+          "selectedPredictors": [
+            "predictor"
+          ],
+          "selectedControls": [
+            "control"
+          ]
+        },
+        "bootstrap": {
+          "value": "enabled",
+          "options": [
+            {
+              "value": "off",
+              "label": "Off"
+            },
+            {
+              "value": "enabled",
+              "label": "Case-resampling bootstrap"
+            }
+          ],
+          "samples": {
+            "count": 1,
+            "value": "10000",
+            "min": "99",
+            "max": "10000",
+            "step": "1"
+          },
+          "workers": {
+            "count": 1,
+            "value": "1",
+            "min": "1",
+            "max": "64",
+            "step": null
+          },
+          "seed": {
+            "count": 1,
+            "value": "20260718",
+            "min": "0",
+            "max": "4294967295",
+            "step": null
+          },
+          "scope": "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.",
+          "toggleFocused": true
+        },
+        "accessibility": {
+          "labeledRegressionType": 1,
+          "labeledOutcome": 1,
+          "labeledBootstrapToggle": 1,
+          "labeledSamples": 1,
+          "labeledWorkers": 1,
+          "labeledSeed": 1,
+          "predictorGroup": 1,
+          "controlGroup": 1,
+          "distinctControlIds": 6
+        },
+        "ols": {
+          "type": "ols",
+          "outcome": "outcome",
+          "roles": {
+            "fieldsetCount": 2,
+            "predictors": {
+              "legend": "Predictors (1 selected)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": true,
+                  "disabled": false
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": false,
+                  "disabled": true
+                }
+              ]
+            },
+            "controls": {
+              "legend": "Controls (1 selected, optional)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": true,
+                  "disabled": false
+                }
+              ]
+            },
+            "selectedPredictors": [
+              "predictor"
+            ],
+            "selectedControls": [
+              "control"
+            ]
+          },
+          "calculationBasis": "Raw-value OLS with intercept (fixed)",
+          "variableData": "Unstandardized numeric values (fixed)",
+          "uncertainty": "HC3 robust SE; two-sided 95% CI (fixed)",
+          "validatedScope": "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa inference. Categorical encoding, weights, clusters, generic PLS resampling, logistic regression, and PROCESS models are not included.",
+          "blockers": {
+            "messages": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
+            ],
+            "runtime": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
+            ],
+            "allowedFixtureProfile": [],
+            "unexpected": [],
+            "model": []
+          },
+          "startCommandCount": 1,
+          "startCommandDisabled": true,
+          "truthAndOverflow": {
+            "fabricatedRunState": {
+              "statusSections": 0,
+              "progressElements": 0,
+              "calculationLogs": 0,
+              "iterationRows": 0
+            },
+            "noFabricatedRunState": true,
+            "horizontalOverflow": {
+              "dialogScrollWidth": 848,
+              "dialogClientWidth": 848,
+              "dialogOutsideViewport": false,
+              "dialogContentOverflow": false,
+              "pageOverflow": false
+            },
+            "noHorizontalOverflow": true
+          },
+          "dialogBounds": {
+            "viewport": {
+              "width": 1440,
+              "height": 900
+            },
+            "rect": {
+              "left": 295,
+              "top": 70,
+              "right": 1145,
+              "bottom": 830,
+              "width": 850,
+              "height": 760
+            },
+            "withinHorizontalViewport": true,
+            "verticalScrollAvailable": false,
+            "pageHorizontalOverflow": false
+          },
+          "noPhantomResult": true
+        },
+        "logistic": {
+          "type": "logistic",
+          "typeFocused": true,
+          "outcome": "outcome",
+          "roles": {
+            "fieldsetCount": 2,
+            "predictors": {
+              "legend": "Predictors (1 selected)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": true,
+                  "disabled": false
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": false,
+                  "disabled": true
+                }
+              ]
+            },
+            "controls": {
+              "legend": "Controls (1 selected, optional)",
+              "variables": [
+                {
+                  "name": "outcome",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "predictor",
+                  "checked": false,
+                  "disabled": true
+                },
+                {
+                  "name": "moderator",
+                  "checked": false,
+                  "disabled": false
+                },
+                {
+                  "name": "control",
+                  "checked": true,
+                  "disabled": false
+                }
+              ]
+            },
+            "selectedPredictors": [
+              "predictor"
+            ],
+            "selectedControls": [
+              "control"
+            ]
+          },
+          "bootstrapValue": "enabled",
+          "samples": "10000",
+          "workers": "1",
+          "seed": "20260718",
+          "calculationBasis": "Binary logistic maximum likelihood with intercept (fixed)",
+          "variableData": "Unstandardized numeric values (fixed)",
+          "uncertainty": "Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)",
+          "validatedScope": "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa coefficient and odds-ratio inference. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, generic PLS resampling, and Firth-corrected models are not included.",
+          "bootstrapScope": "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.",
+          "profile": {
+            "role": "status",
+            "ariaLive": "polite",
+            "ariaBusy": "false",
+            "text": "Complete-dataset outcome profile36 complete cases: 0 class 0 and 0 class 1; 0 omitted by listwise deletion"
+          },
+          "blockers": {
+            "messages": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.",
+              "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
+              "36 non-missing outcome rows are not coded exactly 0 or 1",
+              "The listwise-complete outcome must contain both class 0 and class 1"
+            ],
+            "runtime": [
+              "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
+            ],
+            "allowedFixtureProfile": [
+              "36 non-missing outcome rows are not coded exactly 0 or 1; The listwise-complete outcome must contain both class 0 and class 1.",
+              "36 non-missing outcome rows are not coded exactly 0 or 1",
+              "The listwise-complete outcome must contain both class 0 and class 1"
+            ],
+            "unexpected": [],
+            "model": []
+          },
+          "startCommandCount": 1,
+          "startCommandDisabled": true,
+          "truthAndOverflow": {
+            "fabricatedRunState": {
+              "statusSections": 0,
+              "progressElements": 0,
+              "calculationLogs": 0,
+              "iterationRows": 0
+            },
+            "noFabricatedRunState": true,
+            "horizontalOverflow": {
+              "dialogScrollWidth": 848,
+              "dialogClientWidth": 848,
+              "dialogOutsideViewport": false,
+              "dialogContentOverflow": false,
+              "pageOverflow": false
+            },
+            "noHorizontalOverflow": true
+          },
+          "dialogBounds": {
+            "viewport": {
+              "width": 1440,
+              "height": 900
+            },
+            "rect": {
+              "left": 295,
+              "top": 70,
+              "right": 1145,
+              "bottom": 830,
+              "width": 850,
+              "height": 760
+            },
+            "withinHorizontalViewport": true,
+            "verticalScrollAvailable": false,
+            "pageHorizontalOverflow": false
+          },
+          "noPhantomResult": true
+        },
+        "closeFocus": {
+          "closeButtonCount": 1,
+          "dialogClosed": true,
+          "focusRestored": true
+        },
+        "completedResult": {
+          "genuineSmokeLoader": null,
+          "inspected": false,
+          "synthesizedByHarness": false,
+          "runOptionCount": 0,
+          "groupCount": 0,
+          "tableCount": 0
         }
       }
     ],
@@ -8966,12 +10432,12 @@
         "indicators": 80
       },
       "metrics": {
-        "fixtureRenderMs": 115.9,
-        "selectionMs": 354.9,
-        "dragMs": 495.3,
-        "panMs": 241.4,
-        "zoomMs": 301.9,
-        "workspaceRoundTripMs": 355.9
+        "fixtureRenderMs": 113.3,
+        "selectionMs": 319.4,
+        "dragMs": 507.3,
+        "panMs": 225.6,
+        "zoomMs": 331.1,
+        "workspaceRoundTripMs": 348.7
       },
       "budgetsMs": {
         "fixtureRender": 5000,
@@ -9053,6 +10519,14 @@
       "requiredNativeFollowUp": "Run the full 140-row binary fixture with no editable model through the focused packaged-Tauri logistic gate."
     },
     {
+      "id": "regression-bootstrap-completed-results-browser",
+      "reason": "The smoke runtime provides genuine regression setup data but no completed regression-bootstrap run fixture. The browser harness did not synthesize a run, coefficient, interval, failure, or odds-ratio row.",
+      "viewport": "1024x700",
+      "featureId": "qpls3.standalone.regression_bootstrap",
+      "methodVersion": "regression_bootstrap_v1",
+      "requiredPackagedFollowUp": "Run genuine OLS and binary-logistic case-resampling jobs through packaged Tauri; inspect summary/coefficient/percentile/conditional-BCa tables, conditional failures, logistic odds ratios, XLSX, save, archive witness, and same-run reopen."
+    },
+    {
       "id": "completed-moderation-browser-fixture",
       "reason": "The production browser smoke API exposes the checked-in Corporate Reputation mediation/bootstrap run, which has no moderation payload.",
       "viewport": "1024x700",
@@ -9117,6 +10591,14 @@
       "requiredNativeFollowUp": "Run the full 140-row binary fixture with no editable model through the focused packaged-Tauri logistic gate."
     },
     {
+      "id": "regression-bootstrap-completed-results-browser",
+      "reason": "The smoke runtime provides genuine regression setup data but no completed regression-bootstrap run fixture. The browser harness did not synthesize a run, coefficient, interval, failure, or odds-ratio row.",
+      "viewport": "1280x720",
+      "featureId": "qpls3.standalone.regression_bootstrap",
+      "methodVersion": "regression_bootstrap_v1",
+      "requiredPackagedFollowUp": "Run genuine OLS and binary-logistic case-resampling jobs through packaged Tauri; inspect summary/coefficient/percentile/conditional-BCa tables, conditional failures, logistic odds ratios, XLSX, save, archive witness, and same-run reopen."
+    },
+    {
       "id": "completed-moderation-browser-fixture",
       "reason": "The production browser smoke API exposes the checked-in Corporate Reputation mediation/bootstrap run, which has no moderation payload.",
       "viewport": "1280x720",
@@ -9181,6 +10663,14 @@
       "requiredNativeFollowUp": "Run the full 140-row binary fixture with no editable model through the focused packaged-Tauri logistic gate."
     },
     {
+      "id": "regression-bootstrap-completed-results-browser",
+      "reason": "The smoke runtime provides genuine regression setup data but no completed regression-bootstrap run fixture. The browser harness did not synthesize a run, coefficient, interval, failure, or odds-ratio row.",
+      "viewport": "1440x900",
+      "featureId": "qpls3.standalone.regression_bootstrap",
+      "methodVersion": "regression_bootstrap_v1",
+      "requiredPackagedFollowUp": "Run genuine OLS and binary-logistic case-resampling jobs through packaged Tauri; inspect summary/coefficient/percentile/conditional-BCa tables, conditional failures, logistic odds ratios, XLSX, save, archive witness, and same-run reopen."
+    },
+    {
       "id": "completed-moderation-browser-fixture",
       "reason": "The production browser smoke API exposes the checked-in Corporate Reputation mediation/bootstrap run, which has no moderation payload.",
       "viewport": "1440x900",
@@ -9220,6 +10710,8 @@
       "pca-standalone-dialog",
       "ols-standalone-dialog",
       "logistic-standalone-dialog",
+      "regression-bootstrap-ols-dialog",
+      "regression-bootstrap-logistic-dialog",
       "empty-results",
       "completed-results",
       "mediation-results",
@@ -9236,8 +10728,8 @@
       "1280x720",
       "1440x900"
     ],
-    "expectedRegularScreenshotCount": 79,
-    "capturedRegularScreenshotCount": 79,
+    "expectedRegularScreenshotCount": 85,
+    "capturedRegularScreenshotCount": 85,
     "missingMatrix": [],
     "missingFiles": [],
     "runningCapture": {

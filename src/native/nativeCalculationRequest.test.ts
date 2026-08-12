@@ -99,4 +99,44 @@ describe("native calculation request", () => {
     expect(parseNativeCalculationRequest(malformed)).toBeNull();
     expect(createNativeCalculationRequest("plsc", settings, request.logisticProfile)).not.toHaveProperty("logisticProfile");
   });
+
+  it("preserves only a complete typed regression-bootstrap dispatch snapshot", () => {
+    const bootstrapSettings: AnalysisUiSettings = {
+      ...settings,
+      method: "regression",
+      regressionType: "ols",
+      regressionOutcome: "y",
+      regressionPredictors: "x",
+      regressionBootstrap: true,
+      bootstrapSamples: 10_000,
+      studentizedInnerSamples: 0,
+      permutationSamples: 0,
+      confidenceLevel: 0.95,
+      workers: 4,
+    };
+    const request = createNativeCalculationRequest("regression", bootstrapSettings);
+    expect(parseNativeCalculationRequest(request)).toEqual(request);
+    expect(parseNativeCalculationRequest({
+      ...request,
+      settings: { ...request.settings, bootstrapSamples: 0 },
+    })).toBeNull();
+    expect(parseNativeCalculationRequest({
+      ...request,
+      settings: { ...request.settings, regressionType: "process" },
+    })).toBeNull();
+    expect(parseNativeCalculationRequest({
+      ...request,
+      settings: {
+        ...request.settings,
+        regressionPredictors: Array.from({ length: 51 }, (_, index) => `x${index + 1}`).join(","),
+      },
+    })).toBeNull();
+    expect(parseNativeCalculationRequest({
+      ...request,
+      settings: {
+        ...request.settings,
+        regressionPredictors: Array.from({ length: 50 }, (_, index) => `x${index + 1}`).join(","),
+      },
+    })).not.toBeNull();
+  });
 });

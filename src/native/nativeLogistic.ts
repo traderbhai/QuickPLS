@@ -1,11 +1,12 @@
 import type { AnalysisUiSettings, Dataset, DatasetRowsPage } from "../types";
 import { getNativeDatasetRows } from "../services/projectService";
 import { nativeOlsCsvValues, nativeOlsNumericColumns } from "./nativeOls";
+import { NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS } from "./nativeRegressionBootstrapWitness";
 
 export const NATIVE_LOGISTIC_MAX_TERMS = 25;
 export const NATIVE_LOGISTIC_PROFILE_PAGE_SIZE = 500;
 export const NATIVE_LOGISTIC_SCOPE_NOTE =
-  "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, and Firth-corrected models are not included.";
+  "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa coefficient and odds-ratio inference. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, generic PLS resampling, and Firth-corrected models are not included.";
 export const NATIVE_LOGISTIC_ENGINE_SCOPE_WARNING =
   "Logistic regression v2 is validated for the documented QuickPLS binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, categorical auto-encoding, and Firth-corrected models remain unsupported.";
 export const NATIVE_LEGACY_LOGISTIC_ENGINE_SCOPE_WARNING =
@@ -234,12 +235,19 @@ export function nativeLogisticReadiness(
   suppliedProfile: NativeLogisticProfile | null = null,
 ): NativeLogisticReadinessAssessment {
   const { outcome, predictors, controls, terms } = selectedVariables(settings);
+  const maximumTerms = settings.regressionBootstrap === true
+    ? NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS
+    : NATIVE_LOGISTIC_MAX_TERMS;
   const variables = outcome ? [outcome, ...terms] : terms;
   const numeric = new Set(nativeOlsNumericColumns(dataset));
   const blockers = [
     !outcome ? "Choose one numeric outcome coded exactly 0/1" : null,
     predictors.length < 1 ? "Choose at least one numeric predictor" : null,
-    terms.length > NATIVE_LOGISTIC_MAX_TERMS ? `Choose no more than ${NATIVE_LOGISTIC_MAX_TERMS} predictors and controls combined` : null,
+    terms.length > maximumTerms
+      ? settings.regressionBootstrap === true
+        ? `Regression bootstrap supports at most ${maximumTerms} predictors and controls (${maximumTerms + 1} coefficient terms including the intercept)`
+        : `Choose no more than ${maximumTerms} predictors and controls combined`
+      : null,
     new Set(variables).size !== variables.length ? "Outcome, predictors, and controls must be distinct variables" : null,
     ...variables.map((variable) => !dataset.columns.includes(variable)
       ? `The selected variable ${variable} is absent from the active dataset`

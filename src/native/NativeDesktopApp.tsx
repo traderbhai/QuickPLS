@@ -482,7 +482,7 @@ export function NativeDesktopApp() {
 
   useEffect(() => {
     setSelectedTableId(resultNavigation.defaultItemId ?? "");
-  }, [resultNavigation.runId]);
+  }, [resultNavigation.defaultItemId, resultNavigation.runId]);
 
   useEffect(() => {
     if (runMonitor.status === "completed" && previousRunStatus.current !== "completed") {

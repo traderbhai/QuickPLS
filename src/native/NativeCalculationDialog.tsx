@@ -74,6 +74,7 @@ import {
   type NativeLogisticProfile,
   type NativeLogisticReadinessAssessment,
 } from "./nativeLogistic";
+import { NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS } from "./nativeRegressionBootstrapWitness";
 import { NATIVE_GSCA_SCOPE_NOTE } from "./nativeGsca";
 
 export interface NativeCalculationDialogProps {
@@ -582,7 +583,7 @@ export default function NativeCalculationDialog({
             <button type="button" onClick={close}>Close</button>
             <button className="primary" type="submit" disabled={!canStart}>
               <Play size={14} aria-hidden="true" />
-              {nativeAnalysisStartLabel(kind, retry, settings.regressionType)}
+              {nativeAnalysisStartLabel(kind, retry, settings.regressionType, settings.regressionBootstrap)}
             </button>
           </>
         )}
@@ -619,7 +620,8 @@ function MethodSettings({
   );
   const caseWeightColumn = settings.caseWeightColumn?.trim() ?? "";
   const selectedWeightIsEligible = !caseWeightColumn || numericColumns.includes(caseWeightColumn);
-  const resampling = kind === "pls_bootstrap" || kind === "pls_permutation" || kind === "mga" || kind === "predict" || kind === "nca";
+  const regressionBootstrap = kind === "regression" && settings.regressionBootstrap === true;
+  const resampling = kind === "pls_bootstrap" || kind === "pls_permutation" || kind === "mga" || kind === "predict" || kind === "nca" || regressionBootstrap;
   const selectedGroupColumn = settings.groupColumn?.trim() ?? "";
   const selectedGroupColumnEligible = !selectedGroupColumn || groupColumns.includes(selectedGroupColumn);
   const groupValues = groupProfileState.profile?.groups ?? [];
@@ -635,7 +637,11 @@ function MethodSettings({
   const selectedOlsPredictorSet = new Set(selectedOlsPredictors);
   const selectedOlsControlSet = new Set(selectedOlsControls);
   const logisticRegression = settings.regressionType === "logistic";
-  const regressionTermLimit = logisticRegression ? NATIVE_LOGISTIC_MAX_TERMS : NATIVE_OLS_MAX_TERMS;
+  const regressionTermLimit = regressionBootstrap
+    ? NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS
+    : logisticRegression
+      ? NATIVE_LOGISTIC_MAX_TERMS
+      : NATIVE_OLS_MAX_TERMS;
   const initializedPcaSelection = useRef(false);
   const initializedOlsSelection = useRef(false);
   useEffect(() => {
@@ -1158,6 +1164,54 @@ function MethodSettings({
                 ? "Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)"
                 : "HC3 robust SE; two-sided 95% CI (fixed)"}</strong>
             </div>
+            <label className="wide" htmlFor="nd-calculation-regression-bootstrap">
+              <span>Bootstrap inference</span>
+              <select
+                id="nd-calculation-regression-bootstrap"
+                value={regressionBootstrap ? "enabled" : "off"}
+                onChange={(event) => setSettings(event.target.value === "enabled"
+                  ? {
+                      regressionBootstrap: true,
+                      bootstrapSamples: NATIVE_ANALYSIS_RECIPE_BOUNDS.regressionBootstrapSamples.default,
+                      studentizedInnerSamples: 0,
+                      permutationSamples: 0,
+                      confidenceLevel: 0.95,
+                    }
+                  : { regressionBootstrap: false, bootstrapSamples: 0, workers: 1 })}
+              >
+                <option value="off">Off</option>
+                <option value="enabled">Case-resampling bootstrap</option>
+              </select>
+            </label>
+            {regressionBootstrap ? (
+              <>
+                <label htmlFor="nd-calculation-regression-bootstrap-samples">Bootstrap samples
+                  <input
+                    id="nd-calculation-regression-bootstrap-samples"
+                    type="number"
+                    min={NATIVE_ANALYSIS_RECIPE_BOUNDS.regressionBootstrapSamples.minimum}
+                    max={NATIVE_ANALYSIS_RECIPE_BOUNDS.regressionBootstrapSamples.maximum}
+                    step={1}
+                    value={settings.bootstrapSamples}
+                    onChange={(event) => setSettings({ bootstrapSamples: Number(event.target.value) })}
+                  />
+                </label>
+                <label htmlFor="nd-calculation-regression-bootstrap-workers">Parallel workers
+                  <input
+                    id="nd-calculation-regression-bootstrap-workers"
+                    type="number"
+                    min={NATIVE_ANALYSIS_RECIPE_BOUNDS.workers.minimum}
+                    max={NATIVE_ANALYSIS_RECIPE_BOUNDS.workers.maximum}
+                    value={settings.workers}
+                    onChange={(event) => setSettings({ workers: Number(event.target.value) })}
+                  />
+                </label>
+                <div className="nd-setting-note wide" id="nd-calculation-regression-bootstrap-scope">
+                  <span>Bootstrap scope</span>
+                  <strong>10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.</strong>
+                </div>
+              </>
+            ) : null}
             {logisticRegression ? (
               <div
                 id="nd-calculation-logistic-profile"

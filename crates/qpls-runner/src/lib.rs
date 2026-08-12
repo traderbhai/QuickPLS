@@ -18,8 +18,10 @@ use qpls_estimation::{
     estimate_pls_validated_with_control,
 };
 use qpls_resampling::{
-    PERMUTATION_METHOD_VERSION, PlsBootstrapError, PlsPermutationError, RESAMPLING_METHOD_VERSION,
-    ResamplingError, bootstrap_pls_validated, permutation_pls_validated,
+    PERMUTATION_METHOD_VERSION, PlsBootstrapError, PlsPermutationError,
+    REGRESSION_BOOTSTRAP_METHOD_VERSION, REGRESSION_BOOTSTRAP_MINIMUM_USABLE_FRACTION,
+    RESAMPLING_METHOD_VERSION, RegressionBootstrapError, ResamplingError, bootstrap_pls_validated,
+    bootstrap_regression_validated, permutation_pls_validated,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -64,7 +66,7 @@ pub fn run_pls_analysis(
     let effective_recipe = execution.effective();
     let started_at = Utc::now();
 
-    let estimation = estimate_pls_validated_with_control(dataset, &base_execution, |update| {
+    let mut estimation = estimate_pls_validated_with_control(dataset, &base_execution, |update| {
         progress(RunnerProgress {
             phase: update.phase.as_str().into(),
             completed_units: update.completed_units,
@@ -76,6 +78,36 @@ pub fn run_pls_analysis(
         EstimationError::Cancelled => RunnerError::Cancelled,
         other => RunnerError::Estimation(other.to_string()),
     })?;
+
+    let regression_bootstrap_performed = if effective_recipe.settings.method
+        == qpls_core::AnalysisMethod::Regression
+        && effective_recipe.settings.bootstrap_samples > 0
+    {
+        let bootstrap = bootstrap_regression_validated(
+            dataset,
+            &execution,
+            &estimation,
+            effective_recipe.settings.workers,
+            &should_cancel,
+            |update| {
+                progress(RunnerProgress {
+                    phase: update.phase.as_str().into(),
+                    completed_units: update.completed_replicates as u64,
+                    total_units: update.total_replicates as u64,
+                });
+            },
+        )
+        .map_err(map_regression_bootstrap_error)?;
+        let regression = estimation.regression.as_mut().ok_or_else(|| {
+            RunnerError::Bootstrap(
+                "regression bootstrap completed without a base regression payload".into(),
+            )
+        })?;
+        regression.bootstrap = Some(bootstrap);
+        true
+    } else {
+        false
+    };
 
     if should_cancel() {
         return Err(RunnerError::Cancelled);
@@ -258,6 +290,9 @@ pub fn run_pls_analysis(
             "process" => REGRESSION_PROCESS_METHOD_VERSION,
             _ => REGRESSION_OLS_METHOD_VERSION,
         }];
+        if regression_bootstrap_performed {
+            base_versions.push(REGRESSION_BOOTSTRAP_METHOD_VERSION);
+        }
     }
     if effective_recipe.settings.method == qpls_core::AnalysisMethod::Nca {
         base_versions = vec![NCA_METHOD_VERSION];
@@ -335,6 +370,19 @@ fn map_bootstrap_error(error: PlsBootstrapError) -> RunnerError {
     }
 }
 
+fn map_regression_bootstrap_error(error: RegressionBootstrapError) -> RunnerError {
+    match error {
+        RegressionBootstrapError::Resampling(ResamplingError::Cancelled) => RunnerError::Cancelled,
+        RegressionBootstrapError::InsufficientUsableReplicates { usable, required } => {
+            RunnerError::Bootstrap(format!(
+                "regression bootstrap retained {usable} usable replicates, below the {required} required by the {:.0}% policy",
+                REGRESSION_BOOTSTRAP_MINIMUM_USABLE_FRACTION * 100.0
+            ))
+        }
+        other => RunnerError::Bootstrap(other.to_string()),
+    }
+}
+
 fn map_permutation_error(error: PlsPermutationError) -> RunnerError {
     match error {
         PlsPermutationError::Resampling(error) => {
@@ -347,7 +395,11 @@ fn map_permutation_error(error: PlsPermutationError) -> RunnerError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use qpls_core::{AnalysisMethod, AnalysisPayload, MethodConfig, Preprocessing};
+    use qpls_core::{
+        AnalysisMethod, AnalysisPayload, MethodConfig, Preprocessing, RegressionBootstrapAlgorithm,
+        RegressionBootstrapConfig, RegressionBootstrapInterval, RegressionModelConfig,
+        RobustStandardError,
+    };
     use qpls_data::{ImportOptions, import_delimited_bytes};
     use std::sync::{
         Mutex,
@@ -385,6 +437,34 @@ mod tests {
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         recipe.settings.preprocessing = Preprocessing::Unstandardized;
         (dataset, recipe)
+    }
+
+    fn regression_bootstrap_recipe(
+        mut recipe: AnalysisRecipe,
+        model: RegressionModelConfig,
+        workers: usize,
+        replicates: u32,
+    ) -> AnalysisRecipe {
+        recipe.settings.bootstrap_samples = replicates;
+        recipe.settings.seed = 91;
+        recipe.settings.workers = workers;
+        let Some(MethodConfig::Regression {
+            model: recipe_model,
+            bootstrap,
+            ..
+        }) = recipe.method_config.as_mut()
+        else {
+            panic!("fixture must use typed regression")
+        };
+        *recipe_model = model;
+        *bootstrap = Some(RegressionBootstrapConfig {
+            algorithm: RegressionBootstrapAlgorithm::CaseResampling,
+            intervals: vec![
+                RegressionBootstrapInterval::Percentile,
+                RegressionBootstrapInterval::Bca,
+            ],
+        });
+        recipe
     }
 
     fn assert_estimator_version_is_in_provenance(result: &AnalysisResult, expected: &str) {
@@ -509,6 +589,79 @@ mod tests {
         .to_string();
         assert!(message.contains("logistic regression did not converge"));
         assert!(!message.contains("PLS weights"));
+    }
+
+    #[test]
+    fn regression_bootstrap_ols_and_logistic_are_nested_deterministic_and_worker_invariant() {
+        let (dataset, point_recipe) = logistic_fixture();
+        for (model, base_version) in [
+            (
+                RegressionModelConfig::Ols {
+                    robust_se: RobustStandardError::Hc3,
+                },
+                REGRESSION_OLS_METHOD_VERSION,
+            ),
+            (
+                RegressionModelConfig::Logistic,
+                REGRESSION_LOGISTIC_METHOD_VERSION,
+            ),
+        ] {
+            let serial_recipe =
+                regression_bootstrap_recipe(point_recipe.clone(), model.clone(), 1, 99);
+            let parallel_recipe = regression_bootstrap_recipe(point_recipe.clone(), model, 4, 99);
+            let serial = run_pls_analysis(&dataset, &serial_recipe, || false, |_| {}).unwrap();
+            let parallel = run_pls_analysis(&dataset, &parallel_recipe, || false, |_| {}).unwrap();
+            assert_eq!(
+                serial.provenance.method_version,
+                format!("{base_version}+{REGRESSION_BOOTSTRAP_METHOD_VERSION}")
+            );
+            for result in [&serial, &parallel] {
+                let AnalysisPayload::PlsPmV1 { estimation, .. } = &result.payload else {
+                    panic!("regression bootstrap must not use the generic PLS bootstrap payload")
+                };
+                assert_eq!(estimation["method_version"], base_version);
+                assert_eq!(
+                    estimation["regression"]["bootstrap"]["method_version"],
+                    REGRESSION_BOOTSTRAP_METHOD_VERSION
+                );
+                assert_eq!(
+                    estimation["regression"]["bootstrap"]["requested_replicates"],
+                    99
+                );
+                assert!(
+                    estimation["regression"]["bootstrap"]["coefficients"]
+                        .as_array()
+                        .is_some_and(|rows| !rows.is_empty())
+                );
+            }
+            let extract = |result: &AnalysisResult| match &result.payload {
+                AnalysisPayload::PlsPmV1 { estimation, .. } => {
+                    estimation["regression"]["bootstrap"]["coefficients"].clone()
+                }
+                _ => unreachable!(),
+            };
+            assert_eq!(extract(&serial), extract(&parallel));
+        }
+    }
+
+    #[test]
+    fn regression_bootstrap_cancellation_aborts_without_a_partial_result() {
+        use std::sync::atomic::AtomicBool;
+        let (dataset, recipe) = logistic_fixture();
+        let recipe =
+            regression_bootstrap_recipe(recipe, RegressionModelConfig::Logistic, 1, 10_000);
+        let cancel = AtomicBool::new(false);
+        let result = run_pls_analysis(
+            &dataset,
+            &recipe,
+            || cancel.load(Ordering::Relaxed),
+            |update| {
+                if update.phase == "bootstrap" && update.completed_units >= 1 {
+                    cancel.store(true, Ordering::Relaxed);
+                }
+            },
+        );
+        assert!(matches!(result, Err(RunnerError::Cancelled)));
     }
 
     #[test]

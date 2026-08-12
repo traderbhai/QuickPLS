@@ -15,6 +15,7 @@ import {
   nativeOlsResultProjection,
   nativeLogisticResultProjection,
   nativeLegacyLogisticResultProjection,
+  nativeRegressionBootstrapResultProjection,
 } from "./nativeResults";
 
 export interface NativeRunSettingApplicability {
@@ -50,6 +51,7 @@ export function nativeRunProvenanceTable(
   const ols = nativeOlsResultProjection(run);
   const logistic = nativeLogisticResultProjection(run);
   const legacyLogistic = nativeLegacyLogisticResultProjection(run);
+  const regressionBootstrap = nativeRegressionBootstrapResultProjection(run);
   const cbsem = nativeCbsemResultProjection(run);
   const gsca = nativeGscaResultProjection(run);
   const prediction = currentPredictionResult(run);
@@ -174,6 +176,25 @@ export function nativeRunProvenanceTable(
         ["Preprocessing", run.provenance.settings.preprocessing],
         ["Maximum iterations", String(run.provenance.settings.max_iterations)],
         ["Stop criterion", String(run.provenance.settings.tolerance)],
+      );
+    }
+    if (regressionBootstrap) {
+      rows.push(
+        ["Regression bootstrap method", regressionBootstrap.method_version],
+        ["Regression bootstrap sampling", "Case resampling with replacement"],
+        ["Regression bootstrap algorithm", regressionBootstrap.algorithm],
+        ["Regression bootstrap stream", regressionBootstrap.stream_token],
+        ["Regression bootstrap alternative", "Two-sided"],
+        ["Regression bootstrap test reference", regressionBootstrap.test_reference],
+        ["Regression bootstrap test tolerance policy", regressionBootstrap.test_tolerance_policy],
+        ["Regression bootstrap interval policy", "Percentile primary; BCa conditional"],
+        ["Requested regression bootstrap replicates", String(regressionBootstrap.requested_replicates)],
+        ["Usable regression bootstrap replicates", String(regressionBootstrap.usable_replicates)],
+        ["Failed regression bootstrap replicates", String(regressionBootstrap.failed_replicates.length)],
+        ["Regression bootstrap delete-one fits required", String(regressionBootstrap.jackknife_cases)],
+        ["Regression bootstrap delete-one fits usable", String(regressionBootstrap.usable_jackknife_cases)],
+        ["Regression bootstrap workers", String(regressionBootstrap.workers)],
+        ["Regression bootstrap reproducibility", "Fixed seed with deterministic worker-invariant indexed streams"],
       );
     }
     if (applicability.usesConfidenceLevel) {

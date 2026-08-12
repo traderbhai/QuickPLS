@@ -447,6 +447,102 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).not.toContain('id="nd-calculation-workers"');
   });
 
+  it("renders qualified regression case-resampling controls and disclosures", () => {
+    const regressionDataset: Dataset = {
+      id: "bootstrap-data",
+      name: "bootstrap.csv",
+      columns: ["y", "x"],
+      rows: Array.from({ length: 12 }, (_, index) => ({ y: index * 2 + 1, x: index + 1 })),
+      rowCount: 12,
+      missing: 0,
+      fingerprint: "sha256:bootstrap",
+      kind: "raw",
+      columnMetadata: [metadata("y", "numeric"), metadata("x", "numeric")],
+    };
+    const markup = renderToStaticMarkup(createElement(NativeCalculationDialog, {
+      kind: "regression",
+      setKind: () => undefined,
+      settings: {
+        ...settings,
+        method: "regression",
+        preprocessing: "unstandardized",
+        regressionType: "ols",
+        regressionOutcome: "y",
+        regressionPredictors: "x",
+        regressionBootstrap: true,
+        bootstrapSamples: 10_000,
+        workers: 4,
+        confidenceLevel: 0.95,
+      },
+      setSettings: () => undefined,
+      readiness: { canRun: true, summary: "Ready", blockers: [], warnings: [], items: [] },
+      runMonitor,
+      dataset: regressionDataset,
+      analysisColumns: [],
+      nodes: [],
+      edges: [],
+      start: () => undefined,
+      cancel: () => undefined,
+      close: () => undefined,
+    }));
+
+    expect(markup).toContain('id="nd-calculation-regression-bootstrap"');
+    expect(markup).toContain('<option value="enabled" selected="">Case-resampling bootstrap</option>');
+    expect(markup).toMatch(/id="nd-calculation-regression-bootstrap-samples"[^>]*min="99"[^>]*max="10000"[^>]*value="10000"/);
+    expect(markup).toMatch(/id="nd-calculation-regression-bootstrap-workers"[^>]*min="1"[^>]*max="64"[^>]*value="4"/);
+    expect(markup).toContain("10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs");
+    expect(markup).toContain("Percentile intervals are primary");
+    expect(markup).toContain("BCa is reported when delete-one refits support it");
+    expect(markup).toContain("studentized intervals, one-tailed tests, and custom alpha are excluded");
+    expect(markup).toContain("worker-invariant");
+    expect(markup).toContain("Start OLS regression with bootstrap");
+    expect(markup).toContain('id="nd-calculation-seed"');
+  });
+
+  it("stops regression-bootstrap setup at 50 selected predictors and controls", () => {
+    const predictors = Array.from({ length: 51 }, (_, index) => `x${index + 1}`);
+    const wideDataset: Dataset = {
+      id: "wide-bootstrap-data",
+      name: "wide-bootstrap.csv",
+      columns: ["y", ...predictors],
+      rows: [],
+      rowCount: 60,
+      missing: 0,
+      fingerprint: "sha256:wide-bootstrap",
+      kind: "raw",
+      columnMetadata: ["y", ...predictors].map((name) => metadata(name, "numeric")),
+    };
+    const markup = renderToStaticMarkup(createElement(NativeCalculationDialog, {
+      kind: "regression",
+      setKind: () => undefined,
+      settings: {
+        ...settings,
+        method: "regression",
+        preprocessing: "unstandardized",
+        regressionType: "ols",
+        regressionOutcome: "y",
+        regressionPredictors: predictors.slice(0, 50).join(","),
+        regressionBootstrap: true,
+        bootstrapSamples: 99,
+        workers: 2,
+        confidenceLevel: 0.95,
+      },
+      setSettings: () => undefined,
+      readiness: { canRun: true, summary: "Ready", blockers: [], warnings: [], items: [] },
+      runMonitor,
+      dataset: wideDataset,
+      analysisColumns: [],
+      nodes: [],
+      edges: [],
+      start: () => undefined,
+      cancel: () => undefined,
+      close: () => undefined,
+    }));
+
+    expect(markup).toContain("Predictors (50 selected)");
+    expect(markup).toMatch(/<input type="checkbox" disabled=""\/><span>x51<\/span>/);
+  });
+
   it("renders strict model-free binary logistic setup with a complete 0/1 profile", () => {
     const rows = Array.from({ length: 12 }, (_, index) => ({
       converted: index % 3 === 0 ? 1 : 0,

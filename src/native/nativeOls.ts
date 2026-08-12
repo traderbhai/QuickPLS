@@ -1,9 +1,10 @@
 import type { AnalysisUiSettings, Dataset } from "../types";
 import { nativeNcaNumericColumns } from "./nativeNca";
+import { NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS } from "./nativeRegressionBootstrapWitness";
 
 export const NATIVE_OLS_MAX_TERMS = 25;
 export const NATIVE_OLS_SCOPE_NOTE =
-  "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Categorical encoding, weights, clusters, resampling, logistic regression, and PROCESS models are not included.";
+  "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa inference. Categorical encoding, weights, clusters, generic PLS resampling, logistic regression, and PROCESS models are not included.";
 export const NATIVE_OLS_ENGINE_SCOPE_WARNING =
   "OLS regression v1 is validated for the documented QuickPLS v1.2 OLS scope; unsupported shapes remain blocked.";
 
@@ -37,12 +38,19 @@ export function nativeOlsReadiness(
   const predictors = nativeOlsCsvValues(settings.regressionPredictors);
   const controls = nativeOlsCsvValues(settings.regressionControls);
   const terms = [...predictors, ...controls];
+  const maximumTerms = settings.regressionBootstrap === true
+    ? NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS
+    : NATIVE_OLS_MAX_TERMS;
   const variables = outcome ? [outcome, ...terms] : terms;
   const numeric = new Set(nativeOlsNumericColumns(dataset));
   const blockers = [
     !outcome ? "Choose one numeric outcome variable" : null,
     predictors.length < 1 ? "Choose at least one numeric predictor" : null,
-    terms.length > NATIVE_OLS_MAX_TERMS ? `Choose no more than ${NATIVE_OLS_MAX_TERMS} predictors and controls combined` : null,
+    terms.length > maximumTerms
+      ? settings.regressionBootstrap === true
+        ? `Regression bootstrap supports at most ${maximumTerms} predictors and controls (${maximumTerms + 1} coefficient terms including the intercept)`
+        : `Choose no more than ${maximumTerms} predictors and controls combined`
+      : null,
     new Set(variables).size !== variables.length ? "Outcome, predictors, and controls must be distinct variables" : null,
     ...variables.map((variable) => !dataset.columns.includes(variable)
       ? `The selected variable ${variable} is absent from the active dataset`
@@ -58,7 +66,7 @@ export function nativeOlsReadiness(
   if (residentComplete
     && outcome
     && predictors.length
-    && terms.length <= NATIVE_OLS_MAX_TERMS
+    && terms.length <= maximumTerms
     && new Set(variables).size === variables.length
     && variables.every((variable) => numeric.has(variable))) {
     const completeRows = dataset.rows.filter((row) =>

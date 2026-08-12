@@ -47,7 +47,7 @@ EXPECTED_CATALOG_KINDS = frozenset(
 
 # The catalog is a closed UI inventory, while a single entry may expose more
 # than one independently qualified analytical capability. Regression is the
-# first such entry: OLS, logistic, and PROCESS must never share one promotion
+# first such entry: OLS, logistic, regression bootstrap, and PROCESS must never share one promotion
 # state merely because they share a launcher.
 EXPECTED_CATALOG_CAPABILITIES = {
     "pls_algorithm": frozenset({"qpls3.pls.algorithm"}),
@@ -67,6 +67,7 @@ EXPECTED_CATALOG_CAPABILITIES = {
         {
             "qpls3.standalone.ols",
             "qpls3.standalone.logistic",
+            "qpls3.standalone.regression_bootstrap",
             "qpls3.standalone.process",
         }
     ),

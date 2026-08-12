@@ -72,10 +72,10 @@ describe("native analysis catalog", () => {
       ["predict", ["qpls3.prediction.plspredict_cvpat"]],
       ["nca", ["qpls3.standalone.nca"]],
       ["pca", ["qpls3.standalone.pca"]],
-      ["regression", ["qpls3.standalone.ols", "qpls3.standalone.logistic", "qpls3.standalone.process"]],
+      ["regression", ["qpls3.standalone.ols", "qpls3.standalone.logistic", "qpls3.standalone.regression_bootstrap", "qpls3.standalone.process"]],
     ]);
     const capabilityIds = NATIVE_ANALYSIS_CATALOG.flatMap((item) => item.capabilityIds);
-    expect(capabilityIds).toHaveLength(16);
+    expect(capabilityIds).toHaveLength(17);
     expect(new Set(capabilityIds).size).toBe(capabilityIds.length);
   });
 
@@ -87,7 +87,7 @@ describe("native analysis catalog", () => {
     expect(filterNativeAnalysisCatalog("assessment").map((item) => item.kind)).toEqual(["cca", "ipma"]);
     expect(filterNativeAnalysisCatalog("importance performance").map((item) => item.kind)).toEqual(["ipma"]);
     expect(filterNativeAnalysisCatalog("confirmatory factor maximum likelihood").map((item) => item.kind)).toEqual(["cbsem"]);
-    expect(filterNativeAnalysisCatalog("inference").map((item) => item.kind)).toEqual(["pls_bootstrap", "pls_permutation", "mga"]);
+    expect(filterNativeAnalysisCatalog("inference").map((item) => item.kind)).toEqual(["pls_bootstrap", "pls_permutation", "mga", "regression"]);
     expect(filterNativeAnalysisCatalog("cvpat").map((item) => item.kind)).toEqual(["predict"]);
     expect(filterNativeAnalysisCatalog("indicator prediction").map((item) => item.kind)).toEqual(["predict"]);
     expect(filterNativeAnalysisCatalog("permutation group a group b").map((item) => item.kind)).toEqual(["mga"]);
@@ -248,6 +248,23 @@ describe("native analysis catalog", () => {
       workers: 1,
       caseWeightColumn: null,
     });
+
+    const bootstrapped = nativeAnalysisSettingsForWorkbenchKind({
+      ...logistic,
+      regressionBootstrap: true,
+      bootstrapSamples: 0,
+      workers: 128,
+      studentizedInnerSamples: 199,
+      permutationSamples: 999,
+    }, "regression");
+    expect(bootstrapped).toMatchObject({
+      regressionBootstrap: true,
+      bootstrapSamples: 10_000,
+      workers: 64,
+      confidenceLevel: 0.95,
+      studentizedInnerSamples: 0,
+      permutationSamples: 0,
+    });
   });
 
   it("normalizes hidden common fields so CCA readiness and recipe construction cannot disagree", () => {
@@ -323,5 +340,6 @@ describe("native analysis catalog", () => {
     expect(nativeAnalysisStartLabel("nca", true)).toBe("Retry necessary condition analysis");
     expect(nativeAnalysisStartLabel("pca", false)).toBe("Start principal component analysis");
     expect(nativeAnalysisStartLabel("regression", false, "logistic")).toBe("Start binary logistic regression");
+    expect(nativeAnalysisStartLabel("regression", false, "logistic", true)).toBe("Start binary logistic regression with bootstrap");
   });
 });

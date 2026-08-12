@@ -630,6 +630,41 @@ describe("advanced validated backend family mappings", () => {
       case_weight_column: null,
     });
 
+    const bootstrapped = buildNativeAnalysisRecipe(makeInput("regression", {
+      ...common,
+      regressionType: "logistic",
+      regressionBootstrap: true,
+      bootstrapSamples: 999,
+      workers: 4,
+      confidenceLevel: 0.95,
+    }));
+    expect(bootstrapped.metadata).toEqual({ status: "validated_regression_bootstrap_v1_bounded_scope" });
+    expect(bootstrapped.settings).toMatchObject({
+      method: "regression",
+      bootstrap_samples: 999,
+      studentized_inner_samples: 0,
+      permutation_samples: 0,
+      workers: 4,
+      confidence_level: 0.95,
+    });
+    expect(bootstrapped.method_config).toMatchObject({
+      kind: "regression",
+      model: { type: "logistic" },
+      bootstrap: { algorithm: "case_resampling", intervals: ["percentile", "bca"] },
+    });
+    const maximumBootstrapTerms = Array.from({ length: 50 }, (_, index) => `x${index + 1}`);
+    const maximumTermRecipe = buildNativeAnalysisRecipe(makeInput("regression", {
+      ...common,
+      regressionPredictors: maximumBootstrapTerms.join(","),
+      regressionControls: null,
+      regressionBootstrap: true,
+      bootstrapSamples: 999,
+    }));
+    expect(maximumTermRecipe.method_config).toMatchObject({
+      kind: "regression",
+      predictors: maximumBootstrapTerms,
+    });
+
     const mediation = buildNativeAnalysisRecipe(makeInput("regression", {
       ...common,
       regressionType: "process",
@@ -659,6 +694,15 @@ describe("advanced validated backend family mappings", () => {
     expectFieldError(makeInput("regression", { regressionOutcome: null, regressionPredictors: "x" }), "regressionOutcome");
     expectFieldError(makeInput("regression", { regressionOutcome: "y", regressionPredictors: null }), "regressionPredictors");
     expectFieldError(makeInput("regression", { ...common, robustSe: "hc4" }), "robustSe");
+    expectFieldError(makeInput("regression", { ...common, regressionBootstrap: true, bootstrapSamples: 98 }), "bootstrapSamples");
+    expectFieldError(makeInput("regression", { ...common, regressionBootstrap: true, bootstrapSamples: 999, confidenceLevel: 0.9 }), "confidenceLevel");
+    expectFieldError(makeInput("regression", { ...common, regressionBootstrap: true, bootstrapSamples: 999, studentizedInnerSamples: 99 }), "bootstrapSamples");
+    expectFieldError(makeInput("regression", {
+      ...common,
+      regressionPredictors: [...maximumBootstrapTerms, "x51"].join(","),
+      regressionBootstrap: true,
+      bootstrapSamples: 999,
+    }), "regressionPredictors");
     expectFieldError(makeInput("regression", { ...common, regressionType: "process", processModel: "moderated_mediation", processX: "x", processM: "m", processW: "w" }), "processModel");
   });
 

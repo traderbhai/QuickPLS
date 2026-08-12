@@ -1,14 +1,15 @@
 use arrow::{
-    array::{Array, ArrayRef, BooleanArray, Float64Array, Int64Array, StringArray},
+    array::{Array, ArrayRef, BooleanArray, Float64Array, Int64Array, StringArray, UInt32Array},
+    compute::take,
     datatypes::{DataType, Field, Schema},
     record_batch::RecordBatch,
 };
 use faer::{Mat, prelude::*};
 use qpls_core::{
     AnalysisMethod, AnalysisRecipe, DIJKSTRA_HENSELER_RHO_A_METHOD_VERSION, HigherOrderMethod,
-    InteractionMethod, MeasurementMode, MissingDataPolicy, ModelSpec, Preprocessing,
-    ValidatedExecutionRecipe, WeightingScheme, dijkstra_henseler_rho_a_from_normalized,
-    ipma_predecessor_constructs, resolve_ipma_targets,
+    InteractionMethod, MeasurementMode, MethodConfig, MissingDataPolicy, ModelSpec, Preprocessing,
+    RegressionModelConfig, ValidatedExecutionRecipe, WeightingScheme,
+    dijkstra_henseler_rho_a_from_normalized, ipma_predecessor_constructs, resolve_ipma_targets,
 };
 use qpls_data::{ColumnMetadata, ColumnType, DataFingerprint, DataKind, Dataset, ScaleType};
 use rand::{Rng, SeedableRng};
@@ -1064,7 +1065,129 @@ pub struct RegressionAnalysis {
     pub logistic: Option<LogisticRegressionDiagnostics>,
     #[serde(default)]
     pub process: Option<ProcessAnalysis>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bootstrap: Option<RegressionBootstrapAnalysis>,
     pub warnings: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct RegressionBootstrapAnalysis {
+    pub method_version: String,
+    pub algorithm: String,
+    pub confidence_level: f64,
+    pub alternative: String,
+    pub interval_policy: String,
+    pub test_reference: String,
+    pub test_tolerance_policy: String,
+    pub requested_replicates: u32,
+    pub usable_replicates: u32,
+    pub minimum_usable_fraction: f64,
+    pub jackknife_cases: usize,
+    pub usable_jackknife_cases: usize,
+    pub seed: u64,
+    pub workers: usize,
+    pub stream_token: String,
+    pub failed_replicates: Vec<RegressionBootstrapFailedReplicate>,
+    pub coefficients: Vec<RegressionBootstrapCoefficient>,
+    pub validation_witness: RegressionBootstrapValidationWitness,
+    pub warnings: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct RegressionBootstrapValidationWitness {
+    pub method_version: String,
+    pub terms: Vec<String>,
+    pub successful_bootstrap: Vec<RegressionBootstrapWitnessBootstrapRow>,
+    pub successful_jackknife: Vec<RegressionBootstrapWitnessJackknifeRow>,
+    pub failed_jackknife: Vec<RegressionBootstrapFailedJackknife>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct RegressionBootstrapWitnessBootstrapRow {
+    pub replicate_index: u32,
+    pub coefficients: Vec<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct RegressionBootstrapWitnessJackknifeRow {
+    pub omitted_case: usize,
+    pub coefficients: Vec<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct RegressionBootstrapFailedJackknife {
+    pub omitted_case: usize,
+    pub reason_code: String,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct RegressionBootstrapFailedReplicate {
+    pub replicate_index: u32,
+    pub reason_code: String,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct RegressionBootstrapCoefficient {
+    pub term: String,
+    pub original: f64,
+    pub bootstrap_mean: f64,
+    pub bias: f64,
+    pub standard_error: f64,
+    pub replicate_max_abs: f64,
+    pub test_tolerance: f64,
+    pub test: RegressionBootstrapTest,
+    pub percentile_lower: f64,
+    pub percentile_upper: f64,
+    pub usable_replicates: u32,
+    pub bca: RegressionBootstrapBcaInterval,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub odds_ratio: Option<RegressionBootstrapOddsRatio>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "status", rename_all = "snake_case", deny_unknown_fields)]
+pub enum RegressionBootstrapTest {
+    Available {
+        statistic: f64,
+        p_value_two_sided: f64,
+    },
+    Unavailable {
+        reason_code: String,
+        message: String,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "status", rename_all = "snake_case", deny_unknown_fields)]
+pub enum RegressionBootstrapBcaInterval {
+    Available {
+        bias_correction: f64,
+        acceleration: f64,
+        lower: f64,
+        upper: f64,
+    },
+    Unavailable {
+        reason_code: String,
+        message: String,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct RegressionBootstrapOddsRatio {
+    pub original: f64,
+    pub percentile_lower: f64,
+    pub percentile_upper: f64,
+    pub bca: RegressionBootstrapBcaInterval,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -1395,6 +1518,125 @@ pub fn estimate_pls_validated_with_control(
         .effective_for_dataset(&dataset.fingerprint.0)
         .map_err(|error| EstimationError::UnsupportedMethod(error.to_string()))?;
     estimate_pls_internal(dataset, effective, false, &mut control)
+}
+
+/// Trusted boundary for outer regression case resampling. It first binds the
+/// opaque point-only capability to the original dataset, validates the exact
+/// typed OLS/logistic contract and row indices, creates the sample internally,
+/// and only then enters the private estimator. A caller cannot use this API to
+/// rebind a capability to arbitrary dataset bytes or mutate its configuration.
+pub fn estimate_regression_case_resample_validated_with_control(
+    original_dataset: &Dataset,
+    point_only_recipe: &ValidatedExecutionRecipe,
+    raw_indices: &[usize],
+    mut control: impl FnMut(EstimationProgress) -> bool,
+) -> Result<PlsResult, EstimationError> {
+    let effective = point_only_recipe
+        .effective_for_dataset(&original_dataset.fingerprint.0)
+        .map_err(|error| EstimationError::UnsupportedMethod(error.to_string()))?;
+    let MethodConfig::Regression {
+        outcome,
+        predictors,
+        controls,
+        model,
+        bootstrap: None,
+    } = point_only_recipe
+        .source()
+        .method_config
+        .as_ref()
+        .ok_or_else(|| {
+            EstimationError::UnsupportedMethod(
+                "regression case resampling requires typed point-only regression".into(),
+            )
+        })?
+    else {
+        return Err(EstimationError::UnsupportedMethod(
+            "regression case resampling requires typed point-only regression".into(),
+        ));
+    };
+    if point_only_recipe.source().settings.method != AnalysisMethod::Regression
+        || point_only_recipe.source().settings.bootstrap_samples != 0
+        || point_only_recipe
+            .source()
+            .settings
+            .studentized_inner_samples
+            != 0
+        || point_only_recipe.source().settings.permutation_samples != 0
+        || point_only_recipe.source().settings.workers != 1
+        || !matches!(
+            model,
+            RegressionModelConfig::Ols { .. } | RegressionModelConfig::Logistic
+        )
+    {
+        return Err(EstimationError::UnsupportedMethod(
+            "regression case resampling requires a point-only OLS or binary logistic capability"
+                .into(),
+        ));
+    }
+    if raw_indices.is_empty()
+        || raw_indices
+            .iter()
+            .any(|index| *index >= original_dataset.batch.num_rows() || *index > u32::MAX as usize)
+    {
+        return Err(EstimationError::UnsupportedMethod(
+            "regression case-resample row indices must be nonempty and within the original dataset"
+                .into(),
+        ));
+    }
+    let mut variables = Vec::with_capacity(1 + predictors.len() + controls.len());
+    variables.push(outcome.clone());
+    variables.extend(predictors.iter().cloned());
+    variables.extend(controls.iter().cloned());
+    let positions = variables
+        .iter()
+        .map(|variable| {
+            original_dataset
+                .batch
+                .schema()
+                .index_of(variable)
+                .map_err(|_| EstimationError::InvalidIndicator(variable.clone()))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let take_indices = UInt32Array::from(
+        raw_indices
+            .iter()
+            .map(|index| *index as u32)
+            .collect::<Vec<_>>(),
+    );
+    let columns = variables
+        .iter()
+        .zip(positions)
+        .map(|(name, position)| {
+            take(
+                original_dataset.batch.column(position).as_ref(),
+                &take_indices,
+                None,
+            )
+            .map(|array| (name.clone(), array))
+            .map_err(|error| EstimationError::Numerical(error.to_string()))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let batch = RecordBatch::try_from_iter(columns)
+        .map_err(|error| EstimationError::Numerical(error.to_string()))?;
+    let mut schema = original_dataset.schema.clone();
+    schema.case_count = batch.num_rows();
+    schema
+        .columns
+        .retain(|column| variables.iter().any(|variable| variable == &column.name));
+    let mut digest = Sha256::new();
+    digest.update(b"quickpls-regression-case-resample-v1\0");
+    digest.update(original_dataset.fingerprint.0.as_bytes());
+    for index in raw_indices {
+        digest.update((*index as u64).to_le_bytes());
+    }
+    let sampled = Dataset {
+        id: original_dataset.id,
+        name: original_dataset.name.clone(),
+        schema,
+        batch,
+        fingerprint: DataFingerprint(format!("resample:v1:{:x}", digest.finalize())),
+    };
+    estimate_pls_internal(&sampled, effective, false, &mut control)
 }
 
 #[cfg(test)]
@@ -1949,6 +2191,7 @@ fn estimate_regression_method(
         predictions,
         logistic,
         process,
+        bootstrap: None,
         warnings: result.warnings.clone(),
     });
     Ok(result)
@@ -12000,7 +12243,8 @@ mod tests {
     use qpls_core::{
         ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisSettings, Construct, ControlPath,
         HigherOrderConstruct, HigherOrderMethod, InteractionMethod, InteractionTerm, MethodConfig,
-        ModelSpec, NcaCeiling, PcaRetentionConfig, StructuralPath,
+        ModelSpec, NcaCeiling, PcaRetentionConfig, RegressionBootstrapAlgorithm,
+        RegressionBootstrapConfig, RegressionBootstrapInterval, StructuralPath,
     };
     use qpls_data::{
         ColumnMetadata, ColumnType, DataFingerprint, DataKind, DatasetSchema, ImportOptions,
@@ -12036,6 +12280,7 @@ mod tests {
                 predictors: vec!["x".into()],
                 controls: Vec::new(),
                 model: qpls_core::RegressionModelConfig::Logistic,
+                bootstrap: None,
             }),
             metadata: BTreeMap::new(),
         }
@@ -12118,6 +12363,122 @@ mod tests {
         )
         .unwrap_err();
         assert_eq!(error, EstimationError::LogisticNonConvergence(1));
+    }
+
+    #[test]
+    fn regression_case_resample_boundary_binds_original_capability_and_validates_indices() {
+        let data = b"y,x\n0,-2\n0,-1\n1,-0.5\n0,0\n1,0.2\n0,0.5\n1,0.8\n1,1\n0,1.5\n1,2\n";
+        let dataset = import_delimited_bytes(
+            data,
+            "regression-resample.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let recipe = logistic_recipe(&dataset);
+        let execution =
+            ValidatedExecutionRecipe::for_dataset(&recipe, &dataset.fingerprint.0).unwrap();
+        let indices = vec![0, 1, 2, 2, 4, 5, 6, 7, 8, 9];
+        let first = estimate_regression_case_resample_validated_with_control(
+            &dataset,
+            &execution,
+            &indices,
+            |_| true,
+        )
+        .unwrap();
+        let second = estimate_regression_case_resample_validated_with_control(
+            &dataset,
+            &execution,
+            &indices,
+            |_| true,
+        )
+        .unwrap();
+        assert_eq!(first, second);
+        assert!(matches!(
+            estimate_regression_case_resample_validated_with_control(
+                &dataset,
+                &execution,
+                &[],
+                |_| true,
+            ),
+            Err(EstimationError::UnsupportedMethod(message))
+                if message.contains("row indices")
+        ));
+        assert!(matches!(
+            estimate_regression_case_resample_validated_with_control(
+                &dataset,
+                &execution,
+                &[dataset.batch.num_rows()],
+                |_| true,
+            ),
+            Err(EstimationError::UnsupportedMethod(message))
+                if message.contains("row indices")
+        ));
+
+        let other = import_delimited_bytes(
+            b"y,x\n0,-2\n0,-1\n1,-0.5\n0,0\n1,0.2\n0,0.5\n1,0.8\n1,1\n0,1.5\n1,2.1\n",
+            "different-name.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        assert!(matches!(
+            estimate_regression_case_resample_validated_with_control(
+                &other,
+                &execution,
+                &indices,
+                |_| true,
+            ),
+            Err(EstimationError::UnsupportedMethod(message))
+                if message.contains("fingerprint")
+        ));
+
+        let mut resampling_recipe = recipe.clone();
+        resampling_recipe.settings.bootstrap_samples = 99;
+        if let Some(MethodConfig::Regression { bootstrap, .. }) =
+            resampling_recipe.method_config.as_mut()
+        {
+            *bootstrap = Some(RegressionBootstrapConfig {
+                algorithm: RegressionBootstrapAlgorithm::CaseResampling,
+                intervals: vec![
+                    RegressionBootstrapInterval::Percentile,
+                    RegressionBootstrapInterval::Bca,
+                ],
+            });
+        }
+        let resampling_execution =
+            ValidatedExecutionRecipe::for_dataset(&resampling_recipe, &dataset.fingerprint.0)
+                .unwrap();
+        assert!(matches!(
+            estimate_regression_case_resample_validated_with_control(
+                &dataset,
+                &resampling_execution,
+                &indices,
+                |_| true,
+            ),
+            Err(EstimationError::UnsupportedMethod(message))
+                if message.contains("point-only")
+        ));
+
+        let mut pca_recipe = recipe;
+        pca_recipe.settings.method = AnalysisMethod::Pca;
+        pca_recipe.settings.preprocessing = Preprocessing::Standardized;
+        pca_recipe.method_config = Some(MethodConfig::Pca {
+            variables: vec!["y".into(), "x".into()],
+            retention: PcaRetentionConfig::Kaiser,
+        });
+        let pca_execution =
+            ValidatedExecutionRecipe::for_dataset(&pca_recipe, &dataset.fingerprint.0).unwrap();
+        assert!(matches!(
+            estimate_regression_case_resample_validated_with_control(
+                &dataset,
+                &pca_execution,
+                &indices,
+                |_| true,
+            ),
+            Err(EstimationError::UnsupportedMethod(message))
+                if message.contains("typed point-only regression")
+        ));
     }
 
     #[test]

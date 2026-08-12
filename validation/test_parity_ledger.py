@@ -32,18 +32,18 @@ class ParityLedgerTests(unittest.TestCase):
         report = validate_ledger(LEDGER, REPOSITORY_ROOT)
 
         self.assertTrue(report["passed"], report["errors"])
-        self.assertEqual(report["feature_count"], 16)
+        self.assertEqual(report["feature_count"], 17)
         self.assertEqual(
             report["declared_states"],
-            {"absent": 1, "engine_only": 1, "native_qualified": 13, "release_qualified": 1},
+            {"absent": 1, "engine_only": 1, "native_qualified": 13, "release_qualified": 2},
         )
         self.assertEqual(
             report["derived_states"],
-            {"absent": 1, "engine_only": 1, "native_qualified": 13, "release_qualified": 1},
+            {"absent": 1, "engine_only": 1, "native_qualified": 13, "release_qualified": 2},
         )
         self.assertEqual(
             [feature["id"] for feature in report["features"] if feature["declared_state"] == "release_qualified"],
-            ["qpls3.standalone.logistic"],
+            ["qpls3.standalone.logistic", "qpls3.standalone.regression_bootstrap"],
         )
 
     def test_duplicate_feature_id_is_rejected(self) -> None:

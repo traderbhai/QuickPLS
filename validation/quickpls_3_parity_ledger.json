@@ -1013,6 +1013,61 @@
       }
     },
     {
+      "id": "qpls3.standalone.regression_bootstrap",
+      "catalog_kind": "regression",
+      "label": "Regression Bootstrapping",
+      "official_family": "Regression bootstrapping",
+      "quickpls_scope": "Deterministic indexed case resampling for supported OLS and binary logistic coefficients, with a fixed two-sided 95% standard-normal bootstrap-ratio test, percentile-primary intervals, conditional BCa intervals, progress, cancellation, persistence, and native export.",
+      "method_version": "regression_bootstrap_v1",
+      "state": "release_qualified",
+      "known_differences": [
+        "QuickPLS uses a fixed seed and deterministic indexed worker-invariant streams; it does not claim numerical identity with SmartPLS random-number generation.",
+        "The first bounded slice fixes two-sided 95% inference, excludes studentized intervals and custom alpha/tail settings, and reports BCa as unavailable with a reason when delete-one acceleration is not estimable.",
+        "OLS and binary logistic evidence is qualified separately within the dedicated packaged report; generic PLS bootstrapping is never substituted for this feature."
+      ],
+      "evidence": {
+        "engine": [
+          {
+            "description": "The dedicated regression bootstrap method version must exist before promotion.",
+            "path": "crates/qpls-resampling/src/lib.rs",
+            "contains": "pub const REGRESSION_BOOTSTRAP_METHOD_VERSION: &str = \"regression_bootstrap_v1\";"
+          }
+        ],
+        "archive": [
+          {
+            "description": "A genuine packaged regression-bootstrap run must save and reopen.",
+            "path": "validation/results/regression_bootstrap_v1_packaged_acceptance.json",
+            "pointer": "/checks/save_reopen/passed",
+            "equals": true
+          }
+        ],
+        "native": [
+          {
+            "description": "The packaged regression-bootstrap workflow must pass.",
+            "path": "validation/results/regression_bootstrap_v1_packaged_acceptance.json",
+            "pointer": "/checks/workflow/passed",
+            "equals": true
+          }
+        ]
+      },
+      "release_evidence": {
+        "current_scoped_method_audit": {
+          "path": "validation/results/regression_bootstrap_method_promotion_audit.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        },
+        "packaged_acceptance": {
+          "path": "validation/results/regression_bootstrap_v1_packaged_acceptance.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        }
+      }
+    },
+    {
       "id": "qpls3.standalone.process",
       "catalog_kind": "regression",
       "label": "Graph-defined Path Analysis and PROCESS",

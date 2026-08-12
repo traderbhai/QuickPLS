@@ -1,0 +1,58 @@
+﻿{
+    "launched_pid":  44000,
+    "descendants_at_shutdown":  [
+                                    {
+                                        "ProcessId":  9616,
+                                        "ParentProcessId":  19668,
+                                        "CreationDate":  "\/Date(1786545191870)\/",
+                                        "Name":  "msedgewebview2.exe",
+                                        "ExecutablePath":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe"
+                                    },
+                                    {
+                                        "ProcessId":  11380,
+                                        "ParentProcessId":  19668,
+                                        "CreationDate":  "\/Date(1786545191698)\/",
+                                        "Name":  "msedgewebview2.exe",
+                                        "ExecutablePath":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe"
+                                    },
+                                    {
+                                        "ProcessId":  19668,
+                                        "ParentProcessId":  44000,
+                                        "CreationDate":  "\/Date(1786545191362)\/",
+                                        "Name":  "msedgewebview2.exe",
+                                        "ExecutablePath":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe"
+                                    },
+                                    {
+                                        "ProcessId":  46252,
+                                        "ParentProcessId":  19668,
+                                        "CreationDate":  "\/Date(1786545191624)\/",
+                                        "Name":  "msedgewebview2.exe",
+                                        "ExecutablePath":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe"
+                                    },
+                                    {
+                                        "ProcessId":  48528,
+                                        "ParentProcessId":  19668,
+                                        "CreationDate":  "\/Date(1786545191402)\/",
+                                        "Name":  "msedgewebview2.exe",
+                                        "ExecutablePath":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe"
+                                    },
+                                    {
+                                        "ProcessId":  65252,
+                                        "ParentProcessId":  19668,
+                                        "CreationDate":  "\/Date(1786545191617)\/",
+                                        "Name":  "msedgewebview2.exe",
+                                        "ExecutablePath":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe"
+                                    }
+                                ],
+    "graceful_close_exit_code":  0,
+    "graceful_exit_confirmed":  true,
+    "forced_parent_termination":  false,
+    "forced_descendant_pids":  [
+
+                               ],
+    "parent_exit_confirmed":  true,
+    "lingering_descendant_pids":  [
+
+                                  ],
+    "passed":  true
+}

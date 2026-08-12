@@ -200,6 +200,7 @@ export interface AnalysisUiSettings {
   regressionOutcome?: string | null;
   regressionPredictors?: string | null;
   regressionControls?: string | null;
+  regressionBootstrap?: boolean;
   robustSe?: "none" | "hc0" | "hc3" | "hc4";
   processModel?: "mediation" | "moderation" | "moderated_mediation";
   processX?: string | null;
@@ -550,6 +551,7 @@ export type NativeAnalysisMethodConfig =
       predictors: string[];
       controls?: string[];
       model: NativeRegressionModelConfig;
+      bootstrap?: NativeRegressionBootstrapConfig;
     }
   | {
       kind: "nca";
@@ -575,6 +577,11 @@ export type NativeRegressionModelConfig =
   | { type: "ols"; robust_se: "hc3" }
   | { type: "logistic" }
   | { type: "process"; relationship: NativeProcessRelationshipConfig };
+
+export interface NativeRegressionBootstrapConfig {
+  algorithm: "case_resampling";
+  intervals: ["percentile", "bca"];
+}
 
 export type NativeProcessRelationshipConfig =
   | { model: "mediation"; x: string; mediator: string }
@@ -669,8 +676,68 @@ export interface RegressionAnalysis {
   fit: { r_squared?: number | null; adjusted_r_squared?: number | null; f_statistic?: number | null; log_likelihood?: number | null; pseudo_r_squared?: number | null; aic: number; bic: number; rmse?: number | null; null_log_likelihood?: number | null; deviance?: number | null; null_deviance?: number | null; likelihood_ratio_chi_square?: number | null; likelihood_ratio_degrees_of_freedom?: number | null; likelihood_ratio_p_value?: number | null; pseudo_r_squared_method?: string | null };
   predictions: Array<{ observation: number; fitted: number; residual?: number | null; probability?: number | null }>;
   logistic?: LogisticRegressionDiagnostics | null;
+  bootstrap?: RegressionBootstrapAnalysis | null;
   process?: { method_version: string; model: string; effects: Array<{ effect: string; estimate: number; lower_percentile?: number | null; upper_percentile?: number | null }>; simple_slopes: Array<{ moderator_value: number; slope: number }>; warnings: string[] } | null;
   warnings: string[];
+}
+
+export type RegressionBootstrapBcaInterval =
+  | { status: "available"; bias_correction: number; acceleration: number; lower: number; upper: number }
+  | { status: "unavailable"; reason_code: "insufficient_jackknife_estimates" | "incomplete_jackknife" | "degenerate_jackknife_acceleration"; message: string };
+
+export interface RegressionBootstrapOddsRatioInterval {
+  original: number;
+  percentile_lower: number;
+  percentile_upper: number;
+  bca: RegressionBootstrapBcaInterval;
+}
+
+export interface RegressionBootstrapCoefficient {
+  term: string;
+  original: number;
+  bootstrap_mean: number;
+  bias: number;
+  standard_error: number;
+  replicate_max_abs: number;
+  test_tolerance: number;
+  test:
+    | { status: "available"; statistic: number; p_value_two_sided: number }
+    | { status: "unavailable"; reason_code: "degenerate_bootstrap_standard_error"; message: string };
+  percentile_lower: number;
+  percentile_upper: number;
+  usable_replicates: number;
+  bca: RegressionBootstrapBcaInterval;
+  odds_ratio?: RegressionBootstrapOddsRatioInterval | null;
+}
+
+export interface RegressionBootstrapAnalysis {
+  method_version: "regression_bootstrap_v1";
+  algorithm: "indexed_case_resampling_v1";
+  alternative: "two_sided";
+  interval_policy: "percentile_primary_bca_conditional_v1";
+  test_reference: "standard_normal_bootstrap_ratio_v1";
+  test_tolerance_policy: "64eps_max_1_original_replicates_v1";
+  workers: number;
+  stream_token: "quickpls_indexed_resampling_v1";
+  confidence_level: 0.95;
+  requested_replicates: number;
+  usable_replicates: number;
+  minimum_usable_fraction: 0.9;
+  seed: number;
+  failed_replicates: Array<{ replicate_index: number; reason_code: string; message: string }>;
+  jackknife_cases: number;
+  usable_jackknife_cases: number;
+  validation_witness: RegressionBootstrapValidationWitness;
+  coefficients: RegressionBootstrapCoefficient[];
+  warnings: string[];
+}
+
+export interface RegressionBootstrapValidationWitness {
+  method_version: "regression_bootstrap_validation_witness_v1";
+  terms: string[];
+  successful_bootstrap: Array<{ replicate_index: number; coefficients: number[] }>;
+  successful_jackknife: Array<{ omitted_case: number; coefficients: number[] }>;
+  failed_jackknife: Array<{ omitted_case: number; reason_code: string; message: string }>;
 }
 
 export interface LogisticRegressionDiagnostics {

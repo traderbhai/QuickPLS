@@ -23,6 +23,7 @@ import {
   NATIVE_PREDICTION_METHOD_LABEL,
 } from "./nativeCalculationMode";
 import { isStandaloneNativeAnalysis } from "./nativeStandaloneAnalysis";
+import { isNativeRegressionBootstrapValidationWitness } from "./nativeRegressionBootstrapWitness";
 
 export interface NativeCanonicalProjectState {
   activeModelId: string | null;
@@ -260,6 +261,104 @@ export function nativeRunFromCanonicalResult(
   workspaceRun?: AnalysisRun | NativeWorkspaceRunPresentation,
 ): AnalysisRun | null {
   if (envelope.status !== "completed" || envelope.payload.kind === "legacy") return null;
+  const canonicalRegression = envelope.payload.estimation.regression;
+  const regressionBootstrapPayload = canonicalRegression?.bootstrap;
+  const regressionBootstrap = envelope.provenance.method_version.endsWith("+regression_bootstrap_v1");
+  if (!regressionBootstrap && regressionBootstrapPayload) return null;
+  if (regressionBootstrap) {
+    const config = recipe.method_config;
+    const estimation = envelope.payload.estimation;
+    const regression = canonicalRegression;
+    const nestedBootstrap = regression?.bootstrap;
+    if (config?.kind !== "regression"
+      || typeof config.outcome !== "string" || !config.outcome.trim()
+      || !Array.isArray(config.predictors)
+      || config.predictors.length < 1
+      || config.predictors.some((term) => typeof term !== "string" || !term.trim())
+      || (config.controls !== undefined
+        && (!Array.isArray(config.controls)
+          || config.controls.some((term) => typeof term !== "string" || !term.trim())))
+      || !config.model
+      || (config.model.type !== "ols" && config.model.type !== "logistic")
+      || !config.bootstrap
+      || config.bootstrap.algorithm !== "case_resampling"
+      || !Array.isArray(config.bootstrap.intervals)
+      || config.bootstrap.intervals.length !== 2
+      || config.bootstrap.intervals[0] !== "percentile"
+      || config.bootstrap.intervals[1] !== "bca") return null;
+    const controls = config.controls ?? [];
+    const selectedTerms = [...config.predictors, ...controls];
+    const expectedTerms = ["intercept", ...selectedTerms];
+    const logistic = config.model.type === "logistic";
+    const baseMethodVersion = logistic ? "regression_logistic_v2" : "regression_ols_v1";
+    if (recipe.schema_version !== 3
+      || recipe.settings.method !== "regression"
+      || envelope.provenance.method !== "regression"
+      || envelope.provenance.method_version !== `${baseMethodVersion}+regression_bootstrap_v1`
+      || estimation.method_version !== baseMethodVersion
+      || !Number.isInteger(recipe.settings.bootstrap_samples)
+      || recipe.settings.bootstrap_samples < 99
+      || recipe.settings.bootstrap_samples > 10_000
+      || recipe.settings.studentized_inner_samples !== 0
+      || recipe.settings.permutation_samples !== 0
+      || recipe.settings.confidence_level !== 0.95
+      || !Number.isInteger(recipe.settings.workers)
+      || recipe.settings.workers < 1
+      || recipe.settings.workers > 64
+      || recipe.settings.seed !== envelope.provenance.seed
+      || envelope.provenance.settings.method !== "regression"
+      || envelope.provenance.settings.preprocessing !== "unstandardized"
+      || envelope.provenance.settings.bootstrap_samples !== recipe.settings.bootstrap_samples
+      || envelope.provenance.settings.studentized_inner_samples !== 0
+      || envelope.provenance.settings.permutation_samples !== 0
+      || envelope.provenance.settings.confidence_level !== 0.95
+      || envelope.provenance.settings.seed !== recipe.settings.seed
+      || envelope.provenance.settings.workers !== recipe.settings.workers
+      || expectedTerms.length > 51
+      || new Set([config.outcome, ...selectedTerms]).size !== selectedTerms.length + 1
+      || !regression
+      || regression.method_version !== baseMethodVersion
+      || regression.regression_type !== (logistic ? "logistic" : "ols")
+      || regression.outcome !== config.outcome
+      || !Array.isArray(regression.predictors)
+      || regression.predictors.length !== config.predictors.length
+      || regression.predictors.some((term, index) => term !== config.predictors[index])
+      || !Array.isArray(regression.controls)
+      || regression.controls.length !== controls.length
+      || regression.controls.some((term, index) => term !== controls[index])
+      || !nestedBootstrap
+      || nestedBootstrap.method_version !== "regression_bootstrap_v1"
+      || nestedBootstrap.algorithm !== "indexed_case_resampling_v1"
+      || nestedBootstrap.alternative !== "two_sided"
+      || nestedBootstrap.interval_policy !== "percentile_primary_bca_conditional_v1"
+      || nestedBootstrap.test_reference !== "standard_normal_bootstrap_ratio_v1"
+      || nestedBootstrap.test_tolerance_policy !== "64eps_max_1_original_replicates_v1"
+      || nestedBootstrap.stream_token !== "quickpls_indexed_resampling_v1"
+      || nestedBootstrap.requested_replicates !== recipe.settings.bootstrap_samples
+      || !Number.isInteger(nestedBootstrap.usable_replicates)
+      || nestedBootstrap.usable_replicates < Math.ceil(0.9 * nestedBootstrap.requested_replicates)
+      || nestedBootstrap.usable_replicates > nestedBootstrap.requested_replicates
+      || nestedBootstrap.minimum_usable_fraction !== 0.9
+      || !Array.isArray(nestedBootstrap.failed_replicates)
+      || nestedBootstrap.failed_replicates.length
+        !== nestedBootstrap.requested_replicates - nestedBootstrap.usable_replicates
+      || nestedBootstrap.confidence_level !== 0.95
+      || nestedBootstrap.seed !== recipe.settings.seed
+      || nestedBootstrap.workers !== recipe.settings.workers
+      || !Number.isInteger(regression.observations)
+      || regression.observations < 3
+      || nestedBootstrap.jackknife_cases !== regression.observations
+      || !Number.isInteger(nestedBootstrap.usable_jackknife_cases)
+      || nestedBootstrap.usable_jackknife_cases < 0
+      || nestedBootstrap.usable_jackknife_cases > nestedBootstrap.jackknife_cases
+      || !isNativeRegressionBootstrapValidationWitness(
+        nestedBootstrap.validation_witness,
+        expectedTerms,
+        nestedBootstrap,
+        logistic,
+      )
+      || envelope.payload.kind !== "pls_pm_v1") return null;
+  }
   const standalone = isStandaloneNativeAnalysis(recipe.settings.method);
   const modelSnapshot = standalone ? undefined : nativeModelSnapshotFromCanonical(recipe.model, {
     nodes: workspaceRun?.modelSnapshot?.nodes,
@@ -347,6 +446,8 @@ function canonicalMethodLabel(
   }
   if (recipe.settings.method === "regression") {
     const version = envelope.provenance.method_version;
+    if (version === "regression_ols_v1+regression_bootstrap_v1") return "Ordinary Least Squares Regression with Bootstrap";
+    if (version === "regression_logistic_v2+regression_bootstrap_v1") return "Binary Logistic Regression with Bootstrap";
     if (version === "regression_logistic_v2") return "Binary Logistic Regression";
     if (version === "regression_logistic_v1") return "Legacy binary logistic regression (v1)";
   }

@@ -13,6 +13,7 @@ import { nativePcaReadiness } from "./nativePca";
 import { nativeOlsReadiness } from "./nativeOls";
 import { nativeLogisticReadiness } from "./nativeLogistic";
 import { NATIVE_HIGHER_ORDER_SCOPE_LABEL, nativeHigherOrderScopeProblems } from "./nativeHigherOrder";
+import { NATIVE_ANALYSIS_RECIPE_BOUNDS } from "./nativeAnalysisRecipe";
 
 export type NativePlsReadinessStatus = "ready" | "warning" | "blocked";
 
@@ -79,6 +80,20 @@ export function nativePlsReadiness(input: NativePlsReadinessInput): NativePlsRea
     const assessment = logistic
       ? nativeLogisticReadiness(dataset, settings)
       : nativeOlsReadiness(dataset, settings);
+    const bootstrap = settings.regressionBootstrap === true;
+    const bootstrapProblems = !bootstrap ? [] : [
+      !Number.isInteger(settings.bootstrapSamples)
+        || settings.bootstrapSamples < NATIVE_ANALYSIS_RECIPE_BOUNDS.regressionBootstrapSamples.minimum
+        || settings.bootstrapSamples > NATIVE_ANALYSIS_RECIPE_BOUNDS.regressionBootstrapSamples.maximum
+        ? `Choose ${NATIVE_ANALYSIS_RECIPE_BOUNDS.regressionBootstrapSamples.minimum} to ${NATIVE_ANALYSIS_RECIPE_BOUNDS.regressionBootstrapSamples.maximum} whole-number bootstrap samples`
+        : null,
+      settings.confidenceLevel !== 0.95 ? "Regression bootstrap inference uses a fixed 95% confidence level" : null,
+      settings.studentizedInnerSamples !== 0 ? "Studentized intervals are outside the qualified regression bootstrap scope" : null,
+      settings.permutationSamples !== 0 ? "Regression bootstrap cannot be combined with permutation inference" : null,
+      !Number.isInteger(settings.workers) || settings.workers < 1 || settings.workers > 64
+        ? "Choose 1 to 64 bootstrap workers"
+        : null,
+    ].filter((problem): problem is string => Boolean(problem));
     return readinessFromItems([
       runtimeItem(nativeDesktop),
       dataItem(dataset),
@@ -88,6 +103,14 @@ export function nativePlsReadiness(input: NativePlsReadinessInput): NativePlsRea
         detail: assessment.detail,
         status: assessment.canRun ? "ready" : "blocked",
       },
+      ...(bootstrap ? [{
+        id: "regression-bootstrap",
+        label: "Regression bootstrap",
+        detail: bootstrapProblems.length
+          ? `${bootstrapProblems.join("; ")}.`
+          : `${settings.bootstrapSamples} seeded case resamples; percentile intervals primary, BCa conditional, fixed two-sided 95% normal-reference bootstrap-ratio tests; deterministic worker-invariant indexed streams. Runtime scales with resamples.`,
+        status: bootstrapProblems.length ? "blocked" as const : "ready" as const,
+      }] : []),
     ]);
   }
   const issues = validateModel(nodes, edges);

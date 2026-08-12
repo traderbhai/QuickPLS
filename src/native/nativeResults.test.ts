@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { completedSamplePlsRun } from "../data/smokeRun";
 import { tablesToCsv } from "../domain/resultTables";
-import type { AnalysisRun } from "../types";
+import type { AnalysisResultEnvelope, AnalysisRun, NativeCanonicalAnalysisRecipe } from "../types";
 import { NATIVE_NCA_ENGINE_SCOPE_WARNING, NATIVE_STANDALONE_ASSESSMENT_WARNING } from "./nativeNca";
 import { NATIVE_PCA_ENGINE_SCOPE_WARNING } from "./nativePca";
 import { NATIVE_OLS_ENGINE_SCOPE_WARNING } from "./nativeOls";
@@ -12,6 +12,7 @@ import {
 import { nativeRunProvenanceTable } from "./nativeExportTables";
 import { completedCbsemRun } from "./nativeCbsem.testFixture";
 import { completedGscaRun } from "./nativeGsca.testFixture";
+import { nativeRunFromCanonicalResult } from "./nativeCanonicalProject";
 import {
   buildNativeResultNavigation,
   completedResultRuns,
@@ -25,6 +26,7 @@ import {
   nativeOlsResultProjection,
   nativeLogisticResultProjection,
   nativeLegacyLogisticResultProjection,
+  nativeRegressionBootstrapResultProjection,
   nativeResultTables,
   resolveSelectedCompletedRun,
   resultTableForItem,
@@ -637,6 +639,147 @@ function completedLegacyLogisticRun(): AnalysisRun {
   };
 }
 
+function completedRegressionBootstrapRun(logistic = false): AnalysisRun {
+  const run = logistic ? completedLogisticRun() : completedOlsRun();
+  const regression = run.result!.regression!;
+  const pValue = 0.04550026389635843;
+  const standardErrors = regression.coefficients.map((row) => Math.abs(row.estimate) / 2);
+  run.name = `${run.name.replace(/ run$/, "")} with Bootstrap run`;
+  run.method = `${run.method} with Bootstrap`;
+  run.seed = 7;
+  run.provenance = {
+    ...run.provenance!,
+    method_version: `${regression.method_version}+regression_bootstrap_v1`,
+    settings: {
+      ...run.provenance!.settings,
+      bootstrap_samples: 99,
+      workers: 2,
+      confidence_level: 0.95,
+    },
+  };
+  regression.bootstrap = {
+    method_version: "regression_bootstrap_v1",
+    algorithm: "indexed_case_resampling_v1",
+    alternative: "two_sided",
+    interval_policy: "percentile_primary_bca_conditional_v1",
+    test_reference: "standard_normal_bootstrap_ratio_v1",
+    test_tolerance_policy: "64eps_max_1_original_replicates_v1",
+    confidence_level: 0.95,
+    requested_replicates: 99,
+    usable_replicates: 98,
+    minimum_usable_fraction: 0.9,
+    seed: 7,
+    workers: 2,
+    stream_token: "quickpls_indexed_resampling_v1",
+    failed_replicates: [{ replicate_index: 3, reason_code: "replicate_fit_failed", message: "The resampled fit was singular." }],
+    jackknife_cases: regression.observations,
+    usable_jackknife_cases: regression.observations,
+    validation_witness: {
+      method_version: "regression_bootstrap_validation_witness_v1",
+      terms: regression.coefficients.map((coefficient) => coefficient.term),
+      // This synthetic in-memory run exercises the native structural boundary.
+      // qpls-project recomputes aggregate arithmetic before archived hydration.
+      successful_bootstrap: Array.from({ length: 99 }, (_, replicateIndex) => replicateIndex)
+        .filter((replicateIndex) => replicateIndex !== 3)
+        .map((replicate_index) => ({
+          replicate_index,
+          coefficients: regression.coefficients.map((coefficient) => coefficient.estimate),
+        })),
+      successful_jackknife: Array.from({ length: regression.observations }, (_, omitted_case) => ({
+        omitted_case,
+        coefficients: regression.coefficients.map((coefficient) => coefficient.estimate),
+      })),
+      failed_jackknife: [],
+    },
+    coefficients: regression.coefficients.map((coefficient, index) => {
+      const standardError = standardErrors[index];
+      const lower = coefficient.estimate - standardError * 1.8;
+      const upper = coefficient.estimate + standardError * 1.8;
+      const replicateMaxAbs = Math.max(Math.abs(lower - 0.1), Math.abs(upper + 0.1));
+      const bca = index === 1
+        ? { status: "unavailable" as const, reason_code: "degenerate_jackknife_acceleration" as const, message: "Delete-one estimates have degenerate acceleration." }
+        : { status: "available" as const, bias_correction: 0.02, acceleration: 0.01, lower: lower - 0.01, upper: upper + 0.01 };
+      return {
+        term: coefficient.term,
+        original: coefficient.estimate,
+        bootstrap_mean: coefficient.estimate + 0.01,
+        bias: 0.01,
+        standard_error: standardError,
+        replicate_max_abs: replicateMaxAbs,
+        test_tolerance: 64 * Number.EPSILON * Math.max(1, Math.abs(coefficient.estimate), replicateMaxAbs),
+        test: { status: "available" as const, statistic: coefficient.estimate / standardError, p_value_two_sided: pValue },
+        percentile_lower: lower,
+        percentile_upper: upper,
+        usable_replicates: 98,
+        bca,
+        ...(logistic ? {
+          odds_ratio: {
+            original: Math.exp(coefficient.estimate),
+            percentile_lower: Math.exp(lower),
+            percentile_upper: Math.exp(upper),
+            bca: index === 1
+              ? { status: "unavailable" as const, reason_code: "degenerate_jackknife_acceleration" as const, message: "Odds-ratio delete-one estimates have degenerate acceleration." }
+              : { status: "available" as const, bias_correction: 0.03, acceleration: 0.02, lower: Math.exp(lower) * 0.99, upper: Math.exp(upper) * 1.01 },
+          },
+        } : {}),
+      };
+    }),
+    warnings: [
+      "Regression bootstrap v1 uses deterministic indexed case resampling with replacement; percentile intervals are primary and BCa intervals are conditional on stable delete-one fits.",
+      "Bootstrap ratio statistics use an independently implemented two-sided standard-normal reference for both OLS and logistic coefficients; they are distinct from point-estimate t or Wald inference.",
+      "1 of 99 bootstrap replicates failed and were excluded from inference.",
+    ],
+  };
+  return run;
+}
+
+function canonicalRegressionBootstrapReopen(run: AnalysisRun): AnalysisRun {
+  const regression = run.result!.regression!;
+  const provenance = run.provenance!;
+  const recipe: NativeCanonicalAnalysisRecipe = {
+    schema_version: 3,
+    id: provenance.recipe_id,
+    created_at: provenance.started_at,
+    dataset_fingerprint: provenance.dataset_fingerprint,
+    model: {
+      id: "model-free-regression",
+      name: "Model-free regression",
+      constructs: [],
+      paths: [],
+      controls: [],
+      higher_order_constructs: [],
+      interactions: [],
+    },
+    settings: provenance.settings,
+    method_config: {
+      kind: "regression",
+      outcome: regression.outcome,
+      predictors: [...regression.predictors],
+      ...(regression.controls.length ? { controls: [...regression.controls] } : {}),
+      model: regression.regression_type === "logistic"
+        ? { type: "logistic" }
+        : { type: "ols", robust_se: "hc3" },
+      bootstrap: { algorithm: "case_resampling", intervals: ["percentile", "bca"] },
+    },
+    metadata: { status: "validated_regression_bootstrap_v1_bounded_scope" },
+  };
+  const envelope: AnalysisResultEnvelope = {
+    schema_version: 4,
+    id: run.id,
+    status: "completed",
+    provenance,
+    diagnostics: [],
+    payload: {
+      kind: "pls_pm_v1",
+      estimation: run.result!,
+      assessment: run.assessment!,
+    },
+  };
+  const reopened = nativeRunFromCanonicalResult(envelope, recipe);
+  if (!reopened) throw new Error("Canonical regression-bootstrap fixture did not hydrate.");
+  return reopened;
+}
+
 describe("native result navigation", () => {
   it("projects exact nca_v2 output into standalone tables and an accessible ceiling plot", () => {
     const run = completedNcaRun();
@@ -787,6 +930,122 @@ describe("native result navigation", () => {
     const tampered = completedOlsRun();
     tampered.result!.regression!.coefficients[1].odds_ratio = 2;
     expect(nativeResultTables(tampered)).toEqual([]);
+  });
+
+  it("projects exact nested OLS and logistic regression bootstrap output without N/A fabrication", () => {
+    const ols = completedRegressionBootstrapRun(false);
+    const olsProjection = nativeRegressionBootstrapResultProjection(ols);
+    expect(olsProjection).toMatchObject({
+      method_version: "regression_bootstrap_v1",
+      requested_replicates: 99,
+      usable_replicates: 98,
+      workers: 2,
+      stream_token: "quickpls_indexed_resampling_v1",
+    });
+    const olsNavigation = buildNativeResultNavigation(ols);
+    expect(olsNavigation.groups[0].title).toBe("OLS regression with bootstrap");
+    expect(olsNavigation.groups[0].items.map((item) => item.id)).toEqual(expect.arrayContaining([
+      "regression_bootstrap_summary",
+      "regression_bootstrap_failures",
+      "regression_bootstrap_coefficients",
+      "regression_bootstrap_percentile",
+      "regression_bootstrap_bca",
+    ]));
+    expect(olsNavigation.tables.find((table) => table.id === "regression_bootstrap_failures")?.rows).toEqual([[
+      "4", "replicate_fit_failed", "The resampled fit was singular.",
+    ]]);
+    expect(olsNavigation.tables.find((table) => table.id === "regression_bootstrap_bca")?.rows[1]).toEqual([
+      "x", "Unavailable", "Delete-one estimates have degenerate acceleration.", "", "", "", "",
+    ]);
+    expect(tablesToCsv(olsNavigation.tables)).not.toMatch(/N\/A|NaN/);
+    expect(JSON.stringify(olsNavigation.tables)).not.toContain("validation_witness");
+    expect(JSON.stringify(olsNavigation.tables)).not.toContain("successful_bootstrap");
+
+    const logistic = completedRegressionBootstrapRun(true);
+    const logisticNavigation = buildNativeResultNavigation(logistic);
+    expect(logisticNavigation.groups[0].title).toBe("Binary logistic regression with bootstrap");
+    expect(logisticNavigation.tables.find((table) => table.id === "regression_bootstrap_odds_ratios")?.rows).toHaveLength(2);
+    expect(tablesToCsv(logisticNavigation.tables)).not.toMatch(/N\/A|NaN/);
+
+    const tampered = completedRegressionBootstrapRun(false);
+    tampered.result!.regression!.bootstrap!.coefficients[0].test_tolerance *= 2;
+    expect(nativeRegressionBootstrapResultProjection(tampered)).toBeNull();
+    expect(nativeResultTables(tampered)).toEqual([]);
+
+    const impossibleMean = completedRegressionBootstrapRun(false);
+    impossibleMean.result!.regression!.bootstrap!.coefficients[0].bootstrap_mean = 10_000;
+    expect(nativeRegressionBootstrapResultProjection(impossibleMean)).toBeNull();
+
+    const impossiblePercentile = completedRegressionBootstrapRun(false);
+    impossiblePercentile.result!.regression!.bootstrap!.coefficients[0].percentile_upper = 10_000;
+    expect(nativeRegressionBootstrapResultProjection(impossiblePercentile)).toBeNull();
+
+    const impossibleOddsRatio = completedRegressionBootstrapRun(true);
+    impossibleOddsRatio.result!.regression!.bootstrap!.coefficients[0].odds_ratio!.percentile_upper = Number.MAX_VALUE;
+    expect(nativeRegressionBootstrapResultProjection(impossibleOddsRatio)).toBeNull();
+
+    const missingScopeWarning = completedRegressionBootstrapRun(false);
+    missingScopeWarning.result!.regression!.bootstrap!.warnings.shift();
+    expect(nativeRegressionBootstrapResultProjection(missingScopeWarning)).toBeNull();
+
+    const topLevelPlsBootstrap = completedRegressionBootstrapRun(false);
+    topLevelPlsBootstrap.bootstrap = completedSamplePlsRun().bootstrap;
+    expect(nativeRegressionBootstrapResultProjection(topLevelPlsBootstrap)).toBeNull();
+
+    const missingWitnessRow = completedRegressionBootstrapRun(false);
+    missingWitnessRow.result!.regression!.bootstrap!.validation_witness.successful_bootstrap.pop();
+    expect(nativeRegressionBootstrapResultProjection(missingWitnessRow)).toBeNull();
+
+    const duplicateWitnessIndex = completedRegressionBootstrapRun(false);
+    duplicateWitnessIndex.result!.regression!.bootstrap!.validation_witness.successful_bootstrap[1].replicate_index = 0;
+    expect(nativeRegressionBootstrapResultProjection(duplicateWitnessIndex)).toBeNull();
+
+    const wrongWitnessWidth = completedRegressionBootstrapRun(false);
+    wrongWitnessWidth.result!.regression!.bootstrap!.validation_witness.successful_jackknife[0].coefficients.pop();
+    expect(nativeRegressionBootstrapResultProjection(wrongWitnessWidth)).toBeNull();
+
+    const overflowingLogisticWitness = completedRegressionBootstrapRun(true);
+    overflowingLogisticWitness.result!.regression!.bootstrap!.validation_witness.successful_bootstrap[0].coefficients[0] = 1_000;
+    expect(nativeRegressionBootstrapResultProjection(overflowingLogisticWitness)).toBeNull();
+  });
+
+  it("selects explicit point and bootstrap regression defaults from validated projections", () => {
+    expect(buildNativeResultNavigation(completedOlsRun()).defaultItemId).toBe("ols_coefficients");
+    expect(buildNativeResultNavigation(completedLogisticRun()).defaultItemId).toBe("logistic_coefficients");
+    expect(buildNativeResultNavigation(completedRegressionBootstrapRun(false)).defaultItemId).toBe("regression_bootstrap_summary");
+    expect(buildNativeResultNavigation(completedRegressionBootstrapRun(true)).defaultItemId).toBe("regression_bootstrap_summary");
+  });
+
+  it("accepts the authentic one-ULP logistic tolerance after canonical JSON reopen but rejects material tampering", () => {
+    const archived = completedRegressionBootstrapRun(true);
+    const archivedRow = archived.result!.regression!.bootstrap!.coefficients[0];
+    archivedRow.replicate_max_abs = 1.3395008570597813;
+    archivedRow.test_tolerance = 1.903545207056512e-14;
+    expect(64 * Number.EPSILON * Math.max(1, Math.abs(archivedRow.original), archivedRow.replicate_max_abs))
+      .toBe(1.9035452070565118e-14);
+
+    const reopened = canonicalRegressionBootstrapReopen(
+      JSON.parse(JSON.stringify(archived)) as AnalysisRun,
+    );
+    expect(nativeLogisticResultProjection(reopened)).not.toBeNull();
+    expect(buildNativeResultNavigation(reopened)).toMatchObject({
+      defaultItemId: "regression_bootstrap_summary",
+      groups: [{ id: "regression" }],
+    });
+
+    const tampered = completedRegressionBootstrapRun(true);
+    const tamperedRow = tampered.result!.regression!.bootstrap!.coefficients[0];
+    tamperedRow.replicate_max_abs = 1.3395008570597813;
+    tamperedRow.test_tolerance = 2 * 1.903545207056512e-14;
+    const tamperedReopen = canonicalRegressionBootstrapReopen(
+      JSON.parse(JSON.stringify(tampered)) as AnalysisRun,
+    );
+    expect(nativeLogisticResultProjection(tamperedReopen)).toBeNull();
+    expect(buildNativeResultNavigation(tamperedReopen)).toMatchObject({
+      defaultItemId: null,
+      groups: [],
+      tables: [],
+    });
   });
 
   it("projects exact regression_logistic_v2 output into model-free diagnostic tables", () => {

@@ -8,6 +8,7 @@ import type {
   PlsPredictTarget,
   PcaAnalysis,
   RegressionAnalysis,
+  RegressionBootstrapAnalysis,
   GscaAnalysis,
 } from "../types";
 import { nativeIpmaPredecessorIds } from "./nativeIpma";
@@ -26,6 +27,7 @@ import {
   NATIVE_LOGISTIC_ENGINE_SCOPE_WARNING,
 } from "./nativeLogistic";
 import { isStandaloneNativeAnalysis } from "./nativeStandaloneAnalysis";
+import { isNativeRegressionBootstrapValidationWitness } from "./nativeRegressionBootstrapWitness";
 import {
   NATIVE_GSCA_ALGORITHM_VERSION,
   NATIVE_GSCA_ASSESSMENT_WARNING,
@@ -128,6 +130,7 @@ export interface NativeOlsResultProjection {
   coefficients: RegressionAnalysis["coefficients"];
   fit: RegressionAnalysis["fit"];
   predictionsStored: number;
+  bootstrap: RegressionBootstrapAnalysis | null;
   warnings: string[];
 }
 
@@ -141,6 +144,7 @@ export interface NativeLogisticResultProjection {
   fit: RegressionAnalysis["fit"];
   predictions: RegressionAnalysis["predictions"];
   diagnostics: NonNullable<RegressionAnalysis["logistic"]>;
+  bootstrap: RegressionBootstrapAnalysis | null;
   warnings: string[];
 }
 
@@ -317,6 +321,11 @@ const OLS_RESULT_IDS = [
   "ols_coefficients",
   "ols_model_fit",
   "ols_scope",
+  "regression_bootstrap_summary",
+  "regression_bootstrap_failures",
+  "regression_bootstrap_coefficients",
+  "regression_bootstrap_percentile",
+  "regression_bootstrap_bca",
 ] as const;
 
 const LOGISTIC_RESULT_IDS = [
@@ -327,6 +336,12 @@ const LOGISTIC_RESULT_IDS = [
   "logistic_convergence",
   "logistic_probabilities",
   "logistic_scope",
+  "regression_bootstrap_summary",
+  "regression_bootstrap_failures",
+  "regression_bootstrap_coefficients",
+  "regression_bootstrap_percentile",
+  "regression_bootstrap_bca",
+  "regression_bootstrap_odds_ratios",
 ] as const;
 
 const LEGACY_LOGISTIC_RESULT_IDS = [
@@ -871,22 +886,190 @@ export function nativePcaResultProjection(run: AnalysisRun | null | undefined): 
   };
 }
 
+function validateRegressionBootstrap(
+  run: AnalysisRun & { result: NonNullable<AnalysisRun["result"]> },
+  regression: RegressionAnalysis,
+  expectedTerms: readonly string[],
+  logistic: boolean,
+): RegressionBootstrapAnalysis | null {
+  const scopeWarning = "Regression bootstrap v1 uses deterministic indexed case resampling with replacement; percentile intervals are primary and BCa intervals are conditional on stable delete-one fits.";
+  const testWarning = "Bootstrap ratio statistics use an independently implemented two-sided standard-normal reference for both OLS and logistic coefficients; they are distinct from point-estimate t or Wald inference.";
+  const bootstrap = regression.bootstrap;
+  const settings = run.provenance?.settings;
+  if (!bootstrap || !settings
+    || bootstrap.method_version !== "regression_bootstrap_v1"
+    || bootstrap.algorithm !== "indexed_case_resampling_v1"
+    || bootstrap.alternative !== "two_sided"
+    || bootstrap.interval_policy !== "percentile_primary_bca_conditional_v1"
+    || bootstrap.test_reference !== "standard_normal_bootstrap_ratio_v1"
+    || bootstrap.test_tolerance_policy !== "64eps_max_1_original_replicates_v1"
+    || bootstrap.stream_token !== "quickpls_indexed_resampling_v1"
+    || bootstrap.confidence_level !== 0.95
+    || bootstrap.minimum_usable_fraction !== 0.9
+    || bootstrap.requested_replicates !== settings.bootstrap_samples
+    || bootstrap.seed !== settings.seed
+    || bootstrap.seed !== run.provenance?.seed
+    || bootstrap.seed !== run.seed
+    || bootstrap.workers !== settings.workers
+    || !isPositiveInteger(bootstrap.requested_replicates)
+    || bootstrap.requested_replicates < 99
+    || bootstrap.requested_replicates > 10_000
+    || !isPositiveInteger(bootstrap.usable_replicates)
+    || bootstrap.usable_replicates < Math.ceil(bootstrap.minimum_usable_fraction * bootstrap.requested_replicates)
+    || bootstrap.usable_replicates > bootstrap.requested_replicates
+    || !Array.isArray(bootstrap.failed_replicates)
+    || bootstrap.failed_replicates.length !== bootstrap.requested_replicates - bootstrap.usable_replicates
+    || !isPositiveInteger(bootstrap.jackknife_cases)
+    || bootstrap.jackknife_cases < 3
+    || bootstrap.jackknife_cases !== regression.observations
+    || !isNonNegativeInteger(bootstrap.usable_jackknife_cases)
+    || bootstrap.usable_jackknife_cases > bootstrap.jackknife_cases
+    || !Array.isArray(bootstrap.coefficients)
+    || bootstrap.coefficients.length !== expectedTerms.length
+    || !Array.isArray(bootstrap.warnings)
+    || !isNativeRegressionBootstrapValidationWitness(
+      bootstrap.validation_witness,
+      expectedTerms,
+      bootstrap,
+      logistic,
+    )) return null;
+  const expectedWarnings = [scopeWarning, testWarning];
+  if (bootstrap.failed_replicates.length) {
+    expectedWarnings.push(`${bootstrap.failed_replicates.length} of ${bootstrap.requested_replicates} bootstrap replicates failed and were excluded from inference.`);
+  }
+  const failedJackknife = bootstrap.jackknife_cases - bootstrap.usable_jackknife_cases;
+  if (failedJackknife) {
+    expectedWarnings.push(`${failedJackknife} of ${bootstrap.jackknife_cases} delete-one fits failed; affected BCa intervals are explicitly unavailable.`);
+  }
+  if (bootstrap.warnings.length !== expectedWarnings.length
+    || bootstrap.warnings.some((warning, index) => warning !== expectedWarnings[index])) return null;
+
+  const failedIndexes = new Set<number>();
+  for (const failure of bootstrap.failed_replicates) {
+    if (!isNonNegativeInteger(failure.replicate_index)
+      || failure.replicate_index >= bootstrap.requested_replicates
+      || failedIndexes.has(failure.replicate_index)
+      || !hasText(failure.reason_code)
+      || !hasText(failure.message)) return null;
+    failedIndexes.add(failure.replicate_index);
+  }
+
+  const validateBca = (value: RegressionBootstrapAnalysis["coefficients"][number]["bca"]) => {
+    if (value.status === "available") {
+      return isFiniteNumber(value.bias_correction)
+        && isFiniteNumber(value.acceleration)
+        && isFiniteNumber(value.lower)
+        && isFiniteNumber(value.upper)
+        && value.lower <= value.upper;
+    }
+    return (value.reason_code === "insufficient_jackknife_estimates"
+      || value.reason_code === "incomplete_jackknife"
+      || value.reason_code === "degenerate_jackknife_acceleration")
+      && hasText(value.message);
+  };
+
+  for (const [index, row] of bootstrap.coefficients.entries()) {
+    const point = regression.coefficients[index];
+    if (row.term !== expectedTerms[index]
+      || row.term !== point?.term
+      || !isFiniteNumber(row.original)
+      || !numbersClose(row.original, point.estimate)
+      || !isFiniteNumber(row.bootstrap_mean)
+      || !isFiniteNumber(row.bias)
+      || !numbersClose(row.bias, row.bootstrap_mean - row.original)
+      || !isFiniteNumber(row.standard_error)
+      || row.standard_error < 0
+      || !isFiniteNumber(row.replicate_max_abs)
+      || row.replicate_max_abs < 0
+      || !isFiniteNumber(row.test_tolerance)
+      || row.test_tolerance <= 0
+      || !jsonRoundTripNumbersClose(
+        row.test_tolerance,
+        64 * Number.EPSILON * Math.max(1, Math.abs(row.original), row.replicate_max_abs),
+      )
+      || Math.abs(row.bootstrap_mean) > row.replicate_max_abs + row.test_tolerance
+      || !isFiniteNumber(row.percentile_lower)
+      || !isFiniteNumber(row.percentile_upper)
+      || row.percentile_lower > row.percentile_upper
+      || row.percentile_lower < -row.replicate_max_abs - row.test_tolerance
+      || row.percentile_upper > row.replicate_max_abs + row.test_tolerance
+      || row.usable_replicates !== bootstrap.usable_replicates
+      || !validateBca(row.bca)) return null;
+    if (row.bca.status === "available"
+      && (row.bca.lower < -row.replicate_max_abs - row.test_tolerance
+        || row.bca.upper > row.replicate_max_abs + row.test_tolerance)) return null;
+    if (bootstrap.usable_jackknife_cases < bootstrap.jackknife_cases
+      && (row.bca.status !== "unavailable" || row.bca.reason_code !== "incomplete_jackknife")) return null;
+
+    if (row.standard_error > row.test_tolerance) {
+      if (row.test.status !== "available"
+        || !isFiniteNumber(row.test.statistic)
+        || !numbersClose(row.test.statistic, row.original / row.standard_error)
+        || !isProbability(row.test.p_value_two_sided)
+        || !scientificNumbersClose(
+          row.test.p_value_two_sided,
+          chiSquareSurvival(row.test.statistic * row.test.statistic, 1),
+        )) return null;
+    } else if (row.test.status !== "unavailable"
+      || row.test.reason_code !== "degenerate_bootstrap_standard_error"
+      || !hasText(row.test.message)) return null;
+    if (row.standard_error <= row.test_tolerance
+      && (Math.abs(row.percentile_upper - row.percentile_lower) > row.test_tolerance
+        || Math.abs(row.percentile_lower - row.bootstrap_mean) > row.test_tolerance
+        || Math.abs(row.percentile_upper - row.bootstrap_mean) > row.test_tolerance
+        || Math.abs(row.bootstrap_mean - row.original) > row.test_tolerance)) return null;
+
+    const oddsRatio = row.odds_ratio;
+    if (!logistic) {
+      if (oddsRatio != null) return null;
+      continue;
+    }
+    const oddsRatioMinimum = Math.exp(-row.replicate_max_abs);
+    const oddsRatioMaximum = Math.exp(row.replicate_max_abs);
+    if (!oddsRatio
+      || !isFiniteNumber(oddsRatioMinimum)
+      || !isFiniteNumber(oddsRatioMaximum)
+      || !isFiniteNumber(oddsRatio.original)
+      || oddsRatio.original <= 0
+      || !numbersClose(oddsRatio.original, Math.exp(row.original))
+      || !isFiniteNumber(oddsRatio.percentile_lower)
+      || !isFiniteNumber(oddsRatio.percentile_upper)
+      || oddsRatio.percentile_lower <= 0
+      || oddsRatio.percentile_lower > oddsRatio.percentile_upper
+      || (oddsRatio.percentile_lower < oddsRatioMinimum && !numbersClose(oddsRatio.percentile_lower, oddsRatioMinimum))
+      || (oddsRatio.percentile_upper > oddsRatioMaximum && !numbersClose(oddsRatio.percentile_upper, oddsRatioMaximum))
+      || !validateBca(oddsRatio.bca)) return null;
+    if (oddsRatio.bca.status === "available"
+      && (oddsRatio.bca.lower <= 0
+        || oddsRatio.bca.upper <= 0
+        || (oddsRatio.bca.lower < oddsRatioMinimum && !numbersClose(oddsRatio.bca.lower, oddsRatioMinimum))
+        || (oddsRatio.bca.upper > oddsRatioMaximum && !numbersClose(oddsRatio.bca.upper, oddsRatioMaximum)))) return null;
+    if (bootstrap.usable_jackknife_cases < bootstrap.jackknife_cases
+      && (oddsRatio.bca.status !== "unavailable" || oddsRatio.bca.reason_code !== "incomplete_jackknife")) return null;
+  }
+  return bootstrap;
+}
+
 export function nativeOlsResultProjection(run: AnalysisRun | null | undefined): NativeOlsResultProjection | null {
   if (!isCompletedResultRun(run) || run.modelId || run.modelSnapshot) return null;
   const provenance = run.provenance;
   const result = run.result;
   const regression = result.regression;
+  const bootstrapRun = provenance?.method_version === "regression_ols_v1+regression_bootstrap_v1";
   if (!regression
     || provenance?.method !== "regression"
-    || provenance.method_version !== "regression_ols_v1"
+    || (!bootstrapRun && provenance.method_version !== "regression_ols_v1")
     || provenance.settings.method !== "regression"
     || provenance.settings.weighting_scheme !== "path"
     || provenance.settings.preprocessing !== "unstandardized"
-    || provenance.settings.bootstrap_samples !== 0
+    || (bootstrapRun
+      ? provenance.settings.bootstrap_samples < 99 || provenance.settings.bootstrap_samples > 10_000
+      : provenance.settings.bootstrap_samples !== 0)
     || provenance.settings.studentized_inner_samples !== 0
     || provenance.settings.permutation_samples !== 0
     || provenance.settings.case_weight_column !== null
     || !numbersClose(provenance.settings.confidence_level, 0.95)
+    || (bootstrapRun ? provenance.settings.workers < 1 || provenance.settings.workers > 64 : provenance.settings.workers !== 1)
     || result.method_version !== "regression_ols_v1"
     || regression.method_version !== "regression_ols_v1"
     || regression.regression_type !== "ols") return null;
@@ -907,7 +1090,9 @@ export function nativeOlsResultProjection(run: AnalysisRun | null | undefined): 
     || regression.coefficients.length !== expectedTerms.length
     || regression.predictions.length !== regression.observations
     || regression.logistic
-    || regression.process) return null;
+    || regression.process
+    || run.bootstrap
+    || run.permutation) return null;
   for (const [index, coefficient] of regression.coefficients.entries()) {
     if (coefficient.term !== expectedTerms[index]
       || !isFiniteNumber(coefficient.estimate)
@@ -949,6 +1134,10 @@ export function nativeOlsResultProjection(run: AnalysisRun | null | undefined): 
   }
   const warnings = regression.warnings.map((warning) => warning.trim()).filter(Boolean);
   if (!warnings.includes(NATIVE_OLS_ENGINE_SCOPE_WARNING)) return null;
+  const bootstrap = bootstrapRun
+    ? validateRegressionBootstrap(run, regression, expectedTerms, false)
+    : null;
+  if ((bootstrapRun && !bootstrap) || (!bootstrapRun && regression.bootstrap)) return null;
   return {
     methodVersion: "regression_ols_v1",
     outcome,
@@ -958,6 +1147,7 @@ export function nativeOlsResultProjection(run: AnalysisRun | null | undefined): 
     coefficients: regression.coefficients,
     fit,
     predictionsStored: regression.predictions.length,
+    bootstrap,
     warnings,
   };
 }
@@ -969,23 +1159,28 @@ export function nativeLogisticResultProjection(
   const provenance = run.provenance;
   const result = run.result;
   const regression = result.regression;
+  const bootstrapRun = provenance?.method_version === "regression_logistic_v2+regression_bootstrap_v1";
   if (!regression
     || provenance?.method !== "regression"
-    || provenance.method_version !== "regression_logistic_v2"
+    || (!bootstrapRun && provenance.method_version !== "regression_logistic_v2")
     || provenance.settings.method !== "regression"
     || provenance.settings.weighting_scheme !== "path"
     || provenance.settings.preprocessing !== "unstandardized"
-    || provenance.settings.bootstrap_samples !== 0
+    || (bootstrapRun
+      ? provenance.settings.bootstrap_samples < 99 || provenance.settings.bootstrap_samples > 10_000
+      : provenance.settings.bootstrap_samples !== 0)
     || provenance.settings.studentized_inner_samples !== 0
     || provenance.settings.permutation_samples !== 0
-    || provenance.settings.workers !== 1
+    || (bootstrapRun ? provenance.settings.workers < 1 || provenance.settings.workers > 64 : provenance.settings.workers !== 1)
     || provenance.settings.case_weight_column !== null
     || !numbersClose(provenance.settings.confidence_level, 0.95)
     || result.method_version !== "regression_logistic_v2"
     || regression.method_version !== "regression_logistic_v2"
     || regression.regression_type !== "logistic"
     || regression.process
-    || !regression.logistic) return null;
+    || !regression.logistic
+    || run.bootstrap
+    || run.permutation) return null;
   if (run.assessment?.method_version !== "assessment_not_applicable_v1"
     || run.assessment.warnings.length !== 1
     || run.assessment.warnings[0] !== NATIVE_STANDALONE_ASSESSMENT_WARNING) return null;
@@ -1139,6 +1334,10 @@ export function nativeLogisticResultProjection(
 
   const warnings = regression.warnings.map((warning) => warning.trim()).filter(Boolean);
   if (!warnings.includes(NATIVE_LOGISTIC_ENGINE_SCOPE_WARNING)) return null;
+  const bootstrap = bootstrapRun
+    ? validateRegressionBootstrap(run, regression, expectedTerms, true)
+    : null;
+  if ((bootstrapRun && !bootstrap) || (!bootstrapRun && regression.bootstrap)) return null;
   return {
     methodVersion: "regression_logistic_v2",
     outcome,
@@ -1149,6 +1348,7 @@ export function nativeLogisticResultProjection(
     fit,
     predictions: regression.predictions,
     diagnostics,
+    bootstrap,
     warnings,
   };
 }
@@ -1175,6 +1375,7 @@ export function nativeLegacyLogisticResultProjection(
     || regression.method_version !== "regression_logistic_v1"
     || regression.regression_type !== "logistic"
     || regression.logistic
+    || regression.bootstrap
     || regression.process) return null;
   if (run.assessment?.method_version !== "assessment_not_applicable_v1"
     || run.assessment.warnings.length !== 1
@@ -1239,6 +1440,14 @@ export function nativeLegacyLogisticResultProjection(
     predictions: regression.predictions,
     warnings,
   };
+}
+
+export function nativeRegressionBootstrapResultProjection(
+  run: AnalysisRun | null | undefined,
+): RegressionBootstrapAnalysis | null {
+  return nativeOlsResultProjection(run)?.bootstrap
+    ?? nativeLogisticResultProjection(run)?.bootstrap
+    ?? null;
 }
 
 interface NativeHigherOrderProjection {
@@ -1957,7 +2166,11 @@ export function buildNativeResultTree(run: AnalysisRun | null | undefined, table
   addTableGroup(
     groups,
     "regression",
-    logistic ? "Binary logistic regression" : legacyLogistic ? "Legacy binary logistic regression (v1)" : "OLS regression",
+    logistic
+      ? `Binary logistic regression${logistic.bootstrap ? " with bootstrap" : ""}`
+      : legacyLogistic
+        ? "Legacy binary logistic regression (v1)"
+        : `OLS regression${nativeOlsResultProjection(run)?.bootstrap ? " with bootstrap" : ""}`,
     logistic ? LOGISTIC_RESULT_IDS : legacyLogistic ? LEGACY_LOGISTIC_RESULT_IDS : OLS_RESULT_IDS,
     byId,
   );
@@ -1994,6 +2207,10 @@ export function buildNativeResultNavigation(run: AnalysisRun | null | undefined)
   const ipmaDefault = IPMA_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
   const ncaDefault = NCA_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
   const pcaDefault = PCA_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
+  const regressionBootstrapDefault = nativeRegressionBootstrapResultProjection(run)
+    && tables.some((table) => table.id === "regression_bootstrap_summary")
+    ? "regression_bootstrap_summary"
+    : undefined;
   const olsDefault = OLS_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
   const logisticDefault = LOGISTIC_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
   const legacyLogisticDefault = LEGACY_LOGISTIC_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
@@ -2004,7 +2221,7 @@ export function buildNativeResultNavigation(run: AnalysisRun | null | undefined)
   const fallbackDefault = run.result.mga || standalone ? tables[0]?.id ?? null : "model_estimates";
   return {
     runId: run.id,
-    defaultItemId: groupDefault ?? ipmaDefault ?? ncaDefault ?? pcaDefault ?? logisticDefault ?? legacyLogisticDefault ?? olsDefault ?? cbsemDefault ?? gscaDefault ?? ccaDefault ?? predictionDefault ?? higherOrderDefault ?? fallbackDefault,
+    defaultItemId: regressionBootstrapDefault ?? groupDefault ?? ipmaDefault ?? ncaDefault ?? pcaDefault ?? logisticDefault ?? legacyLogisticDefault ?? olsDefault ?? cbsemDefault ?? gscaDefault ?? ccaDefault ?? predictionDefault ?? higherOrderDefault ?? fallbackDefault,
     groups: buildNativeResultTree(run, tables),
     tables,
   };
@@ -3311,6 +3528,117 @@ function addOlsResultTables(
       ["Method version", projection.methodVersion],
     ],
   });
+
+  if (projection.bootstrap) addRegressionBootstrapTables(tables, projection.bootstrap, false);
+}
+
+function addRegressionBootstrapTables(
+  tables: ResultTable[],
+  bootstrap: RegressionBootstrapAnalysis,
+  logistic: boolean,
+) {
+  const termLabel = (term: string) => term === "intercept" ? "Intercept" : term;
+  const unavailable = (message: string) => `Unavailable — ${message}`;
+  const runtimeWarning = "Runtime scales with the requested resamples. Indexed seeded streams make results deterministic and invariant to the selected worker count.";
+
+  addTable(tables, {
+    id: "regression_bootstrap_summary",
+    title: "Regression bootstrap summary",
+    warning: bootstrap.warnings.length ? `${runtimeWarning} ${bootstrap.warnings.join(" ")}` : runtimeWarning,
+    columns: ["Field", "Value"],
+    rows: [
+      ["Method version", bootstrap.method_version],
+      ["Sampling", "Case resampling with replacement"],
+      ["Algorithm", bootstrap.algorithm],
+      ["Stream", bootstrap.stream_token],
+      ["Alternative", "Two-sided"],
+      ["Test reference", "Standard normal bootstrap ratio"],
+      ["Test tolerance policy", bootstrap.test_tolerance_policy],
+      ["Confidence level", "95% (fixed)"],
+      ["Interval policy", "Percentile primary; BCa conditional"],
+      ["Requested replicates", String(bootstrap.requested_replicates)],
+      ["Usable replicates", String(bootstrap.usable_replicates)],
+      ["Failed replicates", String(bootstrap.failed_replicates.length)],
+      ["Delete-one fits required", String(bootstrap.jackknife_cases)],
+      ["Delete-one fits usable", String(bootstrap.usable_jackknife_cases)],
+      ["Minimum usable fraction", "90%"],
+      ["Seed", String(bootstrap.seed)],
+      ["Workers", String(bootstrap.workers)],
+    ],
+  });
+
+  addTable(tables, {
+    id: "regression_bootstrap_coefficients",
+    title: "Bootstrap coefficient inference",
+    warning: "The bootstrap ratio uses a standard-normal reference and is reported separately from point-estimate t or Wald inference. Significance is not inferred solely from interval inclusion.",
+    columns: ["Term", "Original", "Bootstrap mean", "Bias", "Bootstrap SE", "Replicate max |estimate|", "Test tolerance", "Test status", "Bootstrap ratio", "p (two-sided)", "Usable replicates"],
+    rows: bootstrap.coefficients.map((row) => [
+      termLabel(row.term),
+      formatNumber(row.original),
+      formatNumber(row.bootstrap_mean),
+      formatNumber(row.bias),
+      formatNumber(row.standard_error),
+      formatNumber(row.replicate_max_abs),
+      String(row.test_tolerance),
+      row.test.status === "available" ? "Available" : unavailable(row.test.message),
+      row.test.status === "available" ? formatNumber(row.test.statistic) : "",
+      row.test.status === "available" ? formatPValue(row.test.p_value_two_sided) : "",
+      String(row.usable_replicates),
+    ]),
+  });
+
+  if (bootstrap.failed_replicates.length) {
+    addTable(tables, {
+      id: "regression_bootstrap_failures",
+      title: "Failed bootstrap replicates",
+      warning: "Failed fits are excluded from inference and retained with their engine reason. The run is rejected when fewer than 90% of requested replicates are usable.",
+      columns: ["Replicate", "Reason code", "Message"],
+      rows: bootstrap.failed_replicates.map((failure) => [
+        String(failure.replicate_index + 1),
+        failure.reason_code,
+        failure.message,
+      ]),
+    });
+  }
+
+  addTable(tables, {
+    id: "regression_bootstrap_percentile",
+    title: "Percentile confidence intervals (primary)",
+    warning: "Primary two-sided 95% case-resampling intervals.",
+    columns: ["Term", "Original", "95% lower", "95% upper", "Usable replicates"],
+    rows: bootstrap.coefficients.map((row) => [
+      termLabel(row.term),
+      formatNumber(row.original),
+      formatNumber(row.percentile_lower),
+      formatNumber(row.percentile_upper),
+      String(row.usable_replicates),
+    ]),
+  });
+
+  addTable(tables, {
+    id: "regression_bootstrap_bca",
+    title: "BCa confidence intervals (conditional)",
+    warning: "BCa is an alternative interval. Failed delete-one refits or degenerate jackknife acceleration are disclosed per coefficient.",
+    columns: ["Term", "Status", "Reason", "Bias correction", "Acceleration", "95% lower", "95% upper"],
+    rows: bootstrap.coefficients.map((row) => row.bca.status === "available"
+      ? [termLabel(row.term), "Available", "", formatNumber(row.bca.bias_correction), formatNumber(row.bca.acceleration), formatNumber(row.bca.lower), formatNumber(row.bca.upper)]
+      : [termLabel(row.term), "Unavailable", row.bca.message, "", "", "", ""]),
+  });
+
+  if (logistic) {
+    addTable(tables, {
+      id: "regression_bootstrap_odds_ratios",
+      title: "Bootstrap odds-ratio intervals",
+      warning: "Odds-ratio BCa intervals are calculated on the exponentiated resampling and jackknife distributions; they are not reconstructed from coefficient BCa endpoints.",
+      columns: ["Term", "Odds ratio", "Percentile 95% lower", "Percentile 95% upper", "BCa status", "BCa reason", "BCa 95% lower", "BCa 95% upper"],
+      rows: bootstrap.coefficients.map((row) => {
+        const oddsRatio = row.odds_ratio!;
+        return oddsRatio.bca.status === "available"
+          ? [termLabel(row.term), formatNumber(oddsRatio.original), formatNumber(oddsRatio.percentile_lower), formatNumber(oddsRatio.percentile_upper), "Available", "", formatNumber(oddsRatio.bca.lower), formatNumber(oddsRatio.bca.upper)]
+          : [termLabel(row.term), formatNumber(oddsRatio.original), formatNumber(oddsRatio.percentile_lower), formatNumber(oddsRatio.percentile_upper), "Unavailable", oddsRatio.bca.message, "", ""];
+      }),
+    });
+  }
 }
 
 function addLogisticResultTables(
@@ -3432,7 +3760,9 @@ function addLogisticResultTables(
       ["Predictors", projection.predictors.join(", ")],
       ["Controls", projection.controls.length ? projection.controls.join(", ") : "None"],
       ["Estimator", "Binary logistic maximum likelihood with intercept"],
-      ["Execution", "Deterministic Newton IRLS; one worker"],
+      ["Execution", projection.bootstrap
+        ? `Deterministic Newton IRLS point estimation; indexed bootstrap resampling with ${projection.bootstrap.workers} worker${projection.bootstrap.workers === 1 ? "" : "s"}`
+        : "Deterministic Newton IRLS; one worker"],
       ["Coefficient inference", "Maximum-likelihood SE; Wald z; two-sided 95% confidence intervals"],
       ["Classification threshold", "0.5"],
       ["Classification interpretation", classificationWarning],
@@ -3441,6 +3771,8 @@ function addLogisticResultTables(
       ["Method version", projection.methodVersion],
     ],
   });
+
+  if (projection.bootstrap) addRegressionBootstrapTables(tables, projection.bootstrap, true);
 }
 
 function addLegacyLogisticResultTables(
@@ -4322,6 +4654,20 @@ function numbersClose(left: unknown, right: unknown): boolean {
   return isFiniteNumber(left)
     && isFiniteNumber(right)
     && Math.abs(left - right) <= 1e-10 * Math.max(1, Math.abs(left), Math.abs(right));
+}
+
+/**
+ * Allows only the few representable-value steps introduced when an already
+ * validated Rust f64 is serialized through the Tauri JSON boundary. Unlike
+ * general scientific comparisons, this is relative to the operands themselves
+ * and therefore stays strict for derived values near machine epsilon.
+ */
+function jsonRoundTripNumbersClose(left: unknown, right: unknown): boolean {
+  if (!isFiniteNumber(left) || !isFiniteNumber(right)) return false;
+  if (left === right) return true;
+  const scale = Math.max(Math.abs(left), Math.abs(right));
+  return scale > 0
+    && Math.abs(left - right) <= 4 * Number.EPSILON * scale;
 }
 
 const NORMAL_95_PERCENT_CRITICAL_VALUE = 1.959963984540054;

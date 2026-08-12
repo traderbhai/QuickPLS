@@ -337,6 +337,120 @@ describe("canonical native project reconciliation", () => {
     expect(legacy?.modelSnapshot).toBeUndefined();
   });
 
+  it("hydrates regression bootstrap only from the exact typed schema-v3 recipe", () => {
+    const baseEnvelope = envelope();
+    const basePayload = baseEnvelope.payload as Extract<AnalysisResultEnvelope["payload"], { kind: "pls_pm_v1" }>;
+    const bootstrapRecipe = recipe({
+      schema_version: 3,
+      settings: {
+        ...recipe().settings,
+        method: "regression",
+        preprocessing: "unstandardized",
+        bootstrap_samples: 99,
+        workers: 2,
+      },
+      method_config: {
+        kind: "regression",
+        outcome: "y",
+        predictors: ["x"],
+        model: { type: "ols", robust_se: "hc3" },
+        bootstrap: { algorithm: "case_resampling", intervals: ["percentile", "bca"] },
+      },
+    });
+    const bootstrapEnvelope: AnalysisResultEnvelope = {
+      ...baseEnvelope,
+      id: "result-regression-bootstrap",
+      provenance: {
+        ...baseEnvelope.provenance,
+        recipe_id: bootstrapRecipe.id,
+        method: "regression",
+        method_version: "regression_ols_v1+regression_bootstrap_v1",
+        settings: bootstrapRecipe.settings,
+      },
+      payload: {
+        ...basePayload,
+        estimation: {
+          ...basePayload.estimation,
+          method_version: "regression_ols_v1",
+          regression: {
+            method_version: "regression_ols_v1",
+            regression_type: "ols",
+            outcome: "y",
+            predictors: ["x"],
+            controls: [],
+            observations: 6,
+            coefficients: [],
+            fit: { aic: 1, bic: 1 },
+            predictions: [],
+            bootstrap: {
+              method_version: "regression_bootstrap_v1",
+              algorithm: "indexed_case_resampling_v1",
+              alternative: "two_sided",
+              interval_policy: "percentile_primary_bca_conditional_v1",
+              test_reference: "standard_normal_bootstrap_ratio_v1",
+              test_tolerance_policy: "64eps_max_1_original_replicates_v1",
+              confidence_level: 0.95,
+              requested_replicates: 99,
+              usable_replicates: 99,
+              minimum_usable_fraction: 0.9,
+              seed: 42,
+              workers: 2,
+              stream_token: "quickpls_indexed_resampling_v1",
+              failed_replicates: [],
+              jackknife_cases: 6,
+              usable_jackknife_cases: 6,
+              validation_witness: {
+                method_version: "regression_bootstrap_validation_witness_v1",
+                terms: ["intercept", "x"],
+                successful_bootstrap: Array.from({ length: 99 }, (_, replicate_index) => ({
+                  replicate_index,
+                  coefficients: [1, 0.5],
+                })),
+                successful_jackknife: Array.from({ length: 6 }, (_, omitted_case) => ({
+                  omitted_case,
+                  coefficients: [1, 0.5],
+                })),
+                failed_jackknife: [],
+              },
+              coefficients: [],
+              warnings: [],
+            },
+            process: null,
+            warnings: [],
+          },
+        },
+      },
+    };
+
+    expect(nativeRunFromCanonicalResult(bootstrapEnvelope, bootstrapRecipe)).toMatchObject({
+      modelId: null,
+      method: "Ordinary Least Squares Regression with Bootstrap",
+      name: "Ordinary Least Squares Regression with Bootstrap run",
+    });
+    const missingTypedConfig = { ...bootstrapRecipe, method_config: undefined };
+    expect(nativeRunFromCanonicalResult(bootstrapEnvelope, missingTypedConfig)).toBeNull();
+    const wrongIntervals = {
+      ...bootstrapRecipe,
+      method_config: {
+        ...bootstrapRecipe.method_config!,
+        bootstrap: { algorithm: "case_resampling" as const, intervals: ["bca", "percentile"] as ["bca", "percentile"] },
+      },
+    } as unknown as NativeCanonicalAnalysisRecipe;
+    expect(nativeRunFromCanonicalResult(bootstrapEnvelope, wrongIntervals)).toBeNull();
+
+    const wrongWitnessTerms = JSON.parse(JSON.stringify(bootstrapEnvelope)) as AnalysisResultEnvelope;
+    const wrongTermsBootstrap = (wrongWitnessTerms.payload as Extract<AnalysisResultEnvelope["payload"], { kind: "pls_pm_v1" }>)
+      .estimation.regression!.bootstrap!;
+    wrongTermsBootstrap.validation_witness.terms = ["x", "intercept"];
+    expect(nativeRunFromCanonicalResult(wrongWitnessTerms, bootstrapRecipe)).toBeNull();
+
+    const incompleteWitness = JSON.parse(JSON.stringify(bootstrapEnvelope)) as AnalysisResultEnvelope;
+    const incompleteBootstrap = (incompleteWitness.payload as Extract<AnalysisResultEnvelope["payload"], { kind: "pls_pm_v1" }>)
+      .estimation.regression!.bootstrap!;
+    incompleteBootstrap.validation_witness.successful_bootstrap.pop();
+    expect(nativeRunFromCanonicalResult(incompleteWitness, bootstrapRecipe)).toBeNull();
+  });
+
   it("hydrates current and legacy prediction archives without relabeling v1 as current CVPAT", () => {
     const basePayload = envelope().payload as Extract<AnalysisResultEnvelope["payload"], { kind: "pls_pm_v1" }>;
     const predictionRecipe = recipe({ settings: { ...recipe().settings, method: "predict" } });
