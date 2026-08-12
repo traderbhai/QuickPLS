@@ -3,5 +3,5 @@
   "identifier": "default",
   "description": "QuickPLS desktop window permissions",
   "windows": ["main"],
-  "permissions": ["core:default", "dialog:allow-open", "dialog:allow-save"]
+  "permissions": ["core:default", "core:window:allow-destroy", "dialog:allow-message", "dialog:allow-open", "dialog:allow-save"]
 }

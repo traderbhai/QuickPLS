@@ -664,7 +664,7 @@ function reportParagraphs(run: AnalysisRun, result: PlsResult, findings: Interpr
       sourceFindingIds: findings.filter((item) => item.id.startsWith("loading.")).map((item) => item.id),
     },
     {
-      section: "Structural interpretation",
+      section: "Structural model interpretation",
       text: `${strongestPath ? `The strongest direct path was ${pathName(strongestPath.source, strongestPath.target)} (beta = ${strongestPath.coefficient.toFixed(4)}). ` : ""}${r2Rows.length ? `The highest R2 was ${r2Rows[0][1].toFixed(4)} for ${r2Rows[0][0]}.` : "No endogenous R2 values were available."}`,
       sourceFindingIds: findings.filter((item) => item.tab === "structural").map((item) => item.id),
     },

@@ -12,6 +12,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+arrow.workspace = true
 chrono.workspace = true
 qpls-assessment = { path = "../crates/qpls-assessment" }
 qpls-core = { path = "../crates/qpls-core" }

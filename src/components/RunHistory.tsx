@@ -1,5 +1,5 @@
 ﻿import { AlertTriangle, CheckCircle2, ChevronDown, Copy, FlaskConical, Search } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useWorkspace } from "../store";
 import type { AnalysisRun, AssessmentResult, HtmtAssessment, PlsResult, ResultWorkspaceTab } from "../types";
 import { findBcaParameter, findBootstrapParameter, findStudentizedParameter, formatParameterIdentity } from "../domain/inference";
@@ -7,7 +7,7 @@ import { analysisReadiness } from "../domain/analysisReadiness";
 import { buildResultInterpretation, copyableInterpretationText, findingsByGroup, findingsForTab, rowSpecificInterpretation, type InterpretationFinding, type ResultInterpretation, type SemDiagramEdgeLike, type SemDiagramNodeLike } from "../domain/resultInterpretation";
 import { isNativeDesktop } from "../services/projectService";
 import { ReadinessPanel } from "./ReadinessPanel";
-import { EmptyState, MethodConfidencePanel, PageHeader, ReportabilityChecklist, StatusBadge, type ReportabilityItem } from "./Ui";
+import { EmptyState, MethodConfidencePanel, MetricCard, PageHeader, Panel, ReportabilityChecklist, StatusBadge, WorkspacePage, type ReportabilityItem } from "./Ui";
 
 const resultTabs: Array<{ id: ResultWorkspaceTab; label: string }> = [
   { id: "overview", label: "Overview" },
@@ -38,6 +38,10 @@ function resultTabHint(tab: ResultWorkspaceTab) {
   }
 }
 
+function resultTabLabel(tab: ResultWorkspaceTab) {
+  return resultTabs.find((item) => item.id === tab)?.label ?? "Results";
+}
+
 export function RunHistory() {
   const runs = useWorkspace((state) => state.runs);
   const setView = useWorkspace((state) => state.setView);
@@ -62,6 +66,7 @@ export function RunHistory() {
   const selectedRun = visibleRuns.find((run) => run.id === resultState.selectedRunId) ?? visibleRuns[0];
   const significantWarningCount = selectedRun?.warnings.filter((warning) => !warning.toLowerCase().includes("validated")).length ?? 0;
   const bestR2 = selectedRun?.result ? Object.entries(selectedRun.result.r_squared).sort((a, b) => b[1] - a[1])[0] : null;
+  const selectedInterpretation = selectedRun?.result ? buildResultInterpretation({ run: selectedRun, nodes, edges }) : null;
   const selectedComparisonRuns = resultState.comparisonRunIds
     .map((id) => runs.find((run) => run.id === id))
     .filter((run): run is AnalysisRun => Boolean(run?.result));
@@ -95,17 +100,67 @@ export function RunHistory() {
   const emptyPrimaryLabel = readiness.blockers[0]?.actionLabel ?? (readiness.canRun ? "Run method" : "Open setup");
   const previewTabs = ["Overview", "Measurement", "Structural", "Validity", "Inference", "Diagnostics"];
 
-  if (runs.length === 0) return <section className="workspace-page">
-    <PageHeader title="Results" description="Completed runs, immutable recipes, estimates, and provenance records." />
+  useEffect(() => {
+    const copyTable = () => {
+      if (selectedRun?.result) {
+        void navigator.clipboard?.writeText(csvForCurrentResultTab(selectedRun, resultState.selectedTab));
+      }
+    };
+    const exportTable = () => {
+      if (selectedRun?.result) exportCurrentTable();
+    };
+    const selectRun = () => {
+      const selector = document.querySelector<HTMLSelectElement>('[aria-label="Selected completed run"]');
+      selector?.focus();
+    };
+    const copyRunList = () => {
+      void copyVisibleSummary();
+    };
+    const openInterpretation = () => setResultState({ selectedTab: "interpretation" });
+    const openComparison = () => setResultState({ selectedTab: "comparison" });
+    const prepareReport = () => setView("reports");
+    const toggleConfidence = () => setUiPreferences({ methodScopeDrawerOpen: !uiPreferences.methodScopeDrawerOpen });
+    window.addEventListener("quickpls:results-select-run", selectRun);
+    window.addEventListener("quickpls:results-copy-run-list", copyRunList);
+    window.addEventListener("quickpls:results-copy-current-table", copyTable);
+    window.addEventListener("quickpls:results-export-current-table", exportTable);
+    window.addEventListener("quickpls:results-open-interpretation", openInterpretation);
+    window.addEventListener("quickpls:results-open-comparison", openComparison);
+    window.addEventListener("quickpls:results-prepare-report", prepareReport);
+    window.addEventListener("quickpls:results-method-confidence", toggleConfidence);
+    return () => {
+      window.removeEventListener("quickpls:results-select-run", selectRun);
+      window.removeEventListener("quickpls:results-copy-run-list", copyRunList);
+      window.removeEventListener("quickpls:results-copy-current-table", copyTable);
+      window.removeEventListener("quickpls:results-export-current-table", exportTable);
+      window.removeEventListener("quickpls:results-open-interpretation", openInterpretation);
+      window.removeEventListener("quickpls:results-open-comparison", openComparison);
+      window.removeEventListener("quickpls:results-prepare-report", prepareReport);
+      window.removeEventListener("quickpls:results-method-confidence", toggleConfidence);
+    };
+  }, [selectedRun, visibleRuns, resultState.selectedTab, uiPreferences.methodScopeDrawerOpen]);
+
+  if (runs.length === 0) return <WorkspacePage data-v218-mockup-screen="results-empty" className="results-v2-workspace results-v213-workspace results-v218-workspace">
+    <PageHeader title="Results" description="Completed runs, immutable recipes, estimates, and provenance records." actions={<><StatusBadge status="warning">no completed run</StatusBadge><button className="secondary-button" type="button" onClick={() => setView("trust")}>Why trust this result?</button></>} />
+    <Panel title="Result workbook" description="No completed run is selected yet." className="results-workbench-shell results-v2-command-center results-v2-empty-command results-v213-command-center">
+      <nav className="results-section-nav results-v2-section-nav" aria-label="Result sections preview">
+        <div className="results-v2-nav-header"><strong>Result workbook</strong><span>No selected run</span></div>
+        {previewTabs.map((tab) => <span key={tab}>{tab}</span>)}
+      </nav>
+      <div className="results-tool-stack" aria-label="Result confidence controls">
+        <button className="secondary-button" type="button" onClick={() => setView("trust")}>Why trust this result?</button>
+        <button className="secondary-button" type="button" onClick={() => setView("analyses")}>Open setup</button>
+      </div>
+    </Panel>
     <ReadinessPanel readiness={readiness} compact onNavigate={setView} />
     <EmptyState title="No completed results" description={readiness.canRun ? "Run the selected method to create the first result." : readiness.blockers[0]?.detail ?? "Complete the analysis checklist before running."} actions={<><button className="run-button" onClick={() => setView(emptyPrimary)}>{emptyPrimaryLabel}</button><button className="secondary-button" onClick={() => setView("analyses")}>Open setup</button></>} />
-    <div className="result-preview-tabs" aria-label="Result sections preview">{previewTabs.map((tab) => <span key={tab}>{tab}</span>)}</div>
-  </section>;
+  </WorkspacePage>;
 
-  return <section className={`workspace-page${uiPreferences.showThresholdColors ? " threshold-colors-enabled" : " threshold-colors-hidden"}`}>
-    <PageHeader title="Results" description="Review saved runs by measurement, structural, inference, prediction, groups, diagnostics, and comparison workflow." actions={<StatusBadge status="validated">{visibleRuns.length} visible</StatusBadge>} />
-    <section className="results-workbench-shell" aria-label="Results workspace controls">
-      <nav className="results-section-nav" aria-label="Result sections">
+  return <WorkspacePage data-v218-mockup-screen="results" data-v228-results-workbook="true" className={`results-v2-workspace results-v213-workspace results-v218-workspace results-v228-workspace${uiPreferences.showThresholdColors ? " threshold-colors-enabled" : " threshold-colors-hidden"}`}>
+    <PageHeader title="Results" description="Review one saved run at a time with scoped interpretation, reportability checks, and export-ready tables." actions={<StatusBadge status="validated">{visibleRuns.length} visible</StatusBadge>} />
+    <Panel title="Result workbook" description="Choose a section, refine tables, export, or open interpretation guidance." className="results-workbench-shell results-v2-command-center results-v213-command-center">
+      <nav className="results-section-nav results-v2-section-nav" aria-label="Result sections">
+        <div className="results-v2-nav-header"><strong>Result workbook</strong><span>{selectedRun ? selectedRun.name : "No selected run"}</span></div>
         {resultTabs.map((tab) => <button key={tab.id} type="button" className={resultState.selectedTab === tab.id ? "active" : undefined} aria-current={resultState.selectedTab === tab.id ? "page" : undefined} onClick={() => setResultState({ selectedTab: tab.id })}>
           <span>{tab.label}</span>
           <small>{resultTabHint(tab.id)}</small>
@@ -133,42 +188,59 @@ export function RunHistory() {
           <button type="button" disabled={!selectedRun?.result} onClick={() => selectedRun?.result && navigator.clipboard?.writeText(copyableInterpretationText(buildResultInterpretation({ run: selectedRun, nodes, edges }).findings))}>Copy interpretation</button>
         </ResultMenu>
       </div>
-    </section>
-    {selectedRun ? <section className="results-run-context-sticky" aria-label="Selected run context">
-      <div>
-        <span>Selected run</span>
-        <strong>{selectedRun.name}</strong>
-        <small>{selectedRun.method} | {selectedRun.result?.used_observations ?? "N/A"} observations | seed {selectedRun.seed}</small>
+    </Panel>
+    {selectedRun ? <Panel title="Selected run context" description="Method, sample, seed, fingerprint, warnings, and report handoff." className="results-run-context-sticky results-v2-run-hero results-v213-run-context results-v228-run-header">
+      <div className="results-run-context-main">
+        <label><span>Selected run</span>
+          <select aria-label="Selected completed run" value={selectedRun.id} onChange={(event) => setResultState({ selectedRunId: event.target.value })}>
+            {visibleRuns.map((run) => <option key={run.id} value={run.id}>{run.name}</option>)}
+          </select>
+        </label>
+        <div><span>Active results view</span><strong>{resultTabLabel(resultState.selectedTab)}</strong><small>{resultTabHint(resultState.selectedTab)}</small></div>
       </div>
-      <StatusBadge status="validated">Validated scope</StatusBadge>
-      <span className={significantWarningCount ? "run-warning-chip warning" : "run-warning-chip"}>{significantWarningCount ? `${significantWarningCount} warning(s)` : "No extra warnings"}</span>
-      <details className="run-confidence-details">
-        <summary>Why trust this result?</summary>
-        <MethodConfidencePanel run={selectedRun} />
-      </details>
-    </section> : null}
-    {selectedRun ? <div className="result-headline-grid">
-      <article><span>Selected run</span><strong>{selectedRun.name}</strong><small>{selectedRun.method}</small></article>
-      <article><span>Strongest R²</span><strong>{bestR2 ? bestR2[1].toFixed(resultState.resultPrecision) : "N/A"}</strong><small>{bestR2?.[0] ?? "No endogenous construct"}</small></article>
-      <article><span>Paths</span><strong>{selectedRun.result?.paths.length ?? 0}</strong><small>Click a row to focus the diagram</small></article>
-      <article className={significantWarningCount ? "warning" : "validated"}><span>Warnings</span><strong>{significantWarningCount}</strong><small>{significantWarningCount ? "Review provenance before export" : "No extra warnings"}</small></article>
-    </div> : null}
-    {resultState.selectedTab === "groups" ? <section className="results-groups-bridge" aria-label="Groups result workflow">
-      <div>
-        <strong>Groups and segmentation results</strong>
-        <p>MICOM, permutation MGA, FIMIX-PLS, PLS-POS, and IPMA outputs appear here when the selected run contains those payloads.</p>
+      <div className="results-run-context-meta">
+        <span>{selectedRun.method}</span>
+        <span>{selectedRun.result?.used_observations ?? "N/A"} observations</span>
+        <span>seed {selectedRun.seed}</span>
+        <span>fingerprint {selectedRun.fingerprint.slice(0, 10)}</span>
+        <StatusBadge status="validated">Validated scope</StatusBadge>
+        <span className={significantWarningCount ? "run-warning-chip warning" : "run-warning-chip"}>{significantWarningCount ? `${significantWarningCount} warning(s)` : "No extra warnings"}</span>
+        <button className="secondary-button" type="button" onClick={() => setView("reports")}>Prepare report</button>
+        <details className="run-confidence-details">
+          <summary>Why trust this result?</summary>
+          <MethodConfidencePanel run={selectedRun} />
+        </details>
       </div>
-      <button className="secondary-button" onClick={() => setView("analyses")}>Configure group workflow in Setup</button>
-    </section> : null}
-    <div className={`run-list result-tab-${resultState.selectedTab} table-density-${resultState.tableDensity}`}>{visibleRuns.map((run) => <article key={run.id} className="run-row researcher-result-card">
-      <div className="run-icon"><FlaskConical size={18} /></div>
-      <div className="run-content"><strong>{run.name}</strong><p>{new Date(run.createdAt).toLocaleString()} | seed {run.seed} | fingerprint {run.fingerprint}</p><span><AlertTriangle size={13} />{scopeCopy(run.warnings[0])}</span>
-        {run.result ? <RunResultSections run={run} tab={resultState.selectedTab} focusPath={focusPath} activePath={activePath} comparisonRuns={selectedComparisonRuns} allRuns={runs} nodes={nodes} edges={edges} /> : <SectionEmpty title="No result payload" detail="This saved run does not contain a completed result payload." />}
-      </div>
-      <div className="run-status">Scope checked</div>
-    </article>)}</div>
+    </Panel> : null}
+    <div className="results-v228-workbook-body">
+      <main className="results-v228-table-area" aria-label="Selected result workbook tables">
+        {selectedRun && selectedInterpretation ? <ResultsV2LensPanel run={selectedRun} tab={resultState.selectedTab} interpretation={selectedInterpretation} bestR2={bestR2} warningCount={significantWarningCount} /> : null}
+        {selectedRun ? <div className="result-headline-grid results-v2-summary-row results-v228-summary-row">
+          <MetricCard label="Selected run" value={selectedRun.name} detail={selectedRun.method} />
+          <MetricCard label="Strongest R²" value={bestR2 ? bestR2[1].toFixed(resultState.resultPrecision) : "N/A"} detail={bestR2?.[0] ?? "No endogenous construct"} />
+          <MetricCard label="Paths" value={selectedRun.result?.paths.length ?? 0} detail="Click a row to focus the diagram" />
+          <MetricCard label="Warnings" value={significantWarningCount} detail={significantWarningCount ? "Review provenance before export" : "No extra warnings"} tone={significantWarningCount ? "warning" : "success"} />
+        </div> : null}
+        {resultState.selectedTab === "groups" ? <Panel title="Groups and segmentation results" description="MICOM, permutation MGA, FIMIX-PLS, PLS-POS, and IPMA outputs appear here when the selected run contains those payloads." className="results-groups-bridge results-v213-groups-bridge">
+          <div>
+            <strong>Groups and segmentation results</strong>
+            <p>MICOM, permutation MGA, FIMIX-PLS, PLS-POS, and IPMA outputs appear here when the selected run contains those payloads.</p>
+          </div>
+          <button className="secondary-button" onClick={() => setView("analyses")}>Configure group workflow in Setup</button>
+        </Panel> : null}
+        <div className={`run-list results-v2-selected-run-list result-tab-${resultState.selectedTab} table-density-${resultState.tableDensity}`}>{selectedRun ? [selectedRun].map((run) => <article key={run.id} className="run-row researcher-result-card results-v2-selected-run-card">
+          <div className="run-icon"><FlaskConical size={18} /></div>
+          <div className="run-content"><strong>{run.name}</strong><p>{new Date(run.createdAt).toLocaleString()} | seed {run.seed} | fingerprint {run.fingerprint}</p><span><AlertTriangle size={13} />{scopeCopy(run.warnings[0])}</span>
+            {run.result ? <RunResultSections run={run} tab={resultState.selectedTab} focusPath={focusPath} activePath={activePath} comparisonRuns={selectedComparisonRuns} allRuns={runs} nodes={nodes} edges={edges} /> : <SectionEmpty title="No result payload" detail="This saved run does not contain a completed result payload." />}
+          </div>
+          <div className="run-status"><StatusBadge status="validated">Scope checked</StatusBadge></div>
+        </article>) : null}</div>
+      </main>
+      {selectedRun && selectedInterpretation ? <ResultsV228DetailPane run={selectedRun} tab={resultState.selectedTab} interpretation={selectedInterpretation} bestR2={bestR2} warningCount={significantWarningCount} onOpenTab={(tab) => setResultState({ selectedTab: tab })} onPrepareReport={() => setView("reports")} /> : null}
+    </div>
+    {selectedRun ? <ResultsV228ProvenanceFooter run={selectedRun} warningCount={significantWarningCount} /> : null}
     {visibleRuns.length === 0 ? <EmptyState title="No matching runs" description="Clear the search field or include a broader result section." /> : null}
-  </section>;
+  </WorkspacePage>;
 }
 
 function ResultMenu({ label, name, open, onOpen, children }: { label: string; name: "view" | "table" | "export" | "interpretation"; open: null | "view" | "table" | "export" | "interpretation"; onOpen: (name: null | "view" | "table" | "export" | "interpretation") => void; children: ReactNode }) {
@@ -177,6 +249,134 @@ function ResultMenu({ label, name, open, onOpen, children }: { label: string; na
     <button type="button" className="secondary-button results-menu-trigger" aria-expanded={expanded} onClick={() => onOpen(expanded ? null : name)}>{label}<ChevronDown size={14} /></button>
     {expanded ? <div className="results-menu-panel" role="menu" aria-label={`${label} result controls`}>{children}</div> : null}
   </div>;
+}
+
+function ResultsV2LensPanel({ run, tab, interpretation, bestR2, warningCount }: { run: AnalysisRun; tab: ResultWorkspaceTab; interpretation: ResultInterpretation; bestR2: [string, number] | null | undefined; warningCount: number }) {
+  const result = run.result;
+  const tabFindings = findingsForTab(interpretation, tab);
+  const must = tabFindings.filter((finding) => finding.severity === "issue").length;
+  const review = tabFindings.filter((finding) => finding.severity === "caution" || finding.severity === "unavailable").length;
+  const summary = resultsTabSummary(tab, run, interpretation, bestR2, warningCount);
+  return <section className="results-v2-lens-panel" aria-label={`${resultTabLabel(tab)} result lens`}>
+    <div className="results-v2-lens-copy">
+      <span>{resultTabLabel(tab)}</span>
+      <strong>{summary.question}</strong>
+      <p>{summary.detail}</p>
+    </div>
+    <div className="results-v2-lens-metrics" aria-label="Current tab evidence summary">
+      <article><span>Evidence</span><strong>{summary.evidence}</strong><small>{summary.evidenceDetail}</small></article>
+      <article className={must ? "issue" : review ? "warning" : "validated"}><span>Findings</span><strong>{must ? `${must} must address` : review ? `${review} review` : "Clear"}</strong><small>{tabFindings.length} value-specific item(s)</small></article>
+      <article><span>Report path</span><strong>{summary.reportAction}</strong><small>{result ? "Uses selected run values" : "Run required"}</small></article>
+    </div>
+  </section>;
+}
+
+function ResultsV228DetailPane({ run, tab, interpretation, bestR2, warningCount, onOpenTab, onPrepareReport }: { run: AnalysisRun; tab: ResultWorkspaceTab; interpretation: ResultInterpretation; bestR2: [string, number] | null | undefined; warningCount: number; onOpenTab: (tab: ResultWorkspaceTab) => void; onPrepareReport: () => void }) {
+  const grouped = findingsByGroup(interpretation.findings);
+  const tabFindings = findingsForTab(interpretation, tab);
+  const topFindings = [
+    ...grouped.must.slice(0, 2),
+    ...grouped.recommended.slice(0, 2),
+    ...grouped.optional.slice(0, 1),
+  ].slice(0, 5);
+  return <aside className="results-v228-detail-pane" aria-label="Result interpretation and method confidence">
+    <section className="results-v228-pane-section">
+      <div className="results-v228-pane-title">
+        <span>Method confidence</span>
+        <StatusBadge status="validated">Scope checked</StatusBadge>
+      </div>
+      <dl className="results-v228-confidence-grid">
+        <div><dt>Method</dt><dd>{run.method}</dd></div>
+        <div><dt>Observations</dt><dd>{run.result?.used_observations ?? "N/A"}</dd></div>
+        <div><dt>Seed</dt><dd>{run.seed}</dd></div>
+        <div><dt>Fingerprint</dt><dd>{run.fingerprint.slice(0, 10)}</dd></div>
+      </dl>
+      <details>
+        <summary>Open full evidence</summary>
+        <MethodConfidencePanel run={run} />
+      </details>
+    </section>
+    <section className="results-v228-pane-section">
+      <div className="results-v228-pane-title">
+        <span>{resultTabLabel(tab)} detail</span>
+        <small>{tabFindings.length} finding(s)</small>
+      </div>
+      <p>{resultsTabSummary(tab, run, interpretation, bestR2, warningCount).detail}</p>
+      <div className="results-v228-tab-actions">
+        <button type="button" className="secondary-button" onClick={() => onOpenTab("interpretation")}>Open checklist</button>
+        <button type="button" className="secondary-button" onClick={onPrepareReport}>Prepare report</button>
+      </div>
+    </section>
+    <section className="results-v228-pane-section">
+      <div className="results-v228-pane-title">
+        <span>Findings lanes</span>
+        <small>Must address / Review / Info</small>
+      </div>
+      <ResultsV228FindingLane title="Must address" findings={grouped.must} tone="issue" onOpenTab={onOpenTab} />
+      <ResultsV228FindingLane title="Review" findings={grouped.recommended} tone="warning" onOpenTab={onOpenTab} />
+      <ResultsV228FindingLane title="Info" findings={grouped.optional.length ? grouped.optional : topFindings.filter((finding) => finding.severity === "good" || finding.severity === "info")} tone="info" onOpenTab={onOpenTab} />
+    </section>
+  </aside>;
+}
+
+function ResultsV228FindingLane({ title, findings, tone, onOpenTab }: { title: string; findings: InterpretationFinding[]; tone: "issue" | "warning" | "info"; onOpenTab: (tab: ResultWorkspaceTab) => void }) {
+  const visible = findings.slice(0, 3);
+  return <div className={`results-v228-finding-lane ${tone}`}>
+    <div className="results-v228-lane-heading"><strong>{title}</strong><span>{findings.length}</span></div>
+    {visible.length ? visible.map((finding) => <button key={finding.id} type="button" className="results-v228-finding-chip" onClick={() => onOpenTab(finding.tab)}>
+      <span>{finding.metric}</span>
+      <strong>{finding.value}</strong>
+      <small>{finding.recommendedAction}</small>
+    </button>) : <p>No current items.</p>}
+    {findings.length > visible.length ? <small>{findings.length - visible.length} more in Interpretation.</small> : null}
+  </div>;
+}
+
+function ResultsV228ProvenanceFooter({ run, warningCount }: { run: AnalysisRun; warningCount: number }) {
+  return <footer className="results-v228-provenance-footer" aria-label="Selected run provenance">
+    <span>Run {run.id}</span>
+    <span>{new Date(run.createdAt).toLocaleString()}</span>
+    <span>seed {run.seed}</span>
+    <span>fingerprint {run.fingerprint}</span>
+    <span>{warningCount ? `${warningCount} warning(s)` : "no extra warnings"}</span>
+  </footer>;
+}
+
+function resultsTabSummary(tab: ResultWorkspaceTab, run: AnalysisRun, interpretation: ResultInterpretation, bestR2: [string, number] | null | undefined, warningCount: number) {
+  const result = run.result;
+  const assessment = run.assessment;
+  const base = {
+    question: "What should I report from this run?",
+    detail: "Use the tab-specific tables and findings below before moving to the publication report.",
+    evidence: result ? `${result.used_observations} observations` : "No result",
+    evidenceDetail: `Seed ${run.seed}`,
+    reportAction: "Copy wording",
+  };
+  if (!result) return base;
+  switch (tab) {
+    case "overview":
+      return { question: "Is this run ready to interpret?", detail: "Start here for the highest-priority findings, reportability checklist, path estimates, effects, and provenance context.", evidence: `${result.paths.length} paths`, evidenceDetail: bestR2 ? `Strongest R²: ${bestR2[0]} ${bestR2[1].toFixed(4)}` : "No endogenous R²", reportAction: warningCount ? "Review warnings" : "Prepare report" };
+    case "measurement":
+      return { question: "Are the indicators representing constructs clearly?", detail: "Review loadings, weights, formative VIF, cross-loadings, and indicator-level guidance before emphasizing structural results.", evidence: `${result.outer_estimates.length} indicators`, evidenceDetail: `${new Set(result.outer_estimates.map((row) => row.construct)).size} constructs`, reportAction: "Report measurement" };
+    case "structural":
+      return { question: "Which relationships and explanatory power matter?", detail: "Review path coefficients, total effects, R², f², VIF, and mediation or moderation rows where available.", evidence: `${result.paths.length} direct paths`, evidenceDetail: `${Object.keys(result.r_squared).length} endogenous construct(s)`, reportAction: "Report structure" };
+    case "validity":
+      return { question: "Can constructs be interpreted as reliable and distinct?", detail: "Use reliability, AVE, Fornell-Larcker, HTMT, and cross-loading checks as methodological guidance rather than automatic pass/fail law.", evidence: `${assessment?.construct_quality.length ?? 0} constructs`, evidenceDetail: assessment?.htmt_plus ? "HTMT+ available" : "HTMT unavailable", reportAction: "Report validity" };
+    case "inference":
+      return { question: "Can I make p-value or confidence-interval claims?", detail: "Inference is available only when bootstrap or permutation was run. Estimate-only runs should not be reported as significance evidence.", evidence: run.bootstrap ? `${run.bootstrap.usable_replicates} bootstrap` : run.permutation ? `${run.permutation.plan.permutations} permutations` : "Not run", evidenceDetail: run.bootstrap || run.permutation ? "Resampling payload available" : "Enable in Setup and rerun", reportAction: run.bootstrap || run.permutation ? "Report inference" : "Rerun with inference" };
+    case "prediction":
+      return { question: "Did the model demonstrate predictive usefulness?", detail: "Prediction output is separate from explanatory fit; compare holdout or blindfolding evidence against the intended research objective.", evidence: result.predict ? "PLSpredict available" : assessment?.blindfolding ? "Q² available" : "Not run", evidenceDetail: result.predict?.targets.length ? `${result.predict.targets.length} target(s)` : "Configure prediction first", reportAction: result.predict || assessment?.blindfolding ? "Report prediction" : "Configure prediction" };
+    case "groups":
+      return { question: "Are group or segmentation results present and defensible?", detail: "Group workflows require method-specific prerequisites such as MICOM, group sizes, or segment recovery diagnostics.", evidence: result.mga || result.micom || result.mga_permutation || result.fimix || result.segmentation || result.ipma ? "Payload present" : "No payload", evidenceDetail: "Use Setup for group workflows", reportAction: "Report groups" };
+    case "diagnostics":
+      return { question: "What warnings, provenance, and method details must remain visible?", detail: "Use diagnostics to confirm recipe provenance, warnings, convergence, and method-specific payload notes before export.", evidence: `${warningCount} warning(s)`, evidenceDetail: `Fingerprint ${run.fingerprint.slice(0, 10)}`, reportAction: "Review provenance" };
+    case "interpretation":
+      return { question: "What should be addressed before reporting?", detail: "This checklist prioritizes exact value-driven issues, recommended checks, optional checks, and reusable report wording.", evidence: `${interpretation.findings.length} findings`, evidenceDetail: `${interpretation.reportParagraphs.length} report paragraph(s)`, reportAction: "Copy guidance" };
+    case "comparison":
+      return { question: "How do two compatible runs differ?", detail: "Compare path, R², and measurement deltas only for compatible completed runs; cross-family comparison remains out of scope here.", evidence: "Two-run scope", evidenceDetail: "Select comparable runs", reportAction: "Export deltas" };
+    default:
+      return base;
+  }
 }
 
 function RunResultSections({ run, tab, focusPath, activePath, comparisonRuns, allRuns, nodes, edges }: { run: AnalysisRun; tab: ResultWorkspaceTab; focusPath: (source: string, target: string) => void; activePath: { source: string; target: string } | null; comparisonRuns: AnalysisRun[]; allRuns: AnalysisRun[]; nodes: SemDiagramNodeLike[]; edges: SemDiagramEdgeLike[] }) {
@@ -199,9 +399,11 @@ function SummaryResults({ run, focusPath, activePath, interpretation }: { run: A
   const result = run.result!;
   const warningCount = [...run.warnings, ...result.warnings].filter((warning) => !warning.toLowerCase().includes("validated")).length;
   const setResultState = useWorkspace((state) => state.setResultWorkspaceState);
+  const checklist = reportabilityItems(run, interpretation);
   return <div className="result-sections result-summary" tabIndex={0} role="region" aria-label={`${run.name} result summary`}>
     <FindingCards findings={findingsForTab(interpretation, "overview")} title="Run-specific findings" onFocusPath={focusPath} />
-    <ReportabilityChecklist items={reportabilityItems(run, interpretation)} onSelect={(item) => setResultState({ selectedTab: reportabilityTargetTab(item.id) })} />
+    <ReportabilityChecklist items={checklist} onSelect={(item) => setResultState({ selectedTab: reportabilityTargetTab(item.id) })} />
+    <ReportabilityAssistantPanel run={run} interpretation={interpretation} items={checklist} onOpenTab={(tab) => setResultState({ selectedTab: tab })} />
     <div className="result-kpi-row">
       <MetricTile label="Iterations" value={String(result.iterations)} detail={result.converged ? "converged" : "not converged"} tone={result.converged ? "ok" : "warn"} />
       <MetricTile label="Observations" value={String(result.used_observations)} detail={result.omitted_observations ? `${result.omitted_observations} omitted` : "complete cases used"} />
@@ -331,6 +533,108 @@ function reportabilityTargetTab(id: string): ResultWorkspaceTab {
   return "overview";
 }
 
+function ReportabilityAssistantPanel({ run, interpretation, items, onOpenTab }: { run: AnalysisRun; interpretation: ResultInterpretation; items: ReportabilityItem[]; onOpenTab: (tab: ResultWorkspaceTab) => void }) {
+  const lanes = [
+    { id: "issue", label: "Must address", statuses: ["issue"] },
+    { id: "review", label: "Review before reporting", statuses: ["review"] },
+    { id: "ready", label: "Ready evidence", statuses: ["ready"] },
+    { id: "unavailable", label: "Unavailable / not applicable", statuses: ["unavailable", "not applicable"] },
+  ];
+  const reportSnippets = interpretation.reportParagraphs.slice(0, 5);
+  const copySnippets = async () => {
+    const text = reportSnippets.map((row) => `${row.section}: ${row.text}`).join("\n\n");
+    await navigator.clipboard?.writeText(text);
+  };
+  return <section className="reportability-assistant" data-v230-reportability-assistant="true" aria-label="Interpretation and reportability assistant">
+    <header>
+      <div>
+        <span>Reportability assistant</span>
+        <strong>What should be reported, reviewed, or withheld for this run?</strong>
+        <p>These checks use the selected run values, diagram shape, and availability of inference. Threshold colors are guidance, not universal pass/fail rules.</p>
+      </div>
+      <button type="button" className="secondary-button" onClick={copySnippets} disabled={!reportSnippets.length}>Copy report snippets</button>
+    </header>
+    <div className="reportability-assistant-grid">
+      {lanes.map((lane) => {
+        const laneItems = items.filter((item) => lane.statuses.includes(item.status));
+        return <article key={lane.id} className={`reportability-lane ${lane.id}`}>
+          <div className="reportability-lane-heading">
+            <strong>{lane.label}</strong>
+            <span>{laneItems.length}</span>
+          </div>
+          {laneItems.length ? laneItems.map((item) => <ReportabilityAssistantItem key={item.id} item={item} run={run} interpretation={interpretation} onOpenTab={onOpenTab} />) : <p className="muted-copy">No items in this lane for the selected run.</p>}
+        </article>;
+      })}
+    </div>
+    <div className="reportability-report-snippets" data-v230-report-snippets="true">
+      <strong>Report wording from this run</strong>
+      {reportSnippets.length ? reportSnippets.map((row) => <blockquote key={row.section}><b>{row.section}</b><span>{row.text}</span></blockquote>) : <p>No report wording is available for this run.</p>}
+    </div>
+  </section>;
+}
+
+function ReportabilityAssistantItem({ item, run, interpretation, onOpenTab }: { item: ReportabilityItem; run: AnalysisRun; interpretation: ResultInterpretation; onOpenTab: (tab: ResultWorkspaceTab) => void }) {
+  const tab = reportabilityTargetTab(item.id);
+  const finding = matchingFindingForReportability(item.id, interpretation);
+  const reportSentence = finding?.reportSentence ?? reportSentenceForReportability(item, run);
+  return <section className={`reportability-assistant-item ${item.status}`} data-v230-reportability-item={item.id}>
+    <div className="reportability-item-title">
+      <span>{item.status}</span>
+      <strong>{item.label}</strong>
+    </div>
+    <dl>
+      <div><dt>What the value says</dt><dd>{item.evidence}</dd></div>
+      <div><dt>Why it matters</dt><dd>{finding?.interpretation ?? reportabilityWhyItMatters(item.id)}</dd></div>
+      <div><dt>What to inspect next</dt><dd>{item.action ?? finding?.recommendedAction ?? "Keep the evidence with the selected run provenance and interpret it in context."}</dd></div>
+      <div><dt>Report wording</dt><dd>{reportSentence}</dd></div>
+    </dl>
+    <button type="button" onClick={() => onOpenTab(tab)}>Open {resultTabLabel(tab)}</button>
+  </section>;
+}
+
+function matchingFindingForReportability(id: string, interpretation: ResultInterpretation) {
+  const tab = reportabilityTargetTab(id);
+  const candidates = interpretation.findings.filter((finding) => finding.tab === tab);
+  if (id === "indicator_reliability") return candidates.find((finding) => /loading/i.test(finding.metric));
+  if (id === "internal_consistency") return candidates.find((finding) => /alpha|rho|reliability/i.test(finding.metric));
+  if (id === "convergent_validity") return candidates.find((finding) => /AVE/i.test(finding.metric));
+  if (id === "discriminant_validity") return candidates.find((finding) => /HTMT|Fornell|cross/i.test(finding.metric));
+  if (id === "collinearity") return candidates.find((finding) => /VIF/i.test(finding.metric));
+  if (id === "structural_paths") return candidates.find((finding) => /Path coefficient/i.test(finding.metric));
+  if (id === "r_squared") return candidates.find((finding) => /R²|R2/i.test(finding.metric));
+  if (id === "f_squared") return candidates.find((finding) => /f²|f2/i.test(finding.metric));
+  if (id === "prediction") return candidates.find((finding) => /Q²|prediction|PLSpredict/i.test(finding.metric));
+  if (id === "conditional_effects") return candidates.find((finding) => /mediation|moderation|group|shape/i.test(finding.metric));
+  if (id === "inference") return candidates.find((finding) => /bootstrap|permutation|inference/i.test(finding.metric));
+  if (id === "warnings") return candidates.find((finding) => /warning|provenance|scope/i.test(finding.metric));
+  return candidates[0];
+}
+
+function reportabilityWhyItMatters(id: string) {
+  switch (id) {
+    case "indicator_reliability": return "Indicator quality affects construct scores and every downstream structural estimate.";
+    case "internal_consistency": return "Reliability evidence supports whether indicators are coherently measuring the construct.";
+    case "convergent_validity": return "AVE summarizes whether the construct explains enough indicator variance for common reflective-model reporting.";
+    case "discriminant_validity": return "High discriminant-validity values can mean constructs are not empirically distinct.";
+    case "collinearity": return "Collinearity can destabilize path estimates and distort interpretation of predictor importance.";
+    case "structural_paths": return "Path coefficients describe modeled relationships, but inference is needed before reporting support.";
+    case "r_squared": return "R² describes explained variance for endogenous constructs and anchors structural model interpretation.";
+    case "f_squared": return "f² helps judge each predictor's contribution beyond the coefficient alone.";
+    case "prediction": return "Prediction evidence matters when the study claims out-of-sample or predictive usefulness.";
+    case "conditional_effects": return "Mediation, moderation, and group results should only be interpreted when the diagram and settings support them.";
+    case "inference": return "p values and confidence intervals require resampling or permutation output.";
+    case "warnings": return "Warnings and provenance define the boundary for defensible reporting.";
+    default: return "This item affects how confidently the selected run can be reported.";
+  }
+}
+
+function reportSentenceForReportability(item: ReportabilityItem, run: AnalysisRun) {
+  if (item.status === "ready") return `${item.label} was available for ${run.name}; report the relevant values with the run scope and provenance.`;
+  if (item.status === "review" || item.status === "issue") return `${item.label} requires review because ${item.evidence}`;
+  if (item.status === "unavailable") return `${item.label} was unavailable for this run; do not report it as completed.`;
+  return `${item.label} was not applicable to the selected run.`;
+}
+
 function MeasurementResults({ result, assessment, focusPath, activePath, interpretation }: { result: PlsResult; assessment?: AssessmentResult; focusPath: (source: string, target: string) => void; activePath: { source: string; target: string } | null; interpretation: ResultInterpretation }) {
   return <div className="result-sections" tabIndex={0} role="region" aria-label="Measurement model results">
     <FindingCards findings={findingsForTab(interpretation, "measurement")} title="Measurement findings" onFocusPath={focusPath} />
@@ -426,7 +730,10 @@ function DiagnosticsResults({ run, interpretation }: { run: AnalysisRun; interpr
 function InterpretationResults({ run, interpretation }: { run: AnalysisRun; interpretation: ResultInterpretation }) {
   const result = run.result!;
   const grouped = findingsByGroup(interpretation.findings);
+  const setResultState = useWorkspace((state) => state.setResultWorkspaceState);
+  const checklist = reportabilityItems(run, interpretation);
   return <div className="result-sections interpretation-workspace" tabIndex={0} role="region" aria-label="Interpretation and report wording">
+    <ReportabilityAssistantPanel run={run} interpretation={interpretation} items={checklist} onOpenTab={(tab) => setResultState({ selectedTab: tab })} />
     <FindingChecklist title="Must address before reporting" findings={grouped.must} />
     <FindingChecklist title="Recommended checks" findings={grouped.recommended} />
     <FindingChecklist title="Optional advanced checks" findings={grouped.optional} />
@@ -770,12 +1077,18 @@ function FindingChecklist({ title, findings }: { title: string; findings: Interp
 function SectionTable({ title, note, columns, rows, onRowClick, activeRowIndexes, guidance }: { title: string; note?: string; columns: string[]; rows: string[][]; onRowClick?: (row: string[], index: number) => void; activeRowIndexes?: number[]; guidance?: InterpretationDescriptor }) {
   const resultState = useWorkspace((state) => state.resultWorkspaceState);
   const setResultState = useWorkspace((state) => state.setResultWorkspaceState);
+  const [localSearch, setLocalSearch] = useState("");
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
   if (!rows.length) return null;
   const activeRows = new Set(activeRowIndexes ?? []);
-  const query = resultState.tableSearch.trim().toLowerCase();
+  const globalQuery = resultState.tableSearch.trim().toLowerCase();
+  const localQuery = localSearch.trim().toLowerCase();
   const searchableRows = rows
     .map((row, index) => ({ row, index }))
-    .filter(({ row }) => !query || [title, ...row].join(" ").toLowerCase().includes(query));
+    .filter(({ row }) => {
+      const haystack = [title, ...row].join(" ").toLowerCase();
+      return (!globalQuery || haystack.includes(globalQuery)) && (!localQuery || haystack.includes(localQuery));
+    });
   const sortedRows = [...searchableRows];
   const [sortTitle, sortIndexText, sortDirection] = resultState.tableSort?.split("|") ?? [];
   const sortIndex = Number(sortIndexText);
@@ -800,9 +1113,33 @@ function SectionTable({ title, note, columns, rows, onRowClick, activeRowIndexes
     .filter(({ index }) => resultState.showInterpretationColumns || !interpretationColumnIndexes.has(index));
   const displayRows = sortedRows.map(({ row }) => visibleColumnEntries.map(({ index }) => formatDisplayCell(row[index] ?? "", resultState.resultPrecision)));
   const isWideTable = visibleColumnEntries.length > 6;
+  const activeSortColumn = sortTitle === title && Number.isInteger(sortIndex) ? columns[sortIndex] : null;
+  const tableSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "table";
+  const tableBody = [visibleColumnEntries.map(({ column }) => column), ...displayRows];
+  const selectedDisplayRows = sortedRows
+    .map(({ row, index }) => ({ index, row: visibleColumnEntries.map(({ index: columnIndex }) => formatDisplayCell(row[columnIndex] ?? "", resultState.resultPrecision)) }))
+    .filter(({ index }) => selectedRows.has(index));
   const copyTable = async () => {
-    const body = [visibleColumnEntries.map(({ column }) => column), ...displayRows].map((row) => row.join("\t")).join("\n");
+    const body = tableBody.map((row) => row.join("\t")).join("\n");
     await navigator.clipboard?.writeText(body);
+  };
+  const copySelectedRows = async () => {
+    const selectedBody = [visibleColumnEntries.map(({ column }) => column), ...selectedDisplayRows.map(({ row }) => row)];
+    await navigator.clipboard?.writeText(selectedBody.map((row) => row.join("\t")).join("\n"));
+  };
+  const exportCurrentTable = () => {
+    const csv = tableBody
+      .map((row) => row.map((cell) => {
+        const value = String(cell ?? "");
+        return /[",\n]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
+      }).join(","))
+      .join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `quickpls-${tableSlug}.csv`;
+    anchor.click();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
   };
   const activePanel = resultState.activeInterpretationPanel === title;
   const toggleSort = (columnIndex: number) => {
@@ -810,17 +1147,50 @@ function SectionTable({ title, note, columns, rows, onRowClick, activeRowIndexes
     const nextDirection = resultState.tableSort?.startsWith(sortKey) && resultState.tableSort.endsWith("|asc") ? "desc" : "asc";
     setResultState({ tableSort: `${title}|${columnIndex}|${nextDirection}` });
   };
-  return <section className={`result-table-section${isWideTable ? " wide" : ""}`}>
-    <div className="result-section-title"><strong>{title}</strong>{note ? <span>{note}</span> : null}<div className="result-section-meta"><span>{displayRows.length} of {rows.length} rows</span>{isWideTable ? <span>Wide table: first column stays pinned while scrolling</span> : null}</div><div className="result-section-actions"><button type="button" onClick={() => void copyTable()}>Copy table</button>{guidance ? <button type="button" onClick={() => setResultState({ activeInterpretationPanel: activePanel ? null : title })}>{activePanel ? "Hide guidance" : "Interpretation"}</button> : null}</div></div>
+  const toggleSelectedRow = (rowIndex: number) => {
+    setSelectedRows((current) => {
+      const next = new Set(current);
+      if (next.has(rowIndex)) next.delete(rowIndex);
+      else next.add(rowIndex);
+      return next;
+    });
+  };
+  const toggleAllVisibleRows = () => {
+    setSelectedRows((current) => {
+      const next = new Set(current);
+      const allVisibleSelected = sortedRows.every(({ index }) => next.has(index));
+      sortedRows.forEach(({ index }) => {
+        if (allVisibleSelected) next.delete(index);
+        else next.add(index);
+      });
+      return next;
+    });
+  };
+  return <section className={`result-table-section research-table-shell results-v2-table-shell v2100-research-table v2290-research-table ${resultState.tableDensity}${isWideTable ? " wide" : ""}`} data-results-research-table-pass="v2.10" data-v229-research-table="true" data-result-table-title={title}>
+    <div className="result-section-title results-v2-table-header">
+      <div className="results-v2-table-title"><strong>{title}</strong>{note ? <span>{note}</span> : null}</div>
+      <div className="result-section-meta results-v2-table-meta"><span>{displayRows.length} of {rows.length} rows</span><span>{visibleColumnEntries.length} of {columns.length} columns</span><span>{selectedDisplayRows.length} selected</span>{isWideTable ? <span>Wide table: first column stays pinned while scrolling</span> : null}</div>
+      <div className="result-section-actions"><button type="button" onClick={() => void copyTable()}>Copy table</button><button type="button" disabled={!selectedDisplayRows.length} title={selectedDisplayRows.length ? "Copy selected rows" : "Select one or more rows first"} onClick={() => void copySelectedRows()}>Copy selected</button><button type="button" onClick={exportCurrentTable}>Export table</button>{guidance ? <button type="button" onClick={() => setResultState({ activeInterpretationPanel: activePanel ? null : title })}>{activePanel ? "Hide guidance" : "Interpretation"}</button> : null}</div>
+    </div>
+    <div className="research-table-toolbar" aria-label={`${title} table tools`}>
+      <label><span>Search this table</span><input value={localSearch} onChange={(event) => setLocalSearch(event.target.value)} placeholder="Filter rows..." aria-label={`Search ${title}`} /></label>
+      <label><span>Precision</span><select value={resultState.resultPrecision} onChange={(event) => setResultState({ resultPrecision: Number(event.target.value) })} aria-label={`Precision for ${title}`}>{[2, 3, 4, 5, 6].map((precision) => <option key={precision} value={precision}>{precision} decimals</option>)}</select></label>
+      <button type="button" onClick={() => setResultState({ tableDensity: resultState.tableDensity === "compact" ? "comfortable" : "compact" })}>{resultState.tableDensity === "compact" ? "Comfortable rows" : "Compact rows"}</button>
+      <button type="button" onClick={() => setResultState({ showInterpretationColumns: !resultState.showInterpretationColumns })}>{resultState.showInterpretationColumns ? "Hide interpretation columns" : "Show interpretation columns"}</button>
+    </div>
     {guidance && activePanel ? <InterpretationPanel descriptor={guidance} /> : null}
-    {isWideTable ? <div className="result-table-affordance">Scroll horizontally to inspect all columns. Use Export table for full-width review.</div> : null}
-    <div className="bootstrap-table-scroll result-table-scroll" tabIndex={0} role="region" aria-label={`${title} table`}><table><thead><tr>{visibleColumnEntries.map(({ column, index }) => <th key={`${title}-${column}-${index}`}><button type="button" className="table-sort-button" onClick={() => toggleSort(index)}>{column}</button></th>)}</tr></thead><tbody>
+    <div className="result-table-affordance v2100-table-affordance">
+      <span>{globalQuery || localQuery ? `Filtered by ${[resultState.tableSearch.trim(), localSearch.trim()].filter(Boolean).map((item) => `"${item}"`).join(" and ")}.` : "Use workbook search or table search to filter rows."}</span>
+      <span>{activeSortColumn ? `Sorted by ${activeSortColumn} ${sortDirection === "desc" ? "descending" : "ascending"}.` : "Click any column header to sort."}</span>
+      {isWideTable ? <span>Scroll horizontally; first column stays pinned.</span> : null}
+    </div>
+    <div className="bootstrap-table-scroll result-table-scroll" tabIndex={0} role="region" aria-label={`${title} table`}><table><caption>{title}. {displayRows.length} row(s), {visibleColumnEntries.length} visible column(s).</caption><thead><tr><th className="research-table-select-cell"><input type="checkbox" aria-label={`Select all visible ${title} rows`} checked={sortedRows.length > 0 && sortedRows.every(({ index }) => selectedRows.has(index))} onChange={toggleAllVisibleRows} /></th>{visibleColumnEntries.map(({ column, index }) => <th key={`${title}-${column}-${index}`}><button type="button" className="table-sort-button" onClick={() => toggleSort(index)}>{column}</button></th>)}</tr></thead><tbody>
       {displayRows.map((row, displayIndex) => {
         const original = sortedRows[displayIndex];
         return <tr key={`${title}-${original.index}`} className={`${onRowClick ? "result-path-row" : ""}${activeRows.has(original.index) ? " active-result-row" : ""}`.trim() || undefined} aria-current={activeRows.has(original.index) ? "true" : undefined} onClick={() => {
         setResultState({ selectedDetailRow: `${title}:${row.join("|")}` });
         onRowClick?.(original.row, original.index);
-      }}>{row.map((cell, cellIndex) => <td key={`${title}-${original.index}-${cellIndex}`}>{cell}</td>)}</tr>;
+      }}><td className="research-table-select-cell" onClick={(event) => event.stopPropagation()}><input type="checkbox" aria-label={`Select ${title} row ${displayIndex + 1}`} checked={selectedRows.has(original.index)} onChange={() => toggleSelectedRow(original.index)} /></td>{row.map((cell, cellIndex) => <td key={`${title}-${original.index}-${cellIndex}`}>{cell}</td>)}</tr>;
       })}
     </tbody></table></div>
     {selectedDetail ? <div className="result-row-detail"><strong>Selected row interpretation</strong><span>{rowSpecificInterpretation(title, visibleColumnEntries.map(({ column }) => column), selectedDetail.replace(`${title}:`, "").split("|"))}</span></div> : null}
@@ -831,8 +1201,12 @@ function MatrixTable({ title, note, constructs, values, guidance }: { title: str
   const resultState = useWorkspace((state) => state.resultWorkspaceState);
   const setResultState = useWorkspace((state) => state.setResultWorkspaceState);
   const activePanel = resultState.activeInterpretationPanel === title;
-  return <section className="result-table-section">
-    <div className="result-section-title"><strong>{title}</strong>{note ? <span>{note}</span> : null}<div className="result-section-actions">{guidance ? <button type="button" onClick={() => setResultState({ activeInterpretationPanel: activePanel ? null : title })}>{activePanel ? "Hide guidance" : "Interpretation"}</button> : null}</div></div>
+  return <section className="result-table-section research-table-shell results-v2-table-shell">
+    <div className="result-section-title results-v2-table-header">
+      <div className="results-v2-table-title"><strong>{title}</strong>{note ? <span>{note}</span> : null}</div>
+      <div className="result-section-meta results-v2-table-meta"><span>{constructs.length} constructs</span><span>{constructs.length + 1} columns</span></div>
+      <div className="result-section-actions">{guidance ? <button type="button" onClick={() => setResultState({ activeInterpretationPanel: activePanel ? null : title })}>{activePanel ? "Hide guidance" : "Interpretation"}</button> : null}</div>
+    </div>
     {guidance && activePanel ? <InterpretationPanel descriptor={guidance} /> : null}
     <div className="bootstrap-table-scroll result-table-scroll" tabIndex={0} role="region" aria-label={`${title} matrix`}><table><thead><tr><th>Construct</th>{constructs.map((construct) => <th key={construct}>{construct}</th>)}</tr></thead><tbody>
       {values.map((row, rowIndex) => <tr key={constructs[rowIndex]}><td>{constructs[rowIndex]}</td>{row.map((value, columnIndex) => <td key={constructs[columnIndex]}>{value?.toFixed(4) ?? "N/A"}</td>)}</tr>)}
@@ -890,8 +1264,8 @@ function MethodPayloadSections({ result }: { result: PlsResult }) {
 
     {result.nca && <><strong>NCA ceilings</strong><MethodWarnings warnings={result.nca.warnings} /><div className="method-metric"><span>Variables</span><b>{result.nca.x} &gt; {result.nca.y} | {result.nca.observations} observations | {result.nca.usable_permutations}/{result.nca.permutation_samples} permutations</b></div><table><thead><tr><th>Ceiling</th><th>Effect size</th><th>Permutation p</th></tr></thead><tbody>
       {result.nca.ceilings.map((row) => <tr key={row.ceiling}><td>{formatDiagnosticCode(row.ceiling)}</td><td>{row.effect_size.toFixed(6)}</td><td>{formatPValue(row.permutation_p_value)}</td></tr>)}
-    </tbody></table><table><thead><tr><th>Outcome target %</th><th>Required X %</th></tr></thead><tbody>
-      {result.nca.bottlenecks.map((row) => <tr key={row.outcome_percent}><td>{row.outcome_percent.toFixed(0)}</td><td>{row.required_x_percent.toFixed(4)}</td></tr>)}
+    </tbody></table><table><thead><tr><th>Ceiling</th><th>Outcome target %</th><th>Required X %</th><th>Interpretation</th></tr></thead><tbody>
+      {result.nca.bottlenecks.map((row) => <tr key={`${row.ceiling ?? result.nca?.ceiling}-${row.outcome_percent}`}><td>{formatDiagnosticCode(row.ceiling ?? result.nca?.ceiling ?? "")}</td><td>{row.outcome_percent.toFixed(0)}</td><td>{row.required_x_percent == null ? "" : row.required_x_percent.toFixed(4)}</td><td>{row.status === "not_necessary" ? "Not necessary at this outcome level" : row.status === "not_attainable" ? "Outcome level is above this ceiling line" : "Required condition level"}</td></tr>)}
     </tbody></table></>}
 
     {result.gsca && <><strong>GSCA component model</strong><MethodWarnings warnings={result.gsca.warnings} /><div className="method-metric"><span>Fit</span><b>FIT {result.gsca.fit.toFixed(4)} | AFIT {result.gsca.adjusted_fit.toFixed(4)} | GFI {result.gsca.gfi.toFixed(4)}</b></div><table><thead><tr><th>Path</th><th>Coefficient</th></tr></thead><tbody>
@@ -964,15 +1338,22 @@ function MethodPayloadSections({ result }: { result: PlsResult }) {
 }
 
 function PlsPredictTable({ targets }: { targets: NonNullable<PlsResult["predict"]>["targets"] }) {
-  return <table><thead><tr><th>Construct</th><th>Predictors</th><th>RMSE PLS</th><th>MAE PLS</th><th>RMSE benchmark</th><th>MAE benchmark</th><th>Q2 predict</th><th>RMSE LM</th><th>Q2 LM</th></tr></thead><tbody>
-    {targets.map((row) => <tr key={row.construct}><td>{row.construct}</td><td>{row.predictor_count}</td><td>{row.rmse_pls.toFixed(6)}</td><td>{row.mae_pls.toFixed(6)}</td><td>{row.rmse_benchmark.toFixed(6)}</td><td>{row.mae_benchmark.toFixed(6)}</td><td>{row.q_squared_predict?.toFixed(6) ?? "N/A"}</td><td>{row.rmse_lm?.toFixed(6) ?? "N/A"}</td><td>{row.q_squared_predict_lm?.toFixed(6) ?? "N/A"}</td></tr>)}
-  </tbody></table>;
+  return <SectionTable
+    title="PLSpredict target metrics"
+    note="Holdout prediction metrics are grouped in the shared research table shell."
+    columns={["Construct", "Predictors", "RMSE PLS", "MAE PLS", "RMSE benchmark", "MAE benchmark", "Q² predict", "RMSE LM", "Q² LM"]}
+    rows={targets.map((row) => [row.construct, String(row.predictor_count), row.rmse_pls.toFixed(6), row.mae_pls.toFixed(6), row.rmse_benchmark.toFixed(6), row.mae_benchmark.toFixed(6), row.q_squared_predict?.toFixed(6) ?? "N/A", row.rmse_lm?.toFixed(6) ?? "N/A", row.q_squared_predict_lm?.toFixed(6) ?? "N/A"])}
+    guidance={interpretationRegistry.prediction}
+  />;
 }
 
 function CvpatTable({ comparisons }: { comparisons: NonNullable<NonNullable<PlsResult["predict"]>["repeated_kfold"]>["cvpat"] }) {
-  return <><strong>CVPAT paired loss comparisons</strong><table><thead><tr><th>Target</th><th>Comparison</th><th>Mean loss diff</th><th>SE</th><th>t</th><th>p</th><th>Preferred</th></tr></thead><tbody>
-    {(comparisons ?? []).map((row) => <tr key={`${row.target}-${row.comparison}`} title={row.warning ?? undefined}><td>{row.target}</td><td>{formatDiagnosticCode(row.comparison)}</td><td>{row.mean_loss_difference.toFixed(6)}</td><td>{row.standard_error?.toFixed(6) ?? "N/A"}</td><td>{row.t_statistic?.toFixed(4) ?? "N/A"}</td><td>{formatPValue(row.p_value_two_sided)}</td><td>{formatDiagnosticCode(row.preferred_model)}</td></tr>)}
-  </tbody></table></>;
+  return <SectionTable
+    title="CVPAT paired loss comparisons"
+    columns={["Target", "Comparison", "Mean loss diff", "SE", "t", "p", "Preferred"]}
+    rows={(comparisons ?? []).map((row) => [row.target, formatDiagnosticCode(row.comparison), row.mean_loss_difference.toFixed(6), row.standard_error?.toFixed(6) ?? "N/A", row.t_statistic?.toFixed(4) ?? "N/A", formatPValue(row.p_value_two_sided), formatDiagnosticCode(row.preferred_model)])}
+    guidance={interpretationRegistry.prediction}
+  />;
 }
 
 function MethodWarnings({ warnings }: { warnings: string[] }) {

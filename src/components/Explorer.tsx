@@ -173,22 +173,22 @@ export function Explorer() {
   }
 
   if (explorerCollapsed) {
-    return <aside className="explorer collapsed" aria-label="Collapsed SEM explorer">
+    return <aside className="explorer collapsed model-v2-explorer model-v225-explorer" aria-label="Collapsed SEM explorer">
       <button className="explorer-expand" title="Expand SEM explorer" onClick={() => setExplorerCollapsed(false)}><ChevronRight size={17} /></button>
       <span>SEM</span>
     </aside>;
   }
 
-  return <aside className="explorer sem-explorer" aria-label="SEM explorer">
-    <header className="explorer-header">
+  return <aside className="explorer sem-explorer model-v2-explorer model-v225-explorer" data-v225-model-workbench="explorer-tree" aria-label="SEM explorer">
+    <header className="explorer-header model-v2-panel-header">
       <div>
-        <span className="eyebrow">SEM explorer</span>
+        <span className="eyebrow">Model workspace</span>
         <strong>{projectName}</strong>
       </div>
       <button title="Collapse SEM explorer" onClick={() => setExplorerCollapsed(true)}><ChevronLeft size={16} /></button>
     </header>
 
-    <section className="explorer-status-card" aria-label="Project data status">
+    <section className="explorer-status-card model-v2-status-card" aria-label="Project data status">
       <div><Database size={15} /><span>{dataset.name}</span><b>{dataset.rowCount ?? dataset.rows.length} rows</b></div>
       <div className="explorer-status-actions">
         <button onClick={() => setView("data")}>Data</button>
@@ -196,19 +196,21 @@ export function Explorer() {
       </div>
     </section>
 
-    <section className="explorer-guidance-card" aria-label="What can I do with this model?">
+    <section className="explorer-guidance-card model-v2-guidance-card" aria-label="What can I do with this model?" data-method-applicability-polish="v2.11.0" data-workflow-method-guidance-triage="v2.15.0">
       <strong>What can I do with this model?</strong>
+      <p>Guidance is based on construct modes, assigned indicators, structural paths, and the current dataset.</p>
       {guidance.map((item) => <button key={`${item.title}-${item.actionLabel}`} type="button" className={item.tone} onClick={() => setView(item.actionView)}>
         <span>{item.title}</span>
         <small>{item.detail}</small>
+        <em>{item.actionLabel}</em>
       </button>)}
     </section>
 
-    <nav className="explorer-tabs" aria-label="SEM explorer sections">
+    <nav className="explorer-tabs model-v2-tabs" aria-label="SEM explorer sections">
       {tabLabels.map((tab) => <button key={tab.id} className={explorerTab === tab.id ? "active" : ""} onClick={() => setExplorerTab(tab.id)}>{tab.label}</button>)}
     </nav>
 
-    <div className="explorer-body">
+    <div className="explorer-body model-v2-explorer-body">
       {globalMatches.length > 0 && <div className="explorer-global-results" aria-label="Global SEM explorer search results">
         <strong>Search all</strong>
         {globalMatches.map((match) => <button key={`${match.kind}-${match.id}`} onClick={() => match.kind === "Construct" ? focusConstruct(match.id) : match.kind === "Path" ? focusEdge(match.id) : setExplorerTab("variables")}><strong>{match.kind}</strong><span>{match.label}</span></button>)}
@@ -357,7 +359,7 @@ export function Explorer() {
       </>}
     </div>
 
-    <footer className="explorer-summary">
+    <footer className="explorer-summary model-v2-summary">
       <span><b>{nodes.length}</b> constructs</span>
       <span><b>{assignedVariableCount}</b> indicators</span>
       <span><b>{structuralEdges.length}</b> paths</span>

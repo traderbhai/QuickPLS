@@ -352,6 +352,55 @@ describe("result export tables", () => {
     expect(moderatedMediationTables.every((table) => table.status === "experimental")).toBe(true);
   });
 
+  it("reports only nca_v2 as current and distinguishes nullable bottleneck states without N/A", () => {
+    const ncaV2: PlsResult = {
+      ...result,
+      method_version: "nca_v2",
+      wpls: undefined,
+      cca: undefined,
+      cta_pls: undefined,
+      predict: undefined,
+      segmentation: undefined,
+      mga: undefined,
+      ipma: undefined,
+      nca: {
+        method_version: "nca_v2",
+        ceiling: "both",
+        permutation_samples: 19,
+        usable_permutations: 19,
+        x: "x",
+        y: "y",
+        observations: 4,
+        scope: { minimum_x: 0, maximum_x: 3, minimum_y: 1, maximum_y: 4 },
+        ce_fdh_peers: [{ x: 0, y: 1 }, { x: 1, y: 3 }, { x: 3, y: 4 }],
+        ceilings: [
+          { ceiling: "ce_fdh", effect_size: 5 / 9, permutation_p_value: 0.1, slope: null, intercept: null },
+          { ceiling: "cr_fdh", effect_size: 36 / 91, permutation_p_value: 0.15, slope: 13 / 14, intercept: 10 / 7 },
+        ],
+        bottlenecks: [
+          { ceiling: "ce_fdh", outcome_percent: 50, required_x_percent: 100 / 3, status: "required" },
+          { ceiling: "cr_fdh", outcome_percent: 10, required_x_percent: null, status: "not_necessary" },
+        ],
+        warnings: ["NCA v2 bounded observed numeric X/Y scope."],
+      },
+    };
+
+    const current = methodResultTables(ncaV2);
+    expect(current).toHaveLength(2);
+    expect(current.every((table) => table.status === "validated")).toBe(true);
+    expect(current[0].columns).toEqual(["Ceiling", "Effect size", "Permutation p", "Slope", "Intercept"]);
+    expect(current[0].rows[0].slice(-2)).toEqual(["", ""]);
+    expect(current[1].rows[1]).toEqual(["cr fdh", "10.0", "", "Not necessary at this outcome level"]);
+    expect(JSON.stringify(current)).not.toContain("N/A");
+
+    const legacy = methodResultTables({
+      ...ncaV2,
+      method_version: "nca_v1",
+      nca: { ...ncaV2.nca!, method_version: "nca_v1" },
+    });
+    expect(legacy.every((table) => table.status === "experimental")).toBe(true);
+  });
+
   it("exports run provenance plus escaped CSV and HTML tables", () => {
     const run: AnalysisRun = {
       id: "run-1",

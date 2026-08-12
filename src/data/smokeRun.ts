@@ -3,8 +3,8 @@ import type { AnalysisRun } from "../types";
 export function completedSamplePlsRun(): AnalysisRun {
   return {
     id: "v11-smoke-completed-pls",
-    name: "PLS path modeling core run",
-    method: "PLS path modeling core",
+    name: "PLS-SEM Bootstrapping run",
+    method: "PLS-SEM Bootstrapping",
     createdAt: "2026-07-19T12:00:00.000Z",
     seed: 20260718,
     status: "completed",

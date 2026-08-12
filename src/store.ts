@@ -15,11 +15,34 @@ import { create } from "zustand";
 import { initialEdges, initialNodes, sampleDataset } from "./data/sample";
 import { defaultDiagramLayout, layoutSmartplsModel } from "./domain/diagramGraph";
 import { layoutModel } from "./domain/modelLayout";
-import type { AnalysisMethodId, AnalysisRun, AnalysisUiSettings, ConstructData, Dataset, DiagramLayoutState, DiagramMode, DiagramOverlaySettings, DiagramToolMode, ExplorerTab, IndicatorSide, LargeModelViewState, MethodPresetId, MethodSetupState, OnboardingState, PublicationDiagramSettings, ResultWorkspaceState, ToastNotification, UiPreferences, WorkspaceView } from "./types";
+import { buildNativeRecipeModel } from "./native/nativeAnalysisRecipe";
+import { currentNativeModelPresentation, nativeModelSnapshotFromCanonical } from "./native/nativeCanonicalProject";
+import { nativeHigherOrderCreationBlocker, nativeHigherOrderDraftProblems, type NativeHigherOrderDraft } from "./native/nativeHigherOrder";
+import type { AnalysisMethodId, AnalysisRun, AnalysisUiSettings, ConstructData, Dataset, DatasetVersionMutation, DatasetVersionRecord, DesktopCommandStatus, DesktopDialogId, DesktopMenuId, DiagramLayoutState, DiagramMode, DiagramOverlaySettings, DiagramToolMode, ExplorerTab, IndicatorSide, LargeModelViewState, MethodPresetId, MethodSetupState, NativeCanonicalModelSpec, NativeExplorerSelection, NativeModelPresentation, NativeSavedReport, OnboardingState, PublicationDiagramSettings, ResultWorkspaceState, RunMonitorLogEntry, RunMonitorState, ToastNotification, UiPreferences, WorkflowCommandContext, WorkflowDestinationContext, WorkspaceView } from "./types";
 
 type AlignTarget = "left" | "centerX" | "right" | "top" | "centerY" | "bottom";
 type DistributeAxis = "horizontal" | "vertical";
 type PathRouting = "smoothstep" | "default" | "straight";
+
+export type AddTwoStageInteractionBlockReason =
+  | "constructs_not_distinct"
+  | "interaction_exists"
+  | "construct_missing"
+  | "unsupported_construct"
+  | "focal_path_missing"
+  | "control_paths_unsupported";
+
+export type AddTwoStageInteractionResult =
+  | { status: "created"; interactionId: string }
+  | { status: "blocked"; reason: AddTwoStageInteractionBlockReason };
+
+export type AddHigherOrderConstructBlockReason =
+  | "scope_unavailable"
+  | "invalid_draft";
+
+export type AddHigherOrderConstructResult =
+  | { status: "created"; constructId: string }
+  | { status: "blocked"; reason: AddHigherOrderConstructBlockReason; detail: string };
 
 interface HistorySnapshot {
   nodes: Array<Node<ConstructData>>;
@@ -29,6 +52,8 @@ interface HistorySnapshot {
 
 interface WorkspaceState {
   view: WorkspaceView;
+  workflowDestinationContext: WorkflowDestinationContext | null;
+  workflowCommandContext: WorkflowCommandContext | null;
   nodes: Array<Node<ConstructData>>;
   edges: Edge[];
   selectedNodeId: string | null;
@@ -45,6 +70,11 @@ interface WorkspaceState {
   largeModelViewState: LargeModelViewState;
   commandPaletteOpen: boolean;
   shortcutOverlayOpen: boolean;
+  activeDesktopMenu: DesktopMenuId | null;
+  activeDesktopDialog: DesktopDialogId;
+  desktopDialogPayload: Record<string, unknown> | null;
+  desktopCommandStatus: DesktopCommandStatus | null;
+  runMonitor: RunMonitorState;
   toasts: ToastNotification[];
   diagramMode: DiagramMode;
   diagramTool: DiagramToolMode;
@@ -52,13 +82,23 @@ interface WorkspaceState {
   publicationDiagramSettings: PublicationDiagramSettings;
   diagramLayout: DiagramLayoutState;
   dataset: Dataset;
+  datasetCatalog: Dataset[];
+  datasetVersions: DatasetVersionRecord[];
+  projectModels: NativeCanonicalModelSpec[];
+  activeModelId: string | null;
+  modelPresentations: Record<string, NativeModelPresentation>;
+  savedReports: NativeSavedReport[];
+  explorerSelection: NativeExplorerSelection;
   runs: AnalysisRun[];
   analysisSettings: AnalysisUiSettings;
   projectName: string;
   projectPath: string | null;
+  projectWritable: boolean;
   past: HistorySnapshot[];
   future: HistorySnapshot[];
-  setView: (view: WorkspaceView) => void;
+  setView: (view: WorkspaceView, context?: Omit<WorkflowDestinationContext, "timestamp">) => void;
+  setWorkflowCommandContext: (context: Omit<WorkflowCommandContext, "timestamp"> | null) => void;
+  clearWorkflowFeedback: () => void;
   setSelectedNode: (id: string | null) => void;
   setSelectedEdge: (id: string | null) => void;
   setSelectedResultRun: (id: string | null) => void;
@@ -74,6 +114,12 @@ interface WorkspaceState {
   setLargeModelViewState: (patch: Partial<LargeModelViewState>) => void;
   setCommandPaletteOpen: (open: boolean) => void;
   setShortcutOverlayOpen: (open: boolean) => void;
+  setActiveDesktopMenu: (menu: DesktopMenuId | null) => void;
+  setActiveDesktopDialog: (dialog: DesktopDialogId, payload?: Record<string, unknown> | null) => void;
+  setDesktopCommandStatus: (status: Omit<DesktopCommandStatus, "timestamp"> | null) => void;
+  setRunMonitor: (patch: Partial<RunMonitorState>, log?: Omit<RunMonitorLogEntry, "id" | "timestamp"> | null) => void;
+  appendRunLog: (log: Omit<RunMonitorLogEntry, "id" | "timestamp">) => void;
+  resetRunMonitor: () => void;
   pushToast: (toast: Omit<ToastNotification, "id">) => string;
   dismissToast: (id: string) => void;
   setDiagramMode: (mode: DiagramMode) => void;
@@ -93,7 +139,8 @@ interface WorkspaceState {
   reconnectPath: (edge: Edge, connection: Connection) => void;
   addPath: (source: string, target: string) => void;
   addCovariance: (source: string, target: string) => void;
-  addTwoStageInteraction: (predictor: string, moderator: string, outcome: string) => void;
+  addTwoStageInteraction: (predictor: string, moderator: string, outcome: string) => AddTwoStageInteractionResult;
+  addHigherOrderConstruct: (draft: NativeHigherOrderDraft) => AddHigherOrderConstructResult;
   updateConstruct: (id: string, patch: Partial<ConstructData>) => void;
   updateEdge: (id: string, patch: Partial<Edge>) => void;
   setEdgeLabelOffset: (id: string, offset: { x: number; y: number }) => void;
@@ -120,16 +167,29 @@ interface WorkspaceState {
   assignIndicators: (constructId: string, indicators: string[]) => void;
   unassignIndicator: (constructId: string, indicator: string) => void;
   setDataset: (dataset: Dataset) => void;
+  setDatasetCatalog: (datasets: Dataset[], versions: DatasetVersionRecord[]) => void;
+  commitDatasetVersion: (mutation: DatasetVersionMutation) => void;
+  setExplorerSelection: (selection: NativeExplorerSelection) => void;
+  setProjectExplorer: (project: {
+    projectModels: NativeCanonicalModelSpec[];
+    activeModelId: string | null;
+    modelPresentations: Record<string, NativeModelPresentation>;
+    savedReports: NativeSavedReport[];
+    explorerSelection?: NativeExplorerSelection;
+  }) => void;
+  switchProjectModel: (modelId: string) => boolean;
   addRun: (run: AnalysisRun) => void;
   setAnalysisSettings: (patch: Partial<AnalysisUiSettings>) => void;
   setProjectMeta: (name: string, path: string | null) => void;
+  setProjectWritable: (writable: boolean) => void;
+  closeProject: () => void;
   resetProject: () => void;
-  loadProject: (project: { nodes: Array<Node<ConstructData>>; edges: Edge[]; dataset: Dataset; runs?: AnalysisRun[]; analysisSettings?: AnalysisUiSettings; diagramMode?: DiagramMode; diagramOverlaySettings?: Partial<DiagramOverlaySettings>; publicationDiagramSettings?: Partial<PublicationDiagramSettings>; diagramLayout?: Partial<DiagramLayoutState> }) => void;
+  loadProject: (project: { nodes: Array<Node<ConstructData>>; edges: Edge[]; dataset: Dataset; datasets?: Dataset[]; datasetVersions?: DatasetVersionRecord[]; projectModels?: NativeCanonicalModelSpec[]; activeModelId?: string | null; modelPresentations?: Record<string, NativeModelPresentation>; savedReports?: NativeSavedReport[]; explorerSelection?: NativeExplorerSelection; runs?: AnalysisRun[]; analysisSettings?: AnalysisUiSettings; diagramMode?: DiagramMode; diagramOverlaySettings?: Partial<DiagramOverlaySettings>; publicationDiagramSettings?: Partial<PublicationDiagramSettings>; diagramLayout?: Partial<DiagramLayoutState> }) => void;
 }
 
 const supportedAnalysisMethods = new Set<AnalysisMethodId>(["pls_pm", "bootstrap", "plsc", "wpls", "cca", "cta_pls", "endogeneity", "nonlinear_effects", "moderated_mediation", "predict", "mga", "ipma", "cbsem", "pca", "gsca", "regression", "nca"]);
 
-const defaultAnalysisSettings: AnalysisUiSettings = { method: "pls_pm", bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 0, seed: 20260718, workers: 1, confidenceLevel: 0.95, caseWeightColumn: null, groupColumn: null, ipmaTargets: null, groupMethods: "micom,mga_permutation", groupPermutationSamples: 999, segmentCount: 2, segmentStarts: 10, minimumSegmentShare: 0.10, cbsemModelType: "sem", cbsemMeanStructure: false, cbsemStandardization: "std_all", cbsemGroupColumn: null, cbsemInvarianceSteps: "configural,metric,scalar", cbsemBootstrapSamples: 0, pcaVariables: null, pcaComponentRule: "kaiser", pcaComponents: 2, regressionType: "ols", regressionOutcome: null, regressionPredictors: null, regressionControls: null, robustSe: "hc3", processModel: "mediation", processX: null, processM: null, processW: null, ncaX: null, ncaY: null, ncaCeiling: "both", ncaPermutationSamples: 999 };
+const defaultAnalysisSettings: AnalysisUiSettings = { method: "pls_pm", bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 0, seed: 20260718, workers: 1, confidenceLevel: 0.95, caseWeightColumn: null, groupColumn: null, groupAValue: null, groupBValue: null, ipmaTargets: null, groupMethods: "micom,mga_permutation", groupPermutationSamples: 5_000, micomConfiguralConfirmed: false, segmentCount: 2, segmentStarts: 10, minimumSegmentShare: 0.10, cbsemModelType: "sem", cbsemMeanStructure: false, cbsemStandardization: "std_all", cbsemGroupColumn: null, cbsemInvarianceSteps: "configural,metric,scalar", cbsemBootstrapSamples: 0, pcaVariables: null, pcaComponentRule: "kaiser", pcaComponents: 2, pcaVarianceThreshold: 0.80, regressionType: "ols", regressionOutcome: null, regressionPredictors: null, regressionControls: null, robustSe: "hc3", processModel: "mediation", processX: null, processM: null, processW: null, ncaX: null, ncaY: null, ncaCeiling: "both", ncaPermutationSamples: 999 };
 const defaultDiagramOverlaySettings: DiagramOverlaySettings = { selectedRunId: null, mode: "model", precision: 3, showLoadings: true, showPathCoefficients: true, showPValues: false, showTValues: false, showRSquared: true, showWarnings: true, showWatermark: true };
 const defaultPublicationDiagramSettings: PublicationDiagramSettings = { mode: "smartpls_result", precision: 3, overlayMode: "paths_r2", aspectRatio: "wide", palette: "grayscale", layoutSource: "current_canvas", showLoadings: true, showPathCoefficients: true, showRSquared: true, showValidationWatermark: true, showUnsupportedWarning: true, showRunProvenance: true };
 const defaultUiPreferences: UiPreferences = {
@@ -143,6 +203,37 @@ const defaultUiPreferences: UiPreferences = {
   focusDiagramMode: false,
   selectedExportPreset: "journal_figure",
 };
+const uiPreferencesStorageKey = "quickpls:native-ui-preferences:v1";
+
+function normalizedUiPreferences(candidate: Partial<UiPreferences> = {}): UiPreferences {
+  const precision = Number(candidate.defaultPrecision ?? defaultUiPreferences.defaultPrecision);
+  return {
+    ...defaultUiPreferences,
+    ...candidate,
+    density: candidate.density === "comfortable" ? "comfortable" : "compact",
+    tableDensity: candidate.tableDensity === "comfortable" ? "comfortable" : "compact",
+    defaultPrecision: Math.min(6, Math.max(2, Number.isFinite(precision) ? Math.trunc(precision) : defaultUiPreferences.defaultPrecision)),
+  };
+}
+
+function loadUiPreferences(): UiPreferences {
+  if (typeof window === "undefined") return defaultUiPreferences;
+  try {
+    const stored = window.localStorage.getItem(uiPreferencesStorageKey);
+    return stored ? normalizedUiPreferences(JSON.parse(stored) as Partial<UiPreferences>) : defaultUiPreferences;
+  } catch {
+    return defaultUiPreferences;
+  }
+}
+
+function persistUiPreferences(preferences: UiPreferences) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(uiPreferencesStorageKey, JSON.stringify(preferences));
+  } catch {
+    // Preferences remain available for the current session when storage is unavailable.
+  }
+}
 const defaultResultWorkspaceState: ResultWorkspaceState = {
   selectedRunId: null,
   selectedTab: "overview",
@@ -159,6 +250,30 @@ const defaultResultWorkspaceState: ResultWorkspaceState = {
 const defaultMethodSetupState: MethodSetupState = { mode: "basic", selectedPreset: "standard_pls", expandedSections: ["basic"] };
 const defaultOnboardingState: OnboardingState = { dismissed: false, selectedDemo: "corporate_reputation", recentProjectCards: [] };
 const defaultLargeModelViewState: LargeModelViewState = { indicatorsCollapsed: false, isolatedConstructId: null, neighborhoodMode: "off" };
+const defaultRunMonitor: RunMonitorState = {
+  status: "idle",
+  phase: "Idle",
+  message: "No calculation is currently running.",
+  completedUnits: 0,
+  totalUnits: 0,
+  startedAt: null,
+  completedAt: null,
+  activeJobId: null,
+  lastRunId: null,
+  error: null,
+  logs: [],
+};
+
+const emptyDataset: Dataset = {
+  id: "empty",
+  name: "No dataset loaded",
+  columns: [],
+  rows: [],
+  missing: 0,
+  rowCount: 0,
+  kind: "raw",
+  columnMetadata: [],
+};
 
 const normalizeDiagramOverlaySettings = (settings?: Partial<DiagramOverlaySettings>): DiagramOverlaySettings => ({
   ...defaultDiagramOverlaySettings,
@@ -176,6 +291,10 @@ const normalizePublicationDiagramSettings = (settings?: Partial<PublicationDiagr
 });
 
 const normalizeAnalysisSettings = (settings: Partial<AnalysisUiSettings>): AnalysisUiSettings => {
+  const weightingScheme = settings.weightingScheme === "factor" || settings.weightingScheme === "pca" ? settings.weightingScheme : "path";
+  const tolerance = Number.isFinite(settings.tolerance) ? settings.tolerance! : 1e-7;
+  const maxIterations = Number.isFinite(settings.maxIterations) ? Math.trunc(settings.maxIterations!) : 3000;
+  const preprocessing = settings.preprocessing === "mean_centered" || settings.preprocessing === "unstandardized" ? settings.preprocessing : "standardized";
   const bootstrapSamples = Number.isFinite(settings.bootstrapSamples) ? Math.trunc(settings.bootstrapSamples!) : defaultAnalysisSettings.bootstrapSamples;
   const studentizedInnerSamples = Number.isFinite(settings.studentizedInnerSamples) ? Math.trunc(settings.studentizedInnerSamples!) : defaultAnalysisSettings.studentizedInnerSamples;
   const permutationSamples = Number.isFinite(settings.permutationSamples) ? Math.trunc(settings.permutationSamples!) : defaultAnalysisSettings.permutationSamples;
@@ -184,8 +303,12 @@ const normalizeAnalysisSettings = (settings: Partial<AnalysisUiSettings>): Analy
   const confidenceLevel = Number.isFinite(settings.confidenceLevel) ? settings.confidenceLevel! : defaultAnalysisSettings.confidenceLevel;
   const caseWeightColumn = typeof settings.caseWeightColumn === "string" && settings.caseWeightColumn.trim() ? settings.caseWeightColumn.trim() : null;
   const groupColumn = typeof settings.groupColumn === "string" && settings.groupColumn.trim() ? settings.groupColumn.trim() : null;
+  const groupAValue = typeof settings.groupAValue === "string" && settings.groupAValue.trim() ? settings.groupAValue.trim() : null;
+  const groupBValue = typeof settings.groupBValue === "string" && settings.groupBValue.trim() ? settings.groupBValue.trim() : null;
   const ipmaTargets = typeof settings.ipmaTargets === "string" && settings.ipmaTargets.trim() ? settings.ipmaTargets.trim() : null;
-  const groupMethods = typeof settings.groupMethods === "string" && settings.groupMethods.trim() ? settings.groupMethods.trim() : defaultAnalysisSettings.groupMethods;
+  const groupMethods = typeof settings.groupMethods === "string"
+    ? [...new Set(settings.groupMethods.split(",").map((token) => token.trim()).filter((token) => ["micom", "mga_permutation", "pls_pos", "fimix"].includes(token)))].join(",") || null
+    : defaultAnalysisSettings.groupMethods;
   const groupPermutationSamples = Number.isFinite(settings.groupPermutationSamples) ? Math.trunc(settings.groupPermutationSamples!) : defaultAnalysisSettings.groupPermutationSamples!;
   const segmentCount = Number.isFinite(settings.segmentCount) ? Math.trunc(settings.segmentCount!) : defaultAnalysisSettings.segmentCount!;
   const segmentStarts = Number.isFinite(settings.segmentStarts) ? Math.trunc(settings.segmentStarts!) : defaultAnalysisSettings.segmentStarts!;
@@ -199,6 +322,7 @@ const normalizeAnalysisSettings = (settings: Partial<AnalysisUiSettings>): Analy
   const pcaVariables = typeof settings.pcaVariables === "string" && settings.pcaVariables.trim() ? settings.pcaVariables.trim() : null;
   const pcaComponentRule = settings.pcaComponentRule === "fixed" || settings.pcaComponentRule === "variance_threshold" ? settings.pcaComponentRule : defaultAnalysisSettings.pcaComponentRule!;
   const pcaComponents = Number.isFinite(settings.pcaComponents) ? Math.trunc(settings.pcaComponents!) : defaultAnalysisSettings.pcaComponents!;
+  const pcaVarianceThreshold = Number.isFinite(settings.pcaVarianceThreshold) ? settings.pcaVarianceThreshold! : defaultAnalysisSettings.pcaVarianceThreshold!;
   const regressionType = settings.regressionType === "logistic" || settings.regressionType === "process" ? settings.regressionType : defaultAnalysisSettings.regressionType!;
   const regressionOutcome = typeof settings.regressionOutcome === "string" && settings.regressionOutcome.trim() ? settings.regressionOutcome.trim() : null;
   const regressionPredictors = typeof settings.regressionPredictors === "string" && settings.regressionPredictors.trim() ? settings.regressionPredictors.trim() : null;
@@ -218,6 +342,10 @@ const normalizeAnalysisSettings = (settings: Partial<AnalysisUiSettings>): Analy
   const normalizedBootstrap = normalizedStudentized > 0 ? Math.max(999, bootstrapSamples) : bootstrapSamples;
   return {
     method,
+    weightingScheme,
+    tolerance: Math.min(0.01, Math.max(1e-12, tolerance)),
+    maxIterations: Math.min(100000, Math.max(100, maxIterations)),
+    preprocessing,
     bootstrapSamples: Math.min(10000, Math.max(0, normalizedBootstrap)),
     studentizedInnerSamples: normalizedStudentized,
     permutationSamples: permutationSamples === 0 ? 0 : Math.min(10000, Math.max(99, permutationSamples)),
@@ -226,9 +354,12 @@ const normalizeAnalysisSettings = (settings: Partial<AnalysisUiSettings>): Analy
     confidenceLevel: Math.min(0.999, Math.max(0.8, confidenceLevel)),
     caseWeightColumn,
     groupColumn,
+    groupAValue,
+    groupBValue,
     ipmaTargets,
     groupMethods,
-    groupPermutationSamples: Math.min(10000, Math.max(1, groupPermutationSamples)),
+    groupPermutationSamples: Math.min(10000, Math.max(5000, groupPermutationSamples)),
+    micomConfiguralConfirmed: settings.micomConfiguralConfirmed === true,
     segmentCount: Math.min(5, Math.max(2, segmentCount)),
     segmentStarts: Math.min(50, Math.max(1, segmentStarts)),
     minimumSegmentShare: Math.min(0.4, Math.max(0.05, minimumSegmentShare)),
@@ -241,6 +372,7 @@ const normalizeAnalysisSettings = (settings: Partial<AnalysisUiSettings>): Analy
     pcaVariables,
     pcaComponentRule,
     pcaComponents: Math.min(50, Math.max(1, pcaComponents)),
+    pcaVarianceThreshold: Math.min(0.999, Math.max(0.01, pcaVarianceThreshold)),
     regressionType,
     regressionOutcome,
     regressionPredictors,
@@ -261,6 +393,52 @@ const historyPatch = (state: WorkspaceState) => ({
   past: [...state.past.slice(-49), { nodes: state.nodes, edges: state.edges, diagramLayout: state.diagramLayout }],
   future: [],
 });
+
+const interactionNodes = (nodes: Array<Node<ConstructData>>) => nodes.filter((node) =>
+  node.data.semantic === "interaction" && node.data.interaction,
+);
+
+const touchesGeneratedInteraction = (nodes: Array<Node<ConstructData>>, source: string, target: string) => {
+  const generatedIds = new Set(interactionNodes(nodes).map((node) => node.id));
+  return generatedIds.has(source) || generatedIds.has(target);
+};
+
+const requiredInteractionEdge = (nodes: Array<Node<ConstructData>>, edge: Pick<Edge, "source" | "target">) => interactionNodes(nodes).some((node) => {
+  const interaction = node.data.interaction!;
+  return [
+    [interaction.predictor, interaction.outcome],
+    [interaction.moderator, interaction.outcome],
+    [node.id, interaction.outcome],
+  ].some(([source, target]) => edge.source === source && edge.target === target);
+});
+
+const cascadingInteractionNodeIds = (
+  nodes: Array<Node<ConstructData>>,
+  removedNodeIds: ReadonlySet<string>,
+  removedEdges: readonly Pick<Edge, "source" | "target">[],
+) => new Set(interactionNodes(nodes)
+  .filter((node) => {
+    const interaction = node.data.interaction!;
+    return removedNodeIds.has(node.id)
+      || removedNodeIds.has(interaction.predictor)
+      || removedNodeIds.has(interaction.moderator)
+      || removedNodeIds.has(interaction.outcome)
+      || removedEdges.some((edge) => [
+        [interaction.predictor, interaction.outcome],
+        [interaction.moderator, interaction.outcome],
+        [node.id, interaction.outcome],
+      ].some(([source, target]) => edge.source === source && edge.target === target));
+  })
+  .map((node) => node.id));
+
+const cascadingHigherOrderNodeIds = (
+  nodes: Array<Node<ConstructData>>,
+  removedNodeIds: ReadonlySet<string>,
+) => new Set(nodes
+  .filter((node) => node.data.semantic === "higher_order" && node.data.higherOrder)
+  .filter((node) => removedNodeIds.has(node.id)
+    || node.data.higherOrder!.components.some((component) => removedNodeIds.has(component)))
+  .map((node) => node.id));
 
 const syncedDiagramLayout = (nodes: Array<Node<ConstructData>>, edges: Edge[], existing?: Partial<DiagramLayoutState>) =>
   defaultDiagramLayout(nodes, edges, existing);
@@ -365,11 +543,42 @@ const indicatorGroupKey = (indicator: string) => {
   return prefix.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 8) || "GROUP";
 };
 
-const validUniqueIndicators = (indicators: string[], dataset: Dataset) =>
-  [...new Set(indicators)].filter((indicator): indicator is string => typeof indicator === "string" && dataset.columns.includes(indicator));
+const validUniqueIndicators = (
+  indicators: string[],
+  dataset: Dataset,
+  reservedGroupColumn?: string | null,
+) => {
+  const groupColumn = reservedGroupColumn?.trim() ?? "";
+  return [...new Set(indicators)].filter((indicator): indicator is string =>
+    typeof indicator === "string"
+    && dataset.columns.includes(indicator)
+    && indicator !== groupColumn,
+  );
+};
+
+const upsertDatasetCatalog = (catalog: Dataset[], dataset: Dataset) => {
+  const index = catalog.findIndex((candidate) => candidate.id === dataset.id);
+  if (index < 0) return [...catalog, dataset];
+  return catalog.map((candidate, candidateIndex) => candidateIndex === index ? dataset : candidate);
+};
+
+const sampleProjectModelId = "quickpls-corporate-reputation-model-v1";
+const sampleProjectModel = buildNativeRecipeModel(
+  sampleProjectModelId,
+  "Corporate Reputation Model",
+  initialNodes,
+  initialEdges,
+);
+const sampleModelPresentation = currentNativeModelPresentation(
+  initialNodes,
+  initialEdges,
+  syncedDiagramLayout(initialNodes, initialEdges),
+);
 
 export const useWorkspace = create<WorkspaceState>()((set) => ({
   view: "welcome",
+  workflowDestinationContext: null,
+  workflowCommandContext: null,
   nodes: initialNodes,
   edges: initialEdges,
   selectedNodeId: "satisfaction",
@@ -379,13 +588,18 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   explorerCollapsed: false,
   inspectorCollapsed: false,
   explorerWidth: 330,
-  uiPreferences: defaultUiPreferences,
+  uiPreferences: loadUiPreferences(),
   resultWorkspaceState: defaultResultWorkspaceState,
   methodSetupState: defaultMethodSetupState,
   onboardingState: defaultOnboardingState,
   largeModelViewState: defaultLargeModelViewState,
   commandPaletteOpen: false,
   shortcutOverlayOpen: false,
+  activeDesktopMenu: null,
+  activeDesktopDialog: null,
+  desktopDialogPayload: null,
+  desktopCommandStatus: null,
+  runMonitor: defaultRunMonitor,
   toasts: [],
   diagramMode: "sem",
   diagramTool: "select",
@@ -393,15 +607,32 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   publicationDiagramSettings: defaultPublicationDiagramSettings,
   diagramLayout: syncedDiagramLayout(initialNodes, initialEdges),
   dataset: sampleDataset,
+  datasetCatalog: [sampleDataset],
+  datasetVersions: [],
+  projectModels: [sampleProjectModel],
+  activeModelId: sampleProjectModelId,
+  modelPresentations: { [sampleProjectModelId]: sampleModelPresentation },
+  savedReports: [],
+  explorerSelection: { kind: "model", modelId: sampleProjectModelId },
   runs: [],
   analysisSettings: defaultAnalysisSettings,
   projectName: "Corporate Reputation Study",
   projectPath: null,
+  projectWritable: true,
   past: [],
   future: [],
-  setView: (view) => set((state) => view === "groups"
-    ? { view: "runs", resultWorkspaceState: { ...state.resultWorkspaceState, selectedTab: "groups" } }
-    : { view }),
+  setView: (view, context) => set((state) => {
+    const nextView = view === "groups" ? "runs" : view;
+    const destinationContext = context
+      ? { ...context, to: nextView, timestamp: Date.now() }
+      : state.view === nextView ? state.workflowDestinationContext : null;
+    const workflowCommandContext = state.view === nextView ? state.workflowCommandContext : null;
+    return view === "groups"
+      ? { view: nextView, workflowDestinationContext: destinationContext, workflowCommandContext, resultWorkspaceState: { ...state.resultWorkspaceState, selectedTab: "groups" } }
+      : { view: nextView, workflowDestinationContext: destinationContext, workflowCommandContext };
+  }),
+  setWorkflowCommandContext: (context) => set({ workflowCommandContext: context ? { ...context, timestamp: Date.now() } : null }),
+  clearWorkflowFeedback: () => set({ workflowDestinationContext: null, workflowCommandContext: null }),
   setSelectedNode: (selectedNodeId) => set({ selectedNodeId, selectedEdgeId: null }),
   setSelectedEdge: (selectedEdgeId) => set({ selectedEdgeId, selectedNodeId: null }),
   setSelectedResultRun: (selectedResultRunId) => set((state) => ({ selectedResultRunId, diagramOverlaySettings: { ...state.diagramOverlaySettings, selectedRunId: selectedResultRunId } })),
@@ -409,7 +640,11 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   setExplorerCollapsed: (explorerCollapsed) => set({ explorerCollapsed }),
   setInspectorCollapsed: (inspectorCollapsed) => set({ inspectorCollapsed }),
   setExplorerWidth: (explorerWidth) => set({ explorerWidth: Math.min(430, Math.max(250, Math.trunc(explorerWidth))) }),
-  setUiPreferences: (patch) => set((state) => ({ uiPreferences: { ...state.uiPreferences, ...patch, defaultPrecision: Math.min(6, Math.max(2, Math.trunc(patch.defaultPrecision ?? state.uiPreferences.defaultPrecision))) } })),
+  setUiPreferences: (patch) => set((state) => {
+    const uiPreferences = normalizedUiPreferences({ ...state.uiPreferences, ...patch });
+    persistUiPreferences(uiPreferences);
+    return { uiPreferences };
+  }),
   setResultWorkspaceState: (patch) => set((state) => ({ resultWorkspaceState: { ...state.resultWorkspaceState, ...patch } })),
   setMethodSetupState: (patch) => set((state) => ({ methodSetupState: { ...state.methodSetupState, ...patch, expandedSections: patch.expandedSections ?? state.methodSetupState.expandedSections } })),
   applyMethodPreset: (preset) => set((state) => {
@@ -417,7 +652,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
       standard_pls: { method: "pls_pm", bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 0 },
       pls_bootstrap: { method: "bootstrap", bootstrapSamples: 5000, studentizedInnerSamples: 0, permutationSamples: 0 },
       plspredict: { method: "predict", groupMethods: "pls_pos", segmentCount: 2, segmentStarts: 10 },
-      micom_mga: { method: "mga", groupMethods: "micom,mga_permutation", groupPermutationSamples: 999 },
+      micom_mga: { method: "mga", groupMethods: "micom,mga_permutation", groupPermutationSamples: 5_000, micomConfiguralConfirmed: false },
       cbsem_cfa: { method: "cbsem", cbsemModelType: "cfa", cbsemStandardization: "std_all", cbsemMeanStructure: false },
       ols_regression: { method: "regression", regressionType: "ols", robustSe: "hc3" },
       nca: { method: "nca", ncaCeiling: "both", ncaPermutationSamples: 999 },
@@ -431,9 +666,29 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   setLargeModelViewState: (patch) => set((state) => ({ largeModelViewState: { ...state.largeModelViewState, ...patch } })),
   setCommandPaletteOpen: (commandPaletteOpen) => set({ commandPaletteOpen }),
   setShortcutOverlayOpen: (shortcutOverlayOpen) => set({ shortcutOverlayOpen }),
+  setActiveDesktopMenu: (activeDesktopMenu) => set({ activeDesktopMenu }),
+  setActiveDesktopDialog: (activeDesktopDialog, desktopDialogPayload = null) => set({ activeDesktopDialog, desktopDialogPayload, activeDesktopMenu: null }),
+  setDesktopCommandStatus: (desktopCommandStatus) => set({ desktopCommandStatus: desktopCommandStatus ? { ...desktopCommandStatus, timestamp: Date.now() } : null }),
+  setRunMonitor: (patch, log = null) => set((state) => {
+    const entry = log ? { id: crypto.randomUUID(), timestamp: new Date().toISOString(), ...log } : null;
+    return {
+      runMonitor: {
+        ...state.runMonitor,
+        ...patch,
+        logs: entry ? [entry, ...state.runMonitor.logs].slice(0, 80) : state.runMonitor.logs,
+      },
+    };
+  }),
+  appendRunLog: (log) => set((state) => ({
+    runMonitor: {
+      ...state.runMonitor,
+      logs: [{ id: crypto.randomUUID(), timestamp: new Date().toISOString(), ...log }, ...state.runMonitor.logs].slice(0, 80),
+    },
+  })),
+  resetRunMonitor: () => set({ runMonitor: defaultRunMonitor }),
   pushToast: (toast) => {
     const id = crypto.randomUUID();
-    set((state) => ({ toasts: [{ id, ...toast }, ...state.toasts].slice(0, 4) }));
+    set((state) => ({ toasts: [{ id, ...toast }, ...state.toasts].slice(0, 2) }));
     return id;
   },
   dismissToast: (id) => set((state) => ({ toasts: state.toasts.filter((toast) => toast.id !== id) })),
@@ -484,8 +739,15 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     };
   }),
   onNodesChange: (changes) => set((state) => {
-    const nodes = applyNodeChanges(changes, state.nodes);
-    const layout = syncedDiagramLayout(nodes, state.edges, {
+    const removedNodeIds = new Set(changes.filter((change) => change.type === "remove").map((change) => change.id));
+    const cascadeIds = new Set([
+      ...cascadingInteractionNodeIds(state.nodes, removedNodeIds, []),
+      ...cascadingHigherOrderNodeIds(state.nodes, removedNodeIds),
+    ]);
+    const allRemovedNodeIds = new Set([...removedNodeIds, ...cascadeIds]);
+    const nodes = applyNodeChanges(changes, state.nodes).filter((node) => !cascadeIds.has(node.id));
+    const edges = state.edges.filter((edge) => !allRemovedNodeIds.has(edge.source) && !allRemovedNodeIds.has(edge.target));
+    const layout = syncedDiagramLayout(nodes, edges, {
       ...state.diagramLayout,
       constructLayouts: {
         ...state.diagramLayout.constructLayouts,
@@ -495,16 +757,26 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     return {
       ...(changes.some((change) => change.type === "remove") ? historyPatch(state) : {}),
       nodes,
+      edges,
       diagramLayout: layout,
     };
   }),
-  onEdgesChange: (changes) => set((state) => ({
-    ...(changes.some((change) => change.type === "remove") ? historyPatch(state) : {}),
-    edges: applyEdgeChanges(changes, state.edges),
-    diagramLayout: syncedDiagramLayout(state.nodes, applyEdgeChanges(changes, state.edges), state.diagramLayout),
-  })),
+  onEdgesChange: (changes) => set((state) => {
+    const removedIds = new Set(changes.filter((change) => change.type === "remove").map((change) => change.id));
+    const removedEdges = state.edges.filter((edge) => removedIds.has(edge.id));
+    const cascadeIds = cascadingInteractionNodeIds(state.nodes, new Set(), removedEdges);
+    const nodes = state.nodes.filter((node) => !cascadeIds.has(node.id));
+    const edges = applyEdgeChanges(changes, state.edges).filter((edge) => !cascadeIds.has(edge.source) && !cascadeIds.has(edge.target));
+    return {
+      ...(removedIds.size ? historyPatch(state) : {}),
+      nodes,
+      edges,
+      diagramLayout: syncedDiagramLayout(nodes, edges, state.diagramLayout),
+    };
+  }),
   onConnect: (connection) => set((state) => {
     if (!connection.source || !connection.target || connection.source === connection.target) return state;
+    if (touchesGeneratedInteraction(state.nodes, connection.source, connection.target)) return state;
     if (state.edges.some((edge) => edge.source === connection.source && edge.target === connection.target)) return state;
     const id = `path-${connection.source}-${connection.target}-${Date.now()}`;
     return {
@@ -522,6 +794,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   }),
   reconnectPath: (edge, connection) => set((state) => {
     if (!connection.source || !connection.target || connection.source === connection.target) return state;
+    if (requiredInteractionEdge(state.nodes, edge) || touchesGeneratedInteraction(state.nodes, connection.source, connection.target)) return state;
     if (state.edges.some((candidate) => candidate.id !== edge.id && candidate.source === connection.source && candidate.target === connection.target)) return state;
     return {
       ...historyPatch(state),
@@ -531,7 +804,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     };
   }),
   addPath: (source, target) => set((state) => {
-    if (source === target || state.edges.some((edge) => edge.source === source && edge.target === target)) return state;
+    if (source === target || touchesGeneratedInteraction(state.nodes, source, target) || state.edges.some((edge) => edge.source === source && edge.target === target)) return state;
     const id = `path-${source}-${target}-${Date.now()}`;
     return {
       ...historyPatch(state),
@@ -549,6 +822,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   }),
   addCovariance: (source, target) => set((state) => {
     if (source === target) return state;
+    if (touchesGeneratedInteraction(state.nodes, source, target)) return state;
     const [left, right] = [source, target].sort();
     if (state.edges.some((edge) => edge.data?.role === "covariance" && [edge.source, edge.target].sort().join("\u0000") === `${left}\u0000${right}`)) return state;
     const id = `covariance-${left}-${right}-${Date.now()}`;
@@ -559,17 +833,65 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
       edges: [...state.edges, { id, source: left, target: right, type: "default", label: "Covariance", data: { role: "covariance" } }],
     };
   }),
-  addTwoStageInteraction: (predictor, moderator, outcome) => set((state) => {
-    if (new Set([predictor, moderator, outcome]).size !== 3) return state;
+  addTwoStageInteraction: (predictor, moderator, outcome) => {
+    let result: AddTwoStageInteractionResult = { status: "blocked", reason: "construct_missing" };
+    set((state) => {
+    if (new Set([predictor, moderator, outcome]).size !== 3) {
+      result = { status: "blocked", reason: "constructs_not_distinct" };
+      return state;
+    }
+    if (state.nodes.some((node) => node.data.semantic === "interaction")) {
+      result = { status: "blocked", reason: "interaction_exists" };
+      return state;
+    }
     const predictorNode = state.nodes.find((node) => node.id === predictor);
     const moderatorNode = state.nodes.find((node) => node.id === moderator);
     const outcomeNode = state.nodes.find((node) => node.id === outcome);
-    if (!predictorNode || !moderatorNode || !outcomeNode) return state;
-    if (state.nodes.some((node) => node.data.interaction?.predictor === predictor && node.data.interaction?.moderator === moderator && node.data.interaction?.outcome === outcome)) return state;
+    if (!predictorNode || !moderatorNode || !outcomeNode) {
+      result = { status: "blocked", reason: "construct_missing" };
+      return state;
+    }
+    if ([predictorNode, moderatorNode, outcomeNode].some((node) => node.data.semantic || node.data.indicators.length === 0)) {
+      result = { status: "blocked", reason: "unsupported_construct" };
+      return state;
+    }
+    if (state.edges.some((edge) => (edge.data as { role?: string } | undefined)?.role === "control")) {
+      result = { status: "blocked", reason: "control_paths_unsupported" };
+      return state;
+    }
+    const hasPredictorRelationship = state.edges.some((edge) =>
+      !edge.id.startsWith("measurement::")
+      && edge.source === predictor
+      && edge.target === outcome
+      && edge.data?.role !== "control"
+      && edge.data?.role !== "covariance",
+    );
+    if (!hasPredictorRelationship) {
+      result = { status: "blocked", reason: "focal_path_missing" };
+      return state;
+    }
     const baseId = `interaction-${predictor}-${moderator}-${outcome}`.replace(/[^a-zA-Z0-9_-]/g, "-");
     const id = state.nodes.some((node) => node.id === baseId) ? `${baseId}-${Date.now()}` : baseId;
     const edgeId = `path-${id}-${outcome}`;
     const shortName = `${predictorNode.data.shortName}x${moderatorNode.data.shortName}`.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8) || "INT";
+    const hasModeratorMainEffect = state.edges.some((edge) =>
+      !edge.id.startsWith("measurement::")
+      && edge.source === moderator
+      && edge.target === outcome
+      && edge.data?.role !== "covariance",
+    );
+    const moderatorEdgeId = `path-${moderator}-${outcome}`;
+    const withModeratorMainEffect = hasModeratorMainEffect
+      ? state.edges
+      : addEdge({
+        id: state.edges.some((edge) => edge.id === moderatorEdgeId) ? `${moderatorEdgeId}-${Date.now()}` : moderatorEdgeId,
+        source: moderator,
+        target: outcome,
+        type: "straight",
+        label: "Path",
+        markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
+      }, state.edges);
+    result = { status: "created", interactionId: id };
     return {
       ...historyPatch(state),
       selectedNodeId: id,
@@ -590,8 +912,8 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
           interaction: { predictor, moderator, outcome, method: "two_stage_product_score" },
         },
       }],
-      edges: state.edges.some((edge) => edge.source === id && edge.target === outcome)
-        ? state.edges
+      edges: withModeratorMainEffect.some((edge) => edge.source === id && edge.target === outcome)
+        ? withModeratorMainEffect
         : addEdge({
           id: edgeId,
           source: id,
@@ -599,16 +921,82 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
           type: "straight",
           label: "Interaction",
           markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
-        }, state.edges),
+        }, withModeratorMainEffect),
     };
-  }),
+    });
+    return result;
+  },
+  addHigherOrderConstruct: (draft) => {
+    let result: AddHigherOrderConstructResult = { status: "blocked", reason: "invalid_draft", detail: "The higher-order construct could not be created." };
+    set((state) => {
+      const scopeBlocker = nativeHigherOrderCreationBlocker(state.nodes, state.edges);
+      if (scopeBlocker) {
+        result = { status: "blocked", reason: "scope_unavailable", detail: scopeBlocker };
+        return state;
+      }
+      const problems = nativeHigherOrderDraftProblems(draft, state.nodes, state.edges);
+      if (problems.length) {
+        result = { status: "blocked", reason: "invalid_draft", detail: problems[0] };
+        return state;
+      }
+      const base = `hoc-${draft.shortName.trim().normalize("NFKC").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "construct"}`;
+      let id = base;
+      let suffix = 2;
+      while (state.nodes.some((node) => node.id === id)) id = `${base}-${suffix++}`;
+      result = { status: "created", constructId: id };
+      return {
+        ...historyPatch(state),
+        selectedNodeId: id,
+        selectedEdgeId: null,
+        nodes: [
+          ...state.nodes.map((node) => ({ ...node, selected: false })),
+          {
+            id,
+            type: "construct",
+            position: nextConstructPosition(state.nodes),
+            selected: true,
+            data: {
+              label: draft.name.trim(),
+              shortName: draft.shortName.trim(),
+              mode: "reflective",
+              indicators: [],
+              semantic: "higher_order",
+              higherOrder: {
+                id,
+                components: [...draft.components],
+                method: "two_stage",
+                stage_one_recipe: null,
+              },
+            },
+          },
+        ],
+      };
+    });
+    return result;
+  },
   updateConstruct: (id, patch) => set((state) => ({
     ...historyPatch(state),
-    nodes: state.nodes.map((node) => node.id === id ? { ...node, data: { ...node.data, ...patch } } : node),
+    nodes: state.nodes.map((node) => {
+      if (node.id !== id) return node;
+      const data = { ...node.data, ...patch };
+      return node.data.semantic === "interaction"
+        ? { ...node, data: { ...data, mode: "formative", indicators: [], semantic: "interaction", interaction: node.data.interaction } }
+        : node.data.semantic === "higher_order"
+          ? { ...node, data: { ...data, mode: "reflective", indicators: [], semantic: "higher_order", higherOrder: node.data.higherOrder } }
+        : { ...node, data };
+    }),
   })),
   updateEdge: (id, patch) => set((state) => ({
     ...historyPatch(state),
-    edges: state.edges.map((edge) => edge.id === id ? { ...edge, ...patch } : edge),
+    edges: state.edges.map((edge) => {
+      if (edge.id !== id) return edge;
+      if (!requiredInteractionEdge(state.nodes, edge)) return { ...edge, ...patch };
+      const currentRole = edge.data?.role;
+      const data = { ...(edge.data ?? {}), ...(patch.data ?? {}) };
+      if (currentRole) data.role = currentRole;
+      else delete data.role;
+      return { ...edge, ...patch, source: edge.source, target: edge.target, data };
+    }),
   })),
   setEdgeLabelOffset: (id, offset) => set((state) => ({
     diagramLayout: {
@@ -664,7 +1052,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     const id = `construct-${Date.now()}`;
     const name = nextConstructName(state.nodes);
     const fallback = nextConstructPosition(state.nodes);
-    const validIndicators = validUniqueIndicators(indicators, state.dataset);
+    const validIndicators = validUniqueIndicators(indicators, state.dataset, state.analysisSettings.groupColumn);
     const nextPosition = position ? nearestOpenConstructPosition(position, state.nodes) : fallback;
     return {
       ...historyPatch(state),
@@ -682,7 +1070,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     };
   }),
   addConstructsFromIndicators: (indicators) => set((state) => {
-    const validIndicators = validUniqueIndicators(indicators, state.dataset);
+    const validIndicators = validUniqueIndicators(indicators, state.dataset, state.analysisSettings.groupColumn);
     if (validIndicators.length === 0) return state;
     let nextNodes = state.nodes.map((node) => ({
       ...node,
@@ -714,7 +1102,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     };
   }),
   addConstructsFromIndicatorGroups: (indicators) => set((state) => {
-    const validIndicators = validUniqueIndicators(indicators, state.dataset);
+    const validIndicators = validUniqueIndicators(indicators, state.dataset, state.analysisSettings.groupColumn);
     if (validIndicators.length === 0) return state;
     const groups = new Map<string, string[]>();
     for (const indicator of validIndicators) {
@@ -766,7 +1154,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     };
   }),
   removeSelection: () => set((state) => {
-    const nodeIds = new Set([
+    const selectedNodeIds = new Set([
       ...state.nodes.filter((node) => node.selected).map((node) => node.id),
       ...(state.selectedNodeId ? [state.selectedNodeId] : []),
     ]);
@@ -774,7 +1162,13 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
       ...state.edges.filter((edge) => edge.selected).map((edge) => edge.id),
       ...(state.selectedEdgeId ? [state.selectedEdgeId] : []),
     ]);
-    if (nodeIds.size === 0 && edgeIds.size === 0) return state;
+    if (selectedNodeIds.size === 0 && edgeIds.size === 0) return state;
+    const removedEdges = state.edges.filter((edge) => edgeIds.has(edge.id));
+    const cascadeIds = new Set([
+      ...cascadingInteractionNodeIds(state.nodes, selectedNodeIds, removedEdges),
+      ...cascadingHigherOrderNodeIds(state.nodes, selectedNodeIds),
+    ]);
+    const nodeIds = new Set([...selectedNodeIds, ...cascadeIds]);
     return {
       ...historyPatch(state),
       nodes: state.nodes.filter((node) => !nodeIds.has(node.id)),
@@ -785,7 +1179,7 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   }),
   reverseSelectedPath: () => set((state) => {
     const selected = state.edges.find((edge) => edge.id === state.selectedEdgeId);
-    if (!selected || state.edges.some((edge) => edge.id !== selected.id && edge.source === selected.target && edge.target === selected.source)) return state;
+    if (!selected || requiredInteractionEdge(state.nodes, selected) || state.edges.some((edge) => edge.id !== selected.id && edge.source === selected.target && edge.target === selected.source)) return state;
     return {
       ...historyPatch(state),
       edges: state.edges.map((edge) => edge.id === selected.id ? {
@@ -954,7 +1348,13 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   }),
   assignIndicator: (constructId, indicator) => set((state) => {
     const target = state.nodes.find((node) => node.id === constructId);
-    if (!target || target.data.indicators.includes(indicator)) return state;
+    if (
+      !target
+      || target.data.semantic === "interaction"
+      || target.data.semantic === "higher_order"
+      || target.data.indicators.includes(indicator)
+      || indicator === state.analysisSettings.groupColumn?.trim()
+    ) return state;
     const indicatorLayout = Object.fromEntries(Object.entries(state.diagramLayout.indicatorLayouts).map(([nodeId, indicators]) => {
       const next = { ...indicators };
       if (nodeId !== constructId) delete next[indicator];
@@ -976,8 +1376,8 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   }),
   assignIndicators: (constructId, indicators) => set((state) => {
     const target = state.nodes.find((node) => node.id === constructId);
-    const unique = [...new Set(indicators)].filter((indicator) => state.dataset.columns.includes(indicator));
-    if (!target || unique.length === 0) return state;
+    const unique = validUniqueIndicators(indicators, state.dataset, state.analysisSettings.groupColumn);
+    if (!target || target.data.semantic === "interaction" || target.data.semantic === "higher_order" || unique.length === 0) return state;
     const indicatorLayout = Object.fromEntries(Object.entries(state.diagramLayout.indicatorLayouts).map(([nodeId, current]) => {
       const next = { ...current };
       if (nodeId !== constructId) unique.forEach((indicator) => delete next[indicator]);
@@ -1011,7 +1411,72 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
       },
     }),
   })),
-  setDataset: (dataset) => set({ dataset, view: "data" }),
+  setDataset: (dataset) => set((state) => ({
+    dataset,
+    datasetCatalog: upsertDatasetCatalog(state.datasetCatalog, dataset),
+    view: "data",
+    workflowDestinationContext: null,
+    workflowCommandContext: null,
+  })),
+  setDatasetCatalog: (datasetCatalog, datasetVersions) => set({ datasetCatalog, datasetVersions }),
+  commitDatasetVersion: ({ dataset, version }) => set((state) => ({
+    dataset,
+    datasetCatalog: upsertDatasetCatalog(state.datasetCatalog, dataset),
+    datasetVersions: [
+      ...state.datasetVersions.filter((candidate) => candidate.datasetId !== version.datasetId),
+      version,
+    ],
+    view: "data",
+    workflowDestinationContext: null,
+    workflowCommandContext: null,
+  })),
+  setExplorerSelection: (explorerSelection) => set({ explorerSelection }),
+  setProjectExplorer: ({ projectModels, activeModelId, modelPresentations, savedReports, explorerSelection }) => set((state) => ({
+    projectModels,
+    activeModelId,
+    modelPresentations,
+    savedReports,
+    explorerSelection: explorerSelection ?? state.explorerSelection,
+  })),
+  switchProjectModel: (modelId) => {
+    let switched = false;
+    set((state) => {
+      const requestedModel = state.projectModels.find((model) => model.id === modelId);
+      if (!requestedModel) return state;
+
+      const currentModelName = state.projectModels.find((model) => model.id === state.activeModelId)?.name
+        ?? state.projectName;
+      const projectModels = state.activeModelId
+        ? state.projectModels.map((model) => model.id === state.activeModelId
+          ? buildNativeRecipeModel(model.id, currentModelName, state.nodes, state.edges)
+          : model)
+        : state.projectModels;
+      const modelPresentations = state.activeModelId
+        ? {
+            ...state.modelPresentations,
+            [state.activeModelId]: currentNativeModelPresentation(state.nodes, state.edges, state.diagramLayout),
+          }
+        : state.modelPresentations;
+      const targetModel = projectModels.find((model) => model.id === modelId)!;
+      const target = nativeModelSnapshotFromCanonical(targetModel, modelPresentations[modelId]);
+      switched = true;
+      return {
+        projectModels,
+        activeModelId: modelId,
+        modelPresentations,
+        explorerSelection: { kind: "model", modelId },
+        nodes: target.nodes,
+        edges: target.edges,
+        diagramLayout: syncedDiagramLayout(target.nodes, target.edges, target.diagramLayout),
+        selectedNodeId: target.nodes[0]?.id ?? null,
+        selectedEdgeId: null,
+        diagramTool: "select",
+        past: [],
+        future: [],
+      };
+    });
+    return switched;
+  },
   addRun: (run) => set((state) => ({
     runs: [run, ...state.runs],
     selectedResultRunId: run.result ? run.id : state.selectedResultRunId,
@@ -1020,6 +1485,44 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
   })),
   setAnalysisSettings: (patch) => set((state) => ({ analysisSettings: normalizeAnalysisSettings({ ...state.analysisSettings, ...patch }) })),
   setProjectMeta: (projectName, projectPath) => set({ projectName, projectPath }),
+  setProjectWritable: (projectWritable) => set({ projectWritable }),
+  closeProject: () => set({
+    nodes: [],
+    edges: [],
+    selectedNodeId: null,
+    selectedEdgeId: null,
+    selectedResultRunId: null,
+    explorerTab: "constructs",
+    explorerCollapsed: false,
+    inspectorCollapsed: false,
+    resultWorkspaceState: defaultResultWorkspaceState,
+    methodSetupState: defaultMethodSetupState,
+    largeModelViewState: defaultLargeModelViewState,
+    runMonitor: defaultRunMonitor,
+    diagramMode: "sem",
+    diagramTool: "select",
+    diagramOverlaySettings: defaultDiagramOverlaySettings,
+    publicationDiagramSettings: defaultPublicationDiagramSettings,
+    diagramLayout: syncedDiagramLayout([], []),
+    dataset: emptyDataset,
+    datasetCatalog: [],
+    datasetVersions: [],
+    projectModels: [],
+    activeModelId: null,
+    modelPresentations: {},
+    savedReports: [],
+    explorerSelection: { kind: "data" },
+    runs: [],
+    analysisSettings: defaultAnalysisSettings,
+    view: "welcome",
+    workflowDestinationContext: null,
+    workflowCommandContext: null,
+    projectName: "No project open",
+    projectPath: null,
+    projectWritable: true,
+    past: [],
+    future: [],
+  }),
   resetProject: () => set({
     nodes: initialNodes,
     edges: initialEdges,
@@ -1032,17 +1535,28 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     resultWorkspaceState: defaultResultWorkspaceState,
     methodSetupState: defaultMethodSetupState,
     largeModelViewState: defaultLargeModelViewState,
+    runMonitor: defaultRunMonitor,
     diagramMode: "sem",
     diagramTool: "select",
     diagramOverlaySettings: defaultDiagramOverlaySettings,
     publicationDiagramSettings: defaultPublicationDiagramSettings,
     diagramLayout: syncedDiagramLayout(initialNodes, initialEdges),
     dataset: sampleDataset,
+    datasetCatalog: [sampleDataset],
+    datasetVersions: [],
+    projectModels: [sampleProjectModel],
+    activeModelId: sampleProjectModelId,
+    modelPresentations: { [sampleProjectModelId]: sampleModelPresentation },
+    savedReports: [],
+    explorerSelection: { kind: "model", modelId: sampleProjectModelId },
     runs: [],
     analysisSettings: defaultAnalysisSettings,
     view: "models",
+    workflowDestinationContext: null,
+    workflowCommandContext: null,
     projectName: "Untitled project",
     projectPath: null,
+    projectWritable: true,
     past: [],
     future: [],
   }),
@@ -1050,6 +1564,14 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     nodes: project.nodes,
     edges: project.edges,
     dataset: project.dataset,
+    datasetCatalog: project.datasets?.length ? project.datasets : [project.dataset],
+    datasetVersions: project.datasetVersions ?? [],
+    projectModels: project.projectModels ?? [],
+    activeModelId: project.activeModelId ?? null,
+    modelPresentations: project.modelPresentations ?? {},
+    savedReports: project.savedReports ?? [],
+    explorerSelection: project.explorerSelection
+      ?? (project.activeModelId ? { kind: "model", modelId: project.activeModelId } : { kind: "data" }),
     runs: project.runs ?? [],
     analysisSettings: normalizeAnalysisSettings(project.analysisSettings ?? {}),
     diagramMode: project.diagramMode ?? "sem",
@@ -1065,7 +1587,10 @@ export const useWorkspace = create<WorkspaceState>()((set) => ({
     inspectorCollapsed: false,
     resultWorkspaceState: defaultResultWorkspaceState,
     largeModelViewState: defaultLargeModelViewState,
+    runMonitor: defaultRunMonitor,
     view: "models",
+    workflowDestinationContext: null,
+    workflowCommandContext: null,
     past: [],
     future: [],
   }),

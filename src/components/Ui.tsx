@@ -1,10 +1,18 @@
-import type { ReactNode } from "react";
+import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
 import type { AnalysisRun, MethodDefinition } from "../types";
 import { methodStatusDescription } from "../domain/methodStatus";
 
-export function PageHeader({ title, description, actions }: { title: string; description: string; actions?: ReactNode }) {
-  return <div className="page-heading page-heading-pro">
-    <div><h1>{title}</h1><p>{description}</p></div>
+export function WorkspacePage({ children, className = "", ...props }: HTMLAttributes<HTMLElement> & { children: ReactNode }) {
+  return <section {...props} className={`workspace-page qpls2-workspace qpls2-page-shell ${className}`.trim()}>{children}</section>;
+}
+
+export function PageHeader({ title, description, actions, kicker }: { title: string; description: string; actions?: ReactNode; kicker?: string }) {
+  return <div className="page-heading page-heading-pro qpls2-workspace-hero">
+    <div>
+      {kicker ? <span className="qpls2-page-kicker">{kicker}</span> : null}
+      <h1 className="qpls2-page-title">{title}</h1>
+      <p className="qpls2-page-subtitle">{description}</p>
+    </div>
     {actions ? <div className="page-actions">{actions}</div> : null}
   </div>;
 }
@@ -17,11 +25,58 @@ export function ActionStrip({ children }: { children: ReactNode }) {
   return <div className="ui-action-strip">{children}</div>;
 }
 
+export function Panel({ title, description, actions, children, tone = "plain", className = "" }: { title: string; description?: string; actions?: ReactNode; children?: ReactNode; tone?: "plain" | "warning" | "validated" | "danger"; className?: string }) {
+  return <section className={`qpls2-panel qpls2-design-panel ${tone} ${className}`.trim()}>
+    <header>
+      <div>
+        <strong className="qpls2-panel-title">{title}</strong>
+        {description ? <span>{description}</span> : null}
+      </div>
+      {actions ? <div className="qpls2-panel-actions">{actions}</div> : null}
+    </header>
+    {children ? <div className="qpls2-panel-body">{children}</div> : null}
+  </section>;
+}
+
 export function Card({ title, description, children, tone = "plain" }: { title: string; description?: string; children?: ReactNode; tone?: "plain" | "warning" | "validated" }) {
-  return <article className={`ui-card ${tone}`}>
-    <header className="ui-card-heading"><strong>{title}</strong>{description ? <span>{description}</span> : null}</header>
+  return <article className={`ui-card qpls2-design-card ${tone}`}>
+    <header className="ui-card-heading"><strong className="qpls2-card-title">{title}</strong>{description ? <span className="qpls2-card-body">{description}</span> : null}</header>
     {children ? <div className="ui-card-actions">{children}</div> : null}
   </article>;
+}
+
+export function MetricCard({ label, value, detail, tone = "plain" }: { label: string; value: ReactNode; detail?: ReactNode; tone?: "plain" | "success" | "warning" | "danger" | "info" }) {
+  return <article className={`qpls2-metric-card ${tone}`}>
+    <span>{label}</span>
+    <strong>{value}</strong>
+    {detail ? <small>{detail}</small> : null}
+  </article>;
+}
+
+export function CommandGroup({ label, children }: { label: string; children: ReactNode }) {
+  return <div className="qpls2-command-group" aria-label={label}>
+    <span>{label}</span>
+    <div>{children}</div>
+  </div>;
+}
+
+export function ToolbarButton({ active = false, reason, children, className = "", ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { active?: boolean; reason?: string }) {
+  return <button
+    {...props}
+    className={`qpls2-toolbar-button ${active ? "active" : ""} ${className}`.trim()}
+    aria-disabled={props.disabled}
+    title={props.disabled && reason ? reason : props.title}
+  >
+    {children}
+    {props.disabled && reason ? <span className="qpls2-disabled-reason">{reason}</span> : null}
+  </button>;
+}
+
+export function InlineNotice({ tone = "info", title, children, action }: { tone?: "info" | "success" | "warning" | "danger"; title: string; children?: ReactNode; action?: ReactNode }) {
+  return <div className={`qpls2-inline-notice ${tone}`}>
+    <div><strong>{title}</strong>{children ? <span>{children}</span> : null}</div>
+    {action ? <div>{action}</div> : null}
+  </div>;
 }
 
 export function TabStrip<T extends string>({ tabs, value, onChange, label }: { tabs: Array<{ id: T; label: string; count?: number }>; value: T; onChange: (value: T) => void; label: string }) {
@@ -76,7 +131,7 @@ export interface ReportabilityItem {
 }
 
 export function ReportabilityChecklist({ items, onSelect }: { items: ReportabilityItem[]; onSelect?: (item: ReportabilityItem) => void }) {
-  return <section className="reportability-checklist" aria-label="PLS-SEM reportability checklist">
+  return <section className="reportability-checklist" data-v230-reportability-checklist="true" aria-label="PLS-SEM reportability checklist">
     <header><strong>Reportability checklist</strong><span>Threshold colors are methodological guidance, not universal pass/fail rules.</span></header>
     <div className="reportability-grid">
       {items.map((item) => <button key={item.id} type="button" className={`reportability-item ${item.status}`} onClick={() => onSelect?.(item)}>

@@ -231,21 +231,40 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
   }
 
   if (result.nca) {
+    const ncaStatus = result.nca.method_version === "nca_v2" ? "validated" : "experimental";
+    const ncaWarnings = ncaStatus === "validated"
+      ? scopeWarnings(result.nca.warnings)
+      : experimentalWarnings(result.nca.warnings);
     tables.push({
       id: "nca_ceilings",
       title: "NCA ceiling effects",
-      status: "validated",
-      warning: scopeWarnings(result.nca.warnings),
-      columns: ["Ceiling", "Effect size", "Permutation p"],
-      rows: result.nca.ceilings.map((row) => [formatLabel(row.ceiling), formatNumber(row.effect_size, 6), formatPValue(row.permutation_p_value)]),
+      status: ncaStatus,
+      warning: ncaWarnings,
+      columns: ["Ceiling", "Effect size", "Permutation p", "Slope", "Intercept"],
+      rows: result.nca.ceilings.map((row) => [
+        formatLabel(row.ceiling),
+        formatNumber(row.effect_size, 6),
+        formatPValue(row.permutation_p_value),
+        row.slope == null ? "" : formatNumber(row.slope, 6),
+        row.intercept == null ? "" : formatNumber(row.intercept, 6),
+      ]),
     });
     tables.push({
       id: "nca_bottlenecks",
       title: "NCA bottleneck table",
-      status: "validated",
-      warning: scopeWarnings(result.nca.warnings),
-      columns: ["Outcome %", "Required X %"],
-      rows: result.nca.bottlenecks.map((row) => [formatNumber(row.outcome_percent, 1), formatNumber(row.required_x_percent, 4)]),
+      status: ncaStatus,
+      warning: ncaWarnings,
+      columns: ["Ceiling", "Outcome %", "Required X %", "Interpretation"],
+      rows: result.nca.bottlenecks.map((row) => [
+        formatLabel(row.ceiling || result.nca!.ceiling),
+        formatNumber(row.outcome_percent, 1),
+        row.required_x_percent == null ? "" : formatNumber(row.required_x_percent, 4),
+        row.status === "not_necessary"
+          ? "Not necessary at this outcome level"
+          : row.status === "not_attainable"
+            ? "Outcome level is above this ceiling line"
+            : "Required condition level",
+      ]),
     });
   }
 
@@ -676,7 +695,7 @@ function resultScopeStatus(result: PlsResult): ResultTable["status"] {
   ) {
     return "experimental";
   }
-  if (result.method_version.startsWith("pls_pm_v1") || result.method_version === "pca_v1" || result.method_version === "plsc_v1" || result.method_version === "wpls_case_weighted_v1" || result.method_version === "plspredict_holdout_v1" || result.method_version === "ipma_v1" || result.method_version === "nca_v1" || result.method_version === "regression_logistic_v1" || result.method_version === "regression_process_v1" || result.method_version === "cca_composite_residual_v1" || result.method_version === "cta_pls_tetrad_v1" || result.method_version === "gaussian_copula_endogeneity_v1" || result.method_version === "pls_quadratic_nonlinear_effects_v1" || result.method_version === "pls_moderated_mediation_v1" || result.method_version === "cbsem_ml_v1" || result.method_version === "cfa_ml_v1" || result.method_version === "gsca_v1") return "validated";
+  if (result.method_version.startsWith("pls_pm_v1") || result.method_version === "pca_v1" || result.method_version === "plsc_v2" || result.method_version === "wpls_case_weighted_v1" || result.method_version === "plspredict_holdout_v1" || result.method_version === "ipma_v1" || result.method_version === "nca_v2" || result.method_version === "regression_logistic_v1" || result.method_version === "regression_process_v1" || result.method_version === "cca_composite_residual_v1" || result.method_version === "cta_pls_tetrad_v1" || result.method_version === "gaussian_copula_endogeneity_v1" || result.method_version === "pls_quadratic_nonlinear_effects_v1" || result.method_version === "pls_moderated_mediation_v1" || result.method_version === "cbsem_ml_v1" || result.method_version === "cfa_ml_v1" || result.method_version === "gsca_v1") return "validated";
   if (result.mga || result.micom || result.mga_permutation || result.fimix || result.segmentation) return "validated";
   if (result.regression && regressionScopeStatus(result.regression) === "validated") return "validated";
   return "experimental";

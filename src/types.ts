@@ -1,11 +1,65 @@
-export type WorkspaceView = "welcome" | "data" | "models" | "analyses" | "run" | "runs" | "groups" | "reports";
+import type { Edge, Node } from "@xyflow/react";
+
+export type WorkspaceView = "welcome" | "data" | "models" | "analyses" | "run" | "runs" | "groups" | "reports" | "trust" | "settings";
 export type ExplorerTab = "constructs" | "variables" | "structure" | "issues";
 export type UiDensity = "comfortable" | "compact";
+export type DesktopMenuId = "file" | "edit" | "data" | "model" | "calculate" | "results" | "report" | "view" | "tools" | "window" | "help";
+export type DesktopDialogId = "new_project" | "open_project" | "import_data" | "export_options" | "calculation_setup" | "method_scope" | "settings" | "help_shortcuts" | null;
+export type DesktopCommandTone = "info" | "success" | "warning" | "error";
 export type ResultWorkspaceTab = "overview" | "measurement" | "structural" | "validity" | "inference" | "prediction" | "groups" | "diagnostics" | "interpretation" | "comparison";
 export type MethodSetupMode = "basic" | "expert";
 export type MethodPresetId = "standard_pls" | "pls_bootstrap" | "plspredict" | "micom_mga" | "cbsem_cfa" | "ols_regression" | "nca";
 export type MeasurementMode = "reflective" | "formative";
 export type MethodStatus = "experimental" | "validated" | "unsupported";
+
+export interface WorkflowDestinationContext {
+  from: WorkspaceView;
+  to: WorkspaceView;
+  actionLabel: string;
+  coachId: string;
+  timestamp: number;
+}
+
+export interface WorkflowCommandContext {
+  from: WorkspaceView;
+  event: string;
+  actionLabel: string;
+  coachId: string;
+  timestamp: number;
+}
+
+export interface DesktopCommandStatus {
+  id: string;
+  label: string;
+  detail: string;
+  tone: DesktopCommandTone;
+  timestamp: number;
+}
+
+export type RunMonitorStatus = "idle" | "blocked" | "queued" | "validating" | "running" | "cancelling" | "completed" | "failed" | "cancelled";
+
+export interface RunMonitorLogEntry {
+  id: string;
+  timestamp: string;
+  phase: string;
+  message: string;
+  tone: DesktopCommandTone;
+}
+
+export interface RunMonitorState {
+  status: RunMonitorStatus;
+  phase: string;
+  message: string;
+  completedUnits: number;
+  totalUnits: number;
+  startedAt: string | null;
+  completedAt: string | null;
+  activeJobId: string | null;
+  lastRunId: string | null;
+  error: string | null;
+  logs: RunMonitorLogEntry[];
+}
+
 export type AnalysisMethodId = "pls_pm" | "bootstrap" | "plsc" | "wpls" | "cca" | "cta_pls" | "endogeneity" | "nonlinear_effects" | "moderated_mediation" | "predict" | "mga" | "ipma" | "cbsem" | "pca" | "gsca" | "regression" | "nca";
 export type DiagramMode = "compact" | "sem" | "publication" | "smartpls_result";
 export type DiagramOverlayMode = "model" | "loadings" | "paths_r2" | "significance" | "quality" | "cbsem_standardized" | "cbsem_residuals" | "modification_indices";
@@ -104,13 +158,17 @@ export interface LargeModelViewState {
 
 export interface ToastNotification {
   id: string;
-  tone: "success" | "warning" | "info";
+  tone: "success" | "warning" | "info" | "error";
   title: string;
   detail?: string;
 }
 
 export interface AnalysisUiSettings {
   method: AnalysisMethodId;
+  weightingScheme?: "path" | "factor" | "pca";
+  tolerance?: number;
+  maxIterations?: number;
+  preprocessing?: "standardized" | "mean_centered" | "unstandardized";
   bootstrapSamples: number;
   studentizedInnerSamples: number;
   permutationSamples: number;
@@ -119,9 +177,12 @@ export interface AnalysisUiSettings {
   confidenceLevel: number;
   caseWeightColumn?: string | null;
   groupColumn?: string | null;
+  groupAValue?: string | null;
+  groupBValue?: string | null;
   ipmaTargets?: string | null;
   groupMethods?: string | null;
   groupPermutationSamples?: number;
+  micomConfiguralConfirmed?: boolean;
   segmentCount?: number;
   segmentStarts?: number;
   minimumSegmentShare?: number;
@@ -134,6 +195,7 @@ export interface AnalysisUiSettings {
   pcaVariables?: string | null;
   pcaComponentRule?: "kaiser" | "fixed" | "variance_threshold";
   pcaComponents?: number;
+  pcaVarianceThreshold?: number;
   regressionType?: "ols" | "logistic" | "process";
   regressionOutcome?: string | null;
   regressionPredictors?: string | null;
@@ -223,10 +285,70 @@ export interface Dataset {
   rows: Array<Record<string, string | number | null>>;
   missing: number;
   rowCount?: number;
+  missingByColumn?: Record<string, number>;
   fingerprint?: string;
   kind?: "raw" | "covariance" | "correlation";
   sampleSize?: number | null;
   columnMetadata?: ColumnMetadata[];
+}
+
+export interface DatasetRowsPage {
+  datasetId: string;
+  offset: number;
+  limit: number;
+  rowCount: number;
+  rows: Dataset["rows"];
+}
+
+export interface DatasetGroupProfileValue {
+  value: string;
+  label: string | null;
+  observations: number;
+  completeCases: number;
+}
+
+export interface DatasetGroupProfile {
+  datasetId: string;
+  columnName: string;
+  rowCount: number;
+  missingCount: number;
+  unsupportedCount: number;
+  truncated: boolean;
+  groups: DatasetGroupProfileValue[];
+}
+
+export type DatasetVersionOperation = "import" | "metadata" | "recode";
+
+export interface DatasetVersionRecord {
+  datasetId: string;
+  parentDatasetId: string | null;
+  operation: DatasetVersionOperation;
+  createdAt: string | null;
+  summary: string;
+  sourceColumn: string | null;
+  targetColumn: string | null;
+}
+
+export interface DatasetVersionMutation {
+  dataset: Dataset;
+  version: DatasetVersionRecord;
+}
+
+export type RecodeUnmappedPolicy = "keep_original" | "set_missing" | "error";
+
+export interface RecodeValueMapping {
+  source: string;
+  target: string | null;
+}
+
+export interface RecodeColumnSpec {
+  sourceColumn: string;
+  targetColumn: string;
+  targetLabel: string | null;
+  targetType: ColumnMetadata["column_type"];
+  targetScale: ColumnMetadata["scale_type"];
+  mappings: RecodeValueMapping[];
+  unmapped: RecodeUnmappedPolicy;
 }
 
 export interface ColumnMetadata {
@@ -247,22 +369,152 @@ export interface NativeProjectSnapshot {
   recovered: boolean;
   recoverySource?: "autosave" | "backup" | null;
   datasets: Dataset[];
-  workspace?: { nodes: unknown[]; edges: unknown[]; runs?: AnalysisRun[]; analysisSettings?: AnalysisUiSettings; diagramMode?: DiagramMode; diagramOverlaySettings?: Partial<DiagramOverlaySettings>; publicationDiagramSettings?: Partial<PublicationDiagramSettings>; diagramLayout?: Partial<DiagramLayoutState>; activeDatasetId?: string } | null;
+  datasetVersions: DatasetVersionRecord[];
+  models?: NativeCanonicalModelSpec[];
+  recipes?: NativeCanonicalAnalysisRecipe[];
+  results?: AnalysisResultEnvelope[];
+  activeModelId?: string | null;
+  modelPresentations?: Record<string, NativeModelPresentation>;
+  savedReports?: NativeSavedReport[];
+  workspace?: {
+    nodes: unknown[];
+    edges: unknown[];
+    runs?: Array<AnalysisRun | NativeWorkspaceRunPresentation>;
+    analysisSettings?: AnalysisUiSettings;
+    diagramMode?: DiagramMode;
+    diagramOverlaySettings?: Partial<DiagramOverlaySettings>;
+    publicationDiagramSettings?: Partial<PublicationDiagramSettings>;
+    diagramLayout?: Partial<DiagramLayoutState>;
+    activeDatasetId?: string;
+    activeModelId?: string;
+  } | null;
+}
+
+/** Presentation-only state for one canonical editable model. */
+export interface NativeModelPresentation {
+  nodes?: Array<Node<ConstructData>>;
+  edges?: Edge[];
+  diagramLayout?: Partial<DiagramLayoutState>;
+}
+
+export interface NativeSavedReport {
+  resultId: string;
+  name: string;
+  savedAt: string;
+}
+
+export type NativeExplorerSelection =
+  | { kind: "project" }
+  | { kind: "data" }
+  | { kind: "models" }
+  | { kind: "model"; modelId: string }
+  | { kind: "reports" }
+  | { kind: "report"; resultId: string };
+
+export type NativeProjectExplorerMutation =
+  | { kind: "create_model"; name: string }
+  | { kind: "activate_model"; modelId: string }
+  | { kind: "rename_model"; modelId: string; name: string }
+  | { kind: "delete_model"; modelId: string }
+  | { kind: "save_report"; resultId: string; name: string }
+  | { kind: "rename_report"; resultId: string; name: string }
+  | { kind: "remove_report"; resultId: string };
+
+export interface NativeProjectExplorerMutationRequest {
+  mutation: NativeProjectExplorerMutation;
+  currentModel?: NativeCanonicalModelSpec | null;
+  currentPresentation?: NativeModelPresentation | null;
+  path?: string | null;
+}
+
+/** In-process request/response detail used by Explorer dialogs. */
+export interface NativeProjectExplorerMutationEventDetail {
+  mutation: NativeProjectExplorerMutation;
+  resolve: () => void;
+  reject: (reason: unknown) => void;
+}
+
+export interface NativeCanonicalConstruct {
+  id: string;
+  name: string;
+  short_name: string;
+  mode: MeasurementMode;
+  indicators: string[];
+}
+
+export interface NativeCanonicalStructuralPath {
+  source: string;
+  target: string;
+}
+
+export interface NativeCanonicalControlPath extends NativeCanonicalStructuralPath {
+  label: string | null;
+}
+
+export interface NativeCanonicalHigherOrderConstruct {
+  id: string;
+  components: string[];
+  method: "repeated_indicators" | "two_stage" | "hybrid";
+  stage_one_recipe: string | null;
+}
+
+export interface NativeCanonicalInteraction {
+  id: string;
+  predictor: string;
+  moderator: string;
+  product_construct: string;
+  outcome: string;
+  method: "two_stage_product_score";
+}
+
+export interface NativeCanonicalModelSpec {
+  id: string;
+  name: string;
+  constructs: NativeCanonicalConstruct[];
+  paths: NativeCanonicalStructuralPath[];
+  controls: NativeCanonicalControlPath[];
+  higher_order_constructs: NativeCanonicalHigherOrderConstruct[];
+  interactions: NativeCanonicalInteraction[];
+}
+
+export interface NativeCanonicalAnalysisRecipe {
+  schema_version: number;
+  id: string;
+  created_at: string;
+  dataset_fingerprint: string;
+  model: NativeCanonicalModelSpec;
+  settings: AnalysisEngineSettingsSnapshot;
+  metadata: Record<string, string>;
 }
 
 export interface AnalysisRun {
   id: string;
+  modelId?: string | null;
   name: string;
   method: string;
   createdAt: string;
   seed: number;
   status: "completed" | "failed";
   warnings: string[];
+  logs?: RunMonitorLogEntry[];
   fingerprint: string;
+  modelSnapshot?: AnalysisModelSnapshot;
   result?: PlsResult;
   assessment?: AssessmentResult;
   bootstrap?: PlsBootstrapRun;
   permutation?: PlsPermutationRun;
+  provenance?: AnalysisResultProvenance;
+}
+
+export type NativeWorkspaceRunPresentation = Omit<
+  AnalysisRun,
+  "result" | "assessment" | "bootstrap" | "permutation" | "provenance"
+>;
+
+export interface AnalysisModelSnapshot {
+  nodes: Array<Node<ConstructData>>;
+  edges: Edge[];
+  diagramLayout?: DiagramLayoutState;
 }
 
 export interface PlsResult {
@@ -334,17 +586,32 @@ export interface NcaAnalysis {
   x: string;
   y: string;
   observations: number;
-  ceilings: Array<{ ceiling: string; effect_size: number; permutation_p_value?: number | null }>;
-  bottlenecks: Array<{ outcome_percent: number; required_x_percent: number }>;
+  scope?: { minimum_x: number; maximum_x: number; minimum_y: number; maximum_y: number };
+  ce_fdh_peers?: Array<{ x: number; y: number }>;
+  ceilings: Array<{ ceiling: string; effect_size: number; permutation_p_value?: number | null; slope?: number | null; intercept?: number | null }>;
+  bottlenecks: Array<{ ceiling?: string; outcome_percent: number; required_x_percent?: number | null; status?: "required" | "not_necessary" | "not_attainable" | string }>;
   warnings: string[];
 }
 
 export interface GscaAnalysis {
   method_version: string;
+  algorithm?: string;
+  converged?: boolean;
   iterations: number;
+  stop_criterion?: number;
+  final_change?: number;
+  objective?: number;
   fit: number;
+  measurement_fit?: number;
+  structural_fit?: number;
   adjusted_fit: number;
   gfi: number;
+  srmr?: number;
+  covariance_discrepancy?: number;
+  covariance_sample_total?: number;
+  standardized_residual_sum?: number;
+  observations?: number;
+  free_parameters?: number;
   weights: Array<{ construct: string; indicator: string; weight: number; loading: number }>;
   loadings: Array<{ construct: string; indicator: string; weight: number; loading: number }>;
   paths: Array<{ source: string; target: string; coefficient: number }>;
@@ -566,13 +833,20 @@ export interface PlsPredictAnalysis {
   test_observations: number;
   benchmark: string;
   targets: PlsPredictTarget[];
+  indicator_targets?: PlsPredictIndicatorTarget[];
   repeated_kfold?: {
     method_version: string;
     folds: number;
     repeats: number;
     assignment: string;
+    assignment_digest?: string;
+    seed?: number;
     total_test_observations: number;
     targets: PlsPredictTarget[];
+    indicator_targets?: PlsPredictIndicatorTarget[];
+    cvpat_benchmark_assessments?: CvpatBenchmarkAssessment[];
+    paired_loss_diagnostics?: CvpatComparison[];
+    /** Archive-compatible v1 field. Current v2 results use cvpat_benchmark_assessments. */
     cvpat?: CvpatComparison[];
     warnings: string[];
   } | null;
@@ -580,16 +854,44 @@ export interface PlsPredictAnalysis {
 }
 
 export interface PlsPredictTarget {
-    construct: string;
-    predictor_count: number;
-    rmse_pls: number;
-    mae_pls: number;
-    rmse_benchmark: number;
-    mae_benchmark: number;
-    q_squared_predict: number | null;
-    rmse_lm?: number | null;
-    mae_lm?: number | null;
-    q_squared_predict_lm?: number | null;
+  construct: string;
+  predictor_count: number;
+  rmse_pls: number;
+  mae_pls: number;
+  rmse_benchmark: number;
+  mae_benchmark: number;
+  q_squared_predict: number | null;
+  rmse_lm?: number | null;
+  mae_lm?: number | null;
+  q_squared_predict_lm?: number | null;
+}
+
+export interface PlsPredictErrorMetrics {
+  observations: number;
+  squared_error_sum: number;
+  absolute_error_sum: number;
+  rmse: number;
+  mae: number;
+  absolute_percentage_error_sum: number | null;
+  mape_observations: number;
+  mape_percent: number | null;
+}
+
+export interface PlsPredictLinearModelBenchmark {
+  status: "available" | "unavailable";
+  metrics?: PlsPredictErrorMetrics | null;
+  reason?: string | null;
+}
+
+export interface PlsPredictIndicatorTarget {
+  construct: string;
+  indicator: string;
+  predictor_scope: string;
+  predictor_count: number;
+  pls: PlsPredictErrorMetrics;
+  indicator_average: PlsPredictErrorMetrics;
+  linear_model: PlsPredictLinearModelBenchmark;
+  q_squared_predict: number | null;
 }
 
 export interface CvpatComparison {
@@ -603,6 +905,29 @@ export interface CvpatComparison {
   observations: number;
   preferred_model: string;
   warning: string | null;
+}
+
+export interface CvpatBenchmarkAssessment {
+  method_version: string;
+  comparison_kind: "benchmark_assessment";
+  target_scope: "all_endogenous_indicators" | string;
+  benchmark: "indicator_average" | "linear_model" | string;
+  loss: "mean_squared_error_across_indicators_per_observation" | string;
+  alternative: "pls_loss_less_than_benchmark" | string;
+  confidence_level: number;
+  mean_loss_pls: number | null;
+  mean_loss_benchmark: number | null;
+  mean_loss_difference: number | null;
+  standard_error: number | null;
+  t_statistic: number | null;
+  p_value_one_sided: number | null;
+  confidence_interval_lower: number | null;
+  confidence_interval_upper: number | null;
+  observations: number;
+  indicator_count: number;
+  status: "available" | "inferential_test_unavailable" | "benchmark_unavailable";
+  preferred_model: "pls_sem" | null;
+  reason: string | null;
 }
 
 export interface PlsSegmentationAnalysis {
@@ -638,6 +963,8 @@ export interface PlsMgaAnalysis {
     observations: number;
     paths: Array<{ source: string; target: string; coefficient: number }>;
     r_squared: Record<string, number>;
+    outer_estimates?: Array<{ construct: string; indicator: string; weight: number; loading: number }>;
+    transforms?: Array<{ indicator: string; mean: number; scale: number }>;
   }>;
   comparisons: Array<{
     source: string;
@@ -652,6 +979,16 @@ export interface PlsMgaAnalysis {
     p_value_two_sided: number | null;
     warning: string | null;
   }>;
+  measurement_comparisons?: Array<{
+    parameter: "outer_loading" | "outer_weight" | string;
+    construct: string;
+    indicator: string;
+    group_a: string;
+    group_b: string;
+    estimate_a: number;
+    estimate_b: number;
+    difference: number;
+  }>;
   warnings: string[];
 }
 
@@ -660,16 +997,30 @@ export interface MicomAnalysis {
   group_column: string;
   permutation_samples: number;
   usable_permutations: number;
+  attempted_permutations?: number | null;
+  failed_permutations?: number | null;
+  confidence_level?: number | null;
   groups: Array<{ group: string; observations: number }>;
   constructs: Array<{
     construct: string;
     configural_invariance: boolean;
     compositional_correlation: number;
     compositional_p_value: number | null;
+    compositional_correlation_lower?: number | null;
+    mean_a?: number | null;
+    mean_b?: number | null;
     mean_difference: number;
     mean_p_value: number | null;
+    mean_difference_lower?: number | null;
+    mean_difference_upper?: number | null;
+    variance_a?: number | null;
+    variance_b?: number | null;
     variance_difference: number;
     variance_p_value: number | null;
+    variance_difference_lower?: number | null;
+    variance_difference_upper?: number | null;
+    equal_means?: boolean | null;
+    equal_variances?: boolean | null;
     partial_invariance: boolean;
     full_invariance: boolean;
   }>;
@@ -681,9 +1032,19 @@ export interface PlsMgaPermutationAnalysis {
   group_column: string;
   permutation_samples: number;
   usable_permutations: number;
+  attempted_permutations?: number | null;
+  failed_permutations?: number | null;
   comparisons: Array<{
     source: string;
     target: string;
+    original_difference: number;
+    empirical_p_value_two_sided: number | null;
+    percentile_rank: number | null;
+  }>;
+  measurement_comparisons?: Array<{
+    parameter: "outer_loading" | "outer_weight" | string;
+    construct: string;
+    indicator: string;
     original_difference: number;
     empirical_p_value_two_sided: number | null;
     percentile_rank: number | null;
@@ -854,20 +1215,39 @@ export interface PlsPermutationRun {
   parameters: Array<{ parameter: string; original: number; exceedances: number; p_value_two_sided: number; permutations: number }>;
 }
 
+export interface AnalysisEngineSettingsSnapshot {
+  method: AnalysisMethodId;
+  weighting_scheme: "path" | "factor" | "pca";
+  tolerance: number;
+  max_iterations: number;
+  bootstrap_samples: number;
+  studentized_inner_samples: number;
+  permutation_samples: number;
+  seed: number;
+  workers: number;
+  confidence_level: number;
+  preprocessing: "standardized" | "mean_centered" | "unstandardized";
+  missing_data: "listwise_deletion";
+  case_weight_column: string | null;
+}
+
+export interface AnalysisResultProvenance {
+  recipe_id: string;
+  dataset_fingerprint: string;
+  method: AnalysisMethodId;
+  method_version: string;
+  engine_version: string;
+  seed: number;
+  settings: AnalysisEngineSettingsSnapshot;
+  started_at: string;
+  completed_at: string;
+}
+
 export interface AnalysisResultEnvelope {
   schema_version: number;
   id: string;
   status: "completed" | "failed";
-  provenance: {
-    recipe_id: string;
-    dataset_fingerprint: string;
-    method: string;
-    method_version: string;
-    engine_version: string;
-    seed: number;
-    started_at: string;
-    completed_at: string;
-  };
+  provenance: AnalysisResultProvenance;
   diagnostics: Array<{ code: string; level: "information" | "warning" | "error"; message: string }>;
   payload:
     | { kind: "pls_pm_v1"; estimation: PlsResult; assessment: AssessmentResult }

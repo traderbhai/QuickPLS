@@ -13,6 +13,9 @@ export const sampleDataset: Dataset = {
     { COMP1: 3, COMP2: 4, COMP3: 3, LIKE1: 4, LIKE2: 3, CUSA1: 3, CUSA2: 4, CUSL1: 3, CUSL2: 3 },
   ],
   missing: 0,
+  rowCount: 5,
+  sampleSize: 5,
+  fingerprint: "quickpls-corporate-reputation-sample-v1",
 };
 
 export const initialNodes: Array<Node<ConstructData>> = [

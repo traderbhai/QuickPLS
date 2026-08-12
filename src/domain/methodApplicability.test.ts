@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Edge, Node } from "@xyflow/react";
 import type { AnalysisUiSettings, ColumnMetadata, ConstructData, Dataset } from "../types";
-import { evaluateMethodApplicability, methodApplicabilityFor, topBarMethods } from "./methodApplicability";
+import { dataGuidance, evaluateMethodApplicability, methodApplicabilityFor, modelGuidance, topBarMethods } from "./methodApplicability";
 
 const metadata = (name: string, scale: ColumnMetadata["scale_type"] = "continuous", type: ColumnMetadata["column_type"] = "numeric"): ColumnMetadata => ({
   name,
@@ -124,5 +124,14 @@ describe("methodApplicability", () => {
     expect(all.find((item) => item.method.id === "bootstrap")?.category).toBe("inference_add_on");
     expect(topBarMethods(all, "pls_pm").map((item) => item.method.id)).not.toContain("bootstrap");
     expect(topBarMethods(all, "bootstrap").map((item) => item.method.id)).toContain("bootstrap");
+  });
+
+  it("uses clean R2 text and exposes guidance cards for data and model states", () => {
+    const all = evaluateMethodApplicability(input());
+    const pls = all.find((item) => item.method.id === "pls_pm");
+    expect(pls?.expectedOutputs.join(" ")).toContain("R²");
+    expect(pls?.expectedOutputs.join(" ")).not.toContain(`R${"\u00c2"}²`);
+    expect(dataGuidance(input()).length).toBeGreaterThan(0);
+    expect(modelGuidance(input()).map((item) => item.title)).toContain("Mediation-shaped model");
   });
 });
