@@ -139,24 +139,49 @@ export async function recodeNativeDatasetColumn(datasetId: string, spec: RecodeC
   return { ...mutation, dataset: normalizeDataset(mutation.dataset) };
 }
 
+export async function startNativeAnalysisJob(recipe: unknown) {
+  return invoke<JobSnapshot>("start_analysis_job", { recipe });
+}
+
+export async function getNativeAnalysisJob(jobId: string) {
+  return invoke<JobSnapshot>("analysis_job_status", { jobId });
+}
+
+export async function cancelNativeAnalysisJob(jobId: string) {
+  return invoke<JobSnapshot>("cancel_analysis_job", { jobId });
+}
+
+export async function dismissNativeAnalysisJob(jobId: string) {
+  return invoke<void>("dismiss_analysis_job", { jobId });
+}
+
+export async function getNativeAnalysisJobResult(jobId: string) {
+  return invoke<AnalysisResultEnvelope | null>("analysis_job_result", { jobId });
+}
+
+/** @deprecated Use startNativeAnalysisJob. Retained for one major release. */
 export async function startNativePlsJob(recipe: unknown) {
-  return invoke<JobSnapshot>("start_pls_job", { recipe });
+  return startNativeAnalysisJob(recipe);
 }
 
+/** @deprecated Use getNativeAnalysisJob. Retained for one major release. */
 export async function getNativePlsJob(jobId: string) {
-  return invoke<JobSnapshot>("pls_job_status", { jobId });
+  return getNativeAnalysisJob(jobId);
 }
 
+/** @deprecated Use cancelNativeAnalysisJob. Retained for one major release. */
 export async function cancelNativePlsJob(jobId: string) {
-  return invoke<JobSnapshot>("cancel_pls_job", { jobId });
+  return cancelNativeAnalysisJob(jobId);
 }
 
+/** @deprecated Use dismissNativeAnalysisJob. Retained for one major release. */
 export async function dismissNativePlsJob(jobId: string) {
-  return invoke<void>("dismiss_pls_job", { jobId });
+  return dismissNativeAnalysisJob(jobId);
 }
 
+/** @deprecated Use getNativeAnalysisJobResult. Retained for one major release. */
 export async function getNativePlsJobResult(jobId: string) {
-  return invoke<AnalysisResultEnvelope | null>("pls_job_result", { jobId });
+  return getNativeAnalysisJobResult(jobId);
 }
 
 export async function exportNativeXlsxTables(tables: ResultTable[]) {

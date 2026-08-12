@@ -2,14 +2,24 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   activateNativeDataset,
   autosaveNativeProject,
+  cancelNativeAnalysisJob,
+  cancelNativePlsJob,
   createNativeProject,
+  dismissNativeAnalysisJob,
+  dismissNativePlsJob,
   exportNativeTextFile,
   exportNativeXlsxTables,
+  getNativeAnalysisJob,
+  getNativeAnalysisJobResult,
   getNativeDatasetRows,
+  getNativePlsJob,
+  getNativePlsJobResult,
   mutateNativeProjectExplorer,
   profileNativeDatasetGroups,
   recodeNativeDatasetColumn,
   saveNativeProject,
+  startNativeAnalysisJob,
+  startNativePlsJob,
 } from "./projectService";
 import type { NativeCanonicalModelSpec, NativeModelPresentation, RecodeColumnSpec } from "../types";
 
@@ -64,6 +74,47 @@ describe("native dataset row paging service", () => {
       columnName: "region",
       analysisColumns: ["x1", "x2", "y1", "y2"],
     });
+  });
+});
+
+describe("native generic analysis job service", () => {
+  beforeEach(() => {
+    mocks.invoke.mockReset();
+    mocks.save.mockReset();
+  });
+
+  it("uses method-neutral desktop commands without changing payload shapes", async () => {
+    const recipe = { method: "pls_sem", settings: { seed: 20260812 } };
+    mocks.invoke.mockResolvedValue({ id: "job-1", state: "queued" });
+
+    await startNativeAnalysisJob(recipe);
+    await getNativeAnalysisJob("job-1");
+    await cancelNativeAnalysisJob("job-1");
+    await dismissNativeAnalysisJob("job-1");
+    await getNativeAnalysisJobResult("job-1");
+
+    expect(mocks.invoke).toHaveBeenNthCalledWith(1, "start_analysis_job", { recipe });
+    expect(mocks.invoke).toHaveBeenNthCalledWith(2, "analysis_job_status", { jobId: "job-1" });
+    expect(mocks.invoke).toHaveBeenNthCalledWith(3, "cancel_analysis_job", { jobId: "job-1" });
+    expect(mocks.invoke).toHaveBeenNthCalledWith(4, "dismiss_analysis_job", { jobId: "job-1" });
+    expect(mocks.invoke).toHaveBeenNthCalledWith(5, "analysis_job_result", { jobId: "job-1" });
+  });
+
+  it("keeps legacy PLS service names as delegates to the generic command contract", async () => {
+    const recipe = { method: "ols_regression" };
+    mocks.invoke.mockResolvedValue({ id: "job-2", state: "running" });
+
+    await startNativePlsJob(recipe);
+    await getNativePlsJob("job-2");
+    await cancelNativePlsJob("job-2");
+    await dismissNativePlsJob("job-2");
+    await getNativePlsJobResult("job-2");
+
+    expect(mocks.invoke).toHaveBeenNthCalledWith(1, "start_analysis_job", { recipe });
+    expect(mocks.invoke).toHaveBeenNthCalledWith(2, "analysis_job_status", { jobId: "job-2" });
+    expect(mocks.invoke).toHaveBeenNthCalledWith(3, "cancel_analysis_job", { jobId: "job-2" });
+    expect(mocks.invoke).toHaveBeenNthCalledWith(4, "dismiss_analysis_job", { jobId: "job-2" });
+    expect(mocks.invoke).toHaveBeenNthCalledWith(5, "analysis_job_result", { jobId: "job-2" });
   });
 });
 

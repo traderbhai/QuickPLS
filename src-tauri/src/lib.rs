@@ -1650,7 +1650,7 @@ fn write_workspace_explorer(
 }
 
 #[tauri::command]
-fn start_pls_job(
+fn start_analysis_job(
     recipe: AnalysisRecipe,
     project_state: State<'_, DesktopProject>,
     job_state: State<'_, DesktopJobs>,
@@ -1815,8 +1815,18 @@ fn start_pls_job(
     Ok(snapshot)
 }
 
+/// Deprecated compatibility alias for `start_analysis_job`; retain for one major release.
 #[tauri::command]
-fn pls_job_status(job_id: Uuid, state: State<'_, DesktopJobs>) -> Result<JobSnapshot, String> {
+fn start_pls_job(
+    recipe: AnalysisRecipe,
+    project_state: State<'_, DesktopProject>,
+    job_state: State<'_, DesktopJobs>,
+) -> Result<JobSnapshot, String> {
+    start_analysis_job(recipe, project_state, job_state)
+}
+
+#[tauri::command]
+fn analysis_job_status(job_id: Uuid, state: State<'_, DesktopJobs>) -> Result<JobSnapshot, String> {
     state
         .0
         .lock()
@@ -1826,8 +1836,14 @@ fn pls_job_status(job_id: Uuid, state: State<'_, DesktopJobs>) -> Result<JobSnap
         .ok_or_else(|| format!("unknown job {job_id}"))
 }
 
+/// Deprecated compatibility alias for `analysis_job_status`; retain for one major release.
 #[tauri::command]
-fn cancel_pls_job(job_id: Uuid, state: State<'_, DesktopJobs>) -> Result<JobSnapshot, String> {
+fn pls_job_status(job_id: Uuid, state: State<'_, DesktopJobs>) -> Result<JobSnapshot, String> {
+    analysis_job_status(job_id, state)
+}
+
+#[tauri::command]
+fn cancel_analysis_job(job_id: Uuid, state: State<'_, DesktopJobs>) -> Result<JobSnapshot, String> {
     let mut jobs = state
         .0
         .lock()
@@ -1846,8 +1862,14 @@ fn cancel_pls_job(job_id: Uuid, state: State<'_, DesktopJobs>) -> Result<JobSnap
     Ok(job.snapshot.clone())
 }
 
+/// Deprecated compatibility alias for `cancel_analysis_job`; retain for one major release.
 #[tauri::command]
-fn dismiss_pls_job(job_id: Uuid, state: State<'_, DesktopJobs>) -> Result<(), String> {
+fn cancel_pls_job(job_id: Uuid, state: State<'_, DesktopJobs>) -> Result<JobSnapshot, String> {
+    cancel_analysis_job(job_id, state)
+}
+
+#[tauri::command]
+fn dismiss_analysis_job(job_id: Uuid, state: State<'_, DesktopJobs>) -> Result<(), String> {
     let mut jobs = state
         .0
         .lock()
@@ -1868,12 +1890,27 @@ fn dismiss_pls_job(job_id: Uuid, state: State<'_, DesktopJobs>) -> Result<(), St
     Ok(())
 }
 
+/// Deprecated compatibility alias for `dismiss_analysis_job`; retain for one major release.
+#[tauri::command]
+fn dismiss_pls_job(job_id: Uuid, state: State<'_, DesktopJobs>) -> Result<(), String> {
+    dismiss_analysis_job(job_id, state)
+}
+
+#[tauri::command]
+fn analysis_job_result(
+    job_id: Uuid,
+    state: State<'_, DesktopJobs>,
+) -> Result<Option<AnalysisResult>, String> {
+    take_job_result(&state.0, job_id)
+}
+
+/// Deprecated compatibility alias for `analysis_job_result`; retain for one major release.
 #[tauri::command]
 fn pls_job_result(
     job_id: Uuid,
     state: State<'_, DesktopJobs>,
 ) -> Result<Option<AnalysisResult>, String> {
-    take_job_result(&state.0, job_id)
+    analysis_job_result(job_id, state)
 }
 
 fn commit_job_result(
@@ -3716,6 +3753,11 @@ pub fn run() {
             save_active_project,
             autosave_active_project,
             mutate_project_explorer,
+            start_analysis_job,
+            analysis_job_status,
+            cancel_analysis_job,
+            dismiss_analysis_job,
+            analysis_job_result,
             start_pls_job,
             pls_job_status,
             cancel_pls_job,
