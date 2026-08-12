@@ -15,63 +15,91 @@ def text(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
 
 
+def load_json(path: str) -> dict:
+    value = ROOT / path
+    return json.loads(value.read_text(encoding="utf-8")) if value.exists() else {}
+
+
 def check(name: str, passed: bool, detail: str) -> dict:
     return {"name": name, "passed": bool(passed), "detail": detail}
 
 
 def main() -> int:
-    sample = text("src/data/sample.ts")
     methods = text("crates/qpls-core/src/methods.rs")
-    status = text("src/domain/methodStatus.ts")
-    results = text("src/domain/resultTables.ts")
-    groups = text("src/components/GroupsWorkspace.tsx")
+    core_validation = text("crates/qpls-core/src/validation.rs")
     engine = text("crates/qpls-estimation/src/pls.rs")
+    native_catalog = text("src/native/nativeAnalysisCatalog.ts")
+    native_calculation_dialog = text("src/native/NativeCalculationDialog.tsx")
+    native_recipe = text("src/native/nativeAnalysisRecipe.ts")
+    native_results = text("src/native/nativeResults.ts")
     compat = text("docs/METHOD_COMPATIBILITY.md")
+    packaged = load_json("validation/results/v247_tauri_native_acceptance.json")
+    packaged_checks = packaged.get("checks", {})
     checks = [
-        check("desktop_catalog_promotes_group_and_regression_methods", all(
-            f'id: "{method}"' in sample and 'status: "validated"' in sample.split(f'id: "{method}"', 1)[1].split("}", 1)[0]
-            for method in ["mga", "predict", "regression"]
-        ), "Desktop catalog marks MGA, prediction, and regression as validated entry points with setting-aware scope text."),
         check("core_registry_promotes_entry_points", all(
             f'id: "{method}"' in methods and "status: MethodStatus::Validated" in methods.split(f'id: "{method}"', 1)[1].split("}", 1)[0]
             for method in ["mga", "predict", "regression"]
         ), "Core registry exposes the promoted entry points as validated while validation guards unsupported settings."),
-        check("setting_aware_boundaries", all(snippet in status for snippet in [
-            'item === "micom" || item === "mga_permutation"',
-            'regressionType === "ols" || regressionType === "logistic"',
-            '(settings?.processModel ?? "mediation") !== "moderated_mediation"',
-        ]), "UI method status is setting-aware for MGA and regression PROCESS moderated-mediation exclusion."),
-        check("result_tables_promote_third_batch", all(snippet in results for snippet in [
-            'result.segmentation.method_version === "pls_pos_v1" ? "validated" : "experimental"',
-            'status: "validated"',
-            'id: "micom_constructs"',
+        check("native_primary_catalog_exposes_truthful_micom_mga", all(snippet in native_catalog for snippet in [
+            'kind: "mga"',
+            'categoryLabel: "Groups"',
+            "Assess MICOM measurement invariance",
+            'groupMethods: "micom,mga_permutation"',
+        ]) and "Confirm MICOM Step 1" in native_calculation_dialog
+        and 'kind: "micom"' not in native_catalog, "The primary catalog exposes one bounded joint MICOM/MGA v2 workflow and no conflicting standalone MICOM kind."),
+        check("native_recipe_enforces_explicit_groups", all(snippet in native_recipe for snippet in [
+            'requiredText("groupColumn", settings.groupColumn)',
+            'requiredText("groupAValue", settings.groupAValue)',
+            'requiredText("groupBValue", settings.groupBValue)',
+            'methodTokens(settings.groupMethods, ["micom", "mga_permutation"])',
+            'group_methods: "micom,mga_permutation"',
+            'micom_configural_confirmed: "true"',
+        ]), "The native recipe requires explicit distinct Group A/B values and serializes the exact current MICOM/MGA v2 plan."),
+        check("native_results_expose_complete_truthful_micom_mga_tables", all(snippet in native_results for snippet in [
+            'id: "mga_group_summary"',
+            'id: "micom_summary"',
+            'id: "micom_configural"',
+            'id: "micom_composition"',
+            'id: "micom_means"',
+            'id: "micom_variances"',
+            'id: "mga_group_paths"',
+            'id: "mga_group_r_squared"',
+            'id: "mga_group_loadings"',
+            'id: "mga_group_weights"',
+            'id: "mga_path_differences"',
             'id: "mga_permutation"',
-            'id: "fimix_summary"',
-            'regression.regression_type === "ols" || regression.regression_type === "logistic"',
-            'regression.regression_type === "process" && regression.process?.model !== "moderated_mediation"',
-        ]), "Report/export tables promote only v1.2.2 scoped group, segmentation, logistic, and bounded PROCESS payloads."),
-        check("groups_workspace_uses_validated_scope_language", all(snippet in groups for snippet in [
-            "Validated group and segmentation payloads are limited to the documented QuickPLS v1.2.2 scopes",
-            'className="status-text validated"',
-        ]), "Groups workspace labels promoted v1.2.2 payloads as validated scope."),
+            '"mga_permutation_loadings"',
+            '"mga_permutation_weights"',
+        ]) and "if (result.mga)" in native_results,
+        "Native Results derives the complete current group, measurement, permutation, and MICOM hierarchy without placeholder tables."),
+        check("micom_v2_scope_is_enforced", all(phrase in core_validation for phrase in [
+            "validated MICOM and permutation-MGA v2 scope requires path weighting",
+            "group_permutation_samples between 5000 and 10000",
+            "MICOM requires explicit confirmation",
+        ]) and 'pub const MICOM_METHOD_VERSION: &str = "micom_v2"' in engine
+        and 'pub const MICOM_METHOD_VERSION_V1: &str = "micom_v1"' in engine,
+        "Core validation and estimation enforce the bounded current v2 contract while retaining v1 only as an explicit historical identifier."),
         check("engine_warnings_promoted_scope", all(phrase in engine for phrase in [
             "Logistic regression v1 is validated for the documented QuickPLS v1.2.2 binary numeric complete-case scope",
             "PROCESS-style regression v1 is validated for the documented QuickPLS v1.2.2 bounded mediation/moderation workflow scope",
             "PLS-POS v1 is validated for the documented QuickPLS v1.2.2 deterministic 2-5 segment",
-            "Two-group MGA v1 is validated for the documented QuickPLS v1.2.2",
-            "MICOM v1 is validated for the documented QuickPLS v1.2.2",
-            "Permutation MGA v1 is validated for the documented QuickPLS v1.2.2",
+            "Two-group MGA v2 reports Group A/Group B structural paths",
+            "deterministic two-tailed group-label permutation",
+            "MICOM v2 evaluates computational configural prerequisites",
             "FIMIX-PLS v1 is validated for the documented QuickPLS v1.2.2",
             "moderated mediation remains experimental",
-        ]), "Newly generated result warnings use bounded v1.2.2 validated-scope language."),
-        check("later_methods_remain_experimental", all(phrase in compat for phrase in [
-            "| PLS-SEM | Higher-order constructs | Experimental",
-            "| PLS-SEM | CCA | Experimental",
-            "| PLS-SEM | CTA-PLS | Experimental",
-            "| PLS-SEM | Moderated mediation | Experimental",
-            "| CB-SEM | CFA and maximum-likelihood SEM | Experimental",
-            "| Components | GSCA | Experimental",
-        ]), "Unpromoted later methods remain experimental in compatibility docs."),
+        ]), "Generated warnings retain bounded claims for eligible third-batch methods and state the current joint MGA/MICOM v2 scope."),
+        check("compatibility_documents_current_group_boundaries", all(phrase in compat for phrase in [
+            "| Groups | MICOM and Two-Group Permutation MGA |",
+            "5,000–10,000 usable label permutations",
+            "MICOM Steps 1–3",
+            "| Groups | Historical MICOM v1 | Withdrawn and execution-disabled",
+        ]), "The compatibility matrix promotes only the bounded current v2 workflow and records micom_v1 as legacy-only."),
+        check("packaged_micom_mga_v2_workflow", packaged.get("passed") is True
+        and all(name in packaged_checks for name in ["mgaCalculationDialog", "mgaRunning", "mgaResult", "mgaExport", "mgaSaveReopen"])
+        and packaged_checks.get("mgaExport", {}).get("nativeXlsx", {}).get("attempted") is True
+        and packaged_checks.get("mgaSaveReopen", {}).get("attempted") is True,
+        "The packaged desktop completed the current native setup, active lifecycle, Results, real XLSX export, explicit save, and same-run reopen sequence."),
     ]
     passed = all(item["passed"] for item in checks)
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)

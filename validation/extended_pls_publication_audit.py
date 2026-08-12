@@ -47,6 +47,7 @@ REQUIRED_DOCS = [
     "PLS_TWO_STAGE_MODERATION_V1.md",
     "PLS_MODERATED_MEDIATION_V1.md",
     "PLS_HIGHER_ORDER_V1.md",
+    "PLSC_V2.md",
     "PLSC_V1.md",
     "PLS_WPLS_V1.md",
     "PLS_CCA_V1.md",

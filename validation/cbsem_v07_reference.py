@@ -5,6 +5,7 @@ import csv
 import json
 import random
 import subprocess
+import tempfile
 from pathlib import Path
 
 
@@ -13,6 +14,10 @@ RESULTS = ROOT / "validation" / "results"
 CLI_EXE = ROOT / "target" / "debug" / "qpls.exe"
 OUTPUT = RESULTS / "cbsem_v07_reference_report.json"
 CLI_READY = False
+RUN_OUTPUTS = {}
+RESULTS.mkdir(parents=True, exist_ok=True)
+TEMP_DIR = tempfile.TemporaryDirectory(prefix=".cbsem_v07_", dir=RESULTS)
+WORKDIR = Path(TEMP_DIR.name)
 
 
 def ensure_cli():
@@ -28,7 +33,7 @@ def qpls(args, **kwargs):
 
 
 def dataset_fingerprint(data_path, name):
-    project_path = RESULTS / f"{name}.fingerprint.qpls"
+    project_path = WORKDIR / f"{name}.fingerprint.qpls"
     qpls(["import", str(data_path.relative_to(ROOT)), str(project_path.relative_to(ROOT)), "--name", name], check=True, stdout=subprocess.DEVNULL)
     payload = json.loads(qpls(["inspect", str(project_path.relative_to(ROOT)), "--json"], check=True, capture_output=True, text=True).stdout)
     return payload["datasets"][0]["fingerprint"]
@@ -100,11 +105,12 @@ def recipe_payload(fingerprint, suffix, model_type, metadata):
 
 def run_recipe(name, data_path, model_type, metadata):
     fingerprint = dataset_fingerprint(data_path, name)
-    recipe = RESULTS / f"{name}.recipe.json"
-    output = RESULTS / f"{name}_quickpls.json"
+    recipe = WORKDIR / f"{name}.recipe.json"
+    output = WORKDIR / f"{name}_quickpls.json"
     suffix = sum(ord(ch) for ch in name) % 1000
     recipe.write_text(json.dumps(recipe_payload(fingerprint, suffix, model_type, metadata), indent=2), encoding="utf-8")
     qpls(["run", str(recipe.relative_to(ROOT)), "--data", str(data_path.relative_to(ROOT)), "--output", str(output.relative_to(ROOT)), "--allow-experimental"], check=True, stdout=subprocess.DEVNULL)
+    RUN_OUTPUTS[name] = output
     return json.loads(output.read_text(encoding="utf-8"))
 
 
@@ -153,28 +159,45 @@ def validate_mi(data):
     return {"candidates": len(payload["modification_indices"]), "top_mi": payload["modification_indices"][0]["modification_index"]}
 
 
+def validate_unsupported(data, name, metadata, expected_codes):
+    fingerprint = dataset_fingerprint(data, name)
+    suffix = sum(ord(ch) for ch in name) % 1000
+    recipe = WORKDIR / f"{name}.recipe.json"
+    recipe.write_text(json.dumps(recipe_payload(fingerprint, suffix, "sem", metadata), indent=2), encoding="utf-8")
+    completed = qpls(["validate", str(recipe.relative_to(ROOT)), "--json"], capture_output=True, text=True)
+    issues = json.loads(completed.stdout)
+    codes = {issue["code"] for issue in issues}
+    assert set(expected_codes).issubset(codes)
+    return {"execution_enabled": False, "guard_codes": sorted(set(expected_codes))}
+
+
 def validate_bootstrap(data):
-    payload = cbsem_payload(run_recipe("v07_boot", data, "sem", {"cbsem_bootstrap_samples": "99"}))
-    assert payload["bootstrap"]["method_version"] == "cbsem_bootstrap_v1"
-    assert payload["bootstrap"]["usable_samples"] == 99
-    assert payload["bootstrap"]["intervals"]
-    return {"intervals": len(payload["bootstrap"]["intervals"])}
+    return validate_unsupported(
+        data,
+        "v07_boot_guard",
+        {"cbsem_bootstrap_samples": "99"},
+        ["cbsem.bootstrap_unsupported"],
+    )
 
 
 def validate_multigroup(data):
-    payload = cbsem_payload(run_recipe("v07_mgrp", data, "sem", {"cbsem_group_column": "group", "cbsem_invariance_steps": "configural,metric,scalar", "cbsem_mean_structure": "true"}))
-    assert payload["multigroup"]["method_version"] == "cbsem_multigroup_v1"
-    assert len(payload["multigroup"]["groups"]) == 2
-    steps = [step["step"] for step in payload["multigroup"]["invariance"]]
-    assert steps == ["configural", "metric", "scalar"]
-    return {"groups": len(payload["multigroup"]["groups"]), "steps": steps}
+    return validate_unsupported(
+        data,
+        "v07_multigroup_guard",
+        {
+            "cbsem_group_column": "group",
+            "cbsem_invariance_steps": "configural,metric,scalar",
+            "cbsem_mean_structure": "true",
+        },
+        ["cbsem.mean_structure_unsupported", "cbsem.multigroup_unsupported"],
+    )
 
 
 def validate_export(data):
-    result_path = RESULTS / "v07_sem_quickpls.json"
-    if not result_path.exists():
+    if "v07_sem" not in RUN_OUTPUTS:
         validate_sem(data)
-    export_path = RESULTS / "v07_cbsem_export.csv"
+    result_path = RUN_OUTPUTS["v07_sem"]
+    export_path = WORKDIR / "v07_cbsem_export.csv"
     qpls(["export", str(result_path.relative_to(ROOT)), "--format", "csv", "--output", str(export_path.relative_to(ROOT)), "--include-experimental"], check=True, stdout=subprocess.DEVNULL)
     text = export_path.read_text(encoding="utf-8")
     assert "cbsem_fit" in text
@@ -186,7 +209,7 @@ def validate_guard(data):
     fingerprint = dataset_fingerprint(data, "v07_guard")
     recipe = recipe_payload(fingerprint, 777, "sem", {})
     recipe["model"]["constructs"][0]["mode"] = "formative"
-    path = RESULTS / "v07_guard.recipe.json"
+    path = WORKDIR / "v07_guard.recipe.json"
     path.write_text(json.dumps(recipe, indent=2), encoding="utf-8")
     completed = qpls(["validate", str(path.relative_to(ROOT)), "--json"], capture_output=True, text=True)
     issues = json.loads(completed.stdout)

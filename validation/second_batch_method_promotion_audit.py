@@ -43,7 +43,18 @@ def main() -> int:
     gate = slices.get("v1_2_1_second_batch_method_promotion")
     gate_present = gate is not None
     gate_all_passed = gate_present and all(item.get("status") == "passed" for item in gate.get("gates", []))
-    passed = all(item["present"] and item["passed"] for item in artifacts) and gate_all_passed
+    ipma_artifact = next(
+        (item for item in artifacts if item["path"].endswith("ipma_method_promotion_audit.json")),
+        None,
+    )
+    ipma_native_workflow_ready = bool(ipma_artifact and ipma_artifact["present"] and ipma_artifact["passed"])
+    prediction_artifact = next(
+        (item for item in artifacts if item["path"].endswith("plspredict_method_promotion_audit.json")),
+        None,
+    )
+    prediction_native_workflow_ready = bool(prediction_artifact and prediction_artifact["present"] and prediction_artifact["passed"])
+    passed = (all(item["present"] and item["passed"] for item in artifacts)
+              and gate_all_passed and ipma_native_workflow_ready and prediction_native_workflow_ready)
     OUTPUT.write_text(json.dumps({
         "schema_version": 1,
         "target": "v1_2_1_second_batch_method_promotion",
@@ -51,7 +62,9 @@ def main() -> int:
         "artifacts": artifacts,
         "registry_gate_present": gate_present,
         "registry_gate_all_passed": gate_all_passed,
-        "note": "Second-batch promotion is bounded to the documented scopes; later-batch methods remain experimental.",
+        "ipma_native_workflow_ready": ipma_native_workflow_ready,
+        "prediction_native_workflow_ready": prediction_native_workflow_ready,
+        "note": "Second-batch promotion requires genuine packaged-native run, XLSX export, save, and reopen evidence for bounded IPMA and current indicator-level PLSpredict/CVPAT; numerical and source evidence alone are insufficient.",
     }, indent=2) + "\n", encoding="utf-8")
     print(f"wrote {OUTPUT} | passed={passed}")
     return 0 if passed else 1

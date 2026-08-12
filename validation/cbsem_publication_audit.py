@@ -1,4 +1,4 @@
-"""Publication audit for v0.7 CB-SEM/CFA."""
+"""Publication audit for the bounded v1.2.4 CB-SEM/CFA scope."""
 
 import json
 import subprocess
@@ -31,7 +31,13 @@ def load(path):
 def main():
     RESULTS.mkdir(parents=True, exist_ok=True)
     validate = run(["npm.cmd" if __import__("os").name == "nt" else "npm", "run", "qpls:v07:validate"])
-    evidence_command = run(["cargo", "run", "-p", "qpls-cli", "--", "evidence", "v07-cbsem"])
+    legacy_evidence_path = RESULTS / "v07_cbsem_evidence.json"
+    legacy_evidence = {
+        "path": str(legacy_evidence_path.relative_to(ROOT)),
+        "present": legacy_evidence_path.exists(),
+        "bytes": legacy_evidence_path.stat().st_size if legacy_evidence_path.exists() else None,
+        "authoritative_for_current_promotion": False,
+    }
     reference_path = RESULTS / "cbsem_v07_reference_report.json"
     lavaan_path = RESULTS / "cbsem_lavaan_reference_report.json"
     reference = load(reference_path) if reference_path.exists() else {}
@@ -40,6 +46,25 @@ def main():
     required_sections = ["cfa", "sem", "fit", "mi", "bootstrap", "multigroup", "export", "guard"]
     section_coverage = {section: section in sections for section in required_sections}
     lavaan_models = lavaan.get("models", [])
+    native_path = RESULTS / "v247_tauri_native_acceptance.json"
+    native = load(native_path) if native_path.exists() else {}
+    native_checks = native.get("checks", {})
+    native_result = native_checks.get("cbsemResult", {})
+    native_archive = native_checks.get("cbsemSaveReopen", {}).get("archive", {})
+    native_export = native_checks.get("cbsemExport", {}).get("nativeXlsx", {})
+    packaged_native_coverage = {
+        "report_passed": native.get("passed") is True,
+        "genuine_result": native_result.get("initialSelectedTable") == "cbsem_fit" and native_result.get("noPlaceholder") is True,
+        "xlsx_verified": native_export.get("attempted") is True and native_export.get("file", {}).get("isFile") is True,
+        "archive_verified": native_archive.get("cbsem", {}).get("fitContract") is True and native_archive.get("cbsem", {}).get("modificationContract") is True,
+        "same_run_reopened": native_checks.get("cbsemSaveReopen", {}).get("sameRunRestored") is True,
+    }
+    unsupported_guard_coverage = {
+        "bootstrap_blocked": sections.get("bootstrap", {}).get("execution_enabled") is False
+        and sections.get("bootstrap", {}).get("guard_codes") == ["cbsem.bootstrap_unsupported"],
+        "multigroup_blocked": sections.get("multigroup", {}).get("execution_enabled") is False
+        and sections.get("multigroup", {}).get("guard_codes") == ["cbsem.mean_structure_unsupported", "cbsem.multigroup_unsupported"],
+    }
     lavaan_coverage = {
         "status_passed": lavaan.get("status") == "passed" or lavaan.get("passed") is True,
         "model_count": len(lavaan_models),
@@ -52,24 +77,29 @@ def main():
     cargo = run(["cargo", "test", "-p", "qpls-estimation"])
     passed = (
         validate["passed"]
-        and evidence_command["passed"]
+        and legacy_evidence["present"]
         and cargo["passed"]
         and reference.get("status") == "passed"
         and all(section_coverage.values())
         and lavaan_coverage["status_passed"]
         and lavaan_coverage["model_count"] >= 6
         and lavaan_coverage["all_models_passed"]
+        and all(packaged_native_coverage.values())
+        and all(unsupported_guard_coverage.values())
         and all(item["present"] for item in docs)
     )
     report = {
         "schema_version": 1,
-        "target": "v0.7 CB-SEM/CFA publication audit",
+        "target": "v1.2.4 bounded CB-SEM/CFA publication audit",
         "passed": passed,
         "section_coverage": section_coverage,
         "lavaan_coverage": lavaan_coverage,
+        "packaged_native_coverage": packaged_native_coverage,
+        "unsupported_guard_coverage": unsupported_guard_coverage,
+        "legacy_evidence": legacy_evidence,
         "docs": docs,
-        "commands": [validate, evidence_command, cargo],
-        "note": "Supported publication scope is bounded to the documented raw-data reflective ML CFA/SEM cases; unsupported estimators and constraints remain blocked or experimental.",
+        "commands": [validate, cargo],
+        "note": "Publication support is bounded to the documented raw-data single-group reflective ML CFA/recursive SEM cases. The retained v0.7 evidence JSON is archival and is not regenerated or treated as current promotion authority. Bootstrap, multigroup/invariance, mean structures, robust/ordinal/FIML estimators, and broader constraints are blocked rather than counted as executable evidence.",
     }
     OUTPUT.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(json.dumps(report, indent=2))

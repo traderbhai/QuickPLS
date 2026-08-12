@@ -10,7 +10,7 @@ RESULTS = ROOT / "validation" / "results"
 OUTPUT = RESULTS / "extended_methods_publication_audit.json"
 
 
-REQUIRED_DOCS = ["PCA_V1.md", "REGRESSION_OLS_V1.md", "REGRESSION_LOGISTIC_V1.md", "PROCESS_V1.md", "NCA_V1.md", "GSCA_V1.md"]
+REQUIRED_DOCS = ["PCA_V1.md", "REGRESSION_OLS_V1.md", "REGRESSION_LOGISTIC_V1.md", "PROCESS_V1.md", "NCA_V2.md", "NCA_V1.md", "GSCA_ALS_V2.md", "GSCA_V1.md"]
 
 
 def run(command, timeout=360):

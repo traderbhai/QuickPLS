@@ -88,7 +88,12 @@ def write_recipe(fingerprint):
             "preprocessing": "standardized",
             "missing_data": "listwise_deletion",
         },
-        "metadata": {"fixture": "independent_mga_reference", "mga_group_column": "group"},
+        "metadata": {
+            "fixture": "independent_mga_reference",
+            "mga_group_column": "group",
+            "mga_group_a": "A",
+            "mga_group_b": "B",
+        },
     }
     RECIPE.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 

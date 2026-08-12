@@ -13,6 +13,7 @@ OUTPUT = RESULTS / "method_promotion_completion_audit.json"
 TARGET = "v1_2_method_promotion_program"
 REQUIRED = [
     "method_promotion_matrix_v1_2.json",
+    "second_batch_method_promotion_audit.json",
     "fourth_batch_method_promotion_audit.json",
     "fifth_batch_method_promotion_audit.json",
 ]
@@ -27,7 +28,7 @@ def main() -> int:
     for name in REQUIRED:
         path = RESULTS / name
         value = load(path) if path.exists() else {}
-        artifacts.append({"path": str(path.relative_to(ROOT)), "present": path.exists(), "passed": path.exists() and (value.get("passed") is True or value.get("target") == TARGET)})
+        artifacts.append({"path": str(path.relative_to(ROOT)), "present": path.exists(), "passed": path.exists() and value.get("passed") is True})
     registry = load(ROOT / "validation" / "development_slices.json")
     gate = {item["id"]: item for item in registry["slices"]}.get(TARGET)
     gate_present = gate is not None
@@ -40,7 +41,7 @@ def main() -> int:
         "artifacts": artifacts,
         "registry_gate_present": gate_present,
         "registry_gate_all_passed": gate_all_passed,
-        "note": "All v1.2 method-promotion batches are complete for documented bounded scopes; unsupported variants remain excluded by method docs and product warnings.",
+        "note": "Completion requires every included batch audit and the promotion matrix to pass. The program remains open while the IPMA packaged-native acceptance check is missing.",
     }, indent=2) + "\n", encoding="utf-8")
     print(f"wrote {OUTPUT} | passed={passed}")
     return 0 if passed else 1

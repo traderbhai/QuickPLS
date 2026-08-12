@@ -1,0 +1,25 @@
+{
+  "mockup_dir": "C:/Users/mohd.naved/.codex/generated_images/019f7393-a658-7743-8d7c-435913f960da",
+  "viewport": { "width": 1672, "height": 941 },
+  "states": [
+    { "id": "home", "kind": "screen", "view": "home", "file": "call_uwMGhbyhT6qBfLOyp2yDZljo.png", "required": ["Welcome to QuickPLS 2.0", "Recent Projects", "Project Summary", "Quick Links"] },
+    { "id": "data", "kind": "screen", "view": "data", "file": "call_CZYfQpNAUfxW005dnSaQYjXl.png", "required": ["Data Workbench", "Data View", "Variable Metadata", "Data Notes"] },
+    { "id": "model", "kind": "screen", "view": "model", "file": "call_87wjqS5PpUTmQkx4qI90H141.png", "required": ["SEM Explorer", "Object Inspector", "Model Issues", "Diagram Advisor"] },
+    { "id": "setup", "kind": "screen", "view": "setup", "file": "call_rW7hnlpLS4ig8aYIur52bmty.png", "required": ["PLS-SEM Method Setup", "Recommended", "Available after setup", "Not applicable"] },
+    { "id": "setup_guided", "kind": "screen", "view": "setup", "file": "call_YRdo1lZIT5ACAInWXdqXhnEI.png", "required": ["Selected method", "Method Scope"] },
+    { "id": "run", "kind": "screen", "view": "run", "file": "call_8pwwkV1h4Y6rUX7b5um09D6z.png", "required": ["Run PLS Algorithm", "Procedure", "Progress", "Run Settings"] },
+    { "id": "results", "kind": "screen", "view": "results", "file": "call_UQcHMzc1A7oPnglWKpLXo9k6.png", "required": ["Path Coefficients", "Interpretation", "Export Table", "Expert Results"] },
+    { "id": "report", "kind": "screen", "view": "report", "file": "call_Au9nFkEISuxXT0FnBxIF5a1D.png", "required": ["Export Report - 4 Step Process", "Preview", "Tables"] },
+    { "id": "trust", "kind": "screen", "view": "trust", "file": "call_0iMMnRjmHqb1hwXPSjV3z3RC.png", "required": ["Trust Center", "Method Compatibility Matrix", "Validation Evidence"] },
+    { "id": "trust_evidence", "kind": "screen", "view": "trust", "file": "call_qMn4sCYwkMsRCaadRF8gxPug.png", "required": ["Overall Assessment", "Scope checked"] },
+    { "id": "settings", "kind": "screen", "view": "settings", "file": "call_MqmnrE6vtbxnoeNeNno2As9u.png", "required": ["Settings", "General", "Numeric Format", "Export"] },
+    { "id": "focus_diagram", "kind": "screen", "view": "model", "file": "call_8Iul9llgdREYcrFTEPTLMYBX.png", "required": ["Focus Diagram", "LOY", "R² = 0.589"] },
+    { "id": "model_alt", "kind": "screen", "view": "model", "file": "call_ptxLlLfNprMgxG4EtLW0rMyb.png", "required": ["Add Latent", "Connect Path", "Check Diagram"] },
+    { "id": "home_project_manager", "kind": "screen", "view": "home", "file": "call_mOAP2bRNExdX2qXZcWnAUAGG.png", "required": ["New Project", "Open Project", "Sample Project"] },
+    { "id": "new_project_dialog", "kind": "dialog", "view": "home", "dialog": "new_project", "file": "call_5XzJhhnDaYB905CVUElfXpdK.png", "required": ["New Project", "Project name", "OK"] },
+    { "id": "import_data_dialog", "kind": "dialog", "view": "data", "dialog": "import_data", "file": "call_8Bixbkr0ltT8WyqhyK1rBxcH.png", "required": ["Import Data", "Source type", "Accepted files"] },
+    { "id": "calculation_setup_dialog", "kind": "dialog", "view": "setup", "dialog": "calculation_setup", "file": "call_E8dfRfcaHvJtOZPlrdDoXCnc.png", "required": ["Calculation Setup", "Algorithm", "Dataset"] },
+    { "id": "method_scope_dialog", "kind": "dialog", "view": "trust", "dialog": "method_scope", "file": "call_D0RcUlMzQyBN63D6f9FGLO4b.png", "required": ["Method Scope", "Evidence", "Validated"] },
+    { "id": "export_options_dialog", "kind": "dialog", "view": "report", "dialog": "export_options", "file": "call_zjyk8k3OGlFrrknYB7YoKEIr.png", "required": ["Export Options", "Preset", "SVG"] }
+  ]
+}

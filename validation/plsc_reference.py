@@ -139,13 +139,26 @@ def rho_a(columns, weights):
             indicator_correlation[left, right] = value
             indicator_correlation[right, left] = value
     weights = np.asarray(weights, dtype=float)
-    numerator = float(weights @ indicator_correlation @ weights) ** 2
-    error_correlation = indicator_correlation.copy()
-    squared_weight_sum = float(np.sum(weights * weights))
-    for index in range(count):
-        error_correlation[index, index] = 1.0 - squared_weight_sum
-    denominator = numerator + float(weights @ error_correlation @ weights)
-    return numerator / denominator
+    score_variance = float(weights @ indicator_correlation @ weights)
+    if not math.isfinite(score_variance) or score_variance <= 0.0:
+        raise RuntimeError("canonical rho_A score variance is invalid")
+    weights = weights / math.sqrt(score_variance)
+    weight_norm_squared = float(weights @ weights)
+    numerator = sum(
+        weights[left] * weights[right] * indicator_correlation[left, right]
+        for left in range(count)
+        for right in range(count)
+        if left != right
+    )
+    denominator = weight_norm_squared**2 - float(np.sum(weights**4))
+    if denominator <= 64.0 * np.finfo(float).eps * max(
+        1.0, weight_norm_squared**2, float(np.sum(weights**4))
+    ):
+        raise RuntimeError("canonical rho_A off-diagonal denominator is zero")
+    value = weight_norm_squared**2 * numerator / denominator
+    if not math.isfinite(value):
+        raise RuntimeError("canonical rho_A result is nonfinite")
+    return value
 
 
 def solve_paths(corrected, construct_ids, paths):
@@ -197,6 +210,10 @@ def main():
             right_id = construct_ids[right]
             original = correlation(reference["scores"][left_id], reference["scores"][right_id])
             value = original / math.sqrt(reliabilities[left_id] * reliabilities[right_id])
+            if abs(value) > 1.0 + 1e-10:
+                raise RuntimeError(
+                    f"inadmissible corrected construct correlation for {left_id!r} and {right_id!r}: {value}"
+                )
             corrected[left, right] = max(-1.0, min(1.0, value))
             corrected[right, left] = corrected[left, right]
 
@@ -231,8 +248,9 @@ def main():
         for entry in plsc["corrected_outer_loadings"]
     }
     checks = {
-        "method_version": estimation["method_version"] == "plsc_v1",
-        "plsc_payload_version": plsc["method_version"] == "plsc_v1",
+        "method_version": estimation["method_version"] == "plsc_v2",
+        "plsc_payload_version": plsc["method_version"] == "plsc_v2",
+        "rho_a_method_version": plsc["reliability_method_version"] == "dijkstra_henseler_rho_a_v1",
         "path_delta": max_delta(actual_paths, expected_paths),
         "r2_delta": max_delta(actual_r2, expected_r2),
         "rho_a_delta": max_delta(actual_rho, reliabilities),
@@ -241,14 +259,15 @@ def main():
     passed = (
         checks["method_version"]
         and checks["plsc_payload_version"]
+        and checks["rho_a_method_version"]
         and checks["path_delta"] <= TOLERANCE
         and checks["r2_delta"] <= TOLERANCE
         and checks["rho_a_delta"] <= TOLERANCE
         and checks["loading_delta"] <= TOLERANCE
     )
     report = {
-        "schema_version": 1,
-        "kind": "plsc_reference_v1",
+        "schema_version": 2,
+        "kind": "plsc_reference_v2",
         "passed": passed,
         "tolerance": TOLERANCE,
         "checks": checks,

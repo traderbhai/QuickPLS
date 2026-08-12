@@ -53,11 +53,11 @@ def main() -> int:
             "result_tables_promote_validated_batches_only",
             contains("src/domain/resultTables.ts", 'result.method_version.startsWith("pls_pm_v1")')
             and contains("src/domain/resultTables.ts", 'result.method_version === "pca_v1"')
-            and contains("src/domain/resultTables.ts", 'result.method_version === "plsc_v1"')
+            and contains("src/domain/resultTables.ts", 'result.method_version === "plsc_v2"')
             and contains("src/domain/resultTables.ts", 'result.method_version === "wpls_case_weighted_v1"')
             and contains("src/domain/resultTables.ts", 'result.method_version === "plspredict_holdout_v1"')
             and contains("src/domain/resultTables.ts", 'result.method_version === "ipma_v1"')
-            and contains("src/domain/resultTables.ts", 'result.method_version === "nca_v1"')
+            and contains("src/domain/resultTables.ts", 'result.method_version === "nca_v2"')
             and contains("src/domain/resultTables.ts", 'result.method_version === "regression_logistic_v1"')
             and contains("src/domain/resultTables.ts", 'result.method_version === "regression_process_v1"')
             and contains("src/domain/resultTables.ts", 'regression.regression_type === "ols" || regression.regression_type === "logistic"')
@@ -68,8 +68,9 @@ def main() -> int:
             "engine_warnings_do_not_overclaim_regression_nca",
             contains("crates/qpls-estimation/src/pls.rs", "Logistic regression v1 is validated for the documented QuickPLS v1.2.2 binary numeric complete-case scope")
             and contains("crates/qpls-estimation/src/pls.rs", "PROCESS-style regression v1 is validated for the documented QuickPLS v1.2.2 bounded mediation/moderation workflow scope")
-            and contains("crates/qpls-estimation/src/pls.rs", "NCA v1 is validated for the documented QuickPLS v1.2.1 numeric CE-FDH/CR-FDH scope"),
-            "Newly generated run warnings promote logistic and bounded PROCESS only for documented scopes while treating NCA as validated only for the documented v1.2.1 numeric scope.",
+            and contains("crates/qpls-estimation/src/pls.rs", "NCA v2 is limited to the documented numeric X/Y CE-FDH and CR-FDH scope with observed-range bottlenecks")
+            and not contains("crates/qpls-estimation/src/pls.rs", "NCA v1 is validated"),
+            "Generated run warnings limit NCA v2 to observed numeric X/Y CE-FDH/CR-FDH and preserve the exclusions instead of presenting legacy v1 or broad parity as validated.",
         ),
         check(
             "core_validation_does_not_warn_pca_experimental",
