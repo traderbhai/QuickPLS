@@ -1,27 +1,24 @@
-# NCA_V1
+# NCA v1 legacy compatibility
 
-Status: validated for the documented QuickPLS v1.2.1 numeric X/Y CE-FDH and CR-FDH scope.
+Status: superseded; archive-readable only.
 
-`nca_v1` provides numeric necessary condition analysis for selected X/Y pairs.
+`nca_v1` is retained so existing `.qpls` archives can be opened without silently rewriting historical result values. It is not the current executable NCA method and must not be used as promotion or scientific-validation evidence.
 
-## Contract
+## Why it was superseded
 
-- Required metadata:
-  - `nca_x`
-  - `nca_y`
-- Optional metadata:
-  - `nca_ceiling = ce_fdh|cr_fdh|both`
-  - `nca_permutation_samples`
-- Output includes CE-FDH and/or CR-FDH ceiling effect sizes, deterministic permutation p values, bottleneck rows, observations, usable permutations, warnings, and `method_version = nca_v1`.
-- Constant or nonnumeric variables are rejected.
+The former implementation did not match the documented CE-FDH and CR-FDH definitions:
 
-## Unsupported In v0.8
+- its CE frontier selected outcomes from observations at or above each X value instead of building cumulative record highs while scanning X in ascending order; and
+- its CR result approximated the frontier from adjacent raw outcomes instead of fitting ordinary least squares through the CE-FDH peers.
 
-- Multiple-predictor NCA workflows.
-- Categorical or ordinal NCA.
-- Publication-stable ceiling smoothing claims.
-- Full NCA package parity.
+Those semantics are corrected under the separately versioned [`nca_v2`](NCA_V2.md) contract. QuickPLS does not reinterpret a stored `nca_v1` payload as v2.
 
-## Validation
+## Compatibility behavior
 
-`npm run qpls:nca:reference` compares CE-FDH/CR-FDH effect size and bottleneck monotonicity against an independent Python fixture. Broader NCA variants, nonnumeric variables, categorical handling, and unsupported ceiling methods remain outside the promoted scope.
+- A structurally valid legacy `nca_v1` result may be loaded, saved, and reopened.
+- Loading adds the warning diagnostic `nca.legacy_method_version`.
+- Missing v2-only fields remain missing/defaulted; QuickPLS does not manufacture v2 peers, line parameters, or bottleneck states for the legacy result.
+- New calculations emit `nca_v2` only.
+- Any analysis that will be interpreted, reported, or compared should be rerun with NCA v2 from the original data and recipe choices.
+
+This compatibility policy preserves provenance. It does not validate the earlier numerical result.

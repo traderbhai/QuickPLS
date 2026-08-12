@@ -1,26 +1,20 @@
 # MICOM v1
 
-Status: validated for the documented QuickPLS v1.2.2 two-group MICOM scope.
+Status: withdrawn and execution-disabled pending a scientifically valid reimplementation and independent validation.
 
-`micom_v1` is a measurement-invariance payload emitted from `AnalysisMethod::Mga` when recipe metadata contains `group_methods = "micom"` and `mga_group_column` names a two-group observed column.
+QuickPLS retains the `micom_v1` result schema only so older project archives can still be read. New production analyses must not emit this payload. Recipe validation and estimator execution both reject metadata whose comma-separated `group_methods` contains `micom`.
 
-## Scope
+## Reason for withdrawal
 
-- Exactly two observed, non-missing groups.
-- Same model, preprocessing, missing-data policy, and PLS settings for both groups.
-- Configural invariance is reported as a checklist status for the shared recipe contract.
-- Compositional invariance is screened with deterministic group-label permutations over construct scores.
-- Equality of composite means and variances is screened with the same deterministic permutation plan.
-- Default `group_permutation_samples` is `999`; validation fixtures may use fewer samples for fast CI smoke checks.
+The previous routine did not estimate group-specific composite weights for the original and permuted groups. Its reported compositional correlation therefore did not implement the MICOM compositional-invariance procedure and could produce invalid invariance decisions. The prior QuickPLS v1.2.2 validation claim is withdrawn.
 
-## Output
+## Runtime behavior
 
-The `micom` result includes group sizes, construct-level compositional correlation, compositional p value, mean difference/p value, variance difference/p value, partial-invariance flag, full-invariance flag, and bounded-scope warnings.
+- `AnalysisMethod::Mga` remains available for the documented two-group MGA and group-label permutation-MGA scopes.
+- Adding `micom` to `group_methods` is a blocking validation error and a defense-in-depth estimator error.
+- Permutation MGA does not establish measurement invariance. Confirmatory interpretation requires invariance evidence from a qualified external method until QuickPLS has a correct, independently validated MICOM implementation.
+- Existing `micom_v1` payload fields remain deserializable for archive compatibility, but they are historical output and must not be treated as validated evidence.
 
-## Unsupported
+## Re-promotion requirements
 
-Case weights, generated interactions, higher-order constructs, covariance/correlation-only data, more than two groups, too-small groups, and broader invariance claims outside this contract are unsupported.
-
-## Validation
-
-`npm run qpls:micom:reference`, `npm run qpls:v06:validate`, and `npm run qpls:promotion:micom` write the reference and promotion artifacts. Promotion is limited to this documented scope.
+A future MICOM implementation needs group-specific weight estimation under every original and permuted assignment, configural-invariance checks, reproducible permutation inference, invariant and non-invariant fixtures, independent numerical comparison, and explicit product/export qualification. `npm run qpls:promotion:micom` now audits the safety withdrawal instead of promoting the former routine.

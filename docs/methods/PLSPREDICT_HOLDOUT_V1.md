@@ -1,8 +1,8 @@
-# PLSpredict Holdout v1
+# Legacy Deterministic Construct Prediction v1
 
-Status: validated for the documented QuickPLS v1.2.1 supported prediction scope. Broader PLSpredict variants outside this contract remain unsupported.
+Status: archive-readable legacy contract only. It records the formerly validated QuickPLS v1.2.1 bounded construct-score scope and is not current indicator-level PLSpredict/CVPAT evidence.
 
-`plspredict_holdout_v1` is the first QuickPLS v0.6 prediction slice. It provides deterministic, leak-free complete-case holdout and bounded repeated k-fold prediction for endogenous construct scores produced by the existing PLS-PM estimator.
+`plspredict_holdout_v1` is the archive-compatible internal method version for this workflow. It provides deterministic, leak-free complete-case holdout and bounded repeated k-fold prediction for endogenous construct scores produced by the existing PLS-PM estimator.
 
 ## Scope
 
@@ -10,7 +10,7 @@ Status: validated for the documented QuickPLS v1.2.1 supported prediction scope.
 - Supported models: recursive PLS path models with at least one endogenous construct.
 - Supported weighting schemes: path, factor, and PCA.
 - Supported preprocessing: standardized, mean-centered, and unstandardized, with train-split preprocessing parameters applied to the test split.
-- Unsupported in this slice: generated interaction constructs, higher-order construct expansion, case-weighted prediction, seeded/random repeated folds, separate saved-model CVPAT, indicator-level PLSpredict tables, MGA, MICOM, FIMIX-PLS, and PLS-POS.
+- Unsupported in this slice: generated interaction constructs, higher-order construct expansion, case-weighted prediction, seeded/random repeated folds, comparisons between separately saved models, indicator-level prediction tables, MGA, MICOM, FIMIX-PLS, and PLS-POS.
 
 ## Split
 
@@ -41,9 +41,9 @@ For each endogenous construct, QuickPLS predicts the test construct score using 
 
 QuickPLS also computes an optional linear-model benchmark for the same target construct score. This benchmark regresses the training target construct score on the training indicator columns belonging to predecessor constructs, then applies that linear model to the corresponding test indicator columns. If the benchmark regression is rank-deficient, the LM benchmark fields are unavailable for that target and split.
 
-## CVPAT
+## Bounded Paired-Loss Diagnostic
 
-The repeated k-fold payload includes a bounded validated CVPAT-style paired squared-loss comparison for each endogenous target:
+The repeated k-fold payload includes a bounded paired squared-loss comparison for each endogenous target:
 
 - `pls_vs_training_mean_benchmark`: paired loss difference is `SE_pls - SE_mean`, where `SE_mean` is the squared test construct score under the training-mean benchmark fixed at zero.
 - `pls_vs_lm_benchmark`: paired loss difference is `SE_pls - SE_lm` when the LM benchmark is available.
@@ -52,9 +52,9 @@ The repeated k-fold payload includes a bounded validated CVPAT-style paired squa
 - The two-sided p value uses a Student t distribution with `n - 1` degrees of freedom.
 - If paired differences have zero variance or fewer than two observations, the t statistic and p value are unavailable with an explicit warning.
 
-This is an early repeated-fold paired-loss diagnostic. It is not yet a full CVPAT implementation with configurable alternative hypotheses, separate saved-model comparisons, seeded fold plans, or multiple-comparison policy.
+This diagnostic is not a full CVPAT implementation. It does not provide configurable alternative hypotheses, comparisons between separately saved models, seeded fold plans, or a multiple-comparison policy.
 
-## Model-Pair CVPAT
+## Same-Model Reduced-Path Comparison
 
 Recipes may request one bounded configurable model-pair comparison family through metadata:
 
@@ -70,7 +70,7 @@ Multiple paths may be separated by commas, semicolons, or new lines. QuickPLS gr
 
 The emitted comparison id is `pls_vs_model_pair:drop_<sources>_to_<target>`. The paired loss difference is `SE_full_pls - SE_reduced_model`, so negative values favor the full PLS model.
 
-This model-pair contract is validated only for dropping direct structural paths within the same model. It does not yet support comparing separate saved model diagrams, alternative hypotheses, seeded/random fold plans, or multiple-comparison adjustment.
+This reduced-path contract is validated only for dropping direct structural paths within the same model. It does not support comparing separate saved model diagrams, alternative hypotheses, seeded/random fold plans, or multiple-comparison adjustment.
 
 ## Reported Metrics
 
@@ -87,10 +87,10 @@ For each endogenous construct:
 
 ## Warnings
 
-Outputs are validated only for the documented deterministic holdout, repeated k-fold, LM benchmark, Q2 predict, RMSE/MAE, and bounded CVPAT scope. Unsupported prediction variants remain blocked or explicitly watermarked.
+Outputs are validated only for the documented deterministic holdout, repeated k-fold, construct-score LM benchmark, Q2 predict, RMSE/MAE, and bounded paired-loss diagnostic scope. Unsupported prediction variants remain blocked or explicitly watermarked.
 
 ## Validation Evidence
 
-- `validation/plspredict_holdout_reference.py` generates the bounded independent reference fixture for holdout prediction, repeated k-fold prediction, LM benchmarks, Q2-predict checks, CVPAT-style paired loss checks, model-pair drop-path comparisons, and validated-scope warning propagation.
+- `validation/plspredict_holdout_reference.py` generates the bounded independent reference fixture for holdout prediction, repeated k-fold prediction, LM benchmarks, Q2-predict checks, paired-loss checks, same-model reduced-path comparisons, and validated-scope warning propagation.
 - `validation/results/plspredict_holdout_reference_report.json` records the current passing v1 evidence and is consumed by the v0.6 prediction and heterogeneity publication audit.
 - Broader publication promotion remains limited to the documented supported scope above; unsupported prediction, grouping, and saved-model comparison cases must remain blocked or explicitly experimental.

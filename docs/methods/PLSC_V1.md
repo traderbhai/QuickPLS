@@ -1,24 +1,16 @@
-# PLSc v1
+# PLSc v1 legacy compatibility note
 
-Status: validated for the documented QuickPLS v1.2.1 reflective path/factor-weighting PLSc scope.
+Status: legacy and non-current. QuickPLS no longer emits `plsc_v1` results.
 
-`AnalysisMethod::Plsc` and the catalog id `plsc` run through the ordinary PLS estimator first, then apply a consistent PLS correction contract for reflective constructs. The current implementation reports `method_version = "plsc_v1"` and stores a typed `plsc` payload with rho_A reliabilities, original and corrected construct correlations, corrected paths, corrected outer loadings, corrected R2, and warnings.
+PLSc v1 used a provisional reliability expression in its attenuation correction while labeling the payload's `reliability_method_version` as `dijkstra_henseler_rho_a_v1`. That expression was not Dijkstra and Henseler's Equation 3. Its Python reference repeated the same provisional expression, so agreement with that reference did not independently establish the rho_A claim.
 
-Supported in this preview:
+Existing project archives remain readable only when all of these values agree exactly:
 
-- reflective constructs only;
-- path and factor weighting only;
-- at least two indicators per construct;
-- deterministic corrected construct correlations using rho_A attenuation correction;
-- corrected structural paths from the corrected predictor correlation system;
-- corrected R2 clamped to the valid reporting range;
-- corrected outer loadings clamped to `[-1, 1]`.
+- the analysis method is `plsc`;
+- the estimation payload and nested PLSc payload both use `plsc_v1`;
+- immutable provenance contains `plsc_v1`;
+- the payload retains the historical reliability-version field.
 
-Unsupported settings are blocked before estimation. `settings.weighting_scheme = "pca"` emits `plsc.pca_unsupported`, and any formative construct emits `plsc.reflective_only`.
+Loading such a result adds the `plsc.legacy_method_version` warning. The stored numbers are preserved for auditability and are not silently rewritten, reinterpreted, or promoted to the current method. Re-run the analysis to obtain the current `plsc_v2` correction described in `PLSC_V2.md`.
 
-Validation evidence:
-
-- `npm run qpls:plsc:reference` writes `validation/results/plsc_reference_report.json` and compares QuickPLS against an independent Python PLS + PLSc correction fixture within `1e-6`; the current observed max delta is `4.57e-14`.
-- `npm run qpls:plsc:unsupported-guard` writes `validation/results/plsc_unsupported_guard_report.json` and proves unsupported formative PLSc recipes are rejected before execution.
-
-Publication status: validated for the documented QuickPLS v1.2.1 supported PLSc scope. Broader estimator shapes, inadmissibility diagnostics, and unsupported settings remain outside scope until a later audit expands this contract.
+PLSc v1 must not be cited as a validated implementation of Dijkstra-Henseler rho_A. The legacy compatibility path exists solely to avoid making prior QuickPLS projects unloadable.

@@ -38,7 +38,7 @@ The advisor inspects the current model shape and result state to suggest relevan
 - formative measurement blocks;
 - targets with multiple predictors;
 - missing bootstrap for structural paths;
-- optional PLSpredict when prediction is a research objective.
+- optional bounded construct-score prediction when prediction is a research objective.
 
 ## Evidence
 

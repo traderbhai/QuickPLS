@@ -2,6 +2,8 @@
 
 Status: validated for the documented QuickPLS v1.2.3 bounded repeated-indicator, two-stage, and hybrid higher-order construct scope.
 
+Native desktop status: packaged acceptance is complete for the narrower reflective-reflective disjoint two-stage point-estimate workflow. The desktop does not expose repeated-indicator or hybrid authoring and does not expose HOC resampling inference.
+
 This document freezes the QuickPLS recipe contract for higher-order constructs and the repeated-indicator, two-stage, and hybrid execution behavior promoted in v1.2.3. Unsupported HOC variants remain blocked or excluded.
 
 ## Scope
@@ -52,6 +54,8 @@ Example with two indicators per component:
 The original project recipe remains typed as a hybrid HOC declaration. The execution recipe is split before ordinary PLS estimation, and assessment uses the same split so deterministic quality tables assess the same measurement blocks as estimation. Recipe validation emits `higher_order.hybrid_component_indicators` when any hybrid component has fewer than two indicators. Stable exports may report HOC output as validated only inside this documented v1.2.3 bounded scope.
 
 ## Acceptance Evidence
+
+Native workbench acceptance additionally requires a data-only 120-case project to create and persist three measured constructs, author one indicator-free HOC from two measurement-only components, add exactly one HOC-to-outcome path, and complete PLS Algorithm with path weighting, standardized preprocessing, and listwise deletion. Results must open on `Higher-order component relationships`, also expose `Higher-order structural paths` and `Higher-order calculation scope`, omit `__qpls_hoc_` identities and `N/A`, export those tables plus provenance through the real Windows XLSX Save dialog, save the canonical recipe/result, and restore the same run after reopen. This packaged evidence is recorded in `validation/results/v247_tauri_native_acceptance.json`; responsive dialog evidence is recorded in `validation/results/v247_native_desktop_visual_acceptance.json`.
 
 The schema is accepted when `cargo test -p qpls-core` proves valid repeated-indicator, two-stage, and hybrid declarations, generated HOC indicator placeholders, duplicate ids, unknown constructs, insufficient components, self-components, unknown components, duplicate components, hybrid component split feasibility, and scoped validation warnings.
 

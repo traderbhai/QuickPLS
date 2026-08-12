@@ -1,8 +1,8 @@
-# PLSpredict V1
+# Legacy Deterministic Construct Prediction V1
 
-`plspredict_holdout_v1` is validated for the documented QuickPLS v1.2.1 bounded prediction scope: deterministic complete-case holdout, repeated deterministic k-fold prediction, construct-score LM benchmarks, RMSE, MAE, Q2 predict, and bounded CVPAT paired-loss diagnostics.
+`plspredict_holdout_v1` is the archive-compatible historical method version for the former QuickPLS v1.2.1 bounded construct-score scope: deterministic complete-case holdout, repeated deterministic k-fold prediction, construct-score LM benchmarks, RMSE, MAE, Q2 predict, and bounded paired-loss diagnostics. It remains readable but is not executable or promotable as current indicator-level evidence.
 
-The scope excludes separate saved-model CVPAT, indicator-level PLSpredict tables, generated interactions, higher-order constructs, case weights, and unsupported data shapes.
+The archive display label is **Legacy construct-score prediction (v1)**. New work uses the separately versioned `plspredict_indicator_v2` contract documented in `PLSPREDICT_INDICATOR_V2.md`; v1 output is never relabeled as current PLSpredict/CVPAT evidence.
 
 Evidence:
 
