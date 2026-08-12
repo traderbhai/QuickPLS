@@ -5,10 +5,36 @@ from third_batch_promotion_common import audit_method
 raise SystemExit(audit_method(
     "fimix_pls",
     "Bounded deterministic 2-3 class FIMIX-PLS score-space segmentation with probabilities, memberships, class paths/R2, log-likelihood, information criteria, entropy, and convergence diagnostics.",
-    ["v06_group_methods_reference_report.json", "prediction_heterogeneity_publication_audit.json"],
-    ["FIMIX_PLS_V1.md"],
     [
-        {"name": "bounded_deterministic_scope_documented", "passed": True, "detail": "Known difference states QuickPLS promotes bounded deterministic score-space segmentation, not blanket EM/FIMIX parity."},
-        {"name": "recovery_and_null_evidence_present", "passed": True, "detail": "Integrated v0.6 report and segmentation recovery artifacts cover class recovery/null behavior."},
+        {
+            "name": "v06_group_methods_reference_report.json",
+            "pass_paths": ["passed"],
+            "required_values": {
+                "kind": "v06_group_methods_reference",
+                "sections.fimix.method_version": "fimix_pls_v1",
+            },
+            "source_paths": ["validation/v06_group_methods_reference.py"],
+            "companions": [{
+                "path": "validation/results/v06_fimix_quickpls.json",
+                "required_values": {
+                    "status": "completed",
+                    "provenance.method": "predict",
+                    "payload.estimation.fimix.method_version": "fimix_pls_v1",
+                },
+            }],
+        },
+        {
+            "name": "prediction_heterogeneity_publication_audit.json",
+            "required_true": ["coverage.fimix"],
+            "source_paths": ["validation/prediction_heterogeneity_publication_audit.py"],
+        },
     ],
+    [{
+        "name": "FIMIX_PLS_V1.md",
+        "required_phrases": [
+            "fimix_pls_v1",
+            "random-start EM qualification",
+            "not blanket full EM/FIMIX parity",
+        ],
+    }],
 ))
