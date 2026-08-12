@@ -177,7 +177,10 @@ const projectIsMutable: ContextRule = (context) =>
 const modelIsMutable: ContextRule = (context) =>
   context.surface === "model" && context.hasDataset && projectIsMutable(context);
 const canOpenCalculation: ContextRule = (context) =>
-  context.projectOpen && context.hasDataset && !isNativeCalculationActive(context.calculationStatus);
+  context.projectOpen
+  && context.projectWritable
+  && context.hasDataset
+  && !isNativeCalculationActive(context.calculationStatus);
 const hasModelSelection: ContextRule = (context) =>
   context.selection.count > 0 && ["construct", "path", "multiple"].includes(context.selection.kind);
 

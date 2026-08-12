@@ -53,7 +53,11 @@ interface NativeDataSurfaceProps {
   setSelectedColumn: (column: string) => void;
   groupColumn: string | null;
   propertiesOpen: boolean;
+  hasEditableModel: boolean;
+  projectWritable: boolean;
   mutationsLocked: boolean;
+  onNewModel: () => void;
+  onAnalyze: () => void;
   onContextMenuRequest: (request: NativeDataContextMenuRequest) => boolean;
 }
 type NativeDataMode = "data" | "variables" | "quality" | "import";
@@ -77,7 +81,18 @@ function dataContextTarget(target: EventTarget | null, root: HTMLElement): Nativ
   return datasetTarget && root.contains(datasetTarget) ? { kind: "dataset" } : { kind: "none" };
 }
 
-export function NativeDataSurface({ selectedColumn, setSelectedColumn, groupColumn: configuredGroupColumn, propertiesOpen, mutationsLocked, onContextMenuRequest }: NativeDataSurfaceProps) {
+export function NativeDataSurface({
+  selectedColumn,
+  setSelectedColumn,
+  groupColumn: configuredGroupColumn,
+  propertiesOpen,
+  hasEditableModel,
+  projectWritable,
+  mutationsLocked,
+  onNewModel,
+  onAnalyze,
+  onContextMenuRequest,
+}: NativeDataSurfaceProps) {
   const dataset = useWorkspace((state) => state.dataset);
   const datasetCatalog = useWorkspace((state) => state.datasetCatalog);
   const datasetVersions = useWorkspace((state) => state.datasetVersions);
@@ -297,6 +312,17 @@ export function NativeDataSurface({ selectedColumn, setSelectedColumn, groupColu
 
     <section className="nd-document nd-data-document">
       <div className="nd-document-tab"><Table2 size={14} /><span>{dataset.name}</span></div>
+      {dataset.columns.length > 0 && !hasEditableModel ? <section className="nd-data-next-actions" aria-labelledby="nd-data-next-actions-title">
+        <div>
+          <strong id="nd-data-next-actions-title">Choose what to do next</strong>
+          <span>Build a path model, or analyze observed variables without creating a model.</span>
+          {!projectWritable ? <small role="status">This project is read-only. Save a writable copy before starting new work.</small> : mutationsLocked ? <small role="status">Finish or cancel the active calculation before starting another workflow.</small> : null}
+        </div>
+        <div role="group" aria-label="Next actions for imported data">
+          <button type="button" className="primary" disabled={!projectWritable || mutationsLocked} onClick={onNewModel}>New Model…</button>
+          <button type="button" disabled={!projectWritable || mutationsLocked} onClick={onAnalyze}>Analyze…</button>
+        </div>
+      </section> : null}
       {dataset.columns.length && mode === "data" ? <div className="nd-data-grid">
         <div
           ref={tableRegionRef}

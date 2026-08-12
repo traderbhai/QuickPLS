@@ -98,6 +98,20 @@ describe("native desktop command surface contracts", () => {
     expect(tauri).toContain("commit_dataset_version(project, version, record)");
   });
 
+  it("makes the post-import next step explicit without duplicating command behavior", () => {
+    const app = read("src/native/NativeDesktopApp.tsx");
+    const data = read("src/native/NativeDataSurface.tsx");
+    const commands = read("src/native/nativeCommands.ts");
+
+    expect(app).toContain('onNewModel={() => dispatchNativeAction({ id: "explorer.new-model" })}');
+    expect(app).toContain('onAnalyze={() => dispatchNativeAction({ id: "calculation.open" })}');
+    expect(data).toContain("Choose what to do next");
+    expect(data).toContain("Build a path model, or analyze observed variables without creating a model.");
+    expect(data).toContain(">New Model…</button>");
+    expect(data).toContain(">Analyze…</button>");
+    expect(commands).toMatch(/const canOpenCalculation:[\s\S]*context\.projectWritable/);
+  });
+
   it("keeps dataset lineage authoritative and recode native-only", () => {
     const app = read("src/native/NativeDesktopApp.tsx");
     const data = read("src/native/NativeDataSurface.tsx");

@@ -1005,7 +1005,11 @@ export function NativeDesktopApp() {
         setSelectedColumn={setSelectedColumn}
         groupColumn={analysisSettings.groupColumn ?? null}
         propertiesOpen={propertiesOpen}
+        hasEditableModel={projectModels.length > 0}
+        projectWritable={projectWritable}
         mutationsLocked={dataMutationsLocked}
+        onNewModel={() => dispatchNativeAction({ id: "explorer.new-model" })}
+        onAnalyze={() => dispatchNativeAction({ id: "calculation.open" })}
         onContextMenuRequest={onDataContextMenuRequest}
       /> : null}
       {surface === "model" ? <ModelSurface modelName={activeEditableModelName} propertiesOpen={propertiesOpen} onContextMenuRequest={onModelCanvasContextMenuRequest} /> : null}

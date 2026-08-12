@@ -20,7 +20,11 @@ describe("native Data scientific grid", () => {
       setSelectedColumn={vi.fn()}
       groupColumn={null}
       propertiesOpen={false}
+      hasEditableModel
+      projectWritable
       mutationsLocked={false}
+      onNewModel={vi.fn()}
+      onAnalyze={vi.fn()}
       onContextMenuRequest={() => false}
     />);
 
@@ -45,12 +49,59 @@ describe("native Data scientific grid", () => {
       setSelectedColumn={vi.fn()}
       groupColumn={selectedColumn}
       propertiesOpen
+      hasEditableModel
+      projectWritable
       mutationsLocked={false}
+      onNewModel={vi.fn()}
+      onAnalyze={vi.fn()}
       onContextMenuRequest={() => false}
     />);
 
     expect(markup).toContain("configured grouping variable");
     expect(markup).toContain(">Groups</small>");
     expect(markup).toContain("Grouping variable</span>");
+  });
+
+  it("presents explicit model and model-free next actions after importing into an empty project", () => {
+    vi.stubGlobal("window", {});
+    const dataset = useWorkspace.getState().dataset;
+    const markup = renderToStaticMarkup(<NativeDataSurface
+      selectedColumn={dataset.columns[0]}
+      setSelectedColumn={vi.fn()}
+      groupColumn={null}
+      propertiesOpen={false}
+      hasEditableModel={false}
+      projectWritable
+      mutationsLocked={false}
+      onNewModel={vi.fn()}
+      onAnalyze={vi.fn()}
+      onContextMenuRequest={() => false}
+    />);
+
+    expect(markup).toContain('aria-labelledby="nd-data-next-actions-title"');
+    expect(markup).toContain("Choose what to do next");
+    expect(markup).toContain(">New Model…</button>");
+    expect(markup).toContain(">Analyze…</button>");
+    expect(markup).toContain('aria-label="Next actions for imported data"');
+  });
+
+  it("keeps next actions visible but disabled with an actionable read-only explanation", () => {
+    vi.stubGlobal("window", {});
+    const dataset = useWorkspace.getState().dataset;
+    const markup = renderToStaticMarkup(<NativeDataSurface
+      selectedColumn={dataset.columns[0]}
+      setSelectedColumn={vi.fn()}
+      groupColumn={null}
+      propertiesOpen={false}
+      hasEditableModel={false}
+      projectWritable={false}
+      mutationsLocked={false}
+      onNewModel={vi.fn()}
+      onAnalyze={vi.fn()}
+      onContextMenuRequest={() => false}
+    />);
+
+    expect(markup).toContain("This project is read-only. Save a writable copy before starting new work.");
+    expect(markup.match(/<button[^>]*disabled=""[^>]*>/g)).toHaveLength(2);
   });
 });
