@@ -1,10 +1,10 @@
 use arrow::array::{Array, BooleanArray, Float64Array, Int64Array, StringArray};
 use chrono::Utc;
 use qpls_core::{
-    AnalysisMethod, AnalysisRecipe, AnalysisResult, AnalysisSettings, Construct, JobSnapshot,
-    JobState, METHOD_CAPABILITIES, MeasurementMode, MethodCapability, ModelSpec,
-    PROJECT_SCHEMA_VERSION, RunStatus, Severity, StructuralPath, ValidationIssue, sha256_hex,
-    validate_recipe,
+    ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisMethod, AnalysisRecipe, AnalysisResult,
+    AnalysisSettings, Construct, JobSnapshot, JobState, METHOD_CAPABILITIES, MeasurementMode,
+    MethodCapability, MethodConfig, ModelSpec, RunStatus, Severity, StructuralPath,
+    ValidationIssue, sha256_hex, validate_recipe,
 };
 use qpls_data::{
     ColumnMetadata, DataKind, Dataset, ImportOptions, RecodeColumnSpec, import_delimited_bytes,
@@ -585,6 +585,19 @@ fn build_dataset_group_profile(
     column_name: &str,
     analysis_columns: &[String],
 ) -> Result<DatasetGroupProfile, String> {
+    let dataset = project
+        .datasets
+        .iter()
+        .find(|dataset| dataset.id.to_string() == dataset_id)
+        .ok_or_else(|| format!("unknown dataset {dataset_id}"))?;
+    build_dataset_group_profile_for_dataset(dataset, column_name, analysis_columns)
+}
+
+fn build_dataset_group_profile_for_dataset(
+    dataset: &Dataset,
+    column_name: &str,
+    analysis_columns: &[String],
+) -> Result<DatasetGroupProfile, String> {
     if analysis_columns.iter().any(|column| column == column_name) {
         return Err("the grouping column cannot also be a model indicator".into());
     }
@@ -594,11 +607,6 @@ fn build_dataset_group_profile(
             return Err("analysis columns must be non-empty and unique".into());
         }
     }
-    let dataset = project
-        .datasets
-        .iter()
-        .find(|dataset| dataset.id.to_string() == dataset_id)
-        .ok_or_else(|| format!("unknown dataset {dataset_id}"))?;
     if dataset.schema.kind != DataKind::Raw {
         return Err("group profiling requires raw observations".into());
     }
@@ -721,11 +729,7 @@ fn canonical_group_value(array: &dyn Array, row: usize) -> GroupCellValue {
     GroupCellValue::Unsupported
 }
 
-fn validate_mga_dataset_contract(
-    project: &Project,
-    dataset: &Dataset,
-    recipe: &AnalysisRecipe,
-) -> Result<(), String> {
+fn validate_mga_dataset_contract(dataset: &Dataset, recipe: &AnalysisRecipe) -> Result<(), String> {
     if recipe.settings.method != AnalysisMethod::Mga {
         return Ok(());
     }
@@ -794,12 +798,8 @@ fn validate_mga_dataset_contract(
         .iter()
         .flat_map(|construct| construct.indicators.iter().cloned())
         .collect::<Vec<_>>();
-    let profile = build_dataset_group_profile(
-        project,
-        &dataset.id.to_string(),
-        group_column,
-        &analysis_columns,
-    )?;
+    let profile =
+        build_dataset_group_profile_for_dataset(dataset, group_column, &analysis_columns)?;
     for (role, selected) in [("Group A", group_a), ("Group B", group_b)] {
         let group = profile
             .groups
@@ -1649,19 +1649,33 @@ fn write_workspace_explorer(
     Ok(())
 }
 
-#[tauri::command]
-fn start_analysis_job(
-    recipe: AnalysisRecipe,
-    project_state: State<'_, DesktopProject>,
-    job_state: State<'_, DesktopJobs>,
-) -> Result<JobSnapshot, String> {
-    let issues = validate_recipe(&recipe);
+fn validate_executable_recipe(recipe: &AnalysisRecipe) -> Result<(), String> {
+    if recipe.schema_version != ANALYSIS_RECIPE_SCHEMA_VERSION {
+        return Err(format!(
+            "schema.current_required: new desktop analyses require recipe schema v{ANALYSIS_RECIPE_SCHEMA_VERSION}; found v{}",
+            recipe.schema_version
+        ));
+    }
+    let issues = validate_recipe(recipe);
     if let Some(issue) = issues
         .iter()
         .find(|issue| issue.severity == Severity::Error)
     {
         return Err(format!("{}: {}", issue.code, issue.message));
     }
+    recipe
+        .effective_metadata()
+        .map_err(|error| error.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+fn start_analysis_job(
+    recipe: AnalysisRecipe,
+    project_state: State<'_, DesktopProject>,
+    job_state: State<'_, DesktopJobs>,
+) -> Result<JobSnapshot, String> {
+    validate_executable_recipe(&recipe)?;
     let (dataset, project_id) = {
         let project = project_state
             .0
@@ -1676,9 +1690,33 @@ fn start_analysis_job(
             .find(|dataset| dataset.fingerprint.0 == recipe.dataset_fingerprint)
             .cloned()
             .ok_or_else(|| "recipe dataset fingerprint is not present in the project".to_owned())?;
-        validate_mga_dataset_contract(&project, &dataset, &recipe)?;
         (dataset, project.manifest.project_id)
     };
+    if recipe.settings.method == AnalysisMethod::Mga {
+        let execution_recipe = recipe
+            .with_effective_metadata()
+            .map_err(|error| error.to_string())?;
+        validate_mga_dataset_contract(&dataset, &execution_recipe)?;
+    }
+    {
+        let project = project_state
+            .0
+            .lock()
+            .map_err(|_| "project state is unavailable".to_owned())?;
+        if project.manifest.project_id != project_id {
+            return Err("the active project changed during analysis preflight".into());
+        }
+        if project.read_only {
+            return Err("the project became read-only during analysis preflight".into());
+        }
+        if !project
+            .datasets
+            .iter()
+            .any(|candidate| candidate.fingerprint.0 == recipe.dataset_fingerprint)
+        {
+            return Err("the analysis dataset changed during analysis preflight".into());
+        }
+    }
     let snapshot = JobSnapshot::queued(2);
     let cancellation = Arc::new(AtomicBool::new(false));
     let mut jobs_guard = job_state
@@ -2196,7 +2234,7 @@ fn build_demo_project() -> Result<Project, String> {
     settings.seed = 20_260_718;
     settings.workers = 1;
     let recipe = AnalysisRecipe {
-        schema_version: PROJECT_SCHEMA_VERSION,
+        schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
         id: "00000000-0000-0000-0000-00000000d004"
             .parse()
             .expect("fixed demo recipe UUID is valid"),
@@ -2206,6 +2244,7 @@ fn build_demo_project() -> Result<Project, String> {
         dataset_fingerprint: dataset.fingerprint.0.clone(),
         model: model.clone(),
         settings,
+        method_config: Some(MethodConfig::PlsBootstrap),
         metadata: std::collections::BTreeMap::from([
             ("demo".into(), "quickpls_v04_demo".into()),
             (
@@ -2381,6 +2420,7 @@ mod desktop_job_tests {
             "../../validation/fixtures/simple_reflective.recipe.json"
         ))
         .unwrap();
+        recipe = recipe.migrated_v3().unwrap();
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         let result = run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
         let mut project = Project::new("Job fixture");
@@ -2408,6 +2448,59 @@ mod desktop_job_tests {
             current_presentation: None,
             path: None,
         }
+    }
+
+    #[test]
+    fn desktop_job_boundary_requires_v3_and_keeps_execution_projection_ephemeral() {
+        let legacy: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../validation/fixtures/simple_reflective.recipe.json"
+        ))
+        .unwrap();
+        assert!(
+            validate_executable_recipe(&legacy)
+                .unwrap_err()
+                .contains("require recipe schema v3")
+        );
+
+        let mut legacy_mga: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../validation/results/mga_reference.recipe.json"
+        ))
+        .unwrap();
+        legacy_mga
+            .metadata
+            .insert("group_methods".into(), "micom,mga_permutation".into());
+        legacy_mga
+            .metadata
+            .insert("group_permutation_samples".into(), "5000".into());
+        legacy_mga
+            .metadata
+            .insert("micom_configural_confirmed".into(), "true".into());
+        let typed = legacy_mga.migrated_v3().unwrap();
+        let persisted_value = serde_json::to_value(&typed).unwrap();
+        assert!(typed.executable_legacy_metadata_keys().is_empty());
+
+        validate_executable_recipe(&typed).unwrap();
+        let execution = typed.with_effective_metadata().unwrap();
+
+        assert_eq!(serde_json::to_value(&typed).unwrap(), persisted_value);
+        assert_eq!(execution.id, typed.id);
+        assert_eq!(execution.method_config, typed.method_config);
+        assert_eq!(
+            execution
+                .metadata
+                .get("mga_group_column")
+                .map(String::as_str),
+            Some("group")
+        );
+        assert_eq!(
+            execution
+                .metadata
+                .get("micom_configural_confirmed")
+                .map(String::as_str),
+            Some("true")
+        );
+        assert!(typed.metadata.get("mga_group_column").is_none());
+        assert!(typed.metadata.get("micom_configural_confirmed").is_none());
     }
 
     #[test]
@@ -2713,6 +2806,7 @@ mod desktop_job_tests {
             "../../validation/results/v08_nca.recipe.json"
         ))
         .unwrap();
+        recipe = recipe.migrated_v3().unwrap();
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         let placeholder_model_id = recipe.model.id;
         let recipe_id = recipe.id;
@@ -3255,11 +3349,8 @@ mod desktop_job_tests {
         ))
         .unwrap();
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
-        let mut project = Project::new("Native MGA preflight");
-        project.datasets.push(dataset.clone());
-
         assert!(
-            validate_mga_dataset_contract(&project, &dataset, &recipe)
+            validate_mga_dataset_contract(&dataset, &recipe)
                 .unwrap_err()
                 .contains("requires both permutation MGA and MICOM v2")
         );
@@ -3270,14 +3361,14 @@ mod desktop_job_tests {
             .metadata
             .insert("group_permutation_samples".into(), "5000".into());
         assert!(
-            validate_mga_dataset_contract(&project, &dataset, &recipe)
+            validate_mga_dataset_contract(&dataset, &recipe)
                 .unwrap_err()
                 .contains("configural invariance")
         );
         recipe
             .metadata
             .insert("micom_configural_confirmed".into(), "true".into());
-        validate_mga_dataset_contract(&project, &dataset, &recipe).unwrap();
+        validate_mga_dataset_contract(&dataset, &recipe).unwrap();
     }
 
     #[test]
@@ -3571,6 +3662,7 @@ mod desktop_job_tests {
             "../../validation/fixtures/simple_reflective.recipe.json"
         ))
         .unwrap();
+        recipe = recipe.migrated_v3().unwrap();
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         let desktop_result = run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
         let cli_result: AnalysisResult = serde_json::from_slice(include_bytes!(
@@ -3660,6 +3752,7 @@ fn desktop_native_v11_workflow_smoke_import_run_save_reopen_and_export() {
         "../../validation/fixtures/simple_reflective.recipe.json"
     ))
     .unwrap();
+    recipe = recipe.migrated_v3().unwrap();
     recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
     recipe.settings.workers = 1;
     recipe.settings.bootstrap_samples = 0;

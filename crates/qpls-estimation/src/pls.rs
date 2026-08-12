@@ -7,8 +7,8 @@ use faer::{Mat, prelude::*};
 use qpls_core::{
     AnalysisMethod, AnalysisRecipe, DIJKSTRA_HENSELER_RHO_A_METHOD_VERSION, HigherOrderMethod,
     InteractionMethod, MeasurementMode, MissingDataPolicy, ModelSpec, Preprocessing,
-    WeightingScheme, dijkstra_henseler_rho_a_from_normalized, ipma_predecessor_constructs,
-    resolve_ipma_targets,
+    ValidatedExecutionRecipe, WeightingScheme, dijkstra_henseler_rho_a_from_normalized,
+    ipma_predecessor_constructs, resolve_ipma_targets,
 };
 use qpls_data::{ColumnMetadata, ColumnType, DataFingerprint, DataKind, Dataset, ScaleType};
 use rand::{Rng, SeedableRng};
@@ -1301,6 +1301,32 @@ pub fn estimate_pls(
 pub fn estimate_pls_with_control(
     dataset: &Dataset,
     recipe: &AnalysisRecipe,
+    control: impl FnMut(EstimationProgress) -> bool,
+) -> Result<PlsResult, EstimationError> {
+    let execution = ValidatedExecutionRecipe::for_dataset(recipe, &dataset.fingerprint.0)
+        .map_err(|error| EstimationError::UnsupportedMethod(error.to_string()))?;
+    estimate_pls_validated_with_control(dataset, &execution, control)
+}
+
+/// Executes an opaque recipe capability that has passed the complete
+/// schema-v3 scientific preflight. The effective compatibility projection is
+/// inaccessible to callers, so this cross-crate fast path cannot be used to
+/// bypass typed recipe validation.
+pub fn estimate_pls_validated_with_control(
+    dataset: &Dataset,
+    recipe: &ValidatedExecutionRecipe,
+    mut control: impl FnMut(EstimationProgress) -> bool,
+) -> Result<PlsResult, EstimationError> {
+    let effective = recipe
+        .effective_for_dataset(&dataset.fingerprint.0)
+        .map_err(|error| EstimationError::UnsupportedMethod(error.to_string()))?;
+    estimate_pls_internal(dataset, effective, false, &mut control)
+}
+
+#[cfg(test)]
+fn estimate_pls_with_effective_recipe_control(
+    dataset: &Dataset,
+    recipe: &AnalysisRecipe,
     mut control: impl FnMut(EstimationProgress) -> bool,
 ) -> Result<PlsResult, EstimationError> {
     estimate_pls_internal(dataset, recipe, false, &mut control)
@@ -1370,7 +1396,7 @@ pub fn analyze_mediation_effects_with_tolerance(
 /// Estimates a structurally reduced model while retaining isolated measurement
 /// blocks to preserve the full model's complete-case sample. Intended only for
 /// nested-model diagnostics such as Cohen f-squared.
-pub fn estimate_pls_reduced_with_control(
+fn estimate_pls_reduced_with_control(
     dataset: &Dataset,
     recipe: &AnalysisRecipe,
     mut control: impl FnMut(EstimationProgress) -> bool,
@@ -11696,8 +11722,9 @@ mod tests {
     };
     use chrono::Utc;
     use qpls_core::{
-        AnalysisSettings, Construct, ControlPath, HigherOrderConstruct, HigherOrderMethod,
-        InteractionMethod, InteractionTerm, ModelSpec, StructuralPath,
+        ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisSettings, Construct, ControlPath,
+        HigherOrderConstruct, HigherOrderMethod, InteractionMethod, InteractionTerm, MethodConfig,
+        ModelSpec, NcaCeiling, PcaRetentionConfig, StructuralPath,
     };
     use qpls_data::{
         ColumnMetadata, ColumnType, DataFingerprint, DataKind, DatasetSchema, ImportOptions,
@@ -11761,8 +11788,12 @@ mod tests {
             &ImportOptions::default(),
         )
         .unwrap();
-        let mut recipe = AnalysisRecipe {
-            schema_version: 2,
+        let mut settings = AnalysisSettings::default();
+        settings.method = AnalysisMethod::Nca;
+        settings.preprocessing = Preprocessing::Unstandardized;
+        settings.seed = 77;
+        let recipe = AnalysisRecipe {
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
             id: Uuid::new_v4(),
             created_at: Utc::now(),
             dataset_fingerprint: dataset.fingerprint.0.clone(),
@@ -11775,18 +11806,19 @@ mod tests {
                 higher_order_constructs: Vec::new(),
                 interactions: Vec::new(),
             },
-            settings: AnalysisSettings::default(),
-            metadata: BTreeMap::from([
-                ("nca_x".into(), "x".into()),
-                ("nca_y".into(), "y".into()),
-                ("nca_ceiling".into(), "both".into()),
-                ("nca_permutation_samples".into(), "19".into()),
-            ]),
+            settings,
+            method_config: Some(MethodConfig::Nca {
+                condition: "x".into(),
+                outcome: "y".into(),
+                ceiling: NcaCeiling::Both,
+                permutation_samples: 19,
+            }),
+            metadata: BTreeMap::new(),
         };
-        recipe.settings.method = AnalysisMethod::Nca;
-        recipe.settings.preprocessing = Preprocessing::Unstandardized;
-        recipe.settings.seed = 77;
-        let result = estimate_pls(&dataset, &recipe).unwrap();
+        let execution_recipe = recipe.with_effective_metadata().unwrap();
+        let result =
+            estimate_pls_with_effective_recipe_control(&dataset, &execution_recipe, |_| true)
+                .unwrap();
         let analysis = result.nca.as_ref().unwrap();
         assert_eq!(result.method_version, NCA_METHOD_VERSION);
         assert!(nca_analysis_matches_v2_contract(
@@ -11814,7 +11846,7 @@ mod tests {
         let mut settings = AnalysisSettings::default();
         settings.method = AnalysisMethod::Pca;
         AnalysisRecipe {
-            schema_version: 2,
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
             id: Uuid::new_v4(),
             created_at: Utc::now(),
             dataset_fingerprint: dataset.fingerprint.0.clone(),
@@ -11828,10 +11860,17 @@ mod tests {
                 interactions: Vec::new(),
             },
             settings,
-            metadata: BTreeMap::from([
-                ("pca_variables".into(), "a,b,c".into()),
-                ("pca_component_rule".into(), rule.into()),
-            ]),
+            method_config: Some(MethodConfig::Pca {
+                variables: vec!["a".into(), "b".into(), "c".into()],
+                retention: match rule {
+                    "fixed" => PcaRetentionConfig::Fixed { components: 2 },
+                    "variance_threshold" => {
+                        PcaRetentionConfig::VarianceThreshold { threshold: 0.80 }
+                    }
+                    _ => PcaRetentionConfig::Kaiser,
+                },
+            }),
+            metadata: BTreeMap::new(),
         }
     }
 
@@ -11845,10 +11884,14 @@ mod tests {
         )
         .unwrap();
         let mut recipe = standalone_pca_recipe(&dataset, "variance_threshold");
-        recipe
-            .metadata
-            .insert("pca_variance_threshold".into(), "0.95".into());
-        let result = estimate_pls(&dataset, &recipe).unwrap();
+        recipe.method_config = Some(MethodConfig::Pca {
+            variables: vec!["a".into(), "b".into(), "c".into()],
+            retention: PcaRetentionConfig::VarianceThreshold { threshold: 0.95 },
+        });
+        let execution_recipe = recipe.with_effective_metadata().unwrap();
+        let result =
+            estimate_pls_with_effective_recipe_control(&dataset, &execution_recipe, |_| true)
+                .unwrap();
         let pca = result.pca.unwrap();
 
         assert_eq!(result.method_version, PCA_METHOD_VERSION);
@@ -11875,11 +11918,14 @@ mod tests {
         )
         .unwrap();
         let mut recipe = standalone_pca_recipe(&dataset, "fixed");
-        recipe
-            .metadata
-            .insert("pca_variables".into(), "a,b,c,d".into());
-        recipe.metadata.insert("pca_components".into(), "2".into());
-        let result = estimate_pls(&dataset, &recipe).unwrap();
+        recipe.method_config = Some(MethodConfig::Pca {
+            variables: vec!["a".into(), "b".into(), "c".into(), "d".into()],
+            retention: PcaRetentionConfig::Fixed { components: 2 },
+        });
+        let execution_recipe = recipe.with_effective_metadata().unwrap();
+        let result =
+            estimate_pls_with_effective_recipe_control(&dataset, &execution_recipe, |_| true)
+                .unwrap();
         let pca = result.pca.unwrap();
         assert_eq!(pca.observations, 3);
         assert_eq!(pca.retained_components, 2);
@@ -11921,12 +11967,13 @@ mod tests {
             interactions: Vec::new(),
         };
         let recipe = AnalysisRecipe {
-            schema_version: 2,
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
             id: Uuid::nil(),
             created_at: Utc::now(),
             dataset_fingerprint: dataset.fingerprint.0.clone(),
             model,
             settings: AnalysisSettings::default(),
+            method_config: Some(MethodConfig::PlsAlgorithm),
             metadata: BTreeMap::new(),
         };
         (dataset, recipe)
@@ -11936,6 +11983,7 @@ mod tests {
     fn gsca_als_v2_optimizes_the_global_criterion_without_fabricated_inference() {
         let (dataset, mut recipe) = fixture();
         recipe.settings.method = AnalysisMethod::Gsca;
+        recipe.method_config = Some(MethodConfig::Gsca);
         recipe.settings.workers = 1;
         recipe.settings.max_iterations = 3_000;
         recipe.settings.tolerance = 1e-7;
@@ -11974,6 +12022,7 @@ mod tests {
     fn gsca_als_v2_honors_cancellation_and_rejects_pls_only_settings() {
         let (dataset, mut recipe) = fixture();
         recipe.settings.method = AnalysisMethod::Gsca;
+        recipe.method_config = Some(MethodConfig::Gsca);
         let error = estimate_pls_with_control(&dataset, &recipe, |progress| {
             progress.phase != EstimationPhase::Iterating
         })
@@ -11982,14 +12031,14 @@ mod tests {
 
         recipe.settings.workers = 2;
         assert!(matches!(
-            estimate_pls(&dataset, &recipe),
+            estimate_pls_with_effective_recipe_control(&dataset, &recipe, |_| true),
             Err(EstimationError::UnsupportedMethod(message))
                 if message.contains("one worker")
         ));
         recipe.settings.workers = 1;
         recipe.settings.permutation_samples = 99;
         assert!(matches!(
-            estimate_pls(&dataset, &recipe),
+            estimate_pls_with_effective_recipe_control(&dataset, &recipe, |_| true),
             Err(EstimationError::UnsupportedMethod(message))
                 if message.contains("no resampling")
         ));
@@ -12031,8 +12080,9 @@ mod tests {
             .paths
             .retain(|path| !(path.source == "x" && path.target == "y"));
 
-        let left = estimate_pls(&dataset, &recipe).unwrap();
-        let right = estimate_pls(&dataset, &recipe).unwrap();
+        let left = estimate_pls_with_effective_recipe_control(&dataset, &recipe, |_| true).unwrap();
+        let right =
+            estimate_pls_with_effective_recipe_control(&dataset, &recipe, |_| true).unwrap();
         assert_eq!(left, right);
         assert_eq!(left.method_version, CCA_METHOD_VERSION);
 
@@ -12064,8 +12114,13 @@ mod tests {
     fn bounded_ipma_uses_only_endogenous_targets_and_fixed_standardized_path_scope() {
         let (dataset, mut recipe) = fixture();
         recipe.settings.method = AnalysisMethod::Ipma;
-        recipe.metadata.insert("ipma_targets".into(), "y".into());
-        let result = estimate_pls(&dataset, &recipe).unwrap();
+        recipe.method_config = Some(MethodConfig::Ipma {
+            targets: vec!["y".into()],
+        });
+        let execution_recipe = recipe.with_effective_metadata().unwrap();
+        let result =
+            estimate_pls_with_effective_recipe_control(&dataset, &execution_recipe, |_| true)
+                .unwrap();
         assert_eq!(result.method_version, IPMA_METHOD_VERSION);
         let expected_importance = result
             .effects
@@ -12092,23 +12147,39 @@ mod tests {
         }));
         assert!((ipma.constructs[0].importance - expected_importance).abs() <= 1e-12);
 
-        recipe.metadata.insert("ipma_targets".into(), "x".into());
+        recipe.method_config = Some(MethodConfig::Ipma {
+            targets: vec!["x".into()],
+        });
         assert!(matches!(
-            estimate_pls(&dataset, &recipe),
+            estimate_pls_with_effective_recipe_control(
+                &dataset,
+                &recipe.with_effective_metadata().unwrap(),
+                |_| true,
+            ),
             Err(EstimationError::UnsupportedMethod(message))
                 if message.contains("target must be endogenous")
         ));
 
-        recipe.metadata.insert("ipma_targets".into(), "y".into());
+        recipe.method_config = Some(MethodConfig::Ipma {
+            targets: vec!["y".into()],
+        });
         recipe.settings.weighting_scheme = WeightingScheme::Factor;
         assert!(matches!(
-            estimate_pls(&dataset, &recipe),
+            estimate_pls_with_effective_recipe_control(
+                &dataset,
+                &recipe.with_effective_metadata().unwrap(),
+                |_| true,
+            ),
             Err(EstimationError::UnsupportedMethod(message)) if message.contains("path weighting")
         ));
         recipe.settings.weighting_scheme = WeightingScheme::Path;
         recipe.settings.preprocessing = Preprocessing::MeanCentered;
         assert!(matches!(
-            estimate_pls(&dataset, &recipe),
+            estimate_pls_with_effective_recipe_control(
+                &dataset,
+                &recipe.with_effective_metadata().unwrap(),
+                |_| true,
+            ),
             Err(EstimationError::UnsupportedMethod(message))
                 if message.contains("standardized indicator preprocessing")
         ));
@@ -12136,7 +12207,7 @@ mod tests {
             .insert("group_permutation_samples".into(), "5000".into());
 
         assert!(matches!(
-            estimate_pls(&dataset, &recipe),
+            estimate_pls_with_effective_recipe_control(&dataset, &recipe, |_| true),
             Err(EstimationError::UnsupportedMethod(message))
                 if message.contains("configural invariance")
         ));
@@ -12168,7 +12239,8 @@ mod tests {
         recipe.metadata.insert("mga_group_a".into(), "B".into());
         recipe.metadata.insert("mga_group_b".into(), "A".into());
 
-        let result = estimate_pls(&dataset, &recipe).unwrap();
+        let result =
+            estimate_pls_with_effective_recipe_control(&dataset, &recipe, |_| true).unwrap();
         assert!(result.mga.is_some());
         assert!(result.mga_permutation.is_some());
         assert!(result.micom.is_some());
@@ -12236,7 +12308,7 @@ mod tests {
             .insert("micom_configural_confirmed".into(), "true".into());
 
         let mut permutation_zero_updates = 0usize;
-        let result = estimate_pls_with_control(&dataset, &recipe, |update| {
+        let result = estimate_pls_with_effective_recipe_control(&dataset, &recipe, |update| {
             if update.phase == EstimationPhase::Iterating
                 && update.total_units == 5000
                 && update.completed_units == 0
@@ -12266,7 +12338,8 @@ mod tests {
         .unwrap();
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
 
-        let result = estimate_pls(&dataset, &recipe).unwrap();
+        let result =
+            estimate_pls_with_effective_recipe_control(&dataset, &recipe, |_| true).unwrap();
         let plsc = result.plsc.expect("PLSc payload");
         assert_eq!(result.method_version, PLSC_METHOD_VERSION);
         assert_eq!(plsc.method_version, PLSC_METHOD_VERSION);
@@ -12299,6 +12372,7 @@ mod tests {
     fn plsc_rejects_inadmissible_corrected_correlations_without_clamping() {
         let (dataset, mut recipe) = fixture();
         recipe.settings.method = AnalysisMethod::Plsc;
+        recipe.method_config = Some(MethodConfig::Plsc);
 
         let error = estimate_pls(&dataset, &recipe).unwrap_err();
         assert!(matches!(
@@ -12332,6 +12406,10 @@ mod tests {
         let (_, mut recipe) = fixture();
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         recipe.settings.method = AnalysisMethod::Predict;
+        recipe.method_config = Some(MethodConfig::Predict {
+            pls_pos: None,
+            fimix: None,
+        });
 
         let result = estimate_pls(&dataset, &recipe).unwrap();
         let predict = result.predict.expect("prediction payload");
@@ -12598,7 +12676,7 @@ mod tests {
             batch,
         };
         let recipe = AnalysisRecipe {
-            schema_version: 2,
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
             id: Uuid::nil(),
             created_at: Utc::now(),
             dataset_fingerprint: dataset.fingerprint.0.clone(),
@@ -12649,6 +12727,7 @@ mod tests {
                 interactions: Vec::new(),
             },
             settings: AnalysisSettings::default(),
+            method_config: Some(MethodConfig::PlsAlgorithm),
             metadata: BTreeMap::new(),
         };
         let result = estimate_pls(&dataset, &recipe).unwrap();
@@ -12726,7 +12805,7 @@ mod tests {
             fingerprint: DataFingerprint("moderation".into()),
         };
         let recipe = AnalysisRecipe {
-            schema_version: 2,
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
             id: Uuid::nil(),
             created_at: Utc::now(),
             dataset_fingerprint: dataset.fingerprint.0.clone(),
@@ -12789,6 +12868,7 @@ mod tests {
                 }],
             },
             settings: AnalysisSettings::default(),
+            method_config: Some(MethodConfig::PlsAlgorithm),
             metadata: BTreeMap::new(),
         };
 
@@ -12967,12 +13047,13 @@ mod tests {
             interactions: Vec::new(),
         };
         let recipe = AnalysisRecipe {
-            schema_version: 2,
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
             id: Uuid::nil(),
             created_at: Utc::now(),
             dataset_fingerprint: dataset.fingerprint.0.clone(),
             model,
             settings: AnalysisSettings::default(),
+            method_config: Some(MethodConfig::PlsAlgorithm),
             metadata: BTreeMap::new(),
         };
         let result = estimate_pls(&dataset, &recipe).unwrap();
@@ -13122,7 +13203,7 @@ mod tests {
             target: "x".into(),
         });
         assert_eq!(
-            estimate_pls(&dataset, &recipe),
+            estimate_pls_with_effective_recipe_control(&dataset, &recipe, |_| true),
             Err(EstimationError::CyclicModel)
         );
         let constant = import_delimited_bytes(
@@ -13134,7 +13215,7 @@ mod tests {
         .unwrap();
         recipe.model.paths.pop();
         assert_eq!(
-            estimate_pls(&constant, &recipe),
+            estimate_pls_with_effective_recipe_control(&constant, &recipe, |_| true),
             Err(EstimationError::ConstantIndicator("x1".into()))
         );
     }
@@ -13167,7 +13248,8 @@ mod tests {
         )
         .unwrap();
         let (_, recipe) = fixture();
-        let omitted = estimate_pls(&missing, &recipe).unwrap();
+        let omitted =
+            estimate_pls_with_effective_recipe_control(&missing, &recipe, |_| true).unwrap();
         assert_eq!(omitted.used_observations, 5);
         assert_eq!(omitted.omitted_observations, 1);
         let scaled = import_delimited_bytes(
@@ -13179,7 +13261,11 @@ mod tests {
         .unwrap();
         let (dataset, mut reordered) = fixture();
         let expected = estimate_pls(&dataset, &reordered).unwrap().paths[0].coefficient;
-        let scaled_result = estimate_pls(&scaled, &reordered).unwrap().paths[0].coefficient;
+        let scaled_result =
+            estimate_pls_with_effective_recipe_control(&scaled, &reordered, |_| true)
+                .unwrap()
+                .paths[0]
+                .coefficient;
         assert!((expected - scaled_result).abs() < 1e-10);
         reordered.model.constructs.reverse();
         let reordered_result = estimate_pls(&dataset, &reordered).unwrap().paths[0].coefficient;
@@ -13215,20 +13301,31 @@ mod tests {
     fn execution_rejects_wrong_dispatch_resampling_and_malformed_models() {
         let (dataset, mut recipe) = fixture();
         recipe.settings.method = AnalysisMethod::Cbsem;
+        recipe.method_config = Some(MethodConfig::Cbsem {
+            model_type: qpls_core::CbsemModelType::Sem,
+            estimator: qpls_core::CbsemEstimator::Ml,
+            input: qpls_core::CbsemInput::Raw,
+            mean_structure: false,
+            bootstrap_samples: 0,
+            group_column: None,
+            invariance_steps: Vec::new(),
+        });
         assert_eq!(
             estimate_pls(&dataset, &recipe),
             Err(EstimationError::InsufficientObservations)
         );
         recipe.settings.method = AnalysisMethod::PlsPm;
+        recipe.method_config = Some(MethodConfig::PlsBootstrap);
         recipe.settings.bootstrap_samples = 100;
         assert_eq!(
             estimate_pls(&dataset, &recipe),
             Err(EstimationError::ResamplingRequiresEngine)
         );
         recipe.settings.bootstrap_samples = 0;
+        recipe.method_config = Some(MethodConfig::PlsAlgorithm);
         recipe.model.constructs[1].id = recipe.model.constructs[0].id.clone();
         assert_eq!(
-            estimate_pls(&dataset, &recipe),
+            estimate_pls_with_effective_recipe_control(&dataset, &recipe, |_| true),
             Err(EstimationError::DuplicateConstruct("x".into()))
         );
         let (_, mut duplicate_path) = fixture();
@@ -13237,7 +13334,7 @@ mod tests {
             .paths
             .push(duplicate_path.model.paths[0].clone());
         assert_eq!(
-            estimate_pls(&dataset, &duplicate_path),
+            estimate_pls_with_effective_recipe_control(&dataset, &duplicate_path, |_| true),
             Err(EstimationError::DuplicatePath("x".into(), "y".into()))
         );
     }
@@ -13258,7 +13355,8 @@ mod tests {
             &ImportOptions::default(),
         )
         .unwrap();
-        let actual = estimate_pls(&shifted, &recipe).unwrap();
+        let actual =
+            estimate_pls_with_effective_recipe_control(&shifted, &recipe, |_| true).unwrap();
         assert!((expected.paths[0].coefficient - actual.paths[0].coefficient).abs() < 1e-10);
         for indicator in ["x1", "x2", "y1", "y2"] {
             let left = expected
@@ -13337,7 +13435,7 @@ mod tests {
             })
             .collect();
         let recipe = AnalysisRecipe {
-            schema_version: 2,
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
             id: Uuid::nil(),
             created_at: Utc::now(),
             dataset_fingerprint: "benchmark".into(),
@@ -13354,6 +13452,7 @@ mod tests {
                 max_iterations: 100,
                 ..AnalysisSettings::default()
             },
+            method_config: Some(MethodConfig::PlsAlgorithm),
             metadata: BTreeMap::new(),
         };
         let started = Instant::now();

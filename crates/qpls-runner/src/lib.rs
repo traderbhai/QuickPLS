@@ -1,6 +1,10 @@
 use chrono::Utc;
-use qpls_assessment::{ASSESSMENT_METHOD_VERSION, AssessmentError, assess_pls_with_control};
-use qpls_core::{AnalysisRecipe, AnalysisResult};
+use qpls_assessment::{
+    ASSESSMENT_METHOD_VERSION, AssessmentError, assess_pls_validated_with_control,
+};
+#[cfg(test)]
+use qpls_core::ANALYSIS_RECIPE_SCHEMA_VERSION;
+use qpls_core::{AnalysisRecipe, AnalysisResult, ValidatedExecutionRecipe};
 use qpls_data::Dataset;
 use qpls_estimation::{
     CBSEM_BOOTSTRAP_METHOD_VERSION, CBSEM_FIT_METHOD_VERSION,
@@ -10,11 +14,12 @@ use qpls_estimation::{
     PLS_MGA_METHOD_VERSION, PLS_MGA_PERMUTATION_METHOD_VERSION, PLS_POS_METHOD_VERSION,
     PLS_PREDICT_METHOD_VERSION, PLS_SEGMENTATION_METHOD_VERSION,
     PLS_TWO_STAGE_MODERATION_METHOD_VERSION, REGRESSION_LOGISTIC_METHOD_VERSION,
-    REGRESSION_OLS_METHOD_VERSION, REGRESSION_PROCESS_METHOD_VERSION, estimate_pls_with_control,
+    REGRESSION_OLS_METHOD_VERSION, REGRESSION_PROCESS_METHOD_VERSION,
+    estimate_pls_validated_with_control,
 };
 use qpls_resampling::{
     PERMUTATION_METHOD_VERSION, PlsBootstrapError, PlsPermutationError, RESAMPLING_METHOD_VERSION,
-    ResamplingError, bootstrap_pls, permutation_pls,
+    ResamplingError, bootstrap_pls_validated, permutation_pls_validated,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -28,6 +33,8 @@ pub struct RunnerProgress {
 pub enum RunnerError {
     #[error("analysis was cancelled")]
     Cancelled,
+    #[error("analysis recipe is not executable: {0}")]
+    Recipe(String),
     #[error("PLS estimation failed: {0}")]
     Estimation(String),
     #[error("PLS assessment failed: {0}")]
@@ -49,50 +56,15 @@ pub fn run_pls_analysis(
     if should_cancel() {
         return Err(RunnerError::Cancelled);
     }
-    if recipe.settings.method == qpls_core::AnalysisMethod::Ipma
-        && (recipe.settings.bootstrap_samples > 0
-            || recipe.settings.studentized_inner_samples > 0
-            || recipe.settings.permutation_samples > 0)
-    {
-        return Err(RunnerError::Estimation(
-            "IPMA v1 is a deterministic descriptive analysis and does not support resampling inference"
-                .into(),
-        ));
-    }
-    if recipe.settings.method == qpls_core::AnalysisMethod::Predict
-        && (recipe.settings.bootstrap_samples > 0
-            || recipe.settings.studentized_inner_samples > 0
-            || recipe.settings.permutation_samples > 0)
-    {
-        return Err(RunnerError::Estimation(
-            "PLSpredict indicator v2 owns its fixed 10-fold by 10-repeat plan and does not accept external resampling settings"
-                .into(),
-        ));
-    }
-    if recipe.settings.method == qpls_core::AnalysisMethod::Predict
-        && (recipe.settings.confidence_level - 0.95).abs() > 1e-12
-    {
-        return Err(RunnerError::Estimation(
-            "PLSpredict indicator v2 uses a fixed one-sided 95% CVPAT confidence contract".into(),
-        ));
-    }
-    if recipe.settings.method == qpls_core::AnalysisMethod::Gsca
-        && (recipe.settings.bootstrap_samples > 0
-            || recipe.settings.studentized_inner_samples > 0
-            || recipe.settings.permutation_samples > 0)
-    {
-        return Err(RunnerError::Estimation(
-            "GSCA ALS v2 is a deterministic point-estimation workflow and does not support external resampling inference"
-                .into(),
-        ));
-    }
+    let execution = ValidatedExecutionRecipe::for_dataset(recipe, &dataset.fingerprint.0)
+        .map_err(|error| RunnerError::Recipe(error.to_string()))?;
+    let base_execution = execution
+        .without_outer_resampling()
+        .map_err(|error| RunnerError::Recipe(error.to_string()))?;
+    let effective_recipe = execution.effective();
     let started_at = Utc::now();
-    let mut base_recipe = recipe.clone();
-    base_recipe.settings.bootstrap_samples = 0;
-    base_recipe.settings.studentized_inner_samples = 0;
-    base_recipe.settings.permutation_samples = 0;
 
-    let estimation = estimate_pls_with_control(dataset, &base_recipe, |update| {
+    let estimation = estimate_pls_validated_with_control(dataset, &base_execution, |update| {
         progress(RunnerProgress {
             phase: update.phase.as_str().into(),
             completed_units: update.completed_units,
@@ -109,12 +81,12 @@ pub fn run_pls_analysis(
         return Err(RunnerError::Cancelled);
     }
     let standalone_v08 = matches!(
-        recipe.settings.method,
+        effective_recipe.settings.method,
         qpls_core::AnalysisMethod::Pca
             | qpls_core::AnalysisMethod::Regression
             | qpls_core::AnalysisMethod::Nca
     );
-    let gsca_als = recipe.settings.method == qpls_core::AnalysisMethod::Gsca;
+    let gsca_als = effective_recipe.settings.method == qpls_core::AnalysisMethod::Gsca;
     let assessment = if standalone_v08 || gsca_als {
         let warning = if gsca_als {
             "PLS assessment is not applicable to GSCA ALS component-model estimation."
@@ -127,7 +99,7 @@ pub fn run_pls_analysis(
         })
     } else {
         serde_json::to_value(
-            assess_pls_with_control(dataset, &base_recipe, &estimation, |update| {
+            assess_pls_validated_with_control(dataset, &base_execution, &estimation, |update| {
                 progress(RunnerProgress {
                     phase: update.phase.as_str().into(),
                     completed_units: update.completed_units,
@@ -145,13 +117,13 @@ pub fn run_pls_analysis(
     if should_cancel() {
         return Err(RunnerError::Cancelled);
     }
-    let bootstrap = if recipe.settings.bootstrap_samples > 0 && !standalone_v08 {
+    let bootstrap = if effective_recipe.settings.bootstrap_samples > 0 && !standalone_v08 {
         Some(
-            bootstrap_pls(
+            bootstrap_pls_validated(
                 dataset,
-                recipe,
+                &execution,
                 &estimation,
-                recipe.settings.workers,
+                effective_recipe.settings.workers,
                 &should_cancel,
                 |update| {
                     progress(RunnerProgress {
@@ -170,13 +142,13 @@ pub fn run_pls_analysis(
     if should_cancel() {
         return Err(RunnerError::Cancelled);
     }
-    let permutation = if recipe.settings.permutation_samples > 0 && !standalone_v08 {
+    let permutation = if effective_recipe.settings.permutation_samples > 0 && !standalone_v08 {
         Some(
-            permutation_pls(
+            permutation_pls_validated(
                 dataset,
-                recipe,
+                &execution,
                 &estimation,
-                recipe.settings.workers,
+                effective_recipe.settings.workers,
                 &should_cancel,
                 |update| {
                     progress(RunnerProgress {
@@ -218,62 +190,65 @@ pub fn run_pls_analysis(
         ASSESSMENT_METHOD_VERSION,
     ];
     if matches!(
-        recipe.settings.method,
+        effective_recipe.settings.method,
         qpls_core::AnalysisMethod::Plsc
             | qpls_core::AnalysisMethod::Wpls
             | qpls_core::AnalysisMethod::Cca
     ) {
         base_versions.insert(1, estimation_method_version.as_str());
     }
-    if !recipe.model.interactions.is_empty() {
+    if !effective_recipe.model.interactions.is_empty() {
         base_versions.insert(2, PLS_TWO_STAGE_MODERATION_METHOD_VERSION);
     }
-    if recipe.settings.method == qpls_core::AnalysisMethod::Predict {
+    if effective_recipe.settings.method == qpls_core::AnalysisMethod::Predict {
         base_versions.insert(1, PLS_PREDICT_METHOD_VERSION);
-        if recipe.metadata.contains_key("pls_pos_segments")
-            || recipe
+        if effective_recipe.metadata.contains_key("pls_pos_segments")
+            || effective_recipe
                 .metadata
                 .contains_key("segmentation.pls_pos_segments")
         {
             base_versions.insert(2, PLS_SEGMENTATION_METHOD_VERSION);
         }
-        if recipe.metadata.contains_key("segment_count") {
+        if effective_recipe.metadata.contains_key("segment_count") {
             base_versions.insert(2, PLS_POS_METHOD_VERSION);
         }
-        if metadata_list_contains(recipe, "group_methods", "fimix")
-            || recipe.metadata.contains_key("fimix_classes")
+        if metadata_list_contains(&effective_recipe, "group_methods", "fimix")
+            || effective_recipe.metadata.contains_key("fimix_classes")
         {
             base_versions.insert(2, FIMIX_PLS_METHOD_VERSION);
         }
     }
-    if recipe.settings.method == qpls_core::AnalysisMethod::Mga {
+    if effective_recipe.settings.method == qpls_core::AnalysisMethod::Mga {
         base_versions.insert(1, PLS_MGA_METHOD_VERSION);
-        if metadata_list_contains(recipe, "group_methods", "mga_permutation") {
+        if metadata_list_contains(&effective_recipe, "group_methods", "mga_permutation") {
             base_versions.insert(2, PLS_MGA_PERMUTATION_METHOD_VERSION);
         }
-        if metadata_list_contains(recipe, "group_methods", "micom") {
+        if metadata_list_contains(&effective_recipe, "group_methods", "micom") {
             base_versions.insert(3, MICOM_METHOD_VERSION);
         }
     }
-    if recipe.settings.method == qpls_core::AnalysisMethod::Ipma {
+    if effective_recipe.settings.method == qpls_core::AnalysisMethod::Ipma {
         base_versions.insert(1, IPMA_METHOD_VERSION);
     }
-    if recipe.settings.method == qpls_core::AnalysisMethod::Cbsem {
+    if effective_recipe.settings.method == qpls_core::AnalysisMethod::Cbsem {
         base_versions.insert(1, estimation_method_version.as_str());
         base_versions.insert(2, CBSEM_FIT_METHOD_VERSION);
         base_versions.insert(3, CBSEM_MODIFICATION_INDICES_METHOD_VERSION);
-        if recipe.metadata.contains_key("cbsem_bootstrap_samples") {
+        if effective_recipe
+            .metadata
+            .contains_key("cbsem_bootstrap_samples")
+        {
             base_versions.insert(4, CBSEM_BOOTSTRAP_METHOD_VERSION);
         }
-        if recipe.metadata.contains_key("cbsem_group_column") {
+        if effective_recipe.metadata.contains_key("cbsem_group_column") {
             base_versions.insert(4, CBSEM_MULTIGROUP_METHOD_VERSION);
         }
     }
-    if recipe.settings.method == qpls_core::AnalysisMethod::Pca {
+    if effective_recipe.settings.method == qpls_core::AnalysisMethod::Pca {
         base_versions = vec![PCA_METHOD_VERSION];
     }
-    if recipe.settings.method == qpls_core::AnalysisMethod::Regression {
-        base_versions = vec![match recipe
+    if effective_recipe.settings.method == qpls_core::AnalysisMethod::Regression {
+        base_versions = vec![match effective_recipe
             .metadata
             .get("regression_type")
             .map(String::as_str)
@@ -284,10 +259,10 @@ pub fn run_pls_analysis(
             _ => REGRESSION_OLS_METHOD_VERSION,
         }];
     }
-    if recipe.settings.method == qpls_core::AnalysisMethod::Nca {
+    if effective_recipe.settings.method == qpls_core::AnalysisMethod::Nca {
         base_versions = vec![NCA_METHOD_VERSION];
     }
-    if recipe.settings.method == qpls_core::AnalysisMethod::Gsca {
+    if effective_recipe.settings.method == qpls_core::AnalysisMethod::Gsca {
         base_versions = vec![GSCA_METHOD_VERSION];
     }
     if permutation.is_some() {
@@ -372,7 +347,7 @@ fn map_permutation_error(error: PlsPermutationError) -> RunnerError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use qpls_core::{AnalysisMethod, AnalysisPayload};
+    use qpls_core::{AnalysisMethod, AnalysisPayload, MethodConfig};
     use qpls_data::{ImportOptions, import_delimited_bytes};
     use std::sync::{
         Mutex,
@@ -382,9 +357,18 @@ mod tests {
     fn run_fixture(data: &[u8], data_name: &str, recipe: &[u8]) -> AnalysisResult {
         let dataset =
             import_delimited_bytes(data, data_name, b',', &ImportOptions::default()).unwrap();
-        let mut recipe: AnalysisRecipe = serde_json::from_slice(recipe).unwrap();
+        let mut recipe = migrated_execution_recipe(recipe);
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap()
+    }
+
+    fn migrated_execution_recipe(bytes: &[u8]) -> AnalysisRecipe {
+        let recipe: AnalysisRecipe = serde_json::from_slice(bytes).unwrap();
+        if recipe.schema_version == ANALYSIS_RECIPE_SCHEMA_VERSION {
+            recipe
+        } else {
+            recipe.migrated_v3().unwrap()
+        }
     }
 
     fn assert_estimator_version_is_in_provenance(result: &AnalysisResult, expected: &str) {
@@ -415,10 +399,9 @@ mod tests {
             &ImportOptions::default(),
         )
         .unwrap();
-        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+        let mut recipe = migrated_execution_recipe(include_bytes!(
             "../../../validation/fixtures/simple_reflective.recipe.json"
-        ))
-        .unwrap();
+        ));
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         let left = run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
         let right = run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
@@ -487,15 +470,14 @@ mod tests {
             &ImportOptions::default(),
         )
         .unwrap();
-        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+        let mut recipe = migrated_execution_recipe(include_bytes!(
             "../../../validation/results/ipma_reference.recipe.json"
-        ))
-        .unwrap();
+        ));
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         recipe.settings.bootstrap_samples = 999;
         assert!(matches!(
             run_pls_analysis(&dataset, &recipe, || false, |_| {}),
-            Err(RunnerError::Estimation(message)) if message.contains("does not support resampling")
+            Err(RunnerError::Recipe(message)) if message.contains("outside this contract")
         ));
     }
 
@@ -508,10 +490,9 @@ mod tests {
             &ImportOptions::default(),
         )
         .unwrap();
-        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+        let mut recipe = migrated_execution_recipe(include_bytes!(
             "../../../validation/results/plspredict_holdout_reference.recipe.json"
-        ))
-        .unwrap();
+        ));
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
 
         let updates = Mutex::new(Vec::<RunnerProgress>::new());
@@ -560,13 +541,13 @@ mod tests {
         unsupported.settings.permutation_samples = 99;
         assert!(matches!(
             run_pls_analysis(&dataset, &unsupported, || false, |_| {}),
-            Err(RunnerError::Estimation(message)) if message.contains("does not accept external resampling")
+            Err(RunnerError::Recipe(message)) if message.contains("does not accept bootstrap or permutation")
         ));
         unsupported.settings.permutation_samples = 0;
         unsupported.settings.confidence_level = 0.90;
         assert!(matches!(
             run_pls_analysis(&dataset, &unsupported, || false, |_| {}),
-            Err(RunnerError::Estimation(message)) if message.contains("fixed one-sided 95%")
+            Err(RunnerError::Recipe(message)) if message.contains("fixed one-sided 95%")
         ));
     }
 
@@ -640,12 +621,12 @@ mod tests {
             &ImportOptions::default(),
         )
         .unwrap();
-        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+        let mut recipe = migrated_execution_recipe(include_bytes!(
             "../../../validation/fixtures/simple_reflective.recipe.json"
-        ))
-        .unwrap();
+        ));
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         recipe.settings.method = AnalysisMethod::Gsca;
+        recipe.method_config = Some(MethodConfig::Gsca);
         recipe.settings.workers = 1;
         recipe.settings.max_iterations = 3_000;
         recipe.settings.tolerance = 1e-7;
@@ -707,7 +688,30 @@ mod tests {
         recipe.settings.bootstrap_samples = 999;
         assert!(matches!(
             run_pls_analysis(&dataset, &recipe, || false, |_| {}),
-            Err(RunnerError::Estimation(message)) if message.contains("does not support external resampling")
+            Err(RunnerError::Recipe(message)) if message.contains("does not expose inference")
+        ));
+    }
+
+    #[test]
+    fn historical_recipe_is_readable_but_requires_explicit_migration_before_execution() {
+        let dataset = import_delimited_bytes(
+            include_bytes!("../../../validation/fixtures/simple_reflective.csv"),
+            "simple_reflective.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut historical: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../../validation/fixtures/simple_reflective.recipe.json"
+        ))
+        .unwrap();
+        historical.dataset_fingerprint = dataset.fingerprint.0.clone();
+
+        assert!(matches!(
+            run_pls_analysis(&dataset, &historical, || false, |_| {}),
+            Err(RunnerError::Recipe(message))
+                if message.contains("readable but not executable")
+                    && message.contains("migrate")
         ));
     }
 }

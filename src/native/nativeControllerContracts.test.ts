@@ -167,6 +167,8 @@ describe("native controller release contracts", () => {
         recipe.settings.permutation_samples,
       ], mode).toEqual(samples);
       expect(recipe.metadata.status, mode).toBe(status);
+      expect(recipe.schema_version, mode).toBe(3);
+      expect(recipe.method_config.kind, mode).toBe(mode === "pls" ? "pls_algorithm" : mode === "bootstrap" ? "pls_bootstrap" : mode === "permutation" ? "pls_permutation" : "predict");
     }
   });
 
@@ -223,7 +225,8 @@ describe("native controller release contracts", () => {
       workers: 1,
       case_weight_column: null,
     });
-    expect(recipe.metadata).toEqual({ status: "validated_v1_2_1_ipma_bounded_scope", ipma_targets: "y" });
+    expect(recipe.metadata).toEqual({ status: "validated_v1_2_1_ipma_bounded_scope" });
+    expect(recipe.method_config).toEqual({ kind: "ipma", targets: ["y"] });
   });
 
   it("runs standalone NCA with an empty wire model without creating an editable project model", () => {

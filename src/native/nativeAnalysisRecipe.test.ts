@@ -196,10 +196,11 @@ describe("native recipe model payload", () => {
     const recipe = buildNativeAnalysisRecipe(makeInput("pls_algorithm", {}, { nodes: sourceNodes, edges: mixedEdges }));
 
     expect(recipe).toMatchObject({
-      schema_version: 2,
+      schema_version: 3,
       id: recipeId,
       created_at: createdAt,
       dataset_fingerprint: "sha256-fixture",
+      method_config: { kind: "pls_algorithm" },
       model: { id: modelId, name: "Fixture project" },
     });
     expect(recipe.model.paths).toEqual([{ source: "x", target: "y" }]);
@@ -239,6 +240,9 @@ describe("primary native PLS calculation payloads", () => {
     expect(algorithm.settings).toMatchObject({ method: "pls_pm", bootstrap_samples: 0, studentized_inner_samples: 0, permutation_samples: 0 });
     expect(bootstrap.settings).toMatchObject({ method: "pls_pm", bootstrap_samples: 5_000, studentized_inner_samples: 99, permutation_samples: 0 });
     expect(permutation.settings).toMatchObject({ method: "pls_pm", bootstrap_samples: 0, studentized_inner_samples: 0, permutation_samples: 999 });
+    expect(algorithm.method_config).toEqual({ kind: "pls_algorithm" });
+    expect(bootstrap.method_config).toEqual({ kind: "pls_bootstrap" });
+    expect(permutation.method_config).toEqual({ kind: "pls_permutation" });
     expect(algorithm.metadata).toEqual({ status: "validated_v1_0_supported_pls_scope" });
     expect(bootstrap.metadata).toEqual({ status: "validated_v1_0_supported_pls_scope" });
     expect(permutation.metadata).toEqual({
@@ -334,7 +338,9 @@ describe("advanced validated backend family mappings", () => {
       expect(recipe.settings.bootstrap_samples, kind).toBe(0);
       expect(recipe.settings.studentized_inner_samples, kind).toBe(0);
       expect(recipe.settings.permutation_samples, kind).toBe(0);
+      expect(recipe.method_config.kind, kind).toBe(kind);
       expect(recipe.metadata.status, kind).toContain("validated_");
+      expect(Object.keys(recipe.metadata), kind).toEqual(["status"]);
     }
   });
 
@@ -401,18 +407,21 @@ describe("advanced validated backend family mappings", () => {
   it("keeps current prediction separate from explicitly requested legacy PLS-POS and FIMIX workflows", () => {
     const base = buildNativeAnalysisRecipe(makeInput("predict", { groupMethods: "mga_permutation" }));
     expect(base.metadata).toEqual({ status: "validated_plspredict_indicator_v2_and_cvpat_indicator_benchmarks_v2_bounded_scope" });
+    expect(base.method_config).toEqual({ kind: "predict" });
 
     const pos = buildNativeAnalysisRecipe(makeInput("predict", { groupMethods: "pls_pos", segmentCount: 5, segmentStarts: 50, minimumSegmentShare: 0.4 }));
-    expect(pos.metadata).toEqual({
-      status: "validated_plspredict_indicator_v2_and_cvpat_indicator_benchmarks_v2_bounded_scope",
-      segment_count: "5",
-      segment_starts: "50",
-      minimum_segment_share: "0.4",
+    expect(pos.metadata).toEqual({ status: "validated_plspredict_indicator_v2_and_cvpat_indicator_benchmarks_v2_bounded_scope" });
+    expect(pos.method_config).toEqual({
+      kind: "predict",
+      pls_pos: { segments: 5, starts: 50, minimum_segment_share: 0.4 },
     });
 
     const fimix = buildNativeAnalysisRecipe(makeInput("predict", { groupMethods: "fimix", segmentCount: 3 }));
-    expect(fimix.metadata).toMatchObject({ group_methods: "fimix", fimix_classes: "3" });
-    expect(fimix.metadata).not.toHaveProperty("segment_count");
+    expect(fimix.metadata).toEqual({ status: "validated_plspredict_indicator_v2_and_cvpat_indicator_benchmarks_v2_bounded_scope" });
+    expect(fimix.method_config).toEqual({
+      kind: "predict",
+      fimix: { segments: 3, starts: 10, minimum_segment_share: 0.1 },
+    });
     expectFieldError(makeInput("predict", { groupMethods: "fimix", segmentCount: 4 }), "segmentCount");
     expectFieldError(makeInput("predict", { groupMethods: "pls_pos", segmentStarts: 0 }), "segmentStarts");
     expectFieldError(makeInput("predict", { groupMethods: "pls_pos", minimumSegmentShare: 0.41 }), "minimumSegmentShare");
@@ -426,9 +435,7 @@ describe("advanced validated backend family mappings", () => {
     );
     const recipe = buildNativeAnalysisRecipe(makeInput("predict", settings));
 
-    expect(recipe.metadata).not.toHaveProperty("segment_count");
-    expect(recipe.metadata).not.toHaveProperty("fimix_classes");
-    expect(recipe.metadata).not.toHaveProperty("group_methods");
+    expect(recipe.method_config).toEqual({ kind: "predict" });
   });
 
   it("maps the explicit bounded joint MICOM and permutation-MGA contract", () => {
@@ -440,14 +447,15 @@ describe("advanced validated backend family mappings", () => {
       groupPermutationSamples: 10_000,
       micomConfiguralConfirmed: true,
     }));
-    expect(recipe.metadata).toEqual({
-      status: "validated_micom_v2_and_permutation_mga_v2_bounded_scope",
-      mga_group_column: "Group",
-      mga_group_a: "Treatment",
-      mga_group_b: "Control",
-      group_methods: "micom,mga_permutation",
-      group_permutation_samples: "10000",
-      micom_configural_confirmed: "true",
+    expect(recipe.metadata).toEqual({ status: "validated_micom_v2_and_permutation_mga_v2_bounded_scope" });
+    expect(recipe.method_config).toEqual({
+      kind: "mga",
+      group_column: "Group",
+      group_a: "Treatment",
+      group_b: "Control",
+      methods: ["micom", "mga_permutation"],
+      permutation_samples: 10_000,
+      configural_invariance_confirmed: true,
     });
     expectFieldError(makeInput("mga", { groupColumn: null }), "groupColumn");
     expectFieldError(makeInput("mga", { groupColumn: "group", groupAValue: null, groupBValue: "B" }), "groupAValue");
@@ -469,8 +477,8 @@ describe("advanced validated backend family mappings", () => {
     }));
     expect(recipe.metadata).toEqual({
       status: "validated_v1_2_1_ipma_bounded_scope",
-      ipma_targets: "y",
     });
+    expect(recipe.method_config).toEqual({ kind: "ipma", targets: ["y"] });
     expect(recipe.settings).toMatchObject({
       method: "ipma",
       weighting_scheme: "path",
@@ -497,10 +505,14 @@ describe("advanced validated backend family mappings", () => {
     ));
     expect(cfa.metadata).toEqual({
       status: "validated_v1_2_4_cbsem_single_group_bounded_scope",
-      cbsem_model_type: "cfa",
-      cbsem_estimator: "ml",
-      cbsem_input: "raw",
-      cbsem_mean_structure: "false",
+    });
+    expect(cfa.method_config).toEqual({
+      kind: "cbsem",
+      model_type: "cfa",
+      estimator: "ml",
+      input: "raw",
+      mean_structure: false,
+      bootstrap_samples: 0,
     });
     expect(cfa.settings).toMatchObject({
       method: "cbsem",
@@ -514,7 +526,7 @@ describe("advanced validated backend family mappings", () => {
     expect(cfa.metadata).not.toHaveProperty("cbsem_standardization");
 
     const sem = buildNativeAnalysisRecipe(makeInput("cbsem", { cbsemModelType: "sem" }));
-    expect(sem.metadata.cbsem_model_type).toBe("sem");
+    expect(sem.method_config).toMatchObject({ kind: "cbsem", model_type: "sem" });
     expect(sem.model.paths).toEqual([{ source: "x", target: "y" }]);
     expectFieldError(makeInput("cbsem", { cbsemModelType: "cfa" }), "cbsemModelType");
     expectFieldError(makeInput("cbsem", { cbsemModelType: "sem" }, { edges: [] }), "cbsemModelType");
@@ -567,14 +579,15 @@ describe("advanced validated backend family mappings", () => {
     expectFieldError(makeInput("gsca", {}, { edges: [...edges, { id: "cov", source: "x", target: "y", data: { role: "covariance" } }] }), "model");
   });
 
-  it("emits only PCA metadata that changes the Rust calculation", () => {
+  it("emits typed PCA configuration without executable metadata", () => {
     const kaiser = buildNativeAnalysisRecipe(makeInput("pca", { pcaVariables: "x1, x2", pcaComponentRule: "kaiser", pcaComponents: 9 }));
-    expect(kaiser.metadata).toEqual({ status: "validated_pca_v1_bounded_scope", pca_variables: "x1,x2", pca_component_rule: "kaiser" });
+    expect(kaiser.metadata).toEqual({ status: "validated_pca_v1_bounded_scope" });
+    expect(kaiser.method_config).toEqual({ kind: "pca", variables: ["x1", "x2"], retention: { rule: "kaiser" } });
     expect(kaiser.settings).toMatchObject({ method: "pca", weighting_scheme: "path", preprocessing: "standardized", bootstrap_samples: 0, permutation_samples: 0, case_weight_column: null });
     const fixed = buildNativeAnalysisRecipe(makeInput("pca", { pcaVariables: "x1,x2,x3,x4", pcaComponentRule: "fixed", pcaComponents: 4 }));
-    expect(fixed.metadata.pca_components).toBe("4");
+    expect(fixed.method_config).toEqual({ kind: "pca", variables: ["x1", "x2", "x3", "x4"], retention: { rule: "fixed", components: 4 } });
     const threshold = buildNativeAnalysisRecipe(makeInput("pca", { pcaVariables: "x1,x2", pcaComponentRule: "variance_threshold", pcaVarianceThreshold: 0.85 }));
-    expect(threshold.metadata.pca_variance_threshold).toBe("0.85");
+    expect(threshold.method_config).toEqual({ kind: "pca", variables: ["x1", "x2"], retention: { rule: "variance_threshold", threshold: 0.85 } });
     expectFieldError(makeInput("pca", { pcaVariables: "x1" }), "pcaVariables");
     expectFieldError(makeInput("pca", { pcaVariables: "x1,x1" }), "pcaVariables");
     expectFieldError(makeInput("pca", { pcaVariables: "x1,x2", pcaComponentRule: "fixed", pcaComponents: 3 }), "pcaComponents");
@@ -585,18 +598,18 @@ describe("advanced validated backend family mappings", () => {
   it("maps OLS with its explicit HC3 contract and preserves bounded hidden regression variants", () => {
     const common = { regressionOutcome: "y", regressionPredictors: "x, z, x", regressionControls: "age" } satisfies Partial<AnalysisUiSettings>;
     const ols = buildNativeAnalysisRecipe(makeInput("regression", common));
-    expect(ols.metadata).toEqual({
-      status: "validated_regression_ols_v1_bounded_scope",
-      regression_type: "ols",
-      regression_outcome: "y",
-      regression_predictors: "x,z",
-      regression_controls: "age",
-      robust_se: "hc3",
+    expect(ols.metadata).toEqual({ status: "validated_regression_ols_v1_bounded_scope" });
+    expect(ols.method_config).toEqual({
+      kind: "regression",
+      outcome: "y",
+      predictors: ["x", "z"],
+      controls: ["age"],
+      model: { type: "ols", robust_se: "hc3" },
     });
     expect(ols.settings).toMatchObject({ weighting_scheme: "path", preprocessing: "unstandardized", confidence_level: 0.95 });
 
     const logistic = buildNativeAnalysisRecipe(makeInput("regression", { ...common, regressionType: "logistic" }));
-    expect(logistic.metadata.regression_type).toBe("logistic");
+    expect(logistic.method_config).toMatchObject({ kind: "regression", model: { type: "logistic" } });
 
     const mediation = buildNativeAnalysisRecipe(makeInput("regression", {
       ...common,
@@ -605,13 +618,11 @@ describe("advanced validated backend family mappings", () => {
       processX: "x",
       processM: "m",
     }));
-    expect(mediation.metadata).toMatchObject({
-      status: "validated_v1_2_2_process_mediation_bounded_scope",
-      process_model: "mediation",
-      process_x: "x",
-      process_m: "m",
+    expect(mediation.metadata).toEqual({ status: "validated_v1_2_2_process_mediation_bounded_scope" });
+    expect(mediation.method_config).toMatchObject({
+      kind: "regression",
+      model: { type: "process", relationship: { model: "mediation", x: "x", mediator: "m" } },
     });
-    expect(mediation.metadata).not.toHaveProperty("process_w");
 
     const moderation = buildNativeAnalysisRecipe(makeInput("regression", {
       ...common,
@@ -620,8 +631,11 @@ describe("advanced validated backend family mappings", () => {
       processX: "x",
       processW: "w",
     }));
-    expect(moderation.metadata).toMatchObject({ process_model: "moderation", process_x: "x", process_w: "w" });
-    expect(moderation.metadata).not.toHaveProperty("process_m");
+    expect(moderation.metadata).toEqual({ status: "validated_v1_2_2_process_moderation_bounded_scope" });
+    expect(moderation.method_config).toMatchObject({
+      kind: "regression",
+      model: { type: "process", relationship: { model: "moderation", x: "x", moderator: "w" } },
+    });
 
     expectFieldError(makeInput("regression", { regressionOutcome: null, regressionPredictors: "x" }), "regressionOutcome");
     expectFieldError(makeInput("regression", { regressionOutcome: "y", regressionPredictors: null }), "regressionPredictors");
@@ -629,15 +643,12 @@ describe("advanced validated backend family mappings", () => {
     expectFieldError(makeInput("regression", { ...common, regressionType: "process", processModel: "moderated_mediation", processX: "x", processM: "m", processW: "w" }), "processModel");
   });
 
-  it("maps NCA variable, ceiling, and permutation metadata with its independent bounds", () => {
+  it("maps typed NCA variables, ceiling, and permutations with independent bounds", () => {
     const recipe = buildNativeAnalysisRecipe(makeInput("nca", { ncaX: " x ", ncaY: " y ", ncaCeiling: "cr_fdh", ncaPermutationSamples: 10_000 }));
     expect(recipe.metadata).toEqual({
       status: "validated_nca_v2_bounded_scope",
-      nca_x: "x",
-      nca_y: "y",
-      nca_ceiling: "cr_fdh",
-      nca_permutation_samples: "10000",
     });
+    expect(recipe.method_config).toEqual({ kind: "nca", condition: "x", outcome: "y", ceiling: "cr_fdh", permutation_samples: 10_000 });
     expect(recipe.settings).toMatchObject({ weighting_scheme: "path", preprocessing: "unstandardized" });
     expectFieldError(makeInput("nca", { ncaX: null, ncaY: "y" }), "ncaX");
     expectFieldError(makeInput("nca", { ncaX: "x", ncaY: null }), "ncaY");

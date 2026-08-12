@@ -1,6 +1,7 @@
 use crate::{
-    AnalysisRecipe, HigherOrderMethod, InteractionMethod, MeasurementMode, MethodStatus,
-    PROJECT_SCHEMA_VERSION, Preprocessing, WeightingScheme, method_status,
+    ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisRecipe, EffectiveRecipeMetadataError,
+    HigherOrderMethod, InteractionMethod, MeasurementMode, MethodConfig, MethodStatus, ModelSpec,
+    Preprocessing, WeightingScheme, method_status,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -21,6 +22,142 @@ pub struct ValidationIssue {
     pub subject: Option<String>,
 }
 
+/// Opaque proof that a schema-v3 recipe passed the complete scientific
+/// preflight and that its legacy engine projection was derived from typed
+/// `method_config` rather than caller-controlled executable metadata.
+///
+/// The contained recipes are read-only. Engine crates accept this capability
+/// at their trusted cross-crate entry points, which prevents callers from
+/// bypassing [`validate_recipe`] by constructing an arbitrary projected
+/// [`AnalysisRecipe`].
+#[derive(Debug, Clone)]
+pub struct ValidatedExecutionRecipe {
+    source: AnalysisRecipe,
+    effective: AnalysisRecipe,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Error)]
+pub enum ExecutionRecipeError {
+    #[error(
+        "analysis recipe schema v{found} is readable but not executable; migrate it to schema v{required} first"
+    )]
+    CurrentSchemaRequired { found: u32, required: u32 },
+    #[error("analysis recipe dataset fingerprint does not match the execution dataset")]
+    DatasetFingerprintMismatch,
+    #[error("analysis recipe is not executable: {summary}")]
+    Invalid {
+        summary: String,
+        issues: Vec<ValidationIssue>,
+    },
+    #[error(transparent)]
+    Projection(#[from] EffectiveRecipeMetadataError),
+}
+
+impl ValidatedExecutionRecipe {
+    /// Validates a persisted/current recipe for a concrete source dataset.
+    /// Historical recipes remain readable, but require an explicit migration
+    /// before they can produce new scientific output.
+    pub fn for_dataset(
+        recipe: &AnalysisRecipe,
+        dataset_fingerprint: &str,
+    ) -> Result<Self, ExecutionRecipeError> {
+        if recipe.schema_version != ANALYSIS_RECIPE_SCHEMA_VERSION {
+            return Err(ExecutionRecipeError::CurrentSchemaRequired {
+                found: recipe.schema_version,
+                required: ANALYSIS_RECIPE_SCHEMA_VERSION,
+            });
+        }
+        if recipe.dataset_fingerprint != dataset_fingerprint {
+            return Err(ExecutionRecipeError::DatasetFingerprintMismatch);
+        }
+        Self::from_current_source(recipe.clone())
+    }
+
+    fn from_current_source(source: AnalysisRecipe) -> Result<Self, ExecutionRecipeError> {
+        if source.schema_version != ANALYSIS_RECIPE_SCHEMA_VERSION {
+            return Err(ExecutionRecipeError::CurrentSchemaRequired {
+                found: source.schema_version,
+                required: ANALYSIS_RECIPE_SCHEMA_VERSION,
+            });
+        }
+        let issues = validate_recipe(&source)
+            .into_iter()
+            .filter(|issue| issue.severity == Severity::Error)
+            .collect::<Vec<_>>();
+        if !issues.is_empty() {
+            let summary = issues
+                .iter()
+                .map(|issue| format!("{}: {}", issue.code, issue.message))
+                .collect::<Vec<_>>()
+                .join("; ");
+            return Err(ExecutionRecipeError::Invalid { summary, issues });
+        }
+        let effective = source.with_effective_metadata()?;
+        Ok(Self { source, effective })
+    }
+
+    /// The original typed recipe. This is the only recipe suitable for
+    /// persistence and result provenance.
+    pub const fn source(&self) -> &AnalysisRecipe {
+        &self.source
+    }
+
+    /// The read-only compatibility projection consumed by engine crates that
+    /// still read method-specific values from metadata. It is intentionally
+    /// hidden from public API documentation; scientific callers should pass
+    /// the capability itself to the engine entry points.
+    #[doc(hidden)]
+    pub const fn effective(&self) -> &AnalysisRecipe {
+        &self.effective
+    }
+
+    /// Rebinds a privileged engine call to the concrete dataset it received
+    /// before exposing the compatibility projection. This prevents a valid
+    /// capability created for dataset A from being reused to execute dataset B.
+    #[doc(hidden)]
+    pub fn effective_for_dataset(
+        &self,
+        dataset_fingerprint: &str,
+    ) -> Result<&AnalysisRecipe, ExecutionRecipeError> {
+        if self.source.dataset_fingerprint != dataset_fingerprint {
+            return Err(ExecutionRecipeError::DatasetFingerprintMismatch);
+        }
+        Ok(&self.effective)
+    }
+
+    /// Derives the base-estimation capability used underneath outer PLS
+    /// bootstrap/permutation orchestration. Dedicated method-internal plans
+    /// such as MGA/MICOM and NCA permutations remain unchanged.
+    pub fn without_outer_resampling(&self) -> Result<Self, ExecutionRecipeError> {
+        let mut source = self.source.clone();
+        source.settings.bootstrap_samples = 0;
+        source.settings.studentized_inner_samples = 0;
+        source.settings.permutation_samples = 0;
+        if matches!(
+            source.method_config,
+            Some(MethodConfig::PlsBootstrap | MethodConfig::PlsPermutation)
+        ) {
+            source.method_config = Some(MethodConfig::PlsAlgorithm);
+        }
+        if let Some(MethodConfig::Cbsem {
+            bootstrap_samples, ..
+        }) = source.method_config.as_mut()
+        {
+            *bootstrap_samples = 0;
+        }
+        Self::from_current_source(source)
+    }
+
+    /// Replaces only the model and then repeats the full scientific preflight.
+    /// This is used for deterministic higher-order assessment expansion; it is
+    /// deliberately not a general mutable execution-recipe escape hatch.
+    pub fn with_validated_model(&self, model: ModelSpec) -> Result<Self, ExecutionRecipeError> {
+        let mut source = self.source.clone();
+        source.model = model;
+        Self::from_current_source(source)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
 pub enum IpmaTargetSelectionError {
     #[error("IPMA requires at least one endogenous target construct")]
@@ -33,6 +170,72 @@ pub enum IpmaTargetSelectionError {
     UnknownTarget(String),
     #[error("IPMA target must be endogenous: {0}")]
     ExogenousTarget(String),
+}
+
+fn validate_v3_method_config(
+    recipe: &AnalysisRecipe,
+    config: &crate::MethodConfig,
+) -> Vec<ValidationIssue> {
+    let mut issues = Vec::new();
+    let resampling_conflict = match config {
+        crate::MethodConfig::PlsAlgorithm => {
+            recipe.settings.bootstrap_samples > 0
+                || recipe.settings.studentized_inner_samples > 0
+                || recipe.settings.permutation_samples > 0
+        }
+        crate::MethodConfig::PlsBootstrap => recipe.settings.bootstrap_samples == 0,
+        crate::MethodConfig::PlsPermutation => {
+            recipe.settings.permutation_samples == 0
+                || recipe.settings.bootstrap_samples > 0
+                || recipe.settings.studentized_inner_samples > 0
+        }
+        _ => false,
+    };
+    if resampling_conflict {
+        issues.push(issue(
+            "method_config.resampling_mismatch",
+            Severity::Error,
+            format!(
+                "method_config kind {} conflicts with the bootstrap/permutation settings",
+                config.kind()
+            ),
+            Some(config.kind().into()),
+        ));
+    }
+
+    if let crate::MethodConfig::Predict { pls_pos, fimix } = config {
+        for (name, method, allowed_segments) in
+            [("pls_pos", pls_pos, 2..=5), ("fimix", fimix, 2..=3)]
+        {
+            if let Some(method) = method
+                && (!allowed_segments.contains(&method.segments)
+                    || !(1..=50).contains(&method.starts)
+                    || !method.minimum_segment_share.is_finite()
+                    || !(0.05..=0.40).contains(&method.minimum_segment_share))
+            {
+                issues.push(issue(
+                    "method_config.segmentation_bounds",
+                    Severity::Error,
+                    format!(
+                        "{name} requires a supported segment count, 1 to 50 starts, and minimum share from 0.05 to 0.40"
+                    ),
+                    Some(name.into()),
+                ));
+            }
+        }
+        if let (Some(pls_pos), Some(fimix)) = (pls_pos, fimix)
+            && (pls_pos.starts != fimix.starts
+                || (pls_pos.minimum_segment_share - fimix.minimum_segment_share).abs() > 1e-12)
+        {
+            issues.push(issue(
+                "method_config.segmentation_shared_settings",
+                Severity::Error,
+                "PLS-POS and FIMIX currently share starts and minimum-segment-share settings",
+                None,
+            ));
+        }
+    }
+    issues
 }
 
 /// Resolves the bounded IPMA target list once for validation, estimation, and
@@ -134,7 +337,15 @@ pub fn ipma_predecessor_constructs(recipe: &AnalysisRecipe, target: &str) -> Vec
 
 pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
     let mut issues = Vec::new();
-    if recipe.schema_version > PROJECT_SCHEMA_VERSION {
+    if !matches!(recipe.schema_version, 1..=ANALYSIS_RECIPE_SCHEMA_VERSION) {
+        issues.push(issue(
+            "schema.unsupported",
+            Severity::Error,
+            "Recipe schema version must be 1, 2, or 3",
+            None,
+        ));
+    }
+    if recipe.schema_version > ANALYSIS_RECIPE_SCHEMA_VERSION {
         issues.push(issue(
             "schema.future",
             Severity::Error,
@@ -142,6 +353,57 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
             None,
         ));
     }
+    if matches!(recipe.schema_version, 1 | 2) && recipe.method_config.is_some() {
+        issues.push(issue(
+            "method_config.historical_unexpected",
+            Severity::Error,
+            "Historical schema-v1/v2 recipes cannot contain method_config",
+            None,
+        ));
+    }
+    if recipe.schema_version == ANALYSIS_RECIPE_SCHEMA_VERSION {
+        match &recipe.method_config {
+            None => issues.push(issue(
+                "method_config.required",
+                Severity::Error,
+                "Analysis recipe schema v3 requires a typed method_config",
+                None,
+            )),
+            Some(config) if !config.supports_method(recipe.settings.method) => issues.push(issue(
+                "method_config.method_mismatch",
+                Severity::Error,
+                format!(
+                    "method_config kind {} is incompatible with settings.method {}",
+                    config.kind(),
+                    recipe.settings.method
+                ),
+                Some(config.kind().into()),
+            )),
+            Some(config) => issues.extend(validate_v3_method_config(recipe, config)),
+        }
+        for key in recipe.executable_legacy_metadata_keys() {
+            issues.push(issue(
+                "method_config.legacy_metadata_conflict",
+                Severity::Error,
+                format!(
+                    "Schema-v3 executable configuration must use method_config, not metadata.{key}"
+                ),
+                Some(key.into()),
+            ));
+        }
+    }
+
+    // Existing scientific validators are shared with historical recipes. For
+    // v3, feed them a projection generated solely from the typed config.
+    let projected_recipe;
+    let recipe = if recipe.schema_version == ANALYSIS_RECIPE_SCHEMA_VERSION {
+        projected_recipe = recipe
+            .with_effective_metadata()
+            .unwrap_or_else(|_| recipe.clone());
+        &projected_recipe
+    } else {
+        recipe
+    };
     if !recipe.settings.tolerance.is_finite() || recipe.settings.tolerance <= 0.0 {
         issues.push(issue(
             "settings.tolerance",
@@ -1184,16 +1446,14 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
         let regression_type = recipe
             .metadata
             .get("regression_type")
-            .map(String::as_str)
+            .map(|value| value.trim())
             .unwrap_or("ols");
-        if regression_type == "process"
-            && recipe
-                .metadata
-                .get("process_model")
-                .map(String::as_str)
-                .unwrap_or("mediation")
-                == "moderated_mediation"
-        {
+        let process_model = recipe
+            .metadata
+            .get("process_model")
+            .map(|value| value.trim())
+            .unwrap_or("mediation");
+        if regression_type == "process" && process_model == "moderated_mediation" {
             issues.push(issue(
                 "process.moderated_mediation.experimental",
                 Severity::Warning,
@@ -1209,53 +1469,143 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
                 Some(regression_type.to_owned()),
             ));
         }
-        if !recipe.metadata.contains_key("regression_outcome") {
+        let outcome = recipe
+            .metadata
+            .get("regression_outcome")
+            .map(|value| value.trim())
+            .unwrap_or("");
+        let predictors = metadata_list(recipe, "regression_predictors")
+            .or_else(|| metadata_list(recipe, "regression.predictors"))
+            .unwrap_or_default();
+        let controls = metadata_list(recipe, "regression_controls")
+            .or_else(|| metadata_list(recipe, "regression.controls"))
+            .unwrap_or_default();
+        if outcome.is_empty() {
             issues.push(issue(
                 "regression.outcome_required",
                 Severity::Error,
-                "Regression requires metadata.regression_outcome",
+                "Regression requires a non-empty outcome variable",
                 None,
             ));
         }
-        if metadata_list(recipe, "regression_predictors")
-            .or_else(|| metadata_list(recipe, "regression.predictors"))
-            .unwrap_or_default()
-            .is_empty()
-        {
+        if predictors.is_empty() {
             issues.push(issue(
                 "regression.predictors_required",
                 Severity::Error,
-                "Regression requires metadata.regression_predictors",
+                "Regression requires at least one non-empty predictor variable",
                 None,
             ));
         }
-        if regression_type == "ols" {
-            let outcome = recipe
-                .metadata
-                .get("regression_outcome")
-                .map(|value| value.trim())
-                .unwrap_or("");
-            let predictors = metadata_list(recipe, "regression_predictors")
-                .or_else(|| metadata_list(recipe, "regression.predictors"))
-                .unwrap_or_default();
-            let controls = metadata_list(recipe, "regression_controls")
-                .or_else(|| metadata_list(recipe, "regression.controls"))
-                .unwrap_or_default();
-            let mut variables = Vec::with_capacity(1 + predictors.len() + controls.len());
-            if !outcome.is_empty() {
-                variables.push(outcome.to_owned());
-            }
-            variables.extend(predictors.iter().cloned());
-            variables.extend(controls.iter().cloned());
-            let unique = variables.iter().collect::<std::collections::BTreeSet<_>>();
-            if unique.len() != variables.len() {
+        let typed_has_empty_variable = matches!(
+            &recipe.method_config,
+            Some(crate::MethodConfig::Regression {
+                outcome,
+                predictors,
+                controls,
+                ..
+            }) if outcome.trim().is_empty()
+                || predictors.iter().any(|value| value.trim().is_empty())
+                || controls.iter().any(|value| value.trim().is_empty())
+        );
+        if typed_has_empty_variable {
+            issues.push(issue(
+                "regression.variables_nonempty",
+                Severity::Error,
+                "Regression outcome, predictors, and controls must use non-empty variable names",
+                None,
+            ));
+        }
+        let mut variables = Vec::with_capacity(1 + predictors.len() + controls.len());
+        variables.push(outcome.to_owned());
+        variables.extend(predictors.iter().cloned());
+        variables.extend(controls.iter().cloned());
+        let unique = variables
+            .iter()
+            .map(String::as_str)
+            .collect::<std::collections::BTreeSet<_>>();
+        if unique.len() != variables.len() {
+            issues.push(issue(
+                "regression.variables_distinct",
+                Severity::Error,
+                "Regression outcome, predictors, and controls must be distinct observed variables",
+                None,
+            ));
+        }
+        if regression_type == "process" {
+            if !matches!(
+                process_model,
+                "mediation" | "moderation" | "moderated_mediation"
+            ) {
                 issues.push(issue(
-                    "regression.variables_distinct",
+                    "process.model",
                     Severity::Error,
-                    "OLS outcome, predictors, and controls must be distinct observed variables",
-                    None,
+                    "PROCESS relationship must be mediation, moderation, or moderated_mediation",
+                    Some(process_model.to_owned()),
                 ));
+            } else {
+                let typed_relationship_variables = match &recipe.method_config {
+                    Some(crate::MethodConfig::Regression {
+                        model: crate::RegressionModelConfig::Process { relationship },
+                        ..
+                    }) => Some(match relationship {
+                        crate::ProcessRelationshipConfig::Mediation { x, mediator } => {
+                            vec![x.clone(), mediator.clone()]
+                        }
+                        crate::ProcessRelationshipConfig::Moderation { x, moderator } => {
+                            vec![x.clone(), moderator.clone()]
+                        }
+                        crate::ProcessRelationshipConfig::ModeratedMediation {
+                            x,
+                            mediator,
+                            moderator,
+                        } => vec![x.clone(), mediator.clone(), moderator.clone()],
+                    }),
+                    _ => None,
+                };
+                let relationship_variables = typed_relationship_variables.unwrap_or_else(|| {
+                    let value = |key: &str| {
+                        recipe
+                            .metadata
+                            .get(key)
+                            .map(|value| value.trim().to_owned())
+                            .unwrap_or_default()
+                    };
+                    let x = recipe
+                        .metadata
+                        .get("process_x")
+                        .map(|value| value.trim().to_owned())
+                        .or_else(|| predictors.first().cloned())
+                        .unwrap_or_default();
+                    match process_model {
+                        "mediation" => vec![x, value("process_m")],
+                        "moderation" => vec![x, value("process_w")],
+                        "moderated_mediation" => {
+                            vec![x, value("process_m"), value("process_w")]
+                        }
+                        _ => Vec::new(),
+                    }
+                });
+                let relationship_unique = relationship_variables
+                    .iter()
+                    .map(String::as_str)
+                    .chain(std::iter::once(outcome))
+                    .collect::<std::collections::BTreeSet<_>>();
+                let relationship_is_bound = !outcome.is_empty()
+                    && relationship_variables
+                        .iter()
+                        .all(|variable| !variable.is_empty() && predictors.contains(variable))
+                    && relationship_unique.len() == relationship_variables.len() + 1;
+                if !relationship_is_bound {
+                    issues.push(issue(
+                        "process.variables_bound",
+                        Severity::Error,
+                        "Every PROCESS relationship variable must be a distinct declared predictor and must differ from the outcome",
+                        None,
+                    ));
+                }
             }
+        }
+        if regression_type == "ols" {
             if recipe.metadata.get("robust_se").map(|value| value.trim()) != Some("hc3") {
                 issues.push(issue(
                     "regression.hc3_required",
@@ -1264,70 +1614,70 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
                     None,
                 ));
             }
-            if recipe.settings.weighting_scheme != crate::WeightingScheme::Path {
-                issues.push(issue(
-                    "regression.weighting_sentinel",
-                    Severity::Error,
-                    "Standalone OLS uses path weighting only as a non-operative wire sentinel",
-                    None,
-                ));
-            }
-            if recipe.settings.preprocessing != crate::Preprocessing::Unstandardized {
-                issues.push(issue(
-                    "regression.raw_values_required",
-                    Severity::Error,
-                    "The validated native OLS scope fits unstandardized observed values",
-                    None,
-                ));
-            }
-            if recipe.settings.missing_data != crate::MissingDataPolicy::ListwiseDeletion {
-                issues.push(issue(
-                    "regression.listwise_required",
-                    Severity::Error,
-                    "The validated native OLS scope requires listwise deletion",
-                    None,
-                ));
-            }
-            if recipe.settings.case_weight_column.is_some() {
-                issues.push(issue(
-                    "regression.case_weights_unsupported",
-                    Severity::Error,
-                    "The validated native OLS scope does not support case weights",
-                    None,
-                ));
-            }
-            if recipe.settings.bootstrap_samples > 0
-                || recipe.settings.studentized_inner_samples > 0
-                || recipe.settings.permutation_samples > 0
-            {
-                issues.push(issue(
-                    "regression.resampling_unsupported",
-                    Severity::Error,
-                    "The validated native OLS scope does not accept external resampling settings",
-                    None,
-                ));
-            }
-            if (recipe.settings.confidence_level - 0.95).abs() > 1e-12 {
-                issues.push(issue(
-                    "regression.confidence_fixed",
-                    Severity::Error,
-                    "The validated native OLS scope uses fixed two-sided 95% confidence intervals",
-                    None,
-                ));
-            }
-            if !recipe.model.constructs.is_empty()
-                || !recipe.model.paths.is_empty()
-                || !recipe.model.controls.is_empty()
-                || !recipe.model.interactions.is_empty()
-                || !recipe.model.higher_order_constructs.is_empty()
-            {
-                issues.push(issue(
-                    "regression.empty_model_required",
-                    Severity::Error,
-                    "Standalone OLS consumes selected raw-data columns and requires an empty SEM model",
-                    None,
-                ));
-            }
+        }
+        if recipe.settings.weighting_scheme != crate::WeightingScheme::Path {
+            issues.push(issue(
+                "regression.weighting_sentinel",
+                Severity::Error,
+                "Standalone regression uses path weighting only as a non-operative wire sentinel",
+                None,
+            ));
+        }
+        if recipe.settings.preprocessing != crate::Preprocessing::Unstandardized {
+            issues.push(issue(
+                "regression.raw_values_required",
+                Severity::Error,
+                "The validated native regression scope fits unstandardized observed values",
+                None,
+            ));
+        }
+        if recipe.settings.missing_data != crate::MissingDataPolicy::ListwiseDeletion {
+            issues.push(issue(
+                "regression.listwise_required",
+                Severity::Error,
+                "The validated native regression scope requires listwise deletion",
+                None,
+            ));
+        }
+        if recipe.settings.case_weight_column.is_some() {
+            issues.push(issue(
+                "regression.case_weights_unsupported",
+                Severity::Error,
+                "The validated native regression scope does not support case weights",
+                None,
+            ));
+        }
+        if recipe.settings.bootstrap_samples > 0
+            || recipe.settings.studentized_inner_samples > 0
+            || recipe.settings.permutation_samples > 0
+        {
+            issues.push(issue(
+                "regression.resampling_unsupported",
+                Severity::Error,
+                "The validated native regression scope does not accept external resampling settings",
+                None,
+            ));
+        }
+        if (recipe.settings.confidence_level - 0.95).abs() > 1e-12 {
+            issues.push(issue(
+                "regression.confidence_fixed",
+                Severity::Error,
+                "The validated native regression scope uses fixed two-sided 95% confidence intervals",
+                None,
+            ));
+        }
+        if !recipe.model.constructs.is_empty()
+            || !recipe.model.paths.is_empty()
+            || !recipe.model.controls.is_empty()
+            || !recipe.model.interactions.is_empty()
+            || !recipe.model.higher_order_constructs.is_empty()
+        {
+            issues.push(issue(
+                "regression.empty_model_required",
+                Severity::Error,
+                "Standalone regression consumes selected raw-data columns and requires an empty SEM model",
+                None,
+            ));
         }
     }
     if recipe.settings.method == crate::AnalysisMethod::Nca {
@@ -1971,8 +2321,32 @@ mod tests {
                 interactions: Vec::new(),
             },
             settings: AnalysisSettings::default(),
+            method_config: None,
             metadata: BTreeMap::new(),
         }
+    }
+
+    fn valid_v3_regression_recipe(
+        model: crate::RegressionModelConfig,
+        predictors: &[&str],
+    ) -> AnalysisRecipe {
+        let mut recipe = valid_recipe();
+        recipe.schema_version = ANALYSIS_RECIPE_SCHEMA_VERSION;
+        recipe.settings.method = crate::AnalysisMethod::Regression;
+        recipe.settings.preprocessing = crate::Preprocessing::Unstandardized;
+        recipe.settings.confidence_level = 0.95;
+        recipe.model.constructs.clear();
+        recipe.model.paths.clear();
+        recipe.model.controls.clear();
+        recipe.model.interactions.clear();
+        recipe.model.higher_order_constructs.clear();
+        recipe.method_config = Some(crate::MethodConfig::Regression {
+            outcome: "y".into(),
+            predictors: predictors.iter().map(|value| (*value).into()).collect(),
+            controls: Vec::new(),
+            model,
+        });
+        recipe
     }
 
     #[test]
@@ -1980,6 +2354,124 @@ mod tests {
         let issues = validate_recipe(&valid_recipe());
         assert!(issues.is_empty());
         assert_eq!(method_status("pls_pm"), MethodStatus::Validated);
+    }
+
+    #[test]
+    fn validated_execution_recipe_requires_current_schema_and_matching_dataset() {
+        let historical = valid_recipe();
+        assert!(matches!(
+            ValidatedExecutionRecipe::for_dataset(&historical, "abc"),
+            Err(ExecutionRecipeError::CurrentSchemaRequired {
+                found: 1,
+                required: ANALYSIS_RECIPE_SCHEMA_VERSION,
+            })
+        ));
+
+        let mut current = historical;
+        current.schema_version = ANALYSIS_RECIPE_SCHEMA_VERSION;
+        current.method_config = Some(crate::MethodConfig::PlsAlgorithm);
+        let execution = ValidatedExecutionRecipe::for_dataset(&current, "abc")
+            .expect("a valid current recipe should yield an execution capability");
+        assert_eq!(execution.source(), &current);
+        assert_eq!(
+            execution.effective_for_dataset("abc").unwrap(),
+            execution.effective()
+        );
+        assert!(matches!(
+            execution.effective_for_dataset("different"),
+            Err(ExecutionRecipeError::DatasetFingerprintMismatch)
+        ));
+
+        assert!(matches!(
+            ValidatedExecutionRecipe::for_dataset(&current, "different"),
+            Err(ExecutionRecipeError::DatasetFingerprintMismatch)
+        ));
+
+        current.method_config = Some(crate::MethodConfig::Wpls);
+        assert!(matches!(
+            ValidatedExecutionRecipe::for_dataset(&current, "abc"),
+            Err(ExecutionRecipeError::Invalid { .. })
+        ));
+    }
+
+    #[test]
+    fn validated_execution_recipe_derives_an_immutable_no_resampling_base() {
+        let mut recipe = valid_recipe();
+        recipe.schema_version = ANALYSIS_RECIPE_SCHEMA_VERSION;
+        recipe.settings.bootstrap_samples = 999;
+        recipe.settings.permutation_samples = 999;
+        recipe.method_config = Some(crate::MethodConfig::PlsBootstrap);
+
+        let execution = ValidatedExecutionRecipe::for_dataset(&recipe, "abc").unwrap();
+        let base = execution.without_outer_resampling().unwrap();
+
+        assert_eq!(execution.source().settings.bootstrap_samples, 999);
+        assert_eq!(execution.source().settings.permutation_samples, 999);
+        assert_eq!(
+            execution.source().method_config,
+            Some(crate::MethodConfig::PlsBootstrap)
+        );
+        assert_eq!(base.source().settings.bootstrap_samples, 0);
+        assert_eq!(base.source().settings.studentized_inner_samples, 0);
+        assert_eq!(base.source().settings.permutation_samples, 0);
+        assert_eq!(
+            base.source().method_config,
+            Some(crate::MethodConfig::PlsAlgorithm)
+        );
+    }
+
+    #[test]
+    fn v3_pls_bootstrap_can_explicitly_request_the_combined_permutation_output() {
+        let mut recipe = valid_recipe();
+        recipe.schema_version = ANALYSIS_RECIPE_SCHEMA_VERSION;
+        recipe.settings.bootstrap_samples = 999;
+        recipe.settings.permutation_samples = 999;
+        recipe.method_config = Some(crate::MethodConfig::PlsBootstrap);
+
+        assert!(
+            validate_recipe(&recipe)
+                .iter()
+                .all(|issue| issue.severity != Severity::Error),
+            "an explicit v3 bootstrap workflow preserves the supported optional permutation result"
+        );
+
+        recipe.method_config = Some(crate::MethodConfig::PlsPermutation);
+        assert!(validate_recipe(&recipe).iter().any(|issue| {
+            issue.code == "method_config.resampling_mismatch" && issue.severity == Severity::Error
+        }));
+    }
+
+    #[test]
+    fn v3_rejects_the_historical_bootstrap_method_alias() {
+        let mut recipe = valid_recipe();
+        recipe.schema_version = ANALYSIS_RECIPE_SCHEMA_VERSION;
+        recipe.settings.method = crate::AnalysisMethod::Bootstrap;
+        recipe.settings.bootstrap_samples = 999;
+        recipe.method_config = Some(crate::MethodConfig::PlsBootstrap);
+
+        assert!(validate_recipe(&recipe).iter().any(|issue| {
+            issue.code == "method_config.method_mismatch" && issue.severity == Severity::Error
+        }));
+    }
+
+    #[test]
+    fn recipe_schema_validation_rejects_zero_and_future_versions() {
+        let mut recipe = valid_recipe();
+        recipe.schema_version = 0;
+        assert!(
+            validate_recipe(&recipe)
+                .iter()
+                .any(|issue| issue.code == "schema.unsupported")
+        );
+
+        recipe.schema_version = ANALYSIS_RECIPE_SCHEMA_VERSION + 1;
+        let issues = validate_recipe(&recipe);
+        assert!(
+            issues
+                .iter()
+                .any(|issue| issue.code == "schema.unsupported")
+        );
+        assert!(issues.iter().any(|issue| issue.code == "schema.future"));
     }
 
     #[test]
@@ -2594,6 +3086,180 @@ mod tests {
                 "missing {code}"
             );
         }
+    }
+
+    #[test]
+    fn v3_regression_models_share_the_standalone_execution_envelope() {
+        let cases = vec![
+            (
+                "ols",
+                crate::RegressionModelConfig::Ols {
+                    robust_se: crate::RobustStandardError::Hc3,
+                },
+                vec!["x"],
+            ),
+            (
+                "logistic",
+                crate::RegressionModelConfig::Logistic,
+                vec!["x"],
+            ),
+            (
+                "process",
+                crate::RegressionModelConfig::Process {
+                    relationship: crate::ProcessRelationshipConfig::Mediation {
+                        x: "x".into(),
+                        mediator: "m".into(),
+                    },
+                },
+                vec!["x", "m"],
+            ),
+        ];
+
+        for (name, model, predictors) in cases {
+            let recipe = valid_v3_regression_recipe(model, &predictors);
+            let valid_issues = validate_recipe(&recipe);
+            assert!(
+                valid_issues
+                    .iter()
+                    .all(|issue| issue.severity != Severity::Error),
+                "valid {name} regression recipe was rejected: {valid_issues:#?}"
+            );
+
+            let mut drift = recipe;
+            drift.settings.weighting_scheme = crate::WeightingScheme::Factor;
+            drift.settings.preprocessing = crate::Preprocessing::Standardized;
+            drift.settings.case_weight_column = Some("weight".into());
+            drift.settings.bootstrap_samples = 999;
+            drift.settings.confidence_level = 0.90;
+            drift
+                .model
+                .constructs
+                .push(valid_recipe().model.constructs[0].clone());
+            let issues = validate_recipe(&drift);
+            for code in [
+                "regression.weighting_sentinel",
+                "regression.raw_values_required",
+                "regression.case_weights_unsupported",
+                "regression.resampling_unsupported",
+                "regression.confidence_fixed",
+                "regression.empty_model_required",
+            ] {
+                assert!(
+                    issues.iter().any(|issue| issue.code == code),
+                    "missing {code} for {name}: {issues:#?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn v3_regression_rejects_empty_and_duplicate_declared_variables() {
+        let mut recipe = valid_v3_regression_recipe(crate::RegressionModelConfig::Logistic, &["x"]);
+        recipe.method_config = Some(crate::MethodConfig::Regression {
+            outcome: " ".into(),
+            predictors: vec!["x".into(), "x".into()],
+            controls: vec![" ".into()],
+            model: crate::RegressionModelConfig::Logistic,
+        });
+
+        let issues = validate_recipe(&recipe);
+        for code in [
+            "regression.outcome_required",
+            "regression.variables_nonempty",
+            "regression.variables_distinct",
+        ] {
+            assert!(
+                issues.iter().any(|issue| issue.code == code),
+                "missing {code}: {issues:#?}"
+            );
+        }
+
+        recipe.method_config = Some(crate::MethodConfig::Regression {
+            outcome: "y".into(),
+            predictors: vec![" ".into()],
+            controls: Vec::new(),
+            model: crate::RegressionModelConfig::Logistic,
+        });
+        let issues = validate_recipe(&recipe);
+        assert!(
+            issues
+                .iter()
+                .any(|issue| issue.code == "regression.predictors_required")
+        );
+        assert!(
+            issues
+                .iter()
+                .any(|issue| issue.code == "regression.variables_nonempty")
+        );
+    }
+
+    #[test]
+    fn v3_process_relationship_variables_must_bind_to_declared_predictors() {
+        let cases = vec![
+            (
+                crate::RegressionModelConfig::Process {
+                    relationship: crate::ProcessRelationshipConfig::Mediation {
+                        x: "x".into(),
+                        mediator: "m".into(),
+                    },
+                },
+                vec!["x", "m"],
+            ),
+            (
+                crate::RegressionModelConfig::Process {
+                    relationship: crate::ProcessRelationshipConfig::Moderation {
+                        x: "x".into(),
+                        moderator: "w".into(),
+                    },
+                },
+                vec!["x", "w"],
+            ),
+            (
+                crate::RegressionModelConfig::Process {
+                    relationship: crate::ProcessRelationshipConfig::ModeratedMediation {
+                        x: "x".into(),
+                        mediator: "m".into(),
+                        moderator: "w".into(),
+                    },
+                },
+                vec!["x", "m", "w"],
+            ),
+        ];
+
+        for (model, predictors) in cases {
+            let valid = valid_v3_regression_recipe(model.clone(), &predictors);
+            assert!(
+                validate_recipe(&valid)
+                    .iter()
+                    .all(|issue| issue.code != "process.variables_bound"),
+                "valid PROCESS relationship was not bound"
+            );
+
+            let invalid = valid_v3_regression_recipe(model, &["x"]);
+            let issues = validate_recipe(&invalid);
+            assert!(
+                issues
+                    .iter()
+                    .any(|issue| issue.code == "process.variables_bound"
+                        && issue.severity == Severity::Error),
+                "unbound PROCESS relationship was accepted: {issues:#?}"
+            );
+        }
+
+        let whitespace_bound = valid_v3_regression_recipe(
+            crate::RegressionModelConfig::Process {
+                relationship: crate::ProcessRelationshipConfig::Moderation {
+                    x: " x ".into(),
+                    moderator: "w".into(),
+                },
+            },
+            &["x", "w"],
+        );
+        assert!(
+            validate_recipe(&whitespace_bound)
+                .iter()
+                .any(|issue| issue.code == "process.variables_bound")
+        );
     }
 
     #[test]

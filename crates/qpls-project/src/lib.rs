@@ -7,10 +7,11 @@ use qpls_assessment::{
     variance_inflation_factor,
 };
 use qpls_core::{
-    AnalysisMethod, AnalysisPayload, AnalysisRecipe, AnalysisResult, AnalysisSettings, Diagnostic,
-    DiagnosticLevel, ENGINE_VERSION, HigherOrderMethod, MeasurementMode, MissingDataPolicy,
-    ModelSpec, Preprocessing, RESULT_SCHEMA_VERSION, RunProvenance, RunStatus, WeightingScheme,
-    ipma_predecessor_constructs, resolve_ipma_targets,
+    ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisMethod, AnalysisPayload, AnalysisRecipe,
+    AnalysisResult, AnalysisSettings, Diagnostic, DiagnosticLevel, ENGINE_VERSION,
+    HigherOrderMethod, MeasurementMode, MissingDataPolicy, ModelSpec, Preprocessing,
+    RESULT_SCHEMA_VERSION, RunProvenance, RunStatus, Severity, WeightingScheme,
+    ipma_predecessor_constructs, resolve_ipma_targets, validate_recipe,
 };
 use qpls_data::{Dataset, DatasetDescriptor, dataset_from_descriptor, write_arrow};
 use qpls_estimation::{
@@ -25,7 +26,8 @@ use qpls_estimation::{
     PLS_PREDICT_METHOD_VERSION_V1, PLS_PREDICT_REPEATED_KFOLD_METHOD_VERSION,
     PLS_TWO_STAGE_MODERATION_METHOD_VERSION, PLSC_METHOD_VERSION, PLSC_METHOD_VERSION_V1,
     PcaAnalysis, PlsPredictAnalysis, PlsPredictCvpatBenchmarkAssessment, PlsPredictErrorMetrics,
-    PlsPredictIndicatorTarget, PlsResult, REGRESSION_OLS_METHOD_VERSION, RegressionAnalysis,
+    PlsPredictIndicatorTarget, PlsResult, REGRESSION_LOGISTIC_METHOD_VERSION,
+    REGRESSION_OLS_METHOD_VERSION, REGRESSION_PROCESS_METHOD_VERSION, RegressionAnalysis,
     WPLS_METHOD_VERSION, analyze_mediation_effects_with_tolerance, analyze_moderation,
     nca_analysis_matches_v2_contract,
 };
@@ -167,6 +169,35 @@ impl Project {
     ) -> Result<(), ProjectError> {
         if self.read_only {
             return Err(ProjectError::ReadOnly);
+        }
+        if self.recipes.iter().any(|stored| stored.id == recipe.id) {
+            return Err(ProjectError::Invalid(format!(
+                "analysis recipe {} already exists; recipe IDs must be unique",
+                recipe.id
+            )));
+        }
+        if self.results.iter().any(|stored| stored.id == result.id) {
+            return Err(ProjectError::Invalid(format!(
+                "analysis result {} already exists; result IDs must be unique",
+                result.id
+            )));
+        }
+        if recipe.schema_version != ANALYSIS_RECIPE_SCHEMA_VERSION {
+            return Err(ProjectError::Invalid(format!(
+                "historical analysis recipe schema {} is archive-readable but cannot be appended as a new result; explicitly migrate it to schema v{} first",
+                recipe.schema_version, ANALYSIS_RECIPE_SCHEMA_VERSION
+            )));
+        }
+        let recipe_errors = validate_recipe(&recipe)
+            .into_iter()
+            .filter(|issue| issue.severity == Severity::Error)
+            .map(|issue| format!("{}: {}", issue.code, issue.message))
+            .collect::<Vec<_>>();
+        if !recipe_errors.is_empty() {
+            return Err(ProjectError::Invalid(format!(
+                "analysis recipe cannot be appended: {}",
+                recipe_errors.join("; ")
+            )));
         }
         if result.provenance.method == AnalysisMethod::Mga
             && result.provenance.method_version.split('+').any(|version| {
@@ -384,13 +415,15 @@ fn migrate_document(schema_version: u32, bytes: &[u8]) -> Result<ProjectDocument
                 }
             })
             .collect();
-        return Ok(ProjectDocument {
+        let document = ProjectDocument {
             datasets: legacy.datasets,
             models: legacy.models,
             recipes: legacy.recipes,
             layouts: legacy.layouts,
             results,
-        });
+        };
+        validate_unique_analysis_ids(&document.results, &document.recipes)?;
+        return Ok(document);
     }
     let legacy: LegacyProjectDocument = serde_json::from_slice(bytes)?;
     let results = legacy
@@ -436,13 +469,15 @@ fn migrate_document(schema_version: u32, bytes: &[u8]) -> Result<ProjectDocument
             }
         })
         .collect();
-    Ok(ProjectDocument {
+    let document = ProjectDocument {
         datasets: legacy.datasets,
         models: legacy.models,
         recipes: legacy.recipes,
         layouts: legacy.layouts,
         results,
-    })
+    };
+    validate_unique_analysis_ids(&document.results, &document.recipes)?;
+    Ok(document)
 }
 
 fn migrate_method(method: &str) -> AnalysisMethod {
@@ -478,6 +513,31 @@ fn validate_result_contracts_with_recipes(
     recipes: &[AnalysisRecipe],
 ) -> Result<(), ProjectError> {
     validate_result_contracts_internal(results, recipes, true)
+}
+
+fn validate_unique_analysis_ids(
+    results: &[AnalysisResult],
+    recipes: &[AnalysisRecipe],
+) -> Result<(), ProjectError> {
+    let mut recipe_ids = BTreeSet::new();
+    for recipe in recipes {
+        if !recipe_ids.insert(recipe.id) {
+            return Err(ProjectError::Invalid(format!(
+                "analysis recipe {} is duplicated; recipe IDs must be unique",
+                recipe.id
+            )));
+        }
+    }
+    let mut result_ids = BTreeSet::new();
+    for result in results {
+        if !result_ids.insert(result.id) {
+            return Err(ProjectError::Invalid(format!(
+                "analysis result {} is duplicated; result IDs must be unique",
+                result.id
+            )));
+        }
+    }
+    Ok(())
 }
 
 fn executable_pls_payload_method_version(method: AnalysisMethod) -> Option<&'static str> {
@@ -727,30 +787,67 @@ fn validate_cbsem_payload_contract(
     recipe: Option<&AnalysisRecipe>,
     assessment_method_version: &str,
 ) -> bool {
-    const STATUS: &str = "validated_v1_2_4_cbsem_single_group_bounded_scope";
     const SCOPE_WARNING: &str = "CB-SEM/CFA ML v1 is validated for the documented QuickPLS v1.2.4 raw-data single-group reflective ML scope; bootstrap, unrestricted multigroup/invariance, robust, ordinal, and FIML estimators remain experimental or unsupported.";
 
     let Some(recipe) = recipe else {
         return false;
     };
-    let Some(model_type) = metadata_value(recipe, "cbsem_model_type", "cbsem.model_type") else {
-        return false;
-    };
-    let expected_method_version = match model_type {
+    let (model_type, configured_scope_valid) =
+        if recipe.schema_version == ANALYSIS_RECIPE_SCHEMA_VERSION {
+            let Some(qpls_core::MethodConfig::Cbsem {
+                model_type,
+                estimator,
+                input,
+                mean_structure,
+                bootstrap_samples,
+                group_column,
+                invariance_steps,
+            }) = recipe.method_config.as_ref()
+            else {
+                return false;
+            };
+            (
+                match model_type {
+                    qpls_core::CbsemModelType::Cfa => "cfa".to_string(),
+                    qpls_core::CbsemModelType::Sem => "sem".to_string(),
+                },
+                *estimator == qpls_core::CbsemEstimator::Ml
+                    && *input == qpls_core::CbsemInput::Raw
+                    && !*mean_structure
+                    && *bootstrap_samples == 0
+                    && group_column.is_none()
+                    && invariance_steps.is_empty(),
+            )
+        } else {
+            let Some(model_type) = metadata_value(recipe, "cbsem_model_type", "cbsem.model_type")
+            else {
+                return false;
+            };
+            let metadata_is_absent_or = |key: &str, accepted: &str| {
+                recipe
+                    .metadata
+                    .get(key)
+                    .is_none_or(|value| value.trim().eq_ignore_ascii_case(accepted))
+            };
+            let no_cbsem_bootstrap = recipe
+                .metadata
+                .get("cbsem_bootstrap_samples")
+                .is_none_or(|value| value.trim().parse::<usize>().ok() == Some(0));
+            (
+                model_type.to_string(),
+                metadata_value(recipe, "cbsem_input", "cbsem.input") == Some("raw")
+                    && metadata_is_absent_or("cbsem_estimator", "ml")
+                    && metadata_is_absent_or("cbsem_mean_structure", "false")
+                    && no_cbsem_bootstrap
+                    && !recipe.metadata.contains_key("cbsem_group_column")
+                    && !recipe.metadata.contains_key("cbsem_invariance_steps"),
+            )
+        };
+    let expected_method_version = match model_type.as_str() {
         "cfa" => CFA_ML_METHOD_VERSION,
         "sem" => CBSEM_ML_METHOD_VERSION,
         _ => return false,
     };
-    let metadata_is_absent_or = |key: &str, accepted: &str| {
-        recipe
-            .metadata
-            .get(key)
-            .is_none_or(|value| value.trim().eq_ignore_ascii_case(accepted))
-    };
-    let no_cbsem_bootstrap = recipe
-        .metadata
-        .get("cbsem_bootstrap_samples")
-        .is_none_or(|value| value.trim().parse::<usize>().ok() == Some(0));
     if recipe.settings.method != AnalysisMethod::Cbsem
         || recipe.settings.weighting_scheme != WeightingScheme::Path
         || recipe.settings.preprocessing != Preprocessing::Standardized
@@ -760,13 +857,7 @@ fn validate_cbsem_payload_contract(
         || recipe.settings.studentized_inner_samples > 0
         || recipe.settings.permutation_samples > 0
         || recipe.settings.workers != 1
-        || metadata_value(recipe, "status", "validation_status") != Some(STATUS)
-        || metadata_value(recipe, "cbsem_input", "cbsem.input") != Some("raw")
-        || !metadata_is_absent_or("cbsem_estimator", "ml")
-        || !metadata_is_absent_or("cbsem_mean_structure", "false")
-        || !no_cbsem_bootstrap
-        || recipe.metadata.contains_key("cbsem_group_column")
-        || recipe.metadata.contains_key("cbsem_invariance_steps")
+        || !configured_scope_valid
         || !recipe.model.controls.is_empty()
         || !recipe.model.interactions.is_empty()
         || !recipe.model.higher_order_constructs.is_empty()
@@ -1914,7 +2005,229 @@ fn validate_pca_analysis_contract(
     true
 }
 
-fn validate_ols_payload_contract(
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum ProcessPersistenceContract {
+    Mediation {
+        x: String,
+        mediator: String,
+    },
+    Moderation {
+        x: String,
+        moderator: String,
+    },
+    ModeratedMediation {
+        x: String,
+        mediator: String,
+        moderator: String,
+    },
+}
+
+impl ProcessPersistenceContract {
+    fn model(&self) -> &'static str {
+        match self {
+            Self::Mediation { .. } => "mediation",
+            Self::Moderation { .. } => "moderation",
+            Self::ModeratedMediation { .. } => "moderated_mediation",
+        }
+    }
+
+    fn variables_are_bound(&self, predictors: &[String], outcome: &str) -> bool {
+        let contains = |value: &str| predictors.iter().any(|predictor| predictor == value);
+        match self {
+            Self::Mediation { x, mediator } => {
+                x != mediator
+                    && x != outcome
+                    && mediator != outcome
+                    && contains(x)
+                    && contains(mediator)
+            }
+            Self::Moderation { x, moderator } => {
+                x != moderator
+                    && x != outcome
+                    && moderator != outcome
+                    && contains(x)
+                    && contains(moderator)
+            }
+            Self::ModeratedMediation {
+                x,
+                mediator,
+                moderator,
+            } => {
+                let unique = [x.as_str(), mediator.as_str(), moderator.as_str(), outcome]
+                    .into_iter()
+                    .collect::<BTreeSet<_>>();
+                unique.len() == 4 && contains(x) && contains(mediator) && contains(moderator)
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum RegressionPersistenceKind {
+    Ols,
+    Logistic,
+    Process(ProcessPersistenceContract),
+}
+
+impl RegressionPersistenceKind {
+    fn method_version(&self) -> &'static str {
+        match self {
+            Self::Ols => REGRESSION_OLS_METHOD_VERSION,
+            Self::Logistic => REGRESSION_LOGISTIC_METHOD_VERSION,
+            Self::Process(_) => REGRESSION_PROCESS_METHOD_VERSION,
+        }
+    }
+
+    fn scope_warning(&self) -> &'static str {
+        match self {
+            Self::Ols => {
+                "OLS regression v1 is validated for the documented QuickPLS v1.2 OLS scope; unsupported shapes remain blocked."
+            }
+            Self::Logistic => {
+                "Logistic regression v1 is validated for the documented QuickPLS v1.2.2 binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, and Firth-corrected models remain unsupported."
+            }
+            Self::Process(_) => {
+                "PROCESS-style regression v1 is validated for the documented QuickPLS v1.2.2 bounded mediation/moderation workflow scope; moderated mediation and the full Hayes model catalogue remain experimental."
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct RegressionRecipeContract {
+    outcome: String,
+    predictors: Vec<String>,
+    controls: Vec<String>,
+    kind: RegressionPersistenceKind,
+    current_typed: bool,
+}
+
+fn regression_recipe_contract(recipe: &AnalysisRecipe) -> Option<RegressionRecipeContract> {
+    if recipe.schema_version == ANALYSIS_RECIPE_SCHEMA_VERSION {
+        let qpls_core::MethodConfig::Regression {
+            outcome,
+            predictors,
+            controls,
+            model,
+        } = recipe.method_config.as_ref()?
+        else {
+            return None;
+        };
+        let kind = match model {
+            qpls_core::RegressionModelConfig::Ols { robust_se } => {
+                if *robust_se != qpls_core::RobustStandardError::Hc3 {
+                    return None;
+                }
+                RegressionPersistenceKind::Ols
+            }
+            qpls_core::RegressionModelConfig::Logistic => RegressionPersistenceKind::Logistic,
+            qpls_core::RegressionModelConfig::Process { relationship } => {
+                let process = match relationship {
+                    qpls_core::ProcessRelationshipConfig::Mediation { x, mediator } => {
+                        ProcessPersistenceContract::Mediation {
+                            x: x.clone(),
+                            mediator: mediator.clone(),
+                        }
+                    }
+                    qpls_core::ProcessRelationshipConfig::Moderation { x, moderator } => {
+                        ProcessPersistenceContract::Moderation {
+                            x: x.clone(),
+                            moderator: moderator.clone(),
+                        }
+                    }
+                    qpls_core::ProcessRelationshipConfig::ModeratedMediation {
+                        x,
+                        mediator,
+                        moderator,
+                    } => ProcessPersistenceContract::ModeratedMediation {
+                        x: x.clone(),
+                        mediator: mediator.clone(),
+                        moderator: moderator.clone(),
+                    },
+                };
+                RegressionPersistenceKind::Process(process)
+            }
+        };
+        return Some(RegressionRecipeContract {
+            outcome: outcome.trim().to_string(),
+            predictors: predictors
+                .iter()
+                .map(|value| value.trim().to_string())
+                .collect(),
+            controls: controls
+                .iter()
+                .map(|value| value.trim().to_string())
+                .collect(),
+            kind,
+            current_typed: true,
+        });
+    }
+
+    let outcome = recipe
+        .metadata
+        .get("regression_outcome")?
+        .trim()
+        .to_string();
+    let predictors = metadata_value(recipe, "regression_predictors", "regression.predictors")
+        .map(csv_values)
+        .unwrap_or_default();
+    let controls = metadata_value(recipe, "regression_controls", "regression.controls")
+        .map(csv_values)
+        .unwrap_or_default();
+    let regression_type = recipe
+        .metadata
+        .get("regression_type")
+        .map(|value| value.trim())
+        .unwrap_or("ols");
+    let kind = match regression_type {
+        "ols" => {
+            if recipe.metadata.get("robust_se").map(|value| value.trim()) != Some("hc3") {
+                return None;
+            }
+            RegressionPersistenceKind::Ols
+        }
+        "logistic" => RegressionPersistenceKind::Logistic,
+        "process" => {
+            let x = recipe
+                .metadata
+                .get("process_x")
+                .map(|value| value.trim().to_string())
+                .or_else(|| predictors.first().cloned())?;
+            let process = match recipe
+                .metadata
+                .get("process_model")
+                .map(|value| value.trim())
+                .unwrap_or("mediation")
+            {
+                "mediation" => ProcessPersistenceContract::Mediation {
+                    x,
+                    mediator: recipe.metadata.get("process_m")?.trim().to_string(),
+                },
+                "moderation" => ProcessPersistenceContract::Moderation {
+                    x,
+                    moderator: recipe.metadata.get("process_w")?.trim().to_string(),
+                },
+                "moderated_mediation" => ProcessPersistenceContract::ModeratedMediation {
+                    x,
+                    mediator: recipe.metadata.get("process_m")?.trim().to_string(),
+                    moderator: recipe.metadata.get("process_w")?.trim().to_string(),
+                },
+                _ => return None,
+            };
+            RegressionPersistenceKind::Process(process)
+        }
+        _ => return None,
+    };
+    Some(RegressionRecipeContract {
+        outcome,
+        predictors,
+        controls,
+        kind,
+        current_typed: false,
+    })
+}
+
+fn validate_regression_payload_contract(
     result: &AnalysisResult,
     estimation: &PlsResult,
     recipe: Option<&AnalysisRecipe>,
@@ -1923,39 +2236,41 @@ fn validate_ols_payload_contract(
     let Some(recipe) = recipe else {
         return false;
     };
-    let outcome = recipe
-        .metadata
-        .get("regression_outcome")
-        .map(|value| value.trim())
-        .filter(|value| !value.is_empty());
-    let predictors = metadata_value(recipe, "regression_predictors", "regression.predictors")
-        .map(csv_values)
-        .unwrap_or_default();
-    let controls = metadata_value(recipe, "regression_controls", "regression.controls")
-        .map(csv_values)
-        .unwrap_or_default();
-    let mut variables = outcome.into_iter().collect::<Vec<_>>();
-    variables.extend(predictors.iter().map(String::as_str));
-    variables.extend(controls.iter().map(String::as_str));
-    let unique_variables = variables.iter().collect::<BTreeSet<_>>();
+    let Some(contract) = regression_recipe_contract(recipe) else {
+        return false;
+    };
+    let mut variables = vec![contract.outcome.as_str()];
+    variables.extend(contract.predictors.iter().map(String::as_str));
+    variables.extend(contract.controls.iter().map(String::as_str));
+    let unique_variables = variables.iter().copied().collect::<BTreeSet<_>>();
+    let preprocessing_valid =
+        if contract.current_typed || matches!(contract.kind, RegressionPersistenceKind::Ols) {
+            recipe.settings.preprocessing == Preprocessing::Unstandardized
+        } else {
+            matches!(
+                recipe.settings.preprocessing,
+                Preprocessing::Standardized | Preprocessing::Unstandardized
+            )
+        };
+    let process_variables_valid = match &contract.kind {
+        RegressionPersistenceKind::Process(process) => {
+            process.variables_are_bound(&contract.predictors, &contract.outcome)
+        }
+        _ => true,
+    };
+    let expected_method_version = contract.kind.method_version();
     if recipe.settings.method != AnalysisMethod::Regression
-        || recipe.metadata.get("status").map(String::as_str)
-            != Some("validated_regression_ols_v1_bounded_scope")
-        || recipe
-            .metadata
-            .get("regression_type")
-            .map(|value| value.trim())
-            != Some("ols")
-        || recipe.metadata.get("robust_se").map(|value| value.trim()) != Some("hc3")
-        || outcome.is_none()
-        || predictors.is_empty()
+        || contract.outcome.is_empty()
+        || contract.predictors.is_empty()
+        || variables.iter().any(|value| value.is_empty())
         || unique_variables.len() != variables.len()
-        || result.provenance.method_version != REGRESSION_OLS_METHOD_VERSION
+        || !process_variables_valid
+        || result.provenance.method_version != expected_method_version
         || result.provenance.settings != recipe.settings
         || result.provenance.dataset_fingerprint != recipe.dataset_fingerprint
         || assessment_method_version != REGRESSION_NOT_APPLICABLE_ASSESSMENT_VERSION
         || recipe.settings.weighting_scheme != WeightingScheme::Path
-        || recipe.settings.preprocessing != Preprocessing::Unstandardized
+        || !preprocessing_valid
         || recipe.settings.missing_data != MissingDataPolicy::ListwiseDeletion
         || recipe.settings.case_weight_column.is_some()
         || recipe.settings.bootstrap_samples > 0
@@ -1967,8 +2282,10 @@ fn validate_ols_payload_contract(
         || !recipe.model.controls.is_empty()
         || !recipe.model.interactions.is_empty()
         || !recipe.model.higher_order_constructs.is_empty()
-        || estimation.method_version != REGRESSION_OLS_METHOD_VERSION
-        || estimation.used_observations <= predictors.len() + controls.len() + 1
+        || estimation.method_version != expected_method_version
+        || !estimation.converged
+        || estimation.iterations != 0
+        || estimation.used_observations <= contract.predictors.len() + contract.controls.len() + 1
         || !estimation.transforms.is_empty()
         || !estimation.construct_scores.is_empty()
         || !estimation.outer_estimates.is_empty()
@@ -1994,20 +2311,49 @@ fn validate_ols_payload_contract(
         || estimation.nca.is_some()
         || estimation.gsca.is_some()
         || !estimation.r_squared.is_empty()
+        || estimation.warnings.len() != 1
+        || estimation.warnings[0] != contract.kind.scope_warning()
     {
         return false;
     }
     let Some(regression) = estimation.regression.as_ref() else {
         return false;
     };
-    validate_ols_analysis_contract(
-        regression,
-        outcome.unwrap_or_default(),
-        &predictors,
-        &controls,
-        estimation.used_observations,
-        recipe.settings.confidence_level,
-    ) && regression.warnings == estimation.warnings
+    let analysis_valid = match &contract.kind {
+        RegressionPersistenceKind::Ols => validate_linear_regression_analysis_contract(
+            regression,
+            expected_method_version,
+            "ols",
+            &contract.outcome,
+            &contract.predictors,
+            &contract.controls,
+            estimation.used_observations,
+            recipe.settings.confidence_level,
+            false,
+        ),
+        RegressionPersistenceKind::Logistic => validate_logistic_analysis_contract(
+            regression,
+            &contract.outcome,
+            &contract.predictors,
+            &contract.controls,
+            estimation.used_observations,
+            recipe.settings.confidence_level,
+        ),
+        RegressionPersistenceKind::Process(process) => {
+            validate_linear_regression_analysis_contract(
+                regression,
+                expected_method_version,
+                "process",
+                &contract.outcome,
+                &contract.predictors,
+                &contract.controls,
+                estimation.used_observations,
+                recipe.settings.confidence_level,
+                true,
+            ) && validate_process_analysis_contract(regression, process)
+        }
+    };
+    analysis_valid && regression.warnings == estimation.warnings
 }
 
 fn csv_values(value: &str) -> Vec<String> {
@@ -2019,17 +2365,20 @@ fn csv_values(value: &str) -> Vec<String> {
         .collect()
 }
 
-fn validate_ols_analysis_contract(
+fn validate_linear_regression_analysis_contract(
     regression: &RegressionAnalysis,
+    expected_method_version: &str,
+    expected_regression_type: &str,
     outcome: &str,
     predictors: &[String],
     controls: &[String],
     observations: usize,
     confidence_level: f64,
+    process_required: bool,
 ) -> bool {
     let parameter_count = 1 + predictors.len() + controls.len();
-    if regression.method_version != REGRESSION_OLS_METHOD_VERSION
-        || regression.regression_type != "ols"
+    if regression.method_version != expected_method_version
+        || regression.regression_type != expected_regression_type
         || regression.outcome != outcome
         || regression.predictors != predictors
         || regression.controls != controls
@@ -2037,7 +2386,7 @@ fn validate_ols_analysis_contract(
         || observations <= parameter_count
         || regression.coefficients.len() != parameter_count
         || regression.predictions.len() != observations
-        || regression.process.is_some()
+        || regression.process.is_some() != process_required
         || regression.warnings.is_empty()
     {
         return false;
@@ -2145,6 +2494,199 @@ fn validate_ols_analysis_contract(
             observations as f64 * sigma2.max(1e-12).ln()
                 + (observations as f64).ln() * parameter_count as f64,
         )
+}
+
+fn validate_logistic_analysis_contract(
+    regression: &RegressionAnalysis,
+    outcome: &str,
+    predictors: &[String],
+    controls: &[String],
+    observations: usize,
+    confidence_level: f64,
+) -> bool {
+    let parameter_count = 1 + predictors.len() + controls.len();
+    if regression.method_version != REGRESSION_LOGISTIC_METHOD_VERSION
+        || regression.regression_type != "logistic"
+        || regression.outcome != outcome
+        || regression.predictors != predictors
+        || regression.controls != controls
+        || regression.observations != observations
+        || observations <= parameter_count
+        || regression.coefficients.len() != parameter_count
+        || regression.predictions.len() != observations
+        || regression.process.is_some()
+        || regression.warnings.is_empty()
+    {
+        return false;
+    }
+    let normal = statrs::distribution::Normal::standard();
+    let critical = normal.inverse_cdf(0.5 + confidence_level / 2.0);
+    let expected_terms = std::iter::once("intercept")
+        .chain(predictors.iter().map(String::as_str))
+        .chain(controls.iter().map(String::as_str));
+    for (coefficient, expected_term) in regression.coefficients.iter().zip(expected_terms) {
+        let expected_statistic = coefficient.estimate / coefficient.standard_error;
+        let expected_p = 2.0 * (1.0 - normal.cdf(expected_statistic.abs()));
+        if coefficient.term != expected_term
+            || !coefficient.estimate.is_finite()
+            || !coefficient.standard_error.is_finite()
+            || coefficient.standard_error <= 0.0
+            || !coefficient.statistic.is_finite()
+            || !coefficient.p_value_two_sided.is_finite()
+            || !(0.0..=1.0).contains(&coefficient.p_value_two_sided)
+            || !coefficient.confidence_interval_lower.is_finite()
+            || !coefficient.confidence_interval_upper.is_finite()
+            || coefficient.odds_ratio.is_none_or(|odds_ratio| {
+                !odds_ratio.is_finite()
+                    || odds_ratio <= 0.0
+                    || !close_enough(odds_ratio, coefficient.estimate.exp())
+            })
+            || !close_enough(coefficient.statistic, expected_statistic)
+            || !close_enough(coefficient.p_value_two_sided, expected_p)
+            || !close_enough(
+                coefficient.confidence_interval_lower,
+                coefficient.estimate - critical * coefficient.standard_error,
+            )
+            || !close_enough(
+                coefficient.confidence_interval_upper,
+                coefficient.estimate + critical * coefficient.standard_error,
+            )
+        {
+            return false;
+        }
+    }
+    let fit = &regression.fit;
+    let (Some(log_likelihood), Some(pseudo_r_squared)) = (fit.log_likelihood, fit.pseudo_r_squared)
+    else {
+        return false;
+    };
+    if fit.r_squared.is_some()
+        || fit.adjusted_r_squared.is_some()
+        || fit.f_statistic.is_some()
+        || fit.rmse.is_some()
+        || !log_likelihood.is_finite()
+        || !pseudo_r_squared.is_finite()
+        || !fit.aic.is_finite()
+        || !fit.bic.is_finite()
+    {
+        return false;
+    }
+    let mut actual = Vec::with_capacity(observations);
+    let mut expected_log_likelihood = 0.0;
+    for (index, prediction) in regression.predictions.iter().enumerate() {
+        let (Some(residual), Some(probability)) = (prediction.residual, prediction.probability)
+        else {
+            return false;
+        };
+        let outcome_value = prediction.fitted + residual;
+        if prediction.observation != index
+            || !prediction.fitted.is_finite()
+            || !residual.is_finite()
+            || !probability.is_finite()
+            || !(0.0..1.0).contains(&probability)
+            || !close_enough(prediction.fitted, probability)
+            || !(close_enough(outcome_value, 0.0) || close_enough(outcome_value, 1.0))
+        {
+            return false;
+        }
+        let binary = if close_enough(outcome_value, 1.0) {
+            1.0
+        } else {
+            0.0
+        };
+        actual.push(binary);
+        expected_log_likelihood +=
+            binary * probability.ln() + (1.0 - binary) * (1.0 - probability).ln();
+    }
+    let mean = actual.iter().sum::<f64>() / observations as f64;
+    if !(0.0..1.0).contains(&mean) {
+        return false;
+    }
+    let null_log_likelihood = actual
+        .iter()
+        .map(|value| value * mean.ln() + (1.0 - value) * (1.0 - mean).ln())
+        .sum::<f64>();
+    close_enough(log_likelihood, expected_log_likelihood)
+        && close_enough(
+            pseudo_r_squared,
+            1.0 - expected_log_likelihood / null_log_likelihood,
+        )
+        && close_enough(
+            fit.aic,
+            -2.0 * expected_log_likelihood + 2.0 * parameter_count as f64,
+        )
+        && close_enough(
+            fit.bic,
+            -2.0 * expected_log_likelihood + (observations as f64).ln() * parameter_count as f64,
+        )
+}
+
+fn validate_process_analysis_contract(
+    regression: &RegressionAnalysis,
+    expected: &ProcessPersistenceContract,
+) -> bool {
+    const WARNING: &str = "PROCESS v1 reports bounded deterministic mediation/moderation effects validated for the documented QuickPLS v1.2.2 scope; moderated mediation remains experimental.";
+    let Some(process) = regression.process.as_ref() else {
+        return false;
+    };
+    let expected_effects: &[&str] = match expected {
+        ProcessPersistenceContract::Mediation { .. } => &["direct", "indirect", "total"],
+        ProcessPersistenceContract::Moderation { .. } => &["interaction"],
+        ProcessPersistenceContract::ModeratedMediation { .. } => {
+            &["direct", "indirect", "total", "interaction"]
+        }
+    };
+    if process.method_version != REGRESSION_PROCESS_METHOD_VERSION
+        || process.model != expected.model()
+        || process.effects.len() != expected_effects.len()
+        || process.warnings.len() != 1
+        || process.warnings[0] != WARNING
+    {
+        return false;
+    }
+    let mut effect_values = BTreeMap::new();
+    for (effect, expected_name) in process.effects.iter().zip(expected_effects) {
+        if effect.effect != *expected_name
+            || !effect.estimate.is_finite()
+            || effect.lower_percentile.is_some()
+            || effect.upper_percentile.is_some()
+            || effect_values
+                .insert(effect.effect.as_str(), effect.estimate)
+                .is_some()
+        {
+            return false;
+        }
+    }
+    if matches!(
+        expected,
+        ProcessPersistenceContract::Mediation { .. }
+            | ProcessPersistenceContract::ModeratedMediation { .. }
+    ) && !close_enough(
+        effect_values["total"],
+        effect_values["direct"] + effect_values["indirect"],
+    ) {
+        return false;
+    }
+    if matches!(expected, ProcessPersistenceContract::Mediation { .. }) {
+        return process.simple_slopes.is_empty();
+    }
+    if process.simple_slopes.len() != 3 {
+        return false;
+    }
+    let expected_levels = [-1.0, 0.0, 1.0];
+    for (slope, level) in process.simple_slopes.iter().zip(expected_levels) {
+        if !close_enough(slope.moderator_value, level) || !slope.slope.is_finite() {
+            return false;
+        }
+    }
+    let interaction = effect_values["interaction"];
+    close_enough(
+        process.simple_slopes[0].slope,
+        process.simple_slopes[1].slope - interaction,
+    ) && close_enough(
+        process.simple_slopes[2].slope,
+        process.simple_slopes[1].slope + interaction,
+    )
 }
 
 fn validate_nca_payload_contract(
@@ -4030,6 +4572,48 @@ fn validate_result_contracts_internal(
     recipes: &[AnalysisRecipe],
     require_recipe_context: bool,
 ) -> Result<(), ProjectError> {
+    validate_unique_analysis_ids(results, recipes)?;
+
+    for recipe in recipes
+        .iter()
+        .filter(|recipe| recipe.schema_version == ANALYSIS_RECIPE_SCHEMA_VERSION)
+    {
+        let errors = validate_recipe(recipe)
+            .into_iter()
+            .filter(|issue| issue.severity == Severity::Error)
+            .map(|issue| format!("{}: {}", issue.code, issue.message))
+            .collect::<Vec<_>>();
+        if !errors.is_empty() {
+            return Err(ProjectError::Invalid(format!(
+                "analysis recipe {} is invalid: {}",
+                recipe.id,
+                errors.join("; ")
+            )));
+        }
+    }
+
+    // Validation consumes one compatibility clone per stored recipe. This
+    // lets existing method validators read schema-v3 executable projections
+    // without ever rewriting the archived recipe or its annotation metadata.
+    let effective_recipes = recipes
+        .iter()
+        .map(|recipe| match recipe.schema_version {
+            1..=ANALYSIS_RECIPE_SCHEMA_VERSION => {
+                recipe.with_effective_metadata().map_err(|error| {
+                    ProjectError::Invalid(format!(
+                        "analysis recipe {} cannot provide an effective validation view: {error}",
+                        recipe.id
+                    ))
+                })
+            }
+            version => Err(ProjectError::Invalid(format!(
+                "analysis recipe {} uses unsupported schema {version}",
+                recipe.id
+            ))),
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let recipes = effective_recipes.as_slice();
+
     for result in results {
         let (estimation, assessment, bootstrap, permutation) = match &result.payload {
             AnalysisPayload::PlsPmV1 {
@@ -4145,7 +4729,7 @@ fn validate_result_contracts_internal(
                     Some(recipe),
                     assessment_method_version,
                 ),
-                AnalysisMethod::Regression => validate_ols_payload_contract(
+                AnalysisMethod::Regression => validate_regression_payload_contract(
                     result,
                     &estimation,
                     Some(recipe),
@@ -5625,6 +6209,15 @@ mod tests {
     use super::*;
     use qpls_data::{ImportOptions, import_delimited_bytes};
 
+    fn migrated_execution_recipe(bytes: &[u8]) -> AnalysisRecipe {
+        let recipe: AnalysisRecipe = serde_json::from_slice(bytes).unwrap();
+        if recipe.schema_version == ANALYSIS_RECIPE_SCHEMA_VERSION {
+            recipe
+        } else {
+            recipe.migrated_v3().unwrap()
+        }
+    }
+
     fn pls_family_fixture(method: AnalysisMethod) -> (Dataset, AnalysisRecipe) {
         let (data, data_name, recipe_json): (&[u8], &str, &[u8]) = match method {
             AnalysisMethod::Plsc => (
@@ -5641,7 +6234,7 @@ mod tests {
         };
         let dataset =
             import_delimited_bytes(data, data_name, b',', &ImportOptions::default()).unwrap();
-        let mut recipe: AnalysisRecipe = serde_json::from_slice(recipe_json).unwrap();
+        let mut recipe = migrated_execution_recipe(recipe_json);
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         (dataset, recipe)
     }
@@ -5670,10 +6263,9 @@ mod tests {
             &ImportOptions::default(),
         )
         .unwrap();
-        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+        let mut recipe = migrated_execution_recipe(include_bytes!(
             "../../../validation/results/plspredict_holdout_reference.recipe.json"
-        ))
-        .unwrap();
+        ));
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
         (dataset, recipe, result)
@@ -5701,6 +6293,8 @@ mod tests {
         recipe
             .metadata
             .insert("micom_configural_confirmed".into(), "true".into());
+        let mut recipe = recipe.migrated_v3().unwrap();
+        recipe.metadata.remove("status");
         let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
         (dataset, recipe, result)
     }
@@ -5713,10 +6307,9 @@ mod tests {
             &ImportOptions::default(),
         )
         .unwrap();
-        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+        let mut recipe = migrated_execution_recipe(include_bytes!(
             "../../../validation/results/cca_reference.recipe.json"
-        ))
-        .unwrap();
+        ));
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
         (dataset, recipe, result)
@@ -5730,12 +6323,12 @@ mod tests {
             &ImportOptions::default(),
         )
         .unwrap();
-        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+        let mut recipe = migrated_execution_recipe(include_bytes!(
             "../../../validation/fixtures/simple_reflective.recipe.json"
-        ))
-        .unwrap();
+        ));
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         recipe.settings.method = AnalysisMethod::Gsca;
+        recipe.method_config = Some(qpls_core::MethodConfig::Gsca);
         recipe.settings.workers = 1;
         recipe.settings.max_iterations = 3_000;
         recipe.settings.tolerance = 1e-7;
@@ -5785,6 +6378,8 @@ mod tests {
         recipe
             .metadata
             .insert("cbsem_mean_structure".into(), "false".into());
+        let mut recipe = recipe.migrated_v3().unwrap();
+        recipe.metadata.remove("status");
         let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
         (dataset, recipe, result)
     }
@@ -5797,10 +6392,9 @@ mod tests {
             &ImportOptions::default(),
         )
         .unwrap();
-        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+        let mut recipe = migrated_execution_recipe(include_bytes!(
             "../../../validation/results/ipma_reference.recipe.json"
-        ))
-        .unwrap();
+        ));
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
         (dataset, recipe, result)
@@ -5819,7 +6413,7 @@ mod tests {
         settings.preprocessing = Preprocessing::Unstandardized;
         settings.seed = 20_260_811;
         let recipe = AnalysisRecipe {
-            schema_version: 2,
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
             id: Uuid::new_v4(),
             created_at: Utc::now(),
             dataset_fingerprint: dataset.fingerprint.0.clone(),
@@ -5833,13 +6427,13 @@ mod tests {
                 interactions: Vec::new(),
             },
             settings,
-            metadata: BTreeMap::from([
-                ("status".into(), "validated_nca_v2_bounded_scope".into()),
-                ("nca_x".into(), "x".into()),
-                ("nca_y".into(), "y".into()),
-                ("nca_ceiling".into(), "both".into()),
-                ("nca_permutation_samples".into(), "19".into()),
-            ]),
+            method_config: Some(qpls_core::MethodConfig::Nca {
+                condition: "x".into(),
+                outcome: "y".into(),
+                ceiling: qpls_core::NcaCeiling::Both,
+                permutation_samples: 19,
+            }),
+            metadata: BTreeMap::from([("status".into(), "validated_nca_v2_bounded_scope".into())]),
         };
         let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
         (dataset, recipe, result)
@@ -5856,7 +6450,7 @@ mod tests {
         let mut settings = AnalysisSettings::default();
         settings.method = AnalysisMethod::Pca;
         let recipe = AnalysisRecipe {
-            schema_version: 2,
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
             id: Uuid::new_v4(),
             created_at: Utc::now(),
             dataset_fingerprint: dataset.fingerprint.0.clone(),
@@ -5870,12 +6464,11 @@ mod tests {
                 interactions: Vec::new(),
             },
             settings,
-            metadata: BTreeMap::from([
-                ("status".into(), "validated_pca_v1_bounded_scope".into()),
-                ("pca_variables".into(), "a,b,c,d".into()),
-                ("pca_component_rule".into(), "variance_threshold".into()),
-                ("pca_variance_threshold".into(), "0.80".into()),
-            ]),
+            method_config: Some(qpls_core::MethodConfig::Pca {
+                variables: vec!["a".into(), "b".into(), "c".into(), "d".into()],
+                retention: qpls_core::PcaRetentionConfig::VarianceThreshold { threshold: 0.80 },
+            }),
+            metadata: BTreeMap::from([("status".into(), "validated_pca_v1_bounded_scope".into())]),
         };
         let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
         (dataset, recipe, result)
@@ -5894,7 +6487,7 @@ mod tests {
         settings.preprocessing = Preprocessing::Unstandardized;
         settings.confidence_level = 0.95;
         let recipe = AnalysisRecipe {
-            schema_version: 2,
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
             id: Uuid::new_v4(),
             created_at: Utc::now(),
             dataset_fingerprint: dataset.fingerprint.0.clone(),
@@ -5908,20 +6501,47 @@ mod tests {
                 interactions: Vec::new(),
             },
             settings,
-            metadata: BTreeMap::from([
-                (
-                    "status".into(),
-                    "validated_regression_ols_v1_bounded_scope".into(),
-                ),
-                ("regression_type".into(), "ols".into()),
-                ("regression_outcome".into(), "y".into()),
-                ("regression_predictors".into(), "x,m".into()),
-                ("regression_controls".into(), "z".into()),
-                ("robust_se".into(), "hc3".into()),
-            ]),
+            method_config: Some(qpls_core::MethodConfig::Regression {
+                outcome: "y".into(),
+                predictors: vec!["x".into(), "m".into()],
+                controls: vec!["z".into()],
+                model: qpls_core::RegressionModelConfig::Ols {
+                    robust_se: qpls_core::RobustStandardError::Hc3,
+                },
+            }),
+            metadata: BTreeMap::new(),
         };
         let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
         (dataset, recipe, result)
+    }
+
+    fn runner_generated_regression_fixture(
+        recipe_bytes: &[u8],
+    ) -> (Dataset, AnalysisRecipe, AnalysisResult) {
+        let dataset = import_delimited_bytes(
+            include_bytes!("../../../validation/results/v08_extended_methods_fixture.csv"),
+            "v08_extended_methods_fixture.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe = migrated_execution_recipe(recipe_bytes);
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        recipe.settings.preprocessing = Preprocessing::Unstandardized;
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+        (dataset, recipe, result)
+    }
+
+    fn runner_generated_logistic() -> (Dataset, AnalysisRecipe, AnalysisResult) {
+        runner_generated_regression_fixture(include_bytes!(
+            "../../../validation/results/v08_regression_logistic.recipe.json"
+        ))
+    }
+
+    fn runner_generated_process() -> (Dataset, AnalysisRecipe, AnalysisResult) {
+        runner_generated_regression_fixture(include_bytes!(
+            "../../../validation/results/v08_process.recipe.json"
+        ))
     }
 
     fn runner_generated_mediation() -> (Dataset, AnalysisRecipe, AnalysisResult) {
@@ -5932,10 +6552,9 @@ mod tests {
             &ImportOptions::default(),
         )
         .unwrap();
-        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+        let mut recipe = migrated_execution_recipe(include_bytes!(
             "../../../validation/results/mediation_reference.recipe.json"
-        ))
-        .unwrap();
+        ));
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
         (dataset, recipe, result)
@@ -5949,10 +6568,9 @@ mod tests {
             &ImportOptions::default(),
         )
         .unwrap();
-        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+        let mut recipe = migrated_execution_recipe(include_bytes!(
             "../../../validation/results/moderation_reference_base.recipe.json"
-        ))
-        .unwrap();
+        ));
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
         (dataset, recipe, result)
@@ -5966,10 +6584,9 @@ mod tests {
             &ImportOptions::default(),
         )
         .unwrap();
-        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+        let mut recipe = migrated_execution_recipe(include_bytes!(
             "../../../validation/results/higher_order_two_stage_base.recipe.json"
-        ))
-        .unwrap();
+        ));
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
         (dataset, recipe, result)
@@ -5977,6 +6594,15 @@ mod tests {
 
     fn estimation_payload_mut(result: &mut AnalysisResult) -> &mut serde_json::Value {
         match &mut result.payload {
+            AnalysisPayload::PlsPmV1 { estimation, .. }
+            | AnalysisPayload::PlsPmV2 { estimation, .. }
+            | AnalysisPayload::PlsPmV3 { estimation, .. } => estimation,
+            AnalysisPayload::Legacy { .. } => panic!("expected a typed PLS payload"),
+        }
+    }
+
+    fn estimation_payload(result: &AnalysisResult) -> &serde_json::Value {
+        match &result.payload {
             AnalysisPayload::PlsPmV1 { estimation, .. }
             | AnalysisPayload::PlsPmV2 { estimation, .. }
             | AnalysisPayload::PlsPmV3 { estimation, .. } => estimation,
@@ -6057,6 +6683,284 @@ mod tests {
         assert_eq!(restored.datasets[0].batch, project.datasets[0].batch);
         assert!(!restored.read_only);
     }
+
+    #[test]
+    fn append_requires_v3_but_preserves_the_original_typed_recipe_metadata() {
+        let (_, recipe, result) = runner_generated_nca();
+        let original_metadata = recipe.metadata.clone();
+        assert!(!original_metadata.contains_key("nca_x"));
+
+        let mut project = Project::new("Typed recipe append");
+        project
+            .append_validated_result(recipe.clone(), result.clone())
+            .unwrap();
+        assert_eq!(project.recipes[0], recipe);
+        assert_eq!(project.recipes[0].metadata, original_metadata);
+        assert_eq!(
+            project.recipes[0].effective_metadata().unwrap()["nca_x"],
+            "x"
+        );
+
+        let mut historical = recipe;
+        historical.schema_version = 2;
+        historical.method_config = None;
+        assert!(matches!(
+            Project::new("Historical append").append_validated_result(historical, result),
+            Err(ProjectError::Invalid(message))
+                if message.contains("archive-readable") && message.contains("migrate")
+        ));
+    }
+
+    #[test]
+    fn historical_v1_and_v2_recipes_with_results_remain_archive_readable() {
+        let directory = tempfile::tempdir().unwrap();
+        let (dataset, recipe, result) = runner_generated_nca();
+        let legacy_metadata = recipe.effective_metadata().unwrap();
+
+        for schema_version in [1, 2] {
+            let path = directory
+                .path()
+                .join(format!("historical-recipe-v{schema_version}.qpls"));
+            let mut historical = recipe.clone();
+            historical.schema_version = schema_version;
+            historical.method_config = None;
+            historical.metadata = legacy_metadata.clone();
+
+            let mut project = Project::new(format!("Historical recipe v{schema_version}"));
+            project.datasets.push(dataset.clone());
+            project.recipes.push(historical.clone());
+            project.results.push(result.clone());
+            save_project(&path, &project).unwrap();
+
+            let reopened = load_project(&path).unwrap();
+            assert_eq!(reopened.recipes, vec![historical]);
+            assert_eq!(reopened.results[0].id, result.id);
+        }
+    }
+
+    #[test]
+    fn historical_cbsem_and_ols_ignore_status_annotations_but_reject_scientific_tampering() {
+        let directory = tempfile::tempdir().unwrap();
+        let fixtures = vec![
+            ("cbsem", runner_generated_cbsem("sem")),
+            ("ols", runner_generated_ols()),
+        ];
+
+        for (method_label, (dataset, recipe, result)) in fixtures {
+            let executable_metadata = recipe.effective_metadata().unwrap();
+            for (schema_version, status) in
+                [(1, None), (2, Some("arbitrary_historical_annotation"))]
+            {
+                let status_label = status.unwrap_or("missing");
+                let path = directory.path().join(format!(
+                    "historical-{method_label}-v{schema_version}-{status_label}.qpls"
+                ));
+                let mut historical = recipe.clone();
+                historical.schema_version = schema_version;
+                historical.method_config = None;
+                historical.metadata = executable_metadata.clone();
+                if let Some(status) = status {
+                    historical.metadata.insert("status".into(), status.into());
+                } else {
+                    historical.metadata.remove("status");
+                }
+
+                let mut project = Project::new(format!(
+                    "Historical {method_label} v{schema_version} {status_label}"
+                ));
+                project.datasets.push(dataset.clone());
+                project.recipes.push(historical.clone());
+                project.results.push(result.clone());
+                save_project(&path, &project).unwrap();
+
+                let reopened = load_project(&path).unwrap();
+                assert_eq!(reopened.recipes, vec![historical.clone()]);
+                assert_eq!(reopened.results.len(), 1);
+                assert_eq!(reopened.results[0].id, result.id);
+                assert_eq!(reopened.results[0].status, result.status);
+                assert_eq!(reopened.results[0].provenance, result.provenance);
+                let reopened_estimation = estimation_payload(&reopened.results[0]);
+                let original_estimation = estimation_payload(&result);
+                assert_eq!(
+                    reopened_estimation["method_version"],
+                    original_estimation["method_version"]
+                );
+                if method_label == "cbsem" {
+                    assert_eq!(
+                        reopened_estimation["cbsem"]["method_version"],
+                        original_estimation["cbsem"]["method_version"]
+                    );
+                } else {
+                    assert_eq!(
+                        reopened_estimation["regression"]["method_version"],
+                        original_estimation["regression"]["method_version"]
+                    );
+                }
+                assert_eq!(
+                    reopened.recipes[0]
+                        .metadata
+                        .get("status")
+                        .map(String::as_str),
+                    status
+                );
+
+                let mut tampered_version = result.clone();
+                tampered_version.provenance.method_version = "tampered_method_version".into();
+                assert!(
+                    validate_result_contracts_with_recipes(
+                        std::slice::from_ref(&tampered_version),
+                        std::slice::from_ref(&historical),
+                    )
+                    .is_err()
+                );
+
+                let mut tampered_payload = result.clone();
+                if method_label == "cbsem" {
+                    estimation_payload_mut(&mut tampered_payload)["cbsem"]["fit"]["srmr"] =
+                        serde_json::json!(999.0);
+                } else {
+                    estimation_payload_mut(&mut tampered_payload)["regression"]["coefficients"]
+                        [0]["statistic"] = serde_json::json!(999.0);
+                }
+                assert!(
+                    validate_result_contracts_with_recipes(
+                        std::slice::from_ref(&tampered_payload),
+                        std::slice::from_ref(&historical),
+                    )
+                    .is_err()
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn project_save_rejects_an_invalid_new_v3_recipe_without_a_result() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("invalid-v3.qpls");
+        let dataset = import_delimited_bytes(
+            include_bytes!("../../../validation/fixtures/simple_reflective.csv"),
+            "simple_reflective.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe = migrated_execution_recipe(include_bytes!(
+            "../../../validation/fixtures/simple_reflective.recipe.json"
+        ));
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        recipe.settings.bootstrap_samples = 99;
+        recipe.settings.permutation_samples = 99;
+        recipe.method_config = Some(qpls_core::MethodConfig::PlsPermutation);
+
+        let mut project = Project::new("Invalid v3 recipe");
+        project.datasets.push(dataset);
+        project.recipes.push(recipe.clone());
+        let error = save_project(&path, &project).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("method_config.resampling_mismatch")
+        );
+        assert_eq!(project.recipes, vec![recipe]);
+        assert!(!path.exists());
+    }
+
+    #[test]
+    fn duplicate_recipe_and_result_ids_are_rejected_without_partial_append() {
+        let (_, recipe, result) = runner_generated_nca();
+        let mut project = Project::new("Unique analysis IDs");
+        project
+            .append_validated_result(recipe.clone(), result.clone())
+            .unwrap();
+
+        let mut duplicate_recipe_result = result.clone();
+        duplicate_recipe_result.id = Uuid::new_v4();
+        assert!(matches!(
+            project.append_validated_result(recipe.clone(), duplicate_recipe_result),
+            Err(ProjectError::Invalid(message)) if message.contains("recipe IDs must be unique")
+        ));
+        assert_eq!(project.recipes.len(), 1);
+        assert_eq!(project.results.len(), 1);
+
+        let mut distinct_recipe = recipe.clone();
+        distinct_recipe.id = Uuid::new_v4();
+        let mut duplicate_result = result.clone();
+        duplicate_result.provenance.recipe_id = distinct_recipe.id;
+        assert!(matches!(
+            project.append_validated_result(distinct_recipe, duplicate_result),
+            Err(ProjectError::Invalid(message)) if message.contains("result IDs must be unique")
+        ));
+        assert_eq!(project.recipes.len(), 1);
+        assert_eq!(project.results.len(), 1);
+    }
+
+    #[test]
+    fn project_validation_rejects_preexisting_duplicate_analysis_ids() {
+        let directory = tempfile::tempdir().unwrap();
+        let (_, recipe, result) = runner_generated_nca();
+
+        let mut duplicate_recipes = Project::new("Duplicate recipes");
+        duplicate_recipes.recipes = vec![recipe.clone(), recipe.clone()];
+        assert!(matches!(
+            save_project(&directory.path().join("duplicate-recipes.qpls"), &duplicate_recipes),
+            Err(ProjectError::Invalid(message)) if message.contains("recipe IDs must be unique")
+        ));
+
+        let mut duplicate_results = Project::new("Duplicate results");
+        duplicate_results.recipes.push(recipe);
+        duplicate_results.results = vec![result.clone(), result];
+        assert!(matches!(
+            save_project(&directory.path().join("duplicate-results.qpls"), &duplicate_results),
+            Err(ProjectError::Invalid(message)) if message.contains("result IDs must be unique")
+        ));
+    }
+
+    #[test]
+    fn legacy_migration_rejects_duplicate_analysis_ids() {
+        let (_, recipe, result) = runner_generated_nca();
+        let duplicate_v2 = serde_json::json!({
+            "datasets": [],
+            "models": [],
+            "recipes": [recipe.clone(), recipe.clone()],
+            "layouts": {},
+            "results": []
+        });
+        assert!(matches!(
+            migrate_document(2, &serde_json::to_vec(&duplicate_v2).unwrap()),
+            Err(ProjectError::Invalid(message)) if message.contains("recipe IDs must be unique")
+        ));
+
+        let legacy_result = serde_json::json!({
+            "schema_version": result.schema_version,
+            "id": result.id,
+            "status": result.status,
+            "provenance": {
+                "recipe_id": result.provenance.recipe_id,
+                "dataset_fingerprint": result.provenance.dataset_fingerprint,
+                "method": "nca",
+                "method_version": result.provenance.method_version,
+                "engine_version": result.provenance.engine_version,
+                "seed": result.provenance.seed,
+                "settings": result.provenance.settings,
+                "started_at": result.provenance.started_at,
+                "completed_at": result.provenance.completed_at
+            },
+            "diagnostics": result.diagnostics,
+            "payload": { "legacy": true }
+        });
+        let duplicate_v3 = serde_json::json!({
+            "datasets": [],
+            "models": [],
+            "recipes": [recipe],
+            "layouts": {},
+            "results": [legacy_result.clone(), legacy_result]
+        });
+        assert!(matches!(
+            migrate_document(3, &serde_json::to_vec(&duplicate_v3).unwrap()),
+            Err(ProjectError::Invalid(message)) if message.contains("result IDs must be unique")
+        ));
+    }
+
     #[test]
     fn truncated_archive_is_rejected() {
         let directory = tempfile::tempdir().unwrap();
@@ -6740,7 +7644,11 @@ mod tests {
         let reopened = load_project(&path).unwrap();
         assert_eq!(reopened.results.len(), 1);
         assert_eq!(reopened.results[0].provenance.method, AnalysisMethod::Ipma);
-        assert_eq!(reopened.recipes[0].metadata["ipma_targets"], "y");
+        assert!(!reopened.recipes[0].metadata.contains_key("ipma_targets"));
+        assert_eq!(
+            reopened.recipes[0].effective_metadata().unwrap()["ipma_targets"],
+            "y"
+        );
         let estimation = match &reopened.results[0].payload {
             AnalysisPayload::PlsPmV1 { estimation, .. } => estimation,
             other => panic!("runner returned unexpected IPMA payload: {other:?}"),
@@ -6949,6 +7857,50 @@ mod tests {
             ),
             Err(ProjectError::Invalid(_))
         ));
+    }
+
+    #[test]
+    fn typed_logistic_and_process_results_round_trip_and_reject_family_tampering() {
+        let directory = tempfile::tempdir().unwrap();
+        for (label, generated, expected_version) in [
+            (
+                "logistic",
+                runner_generated_logistic as fn() -> (Dataset, AnalysisRecipe, AnalysisResult),
+                REGRESSION_LOGISTIC_METHOD_VERSION,
+            ),
+            (
+                "process",
+                runner_generated_process as fn() -> (Dataset, AnalysisRecipe, AnalysisResult),
+                REGRESSION_PROCESS_METHOD_VERSION,
+            ),
+        ] {
+            let (dataset, recipe, result) = generated();
+            assert!(!recipe.metadata.contains_key("status"));
+            assert_eq!(result.provenance.method_version, expected_version);
+            let path = directory.path().join(format!("{label}.qpls"));
+            let mut project = Project::new(format!("Typed {label} persistence"));
+            project.datasets.push(dataset);
+            project
+                .append_validated_result(recipe.clone(), result.clone())
+                .unwrap();
+            save_project(&path, &project).unwrap();
+            let reopened = load_project(&path).unwrap();
+            assert_eq!(
+                reopened.results[0].provenance.method_version,
+                expected_version
+            );
+
+            let mut tampered = result;
+            estimation_payload_mut(&mut tampered)["regression"]["method_version"] =
+                serde_json::json!(REGRESSION_OLS_METHOD_VERSION);
+            let mut rejected = Project::new(format!("Rejected {label}"));
+            assert!(matches!(
+                rejected.append_validated_result(recipe, tampered),
+                Err(ProjectError::Invalid(_))
+            ));
+            assert!(rejected.recipes.is_empty());
+            assert!(rejected.results.is_empty());
+        }
     }
 
     #[test]
@@ -7462,8 +8414,10 @@ mod tests {
         save_project(&path, &project).unwrap();
         let reopened = load_project(&path).unwrap();
         assert_eq!(reopened.results.len(), 1);
-        assert_eq!(reopened.recipes[0].metadata["mga_group_a"], "A");
-        assert_eq!(reopened.recipes[0].metadata["mga_group_b"], "B");
+        assert!(!reopened.recipes[0].metadata.contains_key("mga_group_a"));
+        let effective_metadata = reopened.recipes[0].effective_metadata().unwrap();
+        assert_eq!(effective_metadata["mga_group_a"], "A");
+        assert_eq!(effective_metadata["mga_group_b"], "B");
         let estimation = match &reopened.results[0].payload {
             AnalysisPayload::PlsPmV1 { estimation, .. } => estimation,
             other => panic!("runner returned unexpected MGA payload: {other:?}"),
@@ -8105,6 +9059,7 @@ mod tests {
     fn moderation_bootstrap_binds_the_exact_product_path_and_original_effect() {
         let (dataset, mut recipe, _) = runner_generated_moderation();
         recipe.settings.bootstrap_samples = 8;
+        recipe.method_config = Some(qpls_core::MethodConfig::PlsBootstrap);
         recipe.settings.workers = 1;
         let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
         Project::new("validated moderation bootstrap")
@@ -8257,15 +9212,16 @@ mod tests {
             &ImportOptions::default(),
         )
         .unwrap();
-        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+        let mut recipe = migrated_execution_recipe(include_bytes!(
             "../../../validation/fixtures/simple_reflective.recipe.json"
-        ))
-        .unwrap();
+        ));
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         recipe.settings.bootstrap_samples = 8;
         recipe.settings.workers = 2;
+        recipe.method_config = Some(qpls_core::MethodConfig::PlsBootstrap);
         let mut base_recipe = recipe.clone();
         base_recipe.settings.bootstrap_samples = 0;
+        base_recipe.method_config = Some(qpls_core::MethodConfig::PlsAlgorithm);
         let estimation = qpls_estimation::estimate_pls(&dataset, &base_recipe).unwrap();
         let assessment = qpls_assessment::assess_pls(&dataset, &base_recipe, &estimation).unwrap();
         let bootstrap = qpls_resampling::bootstrap_pls(
@@ -8891,15 +9847,16 @@ mod tests {
             &ImportOptions::default(),
         )
         .unwrap();
-        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+        let mut recipe = migrated_execution_recipe(include_bytes!(
             "../../../validation/fixtures/simple_reflective.recipe.json"
-        ))
-        .unwrap();
+        ));
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         recipe.settings.permutation_samples = 99;
         recipe.settings.workers = 2;
+        recipe.method_config = Some(qpls_core::MethodConfig::PlsPermutation);
         let mut base_recipe = recipe.clone();
         base_recipe.settings.permutation_samples = 0;
+        base_recipe.method_config = Some(qpls_core::MethodConfig::PlsAlgorithm);
         let estimation = qpls_estimation::estimate_pls(&dataset, &base_recipe).unwrap();
         let assessment = qpls_assessment::assess_pls(&dataset, &base_recipe, &estimation).unwrap();
         let permutation = qpls_resampling::permutation_pls(

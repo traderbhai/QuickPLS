@@ -1,7 +1,7 @@
 use chrono::{TimeZone, Utc};
 use qpls_core::{
-    AnalysisMethod, AnalysisRecipe, AnalysisSettings, Construct, MeasurementMode, ModelSpec,
-    PROJECT_SCHEMA_VERSION, StructuralPath,
+    ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisMethod, AnalysisRecipe, AnalysisSettings, Construct,
+    MeasurementMode, MethodConfig, ModelSpec, StructuralPath,
 };
 use qpls_data::{ImportOptions, import_delimited_bytes};
 use qpls_estimation::{PLS_METHOD_VERSION, estimate_pls};
@@ -473,7 +473,7 @@ fn run_simulation(
     settings.workers = configuration.workers;
     settings.confidence_level = 1.0 - ALPHA;
     let recipe = AnalysisRecipe {
-        schema_version: PROJECT_SCHEMA_VERSION,
+        schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
         id: Uuid::nil(),
         created_at: Utc.timestamp_opt(0, 0).single().unwrap(),
         dataset_fingerprint: dataset.fingerprint.0.clone(),
@@ -505,6 +505,7 @@ fn run_simulation(
             interactions: Vec::new(),
         },
         settings,
+        method_config: Some(MethodConfig::PlsBootstrap),
         metadata: BTreeMap::from([("validation_harness".into(), HARNESS_VERSION.into())]),
     };
     let mut base_recipe = recipe.clone();
@@ -611,11 +612,20 @@ fn qualify(scenarios: &[ScenarioSummary], configuration: Configuration) -> Quali
         && scenarios
             .iter()
             .all(|scenario| scenario.completed_simulations >= 1_000);
-    let Some(alternative) = scenarios.iter().find(|scenario| scenario.name == "coverage_beta_0_35")
+    let Some(alternative) = scenarios
+        .iter()
+        .find(|scenario| scenario.name == "coverage_beta_0_35")
     else {
-        return qualification_not_evaluated(configuration, thresholds, "missing alternative scenario");
+        return qualification_not_evaluated(
+            configuration,
+            thresholds,
+            "missing alternative scenario",
+        );
     };
-    let Some(null) = scenarios.iter().find(|scenario| scenario.name == "null_beta_0") else {
+    let Some(null) = scenarios
+        .iter()
+        .find(|scenario| scenario.name == "null_beta_0")
+    else {
         return qualification_not_evaluated(configuration, thresholds, "missing null scenario");
     };
     let mut candidates: Vec<(&str, Option<f64>, fn(f64) -> bool)> = vec![
@@ -699,9 +709,7 @@ fn qualify(scenarios: &[ScenarioSummary], configuration: Configuration) -> Quali
             ),
             (
                 "null_studentized_availability",
-                Some(
-                    null.studentized.available as f64 / null.completed_simulations.max(1) as f64,
-                ),
+                Some(null.studentized.available as f64 / null.completed_simulations.max(1) as f64),
                 passes_minimum_availability_threshold as fn(f64) -> bool,
             ),
         ]);

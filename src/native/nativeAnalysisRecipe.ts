@@ -4,6 +4,7 @@ import type {
   AnalysisUiSettings,
   ConstructData,
   MeasurementMode,
+  NativeAnalysisMethodConfig,
   PathEdgeData,
 } from "../types";
 import {
@@ -148,12 +149,13 @@ export interface NativeRecipeSettings {
 }
 
 export interface NativeAnalysisRecipe {
-  schema_version: 2;
+  schema_version: 3;
   id: string;
   created_at: string;
   dataset_fingerprint: string;
   model: NativeRecipeModel;
   settings: NativeRecipeSettings;
+  method_config: NativeAnalysisMethodConfig;
   metadata: Record<string, string>;
 }
 
@@ -205,26 +207,28 @@ export function buildNativeAnalysisRecipe(input: NativeAnalysisRecipeBuildInput)
   validateIdentity(input);
 
   const settings = buildSettings(kind, descriptor.engineMethod, input.settings);
-  const metadata = buildMetadata(kind, descriptor.scopeMetadata, input.settings);
+  const methodConfig = buildMethodConfig(kind, input.settings);
+  const metadata = buildMetadata(descriptor.scopeMetadata, methodConfig);
   const model = buildNativeRecipeModel(input.modelId, input.projectName, input.nodes, input.edges);
   if (kind === "cca") validateCcaModel(model);
-  if (kind === "ipma") validateIpmaModel(model, metadata.ipma_targets, input.nodes, input.edges);
-  if (kind === "cbsem") validateCbsemModel(model, metadata.cbsem_model_type);
+  if (kind === "ipma" && methodConfig.kind === "ipma") validateIpmaModel(model, methodConfig.targets[0], input.nodes, input.edges);
+  if (kind === "cbsem" && methodConfig.kind === "cbsem") validateCbsemModel(model, methodConfig.model_type);
   if (kind === "gsca") validateGscaModel(model, input.edges);
   if (
-    kind === "mga"
-    && model.constructs.some((construct) => construct.indicators.includes(metadata.mga_group_column))
+    methodConfig.kind === "mga"
+    && model.constructs.some((construct) => construct.indicators.includes(methodConfig.group_column))
   ) {
     fail("groupColumn", "The two-group MGA grouping variable cannot also be assigned as a model indicator.");
   }
 
   return {
-    schema_version: 2,
+    schema_version: 3,
     id: input.recipeId,
     created_at: input.createdAt,
     dataset_fingerprint: input.datasetFingerprint.trim(),
     model,
     settings,
+    method_config: methodConfig,
     metadata,
   };
 }
@@ -342,12 +346,20 @@ function validateGscaModel(model: NativeRecipeModel, edges: readonly Edge[]) {
 }
 
 function buildMetadata(
-  kind: NativeAnalysisRecipeKind,
   scopeMetadata: string,
-  settings: Readonly<AnalysisUiSettings>,
+  methodConfig: NativeAnalysisMethodConfig,
 ): Record<string, string> {
-  const metadata: Record<string, string> = { status: scopeMetadata };
+  const status = methodConfig.kind === "regression"
+    && methodConfig.model.type === "process"
+    ? `validated_v1_2_2_process_${methodConfig.model.relationship.model}_bounded_scope`
+    : scopeMetadata;
+  return { status };
+}
 
+function buildMethodConfig(
+  kind: NativeAnalysisRecipeKind,
+  settings: Readonly<AnalysisUiSettings>,
+): NativeAnalysisMethodConfig {
   switch (kind) {
     case "pls_algorithm":
     case "pls_bootstrap":
@@ -360,21 +372,99 @@ function buildMetadata(
     case "nonlinear_effects":
     case "moderated_mediation":
     case "gsca":
-      return metadata;
-    case "predict":
-      return Object.assign(metadata, predictionMetadata(settings));
-    case "mga":
-      return Object.assign(metadata, mgaMetadata(settings));
+      return { kind };
+    case "predict": {
+      const values = predictionMetadata(settings);
+      const segmentation = values.segment_starts === undefined
+        ? undefined
+        : {
+            segments: Number(values.segment_count ?? values.fimix_classes),
+            starts: Number(values.segment_starts),
+            minimum_segment_share: Number(values.minimum_segment_share),
+          };
+      return {
+        kind,
+        ...(values.segment_count && segmentation ? { pls_pos: segmentation } : {}),
+        ...(values.fimix_classes && segmentation ? { fimix: segmentation } : {}),
+      };
+    }
+    case "mga": {
+      const values = mgaMetadata(settings);
+      return {
+        kind,
+        group_column: values.mga_group_column,
+        group_a: values.mga_group_a,
+        group_b: values.mga_group_b,
+        methods: ["micom", "mga_permutation"],
+        permutation_samples: Number(values.group_permutation_samples),
+        configural_invariance_confirmed: values.micom_configural_confirmed === "true",
+      };
+    }
     case "ipma":
-      return Object.assign(metadata, { ipma_targets: requiredSingleTarget(settings.ipmaTargets) });
-    case "cbsem":
-      return Object.assign(metadata, cbsemMetadata(settings));
-    case "pca":
-      return Object.assign(metadata, pcaMetadata(settings));
-    case "regression":
-      return Object.assign(metadata, regressionMetadata(settings));
-    case "nca":
-      return Object.assign(metadata, ncaMetadata(settings));
+      return { kind, targets: [requiredSingleTarget(settings.ipmaTargets)] };
+    case "cbsem": {
+      const values = cbsemMetadata(settings);
+      return {
+        kind,
+        model_type: values.cbsem_model_type as "cfa" | "sem",
+        estimator: "ml",
+        input: "raw",
+        mean_structure: false,
+        bootstrap_samples: 0,
+      };
+    }
+    case "pca": {
+      const values = pcaMetadata(settings);
+      const rule = values.pca_component_rule as "kaiser" | "fixed" | "variance_threshold";
+      const retention = rule === "fixed"
+        ? { rule, components: Number(values.pca_components) } as const
+        : rule === "variance_threshold"
+          ? { rule, threshold: Number(values.pca_variance_threshold) } as const
+          : { rule } as const;
+      return { kind, variables: values.pca_variables.split(","), retention };
+    }
+    case "regression": {
+      const values = regressionMetadata(settings);
+      const regressionType = values.regression_type as "ols" | "logistic" | "process";
+      const model = regressionType === "ols"
+        ? { type: "ols", robust_se: "hc3" } as const
+        : regressionType === "logistic"
+          ? { type: "logistic" } as const
+          : values.process_model === "moderation"
+            ? {
+                type: "process",
+                relationship: {
+                  model: "moderation",
+                  x: values.process_x,
+                  moderator: values.process_w,
+                },
+              } as const
+            : {
+                type: "process",
+                relationship: {
+                  model: "mediation",
+                  x: values.process_x,
+                  mediator: values.process_m,
+                },
+              } as const;
+      return {
+        kind,
+        outcome: values.regression_outcome,
+        predictors: values.regression_predictors.split(","),
+        ...(values.regression_controls ? { controls: values.regression_controls.split(",") } : {}),
+        model,
+      };
+    }
+    case "nca": {
+      const values = ncaMetadata(settings);
+      return {
+        kind,
+        condition: values.nca_x,
+        outcome: values.nca_y,
+        ceiling: values.nca_ceiling as "ce_fdh" | "cr_fdh" | "both",
+        permutation_samples: Number(values.nca_permutation_samples),
+      };
+    }
   }
 }
 

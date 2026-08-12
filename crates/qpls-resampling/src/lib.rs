@@ -16,11 +16,11 @@ use arrow::{
     compute::take,
     record_batch::RecordBatch,
 };
-use qpls_core::{AnalysisMethod, AnalysisRecipe};
+use qpls_core::{AnalysisMethod, AnalysisRecipe, ValidatedExecutionRecipe};
 use qpls_data::{DataKind, Dataset};
 use qpls_estimation::{
     EffectEstimate, EstimationError, OuterEstimate, PathEstimate, PlsResult,
-    estimate_pls_with_control,
+    estimate_pls_validated_with_control,
 };
 
 pub const RESAMPLING_METHOD_VERSION_V1: &str = "indexed_resampling_v1";
@@ -602,6 +602,43 @@ pub fn bootstrap_pls(
     is_cancelled: impl Fn() -> bool + Sync,
     report_progress: impl Fn(ResamplingProgress) + Sync,
 ) -> Result<PlsBootstrapResult, PlsBootstrapError> {
+    if recipe.settings.studentized_inner_samples > 0
+        && (recipe.settings.bootstrap_samples < 999
+            || !(99..=999).contains(&recipe.settings.studentized_inner_samples)
+            || recipe.settings.studentized_inner_samples % 2 == 0)
+    {
+        return Err(PlsBootstrapError::InvalidStudentizedPlan);
+    }
+    let execution = ValidatedExecutionRecipe::for_dataset(recipe, &dataset.fingerprint.0)
+        .map_err(|error| PlsBootstrapError::InconsistentResult(error.to_string()))?;
+    bootstrap_pls_validated(
+        dataset,
+        &execution,
+        original,
+        workers,
+        is_cancelled,
+        report_progress,
+    )
+}
+
+/// Bootstraps an opaque schema-v3 recipe capability. The capability is
+/// validated once before the worker pool and the no-resampling base is reused
+/// by all replicates.
+pub fn bootstrap_pls_validated(
+    dataset: &Dataset,
+    recipe: &ValidatedExecutionRecipe,
+    original: &PlsResult,
+    workers: usize,
+    is_cancelled: impl Fn() -> bool + Sync,
+    report_progress: impl Fn(ResamplingProgress) + Sync,
+) -> Result<PlsBootstrapResult, PlsBootstrapError> {
+    let effective_recipe = recipe
+        .effective_for_dataset(&dataset.fingerprint.0)
+        .map_err(|error| PlsBootstrapError::InconsistentResult(error.to_string()))?;
+    let base_execution = recipe
+        .without_outer_resampling()
+        .map_err(|error| PlsBootstrapError::InconsistentResult(error.to_string()))?;
+    let recipe = effective_recipe;
     if dataset.schema.kind != DataKind::Raw {
         return Err(PlsBootstrapError::RawDataRequired);
     }
@@ -623,9 +660,8 @@ pub fn bootstrap_pls(
             "base estimate is not a converged PLS-PM v1 result".into(),
         ));
     }
-    let mut base_recipe = recipe.clone();
-    base_recipe.settings.bootstrap_samples = 0;
-    let complete_rows = complete_case_rows(dataset, &base_recipe);
+    let base_recipe = base_execution.effective();
+    let complete_rows = complete_case_rows(dataset, base_recipe);
     if original.used_observations != complete_rows.len() {
         return Err(PlsBootstrapError::InconsistentResult(
             "base estimate observation count differs from the complete-case sample".into(),
@@ -653,10 +689,11 @@ pub fn bootstrap_pls(
                 .iter()
                 .map(|position| complete_rows[*position])
                 .collect::<Vec<_>>();
-            let sampled =
-                resample_model_dataset(dataset, &base_recipe, &raw_indices, cancellation)?;
+            let sampled = resample_model_dataset(dataset, base_recipe, &raw_indices, cancellation)?;
             let mut estimate =
-                estimate_pls_with_control(&sampled, &base_recipe, |_| !cancellation())?;
+                estimate_pls_validated_with_control(&sampled, &base_execution, |_| {
+                    !cancellation()
+                })?;
             align_pls_signs(
                 &mut estimate,
                 &original.construct_scores,
@@ -667,7 +704,7 @@ pub fn bootstrap_pls(
                 if recipe.settings.studentized_inner_samples > 0 {
                     match inner_bootstrap_standard_errors(
                         &sampled,
-                        &base_recipe,
+                        &base_execution,
                         &estimate,
                         plan.master_seed,
                         replicate_index,
@@ -724,7 +761,7 @@ pub fn bootstrap_pls(
     let percentile = summarize_percentile(original, &run, recipe.settings.confidence_level)?;
     let jackknife = jackknife_pls(
         dataset,
-        &base_recipe,
+        &base_execution,
         original,
         workers,
         || cancellation(),
@@ -766,18 +803,19 @@ pub fn bootstrap_pls(
     })
 }
 
-pub fn jackknife_pls(
+fn jackknife_pls(
     dataset: &Dataset,
-    recipe: &AnalysisRecipe,
+    recipe: &ValidatedExecutionRecipe,
     original: &PlsResult,
     workers: usize,
     is_cancelled: impl Fn() -> bool + Sync,
     report_progress: impl Fn(ResamplingProgress) + Sync,
 ) -> Result<JackknifeRun<PlsJackknifeEstimate>, PlsJackknifeError> {
+    let effective_recipe = recipe.effective();
     if dataset.schema.kind != DataKind::Raw {
         return Err(PlsJackknifeError::RawDataRequired);
     }
-    if recipe.settings.method != AnalysisMethod::PlsPm {
+    if effective_recipe.settings.method != AnalysisMethod::PlsPm {
         return Err(PlsJackknifeError::InvalidMethod);
     }
     if !original.converged || original.method_version != qpls_estimation::PLS_METHOD_VERSION {
@@ -785,9 +823,8 @@ pub fn jackknife_pls(
             "base estimate is not a converged PLS-PM v1 result".into(),
         ));
     }
-    let mut base_recipe = recipe.clone();
-    base_recipe.settings.bootstrap_samples = 0;
-    let complete_rows = complete_case_rows(dataset, &base_recipe);
+    let base_recipe = effective_recipe;
+    let complete_rows = complete_case_rows(dataset, base_recipe);
     if complete_rows.len() < 4 {
         return Err(PlsJackknifeError::InsufficientCases(complete_rows.len()));
     }
@@ -809,10 +846,9 @@ pub fn jackknife_pls(
                 .iter()
                 .map(|position| complete_rows[*position])
                 .collect::<Vec<_>>();
-            let sampled =
-                resample_model_dataset(dataset, &base_recipe, &raw_indices, cancellation)?;
+            let sampled = resample_model_dataset(dataset, base_recipe, &raw_indices, cancellation)?;
             let mut estimate =
-                estimate_pls_with_control(&sampled, &base_recipe, |_| !cancellation())?;
+                estimate_pls_validated_with_control(&sampled, recipe, |_| !cancellation())?;
             align_pls_signs(
                 &mut estimate,
                 &original.construct_scores,
@@ -852,6 +888,32 @@ pub fn permutation_pls(
     is_cancelled: impl Fn() -> bool + Sync,
     report_progress: impl Fn(ResamplingProgress) + Sync,
 ) -> Result<PlsPermutationResult, PlsPermutationError> {
+    let execution = ValidatedExecutionRecipe::for_dataset(recipe, &dataset.fingerprint.0)
+        .map_err(|error| PlsPermutationError::InconsistentResult(error.to_string()))?;
+    permutation_pls_validated(
+        dataset,
+        &execution,
+        original,
+        workers,
+        is_cancelled,
+        report_progress,
+    )
+}
+
+/// Permutes an opaque schema-v3 recipe capability whose configuration and
+/// compatibility projection cannot be forged by callers.
+pub fn permutation_pls_validated(
+    dataset: &Dataset,
+    recipe: &ValidatedExecutionRecipe,
+    original: &PlsResult,
+    workers: usize,
+    is_cancelled: impl Fn() -> bool + Sync,
+    report_progress: impl Fn(ResamplingProgress) + Sync,
+) -> Result<PlsPermutationResult, PlsPermutationError> {
+    let effective_recipe = recipe
+        .effective_for_dataset(&dataset.fingerprint.0)
+        .map_err(|error| PlsPermutationError::InconsistentResult(error.to_string()))?;
+    let recipe = effective_recipe;
     if dataset.schema.kind != DataKind::Raw {
         return Err(PlsPermutationError::RawDataRequired);
     }
@@ -1096,7 +1158,7 @@ fn ols_with_intercept(
 
 fn inner_bootstrap_standard_errors(
     primary_dataset: &Dataset,
-    recipe: &AnalysisRecipe,
+    recipe: &ValidatedExecutionRecipe,
     primary: &PlsResult,
     master_seed: u64,
     primary_replicate: u32,
@@ -1112,8 +1174,9 @@ fn inner_bootstrap_standard_errors(
             return Err(EstimationError::Cancelled);
         }
         let indices = bootstrap_indices(case_count, master_seed, &operation, inner_replicate);
-        let sampled = resample_model_dataset(primary_dataset, recipe, &indices, is_cancelled)?;
-        let estimate = estimate_pls_with_control(&sampled, recipe, |_| !is_cancelled());
+        let sampled =
+            resample_model_dataset(primary_dataset, recipe.effective(), &indices, is_cancelled)?;
+        let estimate = estimate_pls_validated_with_control(&sampled, recipe, |_| !is_cancelled());
         report_progress();
         let mut estimate = match estimate {
             Ok(estimate) => estimate,
@@ -1826,10 +1889,20 @@ fn derive_seed(master_seed: u64, operation: &str, replicate_index: u32) -> [u8; 
 mod tests {
     use super::*;
     use chrono::Utc;
-    use qpls_core::{AnalysisSettings, Construct, MeasurementMode, ModelSpec, StructuralPath};
+    use qpls_core::{
+        ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisSettings, Construct, MeasurementMode, ModelSpec,
+        StructuralPath,
+    };
     use qpls_data::{ImportOptions, import_delimited_bytes};
     use std::sync::{Arc, atomic::AtomicBool};
     use uuid::Uuid;
+
+    fn current_recipe(mut recipe: AnalysisRecipe) -> AnalysisRecipe {
+        if recipe.schema_version < ANALYSIS_RECIPE_SCHEMA_VERSION {
+            recipe = recipe.migrated_v3().unwrap();
+        }
+        recipe
+    }
 
     #[test]
     fn indexed_samples_are_repeatable_and_replicate_specific() {
@@ -2011,10 +2084,13 @@ mod tests {
             "../../../validation/fixtures/simple_reflective.recipe.json"
         ))
         .unwrap();
+        recipe = current_recipe(recipe);
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         recipe.settings.bootstrap_samples = 24;
+        recipe.method_config = Some(qpls_core::MethodConfig::PlsBootstrap);
         let mut base_recipe = recipe.clone();
         base_recipe.settings.bootstrap_samples = 0;
+        base_recipe.method_config = Some(qpls_core::MethodConfig::PlsAlgorithm);
         let original = qpls_estimation::estimate_pls(&dataset, &base_recipe).unwrap();
         let progress = Arc::new(Mutex::new(Vec::new()));
         let serial_progress = progress.clone();
@@ -2130,17 +2206,19 @@ mod tests {
             interactions: Vec::new(),
         };
         let mut recipe = AnalysisRecipe {
-            schema_version: 2,
+            schema_version: qpls_core::ANALYSIS_RECIPE_SCHEMA_VERSION,
             id: Uuid::nil(),
             created_at: Utc::now(),
             dataset_fingerprint: dataset.fingerprint.0.clone(),
             model,
             settings: AnalysisSettings::default(),
+            method_config: Some(qpls_core::MethodConfig::PlsBootstrap),
             metadata: std::collections::BTreeMap::new(),
         };
         recipe.settings.bootstrap_samples = 99;
         let mut base_recipe = recipe.clone();
         base_recipe.settings.bootstrap_samples = 0;
+        base_recipe.method_config = Some(qpls_core::MethodConfig::PlsAlgorithm);
         let original = qpls_estimation::estimate_pls(&dataset, &base_recipe).unwrap();
         let result = bootstrap_pls(&dataset, &recipe, &original, 1, || false, |_| {}).unwrap();
         let indirect_key = parameter_key("indirect_effect", &["x", "y"]);
@@ -2177,10 +2255,15 @@ mod tests {
             "../../../validation/fixtures/simple_reflective.recipe.json"
         ))
         .unwrap();
+        recipe = current_recipe(recipe);
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         let original = qpls_estimation::estimate_pls(&dataset, &recipe).unwrap();
-        let serial = jackknife_pls(&dataset, &recipe, &original, 1, || false, |_| {}).unwrap();
-        let parallel = jackknife_pls(&dataset, &recipe, &original, 4, || false, |_| {}).unwrap();
+        let execution = ValidatedExecutionRecipe::for_dataset(&recipe, &dataset.fingerprint.0)
+            .unwrap()
+            .without_outer_resampling()
+            .unwrap();
+        let serial = jackknife_pls(&dataset, &execution, &original, 1, || false, |_| {}).unwrap();
+        let parallel = jackknife_pls(&dataset, &execution, &original, 4, || false, |_| {}).unwrap();
         assert_eq!(serial, parallel);
         assert_eq!(serial.case_count, original.used_observations);
         assert!(serial.outcomes.iter().enumerate().all(|(index, outcome)| {
@@ -2202,9 +2285,17 @@ mod tests {
             "../../../validation/fixtures/simple_reflective.recipe.json"
         ))
         .unwrap();
+        recipe = current_recipe(recipe);
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         recipe.settings.permutation_samples = 199;
-        let original = qpls_estimation::estimate_pls(&dataset, &recipe).unwrap();
+        recipe.method_config = Some(qpls_core::MethodConfig::PlsPermutation);
+        let base_recipe = ValidatedExecutionRecipe::for_dataset(&recipe, &dataset.fingerprint.0)
+            .unwrap()
+            .without_outer_resampling()
+            .unwrap();
+        let original =
+            qpls_estimation::estimate_pls_validated_with_control(&dataset, &base_recipe, |_| true)
+                .unwrap();
         let serial = permutation_pls(&dataset, &recipe, &original, 1, || false, |_| {}).unwrap();
         let parallel = permutation_pls(&dataset, &recipe, &original, 4, || false, |_| {}).unwrap();
         assert_eq!(serial, parallel);
@@ -2302,6 +2393,7 @@ mod tests {
             "../../../validation/fixtures/simple_reflective.recipe.json"
         ))
         .unwrap();
+        recipe = current_recipe(recipe);
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         let original = qpls_estimation::estimate_pls(&dataset, &recipe).unwrap();
         let estimate = PlsBootstrapEstimate {
@@ -2356,10 +2448,12 @@ mod tests {
             "../../../validation/fixtures/simple_reflective.recipe.json"
         ))
         .unwrap();
+        recipe = current_recipe(recipe);
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         let original = qpls_estimation::estimate_pls(&dataset, &recipe).unwrap();
         recipe.settings.bootstrap_samples = 998;
         recipe.settings.studentized_inner_samples = 99;
+        recipe.method_config = Some(qpls_core::MethodConfig::PlsBootstrap);
         assert!(matches!(
             bootstrap_pls(&dataset, &recipe, &original, 1, || false, |_| {}),
             Err(PlsBootstrapError::InvalidStudentizedPlan)
@@ -2428,6 +2522,7 @@ mod tests {
             "../../../validation/fixtures/simple_reflective.recipe.json"
         ))
         .unwrap();
+        recipe = current_recipe(recipe);
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         let complete_rows = complete_case_rows(&dataset, &recipe);
         let original = qpls_estimation::estimate_pls(&dataset, &recipe).unwrap();
@@ -2442,7 +2537,13 @@ mod tests {
                 .collect::<Vec<_>>();
             let sampled =
                 resample_model_dataset(&dataset, &recipe, &raw_indices, &|| false).unwrap();
-            let estimate = qpls_estimation::estimate_pls(&sampled, &recipe).unwrap();
+            let execution =
+                ValidatedExecutionRecipe::for_dataset(&recipe, &dataset.fingerprint.0).unwrap();
+            let estimate =
+                qpls_estimation::estimate_pls_validated_with_control(&sampled, &execution, |_| {
+                    true
+                })
+                .unwrap();
             assert_eq!(estimate.used_observations, original.used_observations);
             assert_eq!(estimate.omitted_observations, 0);
         }

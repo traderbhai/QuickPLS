@@ -484,8 +484,85 @@ export interface NativeCanonicalAnalysisRecipe {
   dataset_fingerprint: string;
   model: NativeCanonicalModelSpec;
   settings: AnalysisEngineSettingsSnapshot;
+  /** Required for schema v3; absent on readable legacy v1/v2 recipes. */
+  method_config?: NativeAnalysisMethodConfig;
   metadata: Record<string, string>;
 }
+
+export type NativeAnalysisMethodConfig =
+  | { kind: "pls_algorithm" }
+  | { kind: "pls_bootstrap" }
+  | { kind: "pls_permutation" }
+  | { kind: "plsc" }
+  | { kind: "wpls" }
+  | { kind: "cca" }
+  | { kind: "cta_pls" }
+  | { kind: "endogeneity" }
+  | { kind: "nonlinear_effects" }
+  | { kind: "moderated_mediation" }
+  | {
+      kind: "predict";
+      pls_pos?: NativePredictionSegmentationConfig;
+      fimix?: NativePredictionSegmentationConfig;
+    }
+  | {
+      kind: "mga";
+      group_column: string;
+      group_a: string;
+      group_b: string;
+      methods: Array<"micom" | "mga_permutation">;
+      permutation_samples: number;
+      configural_invariance_confirmed: boolean;
+    }
+  | { kind: "ipma"; targets: string[] }
+  | {
+      kind: "cbsem";
+      model_type: "cfa" | "sem";
+      estimator: "ml" | "robust_ml" | "wlsmv";
+      input: "raw" | "covariance" | "correlation";
+      mean_structure: boolean;
+      bootstrap_samples: number;
+      group_column?: string;
+      invariance_steps?: Array<"configural" | "metric" | "scalar">;
+    }
+  | { kind: "pca"; variables: string[]; retention: NativePcaRetentionConfig }
+  | { kind: "gsca" }
+  | {
+      kind: "regression";
+      outcome: string;
+      predictors: string[];
+      controls?: string[];
+      model: NativeRegressionModelConfig;
+    }
+  | {
+      kind: "nca";
+      condition: string;
+      outcome: string;
+      ceiling: "ce_fdh" | "cr_fdh" | "both";
+      permutation_samples: number;
+    }
+  | { kind: "legacy" };
+
+export interface NativePredictionSegmentationConfig {
+  segments: number;
+  starts: number;
+  minimum_segment_share: number;
+}
+
+export type NativePcaRetentionConfig =
+  | { rule: "kaiser" }
+  | { rule: "fixed"; components: number }
+  | { rule: "variance_threshold"; threshold: number };
+
+export type NativeRegressionModelConfig =
+  | { type: "ols"; robust_se: "hc3" }
+  | { type: "logistic" }
+  | { type: "process"; relationship: NativeProcessRelationshipConfig };
+
+export type NativeProcessRelationshipConfig =
+  | { model: "mediation"; x: string; mediator: string }
+  | { model: "moderation"; x: string; moderator: string }
+  | { model: "moderated_mediation"; x: string; mediator: string; moderator: string };
 
 export interface AnalysisRun {
   id: string;

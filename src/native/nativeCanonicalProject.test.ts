@@ -105,6 +105,14 @@ function envelope(overrides: Partial<AnalysisResultEnvelope> = {}): AnalysisResu
 }
 
 describe("canonical native project reconciliation", () => {
+  it("keeps legacy schema-v1/v2 recipes readable without synthesizing method_config", () => {
+    for (const schema_version of [1, 2]) {
+      const legacy = recipe({ schema_version });
+      expect(legacy.schema_version).toBe(schema_version);
+      expect(legacy.method_config).toBeUndefined();
+    }
+  });
+
   it("uses canonical model content while retaining only safe workspace presentation", () => {
     const snapshot = nativeModelSnapshotFromCanonical(model(), {
       nodes: [
