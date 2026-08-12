@@ -374,10 +374,29 @@ export function NativeDesktopController() {
     }
     if (options.announce !== false) {
       pushToast({
-        tone: project.recovered ? "warning" : "success",
-        title: project.recovered ? "Project recovered" : successTitle,
-        detail: project.name,
+        tone: project.recovered || project.readOnly || project.migrationPending ? "warning" : "success",
+        title: project.recovered
+          ? "Project recovered"
+          : project.readOnly
+            ? "Project opened read-only"
+            : project.migrationPending
+              ? "Project upgrade pending"
+              : successTitle,
+        detail: project.readOnly
+          ? `${project.name} uses archive schema ${project.sourceArchiveVersion}; compatible content can be viewed and exported, but this app will not modify or resave it.${Object.values(project.futureUnsupported).some((count) => count > 0) ? ` Unsupported items hidden: ${project.futureUnsupported.models} models, ${project.futureUnsupported.recipes} recipes, ${project.futureUnsupported.results} results.` : ""}`
+          : project.migrationPending
+            ? `${project.name} was opened from archive schema ${project.sourceArchiveVersion}. The original file will be retained as a backup on the first explicit save.`
+            : project.name,
       });
+      if (project.compatibilityNotices.length) {
+        pushToast({
+          tone: "warning",
+          title: "Historical result compatibility",
+          detail: project.compatibilityNotices.length === 1
+            ? project.compatibilityNotices[0].message
+            : `${project.compatibilityNotices.length} historical results remain readable under their original method versions.`,
+        });
+      }
     }
     if (options.navigate !== false) {
       window.dispatchEvent(new CustomEvent("quickpls:navigate-surface", { detail: { surface: canonical.nodes.length ? "model" : "data" } }));
@@ -483,6 +502,9 @@ export function NativeDesktopController() {
     updateProjectWritable(!saved.readOnly);
     markWorkspaceCleanAt(authoritativeSavedSignature);
     pushToast({ tone: "success", title: "Project saved", detail: saved.path ?? saved.name });
+    if (saved.saveWarning) {
+      pushToast({ tone: "warning", title: "Saved with cleanup warning", detail: saved.saveWarning });
+    }
     return true;
   };
 

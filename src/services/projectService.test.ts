@@ -136,6 +136,11 @@ describe("native canonical project services", () => {
     });
 
     await expect(createNativeProject("Legacy")).resolves.toMatchObject({
+      sourceArchiveVersion: 0,
+      migrationPending: false,
+      compatibilityNotices: [],
+      futureUnsupported: { models: 0, recipes: 0, results: 0 },
+      saveWarning: null,
       models: [],
       recipes: [],
       results: [],

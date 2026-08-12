@@ -1,3 +1,11 @@
+mod archive_integrity;
+
+use archive_integrity::{
+    ArchiveIntegrityError, DEFAULT_ARCHIVE_LIMITS, MAX_MANIFEST_UNCOMPRESSED_BYTES,
+    MAX_PROJECT_DOCUMENT_UNCOMPRESSED_BYTES, PROJECT_ENTRY_NAME, expected_project_entries,
+    preflight_archive, read_preflighted_entry, validate_expected_project_entries,
+    validate_manifest_checksums, validate_raw_central_directory, verify_archive_checksums,
+};
 use chrono::{DateTime, Utc};
 use qpls_assessment::{
     ASSESSMENT_METHOD_VERSION, ASSESSMENT_METHOD_VERSION_V1, ASSESSMENT_METHOD_VERSION_V2,
@@ -41,7 +49,7 @@ use sha2::{Digest, Sha256};
 use statrs::distribution::{ChiSquared, ContinuousCDF, StudentsT};
 use std::{
     collections::{BTreeMap, BTreeSet},
-    fs::{self, File},
+    fs::{self, File, OpenOptions},
     io::{Read, Write},
     path::{Path, PathBuf},
 };
@@ -49,7 +57,8 @@ use thiserror::Error;
 use uuid::Uuid;
 use zip::{ZipArchive, ZipWriter, write::SimpleFileOptions};
 
-pub const PROJECT_ARCHIVE_VERSION: u32 = 4;
+pub const PROJECT_ARCHIVE_VERSION: u32 = 5;
+const PROJECT_ARCHIVE_VERSION_V4: u32 = 4;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProjectManifest {
@@ -59,7 +68,13 @@ pub struct ProjectManifest {
     pub created_at: DateTime<Utc>,
     pub modified_at: DateTime<Utc>,
     pub engine_version: String,
+    #[serde(default = "default_checksum_algorithm")]
+    pub checksum_algorithm: String,
     pub checksums: BTreeMap<String, String>,
+}
+
+fn default_checksum_algorithm() -> String {
+    "sha256".to_owned()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -74,6 +89,20 @@ struct ProjectDocument {
     layouts: BTreeMap<String, serde_json::Value>,
     #[serde(default)]
     results: Vec<AnalysisResult>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct FutureProjectDocument {
+    #[serde(default)]
+    datasets: Vec<DatasetDescriptor>,
+    #[serde(default)]
+    models: Vec<serde_json::Value>,
+    #[serde(default)]
+    recipes: Vec<serde_json::Value>,
+    #[serde(default)]
+    layouts: BTreeMap<String, serde_json::Value>,
+    #[serde(default)]
+    results: Vec<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -136,6 +165,34 @@ pub struct Project {
     pub layouts: BTreeMap<String, serde_json::Value>,
     pub results: Vec<AnalysisResult>,
     pub read_only: bool,
+    /// Archive schema observed on load. This is runtime migration metadata and
+    /// is never serialized into the archive.
+    pub source_archive_version: u32,
+    /// Whether an explicit save still needs to establish a current v5 primary
+    /// while retaining the loaded legacy primary as its previous generation.
+    /// Autosave does not change this runtime state.
+    pub migration_pending: bool,
+    /// Compatibility information derived from immutable stored results. These
+    /// notices are deliberately kept outside `AnalysisResult::diagnostics` so
+    /// opening an archive never rewrites its historical scientific record.
+    pub compatibility_notices: Vec<ProjectCompatibilityNotice>,
+    /// Counts of future-schema items that were checksum-verified but could not
+    /// be decoded by this build. These are read-only visibility metadata and
+    /// are never written back into an archive.
+    pub future_unsupported: FutureUnsupportedCounts,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ProjectCompatibilityNotice {
+    pub result_id: Uuid,
+    pub diagnostic: Diagnostic,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct FutureUnsupportedCounts {
+    pub models: usize,
+    pub recipes: usize,
+    pub results: usize,
 }
 
 impl Project {
@@ -149,6 +206,7 @@ impl Project {
                 created_at: now,
                 modified_at: now,
                 engine_version: ENGINE_VERSION.into(),
+                checksum_algorithm: default_checksum_algorithm(),
                 checksums: BTreeMap::new(),
             },
             datasets: vec![],
@@ -157,7 +215,35 @@ impl Project {
             layouts: BTreeMap::new(),
             results: Vec::new(),
             read_only: false,
+            source_archive_version: PROJECT_ARCHIVE_VERSION,
+            migration_pending: false,
+            compatibility_notices: Vec::new(),
+            future_unsupported: FutureUnsupportedCounts::default(),
         }
+    }
+
+    /// Adopts the manifest returned by a successful explicit `save_project`
+    /// call and completes any pending archive migration. Autosave callers must
+    /// not call this method.
+    pub fn adopt_explicit_save(&mut self, manifest: ProjectManifest) -> Result<(), ProjectError> {
+        if self.read_only {
+            return Err(ProjectError::ReadOnly);
+        }
+        if manifest.project_id != self.manifest.project_id {
+            return Err(ProjectError::Invalid(
+                "saved manifest project ID does not match the active project".into(),
+            ));
+        }
+        if manifest.schema_version != PROJECT_ARCHIVE_VERSION {
+            return Err(ProjectError::Invalid(format!(
+                "saved manifest schema {} is not current archive schema {}",
+                manifest.schema_version, PROJECT_ARCHIVE_VERSION
+            )));
+        }
+        self.manifest = manifest;
+        self.source_archive_version = PROJECT_ARCHIVE_VERSION;
+        self.migration_pending = false;
+        Ok(())
     }
 
     /// Appends a recipe and result only when the resulting project satisfies
@@ -181,6 +267,12 @@ impl Project {
                 "analysis result {} already exists; result IDs must be unique",
                 result.id
             )));
+        }
+        if matches!(&result.payload, AnalysisPayload::Legacy { .. }) {
+            return Err(ProjectError::Invalid(
+                "legacy result payloads are archive-readable only and cannot be appended as new evidence"
+                    .into(),
+            ));
         }
         if recipe.schema_version != ANALYSIS_RECIPE_SCHEMA_VERSION {
             return Err(ProjectError::Invalid(format!(
@@ -259,6 +351,12 @@ pub enum ProjectError {
     ChecksumMismatch(String),
     #[error("project archive is invalid: {0}")]
     Invalid(String),
+    #[error("project recovery failed: {0}")]
+    RecoveryFailed(String),
+    #[error(
+        "save promotion failed ({promotion}) and restoring the original project also failed ({rollback})"
+    )]
+    RollbackFailed { promotion: String, rollback: String },
     #[error("I/O failed: {0}")]
     Io(#[from] std::io::Error),
     #[error("data failed: {0}")]
@@ -269,14 +367,30 @@ pub enum ProjectError {
     Zip(#[from] zip::result::ZipError),
 }
 
-pub fn save_project(path: &Path, project: &Project) -> Result<(), ProjectError> {
+fn map_archive_integrity_error(error: ArchiveIntegrityError) -> ProjectError {
+    match error {
+        ArchiveIntegrityError::MissingRequiredEntry(name) => ProjectError::MissingEntry(name),
+        ArchiveIntegrityError::ChecksumMismatch(name) => ProjectError::ChecksumMismatch(name),
+        other => ProjectError::Invalid(other.to_string()),
+    }
+}
+
+pub fn save_project(path: &Path, project: &Project) -> Result<ProjectManifest, ProjectError> {
     if project.read_only {
         return Err(ProjectError::ReadOnly);
+    }
+    if transaction_journal_path(path).exists() {
+        recover_incomplete_save(path)?;
+        if transaction_journal_path(path).exists() {
+            return Err(ProjectError::RecoveryFailed(
+                "a prior save is committed but its recovery identity is not yet durable; retry after the filesystem permits recovery metadata writes"
+                    .into(),
+            ));
+        }
     }
     validate_result_contracts_with_recipes(&project.results, &project.recipes)?;
     let parent = path.parent().unwrap_or_else(|| Path::new("."));
     fs::create_dir_all(parent)?;
-    let mut entries = BTreeMap::<String, Vec<u8>>::new();
     let document = ProjectDocument {
         datasets: project
             .datasets
@@ -288,64 +402,152 @@ pub fn save_project(path: &Path, project: &Project) -> Result<(), ProjectError> 
         layouts: project.layouts.clone(),
         results: project.results.clone(),
     };
-    entries.insert("project.json".into(), serde_json::to_vec_pretty(&document)?);
-    for dataset in &project.datasets {
-        entries.insert(
-            format!("data/{}.arrow", dataset.id),
-            write_arrow(&dataset.batch)?,
-        );
-    }
     let mut manifest = project.manifest.clone();
     manifest.schema_version = PROJECT_ARCHIVE_VERSION;
     manifest.modified_at = Utc::now();
     manifest.engine_version = ENGINE_VERSION.into();
-    manifest.checksums = entries
-        .iter()
-        .map(|(name, bytes)| (name.clone(), sha256(bytes)))
-        .collect();
+    manifest.checksum_algorithm = default_checksum_algorithm();
+    manifest.checksums.clear();
+
     let temporary = temporary_path(path);
-    let file = File::create(&temporary)?;
+    let mut temporary_guard = TemporaryArchiveGuard::new(temporary.clone());
+    let file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&temporary)?;
     let mut zip = ZipWriter::new(file);
     let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
-    zip.start_file("manifest.json", options)?;
-    zip.write_all(&serde_json::to_vec_pretty(&manifest)?)?;
-    for (name, bytes) in entries {
+
+    let project_bytes = serde_json::to_vec_pretty(&document)?;
+    manifest
+        .checksums
+        .insert(PROJECT_ENTRY_NAME.to_owned(), sha256(&project_bytes));
+    zip.start_file(PROJECT_ENTRY_NAME, options)?;
+    zip.write_all(&project_bytes)?;
+
+    // Arrow buffers are serialized, hashed, written, and dropped one dataset
+    // at a time. A save therefore never retains every dataset version in an
+    // additional in-memory archive map.
+    for dataset in &project.datasets {
+        let name = format!("data/{}.arrow", dataset.id);
+        let bytes = write_arrow(&dataset.batch)?;
+        manifest.checksums.insert(name.clone(), sha256(&bytes));
         zip.start_file(name, options)?;
         zip.write_all(&bytes)?;
     }
+
+    zip.start_file("manifest.json", options)?;
+    zip.write_all(&serde_json::to_vec_pretty(&manifest)?)?;
     zip.finish()?.sync_all()?;
-    if path.exists() {
-        let backup = backup_path(path);
-        let _ = fs::remove_file(&backup);
-        fs::rename(path, &backup)?;
-        if let Err(error) = fs::rename(&temporary, path) {
-            let _ = fs::rename(&backup, path);
-            return Err(error.into());
-        }
-    } else {
-        fs::rename(temporary, path)?;
+
+    // Validate the exact bytes that will be promoted, rather than assuming
+    // successful ZIP finalization implies a readable scientific archive.
+    let persisted = load_project(&temporary)?;
+    if persisted.read_only
+        || persisted.manifest.project_id != manifest.project_id
+        || persisted.manifest.schema_version != PROJECT_ARCHIVE_VERSION
+        || persisted.manifest.checksums != manifest.checksums
+    {
+        return Err(ProjectError::Invalid(
+            "temporary archive validation did not reproduce the persisted manifest".into(),
+        ));
     }
-    Ok(())
+
+    promote_validated_archive(path, &temporary, &manifest)?;
+    temporary_guard.disarm();
+    Ok(manifest)
 }
 
 pub fn load_project(path: &Path) -> Result<Project, ProjectError> {
+    let mut raw_archive = File::open(path)?;
+    validate_raw_central_directory(&mut raw_archive, DEFAULT_ARCHIVE_LIMITS)
+        .map_err(map_archive_integrity_error)?;
     let mut archive = ZipArchive::new(File::open(path)?)?;
-    let mut manifest: ProjectManifest =
-        serde_json::from_slice(&read_entry(&mut archive, "manifest.json")?)?;
-    let future = manifest.schema_version > PROJECT_ARCHIVE_VERSION;
-    let project_bytes = verified_entry(&mut archive, &manifest, "project.json")?;
-    let mut document = migrate_document(manifest.schema_version, &project_bytes)?;
-    annotate_legacy_plsc_results(&mut document.results);
-    annotate_legacy_nca_results(&mut document.results);
-    annotate_legacy_prediction_results(&mut document.results);
-    annotate_legacy_gsca_results(&mut document.results);
+    let preflight = preflight_archive(&mut archive, DEFAULT_ARCHIVE_LIMITS)
+        .map_err(map_archive_integrity_error)?;
+    let manifest_bytes = read_preflighted_entry(
+        &mut archive,
+        &preflight,
+        archive_integrity::MANIFEST_ENTRY_NAME,
+        MAX_MANIFEST_UNCOMPRESSED_BYTES,
+    )
+    .map_err(map_archive_integrity_error)?;
+    let manifest_value: serde_json::Value = serde_json::from_slice(&manifest_bytes)?;
+    let mut manifest: ProjectManifest = serde_json::from_value(manifest_value.clone())?;
+    let source_archive_version = manifest.schema_version;
+    if source_archive_version >= PROJECT_ARCHIVE_VERSION
+        && manifest_value.get("checksum_algorithm").is_none()
+    {
+        return Err(ProjectError::Invalid(
+            "archive schema v5 and newer must declare checksum_algorithm".into(),
+        ));
+    }
+    if !manifest.checksum_algorithm.eq_ignore_ascii_case("sha256") {
+        return Err(ProjectError::Invalid(format!(
+            "unsupported archive checksum algorithm {}",
+            manifest.checksum_algorithm
+        )));
+    }
+    manifest.checksum_algorithm = default_checksum_algorithm();
+    let checksums = validate_manifest_checksums(&preflight, &manifest.checksums)
+        .map_err(map_archive_integrity_error)?;
+    verify_archive_checksums(&mut archive, &preflight, &checksums)
+        .map_err(map_archive_integrity_error)?;
+    let project_bytes = read_preflighted_entry(
+        &mut archive,
+        &preflight,
+        PROJECT_ENTRY_NAME,
+        MAX_PROJECT_DOCUMENT_UNCOMPRESSED_BYTES,
+    )
+    .map_err(map_archive_integrity_error)?;
+    let (document, future, future_unsupported) = match source_archive_version {
+        0 => {
+            return Err(ProjectError::Invalid(
+                "archive schema version 0 is unsupported".into(),
+            ));
+        }
+        1 | 2 | 3 | PROJECT_ARCHIVE_VERSION_V4 | PROJECT_ARCHIVE_VERSION => (
+            migrate_document(source_archive_version, &project_bytes)?,
+            false,
+            FutureUnsupportedCounts::default(),
+        ),
+        _ => {
+            let future = read_future_document(&project_bytes)?;
+            (future.document, true, future.unsupported)
+        }
+    };
+    let expected_entries = expected_project_entries(document.datasets.iter().map(|item| item.id))
+        .map_err(map_archive_integrity_error)?;
+    if future {
+        let available = checksums.entry_names();
+        let missing = expected_entries
+            .difference(&available)
+            .cloned()
+            .collect::<Vec<_>>();
+        if !missing.is_empty() {
+            return Err(ProjectError::Invalid(format!(
+                "future archive is missing compatible project entries: {}",
+                missing.join(", ")
+            )));
+        }
+    } else {
+        validate_expected_project_entries(&checksums, &expected_entries)
+            .map_err(map_archive_integrity_error)?;
+    }
+    let compatibility_notices = compatibility_notices(&document.results);
     if !future {
         manifest.schema_version = PROJECT_ARCHIVE_VERSION;
     }
     let mut datasets = Vec::with_capacity(document.datasets.len());
     for descriptor in document.datasets {
         let name = format!("data/{}.arrow", descriptor.id);
-        let bytes = verified_entry(&mut archive, &manifest, &name)?;
+        let bytes = read_preflighted_entry(
+            &mut archive,
+            &preflight,
+            &name,
+            DEFAULT_ARCHIVE_LIMITS.max_entry_uncompressed_bytes,
+        )
+        .map_err(map_archive_integrity_error)?;
         datasets.push(dataset_from_descriptor(descriptor, &bytes)?);
     }
     Ok(Project {
@@ -356,75 +558,145 @@ pub fn load_project(path: &Path) -> Result<Project, ProjectError> {
         layouts: document.layouts,
         results: document.results,
         read_only: future,
+        source_archive_version,
+        migration_pending: !future && source_archive_version < PROJECT_ARCHIVE_VERSION,
+        compatibility_notices,
+        future_unsupported,
     })
 }
 
 fn migrate_document(schema_version: u32, bytes: &[u8]) -> Result<ProjectDocument, ProjectError> {
-    if schema_version == 0 {
-        return Err(ProjectError::Invalid(
+    match schema_version {
+        0 => Err(ProjectError::Invalid(
             "archive schema version 0 is unsupported".into(),
-        ));
+        )),
+        1 | 2 => migrate_legacy_document(bytes),
+        3 => migrate_v3_document(bytes),
+        PROJECT_ARCHIVE_VERSION_V4 => migrate_v4_document(bytes),
+        PROJECT_ARCHIVE_VERSION => read_current_document(bytes),
+        version => Err(ProjectError::Invalid(format!(
+            "archive schema version {version} requires the future-schema read-only loader"
+        ))),
     }
-    if schema_version >= 4 {
-        let document: ProjectDocument = serde_json::from_slice(bytes)?;
-        validate_result_contracts_with_recipes(&document.results, &document.recipes)?;
-        return Ok(document);
-    }
-    if schema_version == 3 {
-        let legacy: V3ProjectDocument = serde_json::from_slice(bytes)?;
-        let results = legacy
-            .results
-            .into_iter()
-            .map(|result| {
-                let method = migrate_method(&result.provenance.method);
-                let payload = if method == AnalysisMethod::PlsPm {
-                    match (
-                        result.payload.get("estimation").cloned(),
-                        result.payload.get("assessment").cloned(),
-                    ) {
-                        (Some(estimation), Some(assessment)) => AnalysisPayload::PlsPmV1 {
-                            estimation,
-                            assessment,
-                        },
-                        _ => AnalysisPayload::Legacy {
-                            value: result.payload,
-                        },
-                    }
-                } else {
-                    AnalysisPayload::Legacy {
-                        value: result.payload,
-                    }
-                };
-                AnalysisResult {
-                    schema_version: result.schema_version,
-                    id: result.id,
-                    status: result.status,
-                    provenance: RunProvenance {
-                        recipe_id: result.provenance.recipe_id,
-                        dataset_fingerprint: result.provenance.dataset_fingerprint,
-                        method,
-                        method_version: result.provenance.method_version,
-                        engine_version: result.provenance.engine_version,
-                        seed: result.provenance.seed,
-                        settings: result.provenance.settings,
-                        started_at: result.provenance.started_at,
-                        completed_at: result.provenance.completed_at,
+}
+
+fn read_current_document(bytes: &[u8]) -> Result<ProjectDocument, ProjectError> {
+    let document: ProjectDocument = serde_json::from_slice(bytes)?;
+    validate_result_contracts_with_recipes(&document.results, &document.recipes)?;
+    Ok(document)
+}
+
+fn migrate_v4_document(bytes: &[u8]) -> Result<ProjectDocument, ProjectError> {
+    // V4 and v5 deliberately share the collection wire shape. Migration is an
+    // identity parse: no IDs, timestamps, ordering, diagnostics, payloads, or
+    // other scientific values are rewritten.
+    read_current_document(bytes)
+}
+
+struct FutureDocumentRead {
+    document: ProjectDocument,
+    unsupported: FutureUnsupportedCounts,
+}
+
+fn read_future_document(bytes: &[u8]) -> Result<FutureDocumentRead, ProjectError> {
+    // Future archives are decoded collection-by-collection. Compatible items
+    // remain viewable/exportable, while unknown model/recipe/result variants
+    // are omitted rather than making the whole verified archive unreadable.
+    // The returned project remains read-only and is never resaved.
+    let future: FutureProjectDocument = serde_json::from_slice(bytes)?;
+    let model_count = future.models.len();
+    let models = future
+        .models
+        .into_iter()
+        .filter_map(|item| serde_json::from_value::<ModelSpec>(item).ok())
+        .collect::<Vec<_>>();
+    let recipe_count = future.recipes.len();
+    let recipes = future
+        .recipes
+        .into_iter()
+        .filter_map(|item| serde_json::from_value::<AnalysisRecipe>(item).ok())
+        .collect::<Vec<_>>();
+    let result_count = future.results.len();
+    let results = future
+        .results
+        .into_iter()
+        .filter_map(|item| serde_json::from_value::<AnalysisResult>(item).ok())
+        .collect::<Vec<_>>();
+    let document = ProjectDocument {
+        datasets: future.datasets,
+        models,
+        recipes,
+        layouts: future.layouts,
+        results,
+    };
+    validate_unique_analysis_ids(&document.results, &document.recipes)?;
+    Ok(FutureDocumentRead {
+        unsupported: FutureUnsupportedCounts {
+            models: model_count - document.models.len(),
+            recipes: recipe_count - document.recipes.len(),
+            results: result_count - document.results.len(),
+        },
+        document,
+    })
+}
+
+fn migrate_v3_document(bytes: &[u8]) -> Result<ProjectDocument, ProjectError> {
+    let legacy: V3ProjectDocument = serde_json::from_slice(bytes)?;
+    let results = legacy
+        .results
+        .into_iter()
+        .map(|result| {
+            let method = migrate_method(&result.provenance.method);
+            let payload = if method == AnalysisMethod::PlsPm {
+                match (
+                    result.payload.get("estimation").cloned(),
+                    result.payload.get("assessment").cloned(),
+                ) {
+                    (Some(estimation), Some(assessment)) => AnalysisPayload::PlsPmV1 {
+                        estimation,
+                        assessment,
                     },
-                    diagnostics: result.diagnostics,
-                    payload,
+                    _ => AnalysisPayload::Legacy {
+                        value: result.payload,
+                    },
                 }
-            })
-            .collect();
-        let document = ProjectDocument {
-            datasets: legacy.datasets,
-            models: legacy.models,
-            recipes: legacy.recipes,
-            layouts: legacy.layouts,
-            results,
-        };
-        validate_unique_analysis_ids(&document.results, &document.recipes)?;
-        return Ok(document);
-    }
+            } else {
+                AnalysisPayload::Legacy {
+                    value: result.payload,
+                }
+            };
+            AnalysisResult {
+                schema_version: result.schema_version,
+                id: result.id,
+                status: result.status,
+                provenance: RunProvenance {
+                    recipe_id: result.provenance.recipe_id,
+                    dataset_fingerprint: result.provenance.dataset_fingerprint,
+                    method,
+                    method_version: result.provenance.method_version,
+                    engine_version: result.provenance.engine_version,
+                    seed: result.provenance.seed,
+                    settings: result.provenance.settings,
+                    started_at: result.provenance.started_at,
+                    completed_at: result.provenance.completed_at,
+                },
+                diagnostics: result.diagnostics,
+                payload,
+            }
+        })
+        .collect();
+    let document = ProjectDocument {
+        datasets: legacy.datasets,
+        models: legacy.models,
+        recipes: legacy.recipes,
+        layouts: legacy.layouts,
+        results,
+    };
+    validate_unique_analysis_ids(&document.results, &document.recipes)?;
+    Ok(document)
+}
+
+fn migrate_legacy_document(bytes: &[u8]) -> Result<ProjectDocument, ProjectError> {
     let legacy: LegacyProjectDocument = serde_json::from_slice(bytes)?;
     let results = legacy
         .results
@@ -4477,94 +4749,71 @@ fn validate_moderation_contract(
     Ok(())
 }
 
-fn annotate_legacy_plsc_results(results: &mut [AnalysisResult]) {
-    const CODE: &str = "plsc.legacy_method_version";
+fn compatibility_notices(results: &[AnalysisResult]) -> Vec<ProjectCompatibilityNotice> {
+    let mut notices = Vec::new();
     for result in results {
-        if result.provenance.method == AnalysisMethod::Plsc
+        let notice = if result.provenance.method == AnalysisMethod::Plsc
             && result
                 .provenance
                 .method_version
                 .split('+')
                 .any(|version| version == PLSC_METHOD_VERSION_V1)
-            && !result
-                .diagnostics
-                .iter()
-                .any(|diagnostic| diagnostic.code == CODE)
         {
-            result.diagnostics.push(Diagnostic {
-                code: CODE.into(),
+            Some(Diagnostic {
+                code: "plsc.legacy_method_version".into(),
                 level: DiagnosticLevel::Warning,
                 message: "This result uses legacy plsc_v1 reliability correction. It remains readable for compatibility but is not the current Dijkstra-Henseler PLSc implementation; rerun the analysis to obtain plsc_v2.".into(),
-            });
-        }
-    }
-}
-
-fn annotate_legacy_nca_results(results: &mut [AnalysisResult]) {
-    const CODE: &str = "nca.legacy_method_version";
-    for result in results {
-        if result.provenance.method == AnalysisMethod::Nca
+            })
+        } else if result.provenance.method == AnalysisMethod::Nca
             && result.provenance.method_version == NCA_METHOD_VERSION_V1
-            && !result
-                .diagnostics
-                .iter()
-                .any(|diagnostic| diagnostic.code == CODE)
         {
-            result.diagnostics.push(Diagnostic {
-                code: CODE.into(),
+            Some(Diagnostic {
+                code: "nca.legacy_method_version".into(),
                 level: DiagnosticLevel::Warning,
                 message: "This result uses legacy nca_v1 ceiling geometry and remains readable only for archive compatibility. Rerun the analysis to obtain nca_v2 CE-FDH record-high peers, CR-FDH regression through those peers, and seeded independent permutations.".into(),
-            });
-        }
-    }
-}
-
-fn annotate_legacy_prediction_results(results: &mut [AnalysisResult]) {
-    const CODE: &str = "predict.legacy_method_version";
-    for result in results {
-        if result.provenance.method == AnalysisMethod::Predict
+            })
+        } else if result.provenance.method == AnalysisMethod::Predict
             && result
                 .provenance
                 .method_version
                 .split('+')
                 .any(|version| version == PLS_PREDICT_METHOD_VERSION_V1)
-            && !result
-                .diagnostics
-                .iter()
-                .any(|diagnostic| diagnostic.code == CODE)
         {
-            result.diagnostics.push(Diagnostic {
-                code: CODE.into(),
+            Some(Diagnostic {
+                code: "predict.legacy_method_version".into(),
                 level: DiagnosticLevel::Warning,
                 message: "This result uses the legacy construct-score-only plspredict_holdout_v1 contract. It remains readable for archive compatibility but is not current indicator-level PLSpredict or CVPAT evidence; rerun the analysis to obtain plspredict_indicator_v2."
                     .into(),
-            });
-        }
-    }
-}
-
-fn annotate_legacy_gsca_results(results: &mut [AnalysisResult]) {
-    const CODE: &str = "gsca.legacy_preview";
-    for result in results {
-        if result.provenance.method == AnalysisMethod::Gsca
+            })
+        } else if result.provenance.method == AnalysisMethod::Gsca
             && result
                 .provenance
                 .method_version
                 .split('+')
                 .any(|version| version == GSCA_METHOD_VERSION_V1)
-            && !result
-                .diagnostics
-                .iter()
-                .any(|diagnostic| diagnostic.code == CODE)
         {
-            result.diagnostics.push(Diagnostic {
-                code: CODE.into(),
+            Some(Diagnostic {
+                code: "gsca.legacy_preview".into(),
                 level: DiagnosticLevel::Warning,
                 message: "This archive contains the historical gsca_v1 PLS-derived preview with ad-hoc fit summaries and placeholder intervals. It remains readable for compatibility but is not GSCA ALS evidence; rerun with gsca_als_v2."
                     .into(),
+            })
+        } else {
+            None
+        };
+        if let Some(diagnostic) = notice
+            && !result
+                .diagnostics
+                .iter()
+                .any(|stored| stored.code == diagnostic.code)
+        {
+            notices.push(ProjectCompatibilityNotice {
+                result_id: result.id,
+                diagnostic,
             });
         }
     }
+    notices
 }
 
 fn validate_result_contracts_internal(
@@ -6101,16 +6350,32 @@ fn approximately_equal(left: f64, right: f64, tolerance: f64) -> bool {
 }
 
 pub fn load_project_with_recovery(path: &Path) -> Result<(Project, bool), ProjectError> {
+    recover_incomplete_save(path)?;
     match load_project(path) {
         Ok(project) => Ok((project, false)),
         Err(primary_error) => {
+            let primary_identity = read_recovery_identity(path);
+            if primary_identity
+                .as_ref()
+                .is_some_and(|identity| identity.schema_version > PROJECT_ARCHIVE_VERSION)
+            {
+                return Err(primary_error);
+            }
             let backup = backup_path(path);
             if !backup.exists() {
                 return Err(primary_error);
             }
-            load_project(&backup)
-                .map(|project| (project, true))
-                .map_err(|_| primary_error)
+            match load_project(&backup) {
+                Ok(project) if recovery_candidate_matches(primary_identity.as_ref(), &project) => {
+                    Ok((project, true))
+                }
+                Ok(_) => Err(ProjectError::RecoveryFailed(format!(
+                    "primary failed ({primary_error}); backup belongs to another project or is not writable"
+                ))),
+                Err(backup_error) => Err(ProjectError::RecoveryFailed(format!(
+                    "primary failed ({primary_error}); backup failed ({backup_error})"
+                ))),
+            }
         }
     }
 }
@@ -6124,11 +6389,17 @@ pub enum RecoverySource {
 pub fn load_project_with_autosave(
     path: &Path,
 ) -> Result<(Project, Option<RecoverySource>), ProjectError> {
+    recover_incomplete_save(path)?;
     let autosave = autosave_path(path);
     match load_project(path) {
         Ok(primary) => {
-            if autosave.exists()
+            if !primary.read_only
+                && autosave.exists()
                 && let Ok(autosaved) = load_project(&autosave)
+                && recovery_candidate_matches(
+                    Some(&ArchiveIdentity::from_project(&primary)),
+                    &autosaved,
+                )
                 && autosaved.manifest.modified_at > primary.manifest.modified_at
             {
                 return Ok((autosaved, Some(RecoverySource::Autosave)));
@@ -6136,69 +6407,669 @@ pub fn load_project_with_autosave(
             Ok((primary, None))
         }
         Err(primary_error) => {
-            if autosave.exists()
-                && let Ok(autosaved) = load_project(&autosave)
+            let primary_identity = read_recovery_identity(path);
+            if primary_identity
+                .as_ref()
+                .is_some_and(|identity| identity.schema_version > PROJECT_ARCHIVE_VERSION)
             {
-                return Ok((autosaved, Some(RecoverySource::Autosave)));
+                return Err(primary_error);
             }
+
             let backup = backup_path(path);
-            if backup.exists() {
-                return load_project(&backup)
-                    .map(|project| (project, Some(RecoverySource::Backup)))
-                    .map_err(|_| primary_error);
+            let backup_attempt = backup.exists().then(|| load_project(&backup));
+            let backup_candidate = backup_attempt.as_ref().and_then(|attempt| {
+                attempt.as_ref().ok().filter(|project| {
+                    recovery_candidate_matches(primary_identity.as_ref(), project)
+                })
+            });
+            let anchor = primary_identity
+                .as_ref()
+                .cloned()
+                .or_else(|| backup_candidate.map(ArchiveIdentity::from_project));
+
+            let autosave_attempt = autosave.exists().then(|| load_project(&autosave));
+            let autosave_candidate = autosave_attempt.as_ref().and_then(|attempt| {
+                attempt.as_ref().ok().filter(|project| {
+                    anchor
+                        .as_ref()
+                        .is_some_and(|identity| recovery_candidate_matches(Some(identity), project))
+                })
+            });
+
+            match (autosave_candidate, backup_candidate) {
+                (Some(autosaved), Some(backed_up))
+                    if autosaved.manifest.modified_at > backed_up.manifest.modified_at =>
+                {
+                    Ok((autosaved.clone(), Some(RecoverySource::Autosave)))
+                }
+                (_, Some(backed_up)) => Ok((backed_up.clone(), Some(RecoverySource::Backup))),
+                (Some(autosaved), None) => Ok((autosaved.clone(), Some(RecoverySource::Autosave))),
+                (None, None) => Err(ProjectError::RecoveryFailed(format!(
+                    "primary failed ({primary_error}); autosave {}; backup {}",
+                    recovery_attempt_detail(autosave_attempt.as_ref()),
+                    recovery_attempt_detail(backup_attempt.as_ref())
+                ))),
             }
-            Err(primary_error)
         }
     }
 }
 
+#[derive(Debug, Clone)]
+struct ArchiveIdentity {
+    project_id: Uuid,
+    schema_version: u32,
+}
+
+impl ArchiveIdentity {
+    fn from_project(project: &Project) -> Self {
+        Self {
+            project_id: project.manifest.project_id,
+            schema_version: project.source_archive_version,
+        }
+    }
+}
+
+fn read_archive_identity(path: &Path) -> Result<ArchiveIdentity, ProjectError> {
+    let mut archive = ZipArchive::new(File::open(path)?)?;
+    let preflight = preflight_archive(&mut archive, DEFAULT_ARCHIVE_LIMITS)
+        .map_err(map_archive_integrity_error)?;
+    let bytes = read_preflighted_entry(
+        &mut archive,
+        &preflight,
+        archive_integrity::MANIFEST_ENTRY_NAME,
+        MAX_MANIFEST_UNCOMPRESSED_BYTES,
+    )
+    .map_err(map_archive_integrity_error)?;
+    let manifest: ProjectManifest = serde_json::from_slice(&bytes)?;
+    Ok(ArchiveIdentity {
+        project_id: manifest.project_id,
+        schema_version: manifest.schema_version,
+    })
+}
+
+fn read_recovery_identity(path: &Path) -> Option<ArchiveIdentity> {
+    read_archive_identity(path)
+        .ok()
+        .or_else(|| read_identity_sidecar(path).ok())
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct SaveTransactionJournal {
+    schema_version: u32,
+    primary: String,
+    rotation: String,
+    temporary: String,
+    backup: String,
+    new_project_id: Uuid,
+    previous_project_id: Uuid,
+    new_archive_sha256: String,
+    previous_archive_sha256: String,
+}
+
+fn recover_incomplete_save(path: &Path) -> Result<(), ProjectError> {
+    let journal = transaction_journal_path(path);
+    if !journal.exists() {
+        return Ok(());
+    }
+    let transaction: SaveTransactionJournal = match fs::read(&journal)
+        .map_err(ProjectError::from)
+        .and_then(|bytes| serde_json::from_slice(&bytes).map_err(ProjectError::from))
+    {
+        Ok(transaction) => transaction,
+        Err(_error) if safe_without_transaction_journal(path) => {
+            quarantine_artifact(&journal);
+            return Ok(());
+        }
+        Err(error) => {
+            return Err(ProjectError::RecoveryFailed(format!(
+                "save transaction journal is unreadable and no verified primary or matching backup is available ({error})"
+            )));
+        }
+    };
+    validate_transaction_journal(path, &transaction)?;
+    let parent = path.parent().unwrap_or_else(|| Path::new("."));
+    let temporary = parent.join(&transaction.temporary);
+    let rotation = parent.join(&transaction.rotation);
+
+    if path.exists() {
+        let primary_hash = sha256_file(path)?;
+        if primary_hash == transaction.new_archive_sha256 {
+            let project = load_project(path)?;
+            if project.manifest.project_id != transaction.new_project_id {
+                return Err(ProjectError::RecoveryFailed(
+                    "committed save generation has the wrong project identity".into(),
+                ));
+            }
+            remove_if_generation_matches(&temporary, &transaction.new_archive_sha256);
+            finalize_committed_generation(
+                path,
+                &rotation,
+                &journal,
+                &transaction,
+                &project.manifest,
+            );
+            return Ok(());
+        }
+        if primary_hash == transaction.previous_archive_sha256 {
+            let project = load_project(path)?;
+            if project.manifest.project_id != transaction.previous_project_id {
+                return Err(ProjectError::RecoveryFailed(
+                    "prior save generation has the wrong project identity".into(),
+                ));
+            }
+            remove_if_generation_matches(&temporary, &transaction.new_archive_sha256);
+            remove_if_generation_matches(&rotation, &transaction.previous_archive_sha256);
+            if write_identity_sidecar(path, &project.manifest).is_ok() {
+                let _ = fs::remove_file(&journal);
+            }
+            return Ok(());
+        }
+        if generation_matches(&rotation, &transaction.previous_archive_sha256)
+            && let Ok(project) = load_project(&rotation)
+            && project.manifest.project_id == transaction.previous_project_id
+        {
+            quarantine_artifact(path);
+            fs::rename(&rotation, path)?;
+            remove_if_generation_matches(&temporary, &transaction.new_archive_sha256);
+            if write_identity_sidecar(path, &project.manifest).is_ok() {
+                let _ = fs::remove_file(&journal);
+            }
+            return Ok(());
+        }
+        let backup = backup_path(path);
+        if generation_matches(&backup, &transaction.previous_archive_sha256)
+            && let Ok(project) = load_project(&backup)
+            && project.manifest.project_id == transaction.previous_project_id
+        {
+            quarantine_artifact(path);
+            fs::copy(&backup, path)?;
+            File::open(path)?.sync_all()?;
+            remove_if_generation_matches(&temporary, &transaction.new_archive_sha256);
+            remove_if_generation_matches(&rotation, &transaction.previous_archive_sha256);
+            if write_identity_sidecar(path, &project.manifest).is_ok() {
+                let _ = fs::remove_file(&journal);
+            }
+            return Ok(());
+        }
+    } else if generation_matches(&temporary, &transaction.new_archive_sha256)
+        && let Ok(project) = load_project(&temporary)
+        && project.manifest.project_id == transaction.new_project_id
+    {
+        fs::rename(&temporary, path)?;
+        finalize_committed_generation(path, &rotation, &journal, &transaction, &project.manifest);
+        return Ok(());
+    }
+
+    if !path.exists()
+        && generation_matches(&rotation, &transaction.previous_archive_sha256)
+        && let Ok(project) = load_project(&rotation)
+        && project.manifest.project_id == transaction.previous_project_id
+    {
+        fs::rename(&rotation, path)?;
+        remove_if_generation_matches(&temporary, &transaction.new_archive_sha256);
+        if write_identity_sidecar(path, &project.manifest).is_ok() {
+            let _ = fs::remove_file(&journal);
+        }
+        return Ok(());
+    }
+    Err(ProjectError::RecoveryFailed(
+        "an interrupted save was found, but neither its exact intended generation nor its exact prior generation could be safely restored"
+            .into(),
+    ))
+}
+
+fn validate_transaction_journal(
+    path: &Path,
+    transaction: &SaveTransactionJournal,
+) -> Result<(), ProjectError> {
+    if transaction.schema_version != 2 {
+        return Err(ProjectError::RecoveryFailed(
+            "save transaction journal has an unsupported schema".into(),
+        ));
+    }
+    validate_sha256_text(&transaction.new_archive_sha256, "new archive")?;
+    validate_sha256_text(&transaction.previous_archive_sha256, "previous archive")?;
+    let file_name = |candidate: &Path| {
+        candidate
+            .file_name()
+            .and_then(|name| name.to_str())
+            .map(str::to_owned)
+            .ok_or_else(|| {
+                ProjectError::RecoveryFailed("project path has no valid file name".into())
+            })
+    };
+    if transaction.primary != file_name(path)?
+        || transaction.rotation != file_name(&transaction_rotation_path(path))?
+        || transaction.backup != file_name(&backup_path(path))?
+        || Path::new(&transaction.temporary)
+            .file_name()
+            .and_then(|name| name.to_str())
+            != Some(transaction.temporary.as_str())
+        || !transaction
+            .temporary
+            .starts_with(&format!("{}.", file_name(path)?))
+        || !transaction.temporary.contains("qpls.tmp-")
+    {
+        return Err(ProjectError::RecoveryFailed(
+            "save transaction journal contains paths outside the project directory".into(),
+        ));
+    }
+    Ok(())
+}
+
+fn validate_sha256_text(value: &str, label: &str) -> Result<(), ProjectError> {
+    if value.len() != 64
+        || value
+            .bytes()
+            .any(|byte| !byte.is_ascii_digit() && !(b'a'..=b'f').contains(&byte))
+    {
+        return Err(ProjectError::RecoveryFailed(format!(
+            "save journal {label} SHA-256 is invalid"
+        )));
+    }
+    Ok(())
+}
+
+fn safe_without_transaction_journal(path: &Path) -> bool {
+    if load_project(path).is_ok() {
+        return true;
+    }
+    let Some(identity) = read_recovery_identity(path) else {
+        return false;
+    };
+    if identity.schema_version > PROJECT_ARCHIVE_VERSION {
+        return false;
+    }
+    load_project(&backup_path(path))
+        .ok()
+        .is_some_and(|project| recovery_candidate_matches(Some(&identity), &project))
+}
+
+fn generation_matches(path: &Path, expected_sha256: &str) -> bool {
+    path.exists() && sha256_file(path).is_ok_and(|actual| actual == expected_sha256)
+}
+
+fn remove_if_generation_matches(path: &Path, expected_sha256: &str) {
+    if generation_matches(path, expected_sha256) {
+        let _ = fs::remove_file(path);
+    }
+}
+
+fn quarantine_artifact(path: &Path) {
+    if !path.exists() {
+        return;
+    }
+    let quarantine = sibling_path_with_suffix(path, ".quarantine");
+    if quarantine.exists() {
+        return;
+    }
+    let _ = fs::rename(path, &quarantine);
+}
+
+fn finalize_committed_generation(
+    path: &Path,
+    rotation: &Path,
+    journal: &Path,
+    transaction: &SaveTransactionJournal,
+    manifest: &ProjectManifest,
+) {
+    let backup_ready = match preserve_rotation_as_backup(
+        path,
+        rotation,
+        transaction.previous_project_id,
+        &transaction.previous_archive_sha256,
+    ) {
+        Ok(()) => true,
+        Err(
+            ProjectError::RecoveryFailed(_)
+            | ProjectError::Invalid(_)
+            | ProjectError::MissingEntry(_)
+            | ProjectError::ChecksumMismatch(_)
+            | ProjectError::Json(_)
+            | ProjectError::Zip(_)
+            | ProjectError::Data(_),
+        ) => {
+            quarantine_artifact(rotation);
+            true
+        }
+        Err(ProjectError::ReadOnly | ProjectError::RollbackFailed { .. } | ProjectError::Io(_)) => {
+            false
+        }
+    };
+    let identity_ready = write_identity_sidecar(path, manifest).is_ok();
+    if backup_ready && identity_ready {
+        let _ = fs::remove_file(journal);
+    }
+}
+
+fn preserve_rotation_as_backup(
+    path: &Path,
+    rotation: &Path,
+    expected_previous: Uuid,
+    expected_sha256: &str,
+) -> Result<(), ProjectError> {
+    let backup = backup_path(path);
+    let displaced = transaction_displaced_backup_path(path);
+    if !rotation.exists() {
+        if backup.exists() {
+            if displaced.exists() {
+                fs::remove_file(displaced)?;
+            }
+        } else if displaced.exists() {
+            fs::rename(displaced, backup)?;
+        }
+        return Ok(());
+    }
+    if !generation_matches(rotation, expected_sha256) {
+        if backup.exists()
+            && let Ok(existing) = load_project(&backup)
+            && existing.manifest.project_id == expected_previous
+        {
+            quarantine_artifact(rotation);
+            return Ok(());
+        }
+        return Err(ProjectError::RecoveryFailed(
+            "save transaction rotation does not match the prior generation".into(),
+        ));
+    }
+    let previous = load_project(rotation)?;
+    if previous.manifest.project_id != expected_previous {
+        return Err(ProjectError::RecoveryFailed(
+            "save transaction rotation belongs to another project".into(),
+        ));
+    }
+    if backup.exists() {
+        if displaced.exists() {
+            return Err(ProjectError::RecoveryFailed(
+                "a displaced backup from an earlier transaction still requires recovery".into(),
+            ));
+        }
+        fs::rename(&backup, &displaced)?;
+        if let Err(error) = fs::rename(rotation, &backup) {
+            let _ = fs::rename(&displaced, &backup);
+            return Err(error.into());
+        }
+        if let Err(error) = fs::remove_file(&displaced) {
+            let _ = fs::remove_file(&backup);
+            let _ = fs::rename(&displaced, &backup);
+            return Err(error.into());
+        }
+        return Ok(());
+    }
+    fs::rename(rotation, &backup)?;
+    if displaced.exists() {
+        fs::remove_file(displaced)?;
+    }
+    Ok(())
+}
+
+fn write_identity_sidecar(path: &Path, manifest: &ProjectManifest) -> Result<(), ProjectError> {
+    let sidecar = identity_sidecar_path(path);
+    let temporary = sibling_path_with_suffix(&sidecar, &format!(".tmp-{}", Uuid::new_v4()));
+    let value = serde_json::json!({
+        "schemaVersion": 1,
+        "projectId": manifest.project_id,
+        "sourceArchiveVersion": manifest.schema_version,
+    });
+    write_synced_create_new(&temporary, &serde_json::to_vec_pretty(&value)?)?;
+    let previous = sidecar
+        .exists()
+        .then(|| sibling_path_with_suffix(&sidecar, ".previous"));
+    if let Some(previous) = &previous {
+        if previous.exists() {
+            fs::remove_file(previous)?;
+        }
+        fs::rename(&sidecar, previous)?;
+    }
+    if let Err(error) = fs::rename(&temporary, &sidecar) {
+        if let Some(previous) = &previous {
+            let _ = fs::rename(previous, &sidecar);
+        }
+        return Err(error.into());
+    }
+    if let Some(previous) = previous {
+        let _ = fs::remove_file(previous);
+    }
+    Ok(())
+}
+
+fn read_identity_sidecar(path: &Path) -> Result<ArchiveIdentity, ProjectError> {
+    let value: serde_json::Value = serde_json::from_slice(&fs::read(identity_sidecar_path(path))?)?;
+    if value
+        .get("schemaVersion")
+        .and_then(serde_json::Value::as_u64)
+        != Some(1)
+    {
+        return Err(ProjectError::Invalid(
+            "project recovery identity sidecar has an unsupported schema".into(),
+        ));
+    }
+    let project_id = value
+        .get("projectId")
+        .and_then(serde_json::Value::as_str)
+        .ok_or_else(|| {
+            ProjectError::Invalid("project recovery identity is missing projectId".into())
+        })?
+        .parse()
+        .map_err(|_| {
+            ProjectError::Invalid("project recovery identity has invalid projectId".into())
+        })?;
+    let schema_version = value
+        .get("sourceArchiveVersion")
+        .and_then(serde_json::Value::as_u64)
+        .and_then(|version| u32::try_from(version).ok())
+        .ok_or_else(|| {
+            ProjectError::Invalid("project recovery identity has invalid archive version".into())
+        })?;
+    Ok(ArchiveIdentity {
+        project_id,
+        schema_version,
+    })
+}
+
+fn recovery_candidate_matches(identity: Option<&ArchiveIdentity>, candidate: &Project) -> bool {
+    !candidate.read_only
+        && candidate.source_archive_version <= PROJECT_ARCHIVE_VERSION
+        && identity.is_some_and(|identity| identity.project_id == candidate.manifest.project_id)
+}
+
+fn recovery_attempt_detail(attempt: Option<&Result<Project, ProjectError>>) -> String {
+    match attempt {
+        None => "is absent".into(),
+        Some(Err(error)) => format!("failed ({error})"),
+        Some(Ok(project)) if project.read_only => "is future/read-only".into(),
+        Some(Ok(_)) => "was rejected because its project identity did not match".into(),
+    }
+}
+
 pub fn save_autosave(path: &Path, project: &Project) -> Result<(), ProjectError> {
-    save_project(&autosave_path(path), project)
+    save_project(&autosave_path(path), project).map(|_| ())
 }
 
 pub fn discard_autosave(path: &Path) -> Result<(), ProjectError> {
     let autosave = autosave_path(path);
     if autosave.exists() {
-        fs::remove_file(autosave)?;
+        fs::remove_file(&autosave)?;
     }
     let backup = backup_path(&autosave_path(path));
     if backup.exists() {
         fs::remove_file(backup)?;
     }
+    for artifact in [
+        transaction_rotation_path(&autosave),
+        transaction_journal_path(&autosave),
+        transaction_displaced_backup_path(&autosave),
+        identity_sidecar_path(&autosave),
+    ] {
+        if artifact.exists() {
+            fs::remove_file(artifact)?;
+        }
+    }
     Ok(())
 }
 
-fn verified_entry(
-    archive: &mut ZipArchive<File>,
-    manifest: &ProjectManifest,
-    name: &str,
-) -> Result<Vec<u8>, ProjectError> {
-    let bytes = read_entry(archive, name)?;
-    let expected = manifest
-        .checksums
-        .get(name)
-        .ok_or_else(|| ProjectError::MissingEntry(format!("checksum for {name}")))?;
-    if sha256(&bytes) != *expected {
-        return Err(ProjectError::ChecksumMismatch(name.into()));
+struct TemporaryArchiveGuard {
+    path: Option<PathBuf>,
+}
+
+impl TemporaryArchiveGuard {
+    fn new(path: PathBuf) -> Self {
+        Self { path: Some(path) }
     }
-    Ok(bytes)
+
+    fn disarm(&mut self) {
+        self.path = None;
+    }
 }
-fn read_entry(archive: &mut ZipArchive<File>, name: &str) -> Result<Vec<u8>, ProjectError> {
-    let mut entry = archive
-        .by_name(name)
-        .map_err(|_| ProjectError::MissingEntry(name.into()))?;
-    let mut bytes = Vec::new();
-    entry.read_to_end(&mut bytes)?;
-    Ok(bytes)
+
+impl Drop for TemporaryArchiveGuard {
+    fn drop(&mut self) {
+        if let Some(path) = self.path.take() {
+            let _ = fs::remove_file(path);
+        }
+    }
 }
+
+fn promote_validated_archive(
+    path: &Path,
+    temporary: &Path,
+    manifest: &ProjectManifest,
+) -> Result<(), ProjectError> {
+    if !path.exists() {
+        fs::rename(temporary, path)?;
+        let _ = write_identity_sidecar(path, manifest);
+        return Ok(());
+    }
+
+    let backup = backup_path(path);
+    let rotation = transaction_rotation_path(path);
+    let journal = transaction_journal_path(path);
+    let previous_identity = read_recovery_identity(path).ok_or_else(|| {
+        ProjectError::RecoveryFailed("cannot establish the project identity before saving".into())
+    })?;
+    let file_name = |candidate: &Path| -> Result<String, ProjectError> {
+        candidate
+            .file_name()
+            .and_then(|name| name.to_str())
+            .map(str::to_owned)
+            .ok_or_else(|| ProjectError::Invalid("project path has no valid file name".into()))
+    };
+    let transaction = SaveTransactionJournal {
+        schema_version: 2,
+        primary: file_name(path)?,
+        rotation: file_name(&rotation)?,
+        temporary: file_name(temporary)?,
+        backup: file_name(&backup)?,
+        new_project_id: manifest.project_id,
+        previous_project_id: previous_identity.project_id,
+        new_archive_sha256: sha256_file(temporary)?,
+        previous_archive_sha256: sha256_file(path)?,
+    };
+    write_transaction_journal(&journal, &transaction)?;
+
+    // Copy the current primary into a deterministic transaction rotation before
+    // removing it. A crash at any point leaves at least the original primary,
+    // the recognized backup, or the journal-addressable rotation.
+    fs::copy(path, &rotation)?;
+    OpenOptions::new().write(true).open(&rotation)?.sync_all()?;
+    if !generation_matches(&rotation, &transaction.previous_archive_sha256)
+        || load_project(&rotation)
+            .ok()
+            .is_none_or(|project| project.manifest.project_id != transaction.previous_project_id)
+    {
+        quarantine_artifact(&rotation);
+        let _ = fs::remove_file(&journal);
+        return Err(ProjectError::RecoveryFailed(
+            "the verified prior project generation changed or could not be copied exactly; the original primary was left untouched"
+                .into(),
+        ));
+    }
+    fs::remove_file(path)?;
+    if let Err(promotion) = fs::rename(temporary, path) {
+        return match fs::rename(&rotation, path) {
+            Ok(()) => {
+                let _ = fs::remove_file(&journal);
+                Err(ProjectError::Io(promotion))
+            }
+            Err(rollback) => Err(ProjectError::RollbackFailed {
+                promotion: promotion.to_string(),
+                rollback: rollback.to_string(),
+            }),
+        };
+    }
+
+    // The primary is committed at this point. Generation finalization preserves
+    // the immediately previous archive as `.bak`, durably updates recovery
+    // identity, and keeps the journal when any retryable metadata step fails.
+    finalize_committed_generation(path, &rotation, &journal, &transaction, manifest);
+    Ok(())
+}
+
+fn write_synced_create_new(path: &Path, bytes: &[u8]) -> Result<(), ProjectError> {
+    let mut file = OpenOptions::new().write(true).create_new(true).open(path)?;
+    file.write_all(bytes)?;
+    file.sync_all()?;
+    Ok(())
+}
+
+fn write_transaction_journal(
+    journal: &Path,
+    transaction: &SaveTransactionJournal,
+) -> Result<(), ProjectError> {
+    let temporary = sibling_path_with_suffix(journal, &format!(".tmp-{}", Uuid::new_v4()));
+    write_synced_create_new(&temporary, &serde_json::to_vec_pretty(transaction)?)?;
+    if let Err(error) = fs::rename(&temporary, journal) {
+        let _ = fs::remove_file(&temporary);
+        return Err(error.into());
+    }
+    if let Some(parent) = journal.parent()
+        && let Ok(directory) = File::open(parent)
+    {
+        let _ = directory.sync_all();
+    }
+    Ok(())
+}
+
+fn sha256_file(path: &Path) -> Result<String, ProjectError> {
+    let mut file = File::open(path)?;
+    let mut digest = Sha256::new();
+    let mut buffer = [0_u8; 64 * 1024];
+    loop {
+        let read = file.read(&mut buffer)?;
+        if read == 0 {
+            break;
+        }
+        digest.update(&buffer[..read]);
+    }
+    Ok(format!("{:x}", digest.finalize()))
+}
+
 fn temporary_path(path: &Path) -> PathBuf {
-    path.with_extension(format!("qpls.tmp-{}", Uuid::new_v4()))
+    sibling_path_with_suffix(path, &format!(".tmp-{}", Uuid::new_v4()))
+}
+fn transaction_rotation_path(path: &Path) -> PathBuf {
+    sibling_path_with_suffix(path, ".transaction-previous")
+}
+fn transaction_journal_path(path: &Path) -> PathBuf {
+    sibling_path_with_suffix(path, ".transaction.json")
+}
+fn transaction_displaced_backup_path(path: &Path) -> PathBuf {
+    sibling_path_with_suffix(path, ".transaction-backup")
+}
+fn identity_sidecar_path(path: &Path) -> PathBuf {
+    sibling_path_with_suffix(path, ".identity.json")
 }
 pub fn backup_path(path: &Path) -> PathBuf {
-    path.with_extension("qpls.bak")
+    sibling_path_with_suffix(path, ".bak")
 }
 pub fn autosave_path(path: &Path) -> PathBuf {
-    path.with_extension("qpls.autosave")
+    sibling_path_with_suffix(path, ".autosave")
+}
+fn sibling_path_with_suffix(path: &Path, suffix: &str) -> PathBuf {
+    let mut name = path.file_name().unwrap_or_default().to_os_string();
+    name.push(suffix);
+    path.with_file_name(name)
 }
 fn sha256(bytes: &[u8]) -> String {
     format!("{:x}", Sha256::digest(bytes))
@@ -6208,6 +7079,15 @@ fn sha256(bytes: &[u8]) -> String {
 mod tests {
     use super::*;
     use qpls_data::{ImportOptions, import_delimited_bytes};
+    use std::io::Read;
+
+    fn has_compatibility_notice(project: &Project, result_id: Uuid, code: &str) -> bool {
+        project.compatibility_notices.iter().any(|notice| {
+            notice.result_id == result_id
+                && notice.diagnostic.code == code
+                && notice.diagnostic.level == DiagnosticLevel::Warning
+        })
+    }
 
     fn migrated_execution_recipe(bytes: &[u8]) -> AnalysisRecipe {
         let recipe: AnalysisRecipe = serde_json::from_slice(bytes).unwrap();
@@ -6682,6 +7562,265 @@ mod tests {
         assert_eq!(restored.manifest.name, "Study");
         assert_eq!(restored.datasets[0].batch, project.datasets[0].batch);
         assert!(!restored.read_only);
+        assert_eq!(restored.source_archive_version, PROJECT_ARCHIVE_VERSION);
+        assert!(!restored.migration_pending);
+    }
+
+    #[test]
+    fn v5_round_trip_preserves_multiple_datasets_and_mixed_recipe_schemas() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("mixed-v5.qpls");
+        let (dataset, current_recipe, current_result) = runner_generated_nca();
+        let second_dataset = import_delimited_bytes(
+            b"group,value\n1,10\n2,20\n",
+            "second.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut historical_recipe = current_recipe.clone();
+        historical_recipe.id = Uuid::new_v4();
+        historical_recipe.schema_version = 2;
+        historical_recipe.metadata = current_recipe.effective_metadata().unwrap();
+        historical_recipe.method_config = None;
+
+        let mut project = Project::new("Mixed v5 archive");
+        project.datasets = vec![dataset.clone(), second_dataset.clone()];
+        project.models.push(current_recipe.model.clone());
+        project.recipes = vec![current_recipe.clone(), historical_recipe.clone()];
+        project.results.push(current_result.clone());
+        project.layouts.insert(
+            "workspace".into(),
+            serde_json::json!({"selected_dataset_id": dataset.id}),
+        );
+
+        let persisted_manifest = save_project(&path, &project).unwrap();
+        assert_eq!(persisted_manifest.schema_version, PROJECT_ARCHIVE_VERSION);
+        let stored_manifest: ProjectManifest =
+            serde_json::from_slice(&zip_entry_bytes(&path, "manifest.json")).unwrap();
+        assert_eq!(stored_manifest.schema_version, PROJECT_ARCHIVE_VERSION);
+
+        let restored = load_project(&path).unwrap();
+        assert_eq!(restored.source_archive_version, PROJECT_ARCHIVE_VERSION);
+        assert!(!restored.migration_pending);
+        assert!(!restored.read_only);
+        assert_eq!(restored.datasets.len(), 2);
+        assert_eq!(restored.datasets[0].batch, dataset.batch);
+        assert_eq!(restored.datasets[1].batch, second_dataset.batch);
+        assert_eq!(restored.recipes, vec![current_recipe, historical_recipe]);
+        assert_eq!(restored.results.len(), 1);
+        assert_eq!(restored.results[0].id, current_result.id);
+        assert_eq!(restored.results[0].provenance, current_result.provenance);
+        assert!(analysis_results_scientifically_equivalent(
+            &restored.results[0],
+            &current_result
+        ));
+        assert_eq!(restored.layouts, project.layouts);
+    }
+
+    #[test]
+    fn v4_migration_is_deterministic_and_preserves_historical_result_values() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("legacy-v4.qpls");
+        let (dataset, recipe, current_result) = runner_generated_nca();
+        let historical_result = legacy_nca_v1_result(current_result);
+        let mut project = Project::new("Legacy v4 scientific record");
+        project.datasets.push(dataset);
+        project.recipes.push(recipe);
+        project.results.push(historical_result.clone());
+        save_project(&path, &project).unwrap();
+        set_archive_schema_version(&path, PROJECT_ARCHIVE_VERSION_V4);
+
+        let source_bytes = fs::read(&path).unwrap();
+        let stored_project_json = zip_entry_bytes(&path, "project.json");
+        let first = load_project(&path).unwrap();
+        let second = load_project(&path).unwrap();
+
+        assert_eq!(fs::read(&path).unwrap(), source_bytes);
+        assert_eq!(zip_entry_bytes(&path, "project.json"), stored_project_json);
+        assert_eq!(first.source_archive_version, PROJECT_ARCHIVE_VERSION_V4);
+        assert_eq!(first.manifest.schema_version, PROJECT_ARCHIVE_VERSION);
+        assert!(first.migration_pending);
+        assert!(!first.read_only);
+        assert_eq!(first.recipes, second.recipes);
+        assert_eq!(first.models, second.models);
+        assert_eq!(first.layouts, second.layouts);
+        assert_eq!(first.results, second.results);
+        assert_eq!(first.datasets.len(), second.datasets.len());
+        assert_eq!(first.datasets[0].batch, second.datasets[0].batch);
+        assert!(analysis_results_scientifically_equivalent(
+            &first.results[0],
+            &historical_result
+        ));
+        assert!(
+            first.results[0]
+                .diagnostics
+                .iter()
+                .all(|diagnostic| diagnostic.code != "nca.legacy_method_version")
+        );
+        assert!(has_compatibility_notice(
+            &first,
+            first.results[0].id,
+            "nca.legacy_method_version"
+        ));
+    }
+
+    fn analysis_results_scientifically_equivalent(
+        left: &AnalysisResult,
+        right: &AnalysisResult,
+    ) -> bool {
+        left.schema_version == right.schema_version
+            && left.id == right.id
+            && left.status == right.status
+            && left.provenance == right.provenance
+            && left.diagnostics == right.diagnostics
+            && json_values_close(
+                &serde_json::to_value(&left.payload).unwrap(),
+                &serde_json::to_value(&right.payload).unwrap(),
+            )
+    }
+
+    fn json_values_close(left: &serde_json::Value, right: &serde_json::Value) -> bool {
+        match (left, right) {
+            (serde_json::Value::Number(left), serde_json::Value::Number(right)) => {
+                match (left.as_f64(), right.as_f64()) {
+                    (Some(left), Some(right)) => approximately_equal(left, right, 1e-14),
+                    _ => left == right,
+                }
+            }
+            (serde_json::Value::Array(left), serde_json::Value::Array(right)) => {
+                left.len() == right.len()
+                    && left
+                        .iter()
+                        .zip(right)
+                        .all(|(left, right)| json_values_close(left, right))
+            }
+            (serde_json::Value::Object(left), serde_json::Value::Object(right)) => {
+                left.len() == right.len()
+                    && left.iter().all(|(key, left)| {
+                        right
+                            .get(key)
+                            .is_some_and(|right| json_values_close(left, right))
+                    })
+            }
+            _ => left == right,
+        }
+    }
+
+    #[test]
+    fn autosave_does_not_consume_pending_v4_backup_and_explicit_save_does() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("pending-v4.qpls");
+        save_project(&path, &Project::new("Pending v4 migration")).unwrap();
+        set_archive_schema_version(&path, PROJECT_ARCHIVE_VERSION_V4);
+        let original_v4 = fs::read(&path).unwrap();
+        let mut migrated = load_project(&path).unwrap();
+        assert!(migrated.migration_pending);
+
+        save_autosave(&path, &migrated).unwrap();
+        assert_eq!(fs::read(&path).unwrap(), original_v4);
+        assert!(!backup_path(&path).exists());
+        assert!(migrated.migration_pending);
+        assert_eq!(
+            load_project(&autosave_path(&path))
+                .unwrap()
+                .source_archive_version,
+            PROJECT_ARCHIVE_VERSION
+        );
+
+        let persisted_manifest = save_project(&path, &migrated).unwrap();
+        assert_eq!(fs::read(backup_path(&path)).unwrap(), original_v4);
+        assert_eq!(persisted_manifest.schema_version, PROJECT_ARCHIVE_VERSION);
+        assert!(migrated.migration_pending);
+        migrated.adopt_explicit_save(persisted_manifest).unwrap();
+        assert!(!migrated.migration_pending);
+        assert_eq!(migrated.source_archive_version, PROJECT_ARCHIVE_VERSION);
+    }
+
+    #[test]
+    fn compatible_future_archive_uses_distinct_read_only_path() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("future.qpls");
+        save_project(&path, &Project::new("Future compatible project")).unwrap();
+        let future_version = PROJECT_ARCHIVE_VERSION + 1;
+        set_archive_schema_version(&path, future_version);
+        let project_json = zip_entry_bytes(&path, "project.json");
+
+        assert!(matches!(
+            migrate_document(future_version, &project_json),
+            Err(ProjectError::Invalid(message)) if message.contains("future-schema read-only loader")
+        ));
+        let restored = load_project(&path).unwrap();
+        assert!(restored.read_only);
+        assert!(!restored.migration_pending);
+        assert_eq!(restored.source_archive_version, future_version);
+        assert_eq!(restored.manifest.schema_version, future_version);
+        assert_eq!(
+            restored.future_unsupported,
+            FutureUnsupportedCounts::default()
+        );
+        assert!(matches!(
+            save_project(&directory.path().join("forbidden.qpls"), &restored),
+            Err(ProjectError::ReadOnly)
+        ));
+    }
+
+    #[test]
+    fn future_archive_preserves_compatible_content_and_counts_unknown_items() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("future-partial.qpls");
+        let mut project = Project::new("Future partial project");
+        project.models.push(ModelSpec {
+            id: Uuid::new_v4(),
+            name: "Compatible model".into(),
+            constructs: vec![],
+            paths: vec![],
+            controls: vec![],
+            higher_order_constructs: vec![],
+            interactions: vec![],
+        });
+        save_project(&path, &project).unwrap();
+        rewrite_zip_entry_with_manifest_checksum(&path, "project.json", |bytes| {
+            let mut document: serde_json::Value = serde_json::from_slice(bytes).unwrap();
+            document["models"]
+                .as_array_mut()
+                .unwrap()
+                .push(serde_json::json!({
+                    "id": Uuid::new_v4(),
+                    "name": "Unknown future model",
+                    "future_construct_contract": true
+                }));
+            document["recipes"]
+                .as_array_mut()
+                .unwrap()
+                .push(serde_json::json!({
+                    "schema_version": ANALYSIS_RECIPE_SCHEMA_VERSION + 1,
+                    "id": Uuid::new_v4(),
+                    "future_method": "unknown"
+                }));
+            document["results"]
+                .as_array_mut()
+                .unwrap()
+                .push(serde_json::json!({
+                    "schema_version": RESULT_SCHEMA_VERSION + 1,
+                    "id": Uuid::new_v4(),
+                    "future_payload": true
+                }));
+            serde_json::to_vec_pretty(&document).unwrap()
+        });
+        set_archive_schema_version(&path, PROJECT_ARCHIVE_VERSION + 1);
+
+        let restored = load_project(&path).unwrap();
+        assert!(restored.read_only);
+        assert_eq!(restored.models.len(), 1);
+        assert_eq!(
+            restored.future_unsupported,
+            FutureUnsupportedCounts {
+                models: 1,
+                recipes: 1,
+                results: 1,
+            }
+        );
     }
 
     #[test]
@@ -6709,6 +7848,22 @@ mod tests {
             Err(ProjectError::Invalid(message))
                 if message.contains("archive-readable") && message.contains("migrate")
         ));
+    }
+
+    #[test]
+    fn append_rejects_archive_only_legacy_payload_atomically() {
+        let (_, recipe, mut result) = runner_generated_nca();
+        result.payload = AnalysisPayload::Legacy {
+            value: serde_json::json!({"forged": true}),
+        };
+        let mut project = Project::new("Legacy append rejection");
+        assert!(matches!(
+            project.append_validated_result(recipe, result),
+            Err(ProjectError::Invalid(message))
+                if message.contains("archive-readable only")
+        ));
+        assert!(project.recipes.is_empty());
+        assert!(project.results.is_empty());
     }
 
     #[test]
@@ -6974,12 +8129,164 @@ mod tests {
         let path = directory.path().join("study.qpls");
         let project = Project::new("First");
         save_project(&path, &project).unwrap();
-        let replacement = Project::new("Second");
+        let mut replacement = project.clone();
+        replacement.manifest.name = "Second".into();
         save_project(&path, &replacement).unwrap();
         fs::write(&path, b"interrupted write").unwrap();
         let (recovered, used_backup) = load_project_with_recovery(&path).unwrap();
         assert!(used_backup);
         assert_eq!(recovered.manifest.name, "First");
+    }
+
+    #[test]
+    fn interrupted_save_distinguishes_generations_with_the_same_project_id() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("same-id.qpls");
+        let old_project = Project::new("Old generation");
+        save_project(&path, &old_project).unwrap();
+        let old_bytes = fs::read(&path).unwrap();
+        let old_sha256 = sha256_file(&path).unwrap();
+
+        let mut new_project = old_project.clone();
+        new_project.manifest.name = "New generation".into();
+        let new_source = directory.path().join("new-source.qpls");
+        save_project(&new_source, &new_project).unwrap();
+        let new_bytes = fs::read(&new_source).unwrap();
+        let new_sha256 = sha256_file(&new_source).unwrap();
+        assert_eq!(
+            old_project.manifest.project_id,
+            new_project.manifest.project_id
+        );
+        assert_ne!(old_sha256, new_sha256);
+
+        let temporary = path.with_extension("qpls.tmp-interrupted-test");
+        let rotation = transaction_rotation_path(&path);
+        fs::write(&temporary, &new_bytes).unwrap();
+        fs::write(&rotation, &old_bytes).unwrap();
+        let transaction = SaveTransactionJournal {
+            schema_version: 2,
+            primary: path.file_name().unwrap().to_str().unwrap().into(),
+            rotation: rotation.file_name().unwrap().to_str().unwrap().into(),
+            temporary: temporary.file_name().unwrap().to_str().unwrap().into(),
+            backup: backup_path(&path)
+                .file_name()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .into(),
+            new_project_id: new_project.manifest.project_id,
+            previous_project_id: old_project.manifest.project_id,
+            new_archive_sha256: new_sha256,
+            previous_archive_sha256: old_sha256,
+        };
+        write_transaction_journal(&transaction_journal_path(&path), &transaction).unwrap();
+
+        recover_incomplete_save(&path).unwrap();
+        assert_eq!(load_project(&path).unwrap().manifest.name, "Old generation");
+        assert!(!temporary.exists());
+        assert!(!transaction_journal_path(&path).exists());
+    }
+
+    #[test]
+    fn interrupted_promoted_generation_is_kept_and_previous_generation_becomes_backup() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("promoted.qpls");
+        let old_project = Project::new("Old generation");
+        save_project(&path, &old_project).unwrap();
+        let old_bytes = fs::read(&path).unwrap();
+        let old_sha256 = sha256_file(&path).unwrap();
+
+        let mut new_project = old_project.clone();
+        new_project.manifest.name = "New generation".into();
+        let new_source = directory.path().join("new-promoted.qpls");
+        save_project(&new_source, &new_project).unwrap();
+        let new_bytes = fs::read(&new_source).unwrap();
+        let new_sha256 = sha256_file(&new_source).unwrap();
+        let temporary = path.with_extension("qpls.tmp-promoted-test");
+        let rotation = transaction_rotation_path(&path);
+        fs::write(&rotation, &old_bytes).unwrap();
+        fs::write(&path, &new_bytes).unwrap();
+        let transaction = SaveTransactionJournal {
+            schema_version: 2,
+            primary: path.file_name().unwrap().to_str().unwrap().into(),
+            rotation: rotation.file_name().unwrap().to_str().unwrap().into(),
+            temporary: temporary.file_name().unwrap().to_str().unwrap().into(),
+            backup: backup_path(&path)
+                .file_name()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .into(),
+            new_project_id: new_project.manifest.project_id,
+            previous_project_id: old_project.manifest.project_id,
+            new_archive_sha256: new_sha256,
+            previous_archive_sha256: old_sha256,
+        };
+        write_transaction_journal(&transaction_journal_path(&path), &transaction).unwrap();
+
+        recover_incomplete_save(&path).unwrap();
+        assert_eq!(load_project(&path).unwrap().manifest.name, "New generation");
+        assert_eq!(
+            load_project(&backup_path(&path)).unwrap().manifest.name,
+            "Old generation"
+        );
+        assert!(!transaction_journal_path(&path).exists());
+    }
+
+    #[test]
+    fn malformed_transaction_journal_cannot_block_a_verified_primary() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("malformed-journal.qpls");
+        save_project(&path, &Project::new("Verified primary")).unwrap();
+        fs::write(transaction_journal_path(&path), b"{partial").unwrap();
+        let (project, used_backup) = load_project_with_recovery(&path).unwrap();
+        assert!(!used_backup);
+        assert_eq!(project.manifest.name, "Verified primary");
+        assert!(!transaction_journal_path(&path).exists());
+    }
+
+    #[test]
+    fn autosave_recovery_files_are_isolated_and_backup_retention_is_bounded() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("bounded.qpls");
+        let project = Project::new("Primary");
+        save_project(&path, &project).unwrap();
+        let primary_backup = backup_path(&path);
+        assert!(!primary_backup.exists());
+
+        let mut autosaved = project.clone();
+        for generation in 0..4 {
+            autosaved.manifest.name = format!("Autosave {generation}");
+            save_autosave(&path, &autosaved).unwrap();
+        }
+        let autosave = autosave_path(&path);
+        assert!(autosave.exists());
+        assert!(backup_path(&autosave).exists());
+        assert_ne!(backup_path(&autosave), primary_backup);
+        assert!(!primary_backup.exists());
+        assert!(!transaction_displaced_backup_path(&autosave).exists());
+        assert!(!transaction_journal_path(&autosave).exists());
+
+        let autosave_prefix = autosave.file_name().unwrap().to_string_lossy().into_owned();
+        let retained = fs::read_dir(directory.path())
+            .unwrap()
+            .filter_map(Result::ok)
+            .filter(|entry| {
+                entry
+                    .file_name()
+                    .to_string_lossy()
+                    .starts_with(&autosave_prefix)
+            })
+            .count();
+        assert!(
+            retained <= 3,
+            "autosave retained {retained} archive artifacts"
+        );
+
+        discard_autosave(&path).unwrap();
+        assert!(!autosave.exists());
+        assert!(!backup_path(&autosave).exists());
+        assert!(!identity_sidecar_path(&autosave).exists());
     }
     #[test]
     fn valid_autosave_takes_precedence_and_can_be_discarded() {
@@ -6987,7 +8294,8 @@ mod tests {
         let path = directory.path().join("study.qpls");
         let primary = Project::new("Primary");
         save_project(&path, &primary).unwrap();
-        let autosaved = Project::new("Recovered work");
+        let mut autosaved = primary.clone();
+        autosaved.manifest.name = "Recovered work".into();
         save_autosave(&path, &autosaved).unwrap();
         let (restored, source) = load_project_with_autosave(&path).unwrap();
         assert_eq!(restored.manifest.name, "Recovered work");
@@ -6999,12 +8307,79 @@ mod tests {
     fn stale_autosave_does_not_replace_a_newer_explicit_save() {
         let directory = tempfile::tempdir().unwrap();
         let path = directory.path().join("study.qpls");
-        save_project(&path, &Project::new("Initial")).unwrap();
-        save_autosave(&path, &Project::new("Stale autosave")).unwrap();
-        save_project(&path, &Project::new("Explicit save")).unwrap();
+        let initial = Project::new("Initial");
+        save_project(&path, &initial).unwrap();
+        let mut stale = initial.clone();
+        stale.manifest.name = "Stale autosave".into();
+        save_autosave(&path, &stale).unwrap();
+        let mut explicit = initial;
+        explicit.manifest.name = "Explicit save".into();
+        save_project(&path, &explicit).unwrap();
         let (restored, source) = load_project_with_autosave(&path).unwrap();
         assert_eq!(restored.manifest.name, "Explicit save");
         assert_eq!(source, None);
+    }
+
+    #[test]
+    fn foreign_autosave_never_replaces_a_valid_primary() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("study.qpls");
+        let primary = Project::new("Primary identity");
+        save_project(&path, &primary).unwrap();
+        save_autosave(&path, &Project::new("Foreign autosave")).unwrap();
+
+        let (restored, source) = load_project_with_autosave(&path).unwrap();
+        assert_eq!(restored.manifest.project_id, primary.manifest.project_id);
+        assert_eq!(restored.manifest.name, "Primary identity");
+        assert_eq!(source, None);
+    }
+
+    #[test]
+    fn future_primary_never_falls_back_to_a_writable_autosave() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("future.qpls");
+        let project = Project::new("Future primary");
+        save_project(&path, &project).unwrap();
+        let mut autosaved = project.clone();
+        autosaved.manifest.name = "Writable autosave".into();
+        save_autosave(&path, &autosaved).unwrap();
+        set_archive_schema_version(&path, PROJECT_ARCHIVE_VERSION + 1);
+
+        let (restored, source) = load_project_with_autosave(&path).unwrap();
+        assert!(restored.read_only);
+        assert_eq!(restored.manifest.name, "Future primary");
+        assert_eq!(source, None);
+    }
+
+    #[test]
+    fn v5_requires_an_explicit_supported_checksum_algorithm() {
+        let directory = tempfile::tempdir().unwrap();
+        let missing = directory.path().join("missing-algorithm.qpls");
+        save_project(&missing, &Project::new("Missing algorithm")).unwrap();
+        rewrite_zip_entry(&missing, "manifest.json", |bytes| {
+            let mut manifest: serde_json::Value = serde_json::from_slice(bytes).unwrap();
+            manifest
+                .as_object_mut()
+                .unwrap()
+                .remove("checksum_algorithm");
+            serde_json::to_vec_pretty(&manifest).unwrap()
+        });
+        assert!(matches!(
+            load_project(&missing),
+            Err(ProjectError::Invalid(message)) if message.contains("must declare checksum_algorithm")
+        ));
+
+        let unsupported = directory.path().join("unsupported-algorithm.qpls");
+        save_project(&unsupported, &Project::new("Unsupported algorithm")).unwrap();
+        rewrite_zip_entry(&unsupported, "manifest.json", |bytes| {
+            let mut manifest: serde_json::Value = serde_json::from_slice(bytes).unwrap();
+            manifest["checksum_algorithm"] = serde_json::json!("sha512");
+            serde_json::to_vec_pretty(&manifest).unwrap()
+        });
+        assert!(matches!(
+            load_project(&unsupported),
+            Err(ProjectError::Invalid(message)) if message.contains("unsupported archive checksum algorithm")
+        ));
     }
     #[test]
     fn version_one_archive_migrates_to_the_current_schema() {
@@ -8141,11 +9516,13 @@ mod tests {
             legacy_reopened.results[0]
                 .diagnostics
                 .iter()
-                .any(|diagnostic| {
-                    diagnostic.code == "nca.legacy_method_version"
-                        && diagnostic.level == DiagnosticLevel::Warning
-                })
+                .all(|diagnostic| diagnostic.code != "nca.legacy_method_version")
         );
+        assert!(has_compatibility_notice(
+            &legacy_reopened,
+            legacy_reopened.results[0].id,
+            "nca.legacy_method_version"
+        ));
     }
 
     #[test]
@@ -8379,10 +9756,17 @@ mod tests {
                 .split('+')
                 .any(|version| version == PLS_PREDICT_METHOD_VERSION_V1)
         );
-        assert!(reopened.results[0].diagnostics.iter().any(|diagnostic| {
-            diagnostic.code == "predict.legacy_method_version"
-                && diagnostic.level == DiagnosticLevel::Warning
-        }));
+        assert!(
+            reopened.results[0]
+                .diagnostics
+                .iter()
+                .all(|diagnostic| diagnostic.code != "predict.legacy_method_version")
+        );
+        assert!(has_compatibility_notice(
+            &reopened,
+            reopened.results[0].id,
+            "predict.legacy_method_version"
+        ));
     }
 
     #[test]
@@ -9152,21 +10536,34 @@ mod tests {
             estimation_payload_mut(&mut restored.results[0].clone())["method_version"].as_str(),
             Some(PLSC_METHOD_VERSION_V1)
         );
-        assert!(restored.results[0].diagnostics.iter().any(|diagnostic| {
-            diagnostic.code == "plsc.legacy_method_version"
-                && diagnostic.level == DiagnosticLevel::Warning
-                && diagnostic.message.contains(PLSC_METHOD_VERSION)
+        assert!(
+            restored.results[0]
+                .diagnostics
+                .iter()
+                .all(|diagnostic| diagnostic.code != "plsc.legacy_method_version")
+        );
+        assert!(restored.compatibility_notices.iter().any(|notice| {
+            notice.result_id == restored.results[0].id
+                && notice.diagnostic.code == "plsc.legacy_method_version"
+                && notice.diagnostic.level == DiagnosticLevel::Warning
+                && notice.diagnostic.message.contains(PLSC_METHOD_VERSION)
         }));
 
         save_project(&round_trip_path, &restored).unwrap();
         let reopened = load_project(&round_trip_path).unwrap();
         assert_eq!(
+            reopened
+                .compatibility_notices
+                .iter()
+                .filter(|notice| notice.diagnostic.code == "plsc.legacy_method_version")
+                .count(),
+            1
+        );
+        assert!(
             reopened.results[0]
                 .diagnostics
                 .iter()
-                .filter(|diagnostic| diagnostic.code == "plsc.legacy_method_version")
-                .count(),
-            1
+                .all(|diagnostic| diagnostic.code != "plsc.legacy_method_version")
         );
 
         let mut mismatched_payload = reopened.results[0].clone();
@@ -9930,6 +11327,22 @@ mod tests {
         );
     }
 
+    fn zip_entry_bytes(path: &Path, name: &str) -> Vec<u8> {
+        let mut archive = ZipArchive::new(File::open(path).unwrap()).unwrap();
+        let mut entry = archive.by_name(name).unwrap();
+        let mut bytes = Vec::new();
+        entry.read_to_end(&mut bytes).unwrap();
+        bytes
+    }
+
+    fn set_archive_schema_version(path: &Path, schema_version: u32) {
+        rewrite_zip_entry(path, "manifest.json", |bytes| {
+            let mut manifest: serde_json::Value = serde_json::from_slice(bytes).unwrap();
+            manifest["schema_version"] = serde_json::json!(schema_version);
+            serde_json::to_vec_pretty(&manifest).unwrap()
+        });
+    }
+
     fn rewrite_zip_entry(path: &Path, target: &str, transform: impl FnOnce(&[u8]) -> Vec<u8>) {
         let mut archive = ZipArchive::new(File::open(path).unwrap()).unwrap();
         let mut entries = Vec::new();
@@ -9952,6 +11365,46 @@ mod tests {
             } else {
                 bytes
             };
+            writer.write_all(&bytes).unwrap();
+        }
+        writer.finish().unwrap();
+        fs::remove_file(path).unwrap();
+        fs::rename(replacement, path).unwrap();
+    }
+
+    fn rewrite_zip_entry_with_manifest_checksum(
+        path: &Path,
+        target: &str,
+        transform: impl FnOnce(&[u8]) -> Vec<u8>,
+    ) {
+        let mut archive = ZipArchive::new(File::open(path).unwrap()).unwrap();
+        let mut entries = Vec::new();
+        for index in 0..archive.len() {
+            let mut entry = archive.by_index(index).unwrap();
+            let mut bytes = Vec::new();
+            entry.read_to_end(&mut bytes).unwrap();
+            entries.push((entry.name().to_owned(), bytes));
+        }
+        drop(archive);
+
+        let target_index = entries.iter().position(|(name, _)| name == target).unwrap();
+        entries[target_index].1 = transform(&entries[target_index].1);
+        let target_checksum = sha256(&entries[target_index].1);
+        let manifest_index = entries
+            .iter()
+            .position(|(name, _)| name == "manifest.json")
+            .unwrap();
+        let mut manifest: serde_json::Value =
+            serde_json::from_slice(&entries[manifest_index].1).unwrap();
+        manifest["checksums"][target] = serde_json::json!(target_checksum);
+        entries[manifest_index].1 = serde_json::to_vec_pretty(&manifest).unwrap();
+
+        let replacement = path.with_extension("rewrite-with-checksum");
+        let mut writer = ZipWriter::new(File::create(&replacement).unwrap());
+        for (name, bytes) in entries {
+            writer
+                .start_file(name, SimpleFileOptions::default())
+                .unwrap();
             writer.write_all(&bytes).unwrap();
         }
         writer.finish().unwrap();

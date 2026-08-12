@@ -4731,6 +4731,7 @@ fn run_analysis(
     {
         let (project, _) = load_project_with_autosave(input)
             .with_context(|| format!("invalid project {}", input.display()))?;
+        require_executable_project(&project)?;
         let recipe = if let Some(recipe_id) = recipe_id {
             project
                 .recipes
@@ -4798,6 +4799,16 @@ fn run_analysis(
     fs::write(output, serde_json::to_vec_pretty(&envelope)?)
         .with_context(|| format!("cannot write {}", output.display()))?;
     println!("wrote analysis result {}", output.display());
+    Ok(())
+}
+
+fn require_executable_project(project: &Project) -> Result<()> {
+    if project.read_only {
+        bail!(
+            "project archive schema {} is newer than this QuickPLS build; it is available for read-only inspection/export but cannot execute new analyses",
+            project.manifest.schema_version
+        );
+    }
     Ok(())
 }
 
@@ -5039,6 +5050,21 @@ mod tests {
                 .contains("method_config.resampling_mismatch")
         );
         assert!(!result_path.exists());
+    }
+
+    #[test]
+    fn cli_rejects_execution_from_a_read_only_future_project() {
+        let mut project = Project::new("Future read-only project");
+        project.manifest.schema_version = qpls_project::PROJECT_ARCHIVE_VERSION + 1;
+        project.read_only = true;
+
+        let error = require_executable_project(&project).unwrap_err();
+        assert!(error.to_string().contains("read-only inspection/export"));
+        assert!(
+            error
+                .to_string()
+                .contains(&project.manifest.schema_version.to_string())
+        );
     }
 
     #[test]
@@ -5465,17 +5491,24 @@ fn inspect_project(path: &Path, json_output: bool) -> Result<()> {
         .with_context(|| format!("invalid project {}", path.display()))?;
     let recovered = recovery_source.is_some();
     let datasets = project.datasets.iter().map(|dataset| json!({"id": dataset.id, "name": dataset.name, "rows": dataset.schema.case_count, "columns": dataset.schema.columns.len(), "kind": dataset.schema.kind, "sampleSize": dataset.schema.sample_size, "fingerprint": dataset.fingerprint.0})).collect::<Vec<_>>();
-    let summary = json!({"schemaVersion": project.manifest.schema_version, "projectId": project.manifest.project_id, "name": project.manifest.name, "engineVersion": project.manifest.engine_version, "readOnly": project.read_only, "recovered": recovered, "datasets": datasets, "models": project.models.len(), "recipes": project.recipes.len(), "results": project.results.len()});
+    let summary = json!({"schemaVersion": project.manifest.schema_version, "sourceArchiveVersion": project.source_archive_version, "migrationPending": project.migration_pending, "compatibilityNoticeCount": project.compatibility_notices.len(), "futureUnsupported": {"models": project.future_unsupported.models, "recipes": project.future_unsupported.recipes, "results": project.future_unsupported.results}, "projectId": project.manifest.project_id, "name": project.manifest.name, "engineVersion": project.manifest.engine_version, "readOnly": project.read_only, "recovered": recovered, "datasets": datasets, "models": project.models.len(), "recipes": project.recipes.len(), "results": project.results.len()});
     if json_output {
         println!("{}", serde_json::to_string_pretty(&summary)?);
     } else {
         println!(
-            "{}\nschema: {} | datasets: {} | models: {} | recipes: {}{}",
+            "{}\nschema: {} | source schema: {} | datasets: {} | models: {} | recipes: {} | compatibility notices: {}{}{}",
             project.manifest.name,
             project.manifest.schema_version,
+            project.source_archive_version,
             project.datasets.len(),
             project.models.len(),
             project.recipes.len(),
+            project.compatibility_notices.len(),
+            if project.migration_pending {
+                " | migration pending"
+            } else {
+                ""
+            },
             if recovered { " | recovered backup" } else { "" }
         );
     }

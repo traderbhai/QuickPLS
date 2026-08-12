@@ -147,6 +147,11 @@ struct ProjectSnapshot {
     name: String,
     path: Option<String>,
     read_only: bool,
+    source_archive_version: u32,
+    migration_pending: bool,
+    compatibility_notices: Vec<ProjectCompatibilityNoticeSnapshot>,
+    future_unsupported: ProjectFutureUnsupportedSnapshot,
+    save_warning: Option<String>,
     recovered: bool,
     recovery_source: Option<String>,
     datasets: Vec<DatasetSnapshot>,
@@ -158,6 +163,22 @@ struct ProjectSnapshot {
     active_model_id: Option<String>,
     model_presentations: BTreeMap<String, Value>,
     saved_reports: Vec<SavedReportNode>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ProjectFutureUnsupportedSnapshot {
+    models: usize,
+    recipes: usize,
+    results: usize,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ProjectCompatibilityNoticeSnapshot {
+    result_id: Uuid,
+    code: String,
+    message: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -841,9 +862,7 @@ fn import_validation_fixture(state: State<'_, DesktopProject>) -> Result<Dataset
 }
 
 fn append_dataset(project: &mut Project, dataset: Dataset) -> Result<DatasetSnapshot, String> {
-    if project.read_only {
-        return Err("the project is read-only".to_owned());
-    }
+    require_writable_project(project, "import data")?;
     let record = DatasetVersionRecord {
         dataset_id: dataset.id.to_string(),
         parent_dataset_id: None,
@@ -887,9 +906,7 @@ fn version_column_metadata(
     column_name: &str,
     metadata: ColumnMetadata,
 ) -> Result<DatasetSnapshot, String> {
-    if project.read_only {
-        return Err("the project is read-only".to_owned());
-    }
+    require_writable_project(project, "edit variable metadata")?;
     let source = project
         .datasets
         .iter()
@@ -941,9 +958,7 @@ fn version_recode_column(
     dataset_id: &str,
     spec: RecodeColumnSpec,
 ) -> Result<DatasetVersionMutation, String> {
-    if project.read_only {
-        return Err("the project is read-only".to_owned());
-    }
+    require_writable_project(project, "recode data")?;
     let source = project
         .datasets
         .iter()
@@ -1050,6 +1065,18 @@ fn workspace_with_active_dataset(project: &Project, dataset_id: &str) -> Result<
     Ok(workspace)
 }
 
+/// Central mutation boundary for future-schema and otherwise read-only
+/// projects. Every persistent desktop mutation should pass through this guard
+/// before cloning or changing project state.
+fn require_writable_project(project: &Project, operation: &str) -> Result<(), String> {
+    if project.read_only {
+        return Err(format!(
+            "cannot {operation}: the project is read-only because its archive schema is newer than this application"
+        ));
+    }
+    Ok(())
+}
+
 #[tauri::command]
 fn open_project(path: String, state: State<'_, DesktopProject>) -> Result<ProjectSnapshot, String> {
     let (project, recovery_source) =
@@ -1074,11 +1101,19 @@ fn save_active_project(
         .0
         .lock()
         .map_err(|_| "project state is unavailable".to_owned())?;
-    let candidate = project_with_workspace_model(&project, workspace, model, model_presentation)?;
-    save_project(Path::new(&path), &candidate).map_err(|error| error.to_string())?;
-    discard_autosave(Path::new(&path)).map_err(|error| error.to_string())?;
+    let mut candidate =
+        project_with_workspace_model(&project, workspace, model, model_presentation)?;
+    let manifest = save_project(Path::new(&path), &candidate).map_err(|error| error.to_string())?;
+    candidate
+        .adopt_explicit_save(manifest)
+        .map_err(|error| error.to_string())?;
     *project = candidate;
-    Ok(snapshot(&project, Some(path), None))
+    let save_warning = discard_autosave(Path::new(&path)).err().map(|error| {
+        format!("the project was saved, but its stale autosave could not be removed: {error}")
+    });
+    let mut response = snapshot(&project, Some(path), None);
+    response.save_warning = save_warning;
+    Ok(response)
 }
 
 #[tauri::command]
@@ -1105,9 +1140,7 @@ fn project_with_workspace_model(
     model: Option<ModelSpec>,
     model_presentation: Option<Value>,
 ) -> Result<Project, String> {
-    if project.read_only {
-        return Err("the project is read-only".to_owned());
-    }
+    require_writable_project(project, "save the project")?;
     let workspace_object = workspace
         .as_object_mut()
         .ok_or_else(|| "project workspace layout is invalid".to_owned())?;
@@ -1198,9 +1231,7 @@ fn project_after_explorer_mutation(
     project: &Project,
     request: ProjectExplorerMutationRequest,
 ) -> Result<Project, String> {
-    if project.read_only {
-        return Err("the project is read-only".to_owned());
-    }
+    require_writable_project(project, "edit the project explorer")?;
     let mut candidate = project.clone();
     let mut explorer = normalized_workspace_explorer(&candidate);
     persist_current_explorer_model(
@@ -1681,9 +1712,7 @@ fn start_analysis_job(
             .0
             .lock()
             .map_err(|_| "project state is unavailable".to_owned())?;
-        if project.read_only {
-            return Err("cannot run or store analyses in a read-only project".into());
-        }
+        require_writable_project(&project, "run or store analyses")?;
         let dataset = project
             .datasets
             .iter()
@@ -1706,9 +1735,7 @@ fn start_analysis_job(
         if project.manifest.project_id != project_id {
             return Err("the active project changed during analysis preflight".into());
         }
-        if project.read_only {
-            return Err("the project became read-only during analysis preflight".into());
-        }
+        require_writable_project(&project, "finish analysis preflight")?;
         if !project
             .datasets
             .iter()
@@ -1965,9 +1992,7 @@ fn commit_job_result(
     if project.manifest.project_id != expected_project_id {
         return Err("the active project changed while estimation was running".into());
     }
-    if project.read_only {
-        return Err("the project became read-only while estimation was running".into());
-    }
+    require_writable_project(&project, "commit the completed analysis")?;
     let mut jobs = jobs
         .lock()
         .map_err(|_| "job state is unavailable".to_owned())?;
@@ -2065,6 +2090,23 @@ fn snapshot(
         name: project.manifest.name.clone(),
         path,
         read_only: project.read_only,
+        source_archive_version: project.source_archive_version,
+        migration_pending: project.migration_pending,
+        compatibility_notices: project
+            .compatibility_notices
+            .iter()
+            .map(|notice| ProjectCompatibilityNoticeSnapshot {
+                result_id: notice.result_id,
+                code: notice.diagnostic.code.clone(),
+                message: notice.diagnostic.message.clone(),
+            })
+            .collect(),
+        future_unsupported: ProjectFutureUnsupportedSnapshot {
+            models: project.future_unsupported.models,
+            recipes: project.future_unsupported.recipes,
+            results: project.future_unsupported.results,
+        },
+        save_warning: None,
         recovered: recovery_source.is_some(),
         recovery_source: recovery_source.map(|source| {
             match source {
@@ -2670,6 +2712,18 @@ mod desktop_job_tests {
     #[test]
     fn project_snapshot_exposes_canonical_content_independently_of_workspace_runs() {
         let mut project = build_demo_project().unwrap();
+        project.source_archive_version = 4;
+        project.migration_pending = true;
+        project
+            .compatibility_notices
+            .push(qpls_project::ProjectCompatibilityNotice {
+                result_id: project.results[0].id,
+                diagnostic: qpls_core::Diagnostic {
+                    code: "archive.legacy_result".into(),
+                    level: qpls_core::DiagnosticLevel::Warning,
+                    message: "Historical result remains readable under its original label".into(),
+                },
+            });
         project.layouts.insert(
             "workspace".into(),
             serde_json::json!({
@@ -2695,6 +2749,17 @@ mod desktop_job_tests {
 
         let wire = serde_json::to_value(response).unwrap();
         assert_eq!(wire["activeModelId"], canonical_model_id);
+        assert_eq!(wire["sourceArchiveVersion"], 4);
+        assert_eq!(wire["migrationPending"], true);
+        assert_eq!(
+            wire["compatibilityNotices"][0]["resultId"],
+            canonical_result_id
+        );
+        assert_eq!(
+            wire["compatibilityNotices"][0]["code"],
+            "archive.legacy_result"
+        );
+        assert_eq!(wire["saveWarning"], Value::Null);
         assert_eq!(wire["recipes"][0]["id"], canonical_recipe_id);
         assert_eq!(wire["results"][0]["id"], canonical_result_id);
         assert_eq!(

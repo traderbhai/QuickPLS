@@ -362,10 +362,27 @@ export interface ColumnMetadata {
   value_labels: Record<string, string>;
 }
 
+export interface NativeProjectCompatibilityNotice {
+  resultId: string;
+  code: string;
+  message: string;
+}
+
+export interface NativeProjectFutureUnsupported {
+  models: number;
+  recipes: number;
+  results: number;
+}
+
 export interface NativeProjectSnapshot {
   name: string;
   path: string | null;
   readOnly: boolean;
+  sourceArchiveVersion: number;
+  migrationPending: boolean;
+  compatibilityNotices: NativeProjectCompatibilityNotice[];
+  futureUnsupported: NativeProjectFutureUnsupported;
+  saveWarning: string | null;
   recovered: boolean;
   recoverySource?: "autosave" | "backup" | null;
   datasets: Dataset[];

@@ -41,6 +41,11 @@ const normalizeDataset = (dataset: Dataset): Dataset => ({
 
 const normalizeProjectSnapshot = (project: NativeProjectSnapshot): NativeProjectSnapshot => ({
   ...project,
+  sourceArchiveVersion: project.sourceArchiveVersion ?? 0,
+  migrationPending: project.migrationPending ?? false,
+  compatibilityNotices: project.compatibilityNotices ?? [],
+  futureUnsupported: project.futureUnsupported ?? { models: 0, recipes: 0, results: 0 },
+  saveWarning: project.saveWarning ?? null,
   datasets: (project.datasets ?? []).map(normalizeDataset),
   datasetVersions: project.datasetVersions ?? [],
   models: project.models ?? [],

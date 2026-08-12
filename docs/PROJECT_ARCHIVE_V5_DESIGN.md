@@ -23,7 +23,7 @@ These foundations remain useful but do not by themselves satisfy the v5 migratio
 
 ## Complete integrity validation
 
-The v5 manifest declares the checksum algorithm (`sha256`; v4 defaults to it). Loading must reject malformed hashes, duplicate ZIP entry names, missing or unexpected entries, checksum-map mismatches, duplicate dataset IDs, or missing Arrow entries. Every non-manifest entry is verified before interpretation, including entries in future schemas.
+The v5 manifest declares the checksum algorithm (`sha256`; v4 defaults to it). Loading must reject malformed hashes, duplicate ZIP entry names, missing or unexpected current-schema entries, checksum-map mismatches, duplicate dataset IDs, or missing Arrow entries. Future schemas may add entries, but every such entry must still be declared and checksum-verified before best-effort interpretation.
 
 Apply bounded entry-count and uncompressed-size limits before allocating buffers. Checksums detect corruption and tampering; they do not authenticate the archive.
 
@@ -34,16 +34,20 @@ Saving must avoid holding every Arrow dataset version in memory at once. Seriali
 1. Create a unique same-directory temporary archive using create-new semantics.
 2. Write, finish, and synchronize it.
 3. Reopen and fully validate the temporary archive.
-4. Rotate the valid current primary without first destroying the only known-good backup.
-5. Promote the validated temporary archive.
-6. Restore the original primary if promotion fails, and report a distinct rollback failure if restoration also fails.
-7. Remove temporary and rotation files through a cleanup guard.
+4. Publish a synchronized transaction journal containing full SHA-256 identities for both the old and new archive generations, then verify the rotation byte-for-byte before removing the primary.
+5. Rotate the valid current primary without first destroying the only known-good backup.
+6. Promote the validated temporary archive.
+7. Preserve exactly one immediate previous generation as `<project>.qpls.bak`; replacement backups use a bounded transaction-only displacement and are not accumulated.
+8. Restore the exact prior generation if promotion fails, and report a distinct rollback failure if restoration also fails.
+9. Durably update the recovery identity before removing the transaction journal. Malformed journal data cannot block a separately verified primary.
+
+Primary and autosave recovery artifacts retain the complete target filename before adding `.bak`, `.identity.json`, or transaction suffixes. They therefore cannot collide with one another.
 
 `save_project` returns the manifest that was actually persisted. Desktop state adopts that manifest after a successful save. Autosave cleanup failure is reported as a warning after the successful primary save; it must not leave the UI claiming that an already-persisted save failed.
 
 ## Identity-safe recovery
 
-An autosave may replace a primary or backup only when its `project_id` matches the project being recovered. A foreign, corrupt, stale, or future-incompatible autosave is ignored or quarantined. When all candidates fail, preserve primary and recovery error details instead of returning only the first error.
+An autosave may replace a primary or backup only when its `project_id` matches the project being recovered. Interrupted save recovery additionally matches the exact full-archive SHA-256 generation; project UUID alone is insufficient because ordinary saves retain the UUID. A foreign, corrupt, stale, or future-incompatible autosave is ignored or quarantined. When all candidates fail, preserve primary and recovery error details instead of returning only the first error.
 
 ## Future-schema read-only projects
 
