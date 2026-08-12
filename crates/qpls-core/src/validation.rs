@@ -176,7 +176,7 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
     }
     if recipe.settings.studentized_inner_samples > 0
         && (!(99..=999).contains(&recipe.settings.studentized_inner_samples)
-            || recipe.settings.studentized_inner_samples % 2 == 0
+            || recipe.settings.studentized_inner_samples.is_multiple_of(2)
             || recipe.settings.bootstrap_samples < 999)
     {
         issues.push(issue(

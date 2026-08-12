@@ -694,10 +694,10 @@ fn convert_typed_value(
         (TypedRecodeValue::Boolean(value), ColumnType::Numeric) => {
             Ok(TypedRecodeValue::Numeric(if value { 1.0 } else { 0.0 }))
         }
-        (TypedRecodeValue::Numeric(value), ColumnType::Boolean) if value == 0.0 => {
+        (TypedRecodeValue::Numeric(0.0), ColumnType::Boolean) => {
             Ok(TypedRecodeValue::Boolean(false))
         }
-        (TypedRecodeValue::Numeric(value), ColumnType::Boolean) if value == 1.0 => {
+        (TypedRecodeValue::Numeric(1.0), ColumnType::Boolean) => {
             Ok(TypedRecodeValue::Boolean(true))
         }
         (TypedRecodeValue::Numeric(value), ColumnType::Boolean) => {

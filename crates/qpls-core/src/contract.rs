@@ -436,6 +436,7 @@ impl AnalysisResult {
         result
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn completed_pls_inference(
         recipe: &AnalysisRecipe,
         method_version: impl Into<String>,
