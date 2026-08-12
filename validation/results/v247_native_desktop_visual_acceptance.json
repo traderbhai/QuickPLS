@@ -8580,12 +8580,12 @@
         "indicators": 80
       },
       "metrics": {
-        "fixtureRenderMs": 269.6,
-        "selectionMs": 329.5,
-        "dragMs": 1017.5,
-        "panMs": 252.9,
-        "zoomMs": 328.1,
-        "workspaceRoundTripMs": 581.6
+        "fixtureRenderMs": 115.7,
+        "selectionMs": 321.4,
+        "dragMs": 541.9,
+        "panMs": 226.2,
+        "zoomMs": 311.9,
+        "workspaceRoundTripMs": 351
       },
       "budgetsMs": {
         "fixtureRender": 5000,

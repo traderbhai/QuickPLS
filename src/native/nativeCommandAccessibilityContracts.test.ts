@@ -29,6 +29,8 @@ describe("native command accessibility contracts", () => {
     const source = app();
     const canvas = readFileSync("src/components/ModelCanvas.tsx", "utf8");
     expect(source).toContain('case "model.edit-selection"');
+    expect(source).toContain("if (!focusModelSelectionEditor()) window.setTimeout(focusModelSelectionEditor, 0)");
+    expect(source).toContain("editor.focus({ preventScroll: true })");
     expect(source).toContain('"nd-model-construct-name"');
     expect(source).toContain('"nd-model-path-label"');
     expect(canvas).not.toContain("window.prompt(");
@@ -43,7 +45,9 @@ describe("native command accessibility contracts", () => {
     expect(source).toContain('event.key === "ArrowDown" || event.key === "ArrowUp"');
     expect(source).toContain('event.key === "Home" || event.key === "End"');
     expect(source).toContain("restoreTrigger(index)");
-    expect(source).toContain("state.returnFocus.focus()");
+    expect(source).toContain("state.returnFocus.focus({ preventScroll: true })");
+    expect(source).toMatch(/focusReturnTarget\(\);\s*close\(\);/);
+    expect(source).not.toMatch(/setTimeout\(\(\) => \{ if \(state\.returnFocus/);
   });
 
   it("exposes the live Select, Pan, and Path tool state visually and semantically", () => {

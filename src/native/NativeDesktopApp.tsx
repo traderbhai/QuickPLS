@@ -810,8 +810,7 @@ export function NativeDesktopApp() {
       case "model.add-higher-order": openDialog("higher-order"); return;
       case "model.add-moderating-effect": openDialog("moderation"); return;
       case "model.edit-selection": {
-        setPropertiesOpen(true);
-        window.setTimeout(() => {
+        const focusModelSelectionEditor = () => {
           const workspace = useWorkspace.getState();
           const editorId = workspace.selectedNodeId
             ? "nd-model-construct-name"
@@ -819,11 +818,15 @@ export function NativeDesktopApp() {
               ? "nd-model-path-label"
               : null;
           const editor = editorId ? document.getElementById(editorId) : null;
-          if (editor instanceof HTMLInputElement) {
-            editor.focus();
-            editor.select();
-          }
-        }, 0);
+          if (!(editor instanceof HTMLInputElement)) return false;
+          editor.focus({ preventScroll: true });
+          editor.select();
+          return true;
+        };
+        setPropertiesOpen(true);
+        // An already-visible Properties pane can be focused during the same
+        // keyboard event. Defer only when opening the pane must first mount it.
+        if (!focusModelSelectionEditor()) window.setTimeout(focusModelSelectionEditor, 0);
         return;
       }
       case "model.delete-selection": commandEvent("model-delete-selection"); return;
@@ -1204,8 +1207,10 @@ function MenuBar({ menus, openMenu, setOpenMenu, projectName }: { menus: Record<
 
 function ContextCommandMenu({ items, state, close }: { items: MenuItem[]; state: NativeContextMenuState; close: () => void }) {
   const menuRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    menuRef.current?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')?.focus({ preventScroll: true });
+  }, []);
   useEffect(() => {
-    window.setTimeout(() => menuRef.current?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')?.focus(), 0);
     const closeFromPointer = (event: PointerEvent) => {
       if (!(event.target instanceof Node) || !menuRef.current?.contains(event.target)) close();
     };
@@ -1213,9 +1218,15 @@ function ContextCommandMenu({ items, state, close }: { items: MenuItem[]; state:
     return () => document.removeEventListener("pointerdown", closeFromPointer);
   }, [close]);
 
+  const focusReturnTarget = () => {
+    if (!state.returnFocus?.isConnected) return;
+    state.returnFocus.focus({ preventScroll: true });
+  };
   const restoreFocus = () => {
+    // Focus the exact invoking element before unmounting the menu so callers
+    // observing the hidden state cannot race a deferred restoration timer.
+    focusReturnTarget();
     close();
-    window.setTimeout(() => { if (state.returnFocus?.isConnected) state.returnFocus.focus(); }, 0);
   };
   const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     if (event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Home" || event.key === "End") {
@@ -1242,7 +1253,7 @@ function ContextCommandMenu({ items, state, close }: { items: MenuItem[]; state:
     style={{ left: state.x, top: state.y }}
     onKeyDown={onKeyDown}
   >
-    {items.map((item) => <button key={item.id} role="menuitem" tabIndex={-1} type="button" className={item.separator ? "separator" : ""} disabled={item.disabled} onClick={() => { close(); if (state.returnFocus?.isConnected) state.returnFocus.focus(); item.action(); }}><span>{item.label}</span>{item.shortcut ? <kbd>{item.shortcut}</kbd> : null}</button>)}
+    {items.map((item) => <button key={item.id} role="menuitem" tabIndex={-1} type="button" className={item.separator ? "separator" : ""} disabled={item.disabled} onClick={() => { focusReturnTarget(); close(); item.action(); }}><span>{item.label}</span>{item.shortcut ? <kbd>{item.shortcut}</kbd> : null}</button>)}
   </div>;
 }
 
