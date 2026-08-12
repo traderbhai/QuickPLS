@@ -2,7 +2,7 @@
   "schema_version": 1,
   "target": "v1_2_3_extended_pls_diagnostics_promotion",
   "method_id": "cca",
-  "promoted_scope": "Descriptive composite correlation residual diagnostic for recursive standardized PLS path models.",
+  "promoted_scope": "Bounded descriptive composite-correlation residual diagnostics for recursive standardized reflective PLS path models.",
   "passed": true,
   "reports": [
     {
@@ -11,7 +11,12 @@
       "passed": true
     },
     {
-      "path": "validation\\results\\v05_extended_pls_evidence.json",
+      "path": "validation\\results\\v247_native_desktop_visual_acceptance.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\v247_tauri_native_acceptance.json",
       "present": true,
       "passed": true
     }
@@ -20,19 +25,44 @@
     {
       "path": "docs\\methods\\PLS_CCA_V1.md",
       "present": true,
-      "bytes": 1898
+      "bytes": 5318
+    },
+    {
+      "path": "docs\\methods\\CCA_V1.md",
+      "present": true,
+      "bytes": 477
     }
   ],
   "checks": [
     {
-      "name": "decision_rules_excluded",
+      "name": "nonsaturated_reference_contract",
       "passed": true,
-      "detail": "Bootstrap-based CCA decisions remain unsupported outside the promoted descriptive scope."
+      "detail": "The current independent reference must use a non-saturated model and verify exact descriptive payload identity, residual algebra, provenance, and bounded-scope guards."
     },
     {
-      "name": "invalid_settings_guard",
+      "name": "native_catalog_readiness_results",
       "passed": true,
-      "detail": "The reference artifact includes invalid PCA-setting guard evidence."
+      "detail": "The native workbench must expose one assessment method, truthful bounded readiness, and only the residual summary/detail tables actually present."
+    },
+    {
+      "name": "project_persistence_contract",
+      "passed": true,
+      "detail": "Runner provenance and qpls-project validation must recognize the exact CCA method/payload versions before a completed run can be committed or reopened."
+    },
+    {
+      "name": "browser_visual_setup_and_follow_up",
+      "passed": true,
+      "detail": "Every supported viewport must prove the exact CCA catalog/setup/readiness contract and explicitly defer genuine completion to packaged Tauri without a synthetic result fixture."
+    },
+    {
+      "name": "packaged_native_workflow",
+      "passed": true,
+      "detail": "The current packaged-Tauri report must prove a genuine CCA run, residual results, export, explicit save, and reopen. Browser fixtures cannot satisfy this check."
+    },
+    {
+      "name": "no_full_smartpls_cca_claim",
+      "passed": true,
+      "detail": "Documentation must retain the descriptive-only boundary and avoid claiming full SmartPLS CCA equivalence."
     }
   ],
   "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."

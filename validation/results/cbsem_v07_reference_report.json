@@ -20,18 +20,20 @@
       "top_mi": 0.15789617650863985
     },
     "bootstrap": {
-      "intervals": 21
+      "execution_enabled": false,
+      "guard_codes": [
+        "cbsem.bootstrap_unsupported"
+      ]
     },
     "multigroup": {
-      "groups": 2,
-      "steps": [
-        "configural",
-        "metric",
-        "scalar"
+      "execution_enabled": false,
+      "guard_codes": [
+        "cbsem.mean_structure_unsupported",
+        "cbsem.multigroup_unsupported"
       ]
     },
     "export": {
-      "export_bytes": 38374
+      "export_bytes": 38531
     },
     "guard": {
       "guard_code": "cbsem.reflective_only"

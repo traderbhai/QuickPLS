@@ -11,10 +11,9 @@
   "kind": "plsc_unsupported_guard_v1",
   "note": "Experimental PLSc must reject unsupported formative/PCA settings before estimation.",
   "passed": true,
-  "run_stderr": "Error: plsc.reflective_only: PLSc is limited to reflective constructs in this experimental release\n",
+  "run_stderr": "Error: plsc.reflective_only: PLSc is limited to reflective constructs in the documented validated scope\n",
   "schema_version": 1,
   "validation_codes": [
-    "method.experimental",
     "plsc.reflective_only"
   ]
 }

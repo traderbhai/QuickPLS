@@ -13,21 +13,21 @@
     {
       "path": "docs/METHOD_COMPATIBILITY.md",
       "present": true,
-      "bytes": 5932,
+      "bytes": 9915,
       "mentions_validation": true,
-      "mentions_known_differences": false
+      "mentions_known_differences": true
     },
     {
       "path": "docs/DELIVERY_STATUS.md",
       "present": true,
-      "bytes": 52690,
+      "bytes": 142739,
       "mentions_validation": true,
       "mentions_known_differences": true
     },
     {
       "path": "docs/DEVELOPMENT_LEDGER.md",
       "present": true,
-      "bytes": 53232,
+      "bytes": 142224,
       "mentions_validation": true,
       "mentions_known_differences": true
     },
@@ -71,21 +71,21 @@
     {
       "path": "docs\\methods\\PLS_MEDIATION_V1.md",
       "present": true,
-      "bytes": 4514,
-      "mentions_unsupported": false,
+      "bytes": 4581,
+      "mentions_unsupported": true,
       "mentions_validation": true
     },
     {
       "path": "docs\\methods\\PLSPREDICT_HOLDOUT_V1.md",
       "present": true,
-      "bytes": 6653,
+      "bytes": 6803,
       "mentions_unsupported": true,
       "mentions_validation": true
     },
     {
       "path": "docs\\methods\\CBSEM_ML_V1.md",
       "present": true,
-      "bytes": 1760,
+      "bytes": 1871,
       "mentions_unsupported": true,
       "mentions_validation": true
     },
@@ -104,16 +104,23 @@
       "mentions_validation": true
     },
     {
+      "path": "docs\\methods\\NCA_V2.md",
+      "present": true,
+      "bytes": 6229,
+      "mentions_unsupported": false,
+      "mentions_validation": true
+    },
+    {
       "path": "docs\\methods\\NCA_V1.md",
       "present": true,
-      "bytes": 916,
-      "mentions_unsupported": true,
+      "bytes": 1479,
+      "mentions_unsupported": false,
       "mentions_validation": true
     },
     {
       "path": "docs\\methods\\GSCA_V1.md",
       "present": true,
-      "bytes": 1130,
+      "bytes": 1303,
       "mentions_unsupported": true,
       "mentions_validation": true
     }

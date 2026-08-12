@@ -20,4 +20,9 @@ release/
 release_artifacts_backup_before_clean/
 validation/results/screens/
 validation/results/*.xlsx
+validation/results/*.png
+validation/results/*.console.txt
+validation/results/v2*_audit.json
+validation/results/v2*_smoke.json
+validation/results/v247_tauri_native_acceptance.pre-*.json
 .DS_Store

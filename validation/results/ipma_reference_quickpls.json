@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "id": "8b198adb-663e-4c2e-9cf0-6a88ae81da8b",
+  "id": "bc3d78f4-e737-4e8f-bb74-d77302eed9fc",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000000081",
-    "dataset_fingerprint": "v2:6ee7f9b51caf3ac7ba3508c19b425ec58ee94b294e0d68bc048733fe0f7add15",
+    "dataset_fingerprint": "v2:d0c59bf8bc184aaa99db8c3e87772e7b93b36400263db8b30193042cc030bb87",
     "method": "ipma",
     "method_version": "pls_pm_v1+ipma_v1+pls_mediation_v1+pls_assessment_v7",
-    "engine_version": "0.3.0-alpha.1",
+    "engine_version": "2.45.0",
     "seed": 20260719,
     "settings": {
       "method": "ipma",
@@ -24,59 +24,20 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-07-19T07:15:08.961844800Z",
-    "completed_at": "2026-07-19T07:15:09.002337900Z"
+    "started_at": "2026-08-11T06:28:26.522593900Z",
+    "completed_at": "2026-08-11T06:28:26.674449Z"
   },
   "diagnostics": [
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "IPMA is experimental; importance uses fixed PLS total effects and performance uses 0-100 min-max scaled standardized scores, not publication-ready cIPMA validation."
-    },
-    {
-      "code": "estimation.warning",
-      "level": "warning",
-      "message": "rho_a.single_indicator_not_identified for construct 'x'"
-    },
-    {
-      "code": "estimation.warning",
-      "level": "warning",
-      "message": "Cronbach alpha is undefined for single-item construct 'x'"
-    },
-    {
-      "code": "estimation.warning",
-      "level": "warning",
-      "message": "rho_a.single_indicator_not_identified for construct 'z'"
-    },
-    {
-      "code": "estimation.warning",
-      "level": "warning",
-      "message": "Cronbach alpha is undefined for single-item construct 'z'"
-    },
-    {
-      "code": "estimation.warning",
-      "level": "warning",
-      "message": "rho_a.single_indicator_not_identified for construct 'm'"
-    },
-    {
-      "code": "estimation.warning",
-      "level": "warning",
-      "message": "Cronbach alpha is undefined for single-item construct 'm'"
-    },
-    {
-      "code": "estimation.warning",
-      "level": "warning",
-      "message": "rho_a.single_indicator_not_identified for construct 'y'"
-    },
-    {
-      "code": "estimation.warning",
-      "level": "warning",
-      "message": "Cronbach alpha is undefined for single-item construct 'y'"
+      "message": "IPMA v1 reports direct and indirect structural predecessors only; importance uses fixed PLS total effects and performance uses the observed sample range of listwise-standardized scores on a 0-100 scale. Theoretical-range performance and cIPMA are unsupported."
     }
   ],
   "payload": {
     "kind": "pls_pm_v1",
     "estimation": {
+      "cbsem": null,
       "cca": null,
       "construct_scores": {
         "m": [
@@ -160,6 +121,170 @@
           1.867211796031077,
           1.3624722763957795,
           1.4908769173855443
+        ],
+        "u": [
+          -0.6715407117508709,
+          0.3800155233570991,
+          1.3752383887271418,
+          -1.0470965100037175,
+          0.004459725104252603,
+          0.9996825904742953,
+          -1.4226523082565639,
+          -0.3710960731485939,
+          0.624126792221449,
+          1.675683027329419,
+          -0.7466518714014403,
+          0.24857099396860277,
+          1.3001272290765729,
+          -1.1222076696542866,
+          -0.12698480428424375,
+          0.9245714308237261,
+          -1.497763467907133,
+          -0.5025406025370901,
+          0.5490156325708797,
+          1.6005718676788496,
+          -0.8780964007899366,
+          0.17345983431803344,
+          1.2250160694260033,
+          -1.2536521990427831,
+          -0.20209596393481288,
+          0.849460271173157,
+          -1.6292079972956293,
+          -0.5776517621876595,
+          0.4739044729203104,
+          1.4691273382903534,
+          -0.9532075604405058,
+          0.09834867466746408,
+          1.093571540037507,
+          -1.328763358693352,
+          -0.2772071235853822,
+          0.7180157417846608,
+          -1.7043191569461984,
+          -0.6527629218382286,
+          0.34245994353181447,
+          1.394016178639784,
+          -1.028318720091075,
+          -0.03309585472103207,
+          1.0184603803869376,
+          -1.4038745183439214,
+          -0.40865165297387857,
+          0.6429045821340914,
+          1.6944608172420612,
+          -0.784207451226725,
+          0.2673487838812451,
+          1.318905018989215,
+          -1.1597632494795713,
+          -0.1082070143716014,
+          0.9433492207363683,
+          -1.5353190477324177,
+          -0.4837628126244477,
+          0.5677934224835219,
+          1.563016287853565,
+          -0.8593186108772941,
+          0.19223762423067575,
+          1.1874604896007186,
+          -1.2348744091301405,
+          -0.18331817402217054,
+          0.8119046913478724,
+          -1.6104302073829868,
+          -0.5588739722750171,
+          0.43634889309502567,
+          1.4879051282029956,
+          -0.9344297705278636,
+          0.0607930948421794,
+          1.1123493299501492,
+          -1.30998556878071,
+          -0.3147627034106669,
+          0.736793531697303,
+          -1.6855413670335562,
+          -0.6903185016635133,
+          0.3612377334444568,
+          1.4127939685524264,
+          -1.0658742999163597,
+          -0.014318064808389732,
+          1.0372381702995799
+        ],
+        "v": [
+          -0.5762815912216694,
+          0.3878060096842681,
+          1.2967936842015304,
+          -1.1369475088608176,
+          0.10102861502976102,
+          1.0100162895470237,
+          -1.4237249035153243,
+          -0.459637302609387,
+          0.7232388948925169,
+          1.6873264957984542,
+          -0.7464146972638938,
+          0.16257297725336867,
+          1.4005491011439475,
+          -1.0331920919184006,
+          -0.12420441740113801,
+          0.8398831835047994,
+          -1.5938580095575485,
+          -0.4109818120556448,
+          0.5531057888502924,
+          1.51719338975623,
+          -0.971647729694793,
+          0.2663283941957858,
+          1.2304159951017233,
+          -1.2584251243492994,
+          -0.2943375234433623,
+          0.9436386004472165,
+          -1.5452025190038063,
+          -0.581114918097869,
+          0.38297268280806834,
+          1.5658488803099726,
+          -0.8678923127523759,
+          0.09619528815356164,
+          1.0051829626708242,
+          -1.4285582303915239,
+          -0.19058210650094523,
+          0.7184055680163172,
+          -1.7153356250460308,
+          -0.7512480241400933,
+          0.43162817336181053,
+          1.395715774267748,
+          -1.0380254187945999,
+          -0.12903774427733758,
+          1.1089383796132413,
+          -1.3248028134491068,
+          -0.4158151389318444,
+          0.5482724619740931,
+          1.7862485858646722,
+          -0.7025925335863511,
+          0.2614950673195864,
+          1.225582668225524,
+          -1.2632584512254992,
+          -0.02528232733492066,
+          0.9388052735710168,
+          -1.5500358458800059,
+          -0.5859482449740686,
+          0.6520278789165102,
+          1.5610155534337729,
+          -0.8727256396285754,
+          0.0913619612773619,
+          1.2742381587792657,
+          -1.159503034283082,
+          -0.1954154333771448,
+          0.7135722411401177,
+          -1.4462804289375888,
+          -0.4821928280316514,
+          0.4267948464856111,
+          1.3908824473915484,
+          -1.0428587456707996,
+          0.14001745183110406,
+          1.1041050527370417,
+          -1.3296361403253063,
+          -0.42064846580804394,
+          0.8173276580825348,
+          -1.616413534979813,
+          -0.7074258604625507,
+          0.2566617404433867,
+          1.4946378643339655,
+          -0.9942032551170575,
+          -0.03011565421112004,
+          0.9339719466948174
         ],
         "x": [
           -1.699809357502144,
@@ -446,9 +571,18 @@
           "source": "m",
           "target": "y",
           "total": 0.5380980364187491
+        },
+        {
+          "direct": 0.9970874113393475,
+          "indirect": 0.0,
+          "source": "u",
+          "target": "v",
+          "total": 0.9970874113393475
         }
       ],
       "endogeneity": null,
+      "fimix": null,
+      "gsca": null,
       "ipma": {
         "constructs": [
           {
@@ -470,13 +604,6 @@
             "importance": 0.5380980364187491,
             "performance": 50.2035519125683,
             "score_mean": 1.304512053934559e-16,
-            "target": "y"
-          },
-          {
-            "construct": "y",
-            "importance": 1.0,
-            "performance": 50.91532322600357,
-            "score_mean": -1.0824674490095276e-16,
             "target": "y"
           }
         ],
@@ -507,15 +634,6 @@
             "performance": 50.2035519125683,
             "score_mean": 7.91033905045424e-16,
             "target": "y"
-          },
-          {
-            "construct": "y",
-            "construct_importance": 1.0,
-            "indicator": "y1",
-            "loading": 1.0,
-            "performance": 50.91532322600357,
-            "score_mean": -2.914335439641036e-16,
-            "target": "y"
           }
         ],
         "method_version": "ipma_v1",
@@ -524,7 +642,7 @@
           "y"
         ],
         "warnings": [
-          "IPMA is experimental; importance uses fixed PLS total effects and performance uses 0-100 min-max scaled standardized scores, not publication-ready cIPMA validation."
+          "IPMA v1 reports direct and indirect structural predecessors only; importance uses fixed PLS total effects and performance uses the observed sample range of listwise-standardized scores on a 0-100 scale. Theoretical-range performance and cIPMA are unsupported."
         ]
       },
       "iterations": 1,
@@ -579,16 +697,28 @@
             "total": 0.5380980364187491,
             "variance_accounted_for": 0.0,
             "warning": "direct-only structural effect; no mediated component exceeds tolerance"
+          },
+          {
+            "classification": "direct_only",
+            "direct": 0.9970874113393475,
+            "indirect": 0.0,
+            "source": "u",
+            "target": "v",
+            "total": 0.9970874113393475,
+            "variance_accounted_for": 0.0,
+            "warning": "direct-only structural effect; no mediated component exceeds tolerance"
           }
         ],
         "method_version": "pls_mediation_v1",
         "tolerance": 1e-12,
         "warnings": [
-          "Mediation classes are descriptive effect-decomposition labels; publication inference requires validated bootstrap or permutation intervals for the relevant indirect effect."
+          "PLS mediation effect decomposition is validated for the documented QuickPLS v1.2.1 scope when paired with validated bootstrap or permutation intervals for the relevant indirect effect."
         ]
       },
       "method_version": "ipma_v1",
       "mga": null,
+      "mga_permutation": null,
+      "micom": null,
       "moderated_mediation": null,
       "moderation": {
         "estimates": [],
@@ -600,6 +730,7 @@
         ],
         "warnings": []
       },
+      "nca": null,
       "nonlinear_effects": null,
       "omitted_observations": 0,
       "outer_estimates": [
@@ -626,6 +757,18 @@
           "indicator": "y1",
           "loading": 1.0,
           "weight": 1.0000000000000002
+        },
+        {
+          "construct": "u",
+          "indicator": "u1",
+          "loading": 1.0,
+          "weight": 1.0000000000000004
+        },
+        {
+          "construct": "v",
+          "indicator": "v1",
+          "loading": 1.0,
+          "weight": 0.9999999999999999
         }
       ],
       "paths": [
@@ -653,14 +796,22 @@
           "coefficient": 0.5380980364187491,
           "source": "m",
           "target": "y"
+        },
+        {
+          "coefficient": 0.9970874113393475,
+          "source": "u",
+          "target": "v"
         }
       ],
+      "pca": null,
       "plsc": null,
       "predict": null,
       "r_squared": {
         "m": 0.9988437238167035,
+        "v": 0.9941833058514009,
         "y": 0.9992735634447449
       },
+      "regression": null,
       "segmentation": null,
       "transforms": [
         {
@@ -682,11 +833,21 @@
           "indicator": "y1",
           "mean": 3.838389250000001,
           "scale": 1.8424723178517672
+        },
+        {
+          "indicator": "u1",
+          "mean": 1.8152499999999996,
+          "scale": 1.0650880690988467
+        },
+        {
+          "indicator": "v1",
+          "mean": 1.0346925000000002,
+          "scale": 0.6206904843892747
         }
       ],
       "used_observations": 80,
       "warnings": [
-        "IPMA is experimental; importance uses fixed PLS total effects and performance uses 0-100 min-max scaled standardized scores, not publication-ready cIPMA validation."
+        "IPMA v1 reports direct and indirect structural predecessors only; importance uses fixed PLS total effects and performance uses the observed sample range of listwise-standardized scores on a 0-100 scale. Theoretical-range performance and cIPMA are unsupported."
       ],
       "wpls": null
     },
@@ -704,6 +865,12 @@
             "observation_sum_squares": 92.6608662641152,
             "prediction_error_sum_squares": 2.387597324515246,
             "q_squared": 0.9742329483763968
+          },
+          {
+            "construct": "v",
+            "observation_sum_squares": 92.67189920685153,
+            "prediction_error_sum_squares": 2.564721072341341,
+            "q_squared": 0.9723247166153716
           }
         ],
         "settings": {
@@ -772,6 +939,36 @@
           "rho_a_warning_codes": [],
           "rho_c": 1.0,
           "score_variance_before_normalization": null
+        },
+        {
+          "ave": 1.0,
+          "construct": "u",
+          "cronbach_alpha": null,
+          "normalized_weight_norm_squared": null,
+          "off_diagonal_denominator": null,
+          "off_diagonal_numerator": null,
+          "rho_a": null,
+          "rho_a_indicator_count": 1,
+          "rho_a_reason": "rho_a.single_indicator_not_identified",
+          "rho_a_status": "not_applicable",
+          "rho_a_warning_codes": [],
+          "rho_c": 1.0,
+          "score_variance_before_normalization": null
+        },
+        {
+          "ave": 1.0,
+          "construct": "v",
+          "cronbach_alpha": null,
+          "normalized_weight_norm_squared": null,
+          "off_diagonal_denominator": null,
+          "off_diagonal_numerator": null,
+          "rho_a": null,
+          "rho_a_indicator_count": 1,
+          "rho_a_reason": "rho_a.single_indicator_not_identified",
+          "rho_a_status": "not_applicable",
+          "rho_a_warning_codes": [],
+          "rho_c": 1.0,
+          "score_variance_before_normalization": null
         }
       ],
       "cross_loadings": [
@@ -800,6 +997,18 @@
           "loading": 0.9750003558938445
         },
         {
+          "assigned_construct": "x",
+          "construct": "u",
+          "indicator": "x1",
+          "loading": -0.021239898648758734
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "v",
+          "indicator": "x1",
+          "loading": -0.023407668166809337
+        },
+        {
           "assigned_construct": "z",
           "construct": "x",
           "indicator": "z1",
@@ -822,6 +1031,18 @@
           "construct": "y",
           "indicator": "z1",
           "loading": 0.18051482272969788
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "u",
+          "indicator": "z1",
+          "loading": -0.006328962217226663
+        },
+        {
+          "assigned_construct": "z",
+          "construct": "v",
+          "indicator": "z1",
+          "loading": 0.0012881543679077946
         },
         {
           "assigned_construct": "m",
@@ -848,6 +1069,18 @@
           "loading": 0.9995120292535433
         },
         {
+          "assigned_construct": "m",
+          "construct": "u",
+          "indicator": "m1",
+          "loading": -0.030702565932612835
+        },
+        {
+          "assigned_construct": "m",
+          "construct": "v",
+          "indicator": "m1",
+          "loading": -0.030996158590008267
+        },
+        {
           "assigned_construct": "y",
           "construct": "x",
           "indicator": "y1",
@@ -870,6 +1103,90 @@
           "construct": "y",
           "indicator": "y1",
           "loading": 0.9999999999999998
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "u",
+          "indicator": "y1",
+          "loading": -0.026752921077439522
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "v",
+          "indicator": "y1",
+          "loading": -0.027240945028202387
+        },
+        {
+          "assigned_construct": "u",
+          "construct": "x",
+          "indicator": "u1",
+          "loading": -0.021239898648758714
+        },
+        {
+          "assigned_construct": "u",
+          "construct": "z",
+          "indicator": "u1",
+          "loading": -0.006328962217226724
+        },
+        {
+          "assigned_construct": "u",
+          "construct": "m",
+          "indicator": "u1",
+          "loading": -0.03070256593261282
+        },
+        {
+          "assigned_construct": "u",
+          "construct": "y",
+          "indicator": "u1",
+          "loading": -0.02675292107743948
+        },
+        {
+          "assigned_construct": "u",
+          "construct": "u",
+          "indicator": "u1",
+          "loading": 1.0
+        },
+        {
+          "assigned_construct": "u",
+          "construct": "v",
+          "indicator": "u1",
+          "loading": 0.9970874113393474
+        },
+        {
+          "assigned_construct": "v",
+          "construct": "x",
+          "indicator": "v1",
+          "loading": -0.023407668166809344
+        },
+        {
+          "assigned_construct": "v",
+          "construct": "z",
+          "indicator": "v1",
+          "loading": 0.001288154367907786
+        },
+        {
+          "assigned_construct": "v",
+          "construct": "m",
+          "indicator": "v1",
+          "loading": -0.03099615859000827
+        },
+        {
+          "assigned_construct": "v",
+          "construct": "y",
+          "indicator": "v1",
+          "loading": -0.027240945028202408
+        },
+        {
+          "assigned_construct": "v",
+          "construct": "u",
+          "indicator": "v1",
+          "loading": 0.9970874113393474
+        },
+        {
+          "assigned_construct": "v",
+          "construct": "v",
+          "indicator": "v1",
+          "loading": 1.0000000000000004
         }
       ],
       "f_squared": [
@@ -907,6 +1224,13 @@
           "included_r_squared": 0.9992735634447449,
           "source_construct": "m",
           "target_construct": "y"
+        },
+        {
+          "excluded_r_squared": 0.0,
+          "f_squared": 170.91895851028085,
+          "included_r_squared": 0.9941833058514009,
+          "source_construct": "u",
+          "target_construct": "v"
         }
       ],
       "formative_indicator_vif": [],
@@ -915,31 +1239,57 @@
           "x",
           "z",
           "m",
-          "y"
+          "y",
+          "u",
+          "v"
         ],
         "values": [
           [
             1.0000000000000002,
             -0.04011343061118562,
             0.975321061921463,
-            0.9750003558938448
+            0.9750003558938448,
+            -0.021239898648758724,
+            -0.02340766816680932
           ],
           [
             -0.04011343061118562,
             1.0000000000000004,
             0.17885810672072547,
-            0.18051482272969793
+            0.18051482272969793,
+            -0.006328962217226696,
+            0.0012881543679078092
           ],
           [
             0.975321061921463,
             0.17885810672072547,
             1.0,
-            0.9995120292535433
+            0.9995120292535433,
+            -0.030702565932612856,
+            -0.030996158590008278
           ],
           [
             0.9750003558938448,
             0.18051482272969793,
             0.9995120292535433,
+            1.0,
+            -0.02675292107743952,
+            -0.0272409450282024
+          ],
+          [
+            -0.021239898648758724,
+            -0.006328962217226696,
+            -0.030702565932612856,
+            -0.02675292107743952,
+            1.0,
+            0.9970874113393475
+          ],
+          [
+            -0.02340766816680932,
+            0.0012881543679078092,
+            -0.030996158590008278,
+            -0.0272409450282024,
+            0.9970874113393475,
             1.0
           ]
         ]
@@ -968,18 +1318,6 @@
               "reason": "htmt.single_indicator_not_applicable",
               "status": "not_applicable",
               "value": null
-            }
-          ],
-          [
-            {
-              "reason": "htmt.single_indicator_not_applicable",
-              "status": "not_applicable",
-              "value": null
-            },
-            {
-              "reason": "htmt.single_indicator_not_applicable",
-              "status": "not_applicable",
-              "value": null
             },
             {
               "reason": "htmt.single_indicator_not_applicable",
@@ -1012,9 +1350,125 @@
               "reason": "htmt.single_indicator_not_applicable",
               "status": "not_applicable",
               "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
             }
           ],
           [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
             {
               "reason": "htmt.single_indicator_not_applicable",
               "status": "not_applicable",
@@ -1041,7 +1495,9 @@
           "x",
           "z",
           "m",
-          "y"
+          "y",
+          "u",
+          "v"
         ],
         "correlation_type": "pearson"
       },
@@ -1069,18 +1525,6 @@
               "reason": "htmt.single_indicator_not_applicable",
               "status": "not_applicable",
               "value": null
-            }
-          ],
-          [
-            {
-              "reason": "htmt.single_indicator_not_applicable",
-              "status": "not_applicable",
-              "value": null
-            },
-            {
-              "reason": "htmt.single_indicator_not_applicable",
-              "status": "not_applicable",
-              "value": null
             },
             {
               "reason": "htmt.single_indicator_not_applicable",
@@ -1113,9 +1557,125 @@
               "reason": "htmt.single_indicator_not_applicable",
               "status": "not_applicable",
               "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
             }
           ],
           [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            }
+          ],
+          [
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
+            {
+              "reason": "htmt.single_indicator_not_applicable",
+              "status": "not_applicable",
+              "value": null
+            },
             {
               "reason": "htmt.single_indicator_not_applicable",
               "status": "not_applicable",
@@ -1142,7 +1702,9 @@
           "x",
           "z",
           "m",
-          "y"
+          "y",
+          "u",
+          "v"
         ],
         "correlation_type": "pearson"
       },
@@ -1150,16 +1712,17 @@
       "method_version": "pls_assessment_v7",
       "model_fit": {
         "estimated": {
-          "d_uls": 2.8161910611802356e-31,
-          "srmr": 1.6781510841340346e-16
+          "d_uls": 0.0002557389553527326,
+          "srmr": 0.003489705645607845
         },
         "saturated": {
-          "d_uls": 5.212047911997957e-31,
-          "srmr": 2.2829910012958785e-16
+          "d_uls": 8.325654090263922e-31,
+          "srmr": 1.991129625574378e-16
         }
       },
       "r_squared": {
         "m": 0.9988437238167035,
+        "v": 0.9941833058514009,
         "y": 0.9992735634447449
       },
       "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
@@ -1175,6 +1738,12 @@
           "construct": "y",
           "predictor_count": 3,
           "r_squared": 0.9992735634447449
+        },
+        {
+          "adjusted_r_squared": 0.9941087328494957,
+          "construct": "v",
+          "predictor_count": 1,
+          "r_squared": 0.9941833058514009
         }
       ],
       "structural_vif": [
@@ -1202,6 +1771,11 @@
           "predictor_construct": "m",
           "target_construct": "y",
           "vif": 864.8452804316671
+        },
+        {
+          "predictor_construct": "u",
+          "target_construct": "v",
+          "vif": 1.0
         }
       ],
       "warnings": [
@@ -1212,7 +1786,11 @@
         "rho_a.single_indicator_not_identified for construct 'm'",
         "Cronbach alpha is undefined for single-item construct 'm'",
         "rho_a.single_indicator_not_identified for construct 'y'",
-        "Cronbach alpha is undefined for single-item construct 'y'"
+        "Cronbach alpha is undefined for single-item construct 'y'",
+        "rho_a.single_indicator_not_identified for construct 'u'",
+        "Cronbach alpha is undefined for single-item construct 'u'",
+        "rho_a.single_indicator_not_identified for construct 'v'",
+        "Cronbach alpha is undefined for single-item construct 'v'"
       ]
     }
   }

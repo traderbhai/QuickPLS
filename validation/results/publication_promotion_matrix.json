@@ -36,55 +36,73 @@
           "path": "docs/methods/PLS_PM_V1.md",
           "purpose": "method specification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/pls_csem_comparison.json",
           "purpose": "cSEM reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/pls_plspm_comparison.json",
           "purpose": "python-plspm reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/pls_pca_numpy_comparison.json",
           "purpose": "NumPy PCA weighting reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/pls_csem_threecommonfactors_comparison.json",
           "purpose": "published cSEM fixture",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/pls_publication_audit.json",
           "purpose": "publication audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/pls_core_method_promotion_audit.json",
           "purpose": "v1.2 PLS core promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/stable_export_publication_audit.json",
           "purpose": "stable export audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "docs/KNOWN_DIFFERENCES.md",
           "purpose": "known differences",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
@@ -96,7 +114,8 @@
       "artifact_summary": {
         "required": 9,
         "present": 9,
-        "missing": []
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -121,61 +140,81 @@
           "path": "validation/results/assessment_publication_audit.json",
           "purpose": "publication audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/assessment_method_promotion_audit.json",
           "purpose": "v1.2 assessment promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/assessment_publication_metric_matrix.json",
           "purpose": "metric matrix",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/v04_assessment_evidence.json",
           "purpose": "assessment evidence index",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/rho_a_primary_dijkstra_henseler_2015.json",
           "purpose": "primary-paper rho_A evidence",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/rho_a_csem_comparison.json",
           "purpose": "cSEM rho_A reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/htmt_csem_comparison.json",
           "purpose": "cSEM HTMT reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/htmt_seminr_comparison.json",
           "purpose": "seminr HTMT+ reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/assessment_csem_comparison.json",
           "purpose": "cSEM assessment reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "docs/KNOWN_DIFFERENCES.md",
           "purpose": "known differences",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
@@ -187,7 +226,8 @@
       "artifact_summary": {
         "required": 10,
         "present": 10,
-        "missing": []
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -213,55 +253,73 @@
           "path": "validation/results/inference_publication_audit.json",
           "purpose": "publication audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/inference_method_promotion_audit.json",
           "purpose": "v1.2 inference promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/inference_publication_matrix.json",
           "purpose": "procedure matrix",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/monte_carlo_qualification.json",
           "purpose": "percentile/BCa Monte Carlo qualification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/monte_carlo_studentized_qualification.json",
           "purpose": "studentized Monte Carlo qualification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/studentized_worker_matrix.json",
           "purpose": "worker invariance",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/studentized_release_stress.json",
           "purpose": "release-stress benchmark",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/pls_bootstrap_external_reference.json",
           "purpose": "cSEM matched resample reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/pls_bootstrap_plspm_external_reference.json",
           "purpose": "python-plspm matched resample reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
@@ -273,7 +331,8 @@
       "artifact_summary": {
         "required": 9,
         "present": 9,
-        "missing": []
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -281,8 +340,8 @@
       "id": "pca",
       "family": "Components",
       "method": "Standalone PCA",
-      "current_status": "experimental",
-      "target_status": "validated",
+      "current_status": "validated_packaged_native_bounded_scope",
+      "target_status": "validated_packaged_native_bounded_scope",
       "promotion_batch": 1,
       "candidate_scope": "Standardized numeric raw-data PCA with deterministic sign orientation, eigenvalues, explained variance, loadings, weights, scores, and documented retention rules.",
       "required_evidence": [
@@ -291,6 +350,7 @@
         "missing/constant/high-dimensional guards",
         "component sign and order metamorphic checks",
         "GUI/CLI/export parity",
+        "strict append/save/reopen and genuine packaged-native workflow",
         "known-difference note for sign orientation"
       ],
       "artifacts": [
@@ -298,43 +358,70 @@
           "path": "docs/methods/PCA_V1.md",
           "purpose": "method specification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/pca_method_promotion_audit.json",
           "purpose": "v1.2 PCA promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/v08_extended_methods_reference_report.json",
           "purpose": "integrated NumPy/Python reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/extended_methods_publication_audit.json",
           "purpose": "publication audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
+        },
+        {
+          "path": "validation/results/v247_native_desktop_visual_acceptance.json",
+          "purpose": "responsive native setup evidence",
+          "required": true,
+          "present": true,
+          "require_passed": true,
+          "passed": true
+        },
+        {
+          "path": "validation/results/v247_tauri_native_acceptance.json",
+          "purpose": "packaged native run/export/save/reopen evidence",
+          "required": true,
+          "present": true,
+          "require_passed": true,
+          "passed": true
         },
         {
           "path": "docs/KNOWN_DIFFERENCES.md",
           "purpose": "known differences",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
       "scope_decisions": [
         "Standalone PCA is promoted for standardized numeric raw-data PCA with listwise deletion and deterministic sign orientation.",
         "Rotation methods, pairwise deletion, covariance/correlation-only input, nonnumeric variables, and inference remain excluded.",
-        "Logistic regression, PROCESS, NCA, and GSCA remain separate v0.8 experimental methods."
+        "The native PCA workflow is model-free and table-only; full scores are materialized for export rather than duplicated in the ordinary Results surface."
       ],
       "artifact_summary": {
-        "required": 5,
-        "present": 5,
-        "missing": []
+        "required": 7,
+        "present": 7,
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -342,42 +429,67 @@
       "id": "ols_regression",
       "family": "Regression",
       "method": "OLS regression",
-      "current_status": "experimental",
-      "target_status": "validated",
+      "current_status": "validated_packaged_native_bounded_scope",
+      "target_status": "validated_packaged_native_bounded_scope",
       "promotion_batch": 1,
-      "candidate_scope": "OLS with intercept, controls, HC0/HC3/HC4 standard errors, confidence intervals, fit diagnostics, predictions, residual diagnostics, and documented rank-deficiency guards.",
+      "candidate_scope": "Raw numeric OLS with intercept, optional controls, listwise deletion, fixed HC3 standard errors, two-sided 95% intervals, fit diagnostics, fitted values, residuals, and rank-deficiency guards.",
       "required_evidence": [
         "independent Python reference",
         "R lm/sandwich/lmtest reference",
         "rank deficiency and collinearity guards",
         "robust-SE formula tests",
-        "bootstrap interval qualification if promoted",
-        "GUI/CLI/export parity"
+        "strict append/save/reopen contract",
+        "responsive native setup and genuine packaged execution",
+        "table-only fitted/residual XLSX export"
       ],
       "artifacts": [
         {
           "path": "docs/methods/REGRESSION_OLS_V1.md",
           "purpose": "method specification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/ols_method_promotion_audit.json",
-          "purpose": "v1.2 OLS promotion audit",
+          "purpose": "strict v1.2 OLS promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": true,
+          "passed": true
         },
         {
           "path": "validation/results/v08_extended_methods_reference_report.json",
           "purpose": "integrated Python reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/extended_methods_publication_audit.json",
           "purpose": "publication audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
+        },
+        {
+          "path": "validation/results/v247_native_desktop_visual_acceptance.json",
+          "purpose": "responsive native OLS setup evidence",
+          "required": true,
+          "present": true,
+          "require_passed": true,
+          "passed": true
+        },
+        {
+          "path": "validation/results/v247_tauri_native_acceptance.json",
+          "purpose": "packaged-native OLS evidence consumed by the strict audit",
+          "required": true,
+          "present": true,
+          "require_passed": true,
+          "passed": true
         }
       ],
       "blocking_questions": [],
@@ -387,9 +499,10 @@
         "HC0 and HC4 public claims remain excluded until the engine honors robust_se selection."
       ],
       "artifact_summary": {
-        "required": 4,
-        "present": 4,
-        "missing": []
+        "required": 6,
+        "present": 6,
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -414,43 +527,57 @@
           "path": "docs/methods/MEDIATION_V1.md",
           "purpose": "method specification alias",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/mediation_method_promotion_audit.json",
           "purpose": "v1.2.1 mediation promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/mediation_reference_report.json",
           "purpose": "independent Python reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/mediation_r_reference_report.json",
           "purpose": "R base-lm reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/mediation_published_example_report.json",
           "purpose": "published example",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/mediation_metamorphic_report.json",
           "purpose": "metamorphic evidence",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/mediation_randomization_report.json",
           "purpose": "randomization evidence",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
@@ -460,7 +587,8 @@
       "artifact_summary": {
         "required": 7,
         "present": 7,
-        "missing": []
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -485,55 +613,73 @@
           "path": "docs/methods/TWO_STAGE_MODERATION_V1.md",
           "purpose": "method specification alias",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/moderation_method_promotion_audit.json",
           "purpose": "v1.2.1 moderation promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/moderation_reference_report.json",
           "purpose": "independent reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/moderation_r_reference_report.json",
           "purpose": "R reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/moderation_published_formula_report.json",
           "purpose": "published formula fixture",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/moderation_published_empirical_report.json",
           "purpose": "published empirical fixture",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/moderation_simulation_report.json",
           "purpose": "simulation evidence",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/moderation_inference_qualification_report.json",
           "purpose": "inference qualification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/moderation_coverage_qualification_report.json",
           "purpose": "coverage qualification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
@@ -543,7 +689,8 @@
       "artifact_summary": {
         "required": 9,
         "present": 9,
-        "missing": []
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -563,44 +710,64 @@
       ],
       "artifacts": [
         {
-          "path": "docs/methods/PLSC_V1.md",
-          "purpose": "method specification",
+          "path": "docs/methods/PLSC_V2.md",
+          "purpose": "current method specification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
+        },
+        {
+          "path": "docs/methods/PLSC_V1.md",
+          "purpose": "legacy compatibility disclosure",
+          "required": true,
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/plsc_method_promotion_audit.json",
           "purpose": "v1.2.1 PLSc promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/plsc_reference_report.json",
           "purpose": "independent reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/plsc_unsupported_guard_report.json",
           "purpose": "unsupported guard evidence",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/rho_a_csem_comparison.json",
           "purpose": "rho_A second source",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
       "scope_decisions": [
-        "Formative PLSc and PCA-weighting PLSc remain unsupported."
+        "Formative PLSc and PCA-weighting PLSc remain unsupported.",
+        "plsc_v1 remains readable as a flagged legacy result; new analyses emit canonical plsc_v2."
       ],
       "artifact_summary": {
-        "required": 5,
-        "present": 5,
-        "missing": []
+        "required": 6,
+        "present": 6,
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -623,19 +790,25 @@
           "path": "docs/methods/PLS_WPLS_V1.md",
           "purpose": "method specification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/wpls_method_promotion_audit.json",
           "purpose": "v1.2.1 WPLS promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/wpls_reference_report.json",
           "purpose": "independent reference and guards",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
@@ -645,52 +818,71 @@
       "artifact_summary": {
         "required": 3,
         "present": 3,
-        "missing": []
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
     {
       "id": "ipma",
       "family": "Prediction",
-      "method": "IPMA / cIPMA",
-      "current_status": "experimental",
-      "target_status": "validated",
+      "method": "Importance-Performance Map Analysis (IPMA)",
+      "current_status": "ipma_v1_packaged_native_validated_bounded_scope",
+      "target_status": "packaged_native_validated_bounded_scope",
       "promotion_batch": 2,
-      "candidate_scope": "Bounded IPMA using PLS total effects as importance and 0-100 standardized-score performance.",
+      "candidate_scope": "Bounded predecessor-only IPMA using PLS total effects as importance and observed-sample 0-100 performance from listwise-standardized scores.",
       "required_evidence": [
         "method spec",
         "independent Python reference",
-        "target-selection checks",
-        "product/export enforcement"
+        "target/unrelated exclusion checks",
+        "exact provenance and scale",
+        "strict project persistence",
+        "native setup/results/export source contract",
+        "packaged native run/export/save/reopen"
       ],
       "artifacts": [
         {
           "path": "docs/methods/IPMA_V1.md",
           "purpose": "method specification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/ipma_method_promotion_audit.json",
           "purpose": "v1.2.1 IPMA promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": true,
+          "passed": true
         },
         {
           "path": "validation/results/ipma_reference_report.json",
           "purpose": "independent reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
+        },
+        {
+          "path": "validation/results/v247_tauri_native_acceptance.json",
+          "purpose": "packaged native acceptance artifact",
+          "required": true,
+          "present": true,
+          "require_passed": true,
+          "passed": true
         }
       ],
       "blocking_questions": [],
       "scope_decisions": [
-        "Broader cIPMA extensions remain unsupported."
+        "Theoretical-range correction, alternate SmartPLS map representations, NCA integration, and cIPMA remain unsupported."
       ],
       "artifact_summary": {
-        "required": 3,
-        "present": 3,
-        "missing": []
+        "required": 4,
+        "present": 4,
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -698,44 +890,68 @@
       "id": "plspredict",
       "family": "Prediction",
       "method": "PLSpredict / CVPAT",
-      "current_status": "experimental",
-      "target_status": "validated",
+      "current_status": "packaged_native_validated_bounded_scope",
+      "target_status": "packaged_native_validated_bounded_scope",
       "promotion_batch": 2,
-      "candidate_scope": "Deterministic holdout, repeated k-fold, construct-score LM benchmark, Q2 predict, RMSE/MAE, and bounded CVPAT diagnostics.",
+      "candidate_scope": "Indicator-level endogenous prediction with train-only preprocessing, fixed seeded balanced 10-fold by 10-repeat complete-case validation, IA and LM benchmarks, one-sided 95% single-model CVPAT, supplementary construct scores, and a secondary deterministic modulo-4 holdout.",
       "required_evidence": [
-        "method spec",
-        "leakage-free independent reference",
-        "CVPAT checks",
-        "product/export enforcement"
+        "current and legacy method specs",
+        "independent indicator and CVPAT reference",
+        "strict append/save/reopen/tamper tests",
+        "native result and export enforcement",
+        "genuine packaged-native run/export/reopen evidence"
       ],
       "artifacts": [
         {
-          "path": "docs/methods/PLSPREDICT_V1.md",
-          "purpose": "method specification alias",
+          "path": "docs/methods/PLSPREDICT_INDICATOR_V2.md",
+          "purpose": "current bounded indicator prediction and CVPAT specification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
+        },
+        {
+          "path": "docs/methods/PLSPREDICT_HOLDOUT_V1.md",
+          "purpose": "legacy archive compatibility specification",
+          "required": true,
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/plspredict_method_promotion_audit.json",
-          "purpose": "v1.2.1 PLSpredict promotion audit",
+          "purpose": "strict current prediction promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": true,
+          "passed": true
         },
         {
-          "path": "validation/results/plspredict_holdout_reference_report.json",
-          "purpose": "independent reference",
+          "path": "validation/results/plspredict_indicator_reference_report.json",
+          "purpose": "independent indicator prediction and paired CVPAT reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": true,
+          "passed": true
+        },
+        {
+          "path": "validation/results/v247_tauri_native_acceptance.json",
+          "purpose": "packaged native run/export/save/reopen evidence",
+          "required": true,
+          "present": true,
+          "require_passed": true,
+          "passed": true
         }
       ],
       "blocking_questions": [],
       "scope_decisions": [
-        "Separate saved-model CVPAT and indicator-level PLSpredict remain unsupported."
+        "Fold assignment is fixed and seeded rather than SmartPLS-randomized. Separate saved-model comparison, formative endogenous targets, HOCs, interactions, weights, and non-listwise missing handling remain unsupported."
       ],
       "artifact_summary": {
-        "required": 3,
-        "present": 3,
-        "missing": []
+        "required": 5,
+        "present": 5,
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -743,44 +959,73 @@
       "id": "nca",
       "family": "NCA",
       "method": "CE-FDH and CR-FDH",
-      "current_status": "experimental",
-      "target_status": "validated",
+      "current_status": "packaged_native_validated_bounded_scope",
+      "target_status": "packaged_native_validated_bounded_scope",
       "promotion_batch": 2,
-      "candidate_scope": "Numeric X/Y CE-FDH and CR-FDH NCA with deterministic permutation p values and bottleneck tables.",
+      "candidate_scope": "Standalone observed numeric X/Y CE-FDH and CR-FDH NCA v2 with listwise deletion, seeded permutation p values, observed-range bottlenecks, strict archive persistence, no phantom model, bounded native results/export, and no full-parity claim.",
       "required_evidence": [
-        "method spec",
-        "independent Python reference",
-        "constant/nonnumeric guards",
-        "product/export enforcement"
+        "current and legacy method specs",
+        "independent CE/CR Python reference",
+        "recipe and data guards",
+        "strict append/save/reopen/tamper tests",
+        "no-model snapshot test",
+        "native results/export enforcement",
+        "genuine packaged-native run/export/reopen evidence"
       ],
       "artifacts": [
         {
-          "path": "docs/methods/NCA_V1.md",
-          "purpose": "method specification",
+          "path": "docs/methods/NCA_V2.md",
+          "purpose": "current method specification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
+        },
+        {
+          "path": "docs/methods/NCA_V1.md",
+          "purpose": "legacy compatibility and supersession policy",
+          "required": true,
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/nca_method_promotion_audit.json",
-          "purpose": "v1.2.1 NCA promotion audit",
+          "purpose": "strict NCA v2 promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": true,
+          "passed": true
         },
         {
           "path": "validation/results/v08_extended_methods_reference_report.json",
-          "purpose": "integrated independent reference",
+          "purpose": "integrated independent CE-FDH/CR-FDH reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
+        },
+        {
+          "path": "validation/results/v247_tauri_native_acceptance.json",
+          "purpose": "packaged-native evidence consumed by the strict audit",
+          "required": true,
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
       "scope_decisions": [
-        "Broader NCA ceiling variants and nonnumeric variables remain unsupported."
+        "nca_v1 is archive-readable only and is not current scientific evidence; new runs emit nca_v2.",
+        "The qualified backend scope is one observed numeric X and one observed numeric Y with CE-FDH/CR-FDH, listwise deletion, and observed-range bottlenecks.",
+        "Multiple conditions, latent-score NCA, cIPMA integration, categorical/ordinal variables, alternative ceilings, and full SmartPLS or R-package parity remain unsupported.",
+        "Packaged-native promotion is accepted only because the NCA-specific audit now passes; mere artifact presence remains insufficient."
       ],
       "artifact_summary": {
-        "required": 3,
-        "present": 3,
-        "missing": []
+        "required": 5,
+        "present": 5,
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -788,51 +1033,71 @@
       "id": "micom",
       "family": "Groups",
       "method": "MICOM measurement invariance",
-      "current_status": "experimental",
+      "current_status": "validated_micom_v2_bounded_scope",
       "target_status": "validated",
       "promotion_batch": 3,
-      "candidate_scope": "Exactly two observed groups with configural checklist, compositional permutation, and composite mean/variance permutation diagnostics.",
+      "candidate_scope": "MICOM v2 Steps 1-3 for two explicitly ordered groups, with group-specific PLS re-estimation and 5,000-10,000 usable deterministic label permutations.",
       "required_evidence": [
+        "group-specific implementation",
         "method spec",
-        "integrated permutation reference",
+        "independent numerical reference",
         "invariant/non-invariant evidence",
-        "unsupported guards",
-        "product/export enforcement"
+        "strict persistence",
+        "native results/export/reopen enforcement"
       ],
       "artifacts": [
         {
+          "path": "docs/methods/MICOM_V2.md",
+          "purpose": "current bounded method specification",
+          "required": true,
+          "present": true,
+          "require_passed": false,
+          "passed": null
+        },
+        {
           "path": "docs/methods/MICOM_V1.md",
-          "purpose": "method specification",
+          "purpose": "withdrawn legacy compatibility disclosure",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
-          "path": "validation/results/v06_group_methods_reference_report.json",
-          "purpose": "integrated group-method reference",
+          "path": "validation/results/micom_v2_reference_report.json",
+          "purpose": "independent v2 numerical comparison",
           "required": true,
-          "present": true
-        },
-        {
-          "path": "validation/results/prediction_heterogeneity_publication_audit.json",
-          "purpose": "publication audit",
-          "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/micom_method_promotion_audit.json",
-          "purpose": "v1.2.2 MICOM promotion audit",
+          "purpose": "strict MICOM v2 promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
+        },
+        {
+          "path": "validation/results/v247_tauri_native_acceptance.json",
+          "purpose": "packaged native run, XLSX export, save, and reopen evidence",
+          "required": true,
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
       "scope_decisions": [
-        "More than two groups and broader invariance claims remain unsupported."
+        "Historical micom_v1 payloads remain legacy-only and are not validated evidence.",
+        "MICOM v2 runs only with path weighting, standardized listwise data, explicit configural confirmation, and the joint permutation-MGA v2 plan.",
+        "Failed Step 2 blocks an invariance-supported MGA interpretation for that composite; failed Step 3 blocks full-invariance and pooling claims."
       ],
       "artifact_summary": {
-        "required": 4,
-        "present": 4,
-        "missing": []
+        "required": 5,
+        "present": 5,
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -840,51 +1105,68 @@
       "id": "mga_permutation",
       "family": "Groups",
       "method": "Two-group permutation MGA",
-      "current_status": "experimental",
+      "current_status": "validated_v2_bounded_scope",
       "target_status": "validated",
       "promotion_batch": 3,
-      "candidate_scope": "Two observed groups with group-specific PLS re-estimation, deterministic label permutation, empirical p values, and MICOM warning enforcement.",
+      "candidate_scope": "Two observed groups with group-specific PLS re-estimation, deterministic label permutation, empirical p values for paths/loadings/weights, and the companion MICOM v2 hierarchy.",
       "required_evidence": [
-        "method spec",
+        "v2 method spec",
         "independent reference",
         "integrated permutation fixture",
-        "worker invariance",
-        "product/export enforcement"
+        "strict persistence",
+        "native product/export enforcement"
       ],
       "artifacts": [
         {
+          "path": "docs/methods/PLS_MGA_PERMUTATION_V2.md",
+          "purpose": "current method specification",
+          "required": true,
+          "present": true,
+          "require_passed": false,
+          "passed": null
+        },
+        {
           "path": "docs/methods/PLS_MGA_PERMUTATION_V1.md",
-          "purpose": "method specification",
+          "purpose": "legacy compatibility disclosure",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
-          "path": "validation/results/mga_reference_report.json",
-          "purpose": "bounded MGA reference",
+          "path": "validation/results/micom_v2_reference_report.json",
+          "purpose": "joint independent MICOM/MGA v2 reference",
           "required": true,
-          "present": true
-        },
-        {
-          "path": "validation/results/v06_group_methods_reference_report.json",
-          "purpose": "integrated permutation reference",
-          "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/mga_permutation_method_promotion_audit.json",
-          "purpose": "v1.2.2 permutation MGA promotion audit",
+          "purpose": "strict permutation-MGA v2 promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
+        },
+        {
+          "path": "validation/results/v247_tauri_native_acceptance.json",
+          "purpose": "packaged native run, XLSX export, save, and reopen evidence",
+          "required": true,
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
       "scope_decisions": [
-        "Approximate normal path-difference diagnostics remain descriptive; publication interpretation should prefer permutation output."
+        "Approximate-normal diagnostics are omitted from the native report; inference uses the deterministic two-tailed permutation tables and must be interpreted with the MICOM hierarchy."
       ],
       "artifact_summary": {
-        "required": 4,
-        "present": 4,
-        "missing": []
+        "required": 5,
+        "present": 5,
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -908,25 +1190,33 @@
           "path": "docs/methods/PLS_POS_V1.md",
           "purpose": "method specification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/segmentation_recovery_simulation_report.json",
           "purpose": "segmentation recovery and null-screen evidence",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/v06_group_methods_reference_report.json",
           "purpose": "integrated POS fixture",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/pls_pos_method_promotion_audit.json",
           "purpose": "v1.2.2 PLS-POS promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
@@ -936,7 +1226,8 @@
       "artifact_summary": {
         "required": 4,
         "present": 4,
-        "missing": []
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -960,19 +1251,25 @@
           "path": "docs/methods/FIMIX_PLS_V1.md",
           "purpose": "method specification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/v06_group_methods_reference_report.json",
           "purpose": "integrated FIMIX fixture",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/fimix_pls_method_promotion_audit.json",
           "purpose": "v1.2.2 FIMIX-PLS promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
@@ -982,7 +1279,8 @@
       "artifact_summary": {
         "required": 3,
         "present": 3,
-        "missing": []
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -1006,25 +1304,33 @@
           "path": "docs/methods/REGRESSION_LOGISTIC_V1.md",
           "purpose": "method specification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/v08_extended_methods_reference_report.json",
           "purpose": "integrated Python reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/extended_methods_publication_audit.json",
           "purpose": "publication audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/logistic_method_promotion_audit.json",
           "purpose": "v1.2.2 logistic promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
@@ -1034,7 +1340,8 @@
       "artifact_summary": {
         "required": 4,
         "present": 4,
-        "missing": []
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -1058,31 +1365,41 @@
           "path": "docs/methods/PROCESS_V1.md",
           "purpose": "method specification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/v08_extended_methods_reference_report.json",
           "purpose": "integrated Python reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/mediation_method_promotion_audit.json",
           "purpose": "mediation evidence",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/moderation_method_promotion_audit.json",
           "purpose": "moderation evidence",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/process_method_promotion_audit.json",
           "purpose": "v1.2.2 PROCESS promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
@@ -1092,7 +1409,8 @@
       "artifact_summary": {
         "required": 5,
         "present": 5,
-        "missing": []
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -1115,49 +1433,65 @@
           "path": "docs/methods/PLS_HIGHER_ORDER_V1.md",
           "purpose": "method specification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "docs/methods/HIGHER_ORDER_CONSTRUCTS_V1.md",
           "purpose": "method alias",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/higher_order_method_promotion_audit.json",
           "purpose": "v1.2.3 HOC promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/higher_order_reference_report.json",
           "purpose": "repeated-indicator reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/higher_order_metamorphic_report.json",
           "purpose": "metamorphic evidence",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/higher_order_two_stage_reference_report.json",
           "purpose": "two-stage reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/higher_order_hybrid_reference_report.json",
           "purpose": "hybrid reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/higher_order_hybrid_guard_report.json",
           "purpose": "invalid hybrid guard",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
@@ -1167,7 +1501,8 @@
       "artifact_summary": {
         "required": 8,
         "present": 8,
-        "missing": []
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -1189,25 +1524,33 @@
           "path": "docs/methods/PLS_NONLINEAR_EFFECTS_V1.md",
           "purpose": "method specification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "docs/methods/NONLINEAR_EFFECTS_V1.md",
           "purpose": "method alias",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/nonlinear_effects_method_promotion_audit.json",
           "purpose": "v1.2.3 nonlinear promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/nonlinear_effects_reference_report.json",
           "purpose": "independent reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
@@ -1217,7 +1560,8 @@
       "artifact_summary": {
         "required": 4,
         "present": 4,
-        "missing": []
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -1239,25 +1583,33 @@
           "path": "docs/methods/PLS_GAUSSIAN_COPULA_ENDOGENEITY_V1.md",
           "purpose": "method specification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "docs/methods/GAUSSIAN_COPULA_ENDOGENEITY_V1.md",
           "purpose": "method alias",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/endogeneity_method_promotion_audit.json",
           "purpose": "v1.2.3 endogeneity promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/endogeneity_reference_report.json",
           "purpose": "independent reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
@@ -1267,7 +1619,8 @@
       "artifact_summary": {
         "required": 4,
         "present": 4,
-        "missing": []
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -1289,25 +1642,33 @@
           "path": "docs/methods/PLS_CCA_V1.md",
           "purpose": "method specification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "docs/methods/CCA_V1.md",
           "purpose": "method alias",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/cca_method_promotion_audit.json",
           "purpose": "v1.2.3 CCA promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/cca_reference_report.json",
           "purpose": "independent reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
@@ -1317,7 +1678,8 @@
       "artifact_summary": {
         "required": 4,
         "present": 4,
-        "missing": []
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -1339,25 +1701,33 @@
           "path": "docs/methods/PLS_CTA_PLS_V1.md",
           "purpose": "method specification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "docs/methods/CTA_PLS_V1.md",
           "purpose": "method alias",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/cta_pls_method_promotion_audit.json",
           "purpose": "v1.2.3 CTA-PLS promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/cta_pls_reference_report.json",
           "purpose": "independent reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
@@ -1367,7 +1737,8 @@
       "artifact_summary": {
         "required": 4,
         "present": 4,
-        "missing": []
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -1389,25 +1760,33 @@
           "path": "docs/methods/PLS_MODERATED_MEDIATION_V1.md",
           "purpose": "method specification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "docs/methods/MODERATED_MEDIATION_V1.md",
           "purpose": "method alias",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/moderated_mediation_method_promotion_audit.json",
           "purpose": "v1.2.3 moderated mediation promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/moderated_mediation_reference_report.json",
           "purpose": "independent reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
@@ -1417,7 +1796,8 @@
       "artifact_summary": {
         "required": 4,
         "present": 4,
-        "missing": []
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -1440,37 +1820,49 @@
           "path": "docs/methods/CBSEM_ML_V1.md",
           "purpose": "SEM method specification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "docs/methods/CFA_ML_V1.md",
           "purpose": "CFA method specification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/cbsem_cfa_method_promotion_audit.json",
           "purpose": "v1.2.4 CB-SEM/CFA promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/cbsem_lavaan_reference_report.json",
           "purpose": "lavaan reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/v07_cbsem_evidence.json",
           "purpose": "CB-SEM evidence index",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/cbsem_publication_audit.json",
           "purpose": "publication audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
@@ -1480,7 +1872,8 @@
       "artifact_summary": {
         "required": 6,
         "present": 6,
-        "missing": []
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     },
@@ -1502,25 +1895,33 @@
           "path": "docs/methods/GSCA_V1.md",
           "purpose": "method specification",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/gsca_method_promotion_audit.json",
           "purpose": "v1.2.4 GSCA promotion audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/v08_extended_methods_reference_report.json",
           "purpose": "integrated reference",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         },
         {
           "path": "validation/results/extended_methods_publication_audit.json",
           "purpose": "publication audit",
           "required": true,
-          "present": true
+          "present": true,
+          "require_passed": false,
+          "passed": null
         }
       ],
       "blocking_questions": [],
@@ -1530,7 +1931,8 @@
       "artifact_summary": {
         "required": 4,
         "present": 4,
-        "missing": []
+        "missing": [],
+        "failed": []
       },
       "promotion_ready": true
     }

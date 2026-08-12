@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "milestone": "v2_7_0_visual_issue_register",
+  "generated_at": "2026-07-30T02:54:57.640Z",
+  "source": "automated v2.7 rendered shell smoke",
+  "viewports": [
+    "1440x900",
+    "1280x800"
+  ],
+  "open_issues": [],
+  "next_review_focus": "No launch-blocking rendered shell issues detected in the v2.7 smoke set."
+}

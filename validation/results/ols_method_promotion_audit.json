@@ -18,8 +18,12 @@
     "independent_python_hc3_reference": true,
     "r_lm_hc3_reference": true,
     "rank_deficiency_guard": true,
-    "integrated_v08_ols_reference": true,
-    "method_compatibility_updated": true
+    "retained_v08_ols_artifact": true,
+    "method_compatibility_updated": true,
+    "strict_project_persistence_contract": true,
+    "responsive_native_setup": true,
+    "genuine_packaged_native_workflow": true,
+    "bounded_method_note": true
   },
   "max_abs_difference_python": 3.019806626980426e-14,
   "r_reference": {
@@ -37,5 +41,11 @@
     "failed": true,
     "stderr_tail": "Error: PLS estimation failed: rank-deficient regression for construct: y\n"
   },
-  "quickpls_output": "validation\\results\\ols_promotion_main_quickpls.json"
+  "quickpls_output": "validation\\results\\ols_promotion_main_quickpls.json",
+  "packaged_native": {
+    "report": "validation\\results\\v247_tauri_native_acceptance.json",
+    "run_id": "58ae3252-f3cf-4ae1-bc81-d22f3edc3f5c",
+    "xlsx": "D:\\QuickPLS\\validation\\results\\v247-native-ols-20260812-030120455.xlsx",
+    "same_run_reopened": true
+  }
 }

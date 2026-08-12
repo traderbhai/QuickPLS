@@ -1,12 +1,17 @@
 {
   "schema_version": 1,
   "target": "v1_2_method_promotion_program",
-  "passed": true,
+  "passed": false,
   "artifacts": [
     {
       "path": "validation\\results\\method_promotion_matrix_v1_2.json",
       "present": true,
-      "passed": true
+      "passed": false
+    },
+    {
+      "path": "validation\\results\\second_batch_method_promotion_audit.json",
+      "present": true,
+      "passed": false
     },
     {
       "path": "validation\\results\\fourth_batch_method_promotion_audit.json",
@@ -20,6 +25,6 @@
     }
   ],
   "registry_gate_present": true,
-  "registry_gate_all_passed": true,
-  "note": "All v1.2 method-promotion batches are complete for documented bounded scopes; unsupported variants remain excluded by method docs and product warnings."
+  "registry_gate_all_passed": false,
+  "note": "Completion requires every included batch audit and the promotion matrix to pass. The program remains open while the IPMA packaged-native acceptance check is missing."
 }

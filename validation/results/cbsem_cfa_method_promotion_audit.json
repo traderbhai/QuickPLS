@@ -2,7 +2,7 @@
   "schema_version": 1,
   "target": "v1_2_4_cbsem_gsca_promotion",
   "method_id": "cbsem_cfa",
-  "promoted_scope": "Raw-data single-group reflective CFA/SEM ML with marker identification, standardized solutions, residuals, fit indices, and modification-index diagnostics.",
+  "promoted_scope": "Raw-data single-group reflective CFA/recursive SEM ML with marker identification, standardized solutions, residuals, fit indices, and residual-based modification screening.",
   "passed": true,
   "reports": [
     {
@@ -11,12 +11,17 @@
       "passed": true
     },
     {
-      "path": "validation\\results\\v07_cbsem_evidence.json",
+      "path": "validation\\results\\cbsem_publication_audit.json",
       "present": true,
       "passed": true
     },
     {
-      "path": "validation\\results\\cbsem_publication_audit.json",
+      "path": "validation\\results\\v247_native_desktop_visual_acceptance.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\v247_tauri_native_acceptance.json",
       "present": true,
       "passed": true
     }
@@ -25,22 +30,22 @@
     {
       "path": "docs\\methods\\CBSEM_ML_V1.md",
       "present": true,
-      "bytes": 1871
+      "bytes": 2059
     },
     {
       "path": "docs\\methods\\CFA_ML_V1.md",
       "present": true,
-      "bytes": 1455
+      "bytes": 1592
     },
     {
       "path": "docs\\methods\\CBSEM_FIT_V1.md",
       "present": true,
-      "bytes": 1115
+      "bytes": 1236
     },
     {
       "path": "docs\\methods\\CBSEM_MODIFICATION_INDICES_V1.md",
       "present": true,
-      "bytes": 995
+      "bytes": 1369
     }
   ],
   "checks": [
@@ -55,9 +60,29 @@
       "detail": "Max lavaan fit delta = 6.2049907365024914e-09."
     },
     {
+      "name": "exact_method_provenance",
+      "passed": true,
+      "detail": "CFA and SEM reference envelopes contain only their executed estimator plus fit, residual-screening, mediation, and assessment versions."
+    },
+    {
+      "name": "strict_native_and_archive_contract",
+      "passed": true,
+      "detail": "The mounted native catalog, recipe builder, result tables, and project validator contain the bounded CB-SEM contract."
+    },
+    {
+      "name": "browser_setup_boundary",
+      "passed": true,
+      "detail": "Three responsive browser viewports expose the exact editor and truthfully block the five-case preview without fabricated results."
+    },
+    {
+      "name": "genuine_packaged_native_workflow",
+      "passed": true,
+      "detail": "The packaged desktop authored a 240-case three-factor recursive SEM, completed genuine ML, exported all tables to XLSX, saved the exact typed payload, and reopened the same run."
+    },
+    {
       "name": "advanced_cbsem_exclusions_recorded",
       "passed": true,
-      "detail": "Bootstrap, unrestricted multigroup/invariance, robust/ordinal/FIML, and broad constraints remain experimental or unsupported."
+      "detail": "Bootstrap, unrestricted multigroup/invariance, robust/ordinal/FIML, mean structures, interactions, and higher-order constructs remain unsupported in this native workflow."
     }
   ],
   "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."

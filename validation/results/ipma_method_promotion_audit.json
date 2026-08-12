@@ -2,7 +2,7 @@
   "schema_version": 1,
   "target": "v1_2_1_second_batch_method_promotion",
   "method_id": "ipma",
-  "promoted_scope": "Bounded IPMA/cIPMA using PLS total effects as importance and 0-100 standardized score performance.",
+  "promoted_scope": "Bounded predecessor-only IPMA using exact PLS total effects and observed-sample 0-100 performance from listwise-standardized scores; theoretical-range correction, resampling inference, and cIPMA are excluded.",
   "passed": true,
   "reports": [
     {
@@ -11,7 +11,7 @@
       "passed": true
     },
     {
-      "path": "validation\\results\\prediction_heterogeneity_publication_audit.json",
+      "path": "validation\\results\\v247_tauri_native_acceptance.json",
       "present": true,
       "passed": true
     }
@@ -20,9 +20,40 @@
     {
       "path": "docs\\methods\\IPMA_V1.md",
       "present": true,
-      "bytes": 1687
+      "bytes": 3153
     }
   ],
-  "checks": [],
+  "checks": [
+    {
+      "name": "canonical_independent_reference",
+      "passed": true,
+      "detail": "The independent fixture must prove exact predecessor-only identities, target/unrelated exclusion, observed-sample 0-100 scaling, nested version, and full provenance version."
+    },
+    {
+      "name": "canonical_engine_contract",
+      "passed": true,
+      "detail": "Core, estimator, and runner sources must freeze target resolution, predecessor selection, fixed settings, scale identity, limitation warning, and exact IPMA provenance."
+    },
+    {
+      "name": "strict_project_persistence",
+      "passed": true,
+      "detail": "qpls-project must validate exact IPMA rows, algebra, scale, versions, and unsupported-shape exclusions and must reject tampering across save/reopen."
+    },
+    {
+      "name": "native_setup_results_and_export_contract",
+      "passed": true,
+      "detail": "Native source and integration tests must expose one explicit endogenous target, predecessor-only tables/map, exact provenance, observed-range disclosure, and no fabricated N/A output."
+    },
+    {
+      "name": "packaged_native_workflow",
+      "passed": true,
+      "detail": "A current packaged-Tauri artifact must prove a genuine IPMA setup/run, predecessor-only results, XLSX export, explicit save, and reopen. Source tests and browser fixtures cannot satisfy this check."
+    },
+    {
+      "name": "no_cipma_or_full_smartpls_overclaim",
+      "passed": true,
+      "detail": "Current method and compatibility documentation must explicitly exclude theoretical-range correction, broader SmartPLS representations, NCA integration, resampling inference, and cIPMA."
+    }
+  ],
   "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."
 }

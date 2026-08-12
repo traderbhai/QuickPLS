@@ -61,6 +61,8 @@
   },
   "metadata": {
     "fixture": "independent_mga_reference",
-    "mga_group_column": "group"
+    "mga_group_column": "group",
+    "mga_group_a": "A",
+    "mga_group_b": "B"
   }
 }

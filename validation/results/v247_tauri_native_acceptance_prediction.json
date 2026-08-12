@@ -1,0 +1,599 @@
+{
+  "schemaVersion": 1,
+  "kind": "v247_scoped_tauri_native_acceptance",
+  "passed": true,
+  "runtime": "tauri-webview2-cdp",
+  "endpoint": "http://127.0.0.1:9222",
+  "focusedRun": {
+    "scope": "prediction",
+    "evidenceOrigin": "preserved_from_cumulative_v247_report",
+    "sourceGeneratedAt": "2026-08-12T01:17:58.206Z",
+    "sourceFocusedScope": "gsca"
+  },
+  "checks": {
+    "fixtureProvisioning": {
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\wpls_reference.csv",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-methods-1786470355770-49052.qpls",
+      "projectName": "Native Methods Acceptance",
+      "cli": "D:\\QuickPLS\\target\\release\\qpls.exe",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-methods-1786470355770-49052.qpls",
+      "stderr": ""
+    },
+    "predictionFixture": {
+      "projectPath": "D:\\QuickPLS\\validation\\results\\v247-native-methods-1786470355770-49052.qpls",
+      "status": "ReadyNative Methods Acceptancewpls_reference.csv128 cases0 constructsDataOffline",
+      "cases": 128,
+      "columns": [
+        "#",
+        "x1",
+        "x2",
+        "y1",
+        "y2",
+        "case_wt"
+      ]
+    },
+    "predictionInitialModel": {
+      "projectName": "Native Methods Acceptance",
+      "importedEditableModels": 0,
+      "name": "WPLS Structural Model",
+      "constructs": 0,
+      "structuralPaths": 0
+    },
+    "predictionModel": {
+      "constructs": 2,
+      "assignedIndicators": 4,
+      "paths": 1
+    },
+    "predictionV2Dialog": {
+      "methods": [
+        "PLS-SEM Algorithm",
+        "Consistent PLS",
+        "Weighted PLS",
+        "CCA composite residual diagnostics",
+        "Importance-Performance Map Analysis",
+        "PLS-SEM Bootstrapping",
+        "Structural Path Randomization",
+        "MICOM and Two-Group Permutation MGA",
+        "PLSpredict / CVPAT",
+        "Necessary Condition Analysis"
+      ],
+      "selectedMethod": "PLSpredict / CVPAT",
+      "plan": "Complete cases; seeded balanced 10-fold \u00d7 10-repeat cross-validation; deterministic modulo-4 holdout retained as a secondary check",
+      "targets": "Endogenous indicators are primary; construct-score metrics are supplementary",
+      "benchmarks": "Indicator average (IA) and Linear model (LM, where estimable)",
+      "cvpat": "Single fitted model versus IA/LM benchmarks; one-sided test, 95% confidence; not a comparison of saved models",
+      "seed": 20260718,
+      "confidenceControls": 0,
+      "workerControls": 0,
+      "bootstrapControls": 0,
+      "permutationControls": 0,
+      "startEnabled": true,
+      "blockers": [],
+      "noLegacyClaim": true
+    },
+    "predictionV2Progress": {
+      "status": "queued",
+      "phase": "Queued",
+      "message": "Native engine accepted the calculation job.",
+      "progressValue": "0",
+      "progressMax": "100",
+      "logEntries": 3
+    },
+    "predictionV2Result": {
+      "runId": "7fbd7d7b-3ea7-4c15-857d-c8f144111e1f",
+      "runLabel": "PLSpredict / CVPAT run",
+      "treeIds": [
+        "graphical",
+        "model_estimates",
+        "final_results",
+        "path_coefficients",
+        "outer_loadings",
+        "outer_weights",
+        "r_squared",
+        "total_effects",
+        "quality_criteria",
+        "construct_reliability",
+        "cross_loadings",
+        "fornell_larcker",
+        "htmt_plus",
+        "htmt_original",
+        "structural_quality",
+        "structural_vif",
+        "f_squared",
+        "model_fit",
+        "blindfolding",
+        "prediction",
+        "plspredict_indicator_summary",
+        "cvpat_benchmark_assessment",
+        "plspredict_validation_plan",
+        "plspredict_construct_summary",
+        "plspredict_holdout_indicator_summary",
+        "plspredict_holdout_construct_summary",
+        "plspredict_holdout_split"
+      ],
+      "initialSelection": "plspredict_indicator_summary",
+      "indicator": {
+        "rows": 2,
+        "headers": [
+          "Construct",
+          "Indicator",
+          "Predictor scope",
+          "Predictors",
+          "Observations",
+          "Q\u00b2_predict",
+          "PLS-SEM RMSE",
+          "IA RMSE",
+          "LM RMSE",
+          "PLS-SEM MAE",
+          "IA MAE",
+          "LM MAE",
+          "PLS-SEM MAPE (%)",
+          "IA MAPE (%)",
+          "LM MAPE (%)",
+          "MAPE observations",
+          "LM benchmark"
+        ],
+        "values": [
+          [
+            "Construct 2",
+            "y1",
+            "Earliest antecedent indicators",
+            "2",
+            "1280",
+            "0.6096",
+            "0.4934",
+            "0.7897",
+            "0.4922",
+            "0.3921",
+            "0.6338",
+            "0.3913",
+            "162.8806",
+            "100.8287",
+            "160.5797",
+            "1280",
+            "Available"
+          ],
+          [
+            "Construct 2",
+            "y2",
+            "Earliest antecedent indicators",
+            "2",
+            "1280",
+            "0.5923",
+            "0.4378",
+            "0.6857",
+            "0.4408",
+            "0.3563",
+            "0.5606",
+            "0.3552",
+            "421.6682",
+            "126.1329",
+            "400.6117",
+            "1280",
+            "Available"
+          ]
+        ]
+      },
+      "cvpat": {
+        "rows": 2,
+        "headers": [
+          "Benchmark",
+          "Target scope",
+          "Loss",
+          "Alternative",
+          "Confidence",
+          "PLS-SEM mean loss",
+          "Benchmark mean loss",
+          "Mean loss difference (PLS-SEM \u2212 benchmark)",
+          "SE",
+          "t",
+          "p (one-sided)",
+          "95% CI lower",
+          "95% CI upper",
+          "Complete cases",
+          "Indicators",
+          "Status",
+          "Supported conclusion",
+          "Reason"
+        ],
+        "values": [
+          [
+            "Indicator average (IA)",
+            "All endogenous indicators",
+            "Mean squared prediction loss per complete case",
+            "PLS-SEM loss < benchmark",
+            "95%",
+            "0.2176",
+            "0.5469",
+            "-0.3293",
+            "0.0531",
+            "-6.199",
+            "<0.0001",
+            "-0.4345",
+            "-0.2242",
+            "128",
+            "2",
+            "Available",
+            "PLS-SEM significantly better",
+            ""
+          ],
+          [
+            "Linear model (LM)",
+            "All endogenous indicators",
+            "Mean squared prediction loss per complete case",
+            "PLS-SEM loss < benchmark",
+            "95%",
+            "0.2176",
+            "0.2183",
+            "-0.0007",
+            "0.0049",
+            "-0.142",
+            "0.4437",
+            "-0.0105",
+            "0.0091",
+            "128",
+            "2",
+            "Available",
+            "No statistically supported advantage",
+            ""
+          ]
+        ]
+      },
+      "validationPlan": {
+        "rows": 1,
+        "text": "Primary repeated cross-validation1281010Seeded balanced fold assignmentsha256:5ed221096025758c03acb785b494b1f6cf6908d8f0978ed4eac52f8b88eb9283202607181280"
+      },
+      "properties": {
+        "Method": "PLSpredict / CVPAT",
+        "Status": "Completed",
+        "Complete cases": "128",
+        "Folds": "10",
+        "Repeats": "10",
+        "Recorded seed": "20260718",
+        "CVPAT": "One-sided, 95% confidence",
+        "Completed": "11/8/2026, 11:15:59 pm"
+      },
+      "runDetails": {
+        "properties": {
+          "Run": "PLSpredict / CVPAT run",
+          "Method": "PLSpredict / CVPAT",
+          "Created": "11/8/2026, 11:15:59 pm",
+          "Recorded seed": "20260718",
+          "Dataset fingerprint": "v2:d75b66663df84ea0796aadce1dbc79c75b8112673a83c2713e214b71e98d7991",
+          "Recipe": "e4da723e-8049-4544-8535-2ad1d0e80adc",
+          "Engine": "2.45.0",
+          "Method version": "pls_pm_v1+plspredict_indicator_v2+pls_mediation_v1+pls_assessment_v7",
+          "Weighting": "path",
+          "Preprocessing": "standardized"
+        },
+        "logEntries": 4
+      },
+      "noPlaceholderOrLegacyClaim": true
+    },
+    "predictionV2Export": {
+      "formats": [
+        "CSV tables",
+        "HTML report",
+        "Reviewer pack",
+        "XLSX workbook",
+        "Model diagram",
+        "Print / PDF"
+      ],
+      "xlsxEnabled": true,
+      "nativeXlsx": {
+        "attempted": true,
+        "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-prediction-20260811-231552745.xlsx",
+        "helper": {
+          "ready": {
+            "event": "ready",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 4000228,
+              "pid": 53256,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "main_window_binding",
+            "resultsRoot": "D:\\QuickPLS\\validation\\results",
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-prediction-20260811-231552745.xlsx"
+          },
+          "completion": {
+            "boundControls": {
+              "filenameEditControlId": 1001,
+              "saveButtonControlId": 1
+            },
+            "dialog": {
+              "className": "#32770",
+              "directOwner": 4000228,
+              "handle": 1705354,
+              "pid": 53256,
+              "rootOwner": 4000228,
+              "title": "Save As"
+            },
+            "event": "complete",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 4000228,
+              "pid": 53256,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "xlsx_creation_and_readback",
+            "saveSubmission": {
+              "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-prediction-20260811-231552745.xlsx",
+              "filenameBefore": "quickpls-result-tables",
+              "filenameVerified": true,
+              "saveButtonEnabled": true,
+              "saveButtonVisible": true,
+              "setAttempts": [
+                {
+                  "attempt": 1,
+                  "settledReads": [
+                    "D:\\QuickPLS\\validation\\results\\v247-native-prediction-20260811-231552745.xlsx",
+                    "D:\\QuickPLS\\validation\\results\\v247-native-prediction-20260811-231552745.xlsx"
+                  ]
+                }
+              ],
+              "submissionMethod": "BM_CLICK",
+              "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-prediction-20260811-231552745.xlsx"
+            },
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-prediction-20260811-231552745.xlsx",
+            "workbook": {
+              "path": "D:\\QuickPLS\\validation\\results\\v247-native-prediction-20260811-231552745.xlsx",
+              "requiredSharedStrings": [
+                "Indicator prediction summary (10-fold \ufffd 10-repeat)",
+                "CVPAT benchmark assessment (single model)",
+                "Prediction validation plan",
+                "Run provenance",
+                "Indicator average (IA)",
+                "Linear model (LM)",
+                "Assignment digest",
+                "pls_pm_v1+plspredict_indicator_v2+pls_mediation_v1+pls_assessment_v7",
+                "plspredict_repeated_kfold_indicator_v2",
+                "cvpat_indicator_benchmarks_v2"
+              ],
+              "requiredSheets": [
+                "Indicator prediction summary (1",
+                "CVPAT benchmark assessment (sin",
+                "Prediction validation plan",
+                "Supplementary construct-score p",
+                "Secondary holdout indicator sum",
+                "Secondary holdout construct-sco",
+                "Secondary deterministic holdout",
+                "Run provenance"
+              ],
+              "sha256": "69758586ed7f29c9ae7839e52cbea694eb663c297fab3d0512792521579bcdca",
+              "sheetNames": [
+                "Path coefficients",
+                "Outer loadings",
+                "Outer weights",
+                "R-square",
+                "Total effects",
+                "Construct reliability and valid",
+                "Cross loadings",
+                "Fornell-Larcker criterion",
+                "HTMT+",
+                "Original HTMT",
+                "Structural model",
+                "Inner VIF values",
+                "f-square effect sizes",
+                "Model fit",
+                "Construct cross-validated redun",
+                "Indicator prediction summary (1",
+                "CVPAT benchmark assessment (sin",
+                "Prediction validation plan",
+                "Supplementary construct-score p",
+                "Secondary holdout indicator sum",
+                "Secondary holdout construct-sco",
+                "Secondary deterministic holdout",
+                "Run provenance"
+              ],
+              "size": 23909
+            },
+            "transport": {
+              "exitCode": 0,
+              "signal": null,
+              "stderr": "",
+              "events": [
+                {
+                  "event": "ready",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 4000228,
+                    "pid": 53256,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "main_window_binding",
+                  "resultsRoot": "D:\\QuickPLS\\validation\\results",
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-prediction-20260811-231552745.xlsx"
+                },
+                {
+                  "boundControls": {
+                    "filenameEditControlId": 1001,
+                    "saveButtonControlId": 1
+                  },
+                  "dialog": {
+                    "className": "#32770",
+                    "directOwner": 4000228,
+                    "handle": 1705354,
+                    "pid": 53256,
+                    "rootOwner": 4000228,
+                    "title": "Save As"
+                  },
+                  "event": "complete",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 4000228,
+                    "pid": 53256,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "xlsx_creation_and_readback",
+                  "saveSubmission": {
+                    "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-prediction-20260811-231552745.xlsx",
+                    "filenameBefore": "quickpls-result-tables",
+                    "filenameVerified": true,
+                    "saveButtonEnabled": true,
+                    "saveButtonVisible": true,
+                    "setAttempts": [
+                      {
+                        "attempt": 1,
+                        "settledReads": [
+                          "D:\\QuickPLS\\validation\\results\\v247-native-prediction-20260811-231552745.xlsx",
+                          "D:\\QuickPLS\\validation\\results\\v247-native-prediction-20260811-231552745.xlsx"
+                        ]
+                      }
+                    ],
+                    "submissionMethod": "BM_CLICK",
+                    "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-prediction-20260811-231552745.xlsx"
+                  },
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-prediction-20260811-231552745.xlsx",
+                  "workbook": {
+                    "path": "D:\\QuickPLS\\validation\\results\\v247-native-prediction-20260811-231552745.xlsx",
+                    "requiredSharedStrings": [
+                      "Indicator prediction summary (10-fold \ufffd 10-repeat)",
+                      "CVPAT benchmark assessment (single model)",
+                      "Prediction validation plan",
+                      "Run provenance",
+                      "Indicator average (IA)",
+                      "Linear model (LM)",
+                      "Assignment digest",
+                      "pls_pm_v1+plspredict_indicator_v2+pls_mediation_v1+pls_assessment_v7",
+                      "plspredict_repeated_kfold_indicator_v2",
+                      "cvpat_indicator_benchmarks_v2"
+                    ],
+                    "requiredSheets": [
+                      "Indicator prediction summary (1",
+                      "CVPAT benchmark assessment (sin",
+                      "Prediction validation plan",
+                      "Supplementary construct-score p",
+                      "Secondary holdout indicator sum",
+                      "Secondary holdout construct-sco",
+                      "Secondary deterministic holdout",
+                      "Run provenance"
+                    ],
+                    "sha256": "69758586ed7f29c9ae7839e52cbea694eb663c297fab3d0512792521579bcdca",
+                    "sheetNames": [
+                      "Path coefficients",
+                      "Outer loadings",
+                      "Outer weights",
+                      "R-square",
+                      "Total effects",
+                      "Construct reliability and valid",
+                      "Cross loadings",
+                      "Fornell-Larcker criterion",
+                      "HTMT+",
+                      "Original HTMT",
+                      "Structural model",
+                      "Inner VIF values",
+                      "f-square effect sizes",
+                      "Model fit",
+                      "Construct cross-validated redun",
+                      "Indicator prediction summary (1",
+                      "CVPAT benchmark assessment (sin",
+                      "Prediction validation plan",
+                      "Supplementary construct-score p",
+                      "Secondary holdout indicator sum",
+                      "Secondary holdout construct-sco",
+                      "Secondary deterministic holdout",
+                      "Run provenance"
+                    ],
+                    "size": 23909
+                  }
+                }
+              ],
+              "protocolErrors": []
+            }
+          }
+        },
+        "appFeedback": "Saved v247-native-prediction-20260811-231552745.xlsx.",
+        "file": {
+          "size": 23909,
+          "isFile": true
+        },
+        "workbookSheets": [
+          "Path coefficients",
+          "Outer loadings",
+          "Outer weights",
+          "R-square",
+          "Total effects",
+          "Construct reliability and valid",
+          "Cross loadings",
+          "Fornell-Larcker criterion",
+          "HTMT+",
+          "Original HTMT",
+          "Structural model",
+          "Inner VIF values",
+          "f-square effect sizes",
+          "Model fit",
+          "Construct cross-validated redun",
+          "Indicator prediction summary (1",
+          "CVPAT benchmark assessment (sin",
+          "Prediction validation plan",
+          "Supplementary construct-score p",
+          "Secondary holdout indicator sum",
+          "Secondary holdout construct-sco",
+          "Secondary deterministic holdout",
+          "Run provenance"
+        ]
+      }
+    },
+    "predictionV2SaveReopen": {
+      "expectedRunId": "7fbd7d7b-3ea7-4c15-857d-c8f144111e1f",
+      "selectedRunId": "7fbd7d7b-3ea7-4c15-857d-c8f144111e1f",
+      "sameRunRestored": true,
+      "indicatorRows": 2,
+      "cvpatRows": 2,
+      "archive": {
+        "resultStatus": "completed",
+        "resultMethod": "predict",
+        "resultMethodVersion": "pls_pm_v1+plspredict_indicator_v2+pls_mediation_v1+pls_assessment_v7",
+        "usedObservations": 128,
+        "exactVersions": true,
+        "exactRepeatedPlan": true,
+        "exactIndicatorRows": true,
+        "exactCvpatRows": true,
+        "indicatorCount": 2,
+        "constructCount": 1,
+        "cvpatBenchmarks": [
+          "indicator_average",
+          "linear_model"
+        ],
+        "noLegacyRelabel": true,
+        "recipe": {
+          "status": "validated_plspredict_indicator_v2_and_cvpat_indicator_benchmarks_v2_bounded_scope",
+          "method": "predict",
+          "confidenceLevel": 0.95,
+          "bootstrapSamples": 0,
+          "permutationSamples": 0,
+          "caseWeightColumn": null,
+          "seed": 20260718,
+          "constructs": 2,
+          "paths": 1
+        },
+        "run": {
+          "method": "PLSpredict / CVPAT",
+          "status": "completed",
+          "modelId": "5bb42e79-5354-4729-94ef-4f4018c9cb41",
+          "snapshotNodes": 2,
+          "logs": 4
+        }
+      }
+    }
+  },
+  "screenshots": [
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\90-tauri-native-prediction-fixture-data-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\91-tauri-native-prediction-model-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\92-tauri-native-prediction-dialog-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\93-tauri-native-prediction-running-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\94-tauri-native-prediction-indicator-results-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\95-tauri-native-prediction-cvpat-results-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\96-tauri-native-prediction-export-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\97-tauri-native-prediction-reopened-1536x794.png"
+  ],
+  "consoleErrors": [],
+  "failures": [],
+  "sourceReport": "validation/results/v247_tauri_native_acceptance.json",
+  "note": "This is a lossless method-specific slice of genuine checks accumulated by the shared v247 packaged-Tauri report before scoped-report preservation was added."
+}

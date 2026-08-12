@@ -62,7 +62,9 @@
   "metadata": {
     "fixture": "v06_group_methods_reference",
     "mga_group_column": "group",
-    "group_methods": "micom,mga_permutation",
+    "mga_group_a": "A",
+    "mga_group_b": "B",
+    "group_methods": "mga_permutation",
     "group_permutation_samples": "99"
   }
 }

@@ -2,31 +2,120 @@
   "schema_version": 1,
   "target": "v1_2_1_second_batch_method_promotion",
   "passed": true,
+  "semantics": {
+    "primary_native_catalog": [
+      "cca",
+      "ipma",
+      "mga",
+      "nca",
+      "pls_algorithm",
+      "pls_bootstrap",
+      "pls_permutation",
+      "plsc",
+      "predict",
+      "wpls"
+    ],
+    "native_result_capabilities": [
+      "PLSc",
+      "WPLS",
+      "CCA descriptive residuals",
+      "IPMA predecessor importance/performance",
+      "MGA explicit Group A/B permutation",
+      "MICOM v2 measurement invariance",
+      "PLSpredict / CVPAT v2",
+      "Necessary Condition Analysis v2",
+      "Mediation",
+      "Moderation"
+    ],
+    "bounded_engine_contracts_not_primary_native": [
+      "cbsem",
+      "cta_pls",
+      "endogeneity",
+      "gsca",
+      "moderated_mediation",
+      "nonlinear_effects",
+      "pca",
+      "regression"
+    ],
+    "numeric_validated_native_backlog": [],
+    "packaged_native_promoted": [
+      "cca",
+      "ipma",
+      "mga",
+      "micom_v2",
+      "nca",
+      "plspredict_indicator_v2"
+    ],
+    "bounded_metadata_workflows_not_primary_native": [
+      "fimix",
+      "pls_pos"
+    ],
+    "legacy_only": [
+      "micom_v1",
+      "nca_v1"
+    ]
+  },
   "checks": [
     {
-      "name": "desktop_catalog_promotes_second_batch",
+      "name": "primary_native_catalog_is_exact_and_bounded",
       "passed": true,
-      "detail": "Selectable second-batch methods are validated in the desktop method catalog."
+      "detail": "The default workbench exposes exactly the ten accepted model-bound and model-free native workflows, including bounded MICOM/MGA v2 and NCA v2."
     },
     {
-      "name": "core_registry_promotes_second_batch",
+      "name": "native_second_batch_recipes_are_bounded",
       "passed": true,
-      "detail": "Core method registry promotes second-batch method ids."
+      "detail": "Native recipe descriptors promote only documented PLSc, WPLS, prediction, IPMA, and NCA scopes, with explicit method-specific guards."
     },
     {
-      "name": "result_tables_promote_second_batch",
+      "name": "native_results_cover_second_batch_and_effect_workflows",
       "passed": true,
-      "detail": "Report/export tables mark promoted payloads validated and route run provenance through scope detection."
+      "detail": "Capability-derived native Results expose PLSc, WPLS, bounded prediction, predecessor-only 0-100 IPMA, mediation, and moderation tables only when genuine payload rows exist."
     },
     {
-      "name": "engine_warnings_promoted_scope",
+      "name": "cca_and_micom_mga_are_current_native_workflows",
       "passed": true,
-      "detail": "Newly generated result warnings use bounded validated-scope language."
+      "detail": "CCA is a packaged-accepted descriptive residual workflow and MICOM/MGA v2 is the bounded explicit-A/B measurement-invariance and permutation workflow."
     },
     {
-      "name": "later_methods_stay_experimental",
+      "name": "engine_messages_retain_bounded_claims",
       "passed": true,
-      "detail": "Unpromoted methods remain experimental in compatibility docs."
+      "detail": "Estimator messages describe the exact validated numerical slices and preserve exclusions instead of labeling every later family experimental or implying full-method parity."
+    },
+    {
+      "name": "plspredict_v2_is_packaged_indicator_first_native",
+      "passed": true,
+      "detail": "PLSpredict/CVPAT v2 is accepted only after independent indicator/CVPAT reference evidence and a genuine packaged run/XLSX/save/reopen pass; saved-model comparison remains separate."
+    },
+    {
+      "name": "nca_v2_is_packaged_model_free_native",
+      "passed": true,
+      "detail": "NCA v2 is a packaged-accepted model-free native workflow while broader NCA variants remain excluded."
+    },
+    {
+      "name": "micom_v2_is_owned_by_the_joint_third_batch_workflow",
+      "passed": true,
+      "detail": "MICOM v2 is exposed only through the bounded joint group workflow; micom_v1 remains legacy-only."
+    },
+    {
+      "name": "fimix_and_regression_stay_bounded_engine_only",
+      "passed": true,
+      "detail": "FIMIX is an explicit bounded Predict-recipe metadata path and Regression has bounded recipe guards, but compact Prediction clears hidden segmentation and neither workflow is claimed in the primary catalog or native Results."
+    },
+    {
+      "name": "bounded_engine_backlog_is_not_overclaimed_as_native",
+      "passed": true,
+      "detail": "Later bounded engines remain documented with explicit exclusions and stay outside the primary native catalog until their desktop workflows are accepted."
+    },
+    {
+      "name": "current_docs_and_evidence_accept_bounded_ipma",
+      "passed": true,
+      "detail": "IPMA promotion is accepted only because the strict promotion artifact proves the genuine packaged run/export/save/reopen workflow; bounded-scope and cIPMA exclusions remain mandatory."
+    },
+    {
+      "name": "native_workbench_docs_name_ten_accepted_workflows",
+      "passed": true,
+      "detail": "The native workbench documentation records IPMA and model-free NCA alongside the ten accepted workflows while preserving bounded scopes."
     }
-  ]
+  ],
+  "note": "Validated numerical or recipe support is not treated as packaged native acceptance. CCA, IPMA, MICOM/MGA v2, NCA v2, and indicator-level PLSpredict/CVPAT v2 require current packaged evidence; historical construct-score prediction v1, micom_v1, and nca_v1 remain legacy-only."
 }

@@ -14,6 +14,11 @@
       "passed": true
     },
     {
+      "path": "validation\\results\\ipma_method_promotion_audit.json",
+      "present": true,
+      "passed": true
+    },
+    {
       "path": "validation\\results\\mga_reference_report.json",
       "present": true,
       "passed": true
@@ -27,10 +32,16 @@
       "path": "validation\\results\\v06_group_methods_reference_report.json",
       "present": true,
       "passed": true
+    },
+    {
+      "path": "validation\\results\\micom_method_promotion_audit.json",
+      "present": true,
+      "passed": true
     }
   ],
   "coverage": {
-    "micom": true,
+    "ipma_native_workflow": true,
+    "micom_safety_withdrawal": true,
     "permutation_mga": true,
     "pls_pos": true,
     "fimix": true
@@ -39,37 +50,37 @@
     {
       "path": "docs\\methods\\PLSPREDICT_HOLDOUT_V1.md",
       "present": true,
-      "bytes": 6653
+      "bytes": 6803
     },
     {
       "path": "docs\\methods\\IPMA_V1.md",
       "present": true,
-      "bytes": 1618
+      "bytes": 2881
     },
     {
       "path": "docs\\methods\\PLS_MGA_TWO_GROUP_V1.md",
       "present": true,
-      "bytes": 1837
+      "bytes": 2306
     },
     {
       "path": "docs\\methods\\PLS_MGA_PERMUTATION_V1.md",
       "present": true,
-      "bytes": 1094
+      "bytes": 1697
     },
     {
       "path": "docs\\methods\\MICOM_V1.md",
       "present": true,
-      "bytes": 1410
+      "bytes": 1817
     },
     {
       "path": "docs\\methods\\FIMIX_PLS_V1.md",
       "present": true,
-      "bytes": 1011
+      "bytes": 1248
     },
     {
       "path": "docs\\methods\\PLS_POS_V1.md",
       "present": true,
-      "bytes": 1074
+      "bytes": 1214
     },
     {
       "path": "docs\\methods\\PLS_POS_BOUNDED_V1.md",
@@ -86,8 +97,30 @@
       ],
       "returncode": 0,
       "passed": true,
-      "stdout_tail": "\n> quickpls@1.0.0 qpls:v06:validate\n> python validation/v06_group_methods_reference.py --section all\n\n{\n  \"kind\": \"v06_group_methods_reference\",\n  \"sections\": {\n    \"groups\": {\n      \"micom_constructs\": 3,\n      \"max_mga_difference\": 1.3959928789199458\n    },\n    \"pos\": {\n      \"segments\": 3,\n      \"objective_improvement\": 0.6792091948425426\n    },\n    \"fimix\": {\n      \"classes\": 3,\n      \"bic\": 331.8483502084654,\n      \"entropy\": 0.503739550450474\n    }\n  }\n}\n",
-      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.91s\n"
+      "stdout_tail": "\n> quickpls@2.45.0 qpls:v06:validate\n> python validation/v06_group_methods_reference.py --section all\n\n{\n  \"kind\": \"v06_group_methods_reference\",\n  \"sections\": {\n    \"groups\": {\n      \"group_a\": \"A\",\n      \"group_b\": \"B\",\n      \"group_a_observations\": 60,\n      \"group_b_observations\": 60,\n      \"group_methods\": \"mga_permutation\",\n      \"mga_method_version\": \"pls_mga_two_group_v1\",\n      \"permutation_method_version\": \"pls_mga_permutation_v1\",\n      \"usable_permutations\": 99,\n      \"max_abs_path_difference\": 1.3959928789199458,\n      \"micom_execution_enabled\": false\n    },\n    \"pos\": {\n      \"segments\": 3,\n      \"objective_improvement\": 0.6792091948425426\n    },\n    \"fimix\": {\n      \"classes\": 3,\n      \"bic\": 331.8483502084654,\n      \"entropy\": 0.503739550450474\n    }\n  }\n}\n",
+      "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.54s\n"
+    },
+    {
+      "command": [
+        "npm.cmd",
+        "run",
+        "qpls:promotion:micom"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "stdout_tail": "\n> quickpls@2.45.0 qpls:promotion:micom\n> python validation/micom_method_promotion_audit.py\n\nwrote D:\\QuickPLS\\validation\\results\\micom_method_promotion_audit.json | safety_withdrawal_passed=True\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "npm.cmd",
+        "run",
+        "qpls:promotion:ipma"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "stdout_tail": "\n> quickpls@2.45.0 qpls:promotion:ipma\n> python validation/ipma_method_promotion_audit.py\n\nwrote D:\\QuickPLS\\validation\\results\\ipma_method_promotion_audit.json | passed=True\n",
+      "stderr_tail": ""
     },
     {
       "command": [
@@ -98,8 +131,9 @@
       ],
       "returncode": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 20 tests\ntest pls::tests::benchmark_target_shape_100k_300_100 ... ignored, release performance qualification\ntest pls::tests::mediation_classifier_covers_descriptive_effect_patterns ... ok\ntest pls::tests::cycles_and_constant_indicators_are_rejected ... ok\ntest pls::tests::execution_control_reports_progress_and_cancels_inside_iteration ... ok\ntest pls::tests::agrees_with_python_plspm_reference_fixture ... ok\ntest pls::tests::control_estimates_mirror_declared_structural_paths ... ok\ntest pls::tests::hybrid_higher_order_splits_component_indicator_blocks ... ok\ntest pls::tests::iteration_limit_produces_no_completed_result ... ok\ntest pls::tests::indicator_order_does_not_change_paths ... ok\ntest pls::tests::factor_single_item_and_preprocessing_modes_are_supported ... ok\ntest pls::tests::reflective_path_model_converges_and_decomposes_effects ... ok\ntest pls::tests::execution_rejects_wrong_dispatch_resampling_and_malformed_models ... ok\ntest pls::tests::three_construct_path_model_reports_indirect_only_mediation ... ok\ntest pls::tests::listwise_deletion_affine_scaling_and_construct_order_are_stable ... ok\ntest pls::tests::repeated_indicator_higher_order_expands_component_blocks ... ok\ntest pls::tests::two_stage_higher_order_uses_component_scores_as_indicators ... ok\ntest pls::tests::two_stage_moderation_generates_product_score_and_estimates_interaction_path ... ok\ntest pls::tests::plspredict_holdout_reports_leakage_free_prediction_metrics ... ok\ntest pls::tests::pca_weighting_and_formative_mode_are_executable ... ok\ntest pls::tests::unstandardized_mode_b_is_invariant_to_indicator_offsets ... ok\n\ntest result: ok. 19 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
-      "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.21s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_estimation-3c3ef65b39c93933.exe)\n   Doc-tests qpls_estimation\n"
+      "stdout_tail": "\nrunning 27 tests\ntest pls::tests::benchmark_target_shape_100k_300_100 ... ignored, release performance qualification\ntest pls::tests::cycles_and_constant_indicators_are_rejected ... ok\ntest pls::tests::mediation_classifier_covers_descriptive_effect_patterns ... ok\ntest pls::tests::execution_control_reports_progress_and_cancels_inside_iteration ... ok\ntest pls::tests::iteration_limit_produces_no_completed_result ... ok\ntest pls::tests::hybrid_higher_order_splits_component_indicator_blocks ... ok\ntest pls::tests::agrees_with_python_plspm_reference_fixture ... ok\ntest pls::tests::control_estimates_mirror_declared_structural_paths ... ok\ntest pls::tests::bounded_ipma_uses_only_endogenous_targets_and_fixed_standardized_path_scope ... ok\ntest pls::tests::factor_single_item_and_preprocessing_modes_are_supported ... ok\ntest pls::tests::execution_rejects_wrong_dispatch_resampling_and_malformed_models ... ok\ntest pls::tests::indicator_order_does_not_change_paths ... ok\ntest pls::tests::runtime_rejects_micom_metadata_before_estimation ... ok\ntest pls::tests::plsc_rejects_inadmissible_corrected_correlations_without_clamping ... ok\ntest pls::tests::listwise_deletion_affine_scaling_and_construct_order_are_stable ... ok\ntest pls::tests::reflective_path_model_converges_and_decomposes_effects ... ok\ntest pls::tests::repeated_indicator_higher_order_expands_component_blocks ... ok\ntest pls::tests::three_construct_path_model_reports_indirect_only_mediation ... ok\ntest pls::tests::two_stage_higher_order_uses_component_scores_as_indicators ... ok\ntest pls::tests::cca_non_saturated_residuals_are_finite_coherent_and_deterministic ... ok\ntest pls::tests::plsc_v2_uses_canonical_dijkstra_henseler_rho_a ... ok\ntest pls::tests::two_stage_moderation_generates_product_score_and_estimates_interaction_path ... ok\ntest pls::tests::permutation_mga_reports_progress_and_honors_cancellation ... ok\ntest pls::tests::plspredict_holdout_reports_leakage_free_prediction_metrics ... ok\ntest pls::tests::pca_weighting_and_formative_mode_are_executable ... ok\ntest pls::tests::unstandardized_mode_b_is_invariant_to_indicator_offsets ... ok\ntest pls::tests::runtime_keeps_two_group_mga_and_permutation_without_micom ... ok\n\ntest result: ok. 26 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.63s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": "   Compiling qpls-estimation v2.45.0 (D:\\QuickPLS\\crates\\qpls-estimation)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 22.40s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_estimation-90ce985f37bdff2f.exe)\n   Doc-tests qpls_estimation\n"
     }
-  ]
+  ],
+  "note": "IPMA publication readiness requires the canonical predecessor-only reference plus genuine packaged-native run/export/save/reopen evidence. Permutation MGA remains limited to explicit Group A/B comparisons, and MICOM coverage means verified execution withdrawal rather than scientific promotion."
 }

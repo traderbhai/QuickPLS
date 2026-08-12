@@ -1,36 +1,174 @@
 {
   "checks": {
+    "bounded_scope_guards": true,
     "correlation_count": true,
-    "guard": true,
+    "descriptive_payload_only": true,
+    "exact_pair_identity": true,
+    "finite_rows": true,
     "max_delta_within_tolerance": true,
+    "max_residual_identity": true,
+    "method": true,
     "method_version": true,
-    "payload_version": true
+    "nested_model_version": true,
+    "nonsaturated_fixture": true,
+    "payload_version": true,
+    "provenance_includes_payload_version": true,
+    "residual_algebra": true
   },
   "deltas": {
-    "absolute_residual::x::y": 1.1102230246251565e-16,
-    "absolute_residual::x::z": 0.0,
-    "absolute_residual::z::y": 1.1102230246251565e-16,
-    "max_absolute_residual": 1.1102230246251565e-16,
-    "observed::x::y": 3.5083047578154947e-14,
+    "absolute_residual::x::y": 9.603429163007604e-15,
+    "absolute_residual::x::z": 1.1102230246251565e-16,
+    "absolute_residual::z::y": 5.551115123125783e-16,
+    "max_absolute_residual": 9.603429163007604e-15,
+    "observed::x::y": 3.5860203695392556e-14,
     "observed::x::z": 3.2085445411667024e-14,
-    "observed::z::y": 3.1086244689504383e-15,
-    "reproduced::x::y": 3.497202527569243e-14,
-    "reproduced::x::z": 3.2085445411667024e-14,
-    "reproduced::z::y": 2.9976021664879227e-15,
-    "residual::x::y": 1.1102230246251565e-16,
-    "residual::x::z": 0.0,
-    "residual::z::y": 1.1102230246251565e-16
+    "observed::z::y": 3.9968028886505635e-15,
+    "reproduced::x::y": 2.6256774532384952e-14,
+    "reproduced::x::z": 3.197442310920451e-14,
+    "reproduced::z::y": 3.219646771412954e-15,
+    "residual::x::y": 9.603429163007604e-15,
+    "residual::x::z": 1.1102230246251565e-16,
+    "residual::z::y": 7.771561172376096e-16
   },
-  "guard": {
-    "passed": true,
-    "validation_codes": [
-      "method.experimental",
-      "cca.pca_unsupported"
-    ]
+  "fixture": {
+    "constructs": [
+      "x",
+      "z",
+      "y"
+    ],
+    "correlation_pairs": [
+      [
+        "x",
+        "y"
+      ],
+      [
+        "x",
+        "z"
+      ],
+      [
+        "z",
+        "y"
+      ]
+    ],
+    "paths": [
+      {
+        "source": "x",
+        "target": "z"
+      },
+      {
+        "source": "z",
+        "target": "y"
+      }
+    ],
+    "saturated": false
+  },
+  "guards": {
+    "case_weights": {
+      "expected_code": "cca.case_weights_unsupported",
+      "passed": true,
+      "validation_codes": [
+        "cca.case_weights_unsupported"
+      ]
+    },
+    "control_path": {
+      "expected_code": "cca.controls_unsupported",
+      "passed": true,
+      "validation_codes": [
+        "cca.controls_unsupported",
+        "method.controls.experimental"
+      ]
+    },
+    "empty_indicator_block": {
+      "expected_code": "cca.observed_indicators_required",
+      "passed": true,
+      "validation_codes": [
+        "cca.observed_indicators_required",
+        "construct.indicators"
+      ]
+    },
+    "factor_weighting_allowed": {
+      "passed": true,
+      "validation_codes": []
+    },
+    "formative_construct": {
+      "expected_code": "cca.reflective_only",
+      "passed": true,
+      "validation_codes": [
+        "cca.reflective_only"
+      ]
+    },
+    "higher_order_construct": {
+      "expected_code": "cca.higher_order_unsupported",
+      "passed": true,
+      "validation_codes": [
+        "cca.higher_order_unsupported",
+        "method.higher_order.experimental"
+      ]
+    },
+    "interaction": {
+      "expected_code": "cca.interactions_unsupported",
+      "passed": true,
+      "validation_codes": [
+        "cca.interactions_unsupported",
+        "interaction.unknown_construct",
+        "interaction.missing_product_path",
+        "method.moderation.experimental"
+      ]
+    },
+    "listwise_policy_fixed": {
+      "detail": "Listwise deletion is the only currently representable missing-data policy; the Rust contract retains a future-proof cca.listwise_required guard.",
+      "passed": true
+    },
+    "no_structural_path": {
+      "expected_code": "cca.structural_path_required",
+      "passed": true,
+      "validation_codes": [
+        "cca.structural_path_required"
+      ]
+    },
+    "nonstandardized_preprocessing": {
+      "expected_code": "cca.standardized_required",
+      "passed": true,
+      "validation_codes": [
+        "cca.standardized_required"
+      ]
+    },
+    "pca_weighting": {
+      "expected_code": "cca.pca_unsupported",
+      "passed": true,
+      "validation_codes": [
+        "cca.pca_unsupported"
+      ]
+    },
+    "resampling": {
+      "expected_code": "cca.resampling_unsupported",
+      "passed": true,
+      "validation_codes": [
+        "cca.resampling_unsupported"
+      ]
+    },
+    "too_few_constructs": {
+      "expected_code": "cca.constructs_required",
+      "passed": true,
+      "validation_codes": [
+        "cca.constructs_required",
+        "cca.structural_path_required"
+      ]
+    }
   },
   "kind": "cca_reference_v1",
-  "max_delta": 3.5083047578154947e-14,
+  "max_absolute_residual": 0.27627385628730694,
+  "max_delta": 3.5860203695392556e-14,
+  "method_version": "cca_composite_residual_v1",
+  "minimum_nonsaturated_residual": 0.05,
+  "nested_model_version": "recursive_standardized_composite_path_model_v1",
   "passed": true,
   "schema_version": 1,
+  "scope": {
+    "classification": false,
+    "inference": false,
+    "kind": "descriptive_composite_correlation_residuals_only",
+    "thresholds": false
+  },
   "tolerance": 1e-10
 }

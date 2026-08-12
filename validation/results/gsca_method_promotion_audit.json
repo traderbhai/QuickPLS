@@ -1,38 +1,63 @@
 {
   "schema_version": 1,
-  "target": "v1_2_4_cbsem_gsca_promotion",
+  "target": "gsca_als_v2_native_promotion",
   "method_id": "gsca",
-  "promoted_scope": "Bounded deterministic GSCA component model with reflective/formative blocks, recursive paths, FIT/AFIT/GFI diagnostics, weights, loadings, scores, and R2.",
+  "promoted_scope": "Bounded joint global least-squares GSCA ALS v2 for standardized raw data, disjoint reflective/formative blocks, and recursive single-group paths; point estimates only.",
   "passed": true,
   "reports": [
     {
-      "path": "validation\\results\\v08_extended_methods_reference_report.json",
+      "path": "validation\\results\\gsca_als_v2_reference_report.json",
       "present": true,
       "passed": true
     },
     {
-      "path": "validation\\results\\extended_methods_publication_audit.json",
+      "path": "validation\\results\\v247_native_desktop_visual_acceptance.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\v247_tauri_native_acceptance.json",
       "present": true,
       "passed": true
     }
   ],
   "docs": [
     {
+      "path": "docs\\methods\\GSCA_ALS_V2.md",
+      "present": true,
+      "bytes": 1988
+    },
+    {
       "path": "docs\\methods\\GSCA_V1.md",
       "present": true,
-      "bytes": 1303
+      "bytes": 520
     }
   ],
   "checks": [
     {
-      "name": "gsca_reference_section_passes",
+      "name": "independent_global_criterion_reference",
       "passed": true,
-      "detail": "The integrated v0.8 independent reference includes GSCA payload shape and finite-estimate checks."
+      "detail": "Independent SLSQP minimization reproduces every bounded GSCA ALS v2 numerical and version contract within 2e-6."
     },
     {
-      "name": "unrestricted_gsca_excluded",
+      "name": "executable_and_persistence_contract",
       "passed": true,
-      "detail": "Promotion is bounded and does not claim unrestricted GSCA ALS/EM equivalence or unsupported bootstrap variants."
+      "detail": "The dedicated ALS estimator and strict append/save/reopen/tamper validator are present; this is not the historical PLS-derived preview."
+    },
+    {
+      "name": "native_setup_results_and_export_contract",
+      "passed": true,
+      "detail": "All three browser viewports prove the exact bounded setup with no fabricated run state; native result/export tables are method-specific."
+    },
+    {
+      "name": "genuine_packaged_native_workflow",
+      "passed": true,
+      "detail": "The packaged Windows app completed a real GSCA job, native XLSX export, strict archive check, explicit save, and same-run reopen."
+    },
+    {
+      "name": "legacy_v1_not_reinterpreted",
+      "passed": true,
+      "detail": "Historical gsca_v1 remains a clearly disclosed preview record and is not current scientific evidence."
     }
   ],
   "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."

@@ -1,12 +1,57 @@
 {
+  "schema_version": 2,
+  "method_version": "ipma_v1",
+  "performance_scale": "min_max_0_100_from_standardized_scores_v1",
+  "provenance_method_version": "pls_pm_v1+ipma_v1+pls_mediation_v1+pls_assessment_v7",
+  "scope": {
+    "kind": "predecessor_only_observed_sample_ipma",
+    "selected_target": "y",
+    "performance_range": [
+      0.0,
+      100.0
+    ],
+    "theoretical_range_correction": false,
+    "cipma": false,
+    "resampling_inference": false
+  },
+  "fixture": {
+    "expected_predecessor_constructs": [
+      "x",
+      "z",
+      "m"
+    ],
+    "expected_predecessor_indicators": [
+      "x1",
+      "z1",
+      "m1"
+    ],
+    "excluded_target_and_unrelated_constructs": [
+      "y",
+      "u",
+      "v"
+    ],
+    "excluded_target_and_unrelated_indicators": [
+      "y1",
+      "u1",
+      "v1"
+    ]
+  },
   "checks": {
-    "method_version": true,
-    "provenance_version": true,
-    "target_selection": true,
+    "method_version_exact": true,
+    "provenance_version_exact": true,
+    "performance_scale_exact": true,
+    "target_selection_exact": true,
+    "all_rows_match_selected_target": true,
+    "predecessor_construct_rows_exact": true,
+    "predecessor_indicator_rows_exact": true,
+    "target_and_unrelated_rows_excluded": true,
+    "construct_row_schema_exact": true,
+    "indicator_row_schema_exact": true,
     "construct_reference_agreement": true,
     "indicator_reference_agreement": true,
     "performance_bounds": true,
-    "warnings_present": true
+    "observed_sample_boundary_warning": true,
+    "no_resampling_payload": true
   },
   "passed": true,
   "max_construct_delta": 8.204548151979907e-14,
@@ -20,10 +65,7 @@
     "z.score_mean": 1.3964523981613298e-17,
     "m.importance": 8.204548151979907e-14,
     "m.performance": 0.0,
-    "m.score_mean": 1.0304257447302235e-16,
-    "y.importance": 0.0,
-    "y.performance": 7.105427357601002e-15,
-    "y.score_mean": 4.4517341202254815e-17
+    "m.score_mean": 1.0304257447302235e-16
   },
   "indicator_deltas": {
     "x1.construct_importance": 1.1102230246251565e-16,
@@ -37,11 +79,7 @@
     "m1.construct_importance": 8.204548151979907e-14,
     "m1.loading": 0.0,
     "m1.performance": 0.0,
-    "m1.score_mean": 7.636252741249905e-16,
-    "y1.construct_importance": 0.0,
-    "y1.loading": 0.0,
-    "y1.performance": 7.105427357601002e-15,
-    "y1.score_mean": 2.277041402654056e-16
+    "m1.score_mean": 7.636252741249905e-16
   },
   "quickpls": {
     "constructs": [
@@ -64,13 +102,6 @@
         "importance": 0.5380980364187491,
         "performance": 50.2035519125683,
         "score_mean": 1.304512053934559e-16,
-        "target": "y"
-      },
-      {
-        "construct": "y",
-        "importance": 1.0,
-        "performance": 50.91532322600357,
-        "score_mean": -1.0824674490095276e-16,
         "target": "y"
       }
     ],
@@ -101,15 +132,6 @@
         "performance": 50.2035519125683,
         "score_mean": 7.91033905045424e-16,
         "target": "y"
-      },
-      {
-        "construct": "y",
-        "construct_importance": 1.0,
-        "indicator": "y1",
-        "loading": 1.0,
-        "performance": 50.91532322600357,
-        "score_mean": -2.914335439641036e-16,
-        "target": "y"
       }
     ],
     "method_version": "ipma_v1",
@@ -118,7 +140,7 @@
       "y"
     ],
     "warnings": [
-      "IPMA is experimental; importance uses fixed PLS total effects and performance uses 0-100 min-max scaled standardized scores, not publication-ready cIPMA validation."
+      "IPMA v1 reports direct and indirect structural predecessors only; importance uses fixed PLS total effects and performance uses the observed sample range of listwise-standardized scores on a 0-100 scale. Theoretical-range performance and cIPMA are unsupported."
     ]
   },
   "reference": {
@@ -137,11 +159,6 @@
         "importance": 0.5380980364188311,
         "performance": 50.2035519125683,
         "score_mean": 2.7408630920433553e-17
-      },
-      "y": {
-        "importance": 1.0,
-        "performance": 50.91532322600358,
-        "score_mean": -6.372940369869795e-17
       }
     },
     "indicators": {
@@ -165,14 +182,18 @@
         "loading": 1.0,
         "performance": 50.2035519125683,
         "score_mean": 2.7408630920433553e-17
-      },
-      "y1": {
-        "construct": "y",
-        "construct_importance": 1.0,
-        "loading": 1.0,
-        "performance": 50.91532322600358,
-        "score_mean": -6.372940369869795e-17
       }
-    }
+    },
+    "selected_target": "y",
+    "excluded_constructs": [
+      "y",
+      "u",
+      "v"
+    ],
+    "excluded_indicators": [
+      "y1",
+      "u1",
+      "v1"
+    ]
   }
 }

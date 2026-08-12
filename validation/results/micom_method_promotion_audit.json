@@ -1,39 +1,53 @@
 {
-  "schema_version": 1,
-  "target": "v1_2_2_group_prediction_regression_promotion",
+  "schema_version": 3,
+  "target": "micom_v2_method_promotion",
   "method_id": "micom",
-  "promoted_scope": "Exactly two observed groups with configural checklist, compositional permutation, and composite mean/variance permutation diagnostics.",
+  "method_version": "micom_v2",
+  "promotion_status": "qualified",
+  "execution_enabled": true,
   "passed": true,
-  "reports": [
-    {
-      "path": "validation\\results\\v06_group_methods_reference_report.json",
-      "present": true,
-      "passed": true
-    },
-    {
-      "path": "validation\\results\\prediction_heterogeneity_publication_audit.json",
-      "present": true,
-      "passed": true
-    }
-  ],
-  "docs": [
-    {
-      "path": "docs\\methods\\MICOM_V1.md",
-      "present": true,
-      "bytes": 1513
-    }
-  ],
+  "reference": "validation\\results\\micom_v2_reference_report.json",
   "checks": [
     {
-      "name": "integrated_reference_covers_micom",
+      "name": "independent_reference_passes",
       "passed": true,
-      "detail": "v06 integrated reference includes MICOM construct permutation output."
+      "detail": "The independent NumPy reference must agree with a current QuickPLS result at 5,000 or more usable permutations."
     },
     {
-      "name": "unsupported_shapes_guarded",
+      "name": "current_method_version_and_three_step_payload",
       "passed": true,
-      "detail": "Group/segmentation validation blocks case weights, interactions, HOC, too-small groups, and non-two-group input."
+      "detail": "The estimator must emit the versioned MICOM v2 hierarchy, statistics, bounds, and decisions."
+    },
+    {
+      "name": "pooled_score_and_group_refit_contract",
+      "passed": true,
+      "detail": "Step 2 applies group weights to pooled indicators; Step 3 uses pooled scores; every group fit is orientation-aligned."
+    },
+    {
+      "name": "recipe_scope_and_configural_confirmation",
+      "passed": true,
+      "detail": "Core validation requires explicit Step-1 confirmation, both coupled methods, and 5,000\u201310,000 permutations."
+    },
+    {
+      "name": "new_results_persist_as_v2_only",
+      "passed": true,
+      "detail": "Persistence accepts historical archives but validates current payloads and prevents new micom_v1 provenance."
+    },
+    {
+      "name": "native_workflow_exposes_truthful_confirmation",
+      "passed": true,
+      "detail": "The native MGA workflow requests the coupled methods, requires the configural review, and no longer carries the withdrawn disclosure."
+    },
+    {
+      "name": "v2_contract_is_documented",
+      "passed": true,
+      "detail": "MICOM v2 documentation states equations, hierarchy, bounded scope, and independent evidence requirements."
+    },
+    {
+      "name": "micom_v1_withdrawal_is_preserved",
+      "passed": true,
+      "detail": "The historical invalid implementation remains explicitly withdrawn and archive-only."
     }
   ],
-  "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."
+  "note": "A passing audit qualifies only the bounded MICOM v2 contract. It never restores the withdrawn micom_v1 claim, and packaged-desktop release evidence remains a separate gate."
 }
