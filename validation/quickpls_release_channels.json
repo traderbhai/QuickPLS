@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "product_version": "2.46.0",
+  "default_artifact_channel": "unsigned-preview",
+  "commercial_readiness_contract": "validation/quickpls_3_release_readiness.json",
+  "channels": {
+    "internal": {
+      "audience": "maintainers",
+      "artifact_token": "internal",
+      "authenticode_required": false,
+      "distribution": "maintainer_only",
+      "commercial_channel": null,
+      "competitor_claims_policy": "prohibited",
+      "artifact_factory": "unsigned_preview"
+    },
+    "unsigned-preview": {
+      "audience": "named_technical_preview_testers",
+      "artifact_token": "unsigned-preview",
+      "authenticode_required": false,
+      "distribution": "private_named_testers_only",
+      "commercial_channel": null,
+      "competitor_claims_policy": "prohibited",
+      "artifact_factory": "unsigned_preview"
+    },
+    "beta": {
+      "audience": "named_external_beta_testers",
+      "artifact_token": "beta",
+      "authenticode_required": true,
+      "distribution": "signed_prerelease_only",
+      "commercial_channel": "beta",
+      "competitor_claims_policy": "prohibited",
+      "artifact_factory": "signed_candidate"
+    },
+    "stable": {
+      "audience": "public_users",
+      "artifact_token": "stable",
+      "authenticode_required": true,
+      "distribution": "commercial_gate_required",
+      "commercial_channel": "stable",
+      "competitor_claims_policy": "commercial_gate_required",
+      "artifact_factory": "signed_candidate"
+    }
+  }
+}

@@ -3,6 +3,7 @@ import {
   activateNativeDataset,
   autosaveNativeProject,
   cancelNativeAnalysisJob,
+  cancelNativeDiagnosticBundlePreview,
   cancelNativePlsJob,
   createNativeProject,
   dismissNativeAnalysisJob,
@@ -15,9 +16,12 @@ import {
   getNativePlsJob,
   getNativePlsJobResult,
   mutateNativeProjectExplorer,
+  openNativeDemoProject,
   profileNativeDatasetGroups,
+  previewNativeDiagnosticBundle,
   recodeNativeDatasetColumn,
   saveNativeProject,
+  saveNativeDiagnosticBundle,
   startNativeAnalysisJob,
   startNativePlsJob,
 } from "./projectService";
@@ -148,6 +152,26 @@ describe("native canonical project services", () => {
       modelPresentations: {},
       savedReports: [],
     });
+  });
+
+  it("opens the exact selected bundled sample instead of silently falling back", async () => {
+    mocks.invoke.mockResolvedValue({
+      name: "Mediation Sample",
+      path: null,
+      readOnly: false,
+      recovered: false,
+      datasets: [],
+      datasetVersions: [],
+      models: [],
+      recipes: [],
+      results: [],
+      activeModelId: null,
+      workspace: null,
+    });
+
+    await openNativeDemoProject("mediation");
+
+    expect(mocks.invoke).toHaveBeenCalledWith("open_demo_project", { sampleId: "mediation" });
   });
 
   it("sends the typed active model with both explicit saves and recovery saves", async () => {
@@ -309,5 +333,129 @@ describe("native result export service", () => {
     mocks.invoke.mockRejectedValue(new Error("disk is full"));
 
     await expect(exportNativeTextFile(request)).rejects.toThrow("disk is full");
+  });
+});
+
+describe("native diagnostic bundle service", () => {
+  beforeEach(() => {
+    mocks.invoke.mockReset();
+    mocks.save.mockReset();
+  });
+
+  it("previews through the native backend before opening any destination dialog", async () => {
+    const preview = {
+      previewId: "preview-1",
+      createdAt: "2026-08-13T09:00:00.000Z",
+      includedCategories: ["QuickPLS build and release identity"],
+      excludedCategories: ["Dataset rows, values, and variable names"],
+      redactionCounts: {
+        windowsPaths: 0,
+        emailAddresses: 0,
+        urlQueriesOrFragments: 0,
+        bearerTokens: 0,
+      },
+      entryCount: 3,
+      eventCount: 2,
+      estimatedUncompressedBytes: 1024,
+      localOnly: true,
+      networkActivity: "none" as const,
+      stagedContents: {
+        system: {
+          schemaVersion: 1,
+          quickplsVersion: "2.46.0",
+          releaseChannel: "internal",
+          sourceRevision: "not_provided",
+          osFamily: "windows",
+          architecture: "x86_64",
+          desktopRuntime: "Tauri 2",
+          locale: "not_collected",
+          webview2Version: "not_collected",
+          userDataIncluded: false,
+          networkAccessed: false,
+        },
+        events: [{ timestamp: "2026-08-13T09:00:00.000Z", sequence: 1, severity: "info", code: "desktop.session.started" }],
+        manifest: {
+          schemaVersion: 1,
+          policyVersion: "quickpls-diagnostics-v1",
+          createdAt: "2026-08-13T09:00:00.000Z",
+          quickplsVersion: "2.46.0",
+          entries: [{ name: "metadata/system.json", sha256: "b".repeat(64), bytes: 512 }],
+          redactionCounts: {
+            windowsPaths: 0,
+            emailAddresses: 0,
+            urlQueriesOrFragments: 0,
+            bearerTokens: 0,
+          },
+          redactionTotal: 0,
+          archiveLimits: {
+            maximumEntries: 3,
+            maximumEntryBytes: 262144,
+            maximumUncompressedBytes: 524288,
+            maximumArchiveBytes: 532480,
+            compression: "stored" as const,
+          },
+          localOnly: true,
+          networkAccessed: false,
+        },
+      },
+    };
+    mocks.invoke.mockResolvedValue(preview);
+
+    await expect(previewNativeDiagnosticBundle()).resolves.toEqual(preview);
+
+    expect(mocks.invoke).toHaveBeenCalledWith("preview_diagnostic_bundle", { replacesPreviewId: null });
+    expect(mocks.save).not.toHaveBeenCalled();
+  });
+
+  it("names the exact prior preview ID when requesting an atomic refresh", async () => {
+    mocks.invoke.mockResolvedValue({ previewId: "preview-2" });
+
+    await previewNativeDiagnosticBundle("preview-1");
+
+    expect(mocks.invoke).toHaveBeenCalledWith("preview_diagnostic_bundle", {
+      replacesPreviewId: "preview-1",
+    });
+  });
+
+  it("saves an already-previewed bundle to a new ZIP selected by the user", async () => {
+    mocks.save.mockResolvedValue("D:/support/quickpls-diagnostic-bundle.zip");
+    mocks.invoke.mockResolvedValue({ bytes: 2048, archiveSha256: "a".repeat(64) });
+
+    await expect(saveNativeDiagnosticBundle("preview-1")).resolves.toEqual({
+      bytes: 2048,
+      archiveSha256: "a".repeat(64),
+    });
+
+    expect(mocks.save).toHaveBeenCalledWith({
+      defaultPath: "quickpls-diagnostic-bundle.zip",
+      filters: [{ name: "QuickPLS diagnostic bundle", extensions: ["zip"] }],
+    });
+    expect(mocks.invoke).toHaveBeenCalledWith("save_diagnostic_bundle", {
+      path: "D:/support/quickpls-diagnostic-bundle.zip",
+      previewId: "preview-1",
+    });
+  });
+
+  it("cancels the staged preview without invoking a writer when the Save dialog is dismissed", async () => {
+    mocks.save.mockResolvedValue(null);
+    mocks.invoke.mockResolvedValue(undefined);
+
+    await expect(saveNativeDiagnosticBundle("preview-1")).resolves.toBeNull();
+
+    expect(mocks.invoke).toHaveBeenCalledTimes(1);
+    expect(mocks.invoke).toHaveBeenCalledWith("cancel_diagnostic_bundle_preview", {
+      previewId: "preview-1",
+    });
+    expect(mocks.invoke).not.toHaveBeenCalledWith("save_diagnostic_bundle", expect.anything());
+  });
+
+  it("exposes an explicit preview cancellation command", async () => {
+    mocks.invoke.mockResolvedValue(undefined);
+
+    await expect(cancelNativeDiagnosticBundlePreview("preview-1")).resolves.toBeUndefined();
+
+    expect(mocks.invoke).toHaveBeenCalledWith("cancel_diagnostic_bundle_preview", {
+      previewId: "preview-1",
+    });
   });
 });

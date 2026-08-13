@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-13T06:44:33.228Z",
+  "generatedAt": "2026-08-13T19:18:52.475Z",
   "passed": true,
   "harness": {
     "runtime": "Chromium via Vite production preview",
@@ -102,78 +102,85 @@
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/06-calculation-dialog-1024x700.png",
-      "size": 94351,
-      "sha256": "1ea4d0e06552449d6abfb66506f8a990b3d76353d270513337961713de9746f0",
+      "size": 94681,
+      "sha256": "973d77f11f99380e54fc655cb0b87c61728b4f00a9f66d0da984d6da6a74fcaf",
       "viewport": "1024x700",
       "state": "calculation-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/07-plsc-dialog-1024x700.png",
-      "size": 94891,
-      "sha256": "67f3f12f7294b923d04a2293ba14ac170d998ebcbac0e5ad66e0c61abf7d5f6b",
+      "size": 95205,
+      "sha256": "ceedca1d523021ad5b00b392390c1c13695cc7089670314517d87bd7e9dd8723",
       "viewport": "1024x700",
       "state": "plsc-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/08-wpls-dialog-1024x700.png",
-      "size": 99279,
-      "sha256": "f6439bedac196bad105e37688e85f62f84f040a201ccae982f3a00f4058f10a8",
+      "size": 99589,
+      "sha256": "7aa38fbe768797241c789313f9f85f63f1b265e984128b6c423b5f3b7aaf84ae",
       "viewport": "1024x700",
       "state": "wpls-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/09-gsca-dialog-1024x700.png",
-      "size": 107121,
-      "sha256": "61580ff6c3e04f6b39d84eb692877aefbe1a006f6be13b065f14e966db7b3c55",
+      "size": 107419,
+      "sha256": "2acf55429c715bc4e6e534e38bd61c7158c74caf6303b7a97933b71391d1dbe5",
       "viewport": "1024x700",
       "state": "gsca-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/09-cca-dialog-1024x700.png",
-      "size": 98737,
-      "sha256": "b026e7b75fe49f14f55a064c6c48645909ef574dfeae1868ab041e1b84706226",
+      "size": 99065,
+      "sha256": "42ae62c9fea785a50b19bf03578d8921932d62ebf85be6b497374adbe6780ddf",
       "viewport": "1024x700",
       "state": "cca-dialog"
     },
     {
+      "path": "validation/results/screens/v247-native-desktop-visual/09-cta-pls-dialog-1024x700.png",
+      "size": 109257,
+      "sha256": "c81adae12536ace78f767715414b76c60bdf553240fcea9e26fa72e99d792fa6",
+      "viewport": "1024x700",
+      "state": "cta-pls-dialog"
+    },
+    {
       "path": "validation/results/screens/v247-native-desktop-visual/10-cbsem-dialog-1024x700.png",
-      "size": 111953,
-      "sha256": "ce9bb81c1e55d0a6b6a8517ad67aa226ea2e5bc3f78bb2fde06be1c2c6f0c1b5",
+      "size": 113132,
+      "sha256": "65b6c35d467a8a2a9047b550214fff3280a63a10cd63f0696bd8dd2316b1d09b",
       "viewport": "1024x700",
       "state": "cbsem-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/10-ipma-dialog-1024x700.png",
-      "size": 106705,
-      "sha256": "c8148ab5c75f1b5b4aa2f767c685c7d49b3a99da81a4ace7e9e9d7eaff47ff47",
+      "size": 108404,
+      "sha256": "e9adbb49cd31533aeb6154eb294f1f9f1677438c580fe4d5a3db09a2f5f90887",
       "viewport": "1024x700",
       "state": "ipma-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/11-structural-path-randomization-dialog-1024x700.png",
-      "size": 114818,
-      "sha256": "9cfbd9f6849f6ca0a4d5699749def4fa87c17bd818c1af40a147d9919e17697f",
+      "size": 114551,
+      "sha256": "aa2d55ea1bdc942d43334f5631442c17bccd2a90afdd45fb6a823ebdbdd76cf5",
       "viewport": "1024x700",
       "state": "structural-path-randomization-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/12-prediction-dialog-1024x700.png",
-      "size": 118550,
-      "sha256": "dde9caf369d5a4074e0a06f4a6c521d71bee1bb8c1b7a95b5c4ffaa22ae3a156",
+      "size": 119010,
+      "sha256": "a7193005124b2744d3fac53b6bae2bbceb53d40a09d4d65950ef91ae8af746b5",
       "viewport": "1024x700",
       "state": "prediction-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/13-mga-dialog-1024x700.png",
-      "size": 116011,
-      "sha256": "0f538f878f5f63f9c33f0f885282a8a29a888a8bcb58f7887f7bbfb9b6b353e5",
+      "size": 115721,
+      "sha256": "167e6370e83c4691eb6b813a68bf3a50816eb0cff8f34c4fe00b91db8bd3d3f0",
       "viewport": "1024x700",
       "state": "mga-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/14-nca-standalone-dialog-1024x700.png",
-      "size": 105503,
-      "sha256": "87e4536b77d3880363c040d419ed46bed1095007fdf930fd5a3b717853ca496d",
+      "size": 105794,
+      "sha256": "f129a5ceb1189eaf92dc41751c3210dc5c13318922469e02bfd396a7bbb2c9ea",
       "viewport": "1024x700",
       "state": "nca-standalone-dialog"
     },
@@ -186,43 +193,43 @@
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/16-pca-standalone-dialog-1024x700.png",
-      "size": 110844,
-      "sha256": "4bd9eaca91cf7f8098fea9b0de471b9e4bc65fbe427178f3721f5874cfe24510",
+      "size": 110791,
+      "sha256": "5d58134abeb046349c2b88e582891d10b8e46c6d835458d61a432509a72273be",
       "viewport": "1024x700",
       "state": "pca-standalone-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/17-ols-standalone-dialog-1024x700.png",
-      "size": 120136,
-      "sha256": "07e5ce5166291eb9d62621a0d897086fd125af7fe66160f264f0a11ee9d9c867",
+      "size": 120034,
+      "sha256": "4a9efc800c450b309977d485e60a68ed28415b9a6a8ed25e560656cc674842ed",
       "viewport": "1024x700",
       "state": "ols-standalone-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/18-logistic-standalone-dialog-1024x700.png",
-      "size": 114095,
-      "sha256": "f54eaa3643cd4b723482c842d8dcf092269588084c27eceb1650fa405765d718",
+      "size": 114280,
+      "sha256": "07ebeb0a835474151f5ab4b3e386ec626c7a5580f06a79b8e3aef8c52d7f1d0e",
       "viewport": "1024x700",
       "state": "logistic-standalone-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1024x700.png",
-      "size": 117350,
-      "sha256": "d492fa27838ee0808cffdcc1390f29e0a0c9ac22ec801f36c6660d67d0b9892c",
+      "size": 117254,
+      "sha256": "0ee6c866739c9bbcbd14cd52fdd0107c2ce76028f3a69c200e8e1936c7883b68",
       "viewport": "1024x700",
       "state": "regression-bootstrap-ols-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1024x700.png",
-      "size": 113650,
-      "sha256": "8dc649213c9a67748ee39442c4241ed0142eee6708bd77b33febf801971f8904",
+      "size": 113627,
+      "sha256": "b0fd22eb52193701a28faf33b6a109e2dc01f457db6c69cb8cd7d5019342b398",
       "viewport": "1024x700",
       "state": "regression-bootstrap-logistic-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/21-process-v2-dialog-1024x700.png",
-      "size": 132564,
-      "sha256": "1295b687ddf70e050725218e04cd21f046c3cdc4257a9d900acde232d6272a3a",
+      "size": 132698,
+      "sha256": "4725e9dcd5bd863cc7adbeb6d84ac0d182e53cee67ef505af7b96c00197e0bdb",
       "viewport": "1024x700",
       "state": "process-v2-dialog"
     },
@@ -333,78 +340,85 @@
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/06-calculation-dialog-1280x720.png",
-      "size": 101958,
-      "sha256": "33851a01016ab5506c8a6156159e5fff32719f05fa21056c8372855b17d0faa6",
+      "size": 102721,
+      "sha256": "9ca136af4ca3567decbfc873fb7c07abe5e0af21bfdffb0fd5cec89a64d32400",
       "viewport": "1280x720",
       "state": "calculation-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/07-plsc-dialog-1280x720.png",
-      "size": 102488,
-      "sha256": "3d051cc327e45ab209ad00608bdfb82823319a12d7aa3441e9dd08d7be6de38d",
+      "size": 103261,
+      "sha256": "40f91eb7188b01f8eed280d840a636eb0b33bd3c66b69cd082d6e04396f4a5c8",
       "viewport": "1280x720",
       "state": "plsc-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/08-wpls-dialog-1280x720.png",
-      "size": 107024,
-      "sha256": "fb60d109ad946427fe8f16a2ade31080c36c2067c6d3a1d90c07ae6328ba5102",
+      "size": 107831,
+      "sha256": "20a37bf48c72a1dd126d35c7e1f22227aca431b3b4a6958f115d3f773adf9502",
       "viewport": "1280x720",
       "state": "wpls-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/09-gsca-dialog-1280x720.png",
-      "size": 115428,
-      "sha256": "79f369eb8ee00dc8fa7b82fb3879904df50bef8e9f83058ee357df0d164eca0b",
+      "size": 116178,
+      "sha256": "eaa94dfa679d43311bfa82a32f6e0c29095752e72a4efb9d226dd8fb74d65640",
       "viewport": "1280x720",
       "state": "gsca-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/09-cca-dialog-1280x720.png",
-      "size": 106477,
-      "sha256": "00b10cb1240509aa9d5adc2ab3504919f1608750bec444d7a9949802f05478c0",
+      "size": 107293,
+      "sha256": "7abeb9608ad55720c30a4c4fe257966dfb2a1c9f74e16c870df597fb62104bf4",
       "viewport": "1280x720",
       "state": "cca-dialog"
     },
     {
+      "path": "validation/results/screens/v247-native-desktop-visual/09-cta-pls-dialog-1280x720.png",
+      "size": 117097,
+      "sha256": "c077df0e0264258d0c050fb9aae79bac36a0e9f0eb53404902c1ef1d5a101e62",
+      "viewport": "1280x720",
+      "state": "cta-pls-dialog"
+    },
+    {
       "path": "validation/results/screens/v247-native-desktop-visual/10-cbsem-dialog-1280x720.png",
-      "size": 122214,
-      "sha256": "91e4e60f09f94fc66ff78463f1ab951aafd5fa2616f6cecd55395714515e4f15",
+      "size": 122731,
+      "sha256": "568ef3e0d234072de7295371c9a710c8db6eeebd04bbb1c0840726316787a781",
       "viewport": "1280x720",
       "state": "cbsem-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/10-ipma-dialog-1280x720.png",
-      "size": 115076,
-      "sha256": "be8e595b834085792d253640bf0016d9b8930c8111bdd0ac1b0621c7ca26dc15",
+      "size": 115691,
+      "sha256": "0e51f3c9dc2c259cf5131d803da1a90e8efa2fd294857e670cac9e8e64ee4d24",
       "viewport": "1280x720",
       "state": "ipma-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/11-structural-path-randomization-dialog-1280x720.png",
-      "size": 123100,
-      "sha256": "b2d5cdbf0c481c8cd58147725980db9484cce69ec27d6ba5426e95f61a5b5183",
+      "size": 123353,
+      "sha256": "5f070b79bf25ce00217c31973d14481fe3900aa1e5d36e88ef6136e8d0155493",
       "viewport": "1280x720",
       "state": "structural-path-randomization-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/12-prediction-dialog-1280x720.png",
-      "size": 129169,
-      "sha256": "37e9de20a391311a0c99bb29be6f586e665ee9b7edeccd6ad7de6a5205d5cde2",
+      "size": 129393,
+      "sha256": "8bbe078ad85e021063553b9544b750ac8d2fbf59a64a5df276e7992cdba104ed",
       "viewport": "1280x720",
       "state": "prediction-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/13-mga-dialog-1280x720.png",
-      "size": 120232,
-      "sha256": "2583e2de3fde722a0a23711b8be59780c6f4b2a508fc0aa3d86f670dc8379d36",
+      "size": 120037,
+      "sha256": "e084fb2d4606e39679094bd0703c97bbea321e2318c0d8fc861bf0c46d575182",
       "viewport": "1280x720",
       "state": "mga-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/14-nca-standalone-dialog-1280x720.png",
-      "size": 123063,
-      "sha256": "182cc27f01585104418b696866742485471fd6ecb97998aea1ed9c4eb7abfd3f",
+      "size": 123320,
+      "sha256": "27c23d22dec225ced87b79ba370783ab708dc78f592cefde3cbb09affb58225a",
       "viewport": "1280x720",
       "state": "nca-standalone-dialog"
     },
@@ -417,50 +431,50 @@
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/16-pca-standalone-dialog-1280x720.png",
-      "size": 126315,
-      "sha256": "8eabfe7a6712d040b2d196d2363c3901d8c9e4400c7146a5f43bf0ad20eb831c",
+      "size": 126229,
+      "sha256": "64ce36fa4e8f148fc65b3cb92f6caa90680d6446d36c8de254dd4c6f11e4c9cd",
       "viewport": "1280x720",
       "state": "pca-standalone-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/17-ols-standalone-dialog-1280x720.png",
-      "size": 137548,
-      "sha256": "9bc84a95e8f028709c05b5b77b0785fc1f98d7564f1aaf90b9ee88bf80603dbb",
+      "size": 137244,
+      "sha256": "c328bffdd3d2bee32780eae1730e368c295e369a08f4f7f9db58c6e30e7e1c2a",
       "viewport": "1280x720",
       "state": "ols-standalone-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/18-logistic-standalone-dialog-1280x720.png",
-      "size": 133067,
-      "sha256": "29d85988aee264b8680488428b507811b68189d9267a65afb0a589cb570dcecf",
+      "size": 133043,
+      "sha256": "ccac927f417ee053c477415f224be5a381a9f5d65b1a66e91f27bdf548b5fd1c",
       "viewport": "1280x720",
       "state": "logistic-standalone-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1280x720.png",
-      "size": 137052,
-      "sha256": "8078d5a3aee909ff36a002de7a08ae214e1f5692251ac9f7ef00989c39fbe60a",
+      "size": 136681,
+      "sha256": "98e2fc62a6ee4afefa0da7e08a96971a5f78c61eca82b2f2993c908f34f9af2a",
       "viewport": "1280x720",
       "state": "regression-bootstrap-ols-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1280x720.png",
-      "size": 133544,
-      "sha256": "f6a76dd2433e61971b08a0c018df8202f2a468b98849973be213f17a5a7fb05f",
+      "size": 133296,
+      "sha256": "f68e354c8a9446d3046bdb16f1be85e963ab36fbac0570caff41e0766d4f5748",
       "viewport": "1280x720",
       "state": "regression-bootstrap-logistic-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/21-process-v2-dialog-1280x720.png",
-      "size": 145404,
-      "sha256": "8decd2ab6929a29c9bc88cd12a6cdf3ca6fa63b86e502a66e1e78a2d32901d06",
+      "size": 145591,
+      "sha256": "fdbd8bd0e0472b93e5b205c11d19a81befc02b0f33e3ddf6888b6942d15515c8",
       "viewport": "1280x720",
       "state": "process-v2-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/18-empty-results-1280x720.png",
-      "size": 25033,
-      "sha256": "6b9e249ec52da92e57b807fd672aaf1e60a42e6394c2198b0305588b03deed94",
+      "size": 25032,
+      "sha256": "34a0afaf1e5fddb15a5d5ed246ed53382100eee9d6eb553ddad3964980fbee59",
       "viewport": "1280x720",
       "state": "empty-results"
     },
@@ -557,78 +571,85 @@
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/06-calculation-dialog-1440x900.png",
-      "size": 128522,
-      "sha256": "99197d8549f64fd196b6a7e1a0fb358d36d65237340b0a9d8f67ee8b4ae6d7bd",
+      "size": 128854,
+      "sha256": "3733dbe5f5402b9f21feb414a121f31b7e3be6006e6690f4f6590a954098feaa",
       "viewport": "1440x900",
       "state": "calculation-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/07-plsc-dialog-1440x900.png",
-      "size": 129297,
-      "sha256": "32d7d1c9a7d4f0f2a1a810fa9073c06496ed6d6936b2ec7559f4d56b3fdaf6e1",
+      "size": 129631,
+      "sha256": "4f613c9a3108c24db3f87c038baba0262912c6ccadbf1b550d4fc28715998a11",
       "viewport": "1440x900",
       "state": "plsc-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/08-wpls-dialog-1440x900.png",
-      "size": 133294,
-      "sha256": "c0f0b1e724618ca91305519a3d13b399fa78a23d9dde9bf7bc8667383f2ad62d",
+      "size": 133627,
+      "sha256": "e43438d2445e5569e15c1115d0a5cbe9bfc990a28c8c28b85cb3d097d42d6495",
       "viewport": "1440x900",
       "state": "wpls-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/09-gsca-dialog-1440x900.png",
-      "size": 142148,
-      "sha256": "e6b9b7ff2fe1890827e8e9cca62476736d8174ceb5ae0fa9a7370292c26f57fc",
+      "size": 142476,
+      "sha256": "e4d6a2828d77566a9dfc95501e6fd7bf615e20673161f5cd069f178db4fe8719",
       "viewport": "1440x900",
       "state": "gsca-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/09-cca-dialog-1440x900.png",
-      "size": 133441,
-      "sha256": "384fec26c2cad35d886cfb476bd2f88c077639321c6bbf2f77d7a591bdf2d7cc",
+      "size": 133800,
+      "sha256": "e6d02d9df2653e50bedad8c47f4f6891a7586a73d0b7d983e1c74d5b12ba16be",
       "viewport": "1440x900",
       "state": "cca-dialog"
     },
     {
+      "path": "validation/results/screens/v247-native-desktop-visual/09-cta-pls-dialog-1440x900.png",
+      "size": 143960,
+      "sha256": "5dc1d2ad907cb602122a82a077bf9f01aaf4704f33d6ca7ad58149cd5c81ef96",
+      "viewport": "1440x900",
+      "state": "cta-pls-dialog"
+    },
+    {
       "path": "validation/results/screens/v247-native-desktop-visual/10-cbsem-dialog-1440x900.png",
-      "size": 146245,
-      "sha256": "fa0bbbcb1bf829fca8deb85d7db997b735c9119d0deb0ece3c7760e0dc874715",
+      "size": 150225,
+      "sha256": "ac722abf3ee0d4106f9c7ab2480e9e704ed796716845e864df8d182b5405baf8",
       "viewport": "1440x900",
       "state": "cbsem-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/10-ipma-dialog-1440x900.png",
-      "size": 141925,
-      "sha256": "235f5d38f9f6d08e8d9c3557e4e40d0121f11622c070c8da2f992aa86a04f11f",
+      "size": 142262,
+      "sha256": "7dfa1df5a8d5714abf979f02451ff561dca4beed2f10f603a16b12cc261d9226",
       "viewport": "1440x900",
       "state": "ipma-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/11-structural-path-randomization-dialog-1440x900.png",
-      "size": 150143,
-      "sha256": "21f163acebac7d03e07b280354b9a766afd81b633431d9f9a82bc08526a5f83e",
+      "size": 149906,
+      "sha256": "69a6836b2178f593b0aaef4e527eb5caf0bdc60089af743ce0f2540494a4d5ae",
       "viewport": "1440x900",
       "state": "structural-path-randomization-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/12-prediction-dialog-1440x900.png",
-      "size": 157349,
-      "sha256": "7b3d51e56f1746c0485f9a980abc98f015e7cffb3e21a10aa3a57f3f68ef90fd",
+      "size": 157531,
+      "sha256": "96d623be51b86509a17784ccfbf56ac15c39d758c94cf70c6d970558dd538175",
       "viewport": "1440x900",
       "state": "prediction-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/13-mga-dialog-1440x900.png",
-      "size": 155301,
-      "sha256": "cf8b0e75dbc736c1ecb62143777cc7d16bae0b75d0efdd67fb3fdb2d78e8077b",
+      "size": 155443,
+      "sha256": "b43645198d3aad2f877831a00134aac1e509d67d9e776ab4e293b36fb4320a0f",
       "viewport": "1440x900",
       "state": "mga-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/14-nca-standalone-dialog-1440x900.png",
-      "size": 143116,
-      "sha256": "33e585c11310a0c4e2c36857da64ede032ae0c8d26cf0dcf15a528d2ad5e56f0",
+      "size": 143310,
+      "sha256": "ad99634ad37b0163e93bb143049bfc835d4428508fb40ce3201614892f915277",
       "viewport": "1440x900",
       "state": "nca-standalone-dialog"
     },
@@ -641,43 +662,43 @@
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/16-pca-standalone-dialog-1440x900.png",
-      "size": 152389,
-      "sha256": "97baa4eb0902a75d476490aa1e2cbf46da0b6e7aeff117561629be8c34b5de52",
+      "size": 152417,
+      "sha256": "1dc094119621e104cbde6714786542ca840a3df17b3f1d3fdd040e174fa4e607",
       "viewport": "1440x900",
       "state": "pca-standalone-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/17-ols-standalone-dialog-1440x900.png",
-      "size": 172200,
-      "sha256": "1f5a2030d21965c3f9f2e1599be213fcef92b5a68c48ab5edc656aa225ee109e",
+      "size": 172245,
+      "sha256": "8f91f8351387d6fc1d6b6f67e07936dbd56f8a13e6dea2e76fc500361ce8a6e1",
       "viewport": "1440x900",
       "state": "ols-standalone-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/18-logistic-standalone-dialog-1440x900.png",
-      "size": 179212,
-      "sha256": "c60486f52c79aa3c8a81819add4975db5119a1606a97667116705705b01841cb",
+      "size": 179429,
+      "sha256": "b51714e73dd62054d77aea43820d327452860dc062c1790a1a8e09ac338e0e8d",
       "viewport": "1440x900",
       "state": "logistic-standalone-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1440x900.png",
-      "size": 179382,
-      "sha256": "da12dcd5dac3e457283222bf46fec71fa68d4386d3a3f9a0ee7258c8a6d77387",
+      "size": 179356,
+      "sha256": "80bb996503f253d42c1d1f32d61aa9ec1d5e920cda70f344015257f5b5778280",
       "viewport": "1440x900",
       "state": "regression-bootstrap-ols-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1440x900.png",
-      "size": 177689,
-      "sha256": "0d7c5d56108a91d628164983f721b4ed6c624ac0fd0b07f3ae383b8cb143cff8",
+      "size": 177878,
+      "sha256": "a411647a3a63857219a31cdd5ed222f356ca43bc98ee18ae1e24f5c7d9158665",
       "viewport": "1440x900",
       "state": "regression-bootstrap-logistic-dialog"
     },
     {
       "path": "validation/results/screens/v247-native-desktop-visual/21-process-v2-dialog-1440x900.png",
-      "size": 192999,
-      "sha256": "4bd85db55be7658334694c73a5252ead19e1f116b9d2a197520b5d52378a56a1",
+      "size": 192998,
+      "sha256": "ccd07ddc0c0493e4fdbc9869ee7d0680bc1a1e3bc0fa822a3e6f412b68c3a77e",
       "viewport": "1440x900",
       "state": "process-v2-dialog"
     },
@@ -914,6 +935,18 @@
       },
       {
         "state": "cca-dialog",
+        "viewport": "1024x700",
+        "documentWidth": 1024,
+        "bodyWidth": 1008,
+        "viewportWidth": 1024,
+        "horizontalOverflow": false,
+        "visibleHtmlTitlebars": 0,
+        "visibleLegacyRibbons": 0,
+        "obsoleteVisibleStrings": [],
+        "fabricatedIterationRows": 0
+      },
+      {
+        "state": "cta-pls-dialog",
         "viewport": "1024x700",
         "documentWidth": 1024,
         "bodyWidth": 1008,
@@ -1321,6 +1354,18 @@
         "fabricatedIterationRows": 0
       },
       {
+        "state": "cta-pls-dialog",
+        "viewport": "1280x720",
+        "documentWidth": 1280,
+        "bodyWidth": 1264,
+        "viewportWidth": 1280,
+        "horizontalOverflow": false,
+        "visibleHtmlTitlebars": 0,
+        "visibleLegacyRibbons": 0,
+        "obsoleteVisibleStrings": [],
+        "fabricatedIterationRows": 0
+      },
+      {
         "state": "cbsem-dialog",
         "viewport": "1280x720",
         "documentWidth": 1280,
@@ -1694,6 +1739,18 @@
       },
       {
         "state": "cca-dialog",
+        "viewport": "1440x900",
+        "documentWidth": 1440,
+        "bodyWidth": 1424,
+        "viewportWidth": 1440,
+        "horizontalOverflow": false,
+        "visibleHtmlTitlebars": 0,
+        "visibleLegacyRibbons": 0,
+        "obsoleteVisibleStrings": [],
+        "fabricatedIterationRows": 0
+      },
+      {
+        "state": "cta-pls-dialog",
         "viewport": "1440x900",
         "documentWidth": 1440,
         "bodyWidth": 1424,
@@ -2147,6 +2204,14 @@
         "accessibleName": "Calculate"
       },
       {
+        "dialog": "calculation",
+        "viewport": "1024x700",
+        "count": 1,
+        "ariaModal": "true",
+        "labelledBy": "nd-dialog-title",
+        "accessibleName": "Calculate"
+      },
+      {
         "dialog": "export",
         "viewport": "1024x700",
         "count": 1,
@@ -2331,6 +2396,14 @@
         "accessibleName": "Calculate"
       },
       {
+        "dialog": "calculation",
+        "viewport": "1280x720",
+        "count": 1,
+        "ariaModal": "true",
+        "labelledBy": "nd-dialog-title",
+        "accessibleName": "Calculate"
+      },
+      {
         "dialog": "export",
         "viewport": "1280x720",
         "count": 1,
@@ -2377,6 +2450,14 @@
         "ariaModal": "true",
         "labelledBy": "nd-dialog-title",
         "accessibleName": "Create Higher-Order Construct"
+      },
+      {
+        "dialog": "calculation",
+        "viewport": "1440x900",
+        "count": 1,
+        "ariaModal": "true",
+        "labelledBy": "nd-dialog-title",
+        "accessibleName": "Calculate"
       },
       {
         "dialog": "calculation",
@@ -2667,7 +2748,7 @@
       {
         "state": "calculation-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 62,
+        "visibleInteractiveCount": 63,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2681,7 +2762,7 @@
       {
         "state": "plsc-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 62,
+        "visibleInteractiveCount": 63,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2695,7 +2776,7 @@
       {
         "state": "wpls-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 62,
+        "visibleInteractiveCount": 63,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2709,7 +2790,7 @@
       {
         "state": "gsca-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 58,
+        "visibleInteractiveCount": 59,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2723,7 +2804,7 @@
       {
         "state": "cca-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 61,
+        "visibleInteractiveCount": 62,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2735,49 +2816,7 @@
         "namedCommandToolbarPresent": true
       },
       {
-        "state": "cbsem-dialog",
-        "viewport": "1024x700",
-        "visibleInteractiveCount": 61,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "ipma-dialog",
-        "viewport": "1024x700",
-        "visibleInteractiveCount": 61,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "structural-path-randomization-dialog",
-        "viewport": "1024x700",
-        "visibleInteractiveCount": 65,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "prediction-dialog",
+        "state": "cta-pls-dialog",
         "viewport": "1024x700",
         "visibleInteractiveCount": 63,
         "unnamedInteractive": [],
@@ -2791,9 +2830,65 @@
         "namedCommandToolbarPresent": true
       },
       {
+        "state": "cbsem-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 62,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "ipma-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 62,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "structural-path-randomization-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 66,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "prediction-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 64,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
         "state": "mga-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 65,
+        "visibleInteractiveCount": 66,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2807,7 +2902,7 @@
       {
         "state": "nca-standalone-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 49,
+        "visibleInteractiveCount": 50,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2835,7 +2930,7 @@
       {
         "state": "pca-standalone-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 57,
+        "visibleInteractiveCount": 58,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2849,7 +2944,7 @@
       {
         "state": "ols-standalone-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 61,
+        "visibleInteractiveCount": 62,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2863,7 +2958,7 @@
       {
         "state": "logistic-standalone-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 61,
+        "visibleInteractiveCount": 62,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2877,7 +2972,7 @@
       {
         "state": "regression-bootstrap-ols-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 64,
+        "visibleInteractiveCount": 65,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2891,7 +2986,7 @@
       {
         "state": "regression-bootstrap-logistic-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 64,
+        "visibleInteractiveCount": 65,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -2905,7 +3000,7 @@
       {
         "state": "process-v2-dialog",
         "viewport": "1024x700",
-        "visibleInteractiveCount": 119,
+        "visibleInteractiveCount": 120,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3129,7 +3224,7 @@
       {
         "state": "calculation-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 66,
+        "visibleInteractiveCount": 67,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3143,7 +3238,7 @@
       {
         "state": "plsc-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 66,
+        "visibleInteractiveCount": 67,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3157,7 +3252,7 @@
       {
         "state": "wpls-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 66,
+        "visibleInteractiveCount": 67,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3171,7 +3266,7 @@
       {
         "state": "gsca-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 62,
+        "visibleInteractiveCount": 63,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3185,7 +3280,7 @@
       {
         "state": "cca-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 65,
+        "visibleInteractiveCount": 66,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3197,49 +3292,7 @@
         "namedCommandToolbarPresent": true
       },
       {
-        "state": "cbsem-dialog",
-        "viewport": "1280x720",
-        "visibleInteractiveCount": 65,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "ipma-dialog",
-        "viewport": "1280x720",
-        "visibleInteractiveCount": 65,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "structural-path-randomization-dialog",
-        "viewport": "1280x720",
-        "visibleInteractiveCount": 69,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "prediction-dialog",
+        "state": "cta-pls-dialog",
         "viewport": "1280x720",
         "visibleInteractiveCount": 67,
         "unnamedInteractive": [],
@@ -3253,9 +3306,65 @@
         "namedCommandToolbarPresent": true
       },
       {
+        "state": "cbsem-dialog",
+        "viewport": "1280x720",
+        "visibleInteractiveCount": 66,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "ipma-dialog",
+        "viewport": "1280x720",
+        "visibleInteractiveCount": 66,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "structural-path-randomization-dialog",
+        "viewport": "1280x720",
+        "visibleInteractiveCount": 70,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "prediction-dialog",
+        "viewport": "1280x720",
+        "visibleInteractiveCount": 68,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
         "state": "mga-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 65,
+        "visibleInteractiveCount": 66,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3269,7 +3378,7 @@
       {
         "state": "nca-standalone-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 54,
+        "visibleInteractiveCount": 55,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3297,7 +3406,7 @@
       {
         "state": "pca-standalone-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 62,
+        "visibleInteractiveCount": 63,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3311,7 +3420,7 @@
       {
         "state": "ols-standalone-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 66,
+        "visibleInteractiveCount": 67,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3325,7 +3434,7 @@
       {
         "state": "logistic-standalone-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 66,
+        "visibleInteractiveCount": 67,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3339,7 +3448,7 @@
       {
         "state": "regression-bootstrap-ols-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 69,
+        "visibleInteractiveCount": 70,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3353,7 +3462,7 @@
       {
         "state": "regression-bootstrap-logistic-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 69,
+        "visibleInteractiveCount": 70,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3367,7 +3476,7 @@
       {
         "state": "process-v2-dialog",
         "viewport": "1280x720",
-        "visibleInteractiveCount": 124,
+        "visibleInteractiveCount": 125,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3577,7 +3686,7 @@
       {
         "state": "calculation-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 66,
+        "visibleInteractiveCount": 67,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3591,7 +3700,7 @@
       {
         "state": "plsc-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 66,
+        "visibleInteractiveCount": 67,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3605,7 +3714,7 @@
       {
         "state": "wpls-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 66,
+        "visibleInteractiveCount": 67,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3619,7 +3728,7 @@
       {
         "state": "gsca-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 62,
+        "visibleInteractiveCount": 63,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3633,7 +3742,7 @@
       {
         "state": "cca-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 65,
+        "visibleInteractiveCount": 66,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3645,49 +3754,7 @@
         "namedCommandToolbarPresent": true
       },
       {
-        "state": "cbsem-dialog",
-        "viewport": "1440x900",
-        "visibleInteractiveCount": 65,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "ipma-dialog",
-        "viewport": "1440x900",
-        "visibleInteractiveCount": 65,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "structural-path-randomization-dialog",
-        "viewport": "1440x900",
-        "visibleInteractiveCount": 69,
-        "unnamedInteractive": [],
-        "brokenLabelledBy": [],
-        "duplicateIds": [],
-        "positiveTabIndexes": [],
-        "skipLinkPresent": true,
-        "workspaceTargetPresent": true,
-        "workspaceIsMainLandmark": true,
-        "namedApplicationMenuPresent": true,
-        "namedCommandToolbarPresent": true
-      },
-      {
-        "state": "prediction-dialog",
+        "state": "cta-pls-dialog",
         "viewport": "1440x900",
         "visibleInteractiveCount": 67,
         "unnamedInteractive": [],
@@ -3701,9 +3768,65 @@
         "namedCommandToolbarPresent": true
       },
       {
+        "state": "cbsem-dialog",
+        "viewport": "1440x900",
+        "visibleInteractiveCount": 66,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "ipma-dialog",
+        "viewport": "1440x900",
+        "visibleInteractiveCount": 66,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "structural-path-randomization-dialog",
+        "viewport": "1440x900",
+        "visibleInteractiveCount": 70,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "prediction-dialog",
+        "viewport": "1440x900",
+        "visibleInteractiveCount": 68,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
         "state": "mga-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 65,
+        "visibleInteractiveCount": 66,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3717,7 +3840,7 @@
       {
         "state": "nca-standalone-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 54,
+        "visibleInteractiveCount": 55,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3745,7 +3868,7 @@
       {
         "state": "pca-standalone-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 62,
+        "visibleInteractiveCount": 63,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3759,7 +3882,7 @@
       {
         "state": "ols-standalone-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 66,
+        "visibleInteractiveCount": 67,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3773,7 +3896,7 @@
       {
         "state": "logistic-standalone-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 66,
+        "visibleInteractiveCount": 67,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3787,7 +3910,7 @@
       {
         "state": "regression-bootstrap-ols-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 69,
+        "visibleInteractiveCount": 70,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3801,7 +3924,7 @@
       {
         "state": "regression-bootstrap-logistic-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 69,
+        "visibleInteractiveCount": 70,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -3815,7 +3938,7 @@
       {
         "state": "process-v2-dialog",
         "viewport": "1440x900",
-        "visibleInteractiveCount": 124,
+        "visibleInteractiveCount": 125,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -5122,13 +5245,14 @@
         },
         "searchInitiallyFocused": true,
         "listboxCount": 1,
-        "optionCount": 14,
+        "optionCount": 15,
         "optionLabels": [
           "PLS-SEM Algorithm",
           "Consistent PLS",
           "Weighted PLS",
           "GSCA",
           "CCA composite residual diagnostics",
+          "Confirmatory Tetrad Analysis",
           "Importance-Performance Map Analysis",
           "CB-SEM / CFA",
           "PLS-SEM Bootstrapping",
@@ -5145,6 +5269,7 @@
           "Weighted PLS",
           "GSCA",
           "CCA composite residual diagnostics",
+          "Confirmatory Tetrad Analysis",
           "Importance-Performance Map Analysis",
           "CB-SEM / CFA",
           "PLS-SEM Bootstrapping",
@@ -5155,7 +5280,7 @@
           "Principal Component Analysis",
           "Regression"
         ],
-        "countStatus": "14 methods",
+        "countStatus": "15 methods",
         "searchAliases": [
           {
             "query": "survey weights",
@@ -5182,6 +5307,15 @@
             "optionCount": 1,
             "optionId": "nd-calculation-method-cca",
             "optionLabel": "CCA composite residual diagnostics",
+            "status": "1 method"
+          },
+          {
+            "query": "confirmatory tetrad",
+            "expectedKind": "cta_pls",
+            "expectedLabel": "Confirmatory Tetrad Analysis",
+            "optionCount": 1,
+            "optionId": "nd-calculation-method-cta_pls",
+            "optionLabel": "Confirmatory Tetrad Analysis",
             "status": "1 method"
           },
           {
@@ -5396,13 +5530,14 @@
         },
         "searchInitiallyFocused": true,
         "listboxCount": 1,
-        "optionCount": 14,
+        "optionCount": 15,
         "optionLabels": [
           "PLS-SEM Algorithm",
           "Consistent PLS",
           "Weighted PLS",
           "GSCA",
           "CCA composite residual diagnostics",
+          "Confirmatory Tetrad Analysis",
           "Importance-Performance Map Analysis",
           "CB-SEM / CFA",
           "PLS-SEM Bootstrapping",
@@ -5419,6 +5554,7 @@
           "Weighted PLS",
           "GSCA",
           "CCA composite residual diagnostics",
+          "Confirmatory Tetrad Analysis",
           "Importance-Performance Map Analysis",
           "CB-SEM / CFA",
           "PLS-SEM Bootstrapping",
@@ -5429,7 +5565,7 @@
           "Principal Component Analysis",
           "Regression"
         ],
-        "countStatus": "14 methods",
+        "countStatus": "15 methods",
         "searchAliases": [
           {
             "query": "survey weights",
@@ -5456,6 +5592,15 @@
             "optionCount": 1,
             "optionId": "nd-calculation-method-cca",
             "optionLabel": "CCA composite residual diagnostics",
+            "status": "1 method"
+          },
+          {
+            "query": "confirmatory tetrad",
+            "expectedKind": "cta_pls",
+            "expectedLabel": "Confirmatory Tetrad Analysis",
+            "optionCount": 1,
+            "optionId": "nd-calculation-method-cta_pls",
+            "optionLabel": "Confirmatory Tetrad Analysis",
             "status": "1 method"
           },
           {
@@ -5670,13 +5815,14 @@
         },
         "searchInitiallyFocused": true,
         "listboxCount": 1,
-        "optionCount": 14,
+        "optionCount": 15,
         "optionLabels": [
           "PLS-SEM Algorithm",
           "Consistent PLS",
           "Weighted PLS",
           "GSCA",
           "CCA composite residual diagnostics",
+          "Confirmatory Tetrad Analysis",
           "Importance-Performance Map Analysis",
           "CB-SEM / CFA",
           "PLS-SEM Bootstrapping",
@@ -5693,6 +5839,7 @@
           "Weighted PLS",
           "GSCA",
           "CCA composite residual diagnostics",
+          "Confirmatory Tetrad Analysis",
           "Importance-Performance Map Analysis",
           "CB-SEM / CFA",
           "PLS-SEM Bootstrapping",
@@ -5703,7 +5850,7 @@
           "Principal Component Analysis",
           "Regression"
         ],
-        "countStatus": "14 methods",
+        "countStatus": "15 methods",
         "searchAliases": [
           {
             "query": "survey weights",
@@ -5730,6 +5877,15 @@
             "optionCount": 1,
             "optionId": "nd-calculation-method-cca",
             "optionLabel": "CCA composite residual diagnostics",
+            "status": "1 method"
+          },
+          {
+            "query": "confirmatory tetrad",
+            "expectedKind": "cta_pls",
+            "expectedLabel": "Confirmatory Tetrad Analysis",
+            "optionCount": 1,
+            "optionId": "nd-calculation-method-cta_pls",
+            "optionLabel": "Confirmatory Tetrad Analysis",
             "status": "1 method"
           },
           {
@@ -6535,6 +6691,170 @@
         }
       }
     ],
+    "ctaPls": [
+      {
+        "viewport": "1024x700",
+        "dialogOpened": true,
+        "pointerSelected": true,
+        "linkage": {
+          "expectedKind": "cta_pls",
+          "expectedLabel": "Confirmatory Tetrad Analysis",
+          "selectedCount": 1,
+          "selectedId": "nd-calculation-method-cta_pls",
+          "selectedLabel": "Confirmatory Tetrad Analysis",
+          "panelCount": 1,
+          "panelId": "nd-calculation-panel",
+          "panelLabelledBy": "nd-calculation-panel-cta_pls-title",
+          "headingCount": 1,
+          "headingId": "nd-calculation-panel-cta_pls-title",
+          "headingLabel": "Confirmatory Tetrad Analysis",
+          "linkage": true
+        },
+        "category": "Assessment",
+        "scopeLabel": "Eligible indicator blocks",
+        "eligibleBlockSummary": "None - assign at least four indicators to one ordinary construct",
+        "scopeDisclosure": "Descriptive sample-covariance tetrads only. QuickPLS reports all three pairings for every four-indicator subset; it does not classify blocks or calculate bootstrap, permutation, asymptotic, or vanishing-tetrad decisions.",
+        "descriptiveOnlyBoundary": true,
+        "pcaWeightingOptionCount": 1,
+        "pcaWeightingDisabled": true,
+        "resamplingControlCount": 0,
+        "startCommandCount": 1,
+        "startCommandDisabled": true,
+        "readinessText": "Cannot start this calculationCalculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.CTA-PLS requires at least one ordinary construct with four or more assigned indicators.",
+        "missingEligibleBlockerVisible": true,
+        "previewRuntimeBlockerVisible": true,
+        "truthAndOverflow": {
+          "fabricatedRunState": {
+            "statusSections": 0,
+            "progressElements": 0,
+            "calculationLogs": 0,
+            "iterationRows": 0
+          },
+          "noFabricatedRunState": true,
+          "horizontalOverflow": {
+            "dialogScrollWidth": 848,
+            "dialogClientWidth": 848,
+            "dialogOutsideViewport": false,
+            "dialogContentOverflow": false,
+            "pageOverflow": false
+          },
+          "noHorizontalOverflow": true
+        },
+        "closeFocus": {
+          "closeButtonCount": 1,
+          "dialogClosed": true,
+          "focusRestored": true
+        }
+      },
+      {
+        "viewport": "1280x720",
+        "dialogOpened": true,
+        "pointerSelected": true,
+        "linkage": {
+          "expectedKind": "cta_pls",
+          "expectedLabel": "Confirmatory Tetrad Analysis",
+          "selectedCount": 1,
+          "selectedId": "nd-calculation-method-cta_pls",
+          "selectedLabel": "Confirmatory Tetrad Analysis",
+          "panelCount": 1,
+          "panelId": "nd-calculation-panel",
+          "panelLabelledBy": "nd-calculation-panel-cta_pls-title",
+          "headingCount": 1,
+          "headingId": "nd-calculation-panel-cta_pls-title",
+          "headingLabel": "Confirmatory Tetrad Analysis",
+          "linkage": true
+        },
+        "category": "Assessment",
+        "scopeLabel": "Eligible indicator blocks",
+        "eligibleBlockSummary": "None - assign at least four indicators to one ordinary construct",
+        "scopeDisclosure": "Descriptive sample-covariance tetrads only. QuickPLS reports all three pairings for every four-indicator subset; it does not classify blocks or calculate bootstrap, permutation, asymptotic, or vanishing-tetrad decisions.",
+        "descriptiveOnlyBoundary": true,
+        "pcaWeightingOptionCount": 1,
+        "pcaWeightingDisabled": true,
+        "resamplingControlCount": 0,
+        "startCommandCount": 1,
+        "startCommandDisabled": true,
+        "readinessText": "Cannot start this calculationCalculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.CTA-PLS requires at least one ordinary construct with four or more assigned indicators.",
+        "missingEligibleBlockerVisible": true,
+        "previewRuntimeBlockerVisible": true,
+        "truthAndOverflow": {
+          "fabricatedRunState": {
+            "statusSections": 0,
+            "progressElements": 0,
+            "calculationLogs": 0,
+            "iterationRows": 0
+          },
+          "noFabricatedRunState": true,
+          "horizontalOverflow": {
+            "dialogScrollWidth": 848,
+            "dialogClientWidth": 848,
+            "dialogOutsideViewport": false,
+            "dialogContentOverflow": false,
+            "pageOverflow": false
+          },
+          "noHorizontalOverflow": true
+        },
+        "closeFocus": {
+          "closeButtonCount": 1,
+          "dialogClosed": true,
+          "focusRestored": true
+        }
+      },
+      {
+        "viewport": "1440x900",
+        "dialogOpened": true,
+        "pointerSelected": true,
+        "linkage": {
+          "expectedKind": "cta_pls",
+          "expectedLabel": "Confirmatory Tetrad Analysis",
+          "selectedCount": 1,
+          "selectedId": "nd-calculation-method-cta_pls",
+          "selectedLabel": "Confirmatory Tetrad Analysis",
+          "panelCount": 1,
+          "panelId": "nd-calculation-panel",
+          "panelLabelledBy": "nd-calculation-panel-cta_pls-title",
+          "headingCount": 1,
+          "headingId": "nd-calculation-panel-cta_pls-title",
+          "headingLabel": "Confirmatory Tetrad Analysis",
+          "linkage": true
+        },
+        "category": "Assessment",
+        "scopeLabel": "Eligible indicator blocks",
+        "eligibleBlockSummary": "None - assign at least four indicators to one ordinary construct",
+        "scopeDisclosure": "Descriptive sample-covariance tetrads only. QuickPLS reports all three pairings for every four-indicator subset; it does not classify blocks or calculate bootstrap, permutation, asymptotic, or vanishing-tetrad decisions.",
+        "descriptiveOnlyBoundary": true,
+        "pcaWeightingOptionCount": 1,
+        "pcaWeightingDisabled": true,
+        "resamplingControlCount": 0,
+        "startCommandCount": 1,
+        "startCommandDisabled": true,
+        "readinessText": "Cannot start this calculationCalculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.CTA-PLS requires at least one ordinary construct with four or more assigned indicators.",
+        "missingEligibleBlockerVisible": true,
+        "previewRuntimeBlockerVisible": true,
+        "truthAndOverflow": {
+          "fabricatedRunState": {
+            "statusSections": 0,
+            "progressElements": 0,
+            "calculationLogs": 0,
+            "iterationRows": 0
+          },
+          "noFabricatedRunState": true,
+          "horizontalOverflow": {
+            "dialogScrollWidth": 848,
+            "dialogClientWidth": 848,
+            "dialogOutsideViewport": false,
+            "dialogContentOverflow": false,
+            "pageOverflow": false
+          },
+          "noHorizontalOverflow": true
+        },
+        "closeFocus": {
+          "closeButtonCount": 1,
+          "dialogClosed": true,
+          "focusRestored": true
+        }
+      }
+    ],
     "ipma": [
       {
         "viewport": "1024x700",
@@ -6974,7 +7294,7 @@
           "headingLabel": "Necessary Condition Analysis",
           "linkage": true
         },
-        "catalogCount": 14,
+        "catalogCount": 15,
         "category": "Standalone analysis",
         "xOptions": [
           {
@@ -7105,7 +7425,7 @@
           "headingLabel": "Necessary Condition Analysis",
           "linkage": true
         },
-        "catalogCount": 14,
+        "catalogCount": 15,
         "category": "Standalone analysis",
         "xOptions": [
           {
@@ -7236,7 +7556,7 @@
           "headingLabel": "Necessary Condition Analysis",
           "linkage": true
         },
-        "catalogCount": 14,
+        "catalogCount": 15,
         "category": "Standalone analysis",
         "xOptions": [
           {
@@ -7372,7 +7692,7 @@
           "headingLabel": "Principal Component Analysis",
           "linkage": true
         },
-        "catalogCount": 14,
+        "catalogCount": 15,
         "category": "Standalone analysis",
         "variableOptions": [
           {
@@ -7505,7 +7825,7 @@
           "headingLabel": "Principal Component Analysis",
           "linkage": true
         },
-        "catalogCount": 14,
+        "catalogCount": 15,
         "category": "Standalone analysis",
         "variableOptions": [
           {
@@ -7638,7 +7958,7 @@
           "headingLabel": "Principal Component Analysis",
           "linkage": true
         },
-        "catalogCount": 14,
+        "catalogCount": 15,
         "category": "Standalone analysis",
         "variableOptions": [
           {
@@ -7757,7 +8077,7 @@
         "visibleModelNodes": 0,
         "analyzeCommandCount": 1,
         "dialogOpened": true,
-        "catalogCount": 14,
+        "catalogCount": 15,
         "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
@@ -7882,7 +8202,7 @@
         "visibleModelNodes": 0,
         "analyzeCommandCount": 1,
         "dialogOpened": true,
-        "catalogCount": 14,
+        "catalogCount": 15,
         "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
@@ -8007,7 +8327,7 @@
         "visibleModelNodes": 0,
         "analyzeCommandCount": 1,
         "dialogOpened": true,
-        "catalogCount": 14,
+        "catalogCount": 15,
         "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
@@ -8126,7 +8446,7 @@
         "visibleModelNodes": 0,
         "analyzeCommandCount": 1,
         "dialogOpened": true,
-        "catalogCount": 14,
+        "catalogCount": 15,
         "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
@@ -8218,7 +8538,7 @@
         "visibleModelNodes": 0,
         "analyzeCommandCount": 1,
         "dialogOpened": true,
-        "catalogCount": 14,
+        "catalogCount": 15,
         "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
@@ -8310,7 +8630,7 @@
         "visibleModelNodes": 0,
         "analyzeCommandCount": 1,
         "dialogOpened": true,
-        "catalogCount": 14,
+        "catalogCount": 15,
         "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
@@ -8404,7 +8724,7 @@
         "visibleModelNodes": 0,
         "analyzeCommandCount": 1,
         "dialogOpened": true,
-        "catalogCount": 14,
+        "catalogCount": 15,
         "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
@@ -8816,7 +9136,7 @@
         "visibleModelNodes": 0,
         "analyzeCommandCount": 1,
         "dialogOpened": true,
-        "catalogCount": 14,
+        "catalogCount": 15,
         "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
@@ -9228,7 +9548,7 @@
         "visibleModelNodes": 0,
         "analyzeCommandCount": 1,
         "dialogOpened": true,
-        "catalogCount": 14,
+        "catalogCount": 15,
         "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
@@ -12631,12 +12951,12 @@
         "indicators": 80
       },
       "metrics": {
-        "fixtureRenderMs": 117.9,
-        "selectionMs": 354.4,
-        "dragMs": 518.9,
-        "panMs": 241.1,
-        "zoomMs": 298.8,
-        "workspaceRoundTripMs": 353.9
+        "fixtureRenderMs": 109.9,
+        "selectionMs": 325.2,
+        "dragMs": 516.7,
+        "panMs": 226.6,
+        "zoomMs": 316.4,
+        "workspaceRoundTripMs": 334.6
       },
       "budgetsMs": {
         "fixtureRender": 5000,
@@ -12682,6 +13002,12 @@
       "requiredNativeFollowUp": "Run the deterministic non-saturated X -> Z -> Y CCA fixture through the packaged Tauri application and capture the authoritative lifecycle and result evidence."
     },
     {
+      "id": "cta-pls-completed-results-browser",
+      "reason": "The browser visual harness verifies CTA-PLS discovery and truthful invalid-model setup only. Genuine tetrad calculation, export, persistence, and tamper evidence remain authoritative in the CTA-PLS method factory.",
+      "viewport": "1024x700",
+      "requiredNativeFollowUp": "Consume the native-qualified CTA-PLS factory evidence; do not synthesize completed tetrad results in this browser harness."
+    },
+    {
       "id": "cbsem-completed-results-browser",
       "reason": "Completed CB-SEM/CFA results are not synthesized in the browser visual harness. A genuine packaged-Tauri calculation, ML result, export, save, and reopen remain required.",
       "viewport": "1024x700",
@@ -12760,6 +13086,12 @@
       "requiredNativeFollowUp": "Run the deterministic non-saturated X -> Z -> Y CCA fixture through the packaged Tauri application and capture the authoritative lifecycle and result evidence."
     },
     {
+      "id": "cta-pls-completed-results-browser",
+      "reason": "The browser visual harness verifies CTA-PLS discovery and truthful invalid-model setup only. Genuine tetrad calculation, export, persistence, and tamper evidence remain authoritative in the CTA-PLS method factory.",
+      "viewport": "1280x720",
+      "requiredNativeFollowUp": "Consume the native-qualified CTA-PLS factory evidence; do not synthesize completed tetrad results in this browser harness."
+    },
+    {
       "id": "cbsem-completed-results-browser",
       "reason": "Completed CB-SEM/CFA results are not synthesized in the browser visual harness. A genuine packaged-Tauri calculation, ML result, export, save, and reopen remain required.",
       "viewport": "1280x720",
@@ -12836,6 +13168,12 @@
       "reason": "Completed CCA results are not synthesized in the browser visual harness. A genuine packaged-Tauri calculation, residual result, export, save, and reopen remain required.",
       "viewport": "1440x900",
       "requiredNativeFollowUp": "Run the deterministic non-saturated X -> Z -> Y CCA fixture through the packaged Tauri application and capture the authoritative lifecycle and result evidence."
+    },
+    {
+      "id": "cta-pls-completed-results-browser",
+      "reason": "The browser visual harness verifies CTA-PLS discovery and truthful invalid-model setup only. Genuine tetrad calculation, export, persistence, and tamper evidence remain authoritative in the CTA-PLS method factory.",
+      "viewport": "1440x900",
+      "requiredNativeFollowUp": "Consume the native-qualified CTA-PLS factory evidence; do not synthesize completed tetrad results in this browser harness."
     },
     {
       "id": "cbsem-completed-results-browser",
@@ -12959,8 +13297,8 @@
         "state"
       ],
       "pathPrefix": "validation/results/screens/v247-native-desktop-visual/",
-      "descriptorCount": 99,
-      "uniquePathCount": 99,
+      "descriptorCount": 102,
+      "uniquePathCount": 102,
       "errors": [],
       "passed": true
     },

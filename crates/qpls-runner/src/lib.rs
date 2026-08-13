@@ -273,6 +273,7 @@ pub fn run_pls_analysis(
         qpls_core::AnalysisMethod::Plsc
             | qpls_core::AnalysisMethod::Wpls
             | qpls_core::AnalysisMethod::Cca
+            | qpls_core::AnalysisMethod::CtaPls
     ) {
         base_versions.insert(1, estimation_method_version.as_str());
     }
@@ -968,6 +969,14 @@ mod tests {
         );
         assert_eq!(cca.provenance.method, AnalysisMethod::Cca);
         assert_estimator_version_is_in_provenance(&cca, qpls_estimation::CCA_METHOD_VERSION);
+
+        let cta = run_fixture(
+            include_bytes!("../../../validation/results/cta_pls_reference.csv"),
+            "cta_pls_reference.csv",
+            include_bytes!("../../../validation/results/cta_pls_reference.recipe.json"),
+        );
+        assert_eq!(cta.provenance.method, AnalysisMethod::CtaPls);
+        assert_estimator_version_is_in_provenance(&cta, qpls_estimation::CTA_PLS_METHOD_VERSION);
 
         let ipma = run_fixture(
             include_bytes!("../../../validation/results/ipma_reference.csv"),

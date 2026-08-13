@@ -1,0 +1,101 @@
+{
+  "schema_version": 2,
+  "target": "QuickPLS unsigned preview artifact preservation",
+  "passed": true,
+  "version": "2.46.0",
+  "version_contract": {
+    "package_json": "2.46.0",
+    "package_lock": {
+      "document": "2.46.0",
+      "root_package": "2.46.0"
+    },
+    "cargo_workspace": "2.46.0",
+    "cargo_members": {
+      "qpls-assessment": "2.46.0",
+      "qpls-cli": "2.46.0",
+      "qpls-core": "2.46.0",
+      "qpls-data": "2.46.0",
+      "qpls-estimation": "2.46.0",
+      "qpls-project": "2.46.0",
+      "qpls-resampling": "2.46.0",
+      "qpls-runner": "2.46.0",
+      "quickpls-desktop": "2.46.0"
+    },
+    "cargo_lock_quickpls_packages": {
+      "qpls-assessment": "2.46.0",
+      "qpls-cli": "2.46.0",
+      "qpls-core": "2.46.0",
+      "qpls-data": "2.46.0",
+      "qpls-estimation": "2.46.0",
+      "qpls-project": "2.46.0",
+      "qpls-resampling": "2.46.0",
+      "qpls-runner": "2.46.0",
+      "quickpls-desktop": "2.46.0"
+    },
+    "tauri": "2.46.0",
+    "release_channels": "2.46.0"
+  },
+  "release_channel": "unsigned-preview",
+  "channel_policy": {
+    "audience": "named_technical_preview_testers",
+    "artifact_token": "unsigned-preview",
+    "authenticode_required": false,
+    "distribution": "private_named_testers_only",
+    "commercial_channel": null,
+    "competitor_claims_policy": "prohibited",
+    "artifact_factory": "unsigned_preview"
+  },
+  "trust": {
+    "authenticode_required": false,
+    "authenticode_verification_performed": false,
+    "status": "not_verified",
+    "stable_eligible": false,
+    "competitor_claims_authorized": false
+  },
+  "label": "v2_46_0_quickpls_3_wave_1_regression_process",
+  "timestamp_utc": "20260813-175527",
+  "artifact_directory": "target/release/artifacts",
+  "artifacts": [
+    {
+      "role": "portable",
+      "source": "target/release/quickpls-desktop.exe",
+      "source_bytes": 30507008,
+      "source_sha256": "5B226F1C0492FA54198BC21754FE6473181A1B63BC703BB0D49F8F15D9371277",
+      "path": "target/release/artifacts/QuickPLS_2.46.0_unsigned-preview_v2_46_0_quickpls_3_wave_1_regression_process_20260813-175527_x64_portable.exe",
+      "bytes": 30507008,
+      "sha256": "5B226F1C0492FA54198BC21754FE6473181A1B63BC703BB0D49F8F15D9371277",
+      "copy_verified": true
+    },
+    {
+      "role": "cli",
+      "source": "target/release/qpls.exe",
+      "source_bytes": 20690432,
+      "source_sha256": "0FD87AF8C589CD1C5EDE1AC67AA76CDE42822546D3CE0D42A5F4C1DB0EF8080E",
+      "path": "target/release/artifacts/QuickPLS_2.46.0_unsigned-preview_v2_46_0_quickpls_3_wave_1_regression_process_20260813-175527_x64_cli.exe",
+      "bytes": 20690432,
+      "sha256": "0FD87AF8C589CD1C5EDE1AC67AA76CDE42822546D3CE0D42A5F4C1DB0EF8080E",
+      "copy_verified": true
+    },
+    {
+      "role": "setup",
+      "source": "target/release/bundle/nsis/QuickPLS_2.46.0_x64-setup.exe",
+      "source_bytes": 218935816,
+      "source_sha256": "BD4D7245BE6BA362FEC7123483082F37E64ED8F436E11AAD4550AFF9B0B692A5",
+      "path": "target/release/artifacts/QuickPLS_2.46.0_unsigned-preview_v2_46_0_quickpls_3_wave_1_regression_process_20260813-175527_x64_setup.exe",
+      "bytes": 218935816,
+      "sha256": "BD4D7245BE6BA362FEC7123483082F37E64ED8F436E11AAD4550AFF9B0B692A5",
+      "copy_verified": true
+    },
+    {
+      "role": "checksums",
+      "source": null,
+      "source_bytes": null,
+      "source_sha256": null,
+      "path": "target/release/artifacts/QuickPLS_2.46.0_unsigned-preview_v2_46_0_quickpls_3_wave_1_regression_process_20260813-175527_x64_checksums.txt",
+      "bytes": 523,
+      "sha256": "DC621C4D5DD67590E78453517C379988A6960195D1472BFFF55019B8D15B2BE0",
+      "copy_verified": true
+    }
+  ],
+  "note": "Files are copied to unique names so repeated desktop builds do not overwrite prior test artifacts. Every copied binary is size- and SHA-256-identical to its source, but checksums do not establish publisher authenticity. This unsigned-preview factory never authorizes beta, stable, or competitor-ready distribution."
+}

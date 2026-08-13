@@ -1,0 +1,177 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "bounded_claim": "Reflective-only consistent PLS for recursive models with at least two indicators per construct and path or factor inner weighting.",
+    "exact_run_export_and_reopen_pass": true,
+    "excluded_scope": [
+      "Formative blocks, PCA weighting, generated interactions, and higher-order expansion are excluded.",
+      "Bootstrap, permutation, studentized inference, and consistent resampling are separate workflows and are not qualified here.",
+      "Historical plsc_v1 output is compatibility data and is not current scientific evidence."
+    ],
+    "invalid_scope_fails_closed": true,
+    "packaged_report_passes": true,
+    "passed": true,
+    "receipt_and_cleanup_pass": true,
+    "release_evidence_contract_passes": true,
+    "source_binding_stable": true,
+    "three_required_viewports_pass": true,
+    "verified_artifacts": [
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/plsc_v2/method_spec.identity.json",
+        "roles": [
+          "method_spec"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/plsc_v2/independent_reference.identity.json",
+        "roles": [
+          "independent_reference"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/plsc_v2/simulation_report.identity.json",
+        "roles": [
+          "simulation_report"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/plsc_v2/boundary_report.identity.json",
+        "roles": [
+          "boundary_report"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/plsc_v2/persistence_report.identity.json",
+        "roles": [
+          "persistence_report"
+        ],
+        "stage": "archive_qualified"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/plsc_v2/frontend_report.identity.json",
+        "roles": [
+          "frontend_report"
+        ],
+        "stage": "native_qualified"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/plsc_v2/export_report.identity.json",
+        "roles": [
+          "export_report"
+        ],
+        "stage": "native_qualified"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/plsc_v2/packaged_acceptance.identity.json",
+        "roles": [
+          "packaged_acceptance"
+        ],
+        "stage": "release_qualified"
+      }
+    ]
+  },
+  "feature_id": "qpls3.pls.consistent",
+  "generated_at_utc": "2026-08-13T19:26:37.274005Z",
+  "method_version": "plsc_v2",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_audit",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/plsc_v2.manifest.json",
+      "sha256": "6390cc9e9b1fc2844d8688700e5f554c9d4efda579e89b9f64b1740ce11d54e8",
+      "size": 15346
+    },
+    {
+      "path": "validation/plsc_v2_factory_audit.py",
+      "sha256": "981c4998ec602a082494dd1f3becae093fafb263b14ad254f1c8df888f36cb9d",
+      "size": 3993
+    },
+    {
+      "path": "validation/plsc_v2_factory_common.py",
+      "sha256": "e8df9baab689e4bdab8c648cdfed9433162c9172e009565cfeed5da5b932522d",
+      "size": 13718
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/boundary_report.identity.json",
+      "sha256": "49839dc98366a25a7353a64a8bc04ccecf363b69cd0b2619bd267585c1d52b2d",
+      "size": 11894
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/export_report.identity.json",
+      "sha256": "30d97c452b4938df2d9006411f48688cc060f88bfb8866a4ad2487e79dd6fe31",
+      "size": 8575
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/frontend_report.identity.json",
+      "sha256": "db15416eab4f31b3149354b000fca939c562000b52860e9c3c6a85bc95258119",
+      "size": 9007
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/independent_reference.identity.json",
+      "sha256": "f6df1332232184aa9813ac83a3a896627c14bd01350c1264d39315a8310c5c0e",
+      "size": 5851
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/method_spec.identity.json",
+      "sha256": "428161af7eeafa4616ca4c0ada6ecbea6fa4bf7b85beeea2cb1f3d8b1b372bcd",
+      "size": 3125
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/packaged_acceptance.identity.json",
+      "sha256": "777076d08d1d0773e70fc52c656ad2ab5ee58765640075dd3f1ca832cb4ab917",
+      "size": 55429
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/persistence_report.identity.json",
+      "sha256": "807beaaaa194d03010f1ac39f1a59a0c935fb97577d783de89da896b5ec098f8",
+      "size": 19015
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/simulation_report.identity.json",
+      "sha256": "8f0dbee34b68e0450adce8c2ee7133375b308620e572c05255cc74d5b917d959",
+      "size": 19310
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_plsc_v2_factory_evidence.py",
+      "sha256": "9d8249925d07ff3abf79eecea85a2dd32f9b13ad7d395f795c3229b77a7958c8",
+      "size": 3844
+    }
+  ]
+}

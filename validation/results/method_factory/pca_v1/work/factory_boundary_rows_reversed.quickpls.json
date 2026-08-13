@@ -1,0 +1,1277 @@
+{
+  "schema_version": 1,
+  "id": "3675cd53-2807-4f8d-b0db-5c2c3fc736b5",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "4db8e055-72ed-5f63-a680-019ac1066d2a",
+    "dataset_fingerprint": "v2:5481a8617a96f4f206b9267421a770ac3b862cdb8d43f8a054c4a89887c2d65b",
+    "method": "pca",
+    "method_version": "pca_v1",
+    "engine_version": "2.46.0",
+    "seed": 20260813,
+    "settings": {
+      "method": "pca",
+      "weighting_scheme": "path",
+      "tolerance": 1e-12,
+      "max_iterations": 10000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260813,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion",
+      "case_weight_column": null
+    },
+    "started_at": "2026-08-13T19:35:38.264558400Z",
+    "completed_at": "2026-08-13T19:35:38.266729400Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "Standalone PCA v1 is validated for the documented QuickPLS v1.2 supported scope; unsupported shapes remain blocked."
+    },
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "PLS assessment and PLS resampling engines are not applicable to standalone raw-data analyses."
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "cbsem": null,
+      "cca": null,
+      "construct_scores": {},
+      "control_estimates": [],
+      "converged": true,
+      "cta_pls": null,
+      "effects": [],
+      "endogeneity": null,
+      "fimix": null,
+      "gsca": null,
+      "ipma": null,
+      "iterations": 0,
+      "method_version": "pca_v1",
+      "mga": null,
+      "mga_permutation": null,
+      "micom": null,
+      "moderated_mediation": null,
+      "nca": null,
+      "nonlinear_effects": null,
+      "omitted_observations": 0,
+      "outer_estimates": [],
+      "paths": [],
+      "pca": {
+        "component_rule": "fixed",
+        "components": [
+          {
+            "component": "PC1",
+            "cumulative_variance": 0.3555518270435789,
+            "eigenvalue": 1.4222073081743158,
+            "explained_variance": 0.3555518270435789
+          },
+          {
+            "component": "PC2",
+            "cumulative_variance": 0.5844348869975556,
+            "eigenvalue": 0.9155322398159071,
+            "explained_variance": 0.22888305995397673
+          },
+          {
+            "component": "PC3",
+            "cumulative_variance": 0.8003600115737209,
+            "eigenvalue": 0.8637004983046613,
+            "explained_variance": 0.21592512457616528
+          }
+        ],
+        "loadings": [
+          {
+            "component": "PC1",
+            "loading": 0.49582155021308,
+            "variable": "a",
+            "weight": 0.4157611890527475
+          },
+          {
+            "component": "PC1",
+            "loading": 0.5747952746456474,
+            "variable": "b",
+            "weight": 0.481983017369604
+          },
+          {
+            "component": "PC1",
+            "loading": 0.6314902773446106,
+            "variable": "c",
+            "weight": 0.5295234716425975
+          },
+          {
+            "component": "PC1",
+            "loading": 0.6687291831398386,
+            "variable": "d",
+            "weight": 0.5607494071546656
+          },
+          {
+            "component": "PC2",
+            "loading": 0.8447719051506706,
+            "variable": "a",
+            "weight": 0.8828819557015967
+          },
+          {
+            "component": "PC2",
+            "loading": -0.39526970000003187,
+            "variable": "b",
+            "weight": -0.413101434408344
+          },
+          {
+            "component": "PC2",
+            "loading": -0.17743328900968441,
+            "variable": "c",
+            "weight": -0.18543780664615825
+          },
+          {
+            "component": "PC2",
+            "loading": -0.11904604276121128,
+            "variable": "d",
+            "weight": -0.12441654653845076
+          },
+          {
+            "component": "PC3",
+            "loading": 0.1806165186446305,
+            "variable": "a",
+            "weight": 0.1943461232891639
+          },
+          {
+            "component": "PC3",
+            "loading": 0.696624226352295,
+            "variable": "b",
+            "weight": 0.7495782711173767
+          },
+          {
+            "component": "PC3",
+            "loading": -0.5468012249598085,
+            "variable": "c",
+            "weight": -0.5883664411104739
+          },
+          {
+            "component": "PC3",
+            "loading": -0.21633603291840775,
+            "variable": "d",
+            "weight": -0.23278086434703527
+          }
+        ],
+        "method_version": "pca_v1",
+        "observations": 72,
+        "retained_components": 3,
+        "scores": [
+          {
+            "component": "PC1",
+            "observation": 0,
+            "score": -0.13784472888139332
+          },
+          {
+            "component": "PC1",
+            "observation": 1,
+            "score": -1.2414402789034698
+          },
+          {
+            "component": "PC1",
+            "observation": 2,
+            "score": 2.228967322764735
+          },
+          {
+            "component": "PC1",
+            "observation": 3,
+            "score": -0.8023045436667305
+          },
+          {
+            "component": "PC1",
+            "observation": 4,
+            "score": -0.5504834190000853
+          },
+          {
+            "component": "PC1",
+            "observation": 5,
+            "score": 0.009817396321635308
+          },
+          {
+            "component": "PC1",
+            "observation": 6,
+            "score": 0.8758244868649873
+          },
+          {
+            "component": "PC1",
+            "observation": 7,
+            "score": 0.7565000530349402
+          },
+          {
+            "component": "PC1",
+            "observation": 8,
+            "score": 0.09466216992725132
+          },
+          {
+            "component": "PC1",
+            "observation": 9,
+            "score": -1.2412444893681438
+          },
+          {
+            "component": "PC1",
+            "observation": 10,
+            "score": -0.06984964970108232
+          },
+          {
+            "component": "PC1",
+            "observation": 11,
+            "score": -0.8686067205546605
+          },
+          {
+            "component": "PC1",
+            "observation": 12,
+            "score": -0.06271125823115073
+          },
+          {
+            "component": "PC1",
+            "observation": 13,
+            "score": 0.3934464689392182
+          },
+          {
+            "component": "PC1",
+            "observation": 14,
+            "score": -0.28819673424142833
+          },
+          {
+            "component": "PC1",
+            "observation": 15,
+            "score": 0.8112926333419402
+          },
+          {
+            "component": "PC1",
+            "observation": 16,
+            "score": 0.09998721327372811
+          },
+          {
+            "component": "PC1",
+            "observation": 17,
+            "score": -0.8664699925988883
+          },
+          {
+            "component": "PC1",
+            "observation": 18,
+            "score": 2.1079152273322843
+          },
+          {
+            "component": "PC1",
+            "observation": 19,
+            "score": -1.2781271240991638
+          },
+          {
+            "component": "PC1",
+            "observation": 20,
+            "score": -0.5558559939779762
+          },
+          {
+            "component": "PC1",
+            "observation": 21,
+            "score": 0.049466011525647585
+          },
+          {
+            "component": "PC1",
+            "observation": 22,
+            "score": -0.5394444252229911
+          },
+          {
+            "component": "PC1",
+            "observation": 23,
+            "score": 1.4133849528580953
+          },
+          {
+            "component": "PC1",
+            "observation": 24,
+            "score": 0.8342009095038914
+          },
+          {
+            "component": "PC1",
+            "observation": 25,
+            "score": -1.245975702418752
+          },
+          {
+            "component": "PC1",
+            "observation": 26,
+            "score": 1.1310681702291496
+          },
+          {
+            "component": "PC1",
+            "observation": 27,
+            "score": -0.023459227613328082
+          },
+          {
+            "component": "PC1",
+            "observation": 28,
+            "score": 0.31781947397838795
+          },
+          {
+            "component": "PC1",
+            "observation": 29,
+            "score": -0.826692188264617
+          },
+          {
+            "component": "PC1",
+            "observation": 30,
+            "score": 1.948571073125085
+          },
+          {
+            "component": "PC1",
+            "observation": 31,
+            "score": -0.35282282373346885
+          },
+          {
+            "component": "PC1",
+            "observation": 32,
+            "score": -0.6446198587991928
+          },
+          {
+            "component": "PC1",
+            "observation": 33,
+            "score": -0.744093372208937
+          },
+          {
+            "component": "PC1",
+            "observation": 34,
+            "score": 1.6262265522382284
+          },
+          {
+            "component": "PC1",
+            "observation": 35,
+            "score": -0.1277791482579256
+          },
+          {
+            "component": "PC1",
+            "observation": 36,
+            "score": -1.9265219643795746
+          },
+          {
+            "component": "PC1",
+            "observation": 37,
+            "score": -0.418368799434587
+          },
+          {
+            "component": "PC1",
+            "observation": 38,
+            "score": -2.225024258708766
+          },
+          {
+            "component": "PC1",
+            "observation": 39,
+            "score": 0.752723930028703
+          },
+          {
+            "component": "PC1",
+            "observation": 40,
+            "score": 1.1044976739176096
+          },
+          {
+            "component": "PC1",
+            "observation": 41,
+            "score": -0.5970702015085607
+          },
+          {
+            "component": "PC1",
+            "observation": 42,
+            "score": -1.1650862861645068
+          },
+          {
+            "component": "PC1",
+            "observation": 43,
+            "score": 0.18780077186435698
+          },
+          {
+            "component": "PC1",
+            "observation": 44,
+            "score": -0.07758065152086685
+          },
+          {
+            "component": "PC1",
+            "observation": 45,
+            "score": -0.4704126086323779
+          },
+          {
+            "component": "PC1",
+            "observation": 46,
+            "score": -1.2169821623975958
+          },
+          {
+            "component": "PC1",
+            "observation": 47,
+            "score": -0.5511496985455914
+          },
+          {
+            "component": "PC1",
+            "observation": 48,
+            "score": -2.105662418745152
+          },
+          {
+            "component": "PC1",
+            "observation": 49,
+            "score": 0.08882120335684024
+          },
+          {
+            "component": "PC1",
+            "observation": 50,
+            "score": -0.62328133531493
+          },
+          {
+            "component": "PC1",
+            "observation": 51,
+            "score": 0.67656865132754
+          },
+          {
+            "component": "PC1",
+            "observation": 52,
+            "score": 2.6398392513302698
+          },
+          {
+            "component": "PC1",
+            "observation": 53,
+            "score": 2.3048980662760585
+          },
+          {
+            "component": "PC1",
+            "observation": 54,
+            "score": -1.868880077859141
+          },
+          {
+            "component": "PC1",
+            "observation": 55,
+            "score": -0.1508651590244278
+          },
+          {
+            "component": "PC1",
+            "observation": 56,
+            "score": -0.9324373717668124
+          },
+          {
+            "component": "PC1",
+            "observation": 57,
+            "score": -0.1277960748831205
+          },
+          {
+            "component": "PC1",
+            "observation": 58,
+            "score": 0.9166796737231031
+          },
+          {
+            "component": "PC1",
+            "observation": 59,
+            "score": 1.6267744677816094
+          },
+          {
+            "component": "PC1",
+            "observation": 60,
+            "score": 0.5454437872591846
+          },
+          {
+            "component": "PC1",
+            "observation": 61,
+            "score": -0.4481705896222978
+          },
+          {
+            "component": "PC1",
+            "observation": 62,
+            "score": 1.8629954726776528
+          },
+          {
+            "component": "PC1",
+            "observation": 63,
+            "score": -1.0568317932330251
+          },
+          {
+            "component": "PC1",
+            "observation": 64,
+            "score": -0.41709290365974194
+          },
+          {
+            "component": "PC1",
+            "observation": 65,
+            "score": 0.23482460826171803
+          },
+          {
+            "component": "PC1",
+            "observation": 66,
+            "score": 0.1332657216360931
+          },
+          {
+            "component": "PC1",
+            "observation": 67,
+            "score": -0.5814833209575149
+          },
+          {
+            "component": "PC1",
+            "observation": 68,
+            "score": 4.395414179277429
+          },
+          {
+            "component": "PC1",
+            "observation": 69,
+            "score": -0.485051536458391
+          },
+          {
+            "component": "PC1",
+            "observation": 70,
+            "score": -0.9895469669472168
+          },
+          {
+            "component": "PC1",
+            "observation": 71,
+            "score": -1.2663797144697893
+          },
+          {
+            "component": "PC2",
+            "observation": 0,
+            "score": -1.7835440935708249
+          },
+          {
+            "component": "PC2",
+            "observation": 1,
+            "score": -0.07489685593310247
+          },
+          {
+            "component": "PC2",
+            "observation": 2,
+            "score": -0.5883496747425812
+          },
+          {
+            "component": "PC2",
+            "observation": 3,
+            "score": -0.36461355557532993
+          },
+          {
+            "component": "PC2",
+            "observation": 4,
+            "score": -1.5146881538785317
+          },
+          {
+            "component": "PC2",
+            "observation": 5,
+            "score": 0.19036409544664135
+          },
+          {
+            "component": "PC2",
+            "observation": 6,
+            "score": -1.6534042840535443
+          },
+          {
+            "component": "PC2",
+            "observation": 7,
+            "score": 0.17560470227046823
+          },
+          {
+            "component": "PC2",
+            "observation": 8,
+            "score": -0.24988310550391551
+          },
+          {
+            "component": "PC2",
+            "observation": 9,
+            "score": 0.3802877235732347
+          },
+          {
+            "component": "PC2",
+            "observation": 10,
+            "score": 0.43029123018092696
+          },
+          {
+            "component": "PC2",
+            "observation": 11,
+            "score": -0.3418037438821795
+          },
+          {
+            "component": "PC2",
+            "observation": 12,
+            "score": -0.10686366857770163
+          },
+          {
+            "component": "PC2",
+            "observation": 13,
+            "score": 0.8616662030502803
+          },
+          {
+            "component": "PC2",
+            "observation": 14,
+            "score": 0.53033878485461
+          },
+          {
+            "component": "PC2",
+            "observation": 15,
+            "score": 0.028997358503799645
+          },
+          {
+            "component": "PC2",
+            "observation": 16,
+            "score": -0.01224414265683478
+          },
+          {
+            "component": "PC2",
+            "observation": 17,
+            "score": 0.5708785676365091
+          },
+          {
+            "component": "PC2",
+            "observation": 18,
+            "score": -0.417967014389819
+          },
+          {
+            "component": "PC2",
+            "observation": 19,
+            "score": 0.4110924801706452
+          },
+          {
+            "component": "PC2",
+            "observation": 20,
+            "score": -0.10176766257446405
+          },
+          {
+            "component": "PC2",
+            "observation": 21,
+            "score": 2.0955558073928824
+          },
+          {
+            "component": "PC2",
+            "observation": 22,
+            "score": 0.056206239473298336
+          },
+          {
+            "component": "PC2",
+            "observation": 23,
+            "score": -0.2577346398791586
+          },
+          {
+            "component": "PC2",
+            "observation": 24,
+            "score": -0.09722192858371162
+          },
+          {
+            "component": "PC2",
+            "observation": 25,
+            "score": -0.7638971131253782
+          },
+          {
+            "component": "PC2",
+            "observation": 26,
+            "score": -0.5881211795010065
+          },
+          {
+            "component": "PC2",
+            "observation": 27,
+            "score": 0.5594002949209624
+          },
+          {
+            "component": "PC2",
+            "observation": 28,
+            "score": 0.48070151289070073
+          },
+          {
+            "component": "PC2",
+            "observation": 29,
+            "score": -0.15951037674585755
+          },
+          {
+            "component": "PC2",
+            "observation": 30,
+            "score": -1.0891435355918293
+          },
+          {
+            "component": "PC2",
+            "observation": 31,
+            "score": 0.9061366095816024
+          },
+          {
+            "component": "PC2",
+            "observation": 32,
+            "score": -0.20121994421934095
+          },
+          {
+            "component": "PC2",
+            "observation": 33,
+            "score": -1.709095143684149
+          },
+          {
+            "component": "PC2",
+            "observation": 34,
+            "score": -0.5186848220725736
+          },
+          {
+            "component": "PC2",
+            "observation": 35,
+            "score": -1.6512775317806478
+          },
+          {
+            "component": "PC2",
+            "observation": 36,
+            "score": -2.040807584665585
+          },
+          {
+            "component": "PC2",
+            "observation": 37,
+            "score": 0.12291809312780605
+          },
+          {
+            "component": "PC2",
+            "observation": 38,
+            "score": 1.5172578860196273
+          },
+          {
+            "component": "PC2",
+            "observation": 39,
+            "score": 0.022476189182321138
+          },
+          {
+            "component": "PC2",
+            "observation": 40,
+            "score": 0.13250933836866646
+          },
+          {
+            "component": "PC2",
+            "observation": 41,
+            "score": 0.6090018044933335
+          },
+          {
+            "component": "PC2",
+            "observation": 42,
+            "score": 0.3074804487132713
+          },
+          {
+            "component": "PC2",
+            "observation": 43,
+            "score": -2.5919111974461067
+          },
+          {
+            "component": "PC2",
+            "observation": 44,
+            "score": 0.3228326765390309
+          },
+          {
+            "component": "PC2",
+            "observation": 45,
+            "score": 1.1348031872916677
+          },
+          {
+            "component": "PC2",
+            "observation": 46,
+            "score": 0.6034785592603773
+          },
+          {
+            "component": "PC2",
+            "observation": 47,
+            "score": 0.4254203306266861
+          },
+          {
+            "component": "PC2",
+            "observation": 48,
+            "score": 0.8250297082477197
+          },
+          {
+            "component": "PC2",
+            "observation": 49,
+            "score": 0.0732590874175767
+          },
+          {
+            "component": "PC2",
+            "observation": 50,
+            "score": -0.4300043848735945
+          },
+          {
+            "component": "PC2",
+            "observation": 51,
+            "score": 0.35350222802635367
+          },
+          {
+            "component": "PC2",
+            "observation": 52,
+            "score": -1.675470210494947
+          },
+          {
+            "component": "PC2",
+            "observation": 53,
+            "score": 2.9982158561736028
+          },
+          {
+            "component": "PC2",
+            "observation": 54,
+            "score": -0.3927299461083895
+          },
+          {
+            "component": "PC2",
+            "observation": 55,
+            "score": 0.007394008385955624
+          },
+          {
+            "component": "PC2",
+            "observation": 56,
+            "score": 0.742081066711153
+          },
+          {
+            "component": "PC2",
+            "observation": 57,
+            "score": 0.22178054562716595
+          },
+          {
+            "component": "PC2",
+            "observation": 58,
+            "score": -0.03237883168277389
+          },
+          {
+            "component": "PC2",
+            "observation": 59,
+            "score": -0.9712485590368327
+          },
+          {
+            "component": "PC2",
+            "observation": 60,
+            "score": -0.5881168878979735
+          },
+          {
+            "component": "PC2",
+            "observation": 61,
+            "score": 0.4018264094362665
+          },
+          {
+            "component": "PC2",
+            "observation": 62,
+            "score": -0.45927473757109394
+          },
+          {
+            "component": "PC2",
+            "observation": 63,
+            "score": 0.5297616935215843
+          },
+          {
+            "component": "PC2",
+            "observation": 64,
+            "score": -0.15566307958745948
+          },
+          {
+            "component": "PC2",
+            "observation": 65,
+            "score": 1.1661942851455578
+          },
+          {
+            "component": "PC2",
+            "observation": 66,
+            "score": 2.0796578342119734
+          },
+          {
+            "component": "PC2",
+            "observation": 67,
+            "score": -0.043680420871972436
+          },
+          {
+            "component": "PC2",
+            "observation": 68,
+            "score": 1.7396572127689134
+          },
+          {
+            "component": "PC2",
+            "observation": 69,
+            "score": 0.03870467034592778
+          },
+          {
+            "component": "PC2",
+            "observation": 70,
+            "score": 0.0544416056417375
+          },
+          {
+            "component": "PC2",
+            "observation": 71,
+            "score": -0.479988324471628
+          },
+          {
+            "component": "PC3",
+            "observation": 0,
+            "score": 0.4068612099357176
+          },
+          {
+            "component": "PC3",
+            "observation": 1,
+            "score": 1.1146499124530158
+          },
+          {
+            "component": "PC3",
+            "observation": 2,
+            "score": -1.0940210987248973
+          },
+          {
+            "component": "PC3",
+            "observation": 3,
+            "score": -0.08942539512933334
+          },
+          {
+            "component": "PC3",
+            "observation": 4,
+            "score": 1.1420511040990833
+          },
+          {
+            "component": "PC3",
+            "observation": 5,
+            "score": 0.1882588336310898
+          },
+          {
+            "component": "PC3",
+            "observation": 6,
+            "score": 1.0244258550069738
+          },
+          {
+            "component": "PC3",
+            "observation": 7,
+            "score": 0.8955819493226905
+          },
+          {
+            "component": "PC3",
+            "observation": 8,
+            "score": -0.01663036742867041
+          },
+          {
+            "component": "PC3",
+            "observation": 9,
+            "score": 0.4811612839597281
+          },
+          {
+            "component": "PC3",
+            "observation": 10,
+            "score": -0.803559131854086
+          },
+          {
+            "component": "PC3",
+            "observation": 11,
+            "score": -0.9804595365269887
+          },
+          {
+            "component": "PC3",
+            "observation": 12,
+            "score": 0.0922545211603118
+          },
+          {
+            "component": "PC3",
+            "observation": 13,
+            "score": 0.35306960978828117
+          },
+          {
+            "component": "PC3",
+            "observation": 14,
+            "score": -0.8768161883031511
+          },
+          {
+            "component": "PC3",
+            "observation": 15,
+            "score": -1.186092912605244
+          },
+          {
+            "component": "PC3",
+            "observation": 16,
+            "score": -0.1249309324733831
+          },
+          {
+            "component": "PC3",
+            "observation": 17,
+            "score": -0.33295707525754875
+          },
+          {
+            "component": "PC3",
+            "observation": 18,
+            "score": 0.4336373349067578
+          },
+          {
+            "component": "PC3",
+            "observation": 19,
+            "score": -0.3679687371994658
+          },
+          {
+            "component": "PC3",
+            "observation": 20,
+            "score": -0.9445412540579285
+          },
+          {
+            "component": "PC3",
+            "observation": 21,
+            "score": 1.1517870583096743
+          },
+          {
+            "component": "PC3",
+            "observation": 22,
+            "score": 0.4541339496092327
+          },
+          {
+            "component": "PC3",
+            "observation": 23,
+            "score": 0.598505783400287
+          },
+          {
+            "component": "PC3",
+            "observation": 24,
+            "score": -0.3270523622946269
+          },
+          {
+            "component": "PC3",
+            "observation": 25,
+            "score": -0.09109450336698477
+          },
+          {
+            "component": "PC3",
+            "observation": 26,
+            "score": -0.642431334609228
+          },
+          {
+            "component": "PC3",
+            "observation": 27,
+            "score": -0.17199637535780407
+          },
+          {
+            "component": "PC3",
+            "observation": 28,
+            "score": -0.7624758000709555
+          },
+          {
+            "component": "PC3",
+            "observation": 29,
+            "score": 1.3236916278224258
+          },
+          {
+            "component": "PC3",
+            "observation": 30,
+            "score": -0.6019267927308973
+          },
+          {
+            "component": "PC3",
+            "observation": 31,
+            "score": 0.8716479499316815
+          },
+          {
+            "component": "PC3",
+            "observation": 32,
+            "score": 0.6447097384722539
+          },
+          {
+            "component": "PC3",
+            "observation": 33,
+            "score": -0.17608985051228068
+          },
+          {
+            "component": "PC3",
+            "observation": 34,
+            "score": -0.5464583907571268
+          },
+          {
+            "component": "PC3",
+            "observation": 35,
+            "score": -0.9899875476596613
+          },
+          {
+            "component": "PC3",
+            "observation": 36,
+            "score": 0.6478327400222704
+          },
+          {
+            "component": "PC3",
+            "observation": 37,
+            "score": 0.2814173438141982
+          },
+          {
+            "component": "PC3",
+            "observation": 38,
+            "score": -0.7152133698546072
+          },
+          {
+            "component": "PC3",
+            "observation": 39,
+            "score": -0.06592629813544959
+          },
+          {
+            "component": "PC3",
+            "observation": 40,
+            "score": -0.9168393650814554
+          },
+          {
+            "component": "PC3",
+            "observation": 41,
+            "score": 0.9372323713586465
+          },
+          {
+            "component": "PC3",
+            "observation": 42,
+            "score": 1.0703012189598824
+          },
+          {
+            "component": "PC3",
+            "observation": 43,
+            "score": 2.0570633621439547
+          },
+          {
+            "component": "PC3",
+            "observation": 44,
+            "score": -1.841556621275121
+          },
+          {
+            "component": "PC3",
+            "observation": 45,
+            "score": 0.6848765040108951
+          },
+          {
+            "component": "PC3",
+            "observation": 46,
+            "score": 0.5390204576534932
+          },
+          {
+            "component": "PC3",
+            "observation": 47,
+            "score": 0.14538384219258899
+          },
+          {
+            "component": "PC3",
+            "observation": 48,
+            "score": 0.5744790494682398
+          },
+          {
+            "component": "PC3",
+            "observation": 49,
+            "score": -0.17618693692129833
+          },
+          {
+            "component": "PC3",
+            "observation": 50,
+            "score": 0.134163589570893
+          },
+          {
+            "component": "PC3",
+            "observation": 51,
+            "score": -0.0872662877457778
+          },
+          {
+            "component": "PC3",
+            "observation": 52,
+            "score": 0.06995311502560836
+          },
+          {
+            "component": "PC3",
+            "observation": 53,
+            "score": 0.5330910626032391
+          },
+          {
+            "component": "PC3",
+            "observation": 54,
+            "score": -4.046156792281929
+          },
+          {
+            "component": "PC3",
+            "observation": 55,
+            "score": 0.6404431175333575
+          },
+          {
+            "component": "PC3",
+            "observation": 56,
+            "score": 0.4954845254243204
+          },
+          {
+            "component": "PC3",
+            "observation": 57,
+            "score": -0.6904614797064134
+          },
+          {
+            "component": "PC3",
+            "observation": 58,
+            "score": -0.22053906119659322
+          },
+          {
+            "component": "PC3",
+            "observation": 59,
+            "score": -0.8312158602999435
+          },
+          {
+            "component": "PC3",
+            "observation": 60,
+            "score": 0.08786030561886321
+          },
+          {
+            "component": "PC3",
+            "observation": 61,
+            "score": 1.5288084736981746
+          },
+          {
+            "component": "PC3",
+            "observation": 62,
+            "score": -0.2533396384334412
+          },
+          {
+            "component": "PC3",
+            "observation": 63,
+            "score": 0.1882684156983448
+          },
+          {
+            "component": "PC3",
+            "observation": 64,
+            "score": -0.07699286161529931
+          },
+          {
+            "component": "PC3",
+            "observation": 65,
+            "score": -0.16720391680440516
+          },
+          {
+            "component": "PC3",
+            "observation": 66,
+            "score": -0.9606320870195589
+          },
+          {
+            "component": "PC3",
+            "observation": 67,
+            "score": -1.1156537803189215
+          },
+          {
+            "component": "PC3",
+            "observation": 68,
+            "score": 1.129114495185862
+          },
+          {
+            "component": "PC3",
+            "observation": 69,
+            "score": -1.7432242843276184
+          },
+          {
+            "component": "PC3",
+            "observation": 70,
+            "score": 1.0185317504715736
+          },
+          {
+            "component": "PC3",
+            "observation": 71,
+            "score": 1.0955707656744809
+          }
+        ],
+        "variables": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ],
+        "warnings": [
+          "Standalone PCA v1 is validated for the documented QuickPLS v1.2 supported scope; unsupported shapes remain blocked."
+        ]
+      },
+      "plsc": null,
+      "predict": null,
+      "r_squared": {},
+      "regression": null,
+      "segmentation": null,
+      "transforms": [],
+      "used_observations": 72,
+      "warnings": [
+        "Standalone PCA v1 is validated for the documented QuickPLS v1.2 supported scope; unsupported shapes remain blocked."
+      ],
+      "wpls": null
+    },
+    "assessment": {
+      "method_version": "assessment_not_applicable_v1",
+      "warnings": [
+        "PLS assessment is not applicable to standalone raw-data analyses."
+      ]
+    }
+  }
+}

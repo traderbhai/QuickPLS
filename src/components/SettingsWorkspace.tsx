@@ -1,5 +1,13 @@
-import { CheckCircle2, CircleAlert, ClipboardCheck, MonitorCog, MousePointer2, SlidersHorizontal } from "lucide-react";
-import { useEffect } from "react";
+import { CheckCircle2, CircleAlert, ClipboardCheck, FileArchive, MonitorCog, MousePointer2, SlidersHorizontal } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  cancelNativeDiagnosticBundlePreview,
+  isNativeDesktop,
+  previewNativeDiagnosticBundle,
+  saveNativeDiagnosticBundle,
+  type DiagnosticBundlePreview,
+  type DiagnosticStagedContents,
+} from "../services/projectService";
 import { useWorkspace } from "../store";
 import type { UiPreferences, WorkspaceView } from "../types";
 import { Card, CommandGroup, InlineNotice, MetricCard, PageHeader, Panel, StatusBadge, ToolbarButton, WorkspacePage } from "./Ui";
@@ -40,6 +48,206 @@ function parseImportedPreferences(value: unknown): Partial<UiPreferences> {
     next.selectedExportPreset = record.selectedExportPreset as UiPreferences["selectedExportPreset"];
   }
   return next;
+}
+
+export function DiagnosticStagedContentsPreview({ contents }: { contents: DiagnosticStagedContents }) {
+  const systemRows: Array<[string, string]> = [
+    ["Metadata schema", String(contents.system.schemaVersion)],
+    ["QuickPLS version", contents.system.quickplsVersion],
+    ["Release channel", contents.system.releaseChannel],
+    ["Source revision", contents.system.sourceRevision],
+    ["Operating system", contents.system.osFamily],
+    ["Architecture", contents.system.architecture],
+    ["Desktop runtime", contents.system.desktopRuntime],
+    ["Locale", contents.system.locale],
+    ["WebView2 version", contents.system.webview2Version],
+    ["User data included", contents.system.userDataIncluded ? "yes" : "no"],
+    ["Network accessed", contents.system.networkAccessed ? "yes" : "no"],
+  ];
+  return <section aria-label="Redacted staged diagnostic contents">
+    <h3>Redacted staged contents</h3>
+    <p>These are the exact metadata fields, event rows, and payload descriptors staged for the ZIP.</p>
+
+    <h4>System and build metadata</h4>
+    <dl>
+      {systemRows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+    </dl>
+
+    <div role="region" aria-label="Redacted diagnostic event rows" tabIndex={0}>
+      <table>
+        <caption>Redacted diagnostic event rows</caption>
+        <thead><tr><th scope="col">Sequence</th><th scope="col">Timestamp</th><th scope="col">Severity</th><th scope="col">Stable code</th></tr></thead>
+        <tbody>{contents.events.map((event) => <tr key={`${event.sequence}-${event.code}`}>
+          <td>{event.sequence}</td><td>{event.timestamp}</td><td>{event.severity}</td><td>{event.code}</td>
+        </tr>)}</tbody>
+      </table>
+    </div>
+
+    <div role="region" aria-label="Diagnostic manifest payload descriptors" tabIndex={0}>
+      <table>
+        <caption>Manifest payload descriptors</caption>
+        <thead><tr><th scope="col">Entry</th><th scope="col">Bytes</th><th scope="col">SHA-256</th></tr></thead>
+        <tbody>{contents.manifest.entries.map((entry) => <tr key={entry.name}>
+          <td>{entry.name}</td><td>{entry.bytes}</td><td>{entry.sha256}</td>
+        </tr>)}</tbody>
+      </table>
+    </div>
+    <p>
+      Manifest schema {contents.manifest.schemaVersion}; created {contents.manifest.createdAt}; policy {contents.manifest.policyVersion}; {contents.manifest.archiveLimits.compression} ZIP;
+      maximum {contents.manifest.archiveLimits.maximumArchiveBytes} archive bytes;
+      local only: {contents.manifest.localOnly ? "yes" : "no"}; network accessed: {contents.manifest.networkAccessed ? "yes" : "no"}.
+    </p>
+  </section>;
+}
+
+export function DiagnosticBundlePanel() {
+  const nativeDesktop = isNativeDesktop();
+  const [diagnosticPreview, setDiagnosticPreview] = useState<DiagnosticBundlePreview | null>(null);
+  const diagnosticPreviewIdRef = useRef<string | null>(null);
+  const [diagnosticStatus, setDiagnosticStatus] = useState<"idle" | "previewing" | "ready" | "saving" | "saved" | "cancelled" | "error">("idle");
+  const [diagnosticMessage, setDiagnosticMessage] = useState("No diagnostic bundle has been staged.");
+
+  const previewDiagnostics = async () => {
+    if (!nativeDesktop) return;
+    setDiagnosticStatus("previewing");
+    setDiagnosticMessage("Preparing a redacted local preview...");
+    try {
+      const preview = await previewNativeDiagnosticBundle(diagnosticPreview?.previewId ?? null);
+      diagnosticPreviewIdRef.current = preview.previewId;
+      setDiagnosticPreview(preview);
+      setDiagnosticStatus("ready");
+      setDiagnosticMessage("Preview ready. Review the included and excluded categories before saving.");
+    } catch {
+      setDiagnosticPreview(null);
+      setDiagnosticStatus("error");
+      setDiagnosticMessage("Diagnostic preview failed. Try again before choosing a destination.");
+    }
+  };
+
+  const cancelDiagnosticPreview = async () => {
+    const previewId = diagnosticPreview?.previewId;
+    diagnosticPreviewIdRef.current = null;
+    setDiagnosticPreview(null);
+    setDiagnosticStatus("cancelled");
+    setDiagnosticMessage("Diagnostic preview cancelled. No file was created.");
+    if (!previewId) return;
+    try {
+      await cancelNativeDiagnosticBundlePreview(previewId);
+    } catch {
+      setDiagnosticStatus("error");
+      setDiagnosticMessage("The preview was cleared locally, but the native diagnostic state could not be confirmed.");
+    }
+  };
+
+  const saveDiagnostics = async () => {
+    if (!diagnosticPreview) return;
+    setDiagnosticStatus("saving");
+    setDiagnosticMessage("Waiting for a new ZIP destination...");
+    try {
+      const saved = await saveNativeDiagnosticBundle(diagnosticPreview.previewId);
+      diagnosticPreviewIdRef.current = null;
+      setDiagnosticPreview(null);
+      if (!saved) {
+        setDiagnosticStatus("cancelled");
+        setDiagnosticMessage("Save cancelled. No diagnostic ZIP was created.");
+        return;
+      }
+      setDiagnosticStatus("saved");
+      setDiagnosticMessage(`Diagnostic bundle saved locally (${Math.max(1, Math.ceil(saved.bytes / 1024))} KiB). QuickPLS did not upload it.`);
+    } catch {
+      diagnosticPreviewIdRef.current = null;
+      setDiagnosticPreview(null);
+      setDiagnosticStatus("error");
+      setDiagnosticMessage("Diagnostic save failed. Create a fresh preview and choose another new ZIP destination.");
+    }
+  };
+
+  useEffect(() => () => {
+    const previewId = diagnosticPreviewIdRef.current;
+    diagnosticPreviewIdRef.current = null;
+    if (previewId) {
+      void cancelNativeDiagnosticBundlePreview(previewId).catch(() => undefined);
+    }
+  }, []);
+
+  return <div data-diagnostic-bundle-panel="live">
+    <Panel
+      title="Diagnostics and support"
+      description="Create a redacted, local-only support ZIP. QuickPLS never uploads or attaches it automatically."
+      actions={<FileArchive size={18} aria-hidden="true" />}
+      className="settings-diagnostics"
+    >
+      {!nativeDesktop ? <InlineNotice tone="info" title="Native desktop required">
+        Diagnostic preview and saving are available only in the installed QuickPLS desktop application.
+      </InlineNotice> : null}
+
+      {diagnosticPreview ? <>
+        <div className="qpls2-design-system-grid">
+          <MetricCard label="Archive entries" value={diagnosticPreview.entryCount} detail="Fixed allowlist; no arbitrary files." tone="info" />
+          <MetricCard label="Session events" value={diagnosticPreview.eventCount} detail="Stable codes only; no project labels." tone="info" />
+          <MetricCard
+            label="Redactions"
+            value={Object.values(diagnosticPreview.redactionCounts).reduce((total, count) => total + count, 0)}
+            detail="Applied before this preview was produced."
+            tone="success"
+          />
+          <MetricCard
+            label="Estimated size"
+            value={`${Math.max(1, Math.ceil(diagnosticPreview.estimatedUncompressedBytes / 1024))} KiB`}
+            detail="Bounded uncompressed staging size."
+            tone="info"
+          />
+        </div>
+        <div className="qpls2-design-samples">
+          <InlineNotice tone="success" title="Included in this preview">
+            {diagnosticPreview.includedCategories.join("; ")}.
+          </InlineNotice>
+          <InlineNotice tone="warning" title="Always excluded">
+            {diagnosticPreview.excludedCategories.join("; ")}.
+          </InlineNotice>
+        </div>
+        <DiagnosticStagedContentsPreview contents={diagnosticPreview.stagedContents} />
+      </> : null}
+
+      <div className="qpls2-design-toolbar-demo">
+        <CommandGroup label="Diagnostic bundle">
+          <ToolbarButton
+            type="button"
+            onClick={previewDiagnostics}
+            disabled={!nativeDesktop || diagnosticStatus === "previewing" || diagnosticStatus === "saving"}
+            reason={!nativeDesktop ? "Open Settings in the native desktop application." : "A diagnostic action is already running."}
+          >
+            <FileArchive size={15} aria-hidden="true" /> {diagnosticPreview ? "Refresh preview" : "Preview bundle"}
+          </ToolbarButton>
+          <ToolbarButton
+            type="button"
+            onClick={saveDiagnostics}
+            disabled={!diagnosticPreview || diagnosticStatus === "saving"}
+            reason="Preview and review the redacted contents before saving."
+          >
+            Save new ZIP
+          </ToolbarButton>
+          <ToolbarButton
+            type="button"
+            onClick={cancelDiagnosticPreview}
+            disabled={!diagnosticPreview || diagnosticStatus === "saving"}
+            reason="There is no staged diagnostic preview to cancel."
+          >
+            Cancel preview
+          </ToolbarButton>
+        </CommandGroup>
+      </div>
+
+      <div
+        role={diagnosticStatus === "error" ? "alert" : "status"}
+        aria-live="polite"
+        aria-atomic="true"
+        className={`qpls2-inline-notice ${diagnosticStatus === "error" ? "danger" : diagnosticStatus === "saved" || diagnosticStatus === "ready" ? "success" : "info"}`}
+      >
+        <div><strong>Diagnostic status</strong><span>{diagnosticMessage}</span></div>
+      </div>
+    </Panel>
+  </div>;
 }
 
 export function SettingsWorkspace() {
@@ -191,6 +399,8 @@ export function SettingsWorkspace() {
         <MetricCard label="Automated gates" value="Fixtures only" detail="Bundled and generated data remain the gate inputs." tone="info" />
       </div>
     </Panel>
+
+    <DiagnosticBundlePanel />
 
     <div className="qpls2-hero-grid">
       <Card title="Offline first" description="QuickPLS does not require account login, activation, telemetry, cloud sync, or remote computation." tone="validated" />

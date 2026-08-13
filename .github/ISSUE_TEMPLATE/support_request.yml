@@ -1,0 +1,74 @@
+name: Support request
+description: Ask for help with an official QuickPLS workflow without sharing confidential data.
+title: "[Support]: "
+labels: ["support", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Public issues can be read by anyone. Do not upload confidential datasets, project files, credentials, personal data, or unpublished identifiable research. Use a small synthetic or anonymized reproducer.
+  - type: input
+    id: version
+    attributes:
+      label: QuickPLS version
+      description: Copy the complete version and channel shown by QuickPLS.
+      placeholder: "3.0.0-beta.1"
+    validations:
+      required: true
+  - type: dropdown
+    id: channel
+    attributes:
+      label: Release channel
+      options:
+        - Stable
+        - Beta
+        - Unsigned preview
+        - Internal
+        - Unknown
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Support area
+      options:
+        - Installation, upgrade, or uninstall
+        - Data import or project recovery
+        - Model setup or method applicability
+        - Calculation or result interpretation boundary
+        - Export or report workflow
+        - Accessibility or keyboard workflow
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: "Windows edition, version, and OS build"
+    validations:
+      required: true
+  - type: textarea
+    id: request
+    attributes:
+      label: What are you trying to do?
+      description: Describe the expected workflow and where it stops.
+    validations:
+      required: true
+  - type: textarea
+    id: attempts
+    attributes:
+      label: What have you already tried?
+      description: Include privacy-safe steps, messages, and relevant documentation checked.
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy confirmation
+      options:
+        - label: I have removed confidential data, credentials, personal information, and full personal paths from this public report.
+          required: true
+        - label: I understand that suspected vulnerabilities must be reported through a private GitHub security advisory.
+          required: true

@@ -1,0 +1,784 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/diagnostic_bundle_packaged_acceptance.schema.json",
+  "title": "QuickPLS packaged diagnostic bundle acceptance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "kind", "passed", "generated_at_utc", "target", "runtime",
+    "endpoint", "generator", "source_generator", "tested_product", "source_artifacts", "checks", "artifacts",
+    "browser_requests", "console_errors", "failures", "source_report"
+  ],
+  "properties": {
+    "schema_version": { "const": "quickpls.diagnostic_bundle_packaged_acceptance.v1" },
+    "kind": { "const": "quickpls3_packaged_diagnostic_bundle_v1_acceptance" },
+    "passed": { "const": true },
+    "generated_at_utc": { "type": "string", "format": "date-time" },
+    "target": { "const": "windows_10_11_x64_packaged_tauri" },
+    "runtime": { "$ref": "#/$defs/runtime" },
+    "endpoint": { "const": "http://127.0.0.1:9222" },
+    "generator": { "const": "validation/run_diagnostic_bundle_packaged_acceptance.ps1" },
+    "source_generator": { "const": "validation/diagnostic_bundle_packaged_acceptance.mjs" },
+    "tested_product": {
+      "type": "object", "additionalProperties": false,
+      "required": ["quickpls_desktop_exe"],
+      "properties": { "quickpls_desktop_exe": { "$ref": "#/$defs/desktopArtifact" } }
+    },
+    "source_artifacts": { "$ref": "#/$defs/sourceArtifacts" },
+    "checks": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "runtime_preflight", "abandoned_preview_recovery", "live_settings_preview",
+        "navigation_cancellation", "native_save_dialog", "archive_integrity",
+        "destination_rejections", "browser_network_observation", "process_observation",
+        "network_observation", "cleanup"
+      ],
+      "properties": {
+        "runtime_preflight": { "$ref": "#/$defs/runtimePreflight" },
+        "abandoned_preview_recovery": { "$ref": "#/$defs/abandonedPreviewRecovery" },
+        "live_settings_preview": { "$ref": "#/$defs/liveSettingsPreview" },
+        "navigation_cancellation": { "$ref": "#/$defs/navigationCancellation" },
+        "native_save_dialog": { "$ref": "#/$defs/nativeSaveDialog" },
+        "archive_integrity": { "$ref": "#/$defs/archiveIntegrity" },
+        "destination_rejections": { "$ref": "#/$defs/destinationRejections" },
+        "browser_network_observation": { "$ref": "#/$defs/browserNetwork" },
+        "process_observation": { "$ref": "#/$defs/processObservation" },
+        "network_observation": { "$ref": "#/$defs/networkObservation" },
+        "cleanup": { "$ref": "#/$defs/cleanup" }
+      }
+    },
+    "artifacts": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "diagnostic_zip", "live_preview_screenshot", "saved_screenshot", "raw_report",
+        "process_samples", "network_samples", "process_report", "network_report", "cleanup_report",
+        "build_receipt", "source_before", "source_evidence"
+      ],
+      "properties": {
+        "diagnostic_zip": { "$ref": "#/$defs/zipArtifact" },
+        "live_preview_screenshot": { "$ref": "#/$defs/pngArtifact" },
+        "saved_screenshot": { "$ref": "#/$defs/pngArtifact" },
+        "raw_report": { "$ref": "#/$defs/artifact" },
+        "process_samples": { "$ref": "#/$defs/artifact" },
+        "network_samples": { "$ref": "#/$defs/artifact" },
+        "process_report": { "$ref": "#/$defs/artifact" },
+        "network_report": { "$ref": "#/$defs/artifact" },
+        "cleanup_report": { "$ref": "#/$defs/artifact" },
+        "build_receipt": { "allOf": [{ "$ref": "#/$defs/artifact" }, { "properties": { "path": { "const": "validation/results/diagnostic_bundle_build_receipt.json" } } }] },
+        "source_before": { "allOf": [{ "$ref": "#/$defs/artifact" }, { "properties": { "path": { "const": "validation/results/diagnostic_bundle_source_before.json" } } }] },
+        "source_evidence": { "allOf": [{ "$ref": "#/$defs/artifact" }, { "properties": { "path": { "const": "validation/results/diagnostic_bundle_source_evidence.json" } } }] }
+      }
+    },
+    "browser_requests": { "type": "array", "items": { "$ref": "#/$defs/browserRequest" } },
+    "console_errors": { "type": "array", "maxItems": 0 },
+    "failures": { "type": "array", "maxItems": 0 },
+    "source_report": { "const": "validation/results/diagnostic_bundle_packaged_acceptance.raw.json" }
+  },
+  "$defs": {
+    "sourcePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?![A-Za-z]:)(?!/)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+    },
+    "sourceDescriptor": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "size", "sha256", "mtime_ns"],
+      "properties": {
+        "path": { "$ref": "#/$defs/sourcePath" },
+        "size": { "type": "integer", "minimum": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "mtime_ns": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "descriptorManifest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["descriptors", "manifest_sha256"],
+      "properties": {
+        "descriptors": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/sourceDescriptor" } },
+        "manifest_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "productDiscovery": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "paths", "vite_config_precedence", "present_vite_configs", "active_vite_config",
+        "present_production_env_files", "desktop_cargo_manifests", "tauri_configs",
+        "package_build_script", "package_tauri_script", "tauri_before_build_command", "tauri_frontend_dist"
+      ],
+      "properties": {
+        "paths": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/sourcePath" } },
+        "vite_config_precedence": { "const": ["vite.config.js", "vite.config.mjs", "vite.config.ts", "vite.config.cjs", "vite.config.mts", "vite.config.cts"] },
+        "present_vite_configs": { "const": ["vite.config.js", "vite.config.ts"] },
+        "active_vite_config": { "const": "vite.config.js" },
+        "present_production_env_files": { "type": "array", "uniqueItems": true, "items": { "enum": [".env", ".env.local", ".env.production", ".env.production.local"] } },
+        "desktop_cargo_manifests": { "const": [
+          "crates/qpls-assessment/Cargo.toml", "crates/qpls-core/Cargo.toml", "crates/qpls-data/Cargo.toml",
+          "crates/qpls-estimation/Cargo.toml", "crates/qpls-project/Cargo.toml", "crates/qpls-resampling/Cargo.toml",
+          "crates/qpls-runner/Cargo.toml", "src-tauri/Cargo.toml"
+        ] },
+        "tauri_configs": { "const": ["src-tauri/tauri.conf.json"] },
+        "package_build_script": { "const": "tsc -b && vite build" },
+        "package_tauri_script": { "const": "tauri" },
+        "tauri_before_build_command": { "const": "npm run build" },
+        "tauri_frontend_dist": { "const": "../dist" }
+      }
+    },
+    "productSourceManifest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["discovery", "descriptors", "manifest_sha256"],
+      "properties": {
+        "discovery": { "$ref": "#/$defs/productDiscovery" },
+        "descriptors": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/sourceDescriptor" } },
+        "manifest_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "gateOnlyManifest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["descriptors", "manifest_sha256"],
+      "properties": {
+        "descriptors": {
+          "type": "array", "minItems": 10, "maxItems": 10, "items": false,
+          "prefixItems": [
+            { "allOf": [{ "$ref": "#/$defs/sourceDescriptor" }, { "properties": { "path": { "const": "validation/close_tauri_test_window.mjs" } } }] },
+            { "allOf": [{ "$ref": "#/$defs/sourceDescriptor" }, { "properties": { "path": { "const": "validation/diagnostic_bundle_packaged_acceptance.mjs" } } }] },
+            { "allOf": [{ "$ref": "#/$defs/sourceDescriptor" }, { "properties": { "path": { "const": "validation/diagnostic_bundle_packaged_acceptance.py" } } }] },
+            { "allOf": [{ "$ref": "#/$defs/sourceDescriptor" }, { "properties": { "path": { "const": "validation/diagnostic_bundle_packaged_acceptance.schema.json" } } }] },
+            { "allOf": [{ "$ref": "#/$defs/sourceDescriptor" }, { "properties": { "path": { "const": "validation/diagnostic_bundle_source_manifest.py" } } }] },
+            { "allOf": [{ "$ref": "#/$defs/sourceDescriptor" }, { "properties": { "path": { "const": "validation/monitor_quickpls_network.ps1" } } }] },
+            { "allOf": [{ "$ref": "#/$defs/sourceDescriptor" }, { "properties": { "path": { "const": "validation/monitor_quickpls_process_tree.ps1" } } }] },
+            { "allOf": [{ "$ref": "#/$defs/sourceDescriptor" }, { "properties": { "path": { "const": "validation/run_diagnostic_bundle_packaged_acceptance.ps1" } } }] },
+            { "allOf": [{ "$ref": "#/$defs/sourceDescriptor" }, { "properties": { "path": { "const": "validation/test_diagnostic_bundle_packaged_acceptance.py" } } }] },
+            { "allOf": [{ "$ref": "#/$defs/sourceDescriptor" }, { "properties": { "path": { "const": "validation/windows_native_save_diagnostic_bundle.py" } } }] }
+          ]
+        },
+        "manifest_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "depInfo": {
+      "type": "object", "additionalProperties": false,
+      "required": ["descriptor", "repository_dependency_paths", "dist_dependency_paths", "dist_set_exact"],
+      "properties": {
+        "descriptor": { "allOf": [{ "$ref": "#/$defs/sourceDescriptor" }, { "properties": { "path": { "const": "target/release/quickpls-desktop.d" } } }] },
+        "repository_dependency_paths": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/sourcePath" } },
+        "dist_dependency_paths": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^dist/.+" } },
+        "dist_set_exact": { "const": true }
+      }
+    },
+    "sourceFreshness": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "passed", "tested_desktop_path", "tested_desktop_mtime_unix_ns",
+        "newest_product_input_path", "newest_product_input_mtime_unix_ns",
+        "build_started_unix_ns", "build_finished_unix_ns",
+        "desktop_not_older_than_every_product_input", "desktop_created_during_recorded_build"
+      ],
+      "properties": {
+        "passed": { "const": true },
+        "tested_desktop_path": { "const": "target/release/quickpls-desktop.exe" },
+        "tested_desktop_mtime_unix_ns": { "type": "integer", "minimum": 1 },
+        "newest_product_input_path": { "$ref": "#/$defs/sourcePath" },
+        "newest_product_input_mtime_unix_ns": { "type": "integer", "minimum": 1 },
+        "build_started_unix_ns": { "type": "integer", "minimum": 1 },
+        "build_finished_unix_ns": { "type": "integer", "minimum": 1 },
+        "desktop_not_older_than_every_product_input": { "const": true },
+        "desktop_created_during_recorded_build": { "const": true }
+      }
+    },
+    "buildReceipt": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "schema_version", "kind", "passed", "generated_at_utc", "build_command",
+        "build_started_at_utc", "build_finished_at_utc", "build_started_unix_ns", "build_finished_unix_ns",
+        "build_exit_code", "source_before", "source_after", "source_stable_during_build", "dist_after",
+        "cargo_dep_info", "tested_desktop", "dist_bound_to_dep_info", "freshness"
+      ],
+      "properties": {
+        "schema_version": { "const": "quickpls.diagnostic_bundle_build_receipt.v1" },
+        "kind": { "const": "quickpls_diagnostic_packaged_frozen_build_v1" },
+        "passed": { "const": true },
+        "generated_at_utc": { "type": "string", "format": "date-time" },
+        "build_command": { "const": ["npm.cmd", "run", "tauri", "--", "build"] },
+        "build_started_at_utc": { "type": "string", "format": "date-time" },
+        "build_finished_at_utc": { "type": "string", "format": "date-time" },
+        "build_started_unix_ns": { "type": "integer", "minimum": 1 },
+        "build_finished_unix_ns": { "type": "integer", "minimum": 1 },
+        "build_exit_code": { "const": 0 },
+        "source_before": { "$ref": "#/$defs/productSourceManifest" },
+        "source_after": { "$ref": "#/$defs/productSourceManifest" },
+        "source_stable_during_build": { "const": true },
+        "dist_after": { "$ref": "#/$defs/descriptorManifest" },
+        "cargo_dep_info": { "$ref": "#/$defs/depInfo" },
+        "tested_desktop": { "allOf": [{ "$ref": "#/$defs/sourceDescriptor" }, { "properties": { "path": { "const": "target/release/quickpls-desktop.exe" } } }] },
+        "dist_bound_to_dep_info": { "const": true },
+        "freshness": { "$ref": "#/$defs/sourceFreshness" }
+      }
+    },
+    "gateSourceSnapshot": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "discovery_contract", "product_source", "gate_only", "dist", "cargo_dep_info", "tested_desktop", "build_receipt", "freshness"],
+      "properties": {
+        "schema_version": { "const": "quickpls.diagnostic_bundle_gate_source_snapshot.v1" },
+        "discovery_contract": { "const": "quickpls_diagnostic_packaged_source_manifest_v1" },
+        "product_source": { "$ref": "#/$defs/productSourceManifest" },
+        "gate_only": { "$ref": "#/$defs/gateOnlyManifest" },
+        "dist": { "$ref": "#/$defs/descriptorManifest" },
+        "cargo_dep_info": { "$ref": "#/$defs/depInfo" },
+        "tested_desktop": { "allOf": [{ "$ref": "#/$defs/sourceDescriptor" }, { "properties": { "path": { "const": "target/release/quickpls-desktop.exe" } } }] },
+        "build_receipt": { "allOf": [{ "$ref": "#/$defs/sourceDescriptor" }, { "properties": { "path": { "const": "validation/results/diagnostic_bundle_build_receipt.json" } } }] },
+        "freshness": { "$ref": "#/$defs/sourceFreshness" }
+      }
+    },
+    "sourceArtifacts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "discovery_contract", "build_receipt_path", "build_receipt", "before", "after", "source_stable_during_gate", "freshness"],
+      "properties": {
+        "schema_version": { "const": "quickpls.diagnostic_bundle_source_evidence.v1" },
+        "discovery_contract": { "const": "quickpls_diagnostic_packaged_source_manifest_v1" },
+        "build_receipt_path": { "const": "validation/results/diagnostic_bundle_build_receipt.json" },
+        "build_receipt": { "$ref": "#/$defs/buildReceipt" },
+        "before": { "$ref": "#/$defs/gateSourceSnapshot" },
+        "after": { "$ref": "#/$defs/gateSourceSnapshot" },
+        "source_stable_during_gate": { "const": true },
+        "freshness": { "$ref": "#/$defs/sourceFreshness" }
+      }
+    },
+    "runtime": {
+      "type": "object", "additionalProperties": false,
+      "required": ["node", "platform", "architecture", "playwright"],
+      "properties": {
+        "node": { "type": "string", "pattern": "^v[0-9]+\\." },
+        "platform": { "const": "win32" },
+        "architecture": { "enum": ["x64", "arm64"] },
+        "playwright": { "const": "chromium-connect-over-cdp" }
+      }
+    },
+    "artifact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "size", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "size": { "type": "integer", "minimum": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "desktopArtifact": {
+      "allOf": [
+        { "$ref": "#/$defs/artifact" },
+        { "properties": { "path": { "const": "target/release/quickpls-desktop.exe" } } }
+      ]
+    },
+    "zipArtifact": {
+      "allOf": [
+        { "$ref": "#/$defs/artifact" },
+        { "properties": { "path": { "type": "string", "pattern": "^validation/results/[^/]+\\.zip$" } } }
+      ]
+    },
+    "pngArtifact": {
+      "allOf": [
+        { "$ref": "#/$defs/artifact" },
+        { "properties": { "path": { "type": "string", "pattern": "^validation/results/screens/diagnostic-bundle-packaged-acceptance/[^/]+\\.png$" } } }
+      ]
+    },
+    "pageState": {
+      "type": "object", "additionalProperties": false,
+      "required": ["index", "url", "origin", "title", "shell_visible", "tauri_runtime"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0 },
+        "url": { "type": "string", "pattern": "^http://tauri\\.localhost(?:[/?#].*)?$" },
+        "origin": { "const": "http://tauri.localhost" },
+        "title": { "type": "string", "minLength": 1 },
+        "shell_visible": { "const": true },
+        "tauri_runtime": { "const": true }
+      }
+    },
+    "runtimePreflight": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "expected_origin", "qualifying_page_count", "pre_reload", "reload_count", "post_reload", "same_origin"],
+      "properties": {
+        "passed": { "const": true },
+        "expected_origin": { "const": "http://tauri.localhost" },
+        "qualifying_page_count": { "const": 1 },
+        "pre_reload": { "$ref": "#/$defs/pageState" },
+        "reload_count": { "const": 1 },
+        "post_reload": { "$ref": "#/$defs/pageState" },
+        "same_origin": { "const": true }
+      }
+    },
+    "redactionCounts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["windowsPaths", "emailAddresses", "urlQueriesOrFragments", "bearerTokens"],
+      "properties": {
+        "windowsPaths": { "type": "integer", "minimum": 0 },
+        "emailAddresses": { "type": "integer", "minimum": 0 },
+        "urlQueriesOrFragments": { "type": "integer", "minimum": 0 },
+        "bearerTokens": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "systemMetadata": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "schemaVersion", "quickplsVersion", "releaseChannel", "sourceRevision", "osFamily",
+        "architecture", "desktopRuntime", "locale", "webview2Version", "userDataIncluded", "networkAccessed"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "quickplsVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "releaseChannel": { "enum": ["internal", "unsigned-preview", "beta", "stable"] },
+        "sourceRevision": { "type": "string", "pattern": "^(?:not_provided|[0-9a-fA-F]{7,64})$" },
+        "osFamily": { "const": "windows" },
+        "architecture": { "type": "string", "minLength": 1 },
+        "desktopRuntime": { "const": "Tauri 2" },
+        "locale": { "type": "string", "minLength": 1 },
+        "webview2Version": { "type": "string", "minLength": 1 },
+        "userDataIncluded": { "const": false },
+        "networkAccessed": { "const": false }
+      }
+    },
+    "eventRow": {
+      "type": "object", "additionalProperties": false,
+      "required": ["timestamp", "sequence", "severity", "code"],
+      "properties": {
+        "timestamp": { "type": "string", "format": "date-time" },
+        "sequence": { "type": "integer", "minimum": 1 },
+        "severity": { "enum": ["info", "warning", "error"] },
+        "code": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]+$" }
+      }
+    },
+    "descriptor": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "sha256", "bytes"],
+      "properties": {
+        "name": { "enum": ["metadata/system.json", "logs/events.jsonl"] },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "bytes": { "type": "integer", "minimum": 1, "maximum": 262144 }
+      }
+    },
+    "manifest": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "schemaVersion", "policyVersion", "createdAt", "quickplsVersion", "entries",
+        "redactionCounts", "redactionTotal", "archiveLimits", "localOnly", "networkAccessed"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "policyVersion": { "const": "quickpls-diagnostics-v1" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "quickplsVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "entries": {
+          "type": "array", "items": false,
+          "prefixItems": [
+            { "allOf": [{ "$ref": "#/$defs/descriptor" }, { "properties": { "name": { "const": "metadata/system.json" } } }] },
+            { "allOf": [{ "$ref": "#/$defs/descriptor" }, { "properties": { "name": { "const": "logs/events.jsonl" } } }] }
+          ]
+        },
+        "redactionCounts": { "$ref": "#/$defs/redactionCounts" },
+        "redactionTotal": { "type": "integer", "minimum": 0 },
+        "archiveLimits": {
+          "const": {
+            "maximumEntries": 3,
+            "maximumEntryBytes": 262144,
+            "maximumUncompressedBytes": 524288,
+            "maximumArchiveBytes": 532480,
+            "compression": "stored"
+          }
+        },
+        "localOnly": { "const": true },
+        "networkAccessed": { "const": false }
+      }
+    },
+    "stagedContents": {
+      "type": "object", "additionalProperties": false,
+      "required": ["system", "events", "manifest"],
+      "properties": {
+        "system": { "$ref": "#/$defs/systemMetadata" },
+        "events": { "type": "array", "minItems": 1, "maxItems": 128, "items": { "$ref": "#/$defs/eventRow" } },
+        "manifest": { "$ref": "#/$defs/manifest" }
+      }
+    },
+    "abandonedPreviewRecovery": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "passed", "abandoned_preview_count", "backend_capacity", "evicted_oldest_count",
+        "evicted_oldest", "surviving_abandoned_cancelled_count", "surviving_abandoned_cancelled_ids",
+        "live_ui_recovered_at_capacity"
+      ],
+      "properties": {
+        "passed": { "const": true },
+        "abandoned_preview_count": { "const": 7 },
+        "backend_capacity": { "const": 4 },
+        "evicted_oldest_count": { "const": 4 },
+        "evicted_oldest": {
+          "type": "array", "minItems": 4, "maxItems": 4,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["preview_id", "error"],
+            "properties": {
+              "preview_id": { "type": "string", "format": "uuid" },
+              "error": { "type": "string", "pattern": "DIAGNOSTIC_PREVIEW_REQUIRED" }
+            }
+          }
+        },
+        "surviving_abandoned_cancelled_count": { "const": 3 },
+        "surviving_abandoned_cancelled_ids": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "string", "format": "uuid" }, "uniqueItems": true },
+        "live_ui_recovered_at_capacity": { "const": true }
+      }
+    },
+    "liveSettingsPreview": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "passed", "production_entry", "dialog_title", "panel_marker", "existing_preferences_preserved",
+        "preview_before_save", "local_only", "network_activity", "entry_count", "event_count",
+        "included_categories", "excluded_categories", "staged_contents", "exact_system_labels",
+        "exact_descriptor_names", "accessible_regions", "live_status_region"
+      ],
+      "properties": {
+        "passed": { "const": true },
+        "production_entry": { "const": "src/App.tsx -> NativeDesktopApp -> NativeUtilityDialog -> DiagnosticBundlePanel" },
+        "dialog_title": { "const": "Preferences" },
+        "panel_marker": { "const": "live" },
+        "existing_preferences_preserved": { "const": true },
+        "preview_before_save": { "const": true },
+        "local_only": { "const": true },
+        "network_activity": { "const": "none" },
+        "entry_count": { "const": 3 },
+        "event_count": { "type": "integer", "minimum": 1, "maximum": 128 },
+        "included_categories": { "const": [
+          "QuickPLS build and release identity",
+          "Operating-system family and architecture",
+          "Bounded session diagnostic event codes",
+          "Manifest hashes, sizes, limits, and redaction counts"
+        ] },
+        "excluded_categories": { "const": [
+          "Dataset rows, values, and variable names",
+          "Project contents, model labels, and project titles",
+          "Results, reports, and exports",
+          "Credentials, environment values, and command lines",
+          "Arbitrary files, registry data, and memory dumps"
+        ] },
+        "staged_contents": { "$ref": "#/$defs/stagedContents" },
+        "exact_system_labels": { "const": [
+          "Metadata schema", "QuickPLS version", "Release channel", "Source revision", "Operating system",
+          "Architecture", "Desktop runtime", "Locale", "WebView2 version", "User data included", "Network accessed"
+        ] },
+        "exact_descriptor_names": { "const": ["metadata/system.json", "logs/events.jsonl"] },
+        "accessible_regions": { "const": ["Redacted diagnostic event rows", "Diagnostic manifest payload descriptors"] },
+        "live_status_region": { "const": true }
+      }
+    },
+    "navigationCancellation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "explicit_preview_cancellation", "unmount_cycles", "every_unmount_recorded", "recovery_preview_id"],
+      "properties": {
+        "passed": { "const": true },
+        "explicit_preview_cancellation": {
+          "type": "object", "additionalProperties": false,
+          "required": ["passed", "preview_id", "no_file_created_message"],
+          "properties": {
+            "passed": { "const": true },
+            "preview_id": { "type": "string", "format": "uuid" },
+            "no_file_created_message": { "const": true }
+          }
+        },
+        "unmount_cycles": { "const": 5 },
+        "every_unmount_recorded": { "const": true },
+        "recovery_preview_id": { "type": "string", "format": "uuid" }
+      }
+    },
+    "nativeSaveDialog": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "target_path", "new_target", "local_drive_rooted", "helper_ready", "helper_completion", "save_result", "app_feedback"],
+      "properties": {
+        "passed": { "const": true },
+        "target_path": { "type": "string", "pattern": "^[A-Za-z]:[\\\\/].+\\.zip$" },
+        "new_target": { "const": true },
+        "local_drive_rooted": { "const": true },
+        "helper_ready": {
+          "type": "object", "required": ["event", "passed", "phase", "targetPath", "mainWindow"],
+          "properties": { "event": { "const": "ready" }, "passed": { "const": true }, "phase": { "const": "main_window_binding" } }
+        },
+        "helper_completion": {
+          "type": "object", "required": ["event", "passed", "phase", "targetPath", "mainWindow", "dialog", "boundControls", "saveSubmission", "bundle", "transport"],
+          "properties": {
+            "event": { "const": "complete" },
+            "passed": { "const": true },
+            "phase": { "const": "diagnostic_zip_creation_and_readback" },
+            "boundControls": { "const": { "filenameEditControlId": 1001, "saveButtonControlId": 1 } },
+            "bundle": { "$ref": "#/$defs/helperBundle" },
+            "transport": {
+              "type": "object", "required": ["exitCode", "signal", "stderr", "events", "protocolErrors"],
+              "properties": {
+                "exitCode": { "const": 0 }, "signal": { "type": "null" }, "stderr": { "const": "" },
+                "events": { "type": "array", "minItems": 2 }, "protocolErrors": { "type": "array", "maxItems": 0 }
+              }
+            }
+          }
+        },
+        "save_result": {
+          "type": "object", "additionalProperties": false,
+          "required": ["bytes", "archiveSha256"],
+          "properties": {
+            "bytes": { "type": "integer", "minimum": 1, "maximum": 532480 },
+            "archiveSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+          }
+        },
+        "app_feedback": { "type": "string", "pattern": "^Diagnostic bundle saved locally \\([1-9][0-9]* KiB\\)\\. QuickPLS did not upload it\\.$" }
+      }
+    },
+    "helperBundle": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "size", "sha256", "entryNames", "entryCompression", "entrySizes", "uncompressedBytes", "system", "events", "manifest", "forbiddenPatternMatches"],
+      "properties": {
+        "path": { "type": "string", "pattern": "^[A-Za-z]:[\\\\/].+\\.zip$" },
+        "size": { "type": "integer", "minimum": 1, "maximum": 532480 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "entryNames": { "const": ["metadata/system.json", "logs/events.jsonl", "manifest.json"] },
+        "entryCompression": { "const": ["stored", "stored", "stored"] },
+        "entrySizes": {
+          "type": "object", "additionalProperties": false,
+          "required": ["metadata/system.json", "logs/events.jsonl", "manifest.json"],
+          "properties": {
+            "metadata/system.json": { "type": "integer", "minimum": 1, "maximum": 262144 },
+            "logs/events.jsonl": { "type": "integer", "minimum": 1, "maximum": 262144 },
+            "manifest.json": { "type": "integer", "minimum": 1, "maximum": 262144 }
+          }
+        },
+        "uncompressedBytes": { "type": "integer", "minimum": 1, "maximum": 524288 },
+        "system": { "$ref": "#/$defs/systemMetadata" },
+        "events": { "type": "array", "minItems": 1, "maxItems": 128, "items": { "$ref": "#/$defs/eventRow" } },
+        "manifest": { "$ref": "#/$defs/manifest" },
+        "forbiddenPatternMatches": { "type": "array", "maxItems": 0 }
+      }
+    },
+    "archiveIntegrity": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "passed", "exact_entry_names", "exact_entry_count", "stored_compression_only", "entry_sizes",
+        "uncompressed_bytes", "archive_bytes", "archive_sha256", "manifest_payload_descriptors_exact",
+        "preview_archive_exact", "redaction_counts", "redaction_total", "forbidden_pattern_matches",
+        "user_data_included", "network_accessed_declared"
+      ],
+      "properties": {
+        "passed": { "const": true },
+        "exact_entry_names": { "const": ["metadata/system.json", "logs/events.jsonl", "manifest.json"] },
+        "exact_entry_count": { "const": 3 },
+        "stored_compression_only": { "const": true },
+        "entry_sizes": { "$ref": "#/$defs/helperBundle/properties/entrySizes" },
+        "uncompressed_bytes": { "type": "integer", "minimum": 1, "maximum": 524288 },
+        "archive_bytes": { "type": "integer", "minimum": 1, "maximum": 532480 },
+        "archive_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "manifest_payload_descriptors_exact": { "const": true },
+        "preview_archive_exact": { "const": true },
+        "redaction_counts": { "$ref": "#/$defs/redactionCounts" },
+        "redaction_total": { "type": "integer", "minimum": 0 },
+        "forbidden_pattern_matches": { "type": "array", "maxItems": 0 },
+        "user_data_included": { "const": false },
+        "network_accessed_declared": { "const": false }
+      }
+    },
+    "rejectionCase": {
+      "type": "object", "additionalProperties": false,
+      "required": ["case_id", "path", "expected_code", "observed_error", "preview_consumed"],
+      "properties": {
+        "case_id": { "enum": ["relative", "unc", "verbatim_namespace", "wrong_extension", "reserved_device", "existing_destination"] },
+        "path": { "type": "string", "minLength": 1 },
+        "expected_code": { "type": "string", "pattern": "^DIAGNOSTIC_[A-Z_]+$" },
+        "observed_error": { "type": "string", "pattern": "DIAGNOSTIC_[A-Z_]+" },
+        "preview_consumed": { "const": true }
+      }
+    },
+    "destinationRejections": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "cases", "existing_destination_unchanged", "existing_destination_sha256_before", "existing_destination_sha256_after"],
+      "properties": {
+        "passed": { "const": true },
+        "cases": { "type": "array", "minItems": 6, "maxItems": 6, "items": { "$ref": "#/$defs/rejectionCase" } },
+        "existing_destination_unchanged": { "const": true },
+        "existing_destination_sha256_before": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "existing_destination_sha256_after": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "browserNetwork": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "observation", "allowed_origins", "observed_origins", "request_count", "external_request_count", "external_requests"],
+      "properties": {
+        "passed": { "const": true },
+        "observation": { "const": "playwright_page_request_events_during_reload_preview_cancel_navigation_save_and_negative_paths_v1" },
+        "allowed_origins": { "const": ["http://ipc.localhost", "http://tauri.localhost"] },
+        "observed_origins": { "const": ["http://ipc.localhost", "http://tauri.localhost"] },
+        "request_count": { "type": "integer", "minimum": 1 },
+        "external_request_count": { "const": 0 },
+        "external_requests": { "type": "array", "maxItems": 0 }
+      }
+    },
+    "processIdentity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["pid", "parent_pid", "name", "role", "creation_date", "executable_path", "command_line"],
+      "properties": {
+        "pid": { "type": "integer", "minimum": 1 },
+        "parent_pid": { "type": "integer", "minimum": 0 },
+        "name": { "type": "string", "minLength": 1 },
+        "role": { "enum": ["desktop_root", "webview_browser", "webview_renderer", "webview_gpu", "webview_utility", "webview_other"] },
+        "creation_date": { "type": "string", "minLength": 1 },
+        "executable_path": { "type": "string", "pattern": "^[A-Za-z]:\\\\" },
+        "command_line": { "type": "string", "minLength": 1 }
+      }
+    },
+    "processObservation": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "schema_version", "passed", "root_pid", "sample_count", "peak_total_working_set_bytes",
+        "peak_total_private_memory_bytes", "peak_total_handle_count", "peak_total_thread_count",
+        "peak_process_count", "peak_working_set_under_2_gib", "zero_other_descendants",
+        "process_command_lines_persisted", "process_identity_stable", "observed_processes",
+        "direct_webview_browser_child_count", "direct_webview_browser_child",
+        "direct_webview_browser_observed_in_every_sample", "frozen_product_browser_switches", "acceptance_only_browser_switches",
+        "missing_browser_switches", "duplicate_browser_switches", "conflicting_browser_switches", "browser_switch_contract_passed", "observation"
+      ],
+      "properties": {
+        "schema_version": { "const": 1 }, "passed": { "const": true },
+        "root_pid": { "type": "integer", "minimum": 1 }, "sample_count": { "type": "integer", "minimum": 4 },
+        "peak_total_working_set_bytes": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+        "peak_total_private_memory_bytes": { "type": "integer", "minimum": 1 },
+        "peak_total_handle_count": { "type": "integer", "minimum": 1 },
+        "peak_total_thread_count": { "type": "integer", "minimum": 1 },
+        "peak_process_count": { "type": "integer", "minimum": 1 },
+        "peak_working_set_under_2_gib": { "const": true },
+        "zero_other_descendants": { "const": true },
+        "process_command_lines_persisted": { "const": true },
+        "process_identity_stable": { "const": true },
+        "observed_processes": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/processIdentity" } },
+        "direct_webview_browser_child_count": { "const": 1 },
+        "direct_webview_browser_child": {
+          "allOf": [
+            { "$ref": "#/$defs/processIdentity" },
+            { "properties": { "name": { "const": "msedgewebview2.exe" }, "role": { "const": "webview_browser" } } }
+          ]
+        },
+        "direct_webview_browser_observed_in_every_sample": { "const": true },
+        "frozen_product_browser_switches": {
+          "const": [
+            "--disable-background-networking", "--disable-component-update", "--disable-sync",
+            "--metrics-recording-only", "--disable-quic",
+            "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection",
+            "--proxy-server=http://127.0.0.1:17846"
+          ]
+        },
+        "acceptance_only_browser_switches": { "const": ["--remote-debugging-port=9222"] },
+        "missing_browser_switches": { "type": "array", "maxItems": 0 },
+        "duplicate_browser_switches": { "type": "array", "maxItems": 0 },
+        "conflicting_browser_switches": { "type": "array", "maxItems": 0 },
+        "browser_switch_contract_passed": { "const": true },
+        "observation": { "const": "sampled exact root process identity, executable path, command line, and descendants with a configured 250 ms inter-sample delay; bounded run, not a sustained no-leak claim" }
+      }
+    },
+    "tcpConnection": {
+      "type": "object", "additionalProperties": false,
+      "required": ["owning_process", "local_address", "local_port", "remote_address", "remote_port", "state", "remote_access"],
+      "properties": {
+        "owning_process": { "type": "integer", "minimum": 1 },
+        "local_address": { "type": "string", "minLength": 1 },
+        "local_port": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "remote_address": { "type": "string", "minLength": 1 },
+        "remote_port": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "state": { "type": "string", "minLength": 1 },
+        "remote_access": { "type": "boolean" }
+      }
+    },
+    "tcpMonitor": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "schema_version", "passed", "root_pid", "sample_count", "observed_tcp_connection_rows",
+        "remote_connection_count", "remote_connections", "allowed_loopback_ports", "loopback_allowed_for_cdp",
+        "loopback_allowed_for_proxy", "allowed_loopback_connection_rows", "unexpected_loopback_connection_count",
+        "unexpected_loopback_connections", "proxy_listener", "proxy_listener_sample_count",
+        "proxy_listener_present_in_every_sample", "cdp_listener", "cdp_listener_sample_count",
+        "cdp_listener_present_in_every_sample", "exact_loopback_allowances", "udp_observation_performed",
+        "packet_capture_performed", "boundary", "observation"
+      ],
+      "properties": {
+        "schema_version": { "const": 1 }, "passed": { "const": true },
+        "root_pid": { "type": "integer", "minimum": 1 }, "sample_count": { "type": "integer", "minimum": 4 },
+        "observed_tcp_connection_rows": { "type": "integer", "minimum": 0 },
+        "remote_connection_count": { "const": 0 }, "remote_connections": { "type": "array", "maxItems": 0 },
+        "allowed_loopback_ports": { "const": [9222, 17846] },
+        "loopback_allowed_for_cdp": { "const": true },
+        "loopback_allowed_for_proxy": { "const": true },
+        "allowed_loopback_connection_rows": { "type": "integer", "minimum": 2 },
+        "unexpected_loopback_connection_count": { "const": 0 },
+        "unexpected_loopback_connections": { "type": "array", "maxItems": 0 },
+        "proxy_listener": {
+          "allOf": [
+            { "$ref": "#/$defs/tcpConnection" },
+            { "properties": {
+              "local_address": { "const": "127.0.0.1" }, "local_port": { "const": 17846 },
+              "remote_address": { "const": "0.0.0.0" }, "remote_port": { "const": 0 },
+              "state": { "const": "Listen" }, "remote_access": { "const": false }
+            } }
+          ]
+        },
+        "proxy_listener_sample_count": { "type": "integer", "minimum": 4 },
+        "proxy_listener_present_in_every_sample": { "const": true },
+        "cdp_listener": {
+          "allOf": [
+            { "$ref": "#/$defs/tcpConnection" },
+            { "properties": {
+              "local_address": { "const": "127.0.0.1" }, "local_port": { "const": 9222 },
+              "remote_address": { "const": "0.0.0.0" }, "remote_port": { "const": 0 },
+              "state": { "const": "Listen" }, "remote_access": { "const": false }
+            } }
+          ]
+        },
+        "cdp_listener_sample_count": { "type": "integer", "minimum": 4 },
+        "cdp_listener_present_in_every_sample": { "const": true },
+        "exact_loopback_allowances": { "const": true },
+        "udp_observation_performed": { "const": false },
+        "packet_capture_performed": { "const": false },
+        "boundary": { "const": "sampled_exact_process_tree_tcp_only_no_udp_or_packet_capture" },
+        "observation": { "const": "sampled exact-process-tree TCP endpoint snapshots with a configured 250 ms inter-sample delay; only loopback CDP 9222 and QuickPLS proxy 17846 active paths allowed; zero non-loopback rows required; no UDP or packet-capture claim" }
+      }
+    },
+    "networkObservation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "tcp_monitor", "browser_request_observation"],
+      "properties": {
+        "passed": { "const": true },
+        "tcp_monitor": { "$ref": "#/$defs/tcpMonitor" },
+        "browser_request_observation": { "$ref": "#/$defs/browserNetwork" }
+      }
+    },
+    "monitorCleanup": {
+      "type": "object", "additionalProperties": false,
+      "required": ["label", "exit_confirmed", "exit_code", "forced_termination", "stderr"],
+      "properties": {
+        "label": { "enum": ["process_tree", "network_tcp"] },
+        "exit_confirmed": { "const": true }, "exit_code": { "const": 0 },
+        "forced_termination": { "const": false }, "stderr": { "const": "" }
+      }
+    },
+    "cleanup": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "passed", "launched_pid", "descendants_at_shutdown", "graceful_close_exit_code",
+        "graceful_exit_confirmed", "forced_parent_termination", "forced_descendant_pids",
+        "parent_exit_confirmed", "lingering_descendant_pids", "process_monitor", "network_monitor"
+      ],
+      "properties": {
+        "passed": { "const": true }, "launched_pid": { "type": "integer", "minimum": 1 },
+        "descendants_at_shutdown": { "type": "array", "items": { "type": "object" } },
+        "graceful_close_exit_code": { "const": 0 }, "graceful_exit_confirmed": { "const": true },
+        "forced_parent_termination": { "const": false }, "forced_descendant_pids": { "type": "array", "maxItems": 0 },
+        "parent_exit_confirmed": { "const": true }, "lingering_descendant_pids": { "type": "array", "maxItems": 0 },
+        "process_monitor": { "$ref": "#/$defs/monitorCleanup" },
+        "network_monitor": { "$ref": "#/$defs/monitorCleanup" }
+      }
+    },
+    "browserRequest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["url", "origin", "method", "resource_type"],
+      "properties": {
+        "url": { "type": "string", "pattern": "^http://(?:ipc|tauri)\\.localhost(?:/|$)" }, "origin": { "enum": ["http://ipc.localhost", "http://tauri.localhost"] },
+        "method": { "type": "string", "minLength": 1 }, "resource_type": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

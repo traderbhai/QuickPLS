@@ -1,0 +1,132 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "audit_output_not_consumed": true,
+    "passed": true,
+    "release_evidence_contract_passes": true,
+    "semantic_checks": {
+      "exact_packaged_check_set": true,
+      "native_packaged_evidence_passed": true,
+      "prior_factory_stages_passed": true,
+      "responsive_viewports_passed": true,
+      "runner_cleanup_verified": true,
+      "source_freshness_passed": true
+    },
+    "stage_artifacts": [
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/structural_path_randomization_v1/engine_stage.identity.json",
+        "roles": [
+          "method_spec",
+          "independent_reference",
+          "simulation_report",
+          "boundary_report"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/structural_path_randomization_v1/persistence_report.identity.json",
+        "roles": [
+          "persistence_report"
+        ],
+        "stage": "archive_qualified"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/structural_path_randomization_v1/native_stage.identity.json",
+        "roles": [
+          "frontend_report",
+          "export_report"
+        ],
+        "stage": "native_qualified"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/structural_path_randomization_v1/packaged_acceptance.identity.json",
+        "roles": [
+          "packaged_acceptance"
+        ],
+        "stage": "release_qualified"
+      }
+    ]
+  },
+  "feature_id": "qpls3.inference.structural_path_randomization",
+  "generated_at_utc": "2026-08-13T19:55:16.278624Z",
+  "method_version": "freedman_lane_permutation_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_audit",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/legacy_release_adapter_common.py",
+      "sha256": "daddcd525696fb7e45d0c39a5aa5ba919782df44382acb3692af5bf90fc413e0",
+      "size": 51955
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/structural_path_randomization_v1.manifest.json",
+      "sha256": "c4af70fa296449446e4f987c346b82be6c03c82fdaf73e6e2f66e738d8450b2a",
+      "size": 14560
+    },
+    {
+      "path": "validation/results/method_factory/structural_path_randomization_v1/engine_stage.identity.json",
+      "sha256": "79db3c3f5c28b0f340f8bcedc55190189f83058a37492155e802e930d510d753",
+      "size": 5170
+    },
+    {
+      "path": "validation/results/method_factory/structural_path_randomization_v1/native_stage.identity.json",
+      "sha256": "1082a23f699f4bb2bcf5338dc290c58ff2bf536c519634e2e905eb306fbd8071",
+      "size": 5259
+    },
+    {
+      "path": "validation/results/method_factory/structural_path_randomization_v1/packaged_acceptance.identity.json",
+      "sha256": "98b18b2e60b4e81063983d233a7fea660fcaeccd6cf264b5fefd31bd7b9835d9",
+      "size": 58926
+    },
+    {
+      "path": "validation/results/method_factory/structural_path_randomization_v1/persistence_report.identity.json",
+      "sha256": "fc5e9a7fc8640b9757a13c387e1b92e699bd917377d1bbd47500cfbf7297b7b0",
+      "size": 4764
+    },
+    {
+      "path": "validation/structural_path_randomization_method_promotion_audit.py",
+      "sha256": "60f067d3255410559592c5c3ff58b77aa877f4052d609bc2a195627bc212e100",
+      "size": 99637
+    },
+    {
+      "path": "validation/structural_path_randomization_v1_factory_audit.py",
+      "sha256": "39cf74cf64b2516f24e0879293115b9b41f238c4cf22552b2f1f0ada2655176c",
+      "size": 229
+    },
+    {
+      "path": "validation/test_legacy_release_adapters.py",
+      "sha256": "8be8b702aad674175bdcb9cacd5bb99612bf805e19431740a2771c664b35c9be",
+      "size": 13396
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_structural_path_randomization_method_promotion_audit.py",
+      "sha256": "f2e8cc03de3ca710a840b39a485b29e0352b0ab2414339e3466823b488d209eb",
+      "size": 47059
+    }
+  ]
+}

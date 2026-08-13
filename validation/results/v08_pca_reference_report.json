@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "schema_version": 2,
+  "report_scope": "method_specific",
+  "target": "v0.8 pca method reference",
+  "selected_section": "pca",
+  "tolerance": 1e-06,
+  "checks": {
+    "pca": {
+      "passed": true,
+      "method_version": "pca_v1",
+      "max_abs_difference": 4.440892098500626e-16,
+      "retained_components": 3
+    }
+  },
+  "note": "This file is method-specific evidence and is not overwritten by other --section runs. Broader variants require separate promotion evidence."
+}

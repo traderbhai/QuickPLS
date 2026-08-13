@@ -597,7 +597,7 @@ class StructuralPathRandomizationPromotionAuditTests(unittest.TestCase):
 
             def setup(workers: int, start_label: str) -> dict[str, object]:
                 return {
-                    "catalogCount": 14,
+                    "catalogCount": 15,
                     "selectedMethod": "Structural Path Randomization",
                     "permutations": {
                         "count": 1, "type": "number", "minimum": "99",

@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "governance": {"contract_frozen_at_utc": "2026-08-13T10:09:13Z", "manifest_path": "validation/methods/gsca_als_v2.manifest.json", "schema_path": "validation/methods/method_promotion_manifest.schema.json", "validator_path": "validation/method_promotion_manifest.py", "focused_test_path": "validation/test_method_promotion_manifest.py"},
+  "feature": {"id": "qpls3.gsca.als", "label": "GSCA Alternating Least Squares Point Estimation", "method_version": "gsca_als_v2", "method_kind": "deterministic", "catalogue_snapshot_date": "2026-08-12", "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/"},
+  "claim": {
+    "supported_scope": "Bounded joint global least-squares alternating-least-squares point estimation for standardized raw data, disjoint reflective or formative blocks, and recursive single-group structural paths.",
+    "estimand": "Component weights, measurement loadings, structural paths, endogenous R-squared, and bounded global and local fit summaries minimizing the frozen GSCA least-squares criterion.",
+    "assumptions": ["Raw numeric observations are listwise complete after disclosed omission and all standardized indicators have nonzero variance.", "The model contains at least two connected constructs with disjoint supported measurement blocks and recursive paths.", "The deterministic initialization, convergence tolerance, maximum iterations, and normalization conventions are persisted."],
+    "exclusions": ["GSCA bootstrap, permutation, uncertainty intervals, and significance testing are excluded.", "Controls, covariance paths, interactions, higher-order constructs, case weights, multigroup analysis, cycles, and regularization are excluded.", "The official GSCA algorithm-and-bootstrapping catalogue entry is only partially covered by this point-estimation contract."],
+    "warnings": ["Point estimates and fit summaries do not provide inferential uncertainty or establish causality.", "Nonconvergence or an inadmissible solution must prevent substantive interpretation."]
+  },
+  "scientific_contract": {
+    "equations": [
+      {"id": "gsca_global_criterion", "expression": "phi = ||ZV - ZWA||_F^2", "variables": ["phi", "Z", "V", "W", "A"], "source_reference_id": "hwang_takane_2004"},
+      {"id": "gsca_fit", "expression": "FIT = 1 - phi / ||ZV||_F^2", "variables": ["FIT", "phi", "Z", "V"], "source_reference_id": "hwang_takane_2004"}
+    ],
+    "references": [
+      {"id": "hwang_takane_2004", "kind": "primary_paper", "citation": "Hwang and Takane (2004), Generalized Structured Component Analysis", "locator": "docs/methods/GSCA_ALS_V2.md", "independence_group": "published_gsca_method", "runtime_policy": "no_runtime_dependency"},
+      {"id": "independent_scipy_gsca", "kind": "independent_python", "citation": "Independent SciPy constrained minimization of the bounded GSCA criterion", "locator": "validation/gsca_als_v2_reference.py", "independence_group": "python_reference", "runtime_policy": "development_validation_only"}
+    ],
+    "simulations": [{"id": "gsca_parameter_recovery", "purpose": "recovery", "design": "Supported reflective, formative, and mixed recursive models across sample sizes, signal strengths, collinearity, and construct order.", "seed_policy": "Frozen scenario seeds generate data; ALS itself is deterministic with fixed positive initialization.", "metrics": ["weight_error", "loading_error", "path_error", "objective_error", "convergence_rate"], "acceptance_rule": "Mapped estimates and fit summaries must meet preregistered recovery bounds and agree with independent optimization within the documented method tolerance."}],
+    "boundaries": [
+      {"id": "constant_or_collinear_block", "category": "data_pathology", "case": "A block is constant, non-finite, or too ill-conditioned for a supported solution.", "expected_behavior": "The run is blocked or returns an explicit nonconvergent failure without usable point estimates."},
+      {"id": "unsupported_gsca_shape", "category": "unsupported_scope", "case": "The request includes bootstrap, multigroup analysis, interactions, higher-order constructs, case weights, or cyclic paths.", "expected_behavior": "The unsupported request is blocked before execution."},
+      {"id": "model_reorder", "category": "metamorphic", "case": "Constructs and indicators are consistently reordered.", "expected_behavior": "Mapped weights, loadings, paths, objective, and fit summaries remain equal within tolerance."},
+      {"id": "repeat_als", "category": "determinism", "case": "The same data, model, tolerance, and iteration limit are executed repeatedly.", "expected_behavior": "The analytical GSCA payload is exactly equal apart from timestamps."},
+      {"id": "gsca_archive_tamper", "category": "tamper", "case": "Weights, paths, objective, convergence, method identity, or model fingerprint are changed.", "expected_behavior": "Strict project validation rejects the archive."}
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence": {"recipe_schema_version": 3, "result_schema_version": 1, "payload_kind": "pls_pm_v1", "tamper_tests": [
+      {"category": "feature_identity", "expected_behavior": "Reject an archive whose capability identity differs from GSCA ALS."}, {"category": "method_version", "expected_behavior": "Reject a current result relabeled as another GSCA version."}, {"category": "dataset_fingerprint", "expected_behavior": "Reject a result whose dataset fingerprint differs from saved input."}, {"category": "checksum", "expected_behavior": "Reject a changed archive entry whose checksum differs."}, {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, non-finite estimates, inconsistent dimensions, or invalid fit identities."}, {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret gsca_v1 preview results as gsca_als_v2 evidence."}
+    ], "legacy_policy": "Historical gsca_v1 remains preview-only and cannot satisfy the current ALS v2 promotion contract."},
+    "native": {"setup_controls": ["Reflective or formative measurement mode", "Recursive GSCA paths", "Iteration limit", "Convergence tolerance"], "applicability_blockers": ["Unsupported model feature", "Overlapping indicator blocks", "Non-finite or constant data", "Disconnected or cyclic model"], "result_surfaces": ["Weights and loadings", "Structural paths and R-squared", "Global and local fit", "Convergence and provenance"], "gui_cli_parity_rule": "GUI and CLI must produce the same GSCA point-estimate and fit payload for identical data, model, and settings.", "accessibility_rules": ["Every model diagram and fit visual has an equivalent accessible table.", "Convergence, exclusions, estimates, and warnings are available without color alone."]},
+    "export": {"formats": ["csv", "xlsx"], "tables": ["GSCA weights and loadings", "GSCA paths and R-squared", "GSCA fit", "Run provenance"], "same_run_required": true, "provenance_required": true},
+    "packaged": {"platforms": ["windows"], "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"], "viewports": ["1024x700", "1280x720", "1440x900"], "offline_required": true, "cancellation_required": false, "process_cleanup_required": true},
+    "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
+  },
+  "qualification": {"declared_state": "absent", "target_state": "release_qualified", "source_requirements": {
+    "method_spec": ["docs/methods/GSCA_ALS_V2.md"], "independent_reference": ["validation/gsca_als_v2_reference.py"], "simulation_report": ["validation/gsca_release_simulation.py"], "boundary_report": ["validation/gsca_release_boundary_gate.py"], "persistence_report": ["validation/gsca_release_persistence_gate.py"], "frontend_report": ["src/native/nativeGscaCanonicalIntegration.test.ts"], "export_report": ["src/native/nativeExportTables.test.ts"], "method_audit": ["validation/gsca_method_promotion_audit.py"], "packaged_acceptance": ["validation/run_v247_gsca_native_acceptance.ps1"]
+  }, "evidence": {"engine_only": [], "archive_qualified": [], "native_qualified": [], "release_qualified": []}}
+}

@@ -1,0 +1,132 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "audit_output_not_consumed": true,
+    "passed": true,
+    "release_evidence_contract_passes": true,
+    "semantic_checks": {
+      "exact_packaged_check_set": true,
+      "native_packaged_evidence_passed": true,
+      "prior_factory_stages_passed": true,
+      "responsive_viewports_passed": true,
+      "runner_cleanup_verified": true,
+      "source_freshness_passed": true
+    },
+    "stage_artifacts": [
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/regression_bootstrap_v1/engine_stage.identity.json",
+        "roles": [
+          "method_spec",
+          "independent_reference",
+          "simulation_report",
+          "boundary_report"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/regression_bootstrap_v1/persistence_report.identity.json",
+        "roles": [
+          "persistence_report"
+        ],
+        "stage": "archive_qualified"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/regression_bootstrap_v1/native_stage.identity.json",
+        "roles": [
+          "frontend_report",
+          "export_report"
+        ],
+        "stage": "native_qualified"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/regression_bootstrap_v1/packaged_acceptance.identity.json",
+        "roles": [
+          "packaged_acceptance"
+        ],
+        "stage": "release_qualified"
+      }
+    ]
+  },
+  "feature_id": "qpls3.standalone.regression_bootstrap",
+  "generated_at_utc": "2026-08-13T19:55:26.684056Z",
+  "method_version": "regression_bootstrap_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_audit",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/legacy_release_adapter_common.py",
+      "sha256": "daddcd525696fb7e45d0c39a5aa5ba919782df44382acb3692af5bf90fc413e0",
+      "size": 51955
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/regression_bootstrap_v1.manifest.json",
+      "sha256": "857b25d5822321d8ddfb16255849e5932170f733c11523317210a3a600935d72",
+      "size": 15009
+    },
+    {
+      "path": "validation/regression_bootstrap_method_promotion_audit.py",
+      "sha256": "48e1169a2942c83341ce9444fd84683dbd83c1c427e99df36ef44933c7ba0e6b",
+      "size": 51034
+    },
+    {
+      "path": "validation/regression_bootstrap_v1_factory_audit.py",
+      "sha256": "917dc2e2487a0be0895645a476e139e3f5380ce6169666d7fd0617ae57229270",
+      "size": 211
+    },
+    {
+      "path": "validation/results/method_factory/regression_bootstrap_v1/engine_stage.identity.json",
+      "sha256": "02186a55f968b5ddb0e58901a0e6db7d6c2a70f5ef6b64673573a0c81533e272",
+      "size": 5232
+    },
+    {
+      "path": "validation/results/method_factory/regression_bootstrap_v1/native_stage.identity.json",
+      "sha256": "f1f98342ba23edca17220beda418e0b2cd68180cdb82f729c0ff978e0dfc58a5",
+      "size": 5026
+    },
+    {
+      "path": "validation/results/method_factory/regression_bootstrap_v1/packaged_acceptance.identity.json",
+      "sha256": "f9e3ebb3154b91fd5dec4a642e813d0464cece5565fb560155e70c02c9776694",
+      "size": 63348
+    },
+    {
+      "path": "validation/results/method_factory/regression_bootstrap_v1/persistence_report.identity.json",
+      "sha256": "580206f357e9ccd63c28b4c0f10b245d108e38f7fa250c59445c41f92d35c0ec",
+      "size": 4691
+    },
+    {
+      "path": "validation/test_legacy_release_adapters.py",
+      "sha256": "8be8b702aad674175bdcb9cacd5bb99612bf805e19431740a2771c664b35c9be",
+      "size": 13396
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_regression_bootstrap_method_promotion_audit.py",
+      "sha256": "0a19fa90478931880257b687835b679afb44e4f7f2200c3e8532290456efedc6",
+      "size": 35116
+    }
+  ]
+}

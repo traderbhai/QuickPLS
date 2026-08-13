@@ -35,12 +35,14 @@ class ParityLedgerTests(unittest.TestCase):
         self.assertEqual(report["feature_count"], 17)
         self.assertEqual(
             report["declared_states"],
-            {"native_qualified": 13, "release_qualified": 4},
+            {"native_qualified": 14, "release_qualified": 3},
         )
         self.assertEqual(
             report["derived_states"],
-            {"native_qualified": 13, "release_qualified": 4},
+            {"native_qualified": 14, "release_qualified": 3},
         )
+        # Keep withheld PROCESS descriptors visible so its release gate stays
+        # inspectable and fail-closed while qualification remains native-only.
         self.assertEqual(len(report["release_evidence_descriptors"]), 8)
         for descriptor in report["release_evidence_descriptors"]:
             self.assertEqual(set(descriptor), {"path", "size", "sha256"})
@@ -53,7 +55,6 @@ class ParityLedgerTests(unittest.TestCase):
                 "qpls3.inference.structural_path_randomization",
                 "qpls3.standalone.logistic",
                 "qpls3.standalone.regression_bootstrap",
-                "qpls3.standalone.process",
             ],
         )
 

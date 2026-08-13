@@ -1,0 +1,52 @@
+{
+  "schema_version":1,
+  "governance":{"contract_frozen_at_utc":"2026-08-13T10:26:17Z","manifest_path":"validation/methods/cbsem_multigroup_v2.manifest.json","schema_path":"validation/methods/method_promotion_manifest.schema.json","validator_path":"validation/method_promotion_manifest.py","focused_test_path":"validation/test_method_promotion_manifest.py"},
+  "feature":{"id":"qpls3.cbsem.multigroup","label":"CB-SEM Two-Group Structural Path Comparison","method_version":"cbsem_multigroup_v2","method_kind":"stochastic","catalogue_snapshot_date":"2026-08-12","catalogue_url":"https://smartpls.com/documentation/algorithms-and-techniques/"},
+  "claim":{
+    "supported_scope":"Comparison of one preregistered unstandardized structural path between exactly two observed groups using simultaneous ordinary-ML cbsem_ml_v1 fits, a one-constraint likelihood-ratio test, and within-group cbsem_bootstrap_v2 resampling.",
+    "estimand":"The unstandardized coefficient difference beta_group1 minus beta_group2, its one-degree-of-freedom equality-constraint likelihood-ratio test, and its percentile bootstrap interval.",
+    "assumptions":["Exactly two mutually exclusive groups share the same reflective continuous configural model, observed variables, marker convention, preprocessing, and estimator.","Qualified cbsem_invariance_v2 metric invariance is established before the structural path comparison.","The workflow independently qualifies stratified reuse of cbsem_bootstrap_v2 case-resampling, seed, quantile, and failure rules while refitting both groups, and both constrained and unconstrained fits are converged and admissible."],
+    "exclusions":["Three or more groups, latent classes, unequal measurement forms, automated path scanning, multiple-path multiplicity, latent means, ordinal/robust estimators, and clustered samples are excluded.","Standardized path differences are descriptive only and are not the inferential estimand.","The synthetic cbsem_multigroup_v1 preview cannot be promoted or relabeled as v2."],
+    "warnings":["Group comparison validity depends on measurement invariance, group sample adequacy, and correct independent-group specification.","A nonzero coefficient difference is not evidence that group membership causes the difference."]
+  },
+  "scientific_contract":{
+    "equations":[
+      {"id":"group_path_difference","expression":"Delta_beta = beta_g1 - beta_g2","variables":["Delta_beta","beta_g1","beta_g2"],"source_reference_id":"joreskog_1971"},
+      {"id":"path_equality_lrt","expression":"Delta_chi2 = chi2_equal_path - chi2_free_path; Delta_df = 1","variables":["Delta_chi2","chi2_equal_path","chi2_free_path","Delta_df"],"source_reference_id":"joreskog_1971"}
+    ],
+    "references":[
+      {"id":"joreskog_1971","kind":"primary_paper","citation":"Joreskog (1971), Simultaneous Factor Analysis in Several Populations, DOI 10.1007/BF02291466","locator":"docs/methods/CBSEM_MGA_V2.md","independence_group":"published_multigroup_sem","runtime_policy":"no_runtime_dependency"},
+      {"id":"meredith_1993","kind":"primary_paper","citation":"Meredith (1993), Measurement Invariance, Factor Analysis and Factorial Invariance, DOI 10.1007/BF02294825","locator":"docs/methods/CBSEM_MGA_V2.md","independence_group":"published_measurement_invariance","runtime_policy":"no_runtime_dependency"},
+      {"id":"independent_python_cbsem_mga","kind":"independent_python","citation":"Independent Python two-group constrained-ML and stratified-bootstrap reference","locator":"validation/cbsem_mga_v2_reference.py","independence_group":"python_reference","runtime_policy":"development_validation_only"}
+    ],
+    "simulations":[
+      {"id":"group_path_difference_inference","purpose":"type_i_error","design":"Two-group invariant SEMs under equal and unequal target paths across balanced/unbalanced group sizes, loading strength, path magnitude, and moderate nonnormality.","seed_policy":"Frozen group-specific data-generation and within-group bootstrap streams indexed by scenario and replicate.","metrics":["delta_beta_bias","lrt_type_i_error","lrt_power","bootstrap_coverage","group_failure_accuracy"],"acceptance_rule":"Null rejection and interval coverage must meet preregistered Monte Carlo limits, power and bias must meet scenario limits, and invalid/invariance-failing cases must be blocked."},
+      {"id":"mga_failure_policy","purpose":"failure_behavior","design":"Small groups, missing group labels, failed metric invariance, inadmissible group fits, and bootstrap threshold failures.","seed_policy":"Frozen adversarial fixtures and replicate streams.","metrics":["block_decision_accuracy","failure_reason_accuracy","retry_reproducibility"],"acceptance_rule":"Every unsupported or failed case must match the specified block/reason behavior and same-seed retry must reproduce uninterrupted output."}
+    ],
+    "boundaries":[
+      {"id":"small_or_inadmissible_group","category":"data_pathology","case":"A group is too small, singular, nonconverged, non-finite, or inadmissible for the frozen model.","expected_behavior":"MGA is unavailable and no path-difference inference is emitted."},
+      {"id":"unsupported_groups_or_invariance","category":"unsupported_scope","case":"There are not exactly two groups, measurement forms differ, metric invariance failed, or multiple paths are requested.","expected_behavior":"Setup is blocked before structural comparison."},
+      {"id":"group_label_swap","category":"metamorphic","case":"Group 1 and group 2 labels are swapped while observations are unchanged.","expected_behavior":"Delta_beta and percentile interval endpoints reverse sign, while two-sided likelihood-ratio results remain equal."},
+      {"id":"mga_seed_worker_invariance","category":"determinism","case":"The same data, group map, target path, settings, and seed run with different worker counts.","expected_behavior":"Group fits, constraints, resamples, failures, and summaries are exactly equal."},
+      {"id":"mga_archive_tamper","category":"tamper","case":"A group label/count, invariance prerequisite, path estimate, constraint, fit, replicate, interval, or method identity is changed.","expected_behavior":"Strict project validation rejects the archive."}
+    ],
+    "numerical_tolerance":0.000001
+  },
+  "product_contract":{
+    "persistence":{"recipe_schema_version":3,"result_schema_version":1,"payload_kind":"pls_pm_v1","tamper_tests":[
+      {"category":"feature_identity","expected_behavior":"Reject an archive whose identity differs from CB-SEM two-group MGA v2."},
+      {"category":"method_version","expected_behavior":"Reject output relabeled from cbsem_multigroup_v1 or another method."},
+      {"category":"dataset_fingerprint","expected_behavior":"Reject either group or resample when the dataset fingerprint differs."},
+      {"category":"checksum","expected_behavior":"Reject an archive entry whose group model, invariance, bootstrap, or result checksum differs."},
+      {"category":"malformed_payload","expected_behavior":"Reject duplicate keys, unknown fields, invalid groups, inconsistent constraints, non-finite deltas, or impossible replicate counts."},
+      {"category":"legacy_reinterpretation","expected_behavior":"Never reinterpret apportioned pooled-fit or synthetic equality diagnostics from cbsem_multigroup_v1 as v2 evidence."}
+    ],"legacy_policy":"The cbsem_multigroup_v1 preview remains experimental and is permanently ineligible for v2 evidence or migration."},
+    "native":{"setup_controls":["Group column","Group 1 and group 2","Target structural path","Metric-invariance prerequisite","Bootstrap samples and seed"],"applicability_blockers":["Group count other than two","Missing or small group","Different measurement forms","Metric invariance not established","Inadmissible constrained or unconstrained fit"],"result_surfaces":["Group definitions and counts","Free and equal-path fits","Unstandardized path difference and LRT","Bootstrap interval and failures","Warnings and provenance"],"gui_cli_parity_rule":"GUI and CLI must produce identical group rows, constrained fits, stratified resamples, failures, and path-difference results for the same recipe and seed.","accessibility_rules":["Every group comparison visual has an equivalent accessible table.","Direction, uncertainty, invariance status, failures, and warnings are communicated without color alone."]},
+    "export":{"formats":["csv","xlsx"],"tables":["Group definitions","Group parameter estimates","Equality-constraint test","Bootstrap path difference","Failure ledger","Run provenance"],"same_run_required":true,"provenance_required":true},
+    "packaged":{"platforms":["windows"],"workflow_steps":["setup","invalid_setup_blocked","execute","cancel_retry","inspect_results","export","save","close","reopen_same_run","cleanup"],"viewports":["1024x700","1280x720","1440x900"],"offline_required":true,"cancellation_required":true,"process_cleanup_required":true},
+    "audit":{"exact_identity_fields":["passed","feature_id","method_version","catalogue_snapshot_date"],"source_hashes_required":true,"freshness_required":true,"reports_must_pass":true}
+  },
+  "qualification":{"declared_state":"absent","target_state":"release_qualified","source_requirements":{
+    "method_spec":["docs/methods/CBSEM_MGA_V2.md"],"independent_reference":["validation/cbsem_mga_v2_reference.py"],"simulation_report":["validation/cbsem_mga_v2_release_simulation.py"],"boundary_report":["validation/cbsem_mga_v2_release_boundary_gate.py"],"persistence_report":["validation/cbsem_mga_v2_release_persistence_gate.py"],"frontend_report":["src/native/nativeCbsemMga.test.ts"],"export_report":["src/native/nativeExportTables.test.ts"],"method_audit":["validation/cbsem_mga_v2_method_promotion_audit.py"],"packaged_acceptance":["validation/run_v252_cbsem_mga_v2_native_acceptance.ps1"]
+  },"evidence":{"engine_only":[],"archive_qualified":[],"native_qualified":[],"release_qualified":[]}}
+}

@@ -12,7 +12,7 @@ import { Card, MethodScopeDrawer, PageHeader, Panel, StatusBadge, TabStrip, Work
 const presets: Array<{ id: MethodPresetId; label: string; description: string }> = [
   { id: "standard_pls", label: "Standard PLS-SEM", description: "Core PLS path model with validated defaults." },
   { id: "pls_bootstrap", label: "PLS + Bootstrap", description: "Inference-ready PLS setup with bootstrap samples." },
-  { id: "plspredict", label: "PLSpredict", description: "Prediction and segmentation workflow defaults." },
+  { id: "plspredict", label: "PLSpredict", description: "Qualified prediction defaults; optional segmentation diagnostics remain bounded previews." },
   { id: "micom_mga", label: "MICOM + MGA", description: "Two-group invariance and permutation MGA setup." },
   { id: "cbsem_cfa", label: "CB-SEM CFA", description: "Reflective raw-data CFA/SEM ML setup." },
   { id: "ols_regression", label: "OLS Regression", description: "Numeric OLS with HC3 robust standard errors." },
@@ -276,11 +276,11 @@ export function AnalysisCatalog() {
     {setup.mode === "expert" ? <section className="group-setup-card setup-v2-expert-workflows" aria-label="Group and prediction workflow setup">
       <div>
         <strong>Group and prediction workflows</strong>
-        <p>MICOM, permutation MGA, FIMIX-PLS, PLS-POS, and IPMA are configured here, then reviewed from the Groups tab in Results.</p>
+        <p>MICOM, permutation MGA, IPMA, and the bounded preview-only PLS-POS/FIMIX-style diagnostics are configured here, then reviewed from the Groups tab in Results.</p>
       </div>
       <div className="group-setup-actions">
         <button className={setup.selectedPreset === "micom_mga" ? "secondary-button active" : "secondary-button"} onClick={() => applyPreset("micom_mga")}>MICOM + MGA setup</button>
-        <button className={settings.method === "predict" ? "secondary-button active" : "secondary-button"} onClick={() => setSettings({ method: "predict", groupMethods: "pls_pos" })}>PLS-POS / FIMIX setup</button>
+        <button className={settings.method === "predict" ? "secondary-button active" : "secondary-button"} onClick={() => setSettings({ method: "predict", groupMethods: "pls_pos" })}>Segmentation preview setup</button>
         <button className={settings.method === "ipma" ? "secondary-button active" : "secondary-button"} onClick={() => setSettings({ method: "ipma" })}>IPMA setup</button>
       </div>
       <small>{groupWorkflowActive ? "A group or prediction workflow is selected. Completed group outputs will appear in Results > Groups." : "Select a group workflow only when your research design needs invariance, group comparison, segmentation, or IPMA output."}</small>
@@ -413,5 +413,5 @@ function CbsemSettings({ columns }: { columns: string[] }) {
 function PredictSettings() {
   const settings = useWorkspace((state) => state.analysisSettings);
   const setSettings = useWorkspace((state) => state.setAnalysisSettings);
-  return <><label>Segmentation workflow<select value={settings.groupMethods?.includes("fimix") ? "fimix" : "pls_pos"} onChange={(event) => setSettings({ groupMethods: event.target.value })}><option value="pls_pos">PLS-POS</option><option value="fimix">FIMIX-PLS</option></select></label><NumberField label="Segment count" value={settings.segmentCount ?? 2} min={2} max={5} step={1} onChange={(value) => setSettings({ segmentCount: value })} /><NumberField label="Segment starts" value={settings.segmentStarts ?? 10} min={1} max={50} step={1} onChange={(value) => setSettings({ segmentStarts: value })} /></>;
+  return <><label>Segmentation diagnostic (preview)<select value={settings.groupMethods?.includes("fimix") ? "fimix" : "pls_pos"} onChange={(event) => setSettings({ groupMethods: event.target.value })}><option value="pls_pos">PLS-POS-style bounded preview</option><option value="fimix">FIMIX-style bounded preview (not full EM)</option></select></label><NumberField label="Segment count" value={settings.segmentCount ?? 2} min={2} max={5} step={1} onChange={(value) => setSettings({ segmentCount: value })} /><NumberField label="Segment starts" value={settings.segmentStarts ?? 10} min={1} max={50} step={1} onChange={(value) => setSettings({ segmentStarts: value })} /></>;
 }

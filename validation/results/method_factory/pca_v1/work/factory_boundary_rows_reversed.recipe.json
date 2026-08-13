@@ -1,0 +1,46 @@
+{
+  "created_at": "2026-08-13T00:00:00Z",
+  "dataset_fingerprint": "v2:5481a8617a96f4f206b9267421a770ac3b862cdb8d43f8a054c4a89887c2d65b",
+  "id": "4db8e055-72ed-5f63-a680-019ac1066d2a",
+  "metadata": {
+    "status": "validated_pca_v1_bounded_scope"
+  },
+  "method_config": {
+    "kind": "pca",
+    "retention": {
+      "components": 3,
+      "rule": "fixed"
+    },
+    "variables": [
+      "a",
+      "b",
+      "c",
+      "d"
+    ]
+  },
+  "model": {
+    "constructs": [],
+    "controls": [],
+    "higher_order_constructs": [],
+    "id": "08331475-aa21-52d3-b3d4-bf65210656b4",
+    "interactions": [],
+    "name": "PCA v1 factory fixture",
+    "paths": []
+  },
+  "schema_version": 3,
+  "settings": {
+    "bootstrap_samples": 0,
+    "case_weight_column": null,
+    "confidence_level": 0.95,
+    "max_iterations": 10000,
+    "method": "pca",
+    "missing_data": "listwise_deletion",
+    "permutation_samples": 0,
+    "preprocessing": "standardized",
+    "seed": 20260813,
+    "studentized_inner_samples": 0,
+    "tolerance": 1e-12,
+    "weighting_scheme": "path",
+    "workers": 1
+  }
+}

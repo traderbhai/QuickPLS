@@ -1,0 +1,457 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "dimensions_covered": {
+      "distributions": [
+        "gaussian",
+        "laplace"
+      ],
+      "inadmissible_control": true,
+      "indicator_counts": [
+        2,
+        3,
+        4
+      ],
+      "sample_sizes": [
+        240,
+        360,
+        420,
+        480,
+        600
+      ],
+      "two_indicator_case": true,
+      "weighting_schemes": [
+        "factor",
+        "path"
+      ]
+    },
+    "inadmissible_cases": 1,
+    "inadmissible_cases_rejected": 1,
+    "inadmissible_control": {
+      "accepted_inadmissibility_diagnostics": [
+        "corrected construct correlation is outside [-1, 1]",
+        "invalid plsc rho_a"
+      ],
+      "diagnostics_observed": [
+        "invalid plsc rho_a"
+      ],
+      "execution": {
+        "command": [
+          "D:\\QuickPLS\\target\\debug\\qpls.exe",
+          "run",
+          "validation/results/method_factory/plsc_v2/work/factory_simulation_inadmissible_small_sample.recipe.json",
+          "--data",
+          "validation/fixtures/corporate_reputation.csv",
+          "--output",
+          "validation/results/method_factory/plsc_v2/work/factory_simulation_inadmissible_small_sample.quickpls.json",
+          "--allow-experimental"
+        ],
+        "duration_seconds": 0.056,
+        "returncode": 1,
+        "stderr_tail": "Error: PLS estimation failed: numerical failure: invalid PLSc rho_A for construct 'like': 1.5389388194769444\n",
+        "stdout_tail": ""
+      },
+      "expected_failure": true,
+      "id": "inadmissible_small_sample_control",
+      "passed": true,
+      "recipe": "validation/results/method_factory/plsc_v2/work/factory_simulation_inadmissible_small_sample.recipe.json",
+      "result_not_written": true
+    },
+    "latent_recovery_tolerance": 0.1,
+    "passed": true,
+    "preregistered_before_execution": true,
+    "reference_tolerance": 1e-06,
+    "scenario_count": 5,
+    "scenarios": [
+      {
+        "artifacts": {
+          "dataset": "validation/results/method_factory/plsc_v2/work/simulation_strong_reliability_large_path.csv",
+          "recipe": "validation/results/method_factory/plsc_v2/work/factory_simulation_strong_reliability_large_path.recipe.json",
+          "result": "validation/results/method_factory/plsc_v2/work/factory_simulation_strong_reliability_large_path.quickpls.json"
+        },
+        "corrected_path": 0.5215330370218689,
+        "design": {
+          "beta": 0.55,
+          "distribution": "gaussian",
+          "id": "strong_reliability_large_path",
+          "indicators": 3,
+          "measurement_noise": 0.12,
+          "n": 600,
+          "seed": 20260901,
+          "weighting": "path"
+        },
+        "execution": {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "run",
+            "validation/results/method_factory/plsc_v2/work/factory_simulation_strong_reliability_large_path.recipe.json",
+            "--data",
+            "validation/results/method_factory/plsc_v2/work/simulation_strong_reliability_large_path.csv",
+            "--output",
+            "validation/results/method_factory/plsc_v2/work/factory_simulation_strong_reliability_large_path.quickpls.json",
+            "--allow-experimental"
+          ],
+          "duration_seconds": 0.194,
+          "returncode": 0,
+          "stderr_tail": "",
+          "stdout_tail": "wrote analysis result validation/results/method_factory/plsc_v2/work/factory_simulation_strong_reliability_large_path.quickpls.json\n"
+        },
+        "id": "strong_reliability_large_path",
+        "latent_sample_path": 0.5269879500248972,
+        "metrics": {
+          "corrected_loading_reference_delta": 8.881784197001252e-16,
+          "corrected_path_reference_delta": 6.661338147750939e-16,
+          "corrected_r_squared_reference_delta": 6.661338147750939e-16,
+          "latent_sample_path_recovery_error": 0.00545491300302825,
+          "rho_a_reference_delta": 8.881784197001252e-16
+        },
+        "passed": true,
+        "rho_a": {
+          "x": 0.993861474870757,
+          "y": 0.9936114658872847
+        }
+      },
+      {
+        "artifacts": {
+          "dataset": "validation/results/method_factory/plsc_v2/work/simulation_moderate_reliability_path.csv",
+          "recipe": "validation/results/method_factory/plsc_v2/work/factory_simulation_moderate_reliability_path.recipe.json",
+          "result": "validation/results/method_factory/plsc_v2/work/factory_simulation_moderate_reliability_path.quickpls.json"
+        },
+        "corrected_path": 0.45621685808367923,
+        "design": {
+          "beta": 0.4,
+          "distribution": "gaussian",
+          "id": "moderate_reliability_path",
+          "indicators": 4,
+          "measurement_noise": 0.32,
+          "n": 360,
+          "seed": 20260902,
+          "weighting": "path"
+        },
+        "execution": {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "run",
+            "validation/results/method_factory/plsc_v2/work/factory_simulation_moderate_reliability_path.recipe.json",
+            "--data",
+            "validation/results/method_factory/plsc_v2/work/simulation_moderate_reliability_path.csv",
+            "--output",
+            "validation/results/method_factory/plsc_v2/work/factory_simulation_moderate_reliability_path.quickpls.json",
+            "--allow-experimental"
+          ],
+          "duration_seconds": 0.142,
+          "returncode": 0,
+          "stderr_tail": "",
+          "stdout_tail": "wrote analysis result validation/results/method_factory/plsc_v2/work/factory_simulation_moderate_reliability_path.quickpls.json\n"
+        },
+        "id": "moderate_reliability_path",
+        "latent_sample_path": 0.4474009021182057,
+        "metrics": {
+          "corrected_loading_reference_delta": 6.661338147750939e-16,
+          "corrected_path_reference_delta": 5.551115123125783e-17,
+          "corrected_r_squared_reference_delta": 5.551115123125783e-17,
+          "latent_sample_path_recovery_error": 0.008815955965473521,
+          "rho_a_reference_delta": 4.440892098500626e-16
+        },
+        "passed": true,
+        "rho_a": {
+          "x": 0.9617739105585397,
+          "y": 0.9707465320676186
+        }
+      },
+      {
+        "artifacts": {
+          "dataset": "validation/results/method_factory/plsc_v2/work/simulation_two_indicator_limited_information.csv",
+          "recipe": "validation/results/method_factory/plsc_v2/work/factory_simulation_two_indicator_limited_information.recipe.json",
+          "result": "validation/results/method_factory/plsc_v2/work/factory_simulation_two_indicator_limited_information.quickpls.json"
+        },
+        "corrected_path": 0.3434188112752045,
+        "design": {
+          "beta": 0.32,
+          "distribution": "gaussian",
+          "id": "two_indicator_limited_information",
+          "indicators": 2,
+          "measurement_noise": 0.14,
+          "n": 240,
+          "seed": 20260903,
+          "weighting": "path"
+        },
+        "execution": {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "run",
+            "validation/results/method_factory/plsc_v2/work/factory_simulation_two_indicator_limited_information.recipe.json",
+            "--data",
+            "validation/results/method_factory/plsc_v2/work/simulation_two_indicator_limited_information.csv",
+            "--output",
+            "validation/results/method_factory/plsc_v2/work/factory_simulation_two_indicator_limited_information.quickpls.json",
+            "--allow-experimental"
+          ],
+          "duration_seconds": 0.077,
+          "returncode": 0,
+          "stderr_tail": "",
+          "stdout_tail": "wrote analysis result validation/results/method_factory/plsc_v2/work/factory_simulation_two_indicator_limited_information.quickpls.json\n"
+        },
+        "id": "two_indicator_limited_information",
+        "latent_sample_path": 0.3412937071256405,
+        "metrics": {
+          "corrected_loading_reference_delta": 0.0,
+          "corrected_path_reference_delta": 1.6653345369377348e-16,
+          "corrected_r_squared_reference_delta": 1.1102230246251565e-16,
+          "latent_sample_path_recovery_error": 0.0021251041495640166,
+          "rho_a_reference_delta": 2.220446049250313e-16
+        },
+        "passed": true,
+        "rho_a": {
+          "x": 0.9903803555785634,
+          "y": 0.9885885816950408
+        }
+      },
+      {
+        "artifacts": {
+          "dataset": "validation/results/method_factory/plsc_v2/work/simulation_factor_inner_weighting.csv",
+          "recipe": "validation/results/method_factory/plsc_v2/work/factory_simulation_factor_inner_weighting.recipe.json",
+          "result": "validation/results/method_factory/plsc_v2/work/factory_simulation_factor_inner_weighting.quickpls.json"
+        },
+        "corrected_path": 0.4926179416125021,
+        "design": {
+          "beta": 0.48,
+          "distribution": "gaussian",
+          "id": "factor_inner_weighting",
+          "indicators": 3,
+          "measurement_noise": 0.22,
+          "n": 420,
+          "seed": 20260904,
+          "weighting": "factor"
+        },
+        "execution": {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "run",
+            "validation/results/method_factory/plsc_v2/work/factory_simulation_factor_inner_weighting.recipe.json",
+            "--data",
+            "validation/results/method_factory/plsc_v2/work/simulation_factor_inner_weighting.csv",
+            "--output",
+            "validation/results/method_factory/plsc_v2/work/factory_simulation_factor_inner_weighting.quickpls.json",
+            "--allow-experimental"
+          ],
+          "duration_seconds": 0.15,
+          "returncode": 0,
+          "stderr_tail": "",
+          "stdout_tail": "wrote analysis result validation/results/method_factory/plsc_v2/work/factory_simulation_factor_inner_weighting.quickpls.json\n"
+        },
+        "id": "factor_inner_weighting",
+        "latent_sample_path": 0.490781020415403,
+        "metrics": {
+          "corrected_loading_reference_delta": 8.881784197001252e-16,
+          "corrected_path_reference_delta": 1.1102230246251565e-16,
+          "corrected_r_squared_reference_delta": 1.1102230246251565e-16,
+          "latent_sample_path_recovery_error": 0.0018369211970991062,
+          "rho_a_reference_delta": 2.220446049250313e-16
+        },
+        "passed": true,
+        "rho_a": {
+          "x": 0.9805613916328983,
+          "y": 0.9785696806846365
+        }
+      },
+      {
+        "artifacts": {
+          "dataset": "validation/results/method_factory/plsc_v2/work/simulation_nongaussian_reflective.csv",
+          "recipe": "validation/results/method_factory/plsc_v2/work/factory_simulation_nongaussian_reflective.recipe.json",
+          "result": "validation/results/method_factory/plsc_v2/work/factory_simulation_nongaussian_reflective.quickpls.json"
+        },
+        "corrected_path": 0.4372309088267731,
+        "design": {
+          "beta": 0.5,
+          "distribution": "laplace",
+          "id": "nongaussian_reflective",
+          "indicators": 3,
+          "measurement_noise": 0.18,
+          "n": 480,
+          "seed": 20260905,
+          "weighting": "path"
+        },
+        "execution": {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "run",
+            "validation/results/method_factory/plsc_v2/work/factory_simulation_nongaussian_reflective.recipe.json",
+            "--data",
+            "validation/results/method_factory/plsc_v2/work/simulation_nongaussian_reflective.csv",
+            "--output",
+            "validation/results/method_factory/plsc_v2/work/factory_simulation_nongaussian_reflective.quickpls.json",
+            "--allow-experimental"
+          ],
+          "duration_seconds": 0.154,
+          "returncode": 0,
+          "stderr_tail": "",
+          "stdout_tail": "wrote analysis result validation/results/method_factory/plsc_v2/work/factory_simulation_nongaussian_reflective.quickpls.json\n"
+        },
+        "id": "nongaussian_reflective",
+        "latent_sample_path": 0.44673216026862134,
+        "metrics": {
+          "corrected_loading_reference_delta": 8.881784197001252e-16,
+          "corrected_path_reference_delta": 1.6653345369377348e-16,
+          "corrected_r_squared_reference_delta": 1.3877787807814457e-16,
+          "latent_sample_path_recovery_error": 0.009501251441848213,
+          "rho_a_reference_delta": 2.220446049250313e-16
+        },
+        "passed": true,
+        "rho_a": {
+          "x": 0.984467881172389,
+          "y": 0.9846862511857799
+        }
+      }
+    ]
+  },
+  "feature_id": "qpls3.pls.consistent",
+  "generated_at_utc": "2026-08-13T19:01:05.570700Z",
+  "method_version": "plsc_v2",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "simulation_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/fixtures/corporate_reputation.csv",
+      "sha256": "e72185ab375a85cdfd72760bd23fbf897da8742168af384dbe607d4d2752689f",
+      "size": 270
+    },
+    {
+      "path": "validation/fixtures/corporate_reputation.recipe.json",
+      "sha256": "53eba85327585dcca535217d687d888ec95f438a114c01a9692bc3a43155f5ac",
+      "size": 1452
+    },
+    {
+      "path": "validation/higher_order_reference.py",
+      "sha256": "1467a6bf96b1bd84f15d6042ff8bfe8a9605f3fb6826ae8b63428abc614cc66f",
+      "size": 15607
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/plsc_v2.manifest.json",
+      "sha256": "6390cc9e9b1fc2844d8688700e5f554c9d4efda579e89b9f64b1740ce11d54e8",
+      "size": 15346
+    },
+    {
+      "path": "validation/plsc_reference.py",
+      "sha256": "e8aa16716a345121d5c17b47bc54fb9f9d062bf6b879dd34af8e7d4f5199471c",
+      "size": 11019
+    },
+    {
+      "path": "validation/plsc_v2_factory_common.py",
+      "sha256": "e8df9baab689e4bdab8c648cdfed9433162c9172e009565cfeed5da5b932522d",
+      "size": 13718
+    },
+    {
+      "path": "validation/plsc_v2_factory_evidence.py",
+      "sha256": "d1543659b5c6fdb37a9548385371f7ec7671ffdaef37e8436486f4ee06b6fbbc",
+      "size": 15814
+    },
+    {
+      "path": "validation/plsc_v2_simulation.py",
+      "sha256": "8d864aa5ada5ea9b9dac1073a0f0d3dccff4933f461a02fbc08935f14cb040e4",
+      "size": 9093
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/work/factory_simulation_factor_inner_weighting.quickpls.json",
+      "sha256": "5ff69fb65745287dc078b8cc7fbc1e661b8321915620e16ec3dcab92fc91f8eb",
+      "size": 39598
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/work/factory_simulation_factor_inner_weighting.recipe.json",
+      "sha256": "1d20673b302d49c880f30de0587fadd144c92048fa1ae94aed37c0fcde2b15c1",
+      "size": 1484
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/work/factory_simulation_inadmissible_small_sample.recipe.json",
+      "sha256": "3d80155cb2ee477de3e0b47472e90d06f75c294e56ed3fcc3ab3ff341d39dab6",
+      "size": 2136
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/work/factory_simulation_moderate_reliability_path.quickpls.json",
+      "sha256": "ee5027fc20f1e205270bf3ff15c0ae14ba5a6be60575427eea8a695e25c195ed",
+      "size": 37460
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/work/factory_simulation_moderate_reliability_path.recipe.json",
+      "sha256": "a53f4449407a0049c60ba0ec1ea7f8e6125d59314f0c2a657667dedabb07af8b",
+      "size": 1516
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/work/factory_simulation_nongaussian_reflective.quickpls.json",
+      "sha256": "0f50bc3cc0c8445d4102b5e7b7cb32a9e60b8b0cd3dc70f0672b58802ad3dc5d",
+      "size": 43362
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/work/factory_simulation_nongaussian_reflective.recipe.json",
+      "sha256": "896e64dda9b303020f945016f805f0a59a205af37d03ce602fa8246236fd4117",
+      "size": 1482
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/work/factory_simulation_strong_reliability_large_path.quickpls.json",
+      "sha256": "f087528c51b073e6552e7dffb240ff5ce4799d8a4f9a96d154cdd4b6474acfc5",
+      "size": 50550
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/work/factory_simulation_strong_reliability_large_path.recipe.json",
+      "sha256": "a1b02ebc5784e0ece01ca305efa7d9b31f348c4b7507b28d9a744af43a81bb95",
+      "size": 1482
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/work/factory_simulation_two_indicator_limited_information.quickpls.json",
+      "sha256": "bc47d9764c015ea045fb957cc93d096ad2704b29674e083791b5277ae517fc35",
+      "size": 27213
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/work/factory_simulation_two_indicator_limited_information.recipe.json",
+      "sha256": "1484a4686068e4dafad530ef6270a6f0682b9c7cbe8d0571f2f724d4b2efbd75",
+      "size": 1448
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/work/simulation_factor_inner_weighting.csv",
+      "sha256": "a4e7a587056df730da2e67f3f59c45b6f60e1e8c7cd4b6a590a3608920b4bda9",
+      "size": 46274
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/work/simulation_moderate_reliability_path.csv",
+      "sha256": "aff15458509140147255598f85820e2693c687e14da31e9755848609bcb16306",
+      "size": 52723
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/work/simulation_nongaussian_reflective.csv",
+      "sha256": "65ddb2952b1cb8812f07c76e443b46406f053822987c979d3208d6af41a0b2d3",
+      "size": 53247
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/work/simulation_strong_reliability_large_path.csv",
+      "sha256": "7e3dc6ca52d279b28614826615d3222df47d2f76c09653a25259bc311d5fea20",
+      "size": 66103
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/work/simulation_two_indicator_limited_information.csv",
+      "sha256": "ecb597ed406eedc2f004fe0b14b20e7610842696c270d0d94291d429c79f1ab4",
+      "size": 17753
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_plsc_v2_factory_evidence.py",
+      "sha256": "9d8249925d07ff3abf79eecea85a2dd32f9b13ad7d395f795c3229b77a7958c8",
+      "size": 3844
+    }
+  ]
+}

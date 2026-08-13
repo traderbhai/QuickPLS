@@ -1,0 +1,101 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "archive": {
+      "path": "validation/results/v247-native-logistic-1786604241673-47796.qpls",
+      "sha256": "190e07bac6afb3fbae09ea1cc9d580053c6bb7043b28a6c3a523fd92da6603b9",
+      "size": 20162
+    },
+    "archive_identity_token_present": true,
+    "archive_origin": "historical packaged workflow; revalidated and reopened by the exact current release CLI",
+    "checksum_tamper_rejected_by_current_cli": {
+      "command": [
+        "D:\\QuickPLS\\target\\release\\qpls.exe",
+        "validate",
+        "C:\\Users\\MOHD~1.NAV\\AppData\\Local\\Temp\\quickpls-factory-tamper-ahcmangj\\tampered.qpls",
+        "--json"
+      ],
+      "returncode": 1,
+      "stderr_tail": "Error: invalid project C:\\Users\\MOHD~1.NAV\\AppData\\Local\\Temp\\quickpls-factory-tamper-ahcmangj\\tampered.qpls\n\nCaused by:\n    project recovery failed: primary failed (checksum mismatch for project.json); autosave is absent; backup is absent\n",
+      "stdout_tail": ""
+    },
+    "current_cli": {
+      "path": "target/release/qpls.exe",
+      "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+      "size": 20690432
+    },
+    "current_cli_inspect": {
+      "command": [
+        "D:\\QuickPLS\\target\\release\\qpls.exe",
+        "inspect",
+        "validation/results/v247-native-logistic-1786604241673-47796.qpls",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "{\n  \"compatibilityNoticeCount\": 0,\n  \"datasets\": [\n    {\n      \"columns\": 11,\n      \"fingerprint\": \"v2:b5f52a1093a0277acb29a8dd50958f7fd0180635d011a56a5fdff7d6979a76bb\",\n      \"id\": \"7a58708e-ca47-402f-bf55-b97d1a79c17b\",\n      \"kind\": \"raw\",\n      \"name\": \"v08_extended_methods_fixture.csv\",\n      \"rows\": 140,\n      \"sampleSize\": null\n    }\n  ],\n  \"engineVersion\": \"2.46.0\",\n  \"futureUnsupported\": {\n    \"models\": 0,\n    \"recipes\": 0,\n    \"results\": 0\n  },\n  \"migrationPending\": false,\n  \"models\": 0,\n  \"name\": \"Native Logistic Acceptance\",\n  \"projectId\": \"ee415cb4-aeec-4b61-b68d-a09825b3d80c\",\n  \"readOnly\": false,\n  \"recipes\": 1,\n  \"recovered\": false,\n  \"results\": 1,\n  \"schemaVersion\": 5,\n  \"sourceArchiveVersion\": 5\n}\n"
+    },
+    "current_cli_validate": {
+      "command": [
+        "D:\\QuickPLS\\target\\release\\qpls.exe",
+        "validate",
+        "validation/results/v247-native-logistic-1786604241673-47796.qpls",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "{\n  \"issues\": [],\n  \"recovered\": false,\n  \"valid\": true\n}\n"
+    },
+    "current_desktop_write_not_claimed": true,
+    "passed": true
+  },
+  "feature_id": "qpls3.standalone.logistic",
+  "generated_at_utc": "2026-08-13T19:54:23.202259Z",
+  "method_version": "regression_logistic_v2",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "persistence_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-project/src/lib.rs",
+      "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
+      "size": 660277
+    },
+    {
+      "path": "validation/legacy_release_factory_migration.py",
+      "sha256": "5c2c131f972d70746ceed70377f8673d4b67ece6ece07c73d45bb2ac65fa4c5f",
+      "size": 23709
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/logistic_regression_v2.manifest.json",
+      "sha256": "d37e0fa1b6e67a91ec3b885163114e07c7da08de88d54385f960a77abcc73c7f",
+      "size": 13621
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_legacy_release_factory_migration.py",
+      "sha256": "d4ce1d582d77f6a861b20c5ee95f7a01446880270e038429712a240194cb23c1",
+      "size": 2519
+    },
+    {
+      "path": "validation/test_logistic_method_promotion_audit.py",
+      "sha256": "40e2926b4ad0d276f8a1658630de7aa3853362380be0607c3d73791c93214a3c",
+      "size": 10634
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    }
+  ]
+}

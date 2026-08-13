@@ -1604,16 +1604,6 @@
         ]
       },
       "method_version": "pls_pm_v1",
-      "moderation": {
-        "estimates": [],
-        "method_version": "pls_two_stage_moderation_v1",
-        "moderator_score_levels": [
-          -1.0,
-          0.0,
-          1.0
-        ],
-        "warnings": []
-      },
       "omitted_observations": 0,
       "outer_estimates": [
         {

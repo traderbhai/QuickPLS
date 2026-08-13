@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "program_id": "quickpls_3_external_beta_v1",
+  "target_release": "3.0.0-beta",
+  "target_channel": "beta",
+  "status": "planned",
+  "claim_policy": {
+    "allowed_positioning": "closed_signed_beta_testing_only",
+    "functional_offline_statement": "analytical_workflows_require_no_internet_account_or_cloud",
+    "application_network_statement": "quickpls_application_and_page_make_no_external_requests",
+    "strict_process_tree_claim": "prohibited_pending_os_enforced_fixed_webview2_containment"
+  },
+  "privacy_contract": {
+    "collect_names": false,
+    "collect_emails": false,
+    "collect_raw_datasets": false,
+    "participant_ids_are_pseudonymous": true,
+    "institution_ids_are_pseudonymous": true,
+    "consent_record_required": true,
+    "deletion_request_route": "privacy@quickpls.org"
+  },
+  "cohort_contract": {
+    "minimum_participants": 15,
+    "maximum_participants": 25,
+    "minimum_institutions": 5,
+    "minimum_experienced_smartpls_users": 5,
+    "minimum_new_sem_users": 5,
+    "minimum_real_workflows": 30
+  },
+  "core_journeys": [
+    { "id": "import_data", "label": "Import a privacy-safe dataset", "required": true },
+    { "id": "author_model", "label": "Author and validate a model", "required": true },
+    { "id": "calculate", "label": "Run a supported calculation", "required": true },
+    { "id": "interpret", "label": "Inspect results, warnings, and provenance", "required": true },
+    { "id": "export", "label": "Export a result table or report", "required": true },
+    { "id": "save_reopen", "label": "Save, close, reopen, and verify the same run", "required": true }
+  ],
+  "exit_thresholds": {
+    "minimum_unassisted_journey_completion_rate": 0.9,
+    "maximum_unresolved_p0": 0,
+    "maximum_unresolved_p1": 0,
+    "maximum_reproducible_data_loss": 0,
+    "maximum_archive_corruption": 0,
+    "material_scientific_discrepancies_must_be_disposed": true,
+    "final_signed_lifecycle_rerun_required": true
+  },
+  "evidence": {
+    "participants": [],
+    "workflows": [],
+    "defects": [],
+    "scientific_discrepancies": [],
+    "final_candidate": null,
+    "final_lifecycle_rerun": null
+  },
+  "decision": {
+    "status": "pending",
+    "approved_by": null,
+    "approved_at": null,
+    "record_id": null
+  }
+}

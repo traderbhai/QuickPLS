@@ -1,6 +1,6 @@
 # WPLS v1
 
-Status: validated for the documented QuickPLS v1.2.1 supported WPLS scope. Broader weighted estimators outside this contract remain unsupported.
+Status: evidence-derived native-qualified for the documented positive case-weighted WPLS scope. Method-scoped packaged Windows acceptance and the final release audit remain required before release qualification. Broader weighted estimators outside this contract remain unsupported.
 
 `AnalysisMethod::Wpls` runs a case-weighted PLS estimator using an explicit `settings.case_weight_column`. The current result reports `method_version = "wpls_case_weighted_v1"` and stores a typed `wpls` payload with the weight column, weight sum, effective sample size, covariance convention, and warnings.
 
@@ -15,13 +15,12 @@ Implemented contract:
 - structural paths are estimated with weighted least squares;
 - outer loadings and R2 use the same weighted covariance and weighted residual definitions.
 
-Unsupported in this preview:
+Unsupported in the bounded method scope:
 
 - PCA weighting;
 - formative constructs;
 - generated interaction or higher-order construct workflows;
 - bootstrap, permutation, or jackknife inference under case weights;
-- GUI method selection and weight-column picker;
 - publication-ready weighting recommendations.
 
 Validation evidence:
@@ -30,4 +29,4 @@ Validation evidence:
 - The reference script independently implements weighted standardization, weighted covariance, weighted score iteration, weighted path estimation, weighted loadings, weighted R2, weight-sum metadata, effective sample size, missing-weight recipe validation, and negative-weight runtime rejection.
 - Current observed max delta is `3.41e-13`.
 
-Publication status: validated for the documented QuickPLS v1.2.1 positive case-weighted reflective path/factor-weighting scope. WPLS inference, generated interaction/HOC workflows, formative blocks, and PCA weighting remain outside the promoted scope.
+Qualification status: the native method selection, case-weight picker, applicability checks, result tables, and export projections are source-bound and tested. Release qualification remains pending genuine packaged Windows execution, export, save/reopen, and the final method audit. WPLS inference, generated interaction/HOC workflows, formative blocks, and PCA weighting remain outside the bounded scope.

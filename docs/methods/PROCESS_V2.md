@@ -134,13 +134,12 @@ executable contract; users must author a graph-defined v2 relationship.
 
 ## Qualification status
 
-The bounded `regression_process_v2` capability has passed its current
-method-specific and packaged qualification evidence. The coordinated QuickPLS
-2.46.0 Wave 1 release records this bounded capability qualification. The
-qualifying evidence intentionally exercised conservative candidate/experimental
-presentation; that presentation and the method's explicit warnings do not
-expand or weaken the scientific exclusions above. Historical v1 output remains
-archive-only.
+The bounded `regression_process_v2` capability is native-qualified. Its current
+scientific, archive, frontend, export, packaged workflow, and shutdown evidence
+passes, but release qualification is withheld because the repeated-completion
+resource report did not prove terminal process-role stability. This operational
+gap does not expand or weaken the scientific exclusions above. Historical v1
+output remains archive-only.
 
 ## Method references and comparison scope
 

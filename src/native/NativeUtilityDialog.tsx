@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DiagnosticBundlePanel } from "../components/SettingsWorkspace";
 import { isNativeDesktop } from "../services/projectService";
 import { useWorkspace } from "../store";
 import { NATIVE_PREDICTION_METHOD_LABEL } from "./nativeCalculationMode";
@@ -50,10 +51,13 @@ function PreferencesDialog({ close }: { close: () => void }) {
   const setPreferences = useWorkspace((state) => state.setUiPreferences);
   const [draft, setDraft] = useState(preferences);
 
-  return <form className="nd-preferences" onSubmit={(event) => { event.preventDefault(); setPreferences(draft); close(); }}>
-    <label>Interface density<select value={draft.density} onChange={(event) => setDraft((current) => ({ ...current, density: event.target.value as typeof current.density }))}><option value="compact">Compact</option><option value="comfortable">Comfortable</option></select></label>
-    <label>Table density<select value={draft.tableDensity} onChange={(event) => setDraft((current) => ({ ...current, tableDensity: event.target.value as typeof current.tableDensity }))}><option value="compact">Compact</option><option value="comfortable">Comfortable</option></select></label>
-    <label>Default precision<input type="number" min={2} max={6} value={draft.defaultPrecision} onChange={(event) => setDraft((current) => ({ ...current, defaultPrecision: Number(event.target.value) }))} /></label>
-    <footer><button type="button" onClick={close}>Cancel</button><button className="primary" type="submit">OK</button></footer>
-  </form>;
+  return <div className="nd-utility-dialog" data-live-preferences-dialog="true">
+    <form className="nd-preferences" onSubmit={(event) => { event.preventDefault(); setPreferences(draft); close(); }}>
+      <label>Interface density<select value={draft.density} onChange={(event) => setDraft((current) => ({ ...current, density: event.target.value as typeof current.density }))}><option value="compact">Compact</option><option value="comfortable">Comfortable</option></select></label>
+      <label>Table density<select value={draft.tableDensity} onChange={(event) => setDraft((current) => ({ ...current, tableDensity: event.target.value as typeof current.tableDensity }))}><option value="compact">Compact</option><option value="comfortable">Comfortable</option></select></label>
+      <label>Default precision<input type="number" min={2} max={6} value={draft.defaultPrecision} onChange={(event) => setDraft((current) => ({ ...current, defaultPrecision: Number(event.target.value) }))} /></label>
+      <footer><button type="button" onClick={close}>Cancel</button><button className="primary" type="submit">OK</button></footer>
+    </form>
+    <DiagnosticBundlePanel />
+  </div>;
 }

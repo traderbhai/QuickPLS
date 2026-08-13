@@ -12,11 +12,15 @@ from pathlib import Path
 from unittest import mock
 
 from validation import quickpls_3_release_readiness as readiness
+from validation import quickpls_signed_candidate as signed_candidate
 
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = ROOT / "validation" / "quickpls_3_release_readiness.json"
 NOW = datetime(2026, 8, 13, 12, 0, tzinfo=timezone.utc)
+LEAF_SUBJECT = "CN=QuickPLS Release Publisher, O=QuickPLS"
+LEAF_THUMBPRINT = "A" * 40
+SIGNER_ID = readiness._approved_signer_identity_id(LEAF_SUBJECT, LEAF_THUMBPRINT)
 
 
 def repository_contract() -> dict:
@@ -73,6 +77,53 @@ def trusted_signtool_execution(path: Path) -> dict[str, object]:
     }
 
 
+def trusted_windows_identity(path: Path) -> dict[str, object]:
+    name = path.name.casefold()
+    if "cli" in name or name == "qpls.exe":
+        original = "qpls.exe"
+    elif "setup" in name or "installer" in name:
+        original = "QuickPLS_3.0.0_x64-setup.exe"
+    else:
+        original = "quickpls-desktop.exe"
+    return {
+        "signature_status": "Valid",
+        "leaf_subject": LEAF_SUBJECT,
+        "leaf_sha1_thumbprint": LEAF_THUMBPRINT,
+        "product_name": "QuickPLS",
+        "product_version": "3.0.0",
+        "file_version": "3.0.0.0",
+        "original_filename": original,
+    }
+
+
+def trusted_cms_execution(payload: Path, signature: Path) -> dict[str, object]:
+    return {
+        "exit_code": 0,
+        "verification_output": "Trusted detached CMS signature",
+        "leaf_subject": LEAF_SUBJECT,
+        "leaf_sha1_thumbprint": LEAF_THUMBPRINT,
+    }
+
+
+def write_approved_signer(root: Path) -> dict[str, object]:
+    relative = Path("validation/quickpls_signing_identity.json")
+    path = root / relative
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({
+        "schema_version": 1,
+        "document_type": "quickpls_authenticode_signing_identity",
+        "status": "approved",
+        "identity_id": SIGNER_ID,
+        "leaf_subject": LEAF_SUBJECT,
+        "leaf_sha1_thumbprint": LEAF_THUMBPRINT,
+        "approved_by": "QuickPLS release board",
+        "approved_at": "2026-08-13T09:00:00+00:00",
+        "key_protection": "managed_signing_service",
+        "notes": "Test-only approved signer fixture.",
+    }), encoding="utf-8")
+    return {"path": relative.as_posix(), "size": path.stat().st_size, "sha256": sha256(path)}
+
+
 def trusted_signature_fields(path: Path) -> dict[str, object]:
     execution = trusted_signtool_execution(path)
     output = readiness._normalize_signtool_output(
@@ -83,9 +134,15 @@ def trusted_signature_fields(path: Path) -> dict[str, object]:
         "exit_code": 0,
         "verification_output": output,
         "verification_output_sha256": hashlib.sha256(output.encode()).hexdigest(),
-        "publisher": "QuickPLS Release Publisher",
         "timestamp": "2026-08-13T10:45:00+00:00",
         "verified_file_sha256": sha256(path),
+        "signer_identity_id": SIGNER_ID,
+        "leaf_subject": LEAF_SUBJECT,
+        "leaf_sha1_thumbprint": LEAF_THUMBPRINT,
+        "product_name": "QuickPLS",
+        "product_version": "3.0.0",
+        "file_version": "3.0.0.0",
+        "original_filename": trusted_windows_identity(path)["original_filename"],
     }
 
 
@@ -99,7 +156,10 @@ def build_candidate(
     signature_mismatch: bool = False,
     publisher_mismatch: bool = False,
     timestamp_mismatch: bool = False,
+    target_release: str = "3.0.0",
+    channel: str = "stable",
 ) -> tuple[str, dict]:
+    signer_descriptor = write_approved_signer(root)
     artifact_map: dict[str, dict] = {}
     for role in sorted(readiness.SIGNED_PE_ROLES):
         payload = (
@@ -113,6 +173,27 @@ def build_candidate(
             payload,
         )
 
+    payload_id = readiness._candidate_payload_identity(target_release, artifact_map)
+    channel_manifest = {
+        "schema_version": 1,
+        "document_type": "quickpls_signed_channel_manifest",
+        "channel": channel,
+        "target_release": target_release,
+        "payload_id": payload_id,
+        "signing_identity_id": SIGNER_ID,
+        "minimum_installed_version": target_release,
+        "allow_downgrade": False,
+        "manual_check_default": True,
+        "installer": artifact_map["installer"],
+        "recovery": {"mode": "offline_full_installer", "full_installer_sha256": artifact_map["installer"]["sha256"]},
+    }
+    artifact_map["channel_manifest"] = write_artifact(
+        root, f"validation/results/candidate-{variant}/channel-manifest.json", json.dumps(channel_manifest).encode()
+    )
+    artifact_map["channel_manifest_signature"] = write_artifact(
+        root, f"validation/results/candidate-{variant}/channel-manifest.p7s", f"signed-{variant}".encode()
+    )
+
     updater_relative = f"validation/results/candidate-{variant}/updater_bundle.zip"
     updater_path = root / updater_relative
     updater_path.parent.mkdir(parents=True, exist_ok=True)
@@ -121,59 +202,85 @@ def build_candidate(
     else:
         installer_path = root / artifact_map["installer"]["path"]
         with zipfile.ZipFile(updater_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-            archive.writestr("QuickPLS_3.0.0_x64-setup.exe", installer_path.read_bytes())
-    artifact_map["updater_bundle"] = {
-        "path": updater_relative,
-        "size": updater_path.stat().st_size,
-        "sha256": sha256(updater_path),
-    }
-
-    distribution_identity = {
-        "target_release": "3.0.0",
-        "artifacts": [
-            {
-                "role": role,
-                "size": artifact_map[role]["size"],
-                "sha256": artifact_map[role]["sha256"],
-            }
-            for role in sorted(readiness.DISTRIBUTION_CANDIDATE_ROLES)
-        ],
-    }
-    candidate_id = canonical_sha256(distribution_identity)
-    distribution_digests = {
-        role: artifact_map[role]["sha256"] for role in sorted(readiness.DISTRIBUTION_CANDIDATE_ROLES)
-    }
+            archive.writestr(f"QuickPLS_{target_release}_x64-setup.exe", installer_path.read_bytes())
+            archive.writestr("quickpls-channel-manifest.json", (root / artifact_map["channel_manifest"]["path"]).read_bytes())
+            archive.writestr("quickpls-channel-manifest.p7s", (root / artifact_map["channel_manifest_signature"]["path"]).read_bytes())
+    artifact_map["updater_bundle"] = {"path": updater_relative, "size": updater_path.stat().st_size, "sha256": sha256(updater_path)}
+    candidate_id = readiness._candidate_distribution_identity(target_release, artifact_map)
+    distribution_digests = readiness._candidate_digest_map(artifact_map)
 
     sbom_relative = f"validation/results/candidate-{variant}/sbom.json"
     if invalid_sbom:
         artifact_map["sbom"] = write_artifact(root, sbom_relative, b'{"schema_version":')
     else:
-        sbom = {
-            "schema_version": 1,
-            "document_type": "quickpls_sbom",
-            "target_release": "3.0.0",
-            "candidate_id": candidate_id,
-            "candidate_artifact_digests": distribution_digests,
-            "format": "CycloneDX",
-            "spec_version": "1.6",
-            "components": [
-                {"type": "application", "name": "QuickPLS", "version": "3.0.0", "licenses": ["Proprietary"]}
-            ],
+        component = {
+            "type": "library", "bom-ref": "pkg:npm/react@19.1.1", "name": "react", "version": "19.1.1",
+            "purl": "pkg:npm/react@19.1.1", "licenses": [{"expression": "MIT"}],
+            "properties": [{"name": "quickpls:ecosystem", "value": "npm"}],
         }
+        sbom = signed_candidate.candidate_sbom(
+            version=target_release, identity=candidate_id, distribution=artifact_map,
+            components=[component], dependency_graph={component["bom-ref"]: []}, generated_at="2026-08-13T10:30:00Z",
+        )
         artifact_map["sbom"] = write_artifact(root, sbom_relative, json.dumps(sbom).encode())
 
-    provenance = {
+    build_attestation = {
         "schema_version": 1,
-        "document_type": "quickpls_release_provenance",
-        "target_release": "3.0.0",
+        "document_type": "quickpls_protected_build_attestation",
+        "target_release": target_release,
         "candidate_id": candidate_id,
         "candidate_artifact_digests": distribution_digests,
+        "signing_identity_id": SIGNER_ID,
+        "sbom_sha256": artifact_map["sbom"]["sha256"],
         "source_commit": "a" * 40,
-        "build_id": f"QPLS3-BUILD-{variant}",
-        "builder_identity": "protected-windows-release-runner",
+        "source_tree_clean": True,
+        "protected_build": {
+            "workflow_id": "owner/quickpls/.github/workflows/release.yml",
+            "workflow_run_id": "123456789",
+            "workflow_ref": "owner/quickpls/.github/workflows/release.yml@refs/heads/main",
+            "repository": "owner/quickpls",
+            "runner_environment": "github-hosted",
+            "oidc_subject": "repo:owner/quickpls:ref:refs/heads/main",
+        },
+        "build_id": "github-actions:owner/quickpls:123456789",
+        "builder_identity": "github-actions:owner/quickpls/.github/workflows/release.yml@refs/heads/main:github-hosted",
         "build_started_at": "2026-08-13T10:00:00+00:00",
         "build_finished_at": "2026-08-13T10:30:00+00:00",
-        "sbom_sha256": artifact_map["sbom"]["sha256"],
+        "toolchain": {"rustc": "rustc 1", "cargo": "cargo 1", "node": "node 24", "npm": "npm 11", "tauri_cli": "tauri 2"},
+        "lockfiles": {"Cargo.lock": "b" * 64, "package-lock.json": "c" * 64},
+    }
+    artifact_map["build_attestation"] = write_artifact(
+        root, f"validation/results/candidate-{variant}/build-attestation.json", json.dumps(build_attestation).encode()
+    )
+    artifact_map["build_attestation_signature"] = write_artifact(
+        root, f"validation/results/candidate-{variant}/build-attestation.p7s", f"attested-{variant}".encode()
+    )
+
+    provenance = {
+        "_type": "https://in-toto.io/Statement/v1",
+        "subject": [{"name": role, "digest": {"sha256": digest}} for role, digest in sorted(distribution_digests.items())],
+        "predicateType": "https://slsa.dev/provenance/v1",
+        "predicate": {
+            "buildDefinition": {
+                "buildType": "https://quickpls.org/build-types/windows-protected-release/v1",
+                "externalParameters": {"target_release": target_release, "channel": "signed", "candidate_id": candidate_id},
+                "internalParameters": {"signing_identity_id": SIGNER_ID},
+                "resolvedDependencies": [
+                    {"uri": "git+repository", "digest": {"gitCommit": "a" * 40}},
+                    {"uri": "file:Cargo.lock", "digest": {"sha256": "b" * 64}},
+                    {"uri": "file:package-lock.json", "digest": {"sha256": "c" * 64}},
+                ],
+            },
+            "runDetails": {
+                "builder": {"id": "github-actions:owner/quickpls/.github/workflows/release.yml@refs/heads/main"},
+                "metadata": {"invocationId": "github-actions:owner/quickpls:123456789", "startedOn": "2026-08-13T10:00:00+00:00", "finishedOn": "2026-08-13T10:30:00+00:00"},
+                "byproducts": [
+                    {"name": "cyclonedx-sbom", "digest": {"sha256": artifact_map["sbom"]["sha256"]}},
+                    {"name": "protected-build-attestation", "digest": {"sha256": artifact_map["build_attestation"]["sha256"]}},
+                    {"name": "protected-build-attestation-signature", "digest": {"sha256": artifact_map["build_attestation_signature"]["sha256"]}},
+                ],
+            },
+        },
     }
     artifact_map["provenance"] = write_artifact(
         root,
@@ -186,18 +293,18 @@ def build_candidate(
         pe_path = root / artifact_map[role]["path"]
         runtime_fields = trusted_signature_fields(pe_path)
         if publisher_mismatch and role == "desktop":
-            runtime_fields["publisher"] = "Different Publisher"
+            runtime_fields["leaf_subject"] = "CN=Different Publisher"
         if timestamp_mismatch and role == "desktop":
             runtime_fields["timestamp"] = "2026-08-12T10:45:00+00:00"
         signed_hash = "0" * 64 if signature_mismatch and role == "desktop" else artifact_map[role]["sha256"]
         report = {
             "schema_version": 1,
-            "target_release": "3.0.0",
+            "target_release": target_release,
             "candidate_id": candidate_id,
             "role": role,
             "artifact_sha256": signed_hash,
             "authenticode_valid": True,
-            "verification_tool": "signtool",
+            "verification_tool": "signtool_and_windows_authenticode",
             "warnings": [],
             **runtime_fields,
         }
@@ -222,10 +329,39 @@ def build_candidate(
         json.dumps(
             {
                 "schema_version": 1,
-                "target_release": "3.0.0",
+                "target_release": target_release,
                 "candidate_id": candidate_id,
+                "payload_id": payload_id,
+                "signing_identity_id": SIGNER_ID,
+                "signing_identity": signer_descriptor,
                 "artifacts": artifacts,
                 "signature_evidence": signatures,
+                "detached_signature_evidence": [
+                    {
+                        "role": "build_attestation", "signature_role": "build_attestation_signature",
+                        "verification": {
+                            "verification_tool": "windows_signed_cms", "exit_code": 0,
+                            "verification_output": "Trusted detached CMS signature",
+                            "verification_output_sha256": hashlib.sha256(b"Trusted detached CMS signature").hexdigest(),
+                            "signer_identity_id": SIGNER_ID, "leaf_subject": LEAF_SUBJECT,
+                            "leaf_sha1_thumbprint": LEAF_THUMBPRINT,
+                            "payload_sha256": artifact_map["build_attestation"]["sha256"],
+                            "signature_sha256": artifact_map["build_attestation_signature"]["sha256"],
+                        },
+                    },
+                    {
+                        "role": "channel_manifest", "signature_role": "channel_manifest_signature",
+                        "verification": {
+                            "verification_tool": "windows_signed_cms", "exit_code": 0,
+                            "verification_output": "Trusted detached CMS signature",
+                            "verification_output_sha256": hashlib.sha256(b"Trusted detached CMS signature").hexdigest(),
+                            "signer_identity_id": SIGNER_ID, "leaf_subject": LEAF_SUBJECT,
+                            "leaf_sha1_thumbprint": LEAF_THUMBPRINT,
+                            "payload_sha256": artifact_map["channel_manifest"]["sha256"],
+                            "signature_sha256": artifact_map["channel_manifest_signature"]["sha256"],
+                        },
+                    },
+                ],
             }
         ),
         encoding="utf-8",
@@ -365,6 +501,7 @@ def competitor_inputs(contract: dict, root: Path, candidate_id: str) -> dict:
         "target_channel": contract["target_channel"],
         "product_policy": contract["product_policy"],
         "release_channels": contract["release_channels"],
+        "signing_identity_policy": contract["signing_identity_policy"],
         "evidence_policy": contract["evidence_policy"],
         "requirements": [
             {
@@ -437,6 +574,124 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertEqual(report["counts"], {"passed": 0, "pending": 18, "failed": 0})
         self.assertEqual(set(report["pending"]), readiness.REQUIRED_IDS)
         self.assertEqual(report["release_decision"], "pending")
+        self.assertEqual(
+            report["offline_claims"],
+            {
+                "functional_offline": True,
+                "quickpls_app_page_external_requests": False,
+                "strict_process_tree_zero_egress": False,
+                "strict_gate_status": "pending",
+            },
+        )
+
+    def test_strict_offline_claims_cannot_bypass_the_os_containment_gate(self) -> None:
+        for mutation in (
+            lambda policy: policy["strict_zero_egress_claim_gate"].__setitem__("status", "passed"),
+            lambda policy: policy["strict_zero_egress_claim_gate"].__setitem__(
+                "application_level_containment_sufficient", True
+            ),
+            lambda policy: policy["prohibited_claims"].remove(
+                "no_telemetry_without_os_enforced_fixed_webview2_containment"
+            ),
+            lambda policy: policy.__setitem__(
+                "application_network_behavior", "all_processes_make_no_external_requests"
+            ),
+        ):
+            contract = repository_contract()
+            mutation(contract["product_policy"])
+            with self.assertRaises(readiness.ContractError):
+                readiness.validate_contract(contract, repository_root=ROOT, now=NOW)
+
+
+class SignedFactoryReadinessIntegrationTests(unittest.TestCase):
+    def test_durable_factory_manifest_is_consumed_by_readiness(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "Cargo.lock").write_text("test cargo lock", encoding="utf-8")
+            (root / "package-lock.json").write_text("{}", encoding="utf-8")
+            signer_descriptor = write_approved_signer(root)
+            signer = {
+                "status": "approved",
+                "identity_id": SIGNER_ID,
+                "leaf_subject": LEAF_SUBJECT,
+                "leaf_sha1_thumbprint": LEAF_THUMBPRINT,
+                "descriptor": signer_descriptor,
+            }
+            inputs = root / "inputs"
+            inputs.mkdir()
+            desktop = inputs / "quickpls-desktop.exe"
+            cli = inputs / "qpls.exe"
+            installer = inputs / "QuickPLS_3.0.0_x64-setup.exe"
+            desktop.write_bytes(minimal_signed_pe(b"desktop"))
+            cli.write_bytes(minimal_signed_pe(b"cli"))
+            installer.write_bytes(minimal_signed_pe(b"setup"))
+
+            def fake_signature(_tool, path, *, role, version, signer):
+                self.assertEqual(version, "3.0.0")
+                self.assertEqual(signer["identity_id"], SIGNER_ID)
+                return trusted_signature_fields(path)
+
+            def fake_cms(payload, signature, *, signer):
+                signature.write_bytes(b"CMS:" + hashlib.sha256(payload.read_bytes()).digest())
+                return {
+                    "verification_tool": "windows_signed_cms",
+                    "exit_code": 0,
+                    "verification_output": "Trusted detached CMS signature",
+                    "verification_output_sha256": hashlib.sha256(b"Trusted detached CMS signature").hexdigest(),
+                    "signer_identity_id": SIGNER_ID,
+                    "leaf_subject": LEAF_SUBJECT,
+                    "leaf_sha1_thumbprint": LEAF_THUMBPRINT,
+                    "payload_sha256": sha256(payload),
+                    "signature_sha256": sha256(signature),
+                }
+
+            component = {
+                "type": "library", "bom-ref": "pkg:npm/react@19.1.1", "name": "react", "version": "19.1.1",
+                "purl": "pkg:npm/react@19.1.1", "licenses": [{"expression": "MIT"}],
+                "properties": [{"name": "quickpls:ecosystem", "value": "npm"}],
+            }
+            protected_context = {
+                "workflow_id": "owner/quickpls/.github/workflows/release.yml",
+                "workflow_run_id": "123456789",
+                "workflow_ref": "owner/quickpls/.github/workflows/release.yml@refs/heads/main",
+                "repository": "owner/quickpls",
+                "runner_environment": "github-hosted",
+                "oidc_subject": "repo:owner/quickpls:ref:refs/heads/main",
+            }
+            channel_policy = {"beta": {"artifact_factory": "signed_candidate"}, "stable": {"artifact_factory": "signed_candidate"}}
+            with (
+                mock.patch.object(signed_candidate, "read_version_contract", return_value=("3.0.0", {})),
+                mock.patch.object(signed_candidate, "read_release_channel_contract", return_value={"channels": channel_policy}),
+                mock.patch.object(signed_candidate, "git_identity", return_value={"clean": True, "commit": "a" * 40}),
+                mock.patch.object(signed_candidate, "protected_build_context", return_value=protected_context),
+                mock.patch.object(signed_candidate, "approved_signer", return_value=signer),
+                mock.patch.object(signed_candidate, "locate_signtool", return_value="C:/test/signtool.exe"),
+                mock.patch.object(signed_candidate, "verify_signature", side_effect=fake_signature),
+                mock.patch.object(signed_candidate, "sign_detached_cms", side_effect=fake_cms),
+                mock.patch.object(signed_candidate, "npm_components", return_value=([component], {component["bom-ref"]: []})),
+                mock.patch.object(signed_candidate, "run_cargo_metadata", return_value={}),
+                mock.patch.object(signed_candidate, "cargo_components", return_value=([], {})),
+                mock.patch.object(signed_candidate, "tool_version", return_value="tool 1.0"),
+            ):
+                factory = signed_candidate.build_signed_candidate(
+                    channel="stable", label="e2e", desktop=desktop, cli=cli, installer=installer,
+                    minimum_installed_version="2.46.0",
+                    build_started_at="2026-08-13T10:00:00Z", build_finished_at="2026-08-13T10:30:00Z",
+                    output_dir=root / "release/candidates", root=root,
+                )
+
+            self.assertTrue(str(factory["candidate_manifest"]["path"]).startswith("release/candidates/"))
+            contract = repository_contract()
+            candidate = (factory["candidate_id"], factory["candidate_manifest"])
+            attach_record(contract, root, "signing.artifacts", candidate=candidate)
+            with (
+                mock.patch.object(readiness, "_run_signtool", side_effect=trusted_signtool_execution),
+                mock.patch.object(readiness, "_run_windows_file_identity", side_effect=trusted_windows_identity),
+                mock.patch.object(readiness, "_run_windows_cms_verification", side_effect=trusted_cms_execution),
+            ):
+                report = readiness.validate_contract(contract, repository_root=root, now=NOW)
+            self.assertEqual(report["candidate_id"], factory["candidate_id"])
+            self.assertFalse(report["release_ready"])
 
 
 class ProductionSignToolSeamTests(unittest.TestCase):
@@ -467,6 +722,52 @@ class ProductionSignToolSeamTests(unittest.TestCase):
             shell=False,
         )
 
+    def test_signtool_parser_rejects_multiple_signing_chains(self) -> None:
+        output = str(trusted_signtool_execution(Path("candidate.exe"))["stdout"])
+        duplicate = output.replace(
+            "Signing Certificate Chain:\n",
+            "Signing Certificate Chain:\n    Issued to: Other Publisher\nThe signature is timestamped: older\nSigning Certificate Chain:\n",
+            1,
+        )
+        with self.assertRaisesRegex(readiness.ContractError, "exactly one signing certificate chain"):
+            readiness._parse_signtool_identity(duplicate, "candidate")
+
+
+class ProductionWindowsTrustSeamTests(unittest.TestCase):
+    def test_leaf_and_pe_identity_uses_literal_env_path_and_utf8_json(self) -> None:
+        candidate = Path("C:/candidate's dir/quickpls-desktop.exe")
+        powershell = Path("C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe")
+        completed = mock.Mock(returncode=0, stdout=json.dumps(trusted_windows_identity(candidate)), stderr="")
+        with (
+            mock.patch.object(readiness, "_locate_powershell", return_value=powershell),
+            mock.patch.object(readiness.subprocess, "run", return_value=completed) as run,
+        ):
+            result = readiness._run_windows_file_identity(candidate)
+        self.assertEqual(result["leaf_sha1_thumbprint"], LEAF_THUMBPRINT)
+        arguments = run.call_args.args[0]
+        self.assertNotIn(str(candidate.resolve()), arguments)
+        self.assertEqual(run.call_args.kwargs["env"]["QPLS_VERIFY_FILE"], str(candidate.resolve()))
+        self.assertFalse(run.call_args.kwargs["shell"])
+
+    def test_detached_cms_verifier_uses_two_literal_env_paths(self) -> None:
+        payload = Path("C:/candidate's dir/manifest.json")
+        signature = Path("C:/candidate's dir/manifest.p7s")
+        powershell = Path("C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe")
+        completed = mock.Mock(
+            returncode=0,
+            stdout=json.dumps({"leaf_subject": LEAF_SUBJECT, "leaf_sha1_thumbprint": LEAF_THUMBPRINT}),
+            stderr="",
+        )
+        with (
+            mock.patch.object(readiness, "_locate_powershell", return_value=powershell),
+            mock.patch.object(readiness.subprocess, "run", return_value=completed) as run,
+        ):
+            result = readiness._run_windows_cms_verification(payload, signature)
+        self.assertEqual(result["exit_code"], 0)
+        environment = run.call_args.kwargs["env"]
+        self.assertEqual(environment["QPLS_CMS_PAYLOAD"], str(payload.resolve()))
+        self.assertEqual(environment["QPLS_CMS_SIGNATURE"], str(signature.resolve()))
+
 
 class FailClosedValidationTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -477,6 +778,16 @@ class FailClosedValidationTests(unittest.TestCase):
         )
         self.signtool_mock = self.signtool_patcher.start()
         self.addCleanup(self.signtool_patcher.stop)
+        self.windows_identity_patcher = mock.patch.object(
+            readiness, "_run_windows_file_identity", side_effect=trusted_windows_identity
+        )
+        self.windows_identity_mock = self.windows_identity_patcher.start()
+        self.addCleanup(self.windows_identity_patcher.stop)
+        self.cms_patcher = mock.patch.object(
+            readiness, "_run_windows_cms_verification", side_effect=trusted_cms_execution
+        )
+        self.cms_mock = self.cms_patcher.start()
+        self.addCleanup(self.cms_patcher.stop)
 
     def test_independent_scientific_review_is_mandatory_and_cannot_be_omitted(self) -> None:
         contract = repository_contract()
@@ -667,6 +978,25 @@ class FailClosedValidationTests(unittest.TestCase):
                 with self.assertRaises(readiness.ContractError):
                     readiness.validate_contract(contract, repository_root=root, now=NOW)
 
+    def test_signed_attestation_prevents_sbom_and_manifest_rewrite(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            contract = repository_contract()
+            candidate_id, manifest_descriptor = build_candidate(root, "sbom-rewrite")
+            manifest_path = root / manifest_descriptor["path"]
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            sbom_row = next(row for row in manifest["artifacts"] if row["role"] == "sbom")
+            sbom_path = root / sbom_row["path"]
+            sbom_path.write_text(sbom_path.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+            sbom_row["size"] = sbom_path.stat().st_size
+            sbom_row["sha256"] = sha256(sbom_path)
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            manifest_descriptor["size"] = manifest_path.stat().st_size
+            manifest_descriptor["sha256"] = sha256(manifest_path)
+            attach_record(contract, root, "signing.artifacts", candidate=(candidate_id, manifest_descriptor))
+            with self.assertRaisesRegex(readiness.ContractError, "sbom_sha256"):
+                readiness.validate_contract(contract, repository_root=root, now=NOW)
+
     def test_rejects_signtool_nonzero_and_untrusted_results(self) -> None:
         executions = {
             "nonzero": {
@@ -704,7 +1034,7 @@ class FailClosedValidationTests(unittest.TestCase):
 
     def test_rejects_validation_time_publisher_and_timestamp_mismatches(self) -> None:
         cases = [
-            ("publisher", {"publisher_mismatch": True}, "publisher does not match"),
+            ("publisher", {"publisher_mismatch": True}, "leaf_subject does not match"),
             ("timestamp", {"timestamp_mismatch": True}, "timestamp does not match"),
         ]
         for variant, options, error in cases:

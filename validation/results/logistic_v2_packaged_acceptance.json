@@ -2,8 +2,8 @@
   "schema_version": "quickpls.packaged_acceptance.v1",
   "kind": "quickpls3_scoped_tauri_logistic_v2_acceptance",
   "passed": true,
-  "generated_at_utc": "2026-08-13T06:57:21.679Z",
-  "completed_at_utc": "2026-08-13T07:00:58.931Z",
+  "generated_at_utc": "2026-08-13T19:11:38.144Z",
+  "completed_at_utc": "2026-08-13T19:15:15.159Z",
   "feature_id": "qpls3.standalone.logistic",
   "method_version": "regression_logistic_v2",
   "catalogue_snapshot_date": "2026-08-12",
@@ -39,14 +39,14 @@
         "Run provenance"
       ],
       "in_sample_disclaimer_included": true,
-      "artifact_sha256": "87387831caebead4ed99fb20b37675d00f9bb1dd91560073b3892c103492fc19",
+      "artifact_sha256": "08061192e164f7ab4308794a19384718a7d3d9e4db4a5155971584088b15bb4a",
       "source_check": "logisticExport"
     },
     "save_reopen": {
       "passed": true,
       "same_run_restored": true,
       "project_checksum_matches": true,
-      "archive_sha256": "190e07bac6afb3fbae09ea1cc9d580053c6bb7043b28a6c3a523fd92da6603b9",
+      "archive_sha256": "57b7497daedce39d64bff0ca7451033c87255e1a303e116137b1709af31ebaa8",
       "source_check": "logisticSaveReopen"
     },
     "failure_lifecycle": {
@@ -63,14 +63,14 @@
   },
   "artifacts": {
     "xlsx": {
-      "path": "validation/results/v247-native-logistic-20260813-121924925-38092-35700036.xlsx",
-      "size": 16135,
-      "sha256": "87387831caebead4ed99fb20b37675d00f9bb1dd91560073b3892c103492fc19"
+      "path": "validation/results/v247-native-logistic-20260814-003257084-50236-6df5af42.xlsx",
+      "size": 16133,
+      "sha256": "08061192e164f7ab4308794a19384718a7d3d9e4db4a5155971584088b15bb4a"
     },
     "project_archive": {
-      "path": "validation/results/v247-native-logistic-1786604241673-47796.qpls",
-      "size": 20162,
-      "sha256": "190e07bac6afb3fbae09ea1cc9d580053c6bb7043b28a6c3a523fd92da6603b9"
+      "path": "validation/results/v247-native-logistic-1786648298136-35352.qpls",
+      "size": 20157,
+      "sha256": "57b7497daedce39d64bff0ca7451033c87255e1a303e116137b1709af31ebaa8"
     },
     "screenshots": [
       {
@@ -80,28 +80,28 @@
       },
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/151-tauri-native-logistic-dialog-1536x794.png",
-        "size": 284813,
-        "sha256": "e05f775cde073614f644981d85e0fa2d63e6db80fcb1fb1724913ab721a5d640"
+        "size": 284477,
+        "sha256": "164046f3fff839f75b0cd97a84d09b584892ab855a7e5a22f66050b7dac3b94e"
       },
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/152-tauri-native-logistic-running-1536x794.png",
-        "size": 230730,
-        "sha256": "dea3f8f35b728331c8ef8fe2b870fe489fc4d99b1b5ef611955d3cdec9ef75a7"
+        "size": 230670,
+        "sha256": "412b6a5216d536a10a489d3dc38897b26325a0bdabccdf4898237eb4aa2a9c4a"
       },
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/153-tauri-native-logistic-results-1536x794.png",
-        "size": 90927,
-        "sha256": "ba6decfee29fe9bcca28c40a289b13d18e2f5a16b85cb209caa82377582d72bb"
+        "size": 90868,
+        "sha256": "669ef9172fa9834f71f2855e2b90db6655e6d6fbf2629a71ce0890ebb391ae8f"
       },
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/154-tauri-native-logistic-export-1536x794.png",
-        "size": 117072,
-        "sha256": "21159b62d9b1c34336bacd2b0145e2e8718a2fedca2874450780542a5bb48eb7"
+        "size": 117075,
+        "sha256": "18c18417199acbadf439d13236bad3edc111d519061be44a4a27b9d38bd7b31d"
       },
       {
         "path": "validation/results/screens/v247-native-desktop-acceptance/155-tauri-native-logistic-reopened-1536x794.png",
-        "size": 98194,
-        "sha256": "13573173f32f5c39b280ea975bd1f12607c3887717e646d2245b737536f2442a"
+        "size": 98134,
+        "sha256": "b504fc1c7da2861b4701c156e86d862012c32520c46850faaf3ccf56c10a0d43"
       }
     ]
   },

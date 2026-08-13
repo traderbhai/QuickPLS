@@ -1,0 +1,52 @@
+{
+  "schema_version":1,
+  "governance":{"contract_frozen_at_utc":"2026-08-13T10:26:17Z","manifest_path":"validation/methods/cbsem_bootstrap_v2.manifest.json","schema_path":"validation/methods/method_promotion_manifest.schema.json","validator_path":"validation/method_promotion_manifest.py","focused_test_path":"validation/test_method_promotion_manifest.py"},
+  "feature":{"id":"qpls3.cbsem.bootstrap","label":"CB-SEM Nonparametric Bootstrap","method_version":"cbsem_bootstrap_v2","method_kind":"stochastic","catalogue_snapshot_date":"2026-08-12","catalogue_url":"https://smartpls.com/documentation/algorithms-and-techniques/"},
+  "claim":{
+    "supported_scope":"Seeded nonparametric case bootstrap with 1,000 through 10,000 raw-data resamples and complete refits of accepted single-group continuous reflective cbsem_ml_v1 CFA or recursive SEM models.",
+    "estimand":"The empirical case-resampling distribution, bootstrap standard error, and two-sided percentile interval for each supported free CB-SEM parameter.",
+    "assumptions":["The original cbsem_ml_v1 fit is converged, identified, finite, and admissible.","Rows are independent sampling units and each replicate resamples n complete rows with replacement before recomputing moments and refitting.","At least max(1000, ceil(0.90 B)) requested replicates converge to admissible estimates under the frozen optimizer contract."],
+    "exclusions":["Ordinal/WLSMV, robust, FIML, clustered, multilevel, parametric, BCa, studentized, and automatic model-modification bootstrap are excluded from this standalone capability.","Group-stratified or LMS refits may reuse the protocol only when separately qualified under cbsem_multigroup_v2 or cbsem_moderator_v1; those outputs are not standalone v2 evidence.","Bollen-Stine null-transformed fit inference is distinct, and the cbsem_bootstrap_v1 normal-interval preview is not a bootstrap and cannot be promoted or relabeled as v2."],
+    "warnings":["Bootstrap validity depends on independent representative rows and stable admissible refits.","All failed replicates and their reasons remain visible; reaching a usable threshold does not erase them."]
+  },
+  "scientific_contract":{
+    "equations":[
+      {"id":"bootstrap_standard_error","expression":"SE_boot(theta) = sqrt(sum_b(theta_b_star - mean(theta_star))^2 / (B_ok - 1))","variables":["SE_boot","theta","theta_b_star","B_ok"],"source_reference_id":"efron_1979"},
+      {"id":"percentile_interval","expression":"CI_0.95(theta) = [Q_0.025(theta_star), Q_0.975(theta_star)]","variables":["CI_0.95","theta","Q_0.025","Q_0.975","theta_star"],"source_reference_id":"efron_1979"}
+    ],
+    "references":[
+      {"id":"efron_1979","kind":"primary_paper","citation":"Efron (1979), Bootstrap Methods: Another Look at the Jackknife, DOI 10.1214/aos/1176344552","locator":"docs/methods/CBSEM_BOOTSTRAP_V2.md","independence_group":"published_bootstrap","runtime_policy":"no_runtime_dependency"},
+      {"id":"bollen_stine_1992","kind":"primary_paper","citation":"Bollen and Stine (1992), Bootstrapping Goodness-of-Fit Measures in Structural Equation Models, DOI 10.1177/0049124192021002004","locator":"docs/methods/CBSEM_BOOTSTRAP_V2.md","independence_group":"published_cbsem_bootstrap","runtime_policy":"no_runtime_dependency"},
+      {"id":"independent_python_cbsem_bootstrap","kind":"independent_python","citation":"Independent Python case-resampling and full-refit CB-SEM bootstrap reference","locator":"validation/cbsem_bootstrap_v2_reference.py","independence_group":"python_reference","runtime_policy":"development_validation_only"}
+    ],
+    "simulations":[
+      {"id":"bootstrap_interval_coverage","purpose":"coverage","design":"Supported CFA and recursive SEM models across sample size, loading/path magnitude, normal and moderately nonnormal continuous data, and optimizer stress.","seed_policy":"Frozen independent data-generation and replicate streams indexed by scenario, replicate, and bootstrap index.","metrics":["standard_error_bias","percentile_coverage","usable_replicate_rate","failure_reason_accuracy"],"acceptance_rule":"Bias and coverage must meet preregistered Monte Carlo limits, every failed replicate must be counted, and payloads below the usable threshold must emit no interval."},
+      {"id":"bootstrap_failure_policy","purpose":"failure_behavior","design":"Singular resamples, Heywood cases, nonconvergence, cancellation, and threshold-boundary cases.","seed_policy":"Frozen adversarial fixtures plus deterministic replicate streams.","metrics":["failure_classification_accuracy","threshold_decision_accuracy","retry_reproducibility"],"acceptance_rule":"Every failure class and threshold decision must match the contract, and same-seed retry must reproduce uninterrupted output."}
+    ],
+    "boundaries":[
+      {"id":"singular_or_inadmissible_resamples","category":"data_pathology","case":"One or more resamples have singular covariance, nonconvergence, non-finite estimates, or inadmissible variances.","expected_behavior":"Each replicate is reason-coded and counted; inference is emitted only if the frozen usable threshold is met."},
+      {"id":"unsupported_cbsem_bootstrap","category":"unsupported_scope","case":"The base model uses an unqualified estimator, group design, FIML, clustering, interaction, or requested B outside 1,000 through 10,000.","expected_behavior":"Setup is blocked before resampling."},
+      {"id":"row_order_with_stable_ids","category":"metamorphic","case":"Input rows are permuted while stable row identities and the seed-to-identity sampling rule are preserved.","expected_behavior":"Mapped resamples, estimates, failures, and intervals remain invariant."},
+      {"id":"seed_worker_invariance","category":"determinism","case":"The same data, model, settings, and seed execute with different worker counts.","expected_behavior":"Replicate samples, fits, failures, and summaries are exactly equal."},
+      {"id":"bootstrap_archive_tamper","category":"tamper","case":"A sampled row set, replicate estimate, failure, interval, seed, threshold, or method identity is changed.","expected_behavior":"Strict project validation rejects the archive."}
+    ],
+    "numerical_tolerance":0.000001
+  },
+  "product_contract":{
+    "persistence":{"recipe_schema_version":3,"result_schema_version":1,"payload_kind":"pls_pm_v1","tamper_tests":[
+      {"category":"feature_identity","expected_behavior":"Reject an archive whose identity differs from CB-SEM bootstrap v2."},
+      {"category":"method_version","expected_behavior":"Reject a result relabeled from cbsem_bootstrap_v1 or another method."},
+      {"category":"dataset_fingerprint","expected_behavior":"Reject resamples whose base dataset fingerprint differs from saved input."},
+      {"category":"checksum","expected_behavior":"Reject an archive entry whose recipe, replicate, or result checksum differs."},
+      {"category":"malformed_payload","expected_behavior":"Reject duplicate keys, unknown fields, invalid counts, non-finite estimates, unsorted quantiles, or inconsistent failures."},
+      {"category":"legacy_reinterpretation","expected_behavior":"Never reinterpret analytical estimate plus or minus 1.96 standard errors from cbsem_bootstrap_v1 as resampling evidence."}
+    ],"legacy_policy":"The cbsem_bootstrap_v1 preview remains explicitly experimental and is permanently ineligible for v2 evidence or migration."},
+    "native":{"setup_controls":["Accepted CB-SEM run","Bootstrap samples 1000 to 10000","Seed","95 percent percentile interval","Optimizer and usable-threshold summary"],"applicability_blockers":["Unaccepted base model","Unsupported estimator or model feature","Invalid replicate count","Original fit not converged or admissible"],"result_surfaces":["Bootstrap parameter table","Intervals and standard errors","Replicate failure ledger","Usable-threshold decision","Settings, warnings, and provenance"],"gui_cli_parity_rule":"GUI and CLI must produce identical worker-independent replicate streams, fits, failures, and bootstrap summaries for the same recipe and seed.","accessibility_rules":["Interval and failure visuals have equivalent accessible tables.","Unavailable inference, failed counts, and warnings are communicated without color alone."]},
+    "export":{"formats":["csv","xlsx"],"tables":["Bootstrap parameter intervals","Replicate failure ledger","Bootstrap settings","Run provenance"],"same_run_required":true,"provenance_required":true},
+    "packaged":{"platforms":["windows"],"workflow_steps":["setup","invalid_setup_blocked","execute","cancel_retry","inspect_results","export","save","close","reopen_same_run","cleanup"],"viewports":["1024x700","1280x720","1440x900"],"offline_required":true,"cancellation_required":true,"process_cleanup_required":true},
+    "audit":{"exact_identity_fields":["passed","feature_id","method_version","catalogue_snapshot_date"],"source_hashes_required":true,"freshness_required":true,"reports_must_pass":true}
+  },
+  "qualification":{"declared_state":"absent","target_state":"release_qualified","source_requirements":{
+    "method_spec":["docs/methods/CBSEM_BOOTSTRAP_V2.md"],"independent_reference":["validation/cbsem_bootstrap_v2_reference.py"],"simulation_report":["validation/cbsem_bootstrap_v2_release_simulation.py"],"boundary_report":["validation/cbsem_bootstrap_v2_release_boundary_gate.py"],"persistence_report":["validation/cbsem_bootstrap_v2_release_persistence_gate.py"],"frontend_report":["src/native/nativeCbsemBootstrap.test.ts"],"export_report":["src/native/nativeExportTables.test.ts"],"method_audit":["validation/cbsem_bootstrap_v2_method_promotion_audit.py"],"packaged_acceptance":["validation/run_v252_cbsem_bootstrap_v2_native_acceptance.ps1"]
+  },"evidence":{"engine_only":[],"archive_qualified":[],"native_qualified":[],"release_qualified":[]}}
+}

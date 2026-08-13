@@ -1,0 +1,256 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-13T09:59:21Z",
+    "manifest_path": "validation/methods/wpls_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.pls.weighted",
+    "label": "Weighted PLS Algorithm",
+    "method_version": "wpls_case_weighted_v1",
+    "method_kind": "deterministic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/weighted-pls/"
+  },
+  "claim": {
+    "supported_scope": "Positive case-weighted reflective PLS with standardized preprocessing and path or factor inner weighting.",
+    "estimand": "Case-weighted composite scores, outer weights and loadings, weighted least-squares structural paths, R-squared values, weight sum, and effective sample size under the persisted case weights.",
+    "assumptions": [
+      "The selected case-weight column is numeric, finite, and strictly positive for every retained complete observation.",
+      "All constructs are reflective and the model is recursive with path or factor weighting.",
+      "Weighted means, unbiased weighted variances, covariances, score normalization, and regressions use the same retained rows and weights."
+    ],
+    "exclusions": [
+      "Survey-design weights, strata, clusters, finite-population corrections, and replicate-weight variance estimation are excluded.",
+      "Formative blocks, PCA weighting, generated interactions, and higher-order constructs are excluded.",
+      "Weighted bootstrap, permutation, jackknife, and publication-wide weighting recommendations are not qualified here."
+    ],
+    "warnings": [
+      "Case weights change the estimand and must have a defensible study-specific interpretation.",
+      "Effective sample size can be materially smaller than the number of retained observations."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {
+        "id": "unbiased_weighted_covariance",
+        "expression": "cov_w(x,y) = sum_i w_i (x_i-mu_x)(y_i-mu_y) / [sum_i w_i - sum_i w_i^2/sum_i w_i]",
+        "variables": ["cov_w", "w_i", "x_i", "y_i", "mu_x", "mu_y"],
+        "source_reference_id": "westfall_weighted_moments"
+      },
+      {
+        "id": "kish_effective_sample_size",
+        "expression": "n_eff = (sum_i w_i)^2 / sum_i w_i^2",
+        "variables": ["n_eff", "w_i"],
+        "source_reference_id": "kish_1965"
+      }
+    ],
+    "references": [
+      {
+        "id": "kish_1965",
+        "kind": "primary_paper",
+        "citation": "Kish (1965), Survey Sampling, effective sample size under unequal weights",
+        "locator": "docs/methods/PLS_WPLS_V1.md",
+        "independence_group": "published_weighting_method",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "westfall_weighted_moments",
+        "kind": "published_fixture",
+        "citation": "Published weighted-mean and unbiased weighted-covariance formula fixture",
+        "locator": "docs/methods/PLS_WPLS_V1.md",
+        "independence_group": "published_weighted_moments",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "independent_python_wpls",
+        "kind": "independent_python",
+        "citation": "Independent Python implementation of weighted preprocessing, score iteration, paths, loadings, and R-squared",
+        "locator": "validation/wpls_reference.py",
+        "independence_group": "python_reference",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "simulations": [
+      {
+        "id": "weighted_parameter_recovery",
+        "purpose": "recovery",
+        "design": "Reflective recursive models under uniform, moderately unequal, and strongly unequal positive case weights with varied loadings and paths.",
+        "seed_policy": "Frozen scenario-indexed seeds; QuickPLS and the independent reference receive identical observations and weights.",
+        "metrics": ["path_error", "loading_error", "weighted_r2_error", "effective_sample_size_error", "convergence_rate"],
+        "acceptance_rule": "Supported scenarios meet the frozen reference tolerance, uniform weights reduce to ordinary PLS, and every invalid-weight case fails before estimation."
+      }
+    ],
+    "boundaries": [
+      {"id": "invalid_weight_values", "category": "data_pathology", "case": "A retained case weight is missing, nonfinite, zero, or negative.", "expected_behavior": "Validation or execution rejects the dataset with no partial weighted result."},
+      {"id": "unsupported_weighted_shape", "category": "unsupported_scope", "case": "The recipe requests formative measurement, PCA weighting, generated constructs, or resampling with case weights.", "expected_behavior": "The typed recipe validator blocks execution and names the unsupported combination."},
+      {"id": "uniform_weight_reduction", "category": "metamorphic", "case": "All valid case weights are multiplied by one positive constant or are set uniformly.", "expected_behavior": "Scaling weights leaves estimates unchanged and uniform weights reproduce ordinary PLS within tolerance."},
+      {"id": "repeat_and_reorder", "category": "determinism", "case": "The same weighted data are executed repeatedly or rows are consistently reordered.", "expected_behavior": "Mapped analytical payloads remain equal within tolerance, with exact repeated-run arithmetic."},
+      {"id": "weight_metadata_tamper", "category": "tamper", "case": "The saved weight column, sum, effective sample size, covariance convention, estimate, or method version is altered.", "expected_behavior": "Strict project validation rejects the archive rather than displaying the modified WPLS result."}
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 3,
+      "result_schema_version": 1,
+      "payload_kind": "pls_pm_v1",
+      "tamper_tests": [
+        {"category": "feature_identity", "expected_behavior": "Reject a result whose capability identity differs from its weighted recipe."},
+        {"category": "method_version", "expected_behavior": "Reject a weighted result relabeled with another method version."},
+        {"category": "dataset_fingerprint", "expected_behavior": "Reject a weighted result whose dataset fingerprint no longer matches."},
+        {"category": "checksum", "expected_behavior": "Reject any modified archive member whose checksum differs."},
+        {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, non-finite values, invalid weight summaries, or inconsistent dimensions."},
+        {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret ordinary or provisional weighted output as current WPLS v1 evidence."}
+      ],
+      "legacy_policy": "Only typed wpls_case_weighted_v1 payloads can satisfy current evidence; other weighted metadata remains historical or unsupported."
+    },
+    "native": {
+      "setup_controls": ["Reflective model", "Case-weight column", "Path or factor weighting", "Standardized preprocessing", "Tolerance", "Maximum iterations"],
+      "applicability_blockers": ["Missing or invalid case-weight column", "Nonpositive weight", "Formative construct", "PCA weighting", "Generated construct", "Resampling setting"],
+      "result_surfaces": ["Weighted path coefficients", "Weighted loadings and weights", "Weighted R-square", "Weight diagnostics", "Run provenance"],
+      "gui_cli_parity_rule": "For the same typed WPLS recipe, weights, dataset fingerprint, and method version, GUI and CLI analytical payloads must be exactly equal apart from operational identifiers and timestamps.",
+      "accessibility_rules": ["Weight diagnostics and results are available in accessible tables.", "Invalid-weight explanations are associated with the corresponding setup control and do not rely on color."]
+    },
+    "export": {
+      "formats": ["csv", "xlsx", "html", "svg", "png"],
+      "tables": ["Weighted path coefficients", "Weighted outer loadings", "Weighted outer weights", "Weighted R-square", "Weight diagnostics", "Run provenance"],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": ["windows"],
+      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
+      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "offline_required": true,
+      "cancellation_required": false,
+      "process_cleanup_required": true
+    },
+    "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
+  },
+  "qualification": {
+    "declared_state": "native_qualified",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": ["docs/methods/PLS_WPLS_V1.md"],
+      "independent_reference": ["validation/wpls_reference.py", "validation/wpls_v1_factory_evidence.py"],
+      "simulation_report": ["validation/wpls_v1_simulation.py"],
+      "boundary_report": ["validation/wpls_v1_boundary_gate.py"],
+      "persistence_report": ["validation/wpls_v1_persistence_gate.py"],
+      "frontend_report": ["src/native/nativeAnalysisCatalog.test.ts", "src/native/nativeAnalysisRecipe.test.ts", "src/native/nativePlsReadiness.test.ts", "src/native/nativeResults.test.ts", "src/native/NativeCalculationDialog.test.ts"],
+      "export_report": ["src/native/nativeExportTables.test.ts", "src/native/nativeResults.test.ts", "src/native/NativeExportDialog.test.ts"],
+      "method_audit": ["validation/wpls_v1_factory_audit.py"],
+      "packaged_acceptance": [
+        "validation/wpls_v1_packaged_acceptance.py",
+        "validation/diagnostic_bundle_source_manifest.py",
+        "validation/run_v247_cumulative_native_acceptance.ps1",
+        "validation/test_extended_pls_cumulative_receipt.py",
+        "validation/test_wpls_v1_packaged_adapter.py",
+        "validation/v247_native_desktop_visual_acceptance.mjs"
+      ]
+    },
+    "evidence": {
+      "engine_only": [
+        {
+          "path": "validation/results/method_factory/wpls_v1/method_spec.identity.json",
+          "roles": ["method_spec"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/wpls_v1/independent_reference.identity.json",
+          "roles": ["independent_reference"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/wpls_v1/simulation_report.identity.json",
+          "roles": ["simulation_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/wpls_v1/boundary_report.identity.json",
+          "roles": ["boundary_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "archive_qualified": [
+        {
+          "path": "validation/results/method_factory/wpls_v1/persistence_report.identity.json",
+          "roles": ["persistence_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "native_qualified": [
+        {
+          "path": "validation/results/method_factory/wpls_v1/frontend_report.identity.json",
+          "roles": ["frontend_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/wpls_v1/export_report.identity.json",
+          "roles": ["export_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "release_qualified": [
+        {
+          "path": "validation/results/method_factory/wpls_v1/method_audit.identity.json",
+          "roles": ["method_audit"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/wpls_v1/packaged_acceptance.identity.json",
+          "roles": ["packaged_acceptance"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ]
+    }
+  }
+}

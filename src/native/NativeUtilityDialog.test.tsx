@@ -4,6 +4,23 @@ import NativeUtilityDialog from "./NativeUtilityDialog";
 import { NATIVE_NCA_SCOPE_NOTE } from "./nativeNca";
 
 describe("NativeUtilityDialog", () => {
+  it("mounts the live preview-first diagnostic workflow in production Preferences", () => {
+    vi.stubGlobal("window", { __TAURI_INTERNALS__: {} });
+    const html = renderToStaticMarkup(<NativeUtilityDialog kind="settings" close={() => undefined} />);
+    vi.unstubAllGlobals();
+
+    expect(html).toContain('data-live-preferences-dialog="true"');
+    expect(html).toContain('data-diagnostic-bundle-panel="live"');
+    expect(html).toContain("Interface density");
+    expect(html).toContain("Diagnostics and support");
+    expect(html).toContain("Preview bundle");
+    expect(html).toContain("Save new ZIP");
+    expect(html).toContain("Cancel preview");
+    expect(html).toContain("never uploads or attaches it automatically");
+    expect(html).not.toContain("Native desktop required");
+    expect(html).not.toContain(">Upload<");
+  });
+
   it("discloses the bounded standalone NCA scope in the on-demand trust surface", () => {
     vi.stubGlobal("window", {});
     const html = renderToStaticMarkup(<NativeUtilityDialog kind="trust" close={() => undefined} />);

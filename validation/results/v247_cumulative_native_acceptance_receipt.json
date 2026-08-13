@@ -1,0 +1,120 @@
+﻿{
+    "schema_version":  1,
+    "kind":  "quickpls_v247_cumulative_native_acceptance_receipt",
+    "passed":  true,
+    "supervisor_started_at_utc":  "2026-08-13T19:02:56.9977028Z",
+    "completed_at_utc":  "2026-08-13T19:17:18.6025307Z",
+    "report":  "validation/results/v247_tauri_native_acceptance.json",
+    "checks":  177,
+    "unique_checks":  177,
+    "failures":  0,
+    "console_errors":  0,
+    "report_sha256":  "6b56fa15b60e40def2959bb43a4514a654012c1a63724b8eea084743431cfbd7",
+    "report_size":  499999,
+    "final_scope":  "regression_bootstrap",
+    "graceful_process_cleanup_verified":  true,
+    "exports":  [
+                    {
+                        "role":  "generic",
+                        "path":  "validation/results/v247-native-full-20260814-003257084-50236-6df5af42.xlsx",
+                        "size":  18322,
+                        "sha256":  "c440f7f9317d20822e1f789eee7d5dd50508b78899c734d4149fa2a1d76c116a"
+                    },
+                    {
+                        "role":  "bootstrap",
+                        "path":  "validation/results/v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx",
+                        "size":  22849,
+                        "sha256":  "566577b9e9284fbbb161f3624812c756a291e209e0214613614f74423d5c6564"
+                    },
+                    {
+                        "role":  "plsc",
+                        "path":  "validation/results/v247-native-plsc-20260814-003257084-50236-6df5af42.xlsx",
+                        "size":  17912,
+                        "sha256":  "f4b3be660d05782fd0e21651691fdee69a543661d96f0ba8ad1a91f87f6d76cc"
+                    },
+                    {
+                        "role":  "wpls",
+                        "path":  "validation/results/v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx",
+                        "size":  16626,
+                        "sha256":  "0e5ae92fbea1c01d6c1aecc0f54e4aab3339e3a813b1fa1e5194bb453cfee87d"
+                    },
+                    {
+                        "role":  "mga",
+                        "path":  "validation/results/v247-native-mga-20260814-003257084-50236-6df5af42.xlsx",
+                        "size":  20177,
+                        "sha256":  "981f0f19bdf676fc351fcec6228693e79d87d77513c8ca0108fb70b88781ce1c"
+                    },
+                    {
+                        "role":  "cca",
+                        "path":  "validation/results/v247-native-cca-20260814-003257084-50236-6df5af42.xlsx",
+                        "size":  19847,
+                        "sha256":  "88f0c7ebe89f88cbd103138c06a905243f275d10e20a68744f44b22066ca9c6f"
+                    },
+                    {
+                        "role":  "ipma",
+                        "path":  "validation/results/v247-native-ipma-20260814-003257084-50236-6df5af42.xlsx",
+                        "size":  20276,
+                        "sha256":  "1f35fc5b2f3c982961d8f3f50eb06058683cb80bdf56e32da58898a5cc658fe7"
+                    },
+                    {
+                        "role":  "nca",
+                        "path":  "validation/results/v247-native-nca-20260814-003257084-50236-6df5af42.xlsx",
+                        "size":  9598,
+                        "sha256":  "47f2a7661251dca02865098e74400e6c759996dae6d8b340d4e22dea449f03fc"
+                    },
+                    {
+                        "role":  "prediction",
+                        "path":  "validation/results/v247-native-prediction-20260814-003257084-50236-6df5af42.xlsx",
+                        "size":  23909,
+                        "sha256":  "4989b708c004d5d4c11da7f03edfa77a4215bd062ca4125a5d1f4184eee50f41"
+                    },
+                    {
+                        "role":  "hoc",
+                        "path":  "validation/results/v247-native-hoc-20260814-003257084-50236-6df5af42.xlsx",
+                        "size":  15425,
+                        "sha256":  "0f2d1aaaa2c7850a8ae4aa359829da11a8ff7176a725dc1a7ab778ac9bf8f3ca"
+                    },
+                    {
+                        "role":  "pca",
+                        "path":  "validation/results/v247-native-pca-20260814-003257084-50236-6df5af42.xlsx",
+                        "size":  15753,
+                        "sha256":  "aa1c239fb1440eea018ef4398c87b49de61eea4f21bb2f727ffc952ff6b072af"
+                    },
+                    {
+                        "role":  "ols",
+                        "path":  "validation/results/v247-native-ols-20260814-003257084-50236-6df5af42.xlsx",
+                        "size":  13543,
+                        "sha256":  "7b9c99bbcf170bf637e9ec9fd8cedf54bc6b1e6429862a3daac70eed8898b86b"
+                    },
+                    {
+                        "role":  "cbsem",
+                        "path":  "validation/results/v247-native-cbsem-20260814-003257084-50236-6df5af42.xlsx",
+                        "size":  17783,
+                        "sha256":  "8aa8806d744e9c4956eb553b508c514edde9c7e433e1cd70dc1b3a748f38c485"
+                    },
+                    {
+                        "role":  "gsca",
+                        "path":  "validation/results/v247-native-gsca-20260814-003257084-50236-6df5af42.xlsx",
+                        "size":  11437,
+                        "sha256":  "f8ae0f82bca02b9809b133f9359ae33f5dfc7659e387523f3152c16f6fb849af"
+                    },
+                    {
+                        "role":  "logistic",
+                        "path":  "validation/results/v247-native-logistic-20260814-003257084-50236-6df5af42.xlsx",
+                        "size":  16133,
+                        "sha256":  "08061192e164f7ab4308794a19384718a7d3d9e4db4a5155971584088b15bb4a"
+                    },
+                    {
+                        "role":  "regression_bootstrap_ols",
+                        "path":  "validation/results/v247-native-regression-bootstrap-ols-20260814-003257084-50236-6df5af42.xlsx",
+                        "size":  18281,
+                        "sha256":  "27969c7184d31e8d37d4a54d1b29251b4fb3560eea30c8738666d9345dbfb367"
+                    },
+                    {
+                        "role":  "regression_bootstrap_logistic",
+                        "path":  "validation/results/v247-native-regression-bootstrap-logistic-20260814-003257084-50236-6df5af42.xlsx",
+                        "size":  21909,
+                        "sha256":  "5f30f3e17ab02495000ab8138197653ab0fb85396291bbd2518a674d6c786dfa"
+                    }
+                ]
+}

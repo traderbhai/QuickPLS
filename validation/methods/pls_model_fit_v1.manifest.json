@@ -1,0 +1,52 @@
+{
+  "schema_version":1,
+  "governance":{"contract_frozen_at_utc":"2026-08-13T10:26:17Z","manifest_path":"validation/methods/pls_model_fit_v1.manifest.json","schema_path":"validation/methods/method_promotion_manifest.schema.json","validator_path":"validation/method_promotion_manifest.py","focused_test_path":"validation/test_method_promotion_manifest.py"},
+  "feature":{"id":"qpls3.assessment.model_fit","label":"PLS Bounded Model Fit","method_version":"pls_model_fit_v1","method_kind":"deterministic","catalogue_snapshot_date":"2026-08-12","catalogue_url":"https://smartpls.com/documentation/algorithms-and-techniques/"},
+  "claim":{
+    "supported_scope":"Deterministic SRMR and squared Euclidean discrepancy d_ULS for saturated and estimated PLS indicator-correlation models under one frozen lower-triangle convention.",
+    "estimand":"Observed-versus-implied correlation discrepancy summarized as d_ULS and SRMR for both saturated and estimated supported PLS models.",
+    "assumptions":["All indicators use the same finite complete cases and deterministic recipe order.","Observed and implied matrices are finite symmetric dimensionally identical correlation matrices under the frozen PLS model construction.","The output persists the exact fit method identity, model form, indicator order, matrix convention, values, warnings, and reproducible inputs or checksums."],
+    "exclusions":["d_G, NFI, RMS_theta, bootstrap exact-fit tests, approximate-fit p-values, formative-only fit claims, and CB-SEM fit semantics are excluded.","No universal SRMR or d_ULS cutoff is embedded in the calculation or emitted as proof of acceptable fit.","The current unversioned assessment fit block cannot be treated as release evidence until exact identity and strict archive validation exist."],
+    "warnings":["SRMR and d_ULS are descriptive discrepancies conditional on model, estimator, indicator scaling, and data.","Low discrepancy does not prove the specified causal model or replace measurement and predictive assessment." ]
+  },
+  "scientific_contract":{
+    "equations":[
+      {"id":"d_uls","expression":"d_ULS = sum_i_ge_j (S_ij - Sigmahat_ij)^2","variables":["d_ULS","S_ij","Sigmahat_ij","i","j"],"source_reference_id":"henseler_2014"},
+      {"id":"srmr","expression":"SRMR = sqrt(d_ULS / (p(p+1)/2))","variables":["SRMR","d_ULS","p"],"source_reference_id":"henseler_2014"}
+    ],
+    "references":[
+      {"id":"henseler_2014","kind":"primary_paper","citation":"Henseler et al. (2014), Common Beliefs and Reality About PLS: Comments on Ronkko and Evermann, DOI 10.1177/1094428114526928","locator":"docs/methods/PLS_MODEL_FIT_V1.md","independence_group":"published_pls_fit","runtime_policy":"no_runtime_dependency"},
+      {"id":"hu_bentler_1999","kind":"primary_paper","citation":"Hu and Bentler (1999), Cutoff Criteria for Fit Indexes in Covariance Structure Analysis, DOI 10.1080/10705519909540118; used only for interpretation limits","locator":"docs/methods/PLS_MODEL_FIT_V1.md","independence_group":"published_fit_interpretation","runtime_policy":"no_runtime_dependency"},
+      {"id":"independent_python_pls_fit","kind":"independent_python","citation":"Independent Python PLS implied-correlation, d_ULS, and SRMR reference","locator":"validation/pls_model_fit_reference.py","independence_group":"python_reference","runtime_policy":"development_validation_only"}
+    ],
+    "simulations":[
+      {"id":"pls_fit_discrepancy_recovery","purpose":"recovery","design":"Supported reflective PLS models across correct and misspecified paths, sample size, loading strength, indicator order, and correlation discrepancy magnitude.","seed_policy":"Frozen indexed covariance/data-generation scenarios with deterministic estimation and assessment.","metrics":["saturated_srmr_error","estimated_srmr_error","saturated_d_uls_error","estimated_d_uls_error","ordering_invariance"],"acceptance_rule":"Every metric must match the independent reference within 1e-6 and mapped values must remain invariant to consistent indicator permutation."},
+      {"id":"fit_invalid_matrix_behavior","purpose":"failure_behavior","design":"Non-finite, asymmetric, dimension-mismatched, non-correlation, and unsupported formative-only matrix cases.","seed_policy":"Frozen deterministic adversarial fixtures.","metrics":["invalid_matrix_rejection","scope_block_accuracy","no_false_fit_count"],"acceptance_rule":"Every invalid or unsupported case must fail/block explicitly and no fabricated fit statistic may be emitted."}
+    ],
+    "boundaries":[
+      {"id":"invalid_correlation_matrix","category":"data_pathology","case":"Observed or implied matrix is non-finite, asymmetric, dimension-mismatched, or violates the frozen correlation-matrix checks.","expected_behavior":"Fit assessment fails explicitly and emits no metric."},
+      {"id":"unsupported_fit_metric","category":"unsupported_scope","case":"The request asks for d_G, NFI, RMS_theta, a p-value, a universal pass/fail cutoff, or unsupported formative-only fit.","expected_behavior":"Unsupported output is unavailable or the request is blocked without substituting another metric."},
+      {"id":"indicator_permutation","category":"metamorphic","case":"Indicators and both matrices are permuted consistently.","expected_behavior":"Saturated and estimated SRMR/d_ULS remain equal within tolerance after mapping."},
+      {"id":"repeat_model_fit","category":"determinism","case":"The same data, model, indicator order, and estimator output are assessed repeatedly.","expected_behavior":"Matrices, metrics, warnings, and provenance fields are exactly equal apart from timestamps."},
+      {"id":"model_fit_archive_tamper","category":"tamper","case":"A method identity, model form, indicator order, matrix value/checksum, metric, convention, or warning is changed.","expected_behavior":"Strict project validation rejects the archive."}
+    ],
+    "numerical_tolerance":0.000001
+  },
+  "product_contract":{
+    "persistence":{"recipe_schema_version":3,"result_schema_version":1,"payload_kind":"pls_pm_v1","tamper_tests":[
+      {"category":"feature_identity","expected_behavior":"Reject an archive whose identity differs from bounded PLS model fit."},
+      {"category":"method_version","expected_behavior":"Reject a fit block with missing, unknown, or substituted method version."},
+      {"category":"dataset_fingerprint","expected_behavior":"Reject matrices or fit values whose complete-case data fingerprint differs."},
+      {"category":"checksum","expected_behavior":"Reject an archive entry whose matrices, reproducible inputs, or result checksum differs."},
+      {"category":"malformed_payload","expected_behavior":"Reject duplicate keys, unknown fields, non-finite metrics, negative discrepancies, invalid matrices, or mismatched model forms."},
+      {"category":"legacy_reinterpretation","expected_behavior":"Never reinterpret the current unversioned assessment fit block as exact pls_model_fit_v1 evidence."}
+    ],"legacy_policy":"Historical/unversioned PLS fit values remain readable as their original assessment output and cannot satisfy this stable capability."},
+    "native":{"setup_controls":["Supported PLS result","Saturated model fit","Estimated model fit","Metric definition information","Optional interpretation display"],"applicability_blockers":["Invalid or unsupported matrix","No supported PLS indicator model","Non-finite complete cases","Unsupported requested metric"],"result_surfaces":["Saturated SRMR and d_ULS","Estimated SRMR and d_ULS","Metric definitions and convention","Warnings and provenance"],"gui_cli_parity_rule":"GUI and CLI must produce the same method identity, matrix convention, saturated/estimated values, warnings, and provenance for identical inputs.","accessibility_rules":["Every fit visual has an equivalent accessible table.","Metric values, model form, interpretation limits, and warnings are communicated without color alone."]},
+    "export":{"formats":["csv","xlsx"],"tables":["PLS saturated model fit","PLS estimated model fit","Metric definitions","Run provenance"],"same_run_required":true,"provenance_required":true},
+    "packaged":{"platforms":["windows"],"workflow_steps":["setup","invalid_setup_blocked","execute","inspect_results","export","save","close","reopen_same_run","cleanup"],"viewports":["1024x700","1280x720","1440x900"],"offline_required":true,"cancellation_required":false,"process_cleanup_required":true},
+    "audit":{"exact_identity_fields":["passed","feature_id","method_version","catalogue_snapshot_date"],"source_hashes_required":true,"freshness_required":true,"reports_must_pass":true}
+  },
+  "qualification":{"declared_state":"absent","target_state":"release_qualified","source_requirements":{
+    "method_spec":["docs/methods/PLS_MODEL_FIT_V1.md"],"independent_reference":["validation/pls_model_fit_reference.py"],"simulation_report":["validation/pls_model_fit_release_simulation.py"],"boundary_report":["validation/pls_model_fit_release_boundary_gate.py"],"persistence_report":["validation/pls_model_fit_release_persistence_gate.py"],"frontend_report":["src/native/nativePlsModelFit.test.ts"],"export_report":["src/native/nativeExportTables.test.ts"],"method_audit":["validation/pls_model_fit_method_promotion_audit.py"],"packaged_acceptance":["validation/run_v248_pls_model_fit_native_acceptance.ps1"]
+  },"evidence":{"engine_only":[],"archive_qualified":[],"native_qualified":[],"release_qualified":[]}}
+}

@@ -1,0 +1,176 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "bounded_claim": "Deterministic PLS path modelling for supported recursive composite models with numeric raw observations, reflective Mode A, formative Mode B, single-item blocks, and path, factor, or bounded PCA block weighting.",
+    "excluded_scope": [
+      "Cyclic structural models, covariance-only input, unspecified missing-data treatment, and untyped model extensions are excluded.",
+      "This contract does not itself qualify bootstrap, permutation, prediction, group comparison, PLSc, WPLS, or CB-SEM inference.",
+      "QuickPLS does not claim numerical identity with another implementation's initialization, orientation, or convergence path outside the frozen invariants."
+    ],
+    "native_workflow_passes": true,
+    "packaged_report_passes": true,
+    "passed": true,
+    "receipt_and_release_cli_source_binding_passes": true,
+    "release_evidence_contract_passes": true,
+    "runner_cleanup_verified": true,
+    "three_required_viewports_pass": true,
+    "verified_artifacts": [
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/pls_algorithm_v1/method_spec.identity.json",
+        "roles": [
+          "method_spec"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/pls_algorithm_v1/independent_reference.identity.json",
+        "roles": [
+          "independent_reference"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/pls_algorithm_v1/simulation_report.identity.json",
+        "roles": [
+          "simulation_report"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/pls_algorithm_v1/boundary_report.identity.json",
+        "roles": [
+          "boundary_report"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/pls_algorithm_v1/persistence_report.identity.json",
+        "roles": [
+          "persistence_report"
+        ],
+        "stage": "archive_qualified"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/pls_algorithm_v1/frontend_report.identity.json",
+        "roles": [
+          "frontend_report"
+        ],
+        "stage": "native_qualified"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/pls_algorithm_v1/export_report.identity.json",
+        "roles": [
+          "export_report"
+        ],
+        "stage": "native_qualified"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/pls_algorithm_v1/packaged_acceptance.identity.json",
+        "roles": [
+          "packaged_acceptance"
+        ],
+        "stage": "release_qualified"
+      }
+    ]
+  },
+  "feature_id": "qpls3.pls.algorithm",
+  "generated_at_utc": "2026-08-13T19:26:27.898986Z",
+  "method_version": "pls_pm_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_audit",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/pls_algorithm_v1.manifest.json",
+      "sha256": "ec18270309bd1dce2b5064e2f727893d03a44eaa04376efcd99a6dee57dc1ead",
+      "size": 15592
+    },
+    {
+      "path": "validation/pls_algorithm_v1_factory_audit.py",
+      "sha256": "e7b15094cfba1725e73f8c62451056afd7312184e7d5c9351ac73f40895ff5a1",
+      "size": 5736
+    },
+    {
+      "path": "validation/pls_algorithm_v1_factory_common.py",
+      "sha256": "2047408b08f5a7d0f0955ffc5902d063820551d0a37c6c3e595c9441591df3d7",
+      "size": 12465
+    },
+    {
+      "path": "validation/results/method_factory/pls_algorithm_v1/boundary_report.identity.json",
+      "sha256": "52c1a6b968d3d98e5dc0cf4ba15179b355c1f77d833ed3e0cdb1203ce01e5af7",
+      "size": 9572
+    },
+    {
+      "path": "validation/results/method_factory/pls_algorithm_v1/export_report.identity.json",
+      "sha256": "f60525d496e684ce0e89f22fd428e12892af3a7dd681920ea9cab779dbb01a67",
+      "size": 6757
+    },
+    {
+      "path": "validation/results/method_factory/pls_algorithm_v1/frontend_report.identity.json",
+      "sha256": "8b5030d40e794527a89f2ea02143d7cf1f9412971501f74236c47c9bf9b3e483",
+      "size": 7819
+    },
+    {
+      "path": "validation/results/method_factory/pls_algorithm_v1/independent_reference.identity.json",
+      "sha256": "eb55fd69bf133e84cb5a1c90b0453cb2dd06619bc319eb8df5169fb8030601bb",
+      "size": 54896
+    },
+    {
+      "path": "validation/results/method_factory/pls_algorithm_v1/method_spec.identity.json",
+      "sha256": "d4938d071027ed3bd7cc4b7486a7659e8c3d7443800871da4360d939e1ee1996",
+      "size": 2511
+    },
+    {
+      "path": "validation/results/method_factory/pls_algorithm_v1/packaged_acceptance.identity.json",
+      "sha256": "d3dbb7bf1461c8baaedcf7e77f109851a8116ad8810692b148415db7453b7eba",
+      "size": 52275
+    },
+    {
+      "path": "validation/results/method_factory/pls_algorithm_v1/persistence_report.identity.json",
+      "sha256": "1204a6fb309cf9bda7ec88d0f679b06c5e492ddc48f1cf4a5e40a537a549d243",
+      "size": 14723
+    },
+    {
+      "path": "validation/results/method_factory/pls_algorithm_v1/simulation_report.identity.json",
+      "sha256": "8f0f16215cddcaa436ebe6e8eee2b80f503ecfb144f6d9be56db239a2b999104",
+      "size": 10880
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_pls_algorithm_v1_factory_evidence.py",
+      "sha256": "3296d72e15da0d8bf6c7c87d7e1a74c7db3cdb40d49d807374953cdf1c98499f",
+      "size": 12583
+    }
+  ]
+}

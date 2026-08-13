@@ -3,7 +3,7 @@
   "target": "process_v2_focused_rust_boundary_tests",
   "feature_id": "qpls3.standalone.process",
   "method_version": "regression_process_v2",
-  "generated_at_utc": "2026-08-13T04:37:13.511913Z",
+  "generated_at_utc": "2026-08-13T18:17:08.795857Z",
   "passed": true,
   "checks": {
     "qpls_core": {
@@ -100,28 +100,28 @@
   "test_executables": {
     "qpls_core": {
       "path": "target/release/deps/qpls_core-cb3e5442043aeb8c.exe",
-      "size": 2814464,
-      "sha256": "ec2752c459c3855e02d66f70e5e71a5020dae2ead0e67c4a41522bcfb4dc4f7c"
+      "size": 2819584,
+      "sha256": "f5ce5ae25a23719da3a39f15386ea6d8f244efc615f94d1caedc5f0949cd594b"
     },
     "qpls_estimation": {
       "path": "target/release/deps/qpls_estimation-6761e14faabf875b.exe",
-      "size": 12000768,
-      "sha256": "0dd6d18870ef1c7fd80c475bb130f6896a1974effc9dc34f773225149f20758d"
+      "size": 12014080,
+      "sha256": "9e74ab3a745baeba86d5a858e1acc4b15be8155e5f50513be5d9f40b5166ac8f"
     },
     "qpls_resampling": {
       "path": "target/release/deps/qpls_resampling-b5bff3e7363d410e.exe",
-      "size": 11158528,
-      "sha256": "114c617e99e9f748d839495b0a9fa83a33ed0edc8210060626fed36f260457df"
+      "size": 11164160,
+      "sha256": "fc0acc401cfa5af0a2797094cf237d5a6984a03280bca401d77873ffc488191f"
     },
     "qpls_project": {
       "path": "target/release/deps/qpls_project-f5d02c0d541c8f45.exe",
-      "size": 23628288,
-      "sha256": "bc4d033af028173075e3c26cff3b87eb00443cd66f9a2be16f23164d2aa4235a"
+      "size": 24059904,
+      "sha256": "9431ade8c71e64a83557c7d2c7d4f76dd3dec0c272c755359c8f7314352b8d90"
     },
     "qpls_runner": {
       "path": "target/release/deps/qpls_runner-82b3a20590b24c6a.exe",
-      "size": 18933760,
-      "sha256": "9d5e658a190be32497d542687d08fec6fd983b05d5e3597ff59517e2f0956ccc"
+      "size": 18951680,
+      "sha256": "372dbe9cfa02379797653c00f834ade62277e2ca857f9b2ac00c37da1d951cd5"
     }
   },
   "executions": {
@@ -130,7 +130,7 @@
       "full_name": "validation::tests::process_graph_v2_accepts_typed_dag_and_rejects_cycles_role_and_order_drift",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest validation::tests::process_graph_v2_accepts_typed_dag_and_rejects_cycles_role_and_order_drift ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 62 filtered out; finished in 0.00s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest validation::tests::process_graph_v2_accepts_typed_dag_and_rejects_cycles_role_and_order_drift ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 63 filtered out; finished in 0.00s\n\n",
       "stderr_tail": ""
     },
     "process_graph_v2_append_save_reopen_and_tamper_are_atomic": {
@@ -138,7 +138,7 @@
       "full_name": "tests::process_graph_v2_append_save_reopen_and_tamper_are_atomic",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest tests::process_graph_v2_append_save_reopen_and_tamper_are_atomic ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.25s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest tests::process_graph_v2_append_save_reopen_and_tamper_are_atomic ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.22s\n\n",
       "stderr_tail": ""
     },
     "process_graph_v2_bootstrap_is_typed_and_stage_bounded": {
@@ -146,7 +146,7 @@
       "full_name": "validation::tests::process_graph_v2_bootstrap_is_typed_and_stage_bounded",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest validation::tests::process_graph_v2_bootstrap_is_typed_and_stage_bounded ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 62 filtered out; finished in 0.00s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest validation::tests::process_graph_v2_bootstrap_is_typed_and_stage_bounded ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 63 filtered out; finished in 0.00s\n\n",
       "stderr_tail": ""
     },
     "process_graph_v2_bootstrap_maps_degenerate_simple_slope_failure": {
@@ -178,7 +178,7 @@
       "full_name": "tests::process_graph_v2_case_bootstrap_is_worker_invariant_and_bca_conditional",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest tests::process_graph_v2_case_bootstrap_is_worker_invariant_and_bca_conditional ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.51s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest tests::process_graph_v2_case_bootstrap_is_worker_invariant_and_bca_conditional ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.44s\n\n",
       "stderr_tail": ""
     },
     "process_graph_v2_frozen_raw_probes_survive_resample_recentering": {
@@ -186,7 +186,7 @@
       "full_name": "pls::tests::process_graph_v2_frozen_raw_probes_survive_resample_recentering",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_frozen_raw_probes_survive_resample_recentering ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_frozen_raw_probes_survive_resample_recentering ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.00s\n\n",
       "stderr_tail": ""
     },
     "process_graph_v2_hc3_simple_slopes_and_johnson_neyman": {
@@ -194,7 +194,7 @@
       "full_name": "pls::tests::process_graph_v2_hc3_simple_slopes_and_johnson_neyman",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_hc3_simple_slopes_and_johnson_neyman ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_hc3_simple_slopes_and_johnson_neyman ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.00s\n\n",
       "stderr_tail": ""
     },
     "process_graph_v2_jn_nonpositive_contrast_variance_is_tagged_unavailable": {
@@ -202,7 +202,7 @@
       "full_name": "pls::tests::process_graph_v2_jn_nonpositive_contrast_variance_is_tagged_unavailable",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_jn_nonpositive_contrast_variance_is_tagged_unavailable ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_jn_nonpositive_contrast_variance_is_tagged_unavailable ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.00s\n\n",
       "stderr_tail": ""
     },
     "process_graph_v2_jn_root_solver_is_affine_stable_and_deduplicates_near_double_roots": {
@@ -210,7 +210,7 @@
       "full_name": "pls::tests::process_graph_v2_jn_root_solver_is_affine_stable_and_deduplicates_near_double_roots",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_jn_root_solver_is_affine_stable_and_deduplicates_near_double_roots ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_jn_root_solver_is_affine_stable_and_deduplicates_near_double_roots ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.00s\n\n",
       "stderr_tail": ""
     },
     "process_graph_v2_parallel_serial_moderation_and_effect_arithmetic": {
@@ -218,7 +218,7 @@
       "full_name": "pls::tests::process_graph_v2_parallel_serial_moderation_and_effect_arithmetic",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_parallel_serial_moderation_and_effect_arithmetic ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_parallel_serial_moderation_and_effect_arithmetic ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.00s\n\n",
       "stderr_tail": ""
     },
     "process_graph_v2_point_is_row_irrelevant_column_and_recipe_order_invariant": {
@@ -226,7 +226,7 @@
       "full_name": "pls::tests::process_graph_v2_point_is_row_irrelevant_column_and_recipe_order_invariant",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_point_is_row_irrelevant_column_and_recipe_order_invariant ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.01s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_point_is_row_irrelevant_column_and_recipe_order_invariant ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.01s\n\n",
       "stderr_tail": ""
     },
     "process_graph_v2_point_progress_completes_and_cancellation_returns_no_result": {
@@ -234,7 +234,7 @@
       "full_name": "pls::tests::process_graph_v2_point_progress_completes_and_cancellation_returns_no_result",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_point_progress_completes_and_cancellation_returns_no_result ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_point_progress_completes_and_cancellation_returns_no_result ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.00s\n\n",
       "stderr_tail": ""
     },
     "process_graph_v2_rejects_degenerate_simple_slope_variance": {
@@ -242,7 +242,7 @@
       "full_name": "pls::tests::process_graph_v2_rejects_degenerate_simple_slope_variance",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_rejects_degenerate_simple_slope_variance ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_rejects_degenerate_simple_slope_variance ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.00s\n\n",
       "stderr_tail": ""
     },
     "process_graph_v2_rejects_exact_binary_endogenous_outcomes_in_original_sample": {
@@ -250,7 +250,7 @@
       "full_name": "pls::tests::process_graph_v2_rejects_exact_binary_endogenous_outcomes_in_original_sample",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_rejects_exact_binary_endogenous_outcomes_in_original_sample ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_rejects_exact_binary_endogenous_outcomes_in_original_sample ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.00s\n\n",
       "stderr_tail": ""
     },
     "process_graph_v2_rejects_high_leverage_hc3_instability_without_clamping": {
@@ -258,7 +258,7 @@
       "full_name": "pls::tests::process_graph_v2_rejects_high_leverage_hc3_instability_without_clamping",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_rejects_high_leverage_hc3_instability_without_clamping ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_rejects_high_leverage_hc3_instability_without_clamping ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.00s\n\n",
       "stderr_tail": ""
     },
     "process_graph_v2_rejects_nonpositive_hc3_variance_without_absolute_value": {
@@ -266,7 +266,7 @@
       "full_name": "pls::tests::process_graph_v2_rejects_nonpositive_hc3_variance_without_absolute_value",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_rejects_nonpositive_hc3_variance_without_absolute_value ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_rejects_nonpositive_hc3_variance_without_absolute_value ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.00s\n\n",
       "stderr_tail": ""
     },
     "process_graph_v2_scale_aware_svd_is_affine_unit_invariant_and_rejects_relative_collinearity": {
@@ -274,7 +274,7 @@
       "full_name": "pls::tests::process_graph_v2_scale_aware_svd_is_affine_unit_invariant_and_rejects_relative_collinearity",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_scale_aware_svd_is_affine_unit_invariant_and_rejects_relative_collinearity ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_scale_aware_svd_is_affine_unit_invariant_and_rejects_relative_collinearity ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.00s\n\n",
       "stderr_tail": ""
     },
     "process_graph_v2_semantic_probe_grid_rejects_collapsed_f64_levels": {
@@ -282,7 +282,7 @@
       "full_name": "pls::tests::process_graph_v2_semantic_probe_grid_rejects_collapsed_f64_levels",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_semantic_probe_grid_rejects_collapsed_f64_levels ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_semantic_probe_grid_rejects_collapsed_f64_levels ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 55 filtered out; finished in 0.00s\n\n",
       "stderr_tail": ""
     },
     "process_graph_v2_unavailable_bootstrap_roundtrip_and_tamper_contract": {
@@ -290,7 +290,7 @@
       "full_name": "tests::process_graph_v2_unavailable_bootstrap_roundtrip_and_tamper_contract",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest tests::process_graph_v2_unavailable_bootstrap_roundtrip_and_tamper_contract ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.00s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest tests::process_graph_v2_unavailable_bootstrap_roundtrip_and_tamper_contract ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.00s\n\n",
       "stderr_tail": ""
     },
     "process_graph_v2_unavailable_inference_uses_process_specific_tokens": {
@@ -306,7 +306,7 @@
       "full_name": "tests::process_v1_remains_archive_only",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest tests::process_v1_remains_archive_only ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.03s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest tests::process_v1_remains_archive_only ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.03s\n\n",
       "stderr_tail": ""
     },
     "process_v2_point_progress_completes_and_base_fit_cancellation_returns_no_result": {

@@ -113,6 +113,7 @@ import type {
   NativeExplorerSelection,
   NativeProjectExplorerMutation,
   NativeProjectExplorerMutationEventDetail,
+  NativeSampleProjectId,
   RecodeColumnSpec,
 } from "../types";
 import "./nativeDesktop.css";
@@ -197,9 +198,35 @@ const NativeModerationDialog = lazy(() => import("./NativeModerationDialog"));
 const NativeExportDialog = lazy(() => import("./NativeExportDialog"));
 const NativeUtilityDialog = lazy(() => import("./NativeUtilityDialog"));
 
+export const NATIVE_BUNDLED_SAMPLE_PROJECTS = [
+  {
+    id: "corporate_reputation",
+    label: "Corporate reputation",
+    detail: "Four constructs and a completed bootstrap-backed PLS-SEM run.",
+  },
+  {
+    id: "simple_pls",
+    label: "Simple reflective PLS-SEM",
+    detail: "Two reflective constructs and a completed PLS algorithm run.",
+  },
+  {
+    id: "mediation",
+    label: "Mediation",
+    detail: "Three constructs with completed direct, indirect, and total effects.",
+  },
+] as const satisfies ReadonlyArray<{
+  id: NativeSampleProjectId;
+  label: string;
+  detail: string;
+}>;
+
 
 function commandEvent(name: string, detail?: unknown) {
   window.dispatchEvent(new CustomEvent(`quickpls:${name}`, { detail }));
+}
+
+export function openNativeSampleProject(sampleId: NativeSampleProjectId) {
+  commandEvent("open-demo-project", { sampleId });
 }
 
 function requestProjectExplorerMutation(mutation: NativeProjectExplorerMutation): Promise<void> {
@@ -1065,7 +1092,7 @@ export function NativeDesktopApp() {
         onSaveReport={(resultId, name) => requestProjectExplorerMutation({ kind: "save_report", resultId, name })}
         onRenameReport={(resultId, name) => requestProjectExplorerMutation({ kind: "rename_report", resultId, name })}
         onRemoveReport={(resultId) => requestProjectExplorerMutation({ kind: "remove_report", resultId })}
-      /> : <Launcher projectName={projectName} projectPath={projectPath} datasetName={dataset.name} runs={completedRuns} recentProjects={recentProjects} onNavigate={navigate} onOpenRecent={(path) => commandEvent("open-project-path", { path })} /> : null}
+      /> : <Launcher projectName={projectName} projectPath={projectPath} datasetName={dataset.name} runs={completedRuns} recentProjects={recentProjects} onNavigate={navigate} onOpenRecent={(path) => commandEvent("open-project-path", { path })} onOpenSample={openNativeSampleProject} /> : null}
       {surface === "data" ? <NativeDataSurface
         selectedColumn={selectedColumn}
         setSelectedColumn={setSelectedColumn}
@@ -1340,13 +1367,30 @@ function CommandBar({ commands, surface, projectName, projectPath, modelName, pr
   </div>;
 }
 
-function Launcher({ projectName, projectPath, datasetName, runs, recentProjects, onNavigate, onOpenRecent }: { projectName: string; projectPath: string | null; datasetName: string; runs: AnalysisRun[]; recentProjects: NativeRecentProject[]; onNavigate: (surface: NativeSurface) => void; onOpenRecent: (path: string) => void }) {
+export function Launcher({ projectName, projectPath, datasetName, runs, recentProjects, onNavigate, onOpenRecent, onOpenSample }: { projectName: string; projectPath: string | null; datasetName: string; runs: AnalysisRun[]; recentProjects: NativeRecentProject[]; onNavigate: (surface: NativeSurface) => void; onOpenRecent: (path: string) => void; onOpenSample: (sampleId: NativeSampleProjectId) => void }) {
   const hasUnsavedProject = projectName !== "No project open" && !projectPath;
   const hasRows = hasUnsavedProject || recentProjects.length > 0;
   return <div className="nd-launcher" aria-label="Project launcher">
     <section className="nd-launch-actions">
       <h1>QuickPLS</h1>
       <p>Structural equation modeling for Windows.</p>
+      <section className="nd-sample-projects" aria-labelledby="nd-sample-projects-heading">
+        <header>
+          <h2 id="nd-sample-projects-heading">Bundled samples</h2>
+          <p>Open a complete project with data, model, and a completed result.</p>
+        </header>
+        <div className="nd-sample-project-list">
+          {NATIVE_BUNDLED_SAMPLE_PROJECTS.map((sample) => <button
+            key={sample.id}
+            type="button"
+            data-sample-id={sample.id}
+            onClick={() => onOpenSample(sample.id)}
+          >
+            <span><strong>{sample.label}</strong><small>{sample.detail}</small></span>
+            <ChevronRight size={15} aria-hidden="true" />
+          </button>)}
+        </div>
+      </section>
     </section>
     <section className="nd-recent-projects" aria-labelledby="recent-heading">
       <header><h2 id="recent-heading">Recent projects</h2></header>

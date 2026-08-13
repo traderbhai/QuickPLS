@@ -332,16 +332,23 @@ class StaticPromotionScriptTests(unittest.TestCase):
 
     def test_focused_dialogs_reuse_the_canonical_method_count(self) -> None:
         source = (VALIDATION / "v247_tauri_native_acceptance.mjs").read_text(encoding="utf-8")
-        for dialog in ("cbsemDialog", "olsDialog", "pcaDialog"):
-            contract = (
-                f"evidence.checks.{dialog}.catalogCount !== expectedOptionLabels.length"
-            )
+        contracts = (
+            "evidence.checks.cbsemDialog.catalogCount !== expectedOptionLabels.length",
+            "evidence.checks.gscaDialog.catalogCount !== expectedOptionLabels.length",
+            "evidence.checks.olsDialog.catalogCount !== expectedOptionLabels.length",
+            "evidence.checks.logisticDialog.catalogCount !== expectedOptionLabels.length",
+            "evidence.checks.ctaPlsDialog.catalogCount !== expectedOptionLabels.length",
+            "evidence.checks.pcaDialog.catalogCount !== expectedOptionLabels.length",
+            "contract.catalogCount !== expectedOptionLabels.length",
+            "contract.catalogCount === expectedOptionLabels.length",
+        )
+        for contract in contracts:
             self.assertIn(contract, source)
-            mutated = source.replace(contract, f"evidence.checks.{dialog}.catalogCount !== 12", 1)
+            mutated = source.replace(contract, "contract.catalogCount !== 14", 1)
             self.assertNotIn(contract, mutated)
-            self.assertIn(f"evidence.checks.{dialog}.catalogCount !== 12", mutated)
+            self.assertIn("contract.catalogCount !== 14", mutated)
 
-        self.assertNotRegex(source, r"catalogCount !== (?:12|13)\b")
+        self.assertNotRegex(source, r"catalogCount\s*(?:!==|===)\s*\d+\b")
 
     def test_native_mga_archive_inspection_requires_typed_schema_v3_config(self) -> None:
         source = (VALIDATION / "v247_tauri_native_acceptance.mjs").read_text(encoding="utf-8")

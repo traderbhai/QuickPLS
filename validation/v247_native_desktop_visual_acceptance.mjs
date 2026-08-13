@@ -58,22 +58,58 @@ const interactionBudgetsMs = {
   workspaceRoundTrip: 2_500,
 };
 
-const nativeCalculationMethods = [
-  { kind: "pls_algorithm", label: "PLS-SEM Algorithm" },
-  { kind: "plsc", label: "Consistent PLS" },
-  { kind: "wpls", label: "Weighted PLS" },
-  { kind: "gsca", label: "GSCA" },
-  { kind: "cca", label: "CCA composite residual diagnostics" },
-  { kind: "ipma", label: "Importance-Performance Map Analysis" },
-  { kind: "cbsem", label: "CB-SEM / CFA" },
-  { kind: "pls_bootstrap", label: "PLS-SEM Bootstrapping" },
-  { kind: "pls_permutation", label: "Structural Path Randomization" },
-  { kind: "mga", label: "MICOM and Two-Group Permutation MGA" },
-  { kind: "predict", label: "PLSpredict / CVPAT" },
-  { kind: "nca", label: "Necessary Condition Analysis" },
-  { kind: "pca", label: "Principal Component Analysis" },
-  { kind: "regression", label: "Regression" },
-];
+const EXPECTED_NATIVE_CALCULATION_KIND_ORDER = Object.freeze([
+  "pls_algorithm",
+  "plsc",
+  "wpls",
+  "gsca",
+  "cca",
+  "cta_pls",
+  "ipma",
+  "cbsem",
+  "pls_bootstrap",
+  "pls_permutation",
+  "mga",
+  "predict",
+  "nca",
+  "pca",
+  "regression",
+]);
+
+async function canonicalNativeAnalysisCatalog() {
+  const catalogSource = await fs.readFile(path.join(ROOT, "src", "native", "nativeAnalysisCatalog.ts"), "utf8");
+  const recipeSource = await fs.readFile(path.join(ROOT, "src", "native", "nativeAnalysisRecipe.ts"), "utf8");
+  const calculationModeSource = await fs.readFile(path.join(ROOT, "src", "native", "nativeCalculationMode.ts"), "utf8");
+  const catalogMatch = catalogSource.match(/const CATALOG_DRAFTS[^=]*= \[([\s\S]*?)\n\] as const;/);
+  if (!catalogMatch) throw new Error("Could not locate the canonical native analysis catalogue declaration.");
+
+  const kinds = [...catalogMatch[1].matchAll(/^[ \t]{4}kind:\s*"([a-z_]+)",\r?$/gm)]
+    .map((match) => match[1]);
+  if (JSON.stringify(kinds) !== JSON.stringify(EXPECTED_NATIVE_CALCULATION_KIND_ORDER)) {
+    throw new Error(`The canonical native analysis catalogue must preserve the exact 15-kind order: ${JSON.stringify(kinds)}`);
+  }
+
+  const labelsByKind = new Map(
+    [...recipeSource.matchAll(/\{\s*kind:\s*"([a-z_]+)"[^{}]*?\blabel:\s*"([^"]+)"/g)]
+      .map((match) => [match[1], match[2]]),
+  );
+  const predictionLabel = calculationModeSource.match(/export const NATIVE_PREDICTION_METHOD_LABEL\s*=\s*"([^"]+)";/)?.[1];
+  const regressionLabel = catalogSource.match(/item\.kind\s*===\s*"regression"\s*\?\s*"([^"]+)"/)?.[1];
+  if (!predictionLabel || !regressionLabel) {
+    throw new Error("Could not resolve the canonical Prediction or Regression catalogue label.");
+  }
+  labelsByKind.set("predict", predictionLabel);
+  labelsByKind.set("regression", regressionLabel);
+
+  const methods = kinds.map((kind) => ({ kind, label: labelsByKind.get(kind) ?? null }));
+  if (methods.some((method) => !method.label)
+    || new Set(methods.map((method) => method.label)).size !== methods.length) {
+    throw new Error(`The canonical native analysis catalogue has missing or duplicate labels: ${JSON.stringify(methods)}`);
+  }
+  return methods;
+}
+
+const nativeCalculationMethods = await canonicalNativeAnalysisCatalog();
 
 const nativeNcaScopeNote = "Numeric observed-variable CE-FDH and CR-FDH analysis with observed-range bottlenecks. Multiple conditions, latent-score NCA, cIPMA, and broader ceiling variants are not included.";
 const nativePcaScopeNote = "Correlation-matrix PCA of 2 to 50 selected numeric variables with listwise deletion, deterministic component orientation, and no rotation or inferential resampling.";
@@ -139,6 +175,7 @@ const evidence = {
     wpls: [],
     gsca: [],
     cca: [],
+    ctaPls: [],
     ipma: [],
     cbsem: [],
     nca: [],
@@ -1196,6 +1233,7 @@ async function auditModelContextMenuParity(page, viewport) {
     await page.keyboard.press("Enter");
     const editor = page.locator("#nd-model-construct-name");
     await editor.waitFor({ state: "visible" });
+    await page.waitForFunction(() => document.activeElement?.id === "nd-model-construct-name", null, { timeout: 2_000 });
     enterFocusedProperties = await editor.evaluate((node) => document.activeElement === node);
   } finally {
     page.off("dialog", dismissBrowserDialog);
@@ -1748,6 +1786,7 @@ async function auditCalculationCatalogDialog(page, viewport, sequence, trigger, 
       { query: "survey weights", expectedKind: "wpls", expectedLabel: "Weighted PLS" },
       { query: "generalized structured component", expectedKind: "gsca", expectedLabel: "GSCA" },
       { query: "composite residual", expectedKind: "cca", expectedLabel: "CCA composite residual diagnostics" },
+      { query: "confirmatory tetrad", expectedKind: "cta_pls", expectedLabel: "Confirmatory Tetrad Analysis" },
       { query: "importance performance", expectedKind: "ipma", expectedLabel: "Importance-Performance Map Analysis" },
       { query: "confirmatory factor maximum likelihood", expectedKind: "cbsem", expectedLabel: "CB-SEM / CFA" },
       { query: "randomization", expectedKind: "pls_permutation", expectedLabel: "Structural Path Randomization" },
@@ -1852,7 +1891,7 @@ async function auditCalculationCatalogDialog(page, viewport, sequence, trigger, 
   }
 
   evidence.checks.calculationCatalog.push(check);
-  const aliasesCorrect = check.searchAliases.length === 10
+  const aliasesCorrect = check.searchAliases.length === 11
     && check.searchAliases.every((entry) => (
       entry.optionCount === 1
       && entry.optionId === "nd-calculation-method-" + entry.expectedKind
@@ -1863,11 +1902,12 @@ async function auditCalculationCatalogDialog(page, viewport, sequence, trigger, 
     recordFailure("calculation-command-surface", "Calculate was not the sole generic calculation command in both the menu and toolbar at " + viewport.id + ".", check);
   }
   if (!check.searchInitiallyFocused || check.listboxCount !== 1 || check.optionCount !== expectedLabels.length
-    || JSON.stringify(check.optionLabels) !== JSON.stringify(expectedLabels) || check.countStatus !== "14 methods") {
-    recordFailure("calculation-fourteen-method-listbox", "The calculation dialog did not expose the exact ordered fourteen-option searchable listbox at " + viewport.id + ".", check);
+    || JSON.stringify(check.optionLabels) !== JSON.stringify(expectedLabels)
+    || check.countStatus !== `${nativeCalculationMethods.length} methods`) {
+    recordFailure("calculation-fifteen-method-listbox", "The calculation dialog did not expose the exact ordered fifteen-option searchable listbox at " + viewport.id + ".", check);
   }
   if (!aliasesCorrect) {
-    recordFailure("calculation-method-search-aliases", "Search aliases did not isolate Weighted PLS, GSCA, CCA composite residual diagnostics, Importance-Performance Map Analysis, CB-SEM / CFA, single-model Structural Path Randomization, MICOM and Two-Group Permutation MGA, Necessary Condition Analysis, Principal Component Analysis, and OLS regression at " + viewport.id + ".", check);
+    recordFailure("calculation-method-search-aliases", "Search aliases did not isolate Weighted PLS, GSCA, CCA composite residual diagnostics, Confirmatory Tetrad Analysis, Importance-Performance Map Analysis, CB-SEM / CFA, single-model Structural Path Randomization, MICOM and Two-Group Permutation MGA, Necessary Condition Analysis, Principal Component Analysis, and OLS regression at " + viewport.id + ".", check);
   }
   if (!check.pointerSelected || !check.keyboardContract) {
     recordFailure("calculation-listbox-interaction", "Pointer selection or Up/Down/Home/End/Enter roving behavior failed at " + viewport.id + ".", check);
@@ -2212,6 +2252,102 @@ async function auditCcaDialog(page, viewport, sequence, trigger) {
   }
   if (!check.closeFocus?.dialogClosed || !check.closeFocus?.focusRestored) {
     recordFailure("cca-dialog-close-focus", "Close did not dismiss CCA and restore Calculate focus at " + viewport.id + ".", check);
+  }
+}
+
+async function auditCtaPlsDialog(page, viewport, sequence, trigger) {
+  const dialog = page.locator('.nd-dialog-calculation[role="dialog"]');
+  const check = {
+    viewport: viewport.id,
+    dialogOpened: false,
+    pointerSelected: false,
+    linkage: null,
+    category: "",
+    scopeLabel: "",
+    eligibleBlockSummary: "",
+    scopeDisclosure: "",
+    descriptiveOnlyBoundary: false,
+    pcaWeightingOptionCount: 0,
+    pcaWeightingDisabled: false,
+    resamplingControlCount: 0,
+    startCommandCount: 0,
+    startCommandDisabled: false,
+    readinessText: "",
+    missingEligibleBlockerVisible: false,
+    previewRuntimeBlockerVisible: false,
+    truthAndOverflow: null,
+    closeFocus: null,
+  };
+  try {
+    check.dialogOpened = await reopenCalculationDialog(page, viewport, trigger, "cta-pls-dialog-open");
+    if (!check.dialogOpened) return;
+    const selection = await selectCalculationMethod(dialog, "cta_pls");
+    check.pointerSelected = selection.pointerSelected;
+    check.linkage = selection.linkage;
+    check.category = compactCalculationText(await dialog.locator("#nd-calculation-category-assessment").textContent().catch(() => ""));
+
+    const scope = dialog.locator("#nd-calculation-cta-pls-scope");
+    check.scopeLabel = compactCalculationText(await scope.locator("span").textContent().catch(() => ""));
+    check.eligibleBlockSummary = compactCalculationText(await scope.locator("strong").textContent().catch(() => ""));
+    check.scopeDisclosure = compactCalculationText(await scope.locator("small").textContent().catch(() => ""));
+    check.descriptiveOnlyBoundary = /descriptive sample-covariance tetrads only/i.test(check.scopeDisclosure)
+      && /all three pairings for every four-indicator subset/i.test(check.scopeDisclosure)
+      && /does not classify blocks/i.test(check.scopeDisclosure)
+      && /does not .*bootstrap, permutation, asymptotic, or vanishing-tetrad decisions/i.test(check.scopeDisclosure);
+
+    const pcaWeighting = dialog.locator('#nd-calculation-weighting option[value="pca"]');
+    check.pcaWeightingOptionCount = await pcaWeighting.count();
+    check.pcaWeightingDisabled = check.pcaWeightingOptionCount === 1
+      && await pcaWeighting.evaluate((option) => option.disabled).catch(() => false);
+    check.resamplingControlCount = await dialog.locator([
+      "#nd-calculation-bootstrap-samples",
+      "#nd-calculation-confidence",
+      "#nd-calculation-studentized",
+      "#nd-calculation-permutations",
+      "#nd-calculation-group-permutations",
+      "#nd-calculation-seed",
+      "#nd-calculation-workers",
+    ].join(", ")).count();
+    const start = dialog.getByRole("button", { name: "Start tetrad diagnostics", exact: true });
+    check.startCommandCount = await start.count();
+    check.startCommandDisabled = check.startCommandCount === 1 && await start.isDisabled();
+    check.readinessText = compactCalculationText(await dialog.locator('.nd-blocker[role="alert"]').textContent().catch(() => ""));
+    check.missingEligibleBlockerVisible = /CTA-PLS requires at least one ordinary construct with four or more assigned indicators/i.test(check.readinessText);
+    check.previewRuntimeBlockerVisible = check.readinessText.includes("Calculations require the offline QuickPLS desktop runtime");
+    check.truthAndOverflow = await inspectCalculationTruthAndOverflow(dialog);
+    await capture(page, "cta-pls-dialog", sequence, viewport, { dialog: "calculation" });
+    check.closeFocus = await closeCalculationAndCheckFocus(page, dialog, trigger);
+  } finally {
+    if (await dialog.isVisible().catch(() => false)) {
+      await closeCalculationAndCheckFocus(page, dialog, trigger).catch(() => null);
+    }
+    evidence.checks.ctaPls.push(check);
+    recordSkip("cta-pls-completed-results-browser", "The browser visual harness verifies CTA-PLS discovery and truthful invalid-model setup only. Genuine tetrad calculation, export, persistence, and tamper evidence remain authoritative in the CTA-PLS method factory.", {
+      viewport: viewport.id,
+      requiredNativeFollowUp: "Consume the native-qualified CTA-PLS factory evidence; do not synthesize completed tetrad results in this browser harness.",
+    });
+  }
+
+  if (!check.dialogOpened || !check.pointerSelected || !check.linkage?.linkage || check.category !== "Assessment") {
+    recordFailure("cta-pls-method-editor-linkage", "Confirmatory Tetrad Analysis did not open as the selected, labelled Assessment editor at " + viewport.id + ".", check);
+  }
+  if (check.scopeLabel !== "Eligible indicator blocks"
+    || check.eligibleBlockSummary !== "None - assign at least four indicators to one ordinary construct"
+    || !check.descriptiveOnlyBoundary) {
+    recordFailure("cta-pls-bounded-scope", "CTA-PLS did not disclose its exact descriptive-only scope and the sample model's ineligible indicator blocks at " + viewport.id + ".", check);
+  }
+  if (check.pcaWeightingOptionCount !== 1 || !check.pcaWeightingDisabled || check.resamplingControlCount !== 0) {
+    recordFailure("cta-pls-settings-contract", "CTA-PLS exposed unsupported PCA weighting or inferential resampling controls at " + viewport.id + ".", check);
+  }
+  if (check.startCommandCount !== 1 || !check.startCommandDisabled
+    || !check.missingEligibleBlockerVisible || !check.previewRuntimeBlockerVisible) {
+    recordFailure("cta-pls-invalid-model-boundary", "CTA-PLS did not expose one disabled tetrad command with explicit eligible-block and desktop-runtime blockers at " + viewport.id + ".", check);
+  }
+  if (!check.truthAndOverflow?.noFabricatedRunState || !check.truthAndOverflow?.noHorizontalOverflow) {
+    recordFailure("cta-pls-dialog-truth-layout", "The idle CTA-PLS editor exposed fabricated run state or horizontal overflow at " + viewport.id + ".", check);
+  }
+  if (!check.closeFocus?.dialogClosed || !check.closeFocus?.focusRestored) {
+    recordFailure("cta-pls-dialog-close-focus", "Close did not dismiss CTA-PLS and restore Calculate focus at " + viewport.id + ".", check);
   }
 }
 
@@ -2620,7 +2756,7 @@ async function auditNcaStandaloneDialogFromData(page, viewport, sequence) {
   if (check.analyzeCommandCount !== 1 || check.calculateCommandCount !== 0 || !check.dialogOpened
     || check.selectedMethod !== "Necessary Condition Analysis" || !check.linkage?.linkage
     || check.catalogCount !== nativeCalculationMethods.length || check.category !== "Standalone analysis") {
-    recordFailure("nca-data-analyze-command", `Data did not expose one shared Analyze command opening the twelve-method catalog with NCA selected at ${viewport.id}.`, check);
+    recordFailure("nca-data-analyze-command", `Data did not expose one shared Analyze command opening the ${nativeCalculationMethods.length}-method catalog with NCA selected at ${viewport.id}.`, check);
   }
   if (JSON.stringify(check.xOptions) !== JSON.stringify(expectedXOptions)
     || JSON.stringify(check.yOptions) !== JSON.stringify(expectedYOptions)
@@ -2821,7 +2957,7 @@ async function auditPcaStandaloneDialogFromData(page, viewport, sequence) {
   if (check.analyzeCommandCount !== 1 || check.calculateCommandCount !== 0 || !check.dialogOpened
     || check.selectedMethod !== "Principal Component Analysis" || !check.linkage?.linkage
     || check.catalogCount !== nativeCalculationMethods.length || check.category !== "Standalone analysis") {
-    recordFailure("pca-data-analyze-command", `Data did not expose one shared Analyze command opening the twelve-method catalog with PCA selected at ${viewport.id}.`, check);
+    recordFailure("pca-data-analyze-command", `Data did not expose one shared Analyze command opening the ${nativeCalculationMethods.length}-method catalog with PCA selected at ${viewport.id}.`, check);
   }
   if (JSON.stringify(check.variableOptions.map((entry) => entry.name)) !== JSON.stringify(expectedVariables)
     || JSON.stringify(check.initialSelectedVariables) !== JSON.stringify(expectedVariables)
@@ -2977,7 +3113,7 @@ async function auditOlsStandaloneDialogFromData(page, viewport, sequence) {
   }
   if (check.analyzeCommandCount !== 1 || !check.dialogOpened || check.catalogCount !== nativeCalculationMethods.length
     || check.selectedMethod !== "Regression" || !check.linkage?.linkage || check.category !== "Standalone analysis") {
-    recordFailure("ols-data-analyze-command", `Data did not open the shared twelve-method catalog with OLS selected at ${viewport.id}.`, check);
+    recordFailure("ols-data-analyze-command", `Data did not open the shared ${nativeCalculationMethods.length}-method catalog with OLS selected at ${viewport.id}.`, check);
   }
   if (JSON.stringify(check.outcomeOptions.map(compactCalculationText)) !== JSON.stringify(expectedNumeric)
     || check.outcome !== "outcome"
@@ -4261,7 +4397,7 @@ async function auditMgaDialog(page, viewport, sequence, trigger) {
     recordFailure("mga-method-scope-contract", "The group-analysis catalog option did not disclose joint MICOM measurement invariance plus Group A-minus-B path, loading, and weight comparisons at " + viewport.id + ".", check);
   }
   if (!check.keyboardContract) {
-    recordFailure("mga-listbox-keyboard-contract", "The MGA option did not preserve roving focus, selection, and Enter behavior in the ten-method listbox at " + viewport.id + ".", check);
+    recordFailure("mga-listbox-keyboard-contract", `The MGA option did not preserve roving focus, selection, and Enter behavior in the ${nativeCalculationMethods.length}-method listbox at ${viewport.id}.`, check);
   }
   if (check.groupingControlCount !== 1 || check.selectedGroupingColumn !== "COMP1"
     || check.groupAControlCount !== 1 || check.groupBControlCount !== 1
@@ -4448,6 +4584,7 @@ async function exerciseViewport(browser, viewport) {
         await auditWplsDialog(page, viewport, 8, calculation.trigger);
         await auditGscaDialog(page, viewport, 9, calculation.trigger);
         await auditCcaDialog(page, viewport, 9, calculation.trigger);
+        await auditCtaPlsDialog(page, viewport, 9, calculation.trigger);
         await auditCbsemDialog(page, viewport, 10, calculation.trigger);
         await auditIpmaDialog(page, viewport, 10, calculation.trigger);
         await auditStructuralPathRandomizationDialog(page, viewport, 11, calculation.trigger);

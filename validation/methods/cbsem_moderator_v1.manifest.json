@@ -1,0 +1,51 @@
+{
+  "schema_version":1,
+  "governance":{"contract_frozen_at_utc":"2026-08-13T10:26:17Z","manifest_path":"validation/methods/cbsem_moderator_v1.manifest.json","schema_path":"validation/methods/method_promotion_manifest.schema.json","validator_path":"validation/method_promotion_manifest.py","focused_test_path":"validation/test_method_promotion_manifest.py"},
+  "feature":{"id":"qpls3.cbsem.moderator","label":"CB-SEM Latent-by-Observed Moderator","method_version":"cbsem_moderator_v1","method_kind":"stochastic","catalogue_snapshot_date":"2026-08-12","catalogue_url":"https://smartpls.com/documentation/algorithms-and-techniques/"},
+  "claim":{
+    "supported_scope":"One continuous latent predictor by one observed continuous exogenous moderator interaction in a single-group recursive reflective ML SEM, estimated from the raw-data likelihood by LMS, with simple slopes and cbsem_bootstrap_v2 intervals.",
+    "estimand":"The unstandardized LMS interaction coefficient beta_xw and simple slopes beta_x plus beta_xw times w at the persisted centered moderator values.",
+    "assumptions":["The accepted cbsem_ml_v1 base model is identified, converged, admissible, and contains reflective continuous predictor and outcome constructs.","The moderator is finite, nonconstant, observed, continuous, exogenous, mean-centered from the same complete cases, and not reused as an indicator.","The workflow independently qualifies reuse of cbsem_bootstrap_v2 case-resampling, seed, quantile, and failure rules while refitting LMS, and the frozen LMS likelihood, integration, convergence, and model-comparison settings are available."],
+    "exclusions":["Latent-by-latent, categorical, endogenous, multiple, quadratic, three-way, multigroup, ordinal, robust, and multilevel interactions are excluded.","Factor-score OLS and product-indicator substitutions are not this LMS method.","Simple-slope extrapolation beyond the observed moderator range and causal claims are excluded."],
+    "warnings":["The interaction coefficient is scale-dependent and sensitive to distributional and functional-form assumptions.","Conventional global chi-square fit from the no-interaction normal model must not be silently reused as LMS interaction-model fit." ]
+  },
+  "scientific_contract":{
+    "equations":[
+      {"id":"latent_observed_interaction","expression":"eta = alpha + beta_x xi + beta_w W_c + beta_xw (xi W_c) + zeta","variables":["eta","alpha","beta_x","xi","beta_w","W_c","beta_xw","zeta"],"source_reference_id":"klein_moosbrugger_2000"},
+      {"id":"simple_slope","expression":"slope_x(w) = beta_x + beta_xw w","variables":["slope_x","w","beta_x","beta_xw"],"source_reference_id":"klein_moosbrugger_2000"}
+    ],
+    "references":[
+      {"id":"klein_moosbrugger_2000","kind":"primary_paper","citation":"Klein and Moosbrugger (2000), Maximum Likelihood Estimation of Latent Interaction Effects with the LMS Method, DOI 10.1007/BF02296338","locator":"docs/methods/CBSEM_MODERATOR_V1.md","independence_group":"published_lms","runtime_policy":"no_runtime_dependency"},
+      {"id":"independent_python_lms","kind":"independent_python","citation":"Independent Python raw-data LMS likelihood, simple-slope, and bootstrap reference","locator":"validation/cbsem_moderator_v1_reference.py","independence_group":"python_reference","runtime_policy":"development_validation_only"}
+    ],
+    "simulations":[
+      {"id":"lms_interaction_recovery","purpose":"recovery","design":"One latent-by-observed interaction across zero, small, and large interaction effects, moderator distributions, sample sizes, loading strengths, predictor-moderator association, and main effects.","seed_policy":"Frozen independent data-generation, likelihood integration, and bootstrap streams indexed by scenario and replicate.","metrics":["interaction_bias","simple_slope_bias","bootstrap_coverage","convergence_rate","type_i_error"],"acceptance_rule":"Bias, coverage, convergence, and null rejection must meet preregistered Monte Carlo limits and agree with the independent reference within tolerance."},
+      {"id":"moderator_scope_failures","purpose":"failure_behavior","design":"Constant/non-finite/endogenous moderators, reused indicators, latent-by-latent requests, likelihood nonconvergence, and out-of-range slope requests.","seed_policy":"Frozen deterministic adversarial fixtures plus bootstrap streams where applicable.","metrics":["scope_block_accuracy","failure_reason_accuracy","extrapolation_block_accuracy"],"acceptance_rule":"Every unsupported request or failed fit must be blocked/reason-coded exactly and must emit no misleading interaction result."}
+    ],
+    "boundaries":[
+      {"id":"invalid_moderator_or_fit","category":"data_pathology","case":"The moderator is constant/non-finite or the LMS fit is nonconverged, non-finite, unidentified, or inadmissible.","expected_behavior":"The analysis fails explicitly and emits no interaction inference."},
+      {"id":"unsupported_interaction_shape","category":"unsupported_scope","case":"The request is latent-by-latent, categorical, endogenous, multiple, multigroup, ordinal, robust, or reuses the moderator as an indicator.","expected_behavior":"Setup is blocked before estimation."},
+      {"id":"moderator_affine_transform","category":"metamorphic","case":"The observed moderator is shifted or multiplied by a positive constant with the persisted centering/scale mapping applied.","expected_behavior":"Mapped fitted values and likelihood are invariant while coefficients transform by the documented algebra within tolerance."},
+      {"id":"lms_seed_worker_invariance","category":"determinism","case":"The same data, model, integration settings, bootstrap settings, and seed run with different worker counts.","expected_behavior":"Likelihood solution, resamples, failures, intervals, and simple slopes are exactly equal."},
+      {"id":"moderator_archive_tamper","category":"tamper","case":"Centering, scale, integration setting, interaction identity, coefficient, slope, replicate, interval, or method identity is changed.","expected_behavior":"Strict project validation rejects the archive."}
+    ],
+    "numerical_tolerance":0.000001
+  },
+  "product_contract":{
+    "persistence":{"recipe_schema_version":3,"result_schema_version":1,"payload_kind":"pls_pm_v1","tamper_tests":[
+      {"category":"feature_identity","expected_behavior":"Reject an archive whose identity differs from CB-SEM moderator v1."},
+      {"category":"method_version","expected_behavior":"Reject interaction output relabeled as another estimator or version."},
+      {"category":"dataset_fingerprint","expected_behavior":"Reject a base fit, moderator transformation, or resample whose data fingerprint differs."},
+      {"category":"checksum","expected_behavior":"Reject an archive entry whose recipe, likelihood, bootstrap, or result checksum differs."},
+      {"category":"malformed_payload","expected_behavior":"Reject duplicate keys, unknown fields, non-finite coefficients, invalid centering, inconsistent slopes, or impossible bootstrap counts."},
+      {"category":"legacy_reinterpretation","expected_behavior":"Never reinterpret PLS moderation, factor-score regression, or product-indicator output as LMS v1 evidence."}
+    ],"legacy_policy":"Any historical interaction-like result retains its estimator identity and cannot satisfy this LMS contract."},
+    "native":{"setup_controls":["Latent predictor","Observed moderator","Latent outcome","Interaction path","Mean-centering summary","Bootstrap samples and seed"],"applicability_blockers":["Unsupported interaction shape","Invalid or reused moderator","Unaccepted base CB-SEM model","Unidentified or inadmissible LMS fit"],"result_surfaces":["LMS parameter table","Interaction likelihood comparison","Simple slopes and supported moderator range","Bootstrap intervals and failures","Diagnostics and provenance"],"gui_cli_parity_rule":"GUI and CLI must produce identical centered inputs, likelihood settings, LMS estimates, resamples, failures, and simple slopes for the same recipe and seed.","accessibility_rules":["Interaction and simple-slope visuals have equivalent accessible tables.","Observed range, uncertainty, failures, and warnings are communicated without color alone."]},
+    "export":{"formats":["csv","xlsx"],"tables":["Interaction parameters","Simple slopes","Likelihood comparison","Bootstrap intervals","Failure ledger","Run provenance"],"same_run_required":true,"provenance_required":true},
+    "packaged":{"platforms":["windows"],"workflow_steps":["setup","invalid_setup_blocked","execute","cancel_retry","inspect_results","export","save","close","reopen_same_run","cleanup"],"viewports":["1024x700","1280x720","1440x900"],"offline_required":true,"cancellation_required":true,"process_cleanup_required":true},
+    "audit":{"exact_identity_fields":["passed","feature_id","method_version","catalogue_snapshot_date"],"source_hashes_required":true,"freshness_required":true,"reports_must_pass":true}
+  },
+  "qualification":{"declared_state":"absent","target_state":"release_qualified","source_requirements":{
+    "method_spec":["docs/methods/CBSEM_MODERATOR_V1.md"],"independent_reference":["validation/cbsem_moderator_v1_reference.py"],"simulation_report":["validation/cbsem_moderator_v1_release_simulation.py"],"boundary_report":["validation/cbsem_moderator_v1_release_boundary_gate.py"],"persistence_report":["validation/cbsem_moderator_v1_release_persistence_gate.py"],"frontend_report":["src/native/nativeCbsemModerator.test.ts"],"export_report":["src/native/nativeExportTables.test.ts"],"method_audit":["validation/cbsem_moderator_v1_method_promotion_audit.py"],"packaged_acceptance":["validation/run_v252_cbsem_moderator_v1_native_acceptance.ps1"]
+  },"evidence":{"engine_only":[],"archive_qualified":[],"native_qualified":[],"release_qualified":[]}}
+}

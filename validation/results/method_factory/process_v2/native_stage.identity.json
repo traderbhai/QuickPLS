@@ -1,0 +1,90 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "export_projection_present": true,
+    "focused_current_source_tests": {
+      "command": [
+        "npx.cmd",
+        "vitest",
+        "run",
+        "src/native/nativeProcess.test.ts",
+        "src/native/NativeProcessSurface.test.tsx",
+        "src/native/nativeResults.test.ts",
+        "src/native/nativeExportTables.test.ts",
+        "--reporter=verbose"
+      ],
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "ve result navigation > keeps empty and unavailable assessment capabilities out of the tree 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > projects disjoint two-stage HOC evidence without leaking generated score indicators 3ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > classifies moderation and control inference once and hides generated product indicators 7ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > returns no navigation for failed or payload-free runs 0ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > projects only exact GSCA ALS v2 output into dedicated, non-inferential tables 3ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > rejects stale, internally inconsistent, or inference-bearing GSCA payloads 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > projects only exact current CB-SEM/CFA payloads into method-specific tables and standardized diagrams 5ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > resolves table items without treating the diagram as a table 1ms\n \u00e2\u0153\u201c src/native/NativeProcessSurface.test.tsx > NativeResultsSurface PROCESS v2 plots > assigns collision-free accessible IDs to simultaneous Unicode and punctuation plots 54ms\n \u00e2\u0153\u201c src/native/NativeProcessSurface.test.tsx > NativeResultsSurface PROCESS v2 plots > renders only persisted conditional points alongside the table-backed simple slopes 57ms\n \u00e2\u0153\u201c src/native/NativeProcessSurface.test.tsx > NativeResultsSurface PROCESS v2 plots > gives all nine continuous-by-continuous series distinct non-color style signatures 25ms\n \u00e2\u0153\u201c src/native/NativeProcessSurface.test.tsx > NativeResultsSurface PROCESS v2 plots > renders the persisted 101-point Johnson-Neyman curve without UI inference 19ms\n\n Test Files  4 passed (4)\n      Tests  64 passed (64)\n   Start at  01:24:49\n   Duration  3.13s (transform 2.11s, setup 0ms, import 5.56s, tests 506ms, environment 1ms)\n\n"
+    },
+    "method_specific_frontend_present": true,
+    "packaged_desktop_execution_claimed": false,
+    "passed": true,
+    "test_files": [
+      "src/native/nativeProcess.test.ts",
+      "src/native/NativeProcessSurface.test.tsx",
+      "src/native/nativeResults.test.ts",
+      "src/native/nativeExportTables.test.ts"
+    ],
+    "typed_results_projection_present": true
+  },
+  "feature_id": "qpls3.standalone.process",
+  "generated_at_utc": "2026-08-13T19:54:52.262377Z",
+  "method_version": "regression_process_v2",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "native_stage",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "src/native/NativeProcessSurface.test.tsx",
+      "sha256": "3f4ec128f91dd9e221ad7069ec34683974690ef64b438f33ea515483f344b9d1",
+      "size": 5877
+    },
+    {
+      "path": "src/native/nativeExportTables.test.ts",
+      "sha256": "ab22330e2e6ed7752f748034adaa2c8e653bb4a149a0e91bef21943e2c6964fd",
+      "size": 19426
+    },
+    {
+      "path": "src/native/nativeProcess.test.ts",
+      "sha256": "8b28b8538cc35ac33cc6cba9158b29ee5b92dbd33b5ce8297bf3538998fbd418",
+      "size": 11945
+    },
+    {
+      "path": "validation/legacy_release_factory_migration.py",
+      "sha256": "5c2c131f972d70746ceed70377f8673d4b67ece6ece07c73d45bb2ac65fa4c5f",
+      "size": 23709
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/process_v2.manifest.json",
+      "sha256": "fd20d61294e00bb78ef227c1e719ae9830a569a1657437dcc1cd307b31903d4b",
+      "size": 14818
+    },
+    {
+      "path": "validation/process_v2_frontend_gate.py",
+      "sha256": "47586a15b820d360474a0eb837d1a7067909fe7b00afffd34a1945c1c3ce7db2",
+      "size": 5724
+    },
+    {
+      "path": "validation/test_legacy_release_factory_migration.py",
+      "sha256": "d4ce1d582d77f6a861b20c5ee95f7a01446880270e038429712a240194cb23c1",
+      "size": 2519
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    }
+  ]
+}

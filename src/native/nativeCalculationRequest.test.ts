@@ -63,7 +63,10 @@ describe("native calculation request", () => {
         groupBValue: "B",
       }),
     });
-    expect(parseNativeCalculationRequest({ kind: "cta_pls", settings: { ...settings, method: "cta_pls" } })).toBeNull();
+    expect(parseNativeCalculationRequest({ kind: "cta_pls", settings: { ...settings, method: "cta_pls" } })).toEqual({
+      kind: "cta_pls",
+      settings: expect.objectContaining({ method: "cta_pls" }),
+    });
     expect(parseNativeCalculationRequest({ kind: "cca", settings: { ...settings, method: "plsc" } })).toBeNull();
     expect(parseNativeCalculationRequest({ kind: "pls_bootstrap", settings: { ...settings, method: "bootstrap" } })).toBeNull();
     expect(parseNativeCalculationRequest({ kind: "pls_bootstrap", settings: { ...settings, method: "pls_pm" } })).toEqual({

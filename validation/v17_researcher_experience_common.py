@@ -92,13 +92,35 @@ SECTION_CHECKS: dict[str, dict[str, list[tuple[str, str]]]] = {
         ],
     },
     "v176_samples_guided": {
-        "src/components/OnboardingWorkspace.tsx": [
-            ("Sample project gallery", "sample project gallery"),
+        "src/App.tsx": [
+            ("<NativeDesktopApp />", "production entry mounts the native desktop app"),
+        ],
+        "src/native/NativeDesktopApp.tsx": [
+            ("NATIVE_BUNDLED_SAMPLE_PROJECTS", "typed production sample catalogue"),
+            ("Corporate reputation", "corporate reputation sample"),
             ("Simple reflective PLS-SEM", "simple PLS sample"),
-            ("MICOM / MGA", "group sample"),
-            ("CB-SEM CFA", "CB-SEM sample"),
-            ("Start from dataset", "guided dataset workflow"),
-            ("detect prefixes", "guided prefix step"),
+            ("Mediation", "mediation sample"),
+            ("onOpenSample={openNativeSampleProject}", "live launcher binds exact sample action"),
+            ('commandEvent("open-demo-project", { sampleId })', "selected sample identity forwarded"),
+            ('case "project.open-demo": commandEvent("open-demo-project"); return;', "File menu preserves corporate default"),
+        ],
+        "src/native/NativeDesktopController.tsx": [
+            ("detail?.sampleId", "native event reads selected sample identity"),
+            ("openNativeDemoProject(sampleId)", "native controller forwards selected sample"),
+        ],
+        "src/services/projectService.ts": [
+            ('invoke<NativeProjectSnapshot>("open_demo_project", { sampleId })', "Tauri invocation forwards camelCase sample ID"),
+        ],
+        "src-tauri/src/lib.rs": [
+            ('"corporate_reputation" => build_demo_project()', "corporate sample selector"),
+            ("build_bundled_sample_project(BundledSampleProject::parse(other)?)", "typed bundled sample selector"),
+        ],
+        "src-tauri/src/sample_projects.rs": [
+            ('"simple_pls" => Ok(Self::SimplePls)', "simple PLS backend identity"),
+            ('"mediation" => Ok(Self::Mediation)', "mediation backend identity"),
+            ("append_validated_result(recipe, result)", "sample contains a contract-validated completed result"),
+            ("save_project(&path, &project)", "sample save test"),
+            ("let reopened = load_project(&path).unwrap()", "sample reopen test"),
         ],
     },
 }
@@ -119,6 +141,7 @@ def run_section(section: str, result_name: str) -> bool:
                 passed_checks.append({"file": relative_path, "label": label})
             else:
                 missing.append({"file": relative_path, "label": label, "snippet": snippet})
+    native_backend_bound = section == "v176_samples_guided"
     payload = {
         "passed": not missing,
         "section": section,
@@ -126,7 +149,8 @@ def run_section(section: str, result_name: str) -> bool:
         "checked_files": sorted(checks.keys()),
         "passed_checks": passed_checks,
         "missing": missing,
-        "frontend_only": True,
+        "frontend_only": not native_backend_bound,
+        "native_backend_bound": native_backend_bound,
         "numerical_outputs_changed": False,
     }
     RESULTS.mkdir(parents=True, exist_ok=True)

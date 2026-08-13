@@ -8,7 +8,7 @@ import { DESKTOP_MENU_ORDER } from "../domain/desktopCommands";
 import { evaluateMethodApplicability, topBarMethods } from "../domain/methodApplicability";
 import { effectiveMethodStatus, isSelectableAnalysisMethod, methodStatusDescription, methodStatusLabel } from "../domain/methodStatus";
 import { useWorkspace } from "../store";
-import type { AnalysisMethodId, Dataset, DesktopDialogId, DesktopMenuId, JobSnapshot, WorkspaceView } from "../types";
+import type { AnalysisMethodId, Dataset, DesktopDialogId, DesktopMenuId, JobSnapshot, NativeSampleProjectId, WorkspaceView } from "../types";
 import { cancelNativePlsJob, createNativeProject, dismissNativePlsJob, getNativePlsJob, getNativePlsJobResult, importNativeDataset, isNativeDesktop, openNativeDemoProject, openNativeProject, saveNativeProject, startNativePlsJob } from "../services/projectService";
 
 export function TopBar() {
@@ -90,9 +90,9 @@ export function TopBar() {
     loadNativeProjectSnapshot(project);
     if (project?.recovered) window.alert(project.recoverySource === "autosave" ? "QuickPLS recovered newer autosaved work." : "The primary project was damaged. QuickPLS opened the previous valid backup.");
   };
-  const openDemoProjectCommand = async () => {
+  const openDemoProjectCommand = async (sampleId: NativeSampleProjectId = "corporate_reputation") => {
     if (!isNativeDesktop()) { window.alert("The demo evidence project opens in the native QuickPLS desktop application."); return; }
-    loadNativeProjectSnapshot(await openNativeDemoProject());
+    loadNativeProjectSnapshot(await openNativeDemoProject(sampleId));
   };
   const newProjectCommand = async () => { resetProject(); if (isNativeDesktop()) await createNativeProject(); pushToast({ tone: "info", title: "New project ready", detail: "Build a model or import a dataset." }); };
   const importDataCommand = async () => {
@@ -469,7 +469,10 @@ export function TopBar() {
       void cancelAnalysis().catch((error) => window.alert(error));
     };
     const handleOpenProject = () => { void openProjectCommand().catch((error) => window.alert(error)); };
-    const handleOpenDemo = () => { void openDemoProjectCommand().catch((error) => window.alert(error)); };
+    const handleOpenDemo = (event: Event) => {
+      const sampleId = (event as CustomEvent<{ sampleId?: NativeSampleProjectId }>).detail?.sampleId;
+      void openDemoProjectCommand(sampleId).catch((error) => window.alert(error));
+    };
     const handleSaveProject = () => { void saveProject().catch((error) => window.alert(error)); };
     const handleSaveProjectAs = () => { void saveProject(true).catch((error) => window.alert(error)); };
     const handleImportData = () => { void importDataCommand().catch((error) => window.alert(error)); };

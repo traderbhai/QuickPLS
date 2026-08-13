@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-13T10:12:27Z",
+    "manifest_path": "validation/methods/fimix_pls_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.segmentation.fimix_pls",
+    "label": "Bounded FIMIX-style PLS Score-space Segmentation",
+    "method_version": "fimix_pls_v1",
+    "method_kind": "deterministic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/"
+  },
+  "claim": {
+    "supported_scope": "A deterministic QuickPLS two- or three-class score-space segmentation diagnostic using the same fixed partition core as pls_pos_v1, class-specific structural regressions, Gaussian residual pseudo-likelihood criteria, and inverse-distance membership scores.",
+    "estimand": "The best frozen deterministic hard partition under the QuickPLS within-class structural residual objective, with descriptive class summaries, pseudo-likelihood information criteria, inverse-distance membership scores, and normalized classification certainty.",
+    "assumptions": [
+      "The ordinary PLS model converges, at least forty complete observations remain, and every requested class satisfies the frozen minimum-size guard.",
+      "The Gaussian residual expression is used only as a descriptive pseudo-likelihood for the selected hard partition.",
+      "Class membership scores are normalized inverse-distance scores and are not posterior probabilities from an estimated finite-mixture model."
+    ],
+    "exclusions": [
+      "Expectation-maximization, random starts, estimated class proportions and variances, a joint finite-mixture likelihood, and unrestricted FIMIX-PLS parity are excluded.",
+      "More than three classes, automatic class-count selection, case weights, generated interactions, higher-order constructs, and matrix-only data are excluded.",
+      "The information criteria cannot be compared with criteria from a full maximum-likelihood FIMIX implementation as though their likelihoods were equivalent."
+    ],
+    "warnings": [
+      "The current fimix_pls_v1 engine is a bounded FIMIX-style diagnostic, not a full finite-mixture PLS estimator.",
+      "Commercial wording must retain the deterministic score-space and pseudo-likelihood limitations unless a separately versioned EM implementation is qualified."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {
+        "id": "residual_pseudo_likelihood",
+        "expression": "sigma2 = max(J_selected / n, 1e-12); ell_tilde = -n/2 times (ln(2 pi sigma2) + 1)",
+        "variables": ["sigma2", "J_selected", "n", "ell_tilde", "pi"],
+        "source_reference_id": "quickpls_fimix_independent_reference"
+      },
+      {
+        "id": "information_criteria",
+        "expression": "k = C(P + K) + C - 1; AIC = -2 ell_tilde + 2k; BIC = -2 ell_tilde + k ln(n); CAIC = -2 ell_tilde + k(ln(n)+1)",
+        "variables": ["k", "C", "P", "K", "AIC", "BIC", "CAIC", "ell_tilde", "n"],
+        "source_reference_id": "quickpls_fimix_hand_fixture"
+      },
+      {
+        "id": "inverse_distance_membership",
+        "expression": "q_ic = exp(-min(d_ic,700)) / sum_h exp(-min(d_ih,700))",
+        "variables": ["q_ic", "d_ic", "d_ih"],
+        "source_reference_id": "quickpls_fimix_independent_reference"
+      }
+    ],
+    "references": [
+      {
+        "id": "hahn_johnson_herrmann_huber_2002",
+        "kind": "primary_paper",
+        "citation": "Hahn, Johnson, Herrmann, and Huber (2002), Capturing Customer Heterogeneity using a Finite Mixture PLS Approach",
+        "locator": "https://doi.org/10.1007/BF03396655",
+        "independence_group": "published_fimix_method",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "quickpls_fimix_independent_reference",
+        "kind": "independent_python",
+        "citation": "Planned independent Python implementation of the exact bounded QuickPLS partition, pseudo-likelihood, criteria, and inverse-distance score contract",
+        "locator": "validation/fimix_pls_reference.py",
+        "independence_group": "python_reference",
+        "runtime_policy": "development_validation_only"
+      },
+      {
+        "id": "quickpls_fimix_hand_fixture",
+        "kind": "hand_calculation",
+        "citation": "Planned hand-worked pseudo-likelihood, information-criterion, membership-score, and entropy fixture",
+        "locator": "docs/methods/FIMIX_PLS_V1.md",
+        "independence_group": "hand_reference",
+        "runtime_policy": "no_runtime_dependency"
+      }
+    ],
+    "simulations": [
+      {
+        "id": "bounded_class_recovery",
+        "purpose": "class_recovery",
+        "design": "Frozen two- and three-class structural-separation designs spanning class imbalance, measurement reliability, nonnormality, sample size, and near-overlap.",
+        "seed_policy": "Scenario-indexed generation seeds; the QuickPLS estimator is deterministic and must be invariant to worker count.",
+        "metrics": ["adjusted_rand_index", "membership_score_calibration", "path_recovery_error", "criterion_ordering", "convergence_rate"],
+        "acceptance_rule": "For preregistered identifiable strong-separation scenarios, median adjusted Rand index must be at least 0.80, mapped path errors must meet the frozen envelope, and all pseudo-likelihood and membership identities must reproduce independently."
+      },
+      {
+        "id": "full_fimix_difference_guard",
+        "purpose": "failure_behavior",
+        "design": "Scenarios where a genuine finite-mixture likelihood and the bounded hard-partition pseudo-likelihood select different solutions or class counts.",
+        "seed_policy": "Frozen scenario-indexed seeds shared with an independent validation-only full-mixture implementation.",
+        "metrics": ["solution_difference_rate", "criterion_difference", "warning_presence", "mislabelled_posterior_count"],
+        "acceptance_rule": "Every difference must remain visible, exports must call q_ic an inverse-distance membership score rather than a posterior probability, and no unrestricted FIMIX parity claim may be emitted."
+      }
+    ],
+    "boundaries": [
+      {"id": "nonfinite_or_singular_partition", "category": "data_pathology", "case": "Features are constant, a class regression is singular, or the selected residual objective or derived criterion is nonfinite.", "expected_behavior": "Execution fails with a typed diagnostic and emits no partial FIMIX-style payload."},
+      {"id": "unsupported_fimix_scope", "category": "unsupported_scope", "case": "The request uses a class count outside two or three, insufficient rows, weights, interactions, higher-order constructs, matrix-only data, or requests full EM semantics.", "expected_behavior": "Setup or execution is blocked with the exact bounded-scope reason."},
+      {"id": "row_construct_and_class_mapping", "category": "metamorphic", "case": "Rows and constructs are consistently reordered and arbitrary class labels are optimally remapped.", "expected_behavior": "The remapped partition, criteria, scores, paths, and R-squared values agree within tolerance."},
+      {"id": "repeat_and_worker_invariance", "category": "determinism", "case": "The same typed recipe is run repeatedly with every supported worker count.", "expected_behavior": "Class labels, memberships, criteria, paths, and warnings are exactly equal."},
+      {"id": "fimix_archive_tamper", "category": "tamper", "case": "A class count, assignment, inverse-distance score, criterion, entropy, warning, or method identity is modified.", "expected_behavior": "Strict project validation rejects the archive rather than displaying or exporting the changed result."}
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 3,
+      "result_schema_version": 1,
+      "payload_kind": "pls_pm_v1",
+      "tamper_tests": [
+        {"category": "feature_identity", "expected_behavior": "Reject a result whose bounded FIMIX-style capability identity differs from its typed Predict recipe."},
+        {"category": "method_version", "expected_behavior": "Reject a fimix_pls_v1 result relabeled as a full EM estimator or another version."},
+        {"category": "dataset_fingerprint", "expected_behavior": "Reject a result whose complete-case data fingerprint no longer matches."},
+        {"category": "checksum", "expected_behavior": "Reject any changed archive member whose checksum differs."},
+        {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, nonfinite criteria, invalid score sums, incomplete memberships, class sizes, or entropy identities."},
+        {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret an earlier preview or future full-mixture result as the bounded fimix_pls_v1 contract."}
+      ],
+      "legacy_policy": "Only exact fimix_pls_v1 bounded payloads may satisfy this contract; any future EM estimator requires a new method and payload version."
+    },
+    "native": {
+      "setup_controls": ["Class count of 2 or 3", "Deterministic starts from 1 through 50", "Minimum class share from 0.05 through 0.40"],
+      "applicability_blockers": ["No structural path", "Fewer than 40 complete observations", "Requested classes cannot meet minimum size", "Unsupported weights, interactions, higher-order constructs, matrix-only data, or full-EM request"],
+      "result_surfaces": ["Bounded-method scope banner", "Pseudo-likelihood AIC BIC and CAIC", "Inverse-distance membership scores", "Class sizes paths and R-squared", "Classification certainty", "Warnings and provenance"],
+      "gui_cli_parity_rule": "For the same typed recipe and dataset fingerprint, GUI and CLI partitions, scores, criteria, class summaries, warnings, and provenance must be exactly equal apart from operational timestamps.",
+      "accessibility_rules": ["Every classification or criterion graphic has an equivalent accessible data table.", "The pseudo-likelihood and not-posterior limitations are announced in text and never only through color or tooltips."]
+    },
+    "export": {
+      "formats": ["csv", "xlsx", "html", "pdf"],
+      "tables": ["Bounded FIMIX-style summary", "Membership scores", "Class paths", "Class R-squared", "Information criteria", "Warnings and provenance"],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": ["windows"],
+      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
+      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "offline_required": true,
+      "cancellation_required": true,
+      "process_cleanup_required": true
+    },
+    "audit": {
+      "exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
+  },
+  "qualification": {
+    "declared_state": "absent",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": ["docs/methods/FIMIX_PLS_V1.md"],
+      "independent_reference": ["validation/fimix_pls_reference.py"],
+      "simulation_report": ["validation/fimix_pls_simulation.py"],
+      "boundary_report": ["validation/fimix_pls_boundary_gate.py"],
+      "persistence_report": ["validation/fimix_pls_persistence_gate.py"],
+      "frontend_report": ["src/native/nativeFimixPls.test.ts"],
+      "export_report": ["validation/fimix_pls_export_gate.py"],
+      "method_audit": ["validation/fimix_pls_method_promotion_audit.py"],
+      "packaged_acceptance": ["validation/run_fimix_pls_native_acceptance.ps1"]
+    },
+    "evidence": {"engine_only": [], "archive_qualified": [], "native_qualified": [], "release_qualified": []}
+  }
+}

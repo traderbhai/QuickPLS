@@ -1,0 +1,214 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "cli_build_identity": {
+      "built": true,
+      "execution": {
+        "command": [
+          "cargo",
+          "build",
+          "-p",
+          "qpls-cli"
+        ],
+        "duration_seconds": 6.529,
+        "returncode": 0,
+        "stderr_tail": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 6.23s\n",
+        "stdout_tail": ""
+      },
+      "passed": true,
+      "path": "target/debug/qpls.exe",
+      "sha256": "52bba4c791625dd8da51e949683855c2e2f3a83b1cbb83879ff39c4c534ef0d0"
+    },
+    "exact_current_payload_identity": {
+      "cta_method_version": "cta_pls_tetrad_v1",
+      "estimation_method_version": "cta_pls_tetrad_v1",
+      "pairing_count": 3
+    },
+    "execution": {
+      "command": [
+        "python",
+        "validation/cta_pls_reference.py"
+      ],
+      "duration_seconds": 0.52,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "wrote D:\\QuickPLS\\validation\\results\\cta_pls_reference_report.json | passed=True | max_delta=4.94e-14\n"
+    },
+    "fresh_generation_only": true,
+    "generated_artifacts": [
+      {
+        "passed": true,
+        "path": "validation/results/cta_pls_reference_report.json",
+        "sha256": "26f4d7147800b6a2ccd1ae7c197bf0402b3cb344ce7d230cc1e9a0ac7735c591",
+        "size": 821
+      },
+      {
+        "passed": true,
+        "path": "validation/results/cta_pls_reference_quickpls.json",
+        "sha256": "bc3951d816120c7e395a22e690c4c9900ae862ad49bc64f7b5ce511c6ed2dc8c",
+        "size": 20792
+      },
+      {
+        "passed": true,
+        "path": "validation/results/cta_pls_reference.csv",
+        "sha256": "1049464fabc28d72f7d0015e19515fb1543fa64ea0384e318d9b9e583d356853",
+        "size": 11290
+      },
+      {
+        "passed": true,
+        "path": "validation/results/cta_pls_reference.recipe.json",
+        "sha256": "6e1b40b3363a94f98097d3dd5f26f1253f3c11a5ee11488f16dce9ee0a582ae1",
+        "size": 1485
+      },
+      {
+        "passed": true,
+        "path": "validation/results/cta_pls_invalid.recipe.json",
+        "sha256": "f5ca5896af851778e981dbfcd674265e653673f2bfcda29b91dab45f371700eb",
+        "size": 1469
+      }
+    ],
+    "independence": {
+      "engine": "independent Python sample-covariance implementation",
+      "quickpls_imported_by_reference_math": false,
+      "runtime_policy": "development validation only; never packaged with QuickPLS"
+    },
+    "legacy_reports_accepted": false,
+    "passed": true,
+    "reference_report": {
+      "checks": {
+        "estimate_count": true,
+        "guard": true,
+        "max_absolute_summary": true,
+        "max_delta_within_tolerance": true,
+        "method_version": true,
+        "payload_version": true
+      },
+      "deltas": {
+        "x::x1::x2::x3::x4::ab_cd_minus_ac_bd": 4.551914400963142e-15,
+        "x::x1::x2::x3::x4::ac_bd_minus_ad_bc": 4.9404924595819466e-14,
+        "x::x1::x2::x3::x4::ad_bc_minus_ab_cd": 4.4853010194856324e-14
+      },
+      "guard": {
+        "passed": true,
+        "run_stderr": "Error: cta_pls.tetrad_block_required: CTA-PLS requires at least one construct with four or more indicators\n",
+        "validation_codes": [
+          "cta_pls.tetrad_block_required"
+        ]
+      },
+      "kind": "cta_pls_reference_v1",
+      "max_delta": 4.9404924595819466e-14,
+      "passed": true,
+      "schema_version": 1,
+      "tolerance": 1e-10
+    }
+  },
+  "execution": {
+    "command": [
+      "python",
+      "validation/cta_pls_reference.py"
+    ],
+    "duration_seconds": 0.52,
+    "returncode": 0,
+    "stderr_tail": "",
+    "stdout_tail": "wrote D:\\QuickPLS\\validation\\results\\cta_pls_reference_report.json | passed=True | max_delta=4.94e-14\n"
+  },
+  "feature_id": "qpls3.assessment.cta_pls",
+  "generated_at_utc": "2026-08-13T18:53:49.167329Z",
+  "method_version": "cta_pls_tetrad_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "independent_reference",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-cli/src/main.rs",
+      "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
+      "size": 216983
+    },
+    {
+      "path": "crates/qpls-core/src/contract.rs",
+      "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
+      "size": 107095
+    },
+    {
+      "path": "crates/qpls-core/src/validation.rs",
+      "sha256": "ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573",
+      "size": 177352
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
+      "size": 639198
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
+      "size": 49349
+    },
+    {
+      "path": "validation/cta_pls_reference.py",
+      "sha256": "adc63cd996bd8727be572ec1b019763ce058d8f3e0c4610b9b5013f228e475f2",
+      "size": 9016
+    },
+    {
+      "path": "validation/cta_pls_v1_factory_common.py",
+      "sha256": "726ee52650510f685e5ebdf1f90c06800e46dd021cef9d720c38a8bf5cf64294",
+      "size": 12502
+    },
+    {
+      "path": "validation/cta_pls_v1_factory_evidence.py",
+      "sha256": "d1f1a517a9e833740cf1379ac01d7c1288f39fe4a4a8dead78053c7401e44365",
+      "size": 11104
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/cta_pls_v1.manifest.json",
+      "sha256": "9c185db215ed40fd30d77557a9e8448d109f6e3f1acf015d25e47fd4bc62257e",
+      "size": 14741
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/results/cta_pls_invalid.recipe.json",
+      "sha256": "f5ca5896af851778e981dbfcd674265e653673f2bfcda29b91dab45f371700eb",
+      "size": 1469
+    },
+    {
+      "path": "validation/results/cta_pls_reference.csv",
+      "sha256": "1049464fabc28d72f7d0015e19515fb1543fa64ea0384e318d9b9e583d356853",
+      "size": 11290
+    },
+    {
+      "path": "validation/results/cta_pls_reference.recipe.json",
+      "sha256": "6e1b40b3363a94f98097d3dd5f26f1253f3c11a5ee11488f16dce9ee0a582ae1",
+      "size": 1485
+    },
+    {
+      "path": "validation/results/cta_pls_reference_quickpls.json",
+      "sha256": "bc3951d816120c7e395a22e690c4c9900ae862ad49bc64f7b5ce511c6ed2dc8c",
+      "size": 20792
+    },
+    {
+      "path": "validation/results/cta_pls_reference_report.json",
+      "sha256": "26f4d7147800b6a2ccd1ae7c197bf0402b3cb344ce7d230cc1e9a0ac7735c591",
+      "size": 821
+    },
+    {
+      "path": "validation/test_cta_pls_v1_factory_evidence.py",
+      "sha256": "a7455099f23dd1f38ee9db7a856dd0f9cacf2070941a95502c39e92a189e969c",
+      "size": 3720
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    }
+  ]
+}

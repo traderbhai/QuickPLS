@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "governance": {"contract_frozen_at_utc": "2026-08-13T13:18:05Z", "manifest_path": "validation/methods/pls_bootstrap_v4.manifest.json", "schema_path": "validation/methods/method_promotion_manifest.schema.json", "validator_path": "validation/method_promotion_manifest.py", "focused_test_path": "validation/test_method_promotion_manifest.py"},
+  "feature": {"id": "qpls3.inference.bootstrap", "label": "PLS-SEM Bootstrapping", "method_version": "indexed_resampling_v4", "method_kind": "stochastic", "catalogue_snapshot_date": "2026-08-12", "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/"},
+  "claim": {
+    "supported_scope": "Indexed nonparametric case resampling for supported PLS models with sign-aligned parameter summaries, normal-reference tests, Type-7 percentile intervals, BCa intervals, optional nested studentized bootstrap-t intervals, and deterministic jackknife support.",
+    "estimand": "The empirical sampling distribution and supported confidence summaries for frozen PLS weights, loadings, paths, effects, and R-squared parameter identities under case resampling.",
+    "assumptions": ["The accepted PLS estimator and a fixed model-wide complete-case sample define every original, bootstrap, jackknife, and nested fit.", "Indexed domain-separated random streams, sign alignment, parameter identity, confidence level, and failure policy are persisted.", "At least the documented proportion of requested fits is finite and usable for each reported interval."],
+    "exclusions": ["Regression bootstrap, permutation-under-the-null tests, unsupported PLS model shapes, and unspecified resampling conventions are excluded.", "Normal-reference p values are not studentized-bootstrap p values or null-resampling tests.", "No interval type is available when its documented fit-count, jackknife, standard-error, or numerical-admissibility rule fails."],
+    "warnings": ["Bootstrap inference is conditional on the sample, fitted model, estimator, resampling plan, and convergence behavior.", "Nested studentization can require millions of fits and must surface cost, cancellation, failures, and unavailable intervals explicitly."]
+  },
+  "scientific_contract": {
+    "equations": [
+      {"id": "bootstrap_standard_error", "expression": "se_boot = sqrt(sum_b (theta_b - mean(theta_b))^2 / (B_usable - 1))", "variables": ["se_boot", "theta_b", "B_usable"], "source_reference_id": "efron_1979"},
+      {"id": "percentile_interval", "expression": "CI_percentile = [Q_Type7(alpha/2), Q_Type7(1-alpha/2)]", "variables": ["CI_percentile", "Q_Type7", "alpha"], "source_reference_id": "efron_1979"},
+      {"id": "bca_probability", "expression": "alpha_adj = Phi(z0 + (z0 + z_alpha) / (1 - a * (z0 + z_alpha)))", "variables": ["alpha_adj", "Phi", "z0", "z_alpha", "a"], "source_reference_id": "efron_1987"},
+      {"id": "studentized_pivot", "expression": "t_b = (theta_b - theta_hat) / se_inner_b", "variables": ["t_b", "theta_b", "theta_hat", "se_inner_b"], "source_reference_id": "efron_tibshirani_1993"}
+    ],
+    "references": [
+      {"id": "efron_1979", "kind": "primary_paper", "citation": "Efron (1979), Bootstrap Methods: Another Look at the Jackknife", "locator": "docs/methods/RESAMPLING_ENGINE_V4.md", "independence_group": "published_bootstrap_method", "runtime_policy": "no_runtime_dependency"},
+      {"id": "efron_1987", "kind": "primary_paper", "citation": "Efron (1987), Better Bootstrap Confidence Intervals", "locator": "docs/methods/RESAMPLING_ENGINE_V3.md", "independence_group": "published_bca_method", "runtime_policy": "no_runtime_dependency"},
+      {"id": "efron_tibshirani_1993", "kind": "primary_paper", "citation": "Efron and Tibshirani (1993), An Introduction to the Bootstrap", "locator": "docs/methods/STUDENTIZED_BOOTSTRAP_V1.md", "independence_group": "published_studentized_method", "runtime_policy": "no_runtime_dependency"},
+      {"id": "independent_python_bootstrap", "kind": "independent_python", "citation": "Independent Python matched-resample PLS bootstrap calculations", "locator": "validation/pls_bootstrap_external_reference.py", "independence_group": "python_reference", "runtime_policy": "development_validation_only"},
+      {"id": "independent_r_studentized", "kind": "independent_r", "citation": "Development-only supplied-value R bootstrap-t reference", "locator": "validation/studentized_supplied_reference.R", "independence_group": "r_reference", "runtime_policy": "development_validation_only"}
+    ],
+    "simulations": [
+      {"id": "interval_coverage", "purpose": "coverage", "design": "Supported reflective, formative, mixed, direct, indirect, and R-squared parameters under normal and heavy-tailed errors across preregistered sample sizes and effects.", "seed_policy": "Frozen indexed scenario, primary-bootstrap, jackknife, and nested-inner streams independent of scheduling and worker count.", "metrics": ["percentile_coverage", "bca_coverage", "studentized_coverage", "interval_availability"], "acceptance_rule": "Each promoted interval family must meet its preregistered coverage and availability bounds with all failures retained in denominators."},
+      {"id": "null_exclusion", "purpose": "type_i_error", "design": "Supported null path and effect scenarios under normal and heavy-tailed errors.", "seed_policy": "Frozen indexed streams with the same parameter identity and failure accounting used by coverage scenarios.", "metrics": ["null_exclusion_rate", "confidence_interval", "usable_fit_rate"], "acceptance_rule": "At nominal 95 percent, the preregistered interval must contain the target 0.05 error rate and no interval family may silently discard failed fits."}
+    ],
+    "boundaries": [
+      {"id": "degenerate_resamples", "category": "data_pathology", "case": "Resamples are singular, constant, nonconvergent, or produce non-finite parameters.", "expected_behavior": "Each failure is counted once; unavailable summaries retain stable reasons and requested-count denominators."},
+      {"id": "unsupported_resampling_scope", "category": "unsupported_scope", "case": "The recipe requests an unqualified model shape, interval, null test, or resampling convention.", "expected_behavior": "The request is blocked before execution or the unsupported interval remains explicitly unavailable."},
+      {"id": "row_reorder", "category": "metamorphic", "case": "The complete-case rows are reordered without changing the empirical sample, model, or parameter identities.", "expected_behavior": "The original estimate and parameter identities remain invariant; exhaustive small-sample resampling distributions are exactly equal after relabeling; finite indexed Monte Carlo summaries at B=9999 remain within the frozen different-seed Monte Carlo drift envelope plus its documented 10 percent comparison margin and 1e-12 numerical allowance. Same-data, same-seed repeated and worker-count comparisons remain exact."},
+      {"id": "worker_stream_invariance", "category": "determinism", "case": "The same seed and recipe run with one and multiple supported workers.", "expected_behavior": "Draws, failures, ordering, and analytical payload are exactly equal."},
+      {"id": "bootstrap_archive_tamper", "category": "tamper", "case": "Seed, counts, parameter identities, interval fields, failure reasons, or method version are changed.", "expected_behavior": "Strict project validation rejects the archive."}
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence": {"recipe_schema_version": 3, "result_schema_version": 1, "payload_kind": "pls_pm_v2", "tamper_tests": [
+      {"category": "feature_identity", "expected_behavior": "Reject an archive whose capability identity differs from PLS bootstrap."}, {"category": "method_version", "expected_behavior": "Reject a current resampling payload relabeled as another version."}, {"category": "dataset_fingerprint", "expected_behavior": "Reject inference whose dataset fingerprint differs from its original fit."}, {"category": "checksum", "expected_behavior": "Reject a changed archive entry whose checksum differs."}, {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, non-finite values, invalid counts, inconsistent identities, intervals, or reason codes."}, {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret v1-v3 resampling fields as v4-only evidence."}
+    ], "legacy_policy": "Older resampling payloads remain readable only under their original schema and cannot supply fields or evidence introduced by v4."},
+    "native": {"setup_controls": ["Bootstrap samples", "Confidence level", "Seed", "Workers", "Studentized inner samples"], "applicability_blockers": ["Unsupported model or interval", "Too few primary or inner samples", "Invalid complete-case sample", "Unachievable requested plan"], "result_surfaces": ["Bootstrap estimates and standard errors", "Percentile intervals", "BCa intervals", "Studentized intervals", "Failure and progress accounting", "Provenance"], "gui_cli_parity_rule": "For identical data, recipe, seed, and method version, GUI and CLI must produce the same indexed draws and analytical payload independent of worker count.", "accessibility_rules": ["Every confidence-interval visual has an equivalent accessible table.", "Unavailable reasons, counts, warnings, and cancellation status are exposed without color alone."]},
+    "export": {"formats": ["csv", "xlsx"], "tables": ["Bootstrap parameter summaries", "Percentile intervals", "BCa intervals", "Studentized intervals", "Failure accounting", "Run provenance"], "same_run_required": true, "provenance_required": true},
+    "packaged": {"platforms": ["windows"], "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"], "viewports": ["1024x700", "1280x720", "1440x900"], "offline_required": true, "cancellation_required": true, "process_cleanup_required": true},
+    "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
+  },
+  "qualification": {"declared_state": "native_qualified", "target_state": "release_qualified", "source_requirements": {
+    "method_spec": ["docs/methods/RESAMPLING_ENGINE_V4.md", "docs/methods/STUDENTIZED_BOOTSTRAP_V1.md", "docs/methods/JACKKNIFE_ENGINE_V1.md"], "independent_reference": ["validation/pls_bootstrap_external_reference.py", "validation/pls_bootstrap_corporate_csem_reference.py", "validation/studentized_supplied_reference.R"], "simulation_report": ["validation/aggregate_studentized_qualification.py"], "boundary_report": ["validation/pls_bootstrap_release_boundary_gate.py"], "persistence_report": ["validation/pls_bootstrap_release_persistence_gate.py"], "frontend_report": ["src/native/nativeResults.test.ts"], "export_report": ["src/native/nativeExportTables.test.ts"], "method_audit": ["validation/pls_bootstrap_v4_factory_audit.py"], "packaged_acceptance": ["validation/pls_bootstrap_v4_packaged_acceptance.py", "validation/diagnostic_bundle_source_manifest.py", "validation/run_v247_cumulative_native_acceptance.ps1", "validation/test_pls_bootstrap_v4_packaged_adapter.py", "validation/test_v247_cumulative_native_acceptance_supervisor.py", "validation/v247_tauri_native_acceptance.mjs"]
+  }, "evidence": {
+    "engine_only": [
+      {
+        "path": "validation/results/method_factory/pls_bootstrap_v4/method_spec.identity.json",
+        "roles": ["method_spec"],
+        "verification": {"kind": "identity_report", "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"}, "source_artifacts_pointer": "/source_artifacts", "generated_at_pointer": "/generated_at_utc"}
+      },
+      {
+        "path": "validation/results/method_factory/pls_bootstrap_v4/independent_reference.identity.json",
+        "roles": ["independent_reference"],
+        "verification": {"kind": "identity_report", "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"}, "source_artifacts_pointer": "/source_artifacts", "generated_at_pointer": "/generated_at_utc"}
+      },
+      {
+        "path": "validation/results/method_factory/pls_bootstrap_v4/simulation_report.identity.json",
+        "roles": ["simulation_report"],
+        "verification": {"kind": "identity_report", "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"}, "source_artifacts_pointer": "/source_artifacts", "generated_at_pointer": "/generated_at_utc"}
+      },
+      {
+        "path": "validation/results/method_factory/pls_bootstrap_v4/boundary_report.identity.json",
+        "roles": ["boundary_report"],
+        "verification": {"kind": "identity_report", "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"}, "source_artifacts_pointer": "/source_artifacts", "generated_at_pointer": "/generated_at_utc"}
+      }
+    ],
+    "archive_qualified": [
+      {
+        "path": "validation/results/method_factory/pls_bootstrap_v4/persistence_report.identity.json",
+        "roles": ["persistence_report"],
+        "verification": {"kind": "identity_report", "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"}, "source_artifacts_pointer": "/source_artifacts", "generated_at_pointer": "/generated_at_utc"}
+      }
+    ],
+    "native_qualified": [
+      {
+        "path": "validation/results/method_factory/pls_bootstrap_v4/frontend_report.identity.json",
+        "roles": ["frontend_report"],
+        "verification": {"kind": "identity_report", "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"}, "source_artifacts_pointer": "/source_artifacts", "generated_at_pointer": "/generated_at_utc"}
+      },
+      {
+        "path": "validation/results/method_factory/pls_bootstrap_v4/export_report.identity.json",
+        "roles": ["export_report"],
+        "verification": {"kind": "identity_report", "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"}, "source_artifacts_pointer": "/source_artifacts", "generated_at_pointer": "/generated_at_utc"}
+      }
+    ],
+    "release_qualified": [
+      {
+        "path": "validation/results/method_factory/pls_bootstrap_v4/method_audit.identity.json",
+        "roles": ["method_audit"],
+        "verification": {"kind": "identity_report", "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"}, "source_artifacts_pointer": "/source_artifacts", "generated_at_pointer": "/generated_at_utc"}
+      },
+      {
+        "path": "validation/results/method_factory/pls_bootstrap_v4/packaged_acceptance.identity.json",
+        "roles": ["packaged_acceptance"],
+        "verification": {"kind": "identity_report", "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"}, "source_artifacts_pointer": "/source_artifacts", "generated_at_pointer": "/generated_at_utc"}
+      }
+    ]
+  }}
+}

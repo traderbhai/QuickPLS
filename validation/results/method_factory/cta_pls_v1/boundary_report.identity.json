@@ -1,0 +1,203 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "baseline_identity": {
+      "output": "validation/results/method_factory/cta_pls_v1/work/factory_boundary_baseline.quickpls.json",
+      "output_sha256": "0c43f327cf1a8db206129b741a94fc223ab2eb433e407bd578e6ff2f04a7a36f",
+      "pairing_count": 15,
+      "passed": true
+    },
+    "categories": {
+      "data_pathology": {
+        "execution": {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "run",
+            "validation/results/method_factory/cta_pls_v1/work/factory_boundary_constant.recipe.json",
+            "--data",
+            "validation/results/method_factory/cta_pls_v1/work/boundary_constant.csv",
+            "--output",
+            "validation/results/method_factory/cta_pls_v1/work/factory_boundary_constant.quickpls.json",
+            "--allow-experimental"
+          ],
+          "duration_seconds": 0.041,
+          "returncode": 1,
+          "stderr_tail": "Error: PLS estimation failed: constant indicator: x5\n",
+          "stdout_tail": ""
+        },
+        "no_partial_result": true,
+        "passed": true,
+        "typed_diagnostic": true
+      },
+      "determinism": {
+        "analytical_payloads_exactly_equal": true,
+        "first_output_sha256": "0c43f327cf1a8db206129b741a94fc223ab2eb433e407bd578e6ff2f04a7a36f",
+        "passed": true,
+        "second_output_sha256": "91845eed8f2b49c7dc95c13e75ad460ef3692fd984338994feb788e5a8300ffd"
+      },
+      "metamorphic": {
+        "indicator_reorder": {
+          "canonical_tetrad_count": 15,
+          "exact_canonical_membership": true,
+          "max_abs_error": 0.0,
+          "missing_from_right": [],
+          "passed": true,
+          "unexpected_in_right": []
+        },
+        "passed": true,
+        "row_reorder": {
+          "canonical_tetrad_count": 15,
+          "exact_canonical_membership": true,
+          "max_abs_error": 1.4432899320127035e-15,
+          "missing_from_right": [],
+          "passed": true,
+          "unexpected_in_right": []
+        }
+      },
+      "tamper": {
+        "execution": {
+          "command": [
+            "cargo",
+            "test",
+            "-p",
+            "qpls-project",
+            "tests::runner_generated_cta_pls_appends_round_trips_and_rejects_contract_tampering",
+            "--"
+          ],
+          "duration_seconds": 26.842,
+          "returncode": 0,
+          "stderr_tail": "   Compiling qpls-project v2.46.0 (D:\\QuickPLS\\crates\\qpls-project)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 26.41s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_project-97d8e1207ceb67c8.exe)\n",
+          "stdout_tail": "\nrunning 1 test\ntest tests::runner_generated_cta_pls_appends_round_trips_and_rejects_contract_tampering ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.08s\n\n"
+        },
+        "method_scoped_archive_test": true,
+        "mutations": [
+          "method_version",
+          "unknown_pairing",
+          "duplicate_pairing",
+          "absolute_value",
+          "construct_maximum",
+          "warning_contract",
+          "resampling_identity"
+        ],
+        "passed": true
+      },
+      "unsupported_scope": {
+        "executions": [
+          {
+            "command": [
+              "D:\\QuickPLS\\target\\debug\\qpls.exe",
+              "run",
+              "validation/results/method_factory/cta_pls_v1/work/factory_boundary_insufficient_block.recipe.json",
+              "--data",
+              "validation/results/method_factory/cta_pls_v1/work/boundary_baseline.csv",
+              "--output",
+              "validation/results/method_factory/cta_pls_v1/work/factory_boundary_insufficient_block.quickpls.json",
+              "--allow-experimental"
+            ],
+            "duration_seconds": 0.037,
+            "returncode": 1,
+            "stderr_tail": "Error: cta_pls.tetrad_block_required: CTA-PLS requires at least one construct with four or more indicators\n",
+            "stdout_tail": ""
+          },
+          {
+            "command": [
+              "D:\\QuickPLS\\target\\debug\\qpls.exe",
+              "run",
+              "validation/results/method_factory/cta_pls_v1/work/factory_boundary_pca_weighting.recipe.json",
+              "--data",
+              "validation/results/method_factory/cta_pls_v1/work/boundary_baseline.csv",
+              "--output",
+              "validation/results/method_factory/cta_pls_v1/work/factory_boundary_pca_weighting.quickpls.json",
+              "--allow-experimental"
+            ],
+            "duration_seconds": 0.053,
+            "returncode": 1,
+            "stderr_tail": "Error: cta_pls.pca_unsupported: CTA-PLS requires path or factor weighting in the bounded descriptive scope\n",
+            "stdout_tail": ""
+          }
+        ],
+        "insufficient_block_code": true,
+        "insufficient_block_rejected_without_result": true,
+        "passed": true,
+        "pca_weighting_code": true,
+        "pca_weighting_rejected_without_result": true
+      }
+    },
+    "passed": true,
+    "tolerance": 1e-06
+  },
+  "feature_id": "qpls3.assessment.cta_pls",
+  "generated_at_utc": "2026-08-13T18:54:23.180204Z",
+  "method_version": "cta_pls_tetrad_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "boundary_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-cli/src/main.rs",
+      "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
+      "size": 216983
+    },
+    {
+      "path": "crates/qpls-core/src/contract.rs",
+      "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
+      "size": 107095
+    },
+    {
+      "path": "crates/qpls-core/src/validation.rs",
+      "sha256": "ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573",
+      "size": 177352
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
+      "size": 639198
+    },
+    {
+      "path": "crates/qpls-project/src/lib.rs",
+      "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
+      "size": 660277
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
+      "size": 49349
+    },
+    {
+      "path": "validation/cta_pls_boundary_gate.py",
+      "sha256": "3df7108c930eefc3429c6ea933e3c7a4a4460d5c5f88595064b748e8e5ce9b51",
+      "size": 9136
+    },
+    {
+      "path": "validation/cta_pls_v1_factory_common.py",
+      "sha256": "726ee52650510f685e5ebdf1f90c06800e46dd021cef9d720c38a8bf5cf64294",
+      "size": 12502
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/cta_pls_v1.manifest.json",
+      "sha256": "9c185db215ed40fd30d77557a9e8448d109f6e3f1acf015d25e47fd4bc62257e",
+      "size": 14741
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_cta_pls_v1_factory_evidence.py",
+      "sha256": "a7455099f23dd1f38ee9db7a856dd0f9cacf2070941a95502c39e92a189e969c",
+      "size": 3720
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    }
+  ]
+}

@@ -10,7 +10,13 @@ Use one of the release assets from the latest GitHub Release, or use the version
 - `QuickPLS_<version>_<milestone>_<timestamp>_x64_portable.exe` for a portable launch without installing.
 - `QuickPLS_<version>_<milestone>_<timestamp>_x64_cli.exe` for offline command-line and batch recipe execution.
 
-All three executables run fully offline after download.
+The desktop, CLI, and analytical workflows require no internet connection,
+account, or cloud service after download. The QuickPLS application and page make
+no external requests. This is a functional-offline claim, not a literal
+fully-offline, no-telemetry, or zero-egress process-tree claim: the
+Microsoft-managed WebView2 runtime may make its own background service
+connections unless an independently validated OS-enforced fixed-WebView2
+network boundary is applied. See `docs/WEBVIEW2_OFFLINE_BOUNDARY.md`.
 
 ## Verify The Download
 
@@ -36,7 +42,7 @@ The installer is unsigned. Windows may warn that the app is from an unknown publ
 
 ## Runtime Dependencies
 
-QuickPLS does not require R, Rscript, Python, cloud services, telemetry, accounts, or activation at runtime. R and Python are used only by development validation scripts.
+QuickPLS does not require R, Rscript, Python, cloud services, accounts, or activation at runtime. QuickPLS product telemetry is disabled and its application/page makes no external requests. The separate Microsoft-managed WebView2 process boundary described above still applies. R and Python are used only by development validation scripts.
 
 ## Uninstall
 

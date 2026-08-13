@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "id": "07355c86-0d34-44af-81e3-02d7b32ea014",
+  "id": "0fceda0f-b0e9-445b-9c64-e8b50d704f3b",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000000013",
     "dataset_fingerprint": "v2:a9642788c2926803864a7fb83f39fd2a973a62a516d6a51780085fec714fe8ec",
     "method": "cta_pls",
-    "method_version": "pls_pm_v1+pls_mediation_v1+pls_assessment_v7",
-    "engine_version": "0.3.0-alpha.1",
+    "method_version": "pls_pm_v1+cta_pls_tetrad_v1+pls_mediation_v1+pls_assessment_v7",
+    "engine_version": "2.46.0",
     "seed": 20260719,
     "settings": {
       "method": "cta_pls",
@@ -24,24 +24,20 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-07-19T04:20:39.177477400Z",
-    "completed_at": "2026-07-19T04:20:39.202745Z"
+    "started_at": "2026-08-13T18:53:49.047078Z",
+    "completed_at": "2026-08-13T18:53:49.066572500Z"
   },
   "diagnostics": [
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "CTA-PLS is experimental; tetrads are descriptive sample-covariance diagnostics and require bootstrap/permutation inference before publication"
-    },
-    {
-      "code": "estimation.warning",
-      "level": "warning",
-      "message": "rho_a.two_indicator_limited_information for construct 'y'"
+      "message": "CTA-PLS tetrad diagnostics are validated for the documented QuickPLS v1.2.3 descriptive tetrad scope; bootstrap/permutation tetrad decision rules remain unsupported."
     }
   ],
   "payload": {
     "kind": "pls_pm_v1",
     "estimation": {
+      "cbsem": null,
       "cca": null,
       "construct_scores": {
         "x": [
@@ -330,7 +326,7 @@
         },
         "method_version": "cta_pls_tetrad_v1",
         "warnings": [
-          "CTA-PLS tetrad inference is not implemented in this preview; do not use these diagnostics as publication-ready evidence"
+          "CTA-PLS tetrad bootstrap/permutation inference is outside the validated QuickPLS v1.2.3 descriptive scope."
         ]
       },
       "effects": [
@@ -343,6 +339,9 @@
         }
       ],
       "endogeneity": null,
+      "fimix": null,
+      "gsca": null,
+      "ipma": null,
       "iterations": 3,
       "mediation": {
         "estimates": [
@@ -360,21 +359,15 @@
         "method_version": "pls_mediation_v1",
         "tolerance": 1e-12,
         "warnings": [
-          "Mediation classes are descriptive effect-decomposition labels; publication inference requires validated bootstrap or permutation intervals for the relevant indirect effect."
+          "PLS mediation effect decomposition is validated for the documented QuickPLS v1.2.1 scope when paired with validated bootstrap or permutation intervals for the relevant indirect effect."
         ]
       },
       "method_version": "cta_pls_tetrad_v1",
+      "mga": null,
+      "mga_permutation": null,
+      "micom": null,
       "moderated_mediation": null,
-      "moderation": {
-        "estimates": [],
-        "method_version": "pls_two_stage_moderation_v1",
-        "moderator_score_levels": [
-          -1.0,
-          0.0,
-          1.0
-        ],
-        "warnings": []
-      },
+      "nca": null,
       "nonlinear_effects": null,
       "omitted_observations": 0,
       "outer_estimates": [
@@ -422,10 +415,14 @@
           "target": "y"
         }
       ],
+      "pca": null,
       "plsc": null,
+      "predict": null,
       "r_squared": {
         "y": 0.5333171845638829
       },
+      "regression": null,
+      "segmentation": null,
       "transforms": [
         {
           "indicator": "x1",
@@ -460,7 +457,7 @@
       ],
       "used_observations": 120,
       "warnings": [
-        "CTA-PLS is experimental; tetrads are descriptive sample-covariance diagnostics and require bootstrap/permutation inference before publication"
+        "CTA-PLS tetrad diagnostics are validated for the documented QuickPLS v1.2.3 descriptive tetrad scope; bootstrap/permutation tetrad decision rules remain unsupported."
       ],
       "wpls": null
     },

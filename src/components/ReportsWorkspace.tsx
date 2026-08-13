@@ -4,6 +4,7 @@ import { methods } from "../data/sample";
 import { publicationDiagramSvg } from "../domain/publicationDiagram";
 import { buildResultInterpretation } from "../domain/resultInterpretation";
 import { runExportTables, tablesToCsv, tablesToHtml, type ResultTable } from "../domain/resultTables";
+import { spreadsheetSafeCsvCell } from "../domain/spreadsheetSafety";
 import { compareRuns } from "../domain/runComparison";
 import { nativeLegacyProcessResultProjection, nativeProcessResultProjection } from "../native/nativeProcessResults";
 import { nativeStructuralPathRandomizationProjection } from "../native/nativeStructuralPathRandomization";
@@ -421,7 +422,7 @@ function ReportTablePreview({ table, onStatus }: { table: ReportExportTable; onS
     onStatus(`Copied preview table: ${table.title}`);
   };
   const exportReportTable = () => {
-    const csv = tableBody.map((row) => row.map(csvCell).join(",")).join("\n");
+    const csv = tableBody.map((row) => row.map(spreadsheetSafeCsvCell).join(",")).join("\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     const anchor = document.createElement("a");
     anchor.href = url;
@@ -476,8 +477,4 @@ function reportHtml(baseHtml: string, interpretation: ReturnType<typeof buildRes
 
 function escapeHtml(value: string) {
   return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
-}
-
-function csvCell(value: string) {
-  return /[",\n]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
 }

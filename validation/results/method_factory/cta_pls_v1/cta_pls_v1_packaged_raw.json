@@ -1,0 +1,801 @@
+{
+  "schema_version": "quickpls.packaged_acceptance.v1",
+  "feature_id": "qpls3.assessment.cta_pls",
+  "method_version": "cta_pls_tetrad_v1",
+  "catalogue_snapshot_date": "2026-08-12",
+  "acceptance_scope": "cta_pls",
+  "passed": true,
+  "generatedAt": "2026-08-13T18:55:02.834Z",
+  "endpoint": "http://127.0.0.1:9222",
+  "runtime": "tauri-webview2-cdp",
+  "focusedRun": {
+    "scope": "cta_pls",
+    "priorGeneratedAt": null,
+    "completedAt": "2026-08-13T18:55:45.807Z"
+  },
+  "checks": {
+    "ctaPlsFixtureProvisioning": {
+      "sourceCsv": "D:\\QuickPLS\\validation\\results\\cta_pls_reference.csv",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-cta-pls-1786647302831-64572.qpls",
+      "projectName": "Native CTA-PLS Acceptance",
+      "cli": "D:\\QuickPLS\\target\\release\\qpls.exe",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-cta-pls-1786647302831-64572.qpls",
+      "stderr": ""
+    },
+    "runtimePreflight": {
+      "passed": true,
+      "expectedOrigin": "http://tauri.localhost",
+      "enumeratedPages": [
+        {
+          "index": 0,
+          "url": "http://tauri.localhost/",
+          "origin": "http://tauri.localhost",
+          "title": "QuickPLS",
+          "shellVisible": true,
+          "tauriRuntime": true
+        }
+      ],
+      "qualifyingPageCount": 1,
+      "preReload": {
+        "index": 0,
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "title": "QuickPLS",
+        "shellVisible": true,
+        "tauriRuntime": true
+      },
+      "reloadCount": 1,
+      "postReload": {
+        "index": 0,
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "title": "QuickPLS",
+        "shellVisible": true,
+        "tauriRuntime": true
+      },
+      "sameOrigin": true
+    },
+    "runtime": {
+      "title": "QuickPLS",
+      "tauriRuntime": true,
+      "viewport": {
+        "width": 1536,
+        "height": 794,
+        "dpr": 1.25
+      },
+      "surface": "launcher"
+    },
+    "ctaPlsFixture": {
+      "projectPath": "D:\\QuickPLS\\validation\\results\\v247-native-cta-pls-1786647302831-64572.qpls",
+      "status": "ReadyNative CTA-PLS Acceptancecta_pls_reference.csv120 cases0 constructsDataOffline",
+      "cases": 120,
+      "columns": [
+        "#",
+        "x1",
+        "x2",
+        "x3",
+        "x4",
+        "y1",
+        "y2"
+      ],
+      "initialArchive": {
+        "manifestEngineVersion": "2.46.0",
+        "packageVersion": "2.46.0",
+        "projectChecksum": {
+          "expected": "1fd11a086bf6f6ac2409af4f4d52717f708895dfcd202602b7dc9c2f73c1ad36",
+          "actual": "1fd11a086bf6f6ac2409af4f4d52717f708895dfcd202602b7dc9c2f73c1ad36",
+          "matches": true
+        },
+        "datasetCount": 1,
+        "modelCount": 0,
+        "recipeCount": 0,
+        "resultCount": 0,
+        "runCount": 0,
+        "activeModelId": null,
+        "nodes": 0,
+        "edges": 0
+      }
+    },
+    "ctaPlsInitialModel": {
+      "projectName": "Native CTA-PLS Acceptance",
+      "importedEditableModels": 0,
+      "name": "CTA-PLS Descriptive Tetrad Model",
+      "constructs": 0,
+      "structuralPaths": 0
+    },
+    "ctaPlsInvalidSetup": {
+      "attempted": true,
+      "selectedMethod": "Confirmatory Tetrad Analysis",
+      "startEnabled": false,
+      "blockers": [
+        "The model does not contain any constructs.",
+        "The model does not contain any assigned indicators.",
+        "Structural validity cannot be checked without constructs.",
+        "CTA-PLS requires at least one ordinary construct with four or more assigned indicators."
+      ],
+      "eligibleBlockText": "None - assign at least four indicators to one ordinary construct",
+      "archiveBefore": {
+        "manifestEngineVersion": "2.46.0",
+        "packageVersion": "2.46.0",
+        "projectChecksum": {
+          "expected": "be83641e469f14b1f929dc81ce0679992907d104d161e4ad7fcf5542655bca64",
+          "actual": "be83641e469f14b1f929dc81ce0679992907d104d161e4ad7fcf5542655bca64",
+          "matches": true
+        },
+        "datasetCount": 1,
+        "modelCount": 1,
+        "recipeCount": 0,
+        "resultCount": 0,
+        "runCount": 0,
+        "activeModelId": "aca941b8-9fe6-4105-b1a6-2a2a0dea2cdd"
+      },
+      "archiveAfter": {
+        "manifestEngineVersion": "2.46.0",
+        "packageVersion": "2.46.0",
+        "projectChecksum": {
+          "expected": "be83641e469f14b1f929dc81ce0679992907d104d161e4ad7fcf5542655bca64",
+          "actual": "be83641e469f14b1f929dc81ce0679992907d104d161e4ad7fcf5542655bca64",
+          "matches": true
+        },
+        "datasetCount": 1,
+        "modelCount": 1,
+        "recipeCount": 0,
+        "resultCount": 0,
+        "runCount": 0,
+        "activeModelId": "aca941b8-9fe6-4105-b1a6-2a2a0dea2cdd"
+      },
+      "runStateUnchanged": true,
+      "resultCreated": false
+    },
+    "ctaPlsModel": {
+      "constructs": 2,
+      "assignedIndicators": 6,
+      "structuralPaths": 1,
+      "constructIds": [
+        "construct-1786647306156",
+        "construct-1786647306607"
+      ],
+      "labels": [
+        "Predictor",
+        "Outcome"
+      ]
+    },
+    "ctaPlsDialog": {
+      "catalogCount": 15,
+      "canonicalCatalogKinds": [
+        "pls_algorithm",
+        "plsc",
+        "wpls",
+        "gsca",
+        "cca",
+        "cta_pls",
+        "ipma",
+        "cbsem",
+        "pls_bootstrap",
+        "pls_permutation",
+        "mga",
+        "predict",
+        "nca",
+        "pca",
+        "regression"
+      ],
+      "catalogKinds": [
+        "pls_algorithm",
+        "plsc",
+        "wpls",
+        "gsca",
+        "cca",
+        "cta_pls",
+        "ipma",
+        "cbsem",
+        "pls_bootstrap",
+        "pls_permutation",
+        "mga",
+        "predict",
+        "nca",
+        "pca",
+        "regression"
+      ],
+      "selectedMethod": "Confirmatory Tetrad Analysis",
+      "category": "Assessment",
+      "eligibleBlockText": "Predictor: 4 indicators, 3 tetrads",
+      "scopeText": "Descriptive sample-covariance tetrads only. QuickPLS reports all three pairings for every four-indicator subset; it does not classify blocks or calculate bootstrap, permutation, asymptotic, or vanishing-tetrad decisions.",
+      "weighting": "path",
+      "pcaWeightingDisabled": true,
+      "preprocessing": "standardized",
+      "maximumIterations": "3000",
+      "tolerance": "1e-7",
+      "unsupportedControls": 0,
+      "blockers": [],
+      "startEnabled": true
+    },
+    "ctaPlsProgress": {
+      "captured": false,
+      "completedBeforeCapture": true,
+      "detail": "CTA-PLS descriptive tetrads left its active lifecycle before the evidence snapshot completed."
+    },
+    "ctaPlsResult": {
+      "runId": "ccea8d56-532b-4dd8-909f-66beba5c4c5a",
+      "runLabel": "Confirmatory Tetrad Analysis run",
+      "initialSelectedTable": "cta_pls_summary",
+      "treeItems": [
+        "Graphical results",
+        "Model estimates",
+        "Assessment",
+        "CTA-PLS tetrad summary",
+        "CTA-PLS tetrads",
+        "CTA-PLS scope and exclusions",
+        "Final results",
+        "Path coefficients",
+        "Outer loadings",
+        "Outer weights",
+        "R-square",
+        "Total effects",
+        "Quality criteria",
+        "Construct reliability and validity",
+        "Cross loadings",
+        "Fornell-Larcker criterion",
+        "HTMT+",
+        "Original HTMT",
+        "Structural model",
+        "Inner VIF values",
+        "f-square effect sizes",
+        "Model fit",
+        "Construct cross-validated redundancy"
+      ],
+      "summary": {
+        "rows": 1,
+        "headers": [
+          "Construct",
+          "Indicators",
+          "Four-indicator subsets",
+          "Tetrads",
+          "Maximum absolute tetrad"
+        ],
+        "values": [
+          [
+            "Predictor",
+            "x1, x2, x3, x4",
+            "1",
+            "3",
+            "0.0129"
+          ]
+        ]
+      },
+      "tetrads": {
+        "rows": 3,
+        "headers": [
+          "Construct",
+          "Indicator A",
+          "Indicator B",
+          "Indicator C",
+          "Indicator D",
+          "Pairing",
+          "Tetrad",
+          "Absolute tetrad"
+        ],
+        "values": [
+          [
+            "Predictor",
+            "x1",
+            "x2",
+            "x3",
+            "x4",
+            "Ab cd minus ac bd",
+            "0.0070",
+            "0.0070"
+          ],
+          [
+            "Predictor",
+            "x1",
+            "x2",
+            "x3",
+            "x4",
+            "Ac bd minus ad bc",
+            "0.0060",
+            "0.0060"
+          ],
+          [
+            "Predictor",
+            "x1",
+            "x2",
+            "x3",
+            "x4",
+            "Ad bc minus ab cd",
+            "-0.0129",
+            "0.0129"
+          ]
+        ]
+      },
+      "scope": {
+        "rows": 6,
+        "headers": [
+          "Field",
+          "Value"
+        ],
+        "values": [
+          [
+            "Method version",
+            "cta_pls_tetrad_v1"
+          ],
+          [
+            "Covariance convention",
+            "sample_covariance_of_preprocessed_indicators_v1"
+          ],
+          [
+            "Complete cases",
+            "120"
+          ],
+          [
+            "Omitted cases",
+            "0"
+          ],
+          [
+            "Interpretation",
+            "Descriptive sample-covariance tetrads only. QuickPLS reports all three pairings for every four-indicator subset; it does not classify blocks or calculate bootstrap, permutation, asymptotic, or vanishing-tetrad decisions."
+          ],
+          [
+            "Excluded inference",
+            "Bootstrap, permutation, asymptotic, and vanishing-tetrad decisions"
+          ]
+        ]
+      },
+      "scopeValues": {
+        "Method version": "cta_pls_tetrad_v1",
+        "Covariance convention": "sample_covariance_of_preprocessed_indicators_v1",
+        "Complete cases": "120",
+        "Omitted cases": "0",
+        "Interpretation": "Descriptive sample-covariance tetrads only. QuickPLS reports all three pairings for every four-indicator subset; it does not classify blocks or calculate bootstrap, permutation, asymptotic, or vanishing-tetrad decisions.",
+        "Excluded inference": "Bootstrap, permutation, asymptotic, and vanishing-tetrad decisions"
+      },
+      "runDetails": {
+        "properties": {
+          "Run": "Confirmatory Tetrad Analysis run",
+          "Method": "Confirmatory Tetrad Analysis",
+          "Created": "14/8/2026, 12:25:07 am",
+          "Dataset fingerprint": "v2:a9642788c2926803864a7fb83f39fd2a973a62a516d6a51780085fec714fe8ec",
+          "Recipe": "9ae78658-3cc5-40a1-912a-a8e7038b362c",
+          "Engine": "2.46.0",
+          "Method version": "pls_pm_v1+cta_pls_tetrad_v1+pls_mediation_v1+pls_assessment_v7",
+          "Weighting": "path",
+          "Preprocessing": "standardized"
+        },
+        "logEntries": 4
+      },
+      "allTetradsFinite": true,
+      "absoluteColumnsMatch": true,
+      "noInferentialDecision": true
+    },
+    "ctaPlsExport": {
+      "selectedRunId": "ccea8d56-532b-4dd8-909f-66beba5c4c5a",
+      "xlsxEnabled": true,
+      "buttonCount": 6,
+      "nativeXlsx": {
+        "attempted": true,
+        "targetPath": "D:\\QuickPLS\\validation\\results\\cta_pls_v1_packaged_runtime.xlsx",
+        "helper": {
+          "ready": {
+            "event": "ready",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 5767680,
+              "pid": 14556,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "main_window_binding",
+            "resultsRoot": "D:\\QuickPLS\\validation\\results",
+            "targetPath": "D:\\QuickPLS\\validation\\results\\cta_pls_v1_packaged_runtime.xlsx"
+          },
+          "completion": {
+            "boundControls": {
+              "filenameEditControlId": 1001,
+              "saveButtonControlId": 1
+            },
+            "dialog": {
+              "className": "#32770",
+              "directOwner": 5767680,
+              "handle": 5637104,
+              "pid": 14556,
+              "rootOwner": 5767680,
+              "title": "Save As"
+            },
+            "event": "complete",
+            "mainWindow": {
+              "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+              "handle": 5767680,
+              "pid": 14556,
+              "title": "QuickPLS"
+            },
+            "passed": true,
+            "phase": "xlsx_creation_and_readback",
+            "saveSubmission": {
+              "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\cta_pls_v1_packaged_runtime.xlsx",
+              "filenameBefore": "quickpls-result-tables",
+              "filenameVerified": true,
+              "saveButtonEnabled": true,
+              "saveButtonVisible": true,
+              "setAttempts": [
+                {
+                  "attempt": 1,
+                  "settledReads": [
+                    "D:\\QuickPLS\\validation\\results\\cta_pls_v1_packaged_runtime.xlsx",
+                    "D:\\QuickPLS\\validation\\results\\cta_pls_v1_packaged_runtime.xlsx"
+                  ]
+                }
+              ],
+              "submissionMethod": "BM_CLICK",
+              "targetText": "D:\\QuickPLS\\validation\\results\\cta_pls_v1_packaged_runtime.xlsx"
+            },
+            "targetPath": "D:\\QuickPLS\\validation\\results\\cta_pls_v1_packaged_runtime.xlsx",
+            "workbook": {
+              "path": "D:\\QuickPLS\\validation\\results\\cta_pls_v1_packaged_runtime.xlsx",
+              "requiredSharedStrings": [
+                "CTA-PLS tetrad summary",
+                "CTA-PLS tetrads",
+                "CTA-PLS scope and exclusions",
+                "Run provenance",
+                "Confirmatory Tetrad Analysis",
+                "cta_pls_tetrad_v1",
+                "sample_covariance_of_preprocessed_indicators_v1",
+                "CTA-PLS tetrad bootstrap/permutation inference is outside the validated QuickPLS v1.2.3 descriptive scope.",
+                "Predictor"
+              ],
+              "requiredSheets": [
+                "CTA-PLS tetrad summary",
+                "CTA-PLS tetrads",
+                "CTA-PLS scope and exclusions",
+                "Run provenance"
+              ],
+              "sha256": "a52250e27bc66db97a7c989ac73439dd201d1157726eb6494df80a60b924fdd1",
+              "sheetNames": [
+                "Path coefficients",
+                "Outer loadings",
+                "Outer weights",
+                "R-square",
+                "Total effects",
+                "CTA-PLS tetrad summary",
+                "CTA-PLS tetrads",
+                "CTA-PLS scope and exclusions",
+                "Construct reliability and valid",
+                "Cross loadings",
+                "Fornell-Larcker criterion",
+                "HTMT+",
+                "Original HTMT",
+                "Structural model",
+                "Inner VIF values",
+                "f-square effect sizes",
+                "Model fit",
+                "Construct cross-validated redun",
+                "Run provenance"
+              ],
+              "size": 19421
+            },
+            "transport": {
+              "exitCode": 0,
+              "signal": null,
+              "stderr": "",
+              "events": [
+                {
+                  "event": "ready",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 5767680,
+                    "pid": 14556,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "main_window_binding",
+                  "resultsRoot": "D:\\QuickPLS\\validation\\results",
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\cta_pls_v1_packaged_runtime.xlsx"
+                },
+                {
+                  "boundControls": {
+                    "filenameEditControlId": 1001,
+                    "saveButtonControlId": 1
+                  },
+                  "dialog": {
+                    "className": "#32770",
+                    "directOwner": 5767680,
+                    "handle": 5637104,
+                    "pid": 14556,
+                    "rootOwner": 5767680,
+                    "title": "Save As"
+                  },
+                  "event": "complete",
+                  "mainWindow": {
+                    "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                    "handle": 5767680,
+                    "pid": 14556,
+                    "title": "QuickPLS"
+                  },
+                  "passed": true,
+                  "phase": "xlsx_creation_and_readback",
+                  "saveSubmission": {
+                    "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\cta_pls_v1_packaged_runtime.xlsx",
+                    "filenameBefore": "quickpls-result-tables",
+                    "filenameVerified": true,
+                    "saveButtonEnabled": true,
+                    "saveButtonVisible": true,
+                    "setAttempts": [
+                      {
+                        "attempt": 1,
+                        "settledReads": [
+                          "D:\\QuickPLS\\validation\\results\\cta_pls_v1_packaged_runtime.xlsx",
+                          "D:\\QuickPLS\\validation\\results\\cta_pls_v1_packaged_runtime.xlsx"
+                        ]
+                      }
+                    ],
+                    "submissionMethod": "BM_CLICK",
+                    "targetText": "D:\\QuickPLS\\validation\\results\\cta_pls_v1_packaged_runtime.xlsx"
+                  },
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\cta_pls_v1_packaged_runtime.xlsx",
+                  "workbook": {
+                    "path": "D:\\QuickPLS\\validation\\results\\cta_pls_v1_packaged_runtime.xlsx",
+                    "requiredSharedStrings": [
+                      "CTA-PLS tetrad summary",
+                      "CTA-PLS tetrads",
+                      "CTA-PLS scope and exclusions",
+                      "Run provenance",
+                      "Confirmatory Tetrad Analysis",
+                      "cta_pls_tetrad_v1",
+                      "sample_covariance_of_preprocessed_indicators_v1",
+                      "CTA-PLS tetrad bootstrap/permutation inference is outside the validated QuickPLS v1.2.3 descriptive scope.",
+                      "Predictor"
+                    ],
+                    "requiredSheets": [
+                      "CTA-PLS tetrad summary",
+                      "CTA-PLS tetrads",
+                      "CTA-PLS scope and exclusions",
+                      "Run provenance"
+                    ],
+                    "sha256": "a52250e27bc66db97a7c989ac73439dd201d1157726eb6494df80a60b924fdd1",
+                    "sheetNames": [
+                      "Path coefficients",
+                      "Outer loadings",
+                      "Outer weights",
+                      "R-square",
+                      "Total effects",
+                      "CTA-PLS tetrad summary",
+                      "CTA-PLS tetrads",
+                      "CTA-PLS scope and exclusions",
+                      "Construct reliability and valid",
+                      "Cross loadings",
+                      "Fornell-Larcker criterion",
+                      "HTMT+",
+                      "Original HTMT",
+                      "Structural model",
+                      "Inner VIF values",
+                      "f-square effect sizes",
+                      "Model fit",
+                      "Construct cross-validated redun",
+                      "Run provenance"
+                    ],
+                    "size": 19421
+                  }
+                }
+              ],
+              "protocolErrors": []
+            }
+          }
+        },
+        "appFeedback": "Saved cta_pls_v1_packaged_runtime.xlsx.",
+        "file": {
+          "size": 19421,
+          "isFile": true
+        },
+        "workbookSheets": [
+          "Path coefficients",
+          "Outer loadings",
+          "Outer weights",
+          "R-square",
+          "Total effects",
+          "CTA-PLS tetrad summary",
+          "CTA-PLS tetrads",
+          "CTA-PLS scope and exclusions",
+          "Construct reliability and valid",
+          "Cross loadings",
+          "Fornell-Larcker criterion",
+          "HTMT+",
+          "Original HTMT",
+          "Structural model",
+          "Inner VIF values",
+          "f-square effect sizes",
+          "Model fit",
+          "Construct cross-validated redun",
+          "Run provenance"
+        ]
+      }
+    },
+    "ctaPlsSaveReopen": {
+      "expectedRunId": "ccea8d56-532b-4dd8-909f-66beba5c4c5a",
+      "selectedRunId": "ccea8d56-532b-4dd8-909f-66beba5c4c5a",
+      "sameRunRestored": true,
+      "sameVisibleValuesRestored": true,
+      "archive": {
+        "manifestEngineVersion": "2.46.0",
+        "packageVersion": "2.46.0",
+        "projectChecksum": {
+          "expected": "556a18b345ccd1b9f6fb70b81927eb2578a1a728f6d3f5bed9c7e4d0a0885754",
+          "actual": "556a18b345ccd1b9f6fb70b81927eb2578a1a728f6d3f5bed9c7e4d0a0885754",
+          "matches": true
+        },
+        "identity": {
+          "resultId": "ccea8d56-532b-4dd8-909f-66beba5c4c5a",
+          "resultStatus": "completed",
+          "provenanceMethod": "cta_pls",
+          "provenanceMethodVersion": "pls_pm_v1+cta_pls_tetrad_v1+pls_mediation_v1+pls_assessment_v7",
+          "provenanceEngineVersion": "2.46.0",
+          "payloadKind": "pls_pm_v1",
+          "estimationMethodVersion": "cta_pls_tetrad_v1",
+          "ctaMethodVersion": "cta_pls_tetrad_v1",
+          "covarianceVersion": "sample_covariance_of_preprocessed_indicators_v1"
+        },
+        "observations": {
+          "used": 120,
+          "omitted": 0
+        },
+        "tetrads": {
+          "count": 3,
+          "identities": [
+            "construct-1786647306156\u0000x1\u0000x2\u0000x3\u0000x4\u0000ab_cd_minus_ac_bd",
+            "construct-1786647306156\u0000x1\u0000x2\u0000x3\u0000x4\u0000ac_bd_minus_ad_bc",
+            "construct-1786647306156\u0000x1\u0000x2\u0000x3\u0000x4\u0000ad_bc_minus_ab_cd"
+          ],
+          "uniqueIdentities": 3,
+          "pairings": [
+            "ab_cd_minus_ac_bd",
+            "ac_bd_minus_ad_bc",
+            "ad_bc_minus_ab_cd"
+          ],
+          "finite": true,
+          "algebraicSum": 0,
+          "maximum": 0.012931987306177617,
+          "archivedMaximum": 0.012931987306177617,
+          "maximumMatches": true
+        },
+        "warnings": {
+          "result": [
+            "CTA-PLS tetrad bootstrap/permutation inference is outside the validated QuickPLS v1.2.3 descriptive scope."
+          ],
+          "estimation": [
+            "CTA-PLS tetrad diagnostics are validated for the documented QuickPLS v1.2.3 descriptive tetrad scope; bootstrap/permutation tetrad decision rules remain unsupported."
+          ]
+        },
+        "unrelatedPayloads": [],
+        "recipe": {
+          "schemaVersion": 3,
+          "exactMethodConfig": true,
+          "method": "cta_pls",
+          "weightingScheme": "path",
+          "preprocessing": "standardized",
+          "missingData": "listwise_deletion",
+          "bootstrapSamples": 0,
+          "studentizedInnerSamples": 0,
+          "permutationSamples": 0,
+          "workers": 1,
+          "caseWeightColumn": null,
+          "constructs": [
+            {
+              "id": "construct-1786647306156",
+              "name": "Predictor",
+              "shortName": "X",
+              "mode": "reflective",
+              "indicators": [
+                "x1",
+                "x2",
+                "x3",
+                "x4"
+              ]
+            },
+            {
+              "id": "construct-1786647306607",
+              "name": "Outcome",
+              "shortName": "Y",
+              "mode": "reflective",
+              "indicators": [
+                "y1",
+                "y2"
+              ]
+            }
+          ],
+          "paths": [
+            {
+              "source": "construct-1786647306156",
+              "target": "construct-1786647306607"
+            }
+          ],
+          "controls": [],
+          "higherOrderConstructs": [],
+          "interactions": []
+        },
+        "project": {
+          "datasetCount": 1,
+          "modelCount": 1,
+          "recipeCount": 1,
+          "resultCount": 1,
+          "runCount": 1,
+          "activeModelId": "aca941b8-9fe6-4105-b1a6-2a2a0dea2cdd",
+          "runModelId": "aca941b8-9fe6-4105-b1a6-2a2a0dea2cdd",
+          "runSnapshotNodes": 2,
+          "runSnapshotEdges": 1
+        }
+      }
+    },
+    "ctaPlsResponsiveViewports": {
+      "passed": true,
+      "exactViewports": [
+        {
+          "id": "1024x700",
+          "width": 1024,
+          "height": 700,
+          "passed": true,
+          "metrics": {
+            "innerWidth": 1024,
+            "innerHeight": 700,
+            "documentNoHorizontalOverflow": true,
+            "appNoHorizontalOverflow": true,
+            "selectedTableId": "cta_pls_summary",
+            "summaryRows": 1,
+            "treeVisible": true
+          }
+        },
+        {
+          "id": "1280x720",
+          "width": 1280,
+          "height": 720,
+          "passed": true,
+          "metrics": {
+            "innerWidth": 1280,
+            "innerHeight": 720,
+            "documentNoHorizontalOverflow": true,
+            "appNoHorizontalOverflow": true,
+            "selectedTableId": "cta_pls_summary",
+            "summaryRows": 1,
+            "treeVisible": true
+          }
+        },
+        {
+          "id": "1440x900",
+          "width": 1440,
+          "height": 900,
+          "passed": true,
+          "metrics": {
+            "innerWidth": 1440,
+            "innerHeight": 900,
+            "documentNoHorizontalOverflow": true,
+            "appNoHorizontalOverflow": true,
+            "selectedTableId": "cta_pls_summary",
+            "summaryRows": 1,
+            "treeVisible": true
+          }
+        }
+      ]
+    },
+    "ctaPlsBrowserNetwork": {
+      "passed": true,
+      "observedRequestCount": 47,
+      "externalRequestCount": 0,
+      "origins": [
+        "http://ipc.localhost",
+        "http://tauri.localhost"
+      ],
+      "externalRequests": []
+    },
+    "recentProjectsRestored": true
+  },
+  "screenshots": [
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\200-tauri-native-cta-pls-fixture-data-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\201-tauri-native-cta-pls-invalid-setup-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\202-tauri-native-cta-pls-model-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\203-tauri-native-cta-pls-dialog-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\204-tauri-native-cta-pls-running-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\205-tauri-native-cta-pls-results-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\206-tauri-native-cta-pls-export-1536x794.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\207-tauri-native-cta-pls-reopened-1024x700.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\207-tauri-native-cta-pls-reopened-1280x720.png",
+    "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\207-tauri-native-cta-pls-reopened-1440x900.png"
+  ],
+  "consoleErrors": [],
+  "failures": []
+}

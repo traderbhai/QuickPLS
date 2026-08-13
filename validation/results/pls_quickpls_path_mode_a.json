@@ -92,16 +92,6 @@
       "mga_permutation": null,
       "micom": null,
       "moderated_mediation": null,
-      "moderation": {
-        "estimates": [],
-        "method_version": "pls_two_stage_moderation_v1",
-        "moderator_score_levels": [
-          -1.0,
-          0.0,
-          1.0
-        ],
-        "warnings": []
-      },
       "nca": null,
       "nonlinear_effects": null,
       "omitted_observations": 0,

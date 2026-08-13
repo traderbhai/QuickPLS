@@ -1,0 +1,67 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "bounded_scope_not_broadened": true,
+    "document": "docs/methods/PCA_V1.md",
+    "passed": true,
+    "required_contract_fragments": {
+      "2 to 50 distinct selected numeric variables": true,
+      "Pairwise deletion": true,
+      "Rotation methods": true,
+      "Signs are oriented deterministically": true,
+      "`pca_v1` is a standalone principal component analysis workflow": true,
+      "correlation-matrix eigensystem": true,
+      "kaiser|fixed|variance_threshold": true,
+      "same-run reopen": true
+    }
+  },
+  "feature_id": "qpls3.standalone.pca",
+  "generated_at_utc": "2026-08-13T19:35:32.829086Z",
+  "method_version": "pca_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_spec",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "docs/methods/PCA_V1.md",
+      "sha256": "e061252fdfa5b84eaadc11b67269ce50a81fafeecf52959512c99dcaadb80ae5",
+      "size": 3229
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/pca_v1.manifest.json",
+      "sha256": "c190031338e9790dd64cf280a2e419585b254c5e3a109b81ecc4849f5cad7433",
+      "size": 14506
+    },
+    {
+      "path": "validation/pca_v1_factory_common.py",
+      "sha256": "9a0ce1a0fb76f83ee124b5927e1990f354a70b0ed28fe7d038919dd9f1e11c61",
+      "size": 11599
+    },
+    {
+      "path": "validation/pca_v1_factory_evidence.py",
+      "sha256": "5889a32132a2ade9e6a8cb612dfedee76ede84682213adbc1ba43088ff5156b7",
+      "size": 10692
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_pca_v1_factory_evidence.py",
+      "sha256": "45f58bcbd84e0e5b6adc9aadb334ad50085aa9c4e63c23ad9eedb53d15a6278f",
+      "size": 3537
+    }
+  ]
+}

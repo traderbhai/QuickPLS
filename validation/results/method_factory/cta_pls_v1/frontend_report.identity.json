@@ -1,0 +1,124 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "accessible_dialog_contract": true,
+    "method_scoped_setup_contract": true,
+    "passed": true,
+    "typed_recipe_and_scope_contract": true,
+    "typed_result_and_tamper_contract": true,
+    "vitest_summary": {
+      "expected_test_files": 4,
+      "minimum_tests": 40,
+      "observed_test_files_passed": 4,
+      "observed_test_files_total": 4,
+      "observed_tests_passed": 78,
+      "observed_tests_total": 78,
+      "passed": true
+    }
+  },
+  "execution": {
+    "command": [
+      "npx.cmd",
+      "vitest",
+      "run",
+      "src/native/nativeCtaPls.test.ts",
+      "src/native/nativeCtaPlsResults.test.ts",
+      "src/native/nativeAnalysisRecipe.test.ts",
+      "src/native/NativeCalculationDialog.test.ts",
+      "--reporter=verbose"
+    ],
+    "duration_seconds": 11.728,
+    "returncode": 0,
+    "stderr_tail": "",
+    "stdout_tail": "tract > fails closed when pairing identity is altered 0ms\n \u00e2\u0153\u201c src/native/nativeCtaPlsResults.test.ts > native CTA-PLS result contract > fails closed when absolute value is altered 0ms\n \u00e2\u0153\u201c src/native/nativeCtaPlsResults.test.ts > native CTA-PLS result contract > fails closed when three-pair algebra is altered 0ms\n \u00e2\u0153\u201c src/native/nativeCtaPlsResults.test.ts > native CTA-PLS result contract > fails closed when block maximum is altered 0ms\n \u00e2\u0153\u201c src/native/nativeCtaPlsResults.test.ts > native CTA-PLS result contract > fails closed when resampling is altered 0ms\n \u00e2\u0153\u201c src/native/NativeCalculationDialog.test.ts > NativeCalculationDialog contracts > preserves seeded predictors across fast non-PROCESS type switches and clears them only for PROCESS 4ms\n \u00e2\u0153\u201c src/native/NativeCalculationDialog.test.ts > NativeCalculationDialog contracts > does not reprofile an unchanged PROCESS selection after runtime-only setting edits 1ms\n \u00e2\u0153\u201c src/native/NativeCalculationDialog.test.ts > NativeCalculationDialog contracts > reveals the selected method without moving focus or animating the catalog 3ms\n \u00e2\u0153\u201c src/native/NativeCalculationDialog.test.ts > NativeCalculationDialog contracts > admits every backend-valid integer resample count through the HTML number inputs 1ms\n \u00e2\u0153\u201c src/native/NativeCalculationDialog.test.ts > NativeCalculationDialog contracts > renders formerly step-mismatched valid counts with an enabled submit action 38ms\n \u00e2\u0153\u201c src/native/NativeCalculationDialog.test.ts > NativeCalculationDialog contracts > offers declared numeric variables and safely inferred resident numeric variables for WPLS 1ms\n \u00e2\u0153\u201c src/native/NativeCalculationDialog.test.ts > NativeCalculationDialog contracts > renders the bounded joint MICOM and two-group permutation scope 13ms\n \u00e2\u0153\u201c src/native/NativeCalculationDialog.test.ts > NativeCalculationDialog contracts > renders an accessible fixed CCA residual-diagnostics setup without ignored inference controls 10ms\n \u00e2\u0153\u201c src/native/NativeCalculationDialog.test.ts > NativeCalculationDialog contracts > renders an accessible CTA-PLS eligible-block summary and bounded descriptive scope 13ms\n \u00e2\u0153\u201c src/native/NativeCalculationDialog.test.ts > NativeCalculationDialog contracts > renders one ID-backed endogenous IPMA target with fixed truthful settings 10ms\n \u00e2\u0153\u201c src/native/NativeCalculationDialog.test.ts > NativeCalculationDialog contracts > renders the fixed indicator-level PLSpredict / CVPAT contract without irrelevant controls 15ms\n \u00e2\u0153\u201c src/native/NativeCalculationDialog.test.ts > NativeCalculationDialog contracts > renders a bounded observed-variable NCA setup without SEM controls or claims 13ms\n \u00e2\u0153\u201c src/native/NativeCalculationDialog.test.ts > NativeCalculationDialog contracts > renders the bounded single-group CB-SEM/CFA ML setup without unsupported controls 16ms\n \u00e2\u0153\u201c src/native/NativeCalculationDialog.test.ts > NativeCalculationDialog contracts > renders GSCA as a fixed ALS component-model workflow without PLS or inference controls 11ms\n \u00e2\u0153\u201c src/native/NativeCalculationDialog.test.ts > NativeCalculationDialog contracts > renders model-free PCA variable and retention controls with fixed scientific scope 15ms\n \u00e2\u0153\u201c src/native/NativeCalculationDialog.test.ts > NativeCalculationDialog contracts > renders bounded model-free OLS selectors and fixed HC3 inference without SEM controls 19ms\n \u00e2\u0153\u201c src/native/NativeCalculationDialog.test.ts > NativeCalculationDialog contracts > renders qualified regression case-resampling controls and disclosures 20ms\n \u00e2\u0153\u201c src/native/NativeCalculationDialog.test.ts > NativeCalculationDialog contracts > stops regression-bootstrap setup at 50 selected predictors and controls 38ms\n \u00e2\u0153\u201c src/native/NativeCalculationDialog.test.ts > NativeCalculationDialog contracts > renders strict model-free binary logistic setup with a complete 0/1 profile 19ms\n\n Test Files  4 passed (4)\n      Tests  78 passed (78)\n   Start at  00:24:38\n   Duration  2.03s (transform 1.83s, setup 0ms, import 3.09s, tests 348ms, environment 1ms)\n\n"
+  },
+  "feature_id": "qpls3.assessment.cta_pls",
+  "generated_at_utc": "2026-08-13T18:54:40.813091Z",
+  "method_version": "cta_pls_tetrad_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "frontend_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "src/native/NativeCalculationDialog.test.ts",
+      "sha256": "d0933d36ac7b6966ab8fc2b20a9c36b51481ed8b77831bd0dc3828ce7ffb434e",
+      "size": 29849
+    },
+    {
+      "path": "src/native/NativeCalculationDialog.tsx",
+      "sha256": "e99af834fda46a5c0197b26ab504d67b5f4e2fc1ca5874d939013b1e3f54f098",
+      "size": 71729
+    },
+    {
+      "path": "src/native/nativeAnalysisRecipe.test.ts",
+      "sha256": "f09b36ffbeabe578cc75dd93567dcbab830e6c87bc48ee3fcc388a8e96d664c7",
+      "size": 37911
+    },
+    {
+      "path": "src/native/nativeAnalysisRecipe.ts",
+      "sha256": "eaf427095305c578a3634da1c50d3afacc9a73a604607d5d75a0bf4d6ae3e61d",
+      "size": 42423
+    },
+    {
+      "path": "src/native/nativeCtaPls.test.ts",
+      "sha256": "328d7f021c9557736184fe1053b88376ecaffd0b49944c81f7676626cd199002",
+      "size": 4800
+    },
+    {
+      "path": "src/native/nativeCtaPls.testFixture.ts",
+      "sha256": "9b8bd47c3ccfb007aa54938c0613f43df1107bd05216e318006ca85ac2044bc1",
+      "size": 3183
+    },
+    {
+      "path": "src/native/nativeCtaPls.ts",
+      "sha256": "8f90b064cdd6c097d6cbf3949d03f472b11780df82fbd59d6ad30c53a079d726",
+      "size": 7107
+    },
+    {
+      "path": "src/native/nativeCtaPlsResults.test.ts",
+      "sha256": "1a53552146fabdd904b1d35f45bc05f52c8cc63adfd57f5c9fc35898506cf45a",
+      "size": 3047
+    },
+    {
+      "path": "src/native/nativeResults.ts",
+      "sha256": "e81f4563ca317d7ce56cb8f8fa29daa4b3674c472bf75eea0fa8d2149eaf6f39",
+      "size": 214672
+    },
+    {
+      "path": "validation/cta_pls_v1_factory_common.py",
+      "sha256": "726ee52650510f685e5ebdf1f90c06800e46dd021cef9d720c38a8bf5cf64294",
+      "size": 12502
+    },
+    {
+      "path": "validation/cta_pls_v1_factory_evidence.py",
+      "sha256": "d1f1a517a9e833740cf1379ac01d7c1288f39fe4a4a8dead78053c7401e44365",
+      "size": 11104
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/cta_pls_v1.manifest.json",
+      "sha256": "9c185db215ed40fd30d77557a9e8448d109f6e3f1acf015d25e47fd4bc62257e",
+      "size": 14741
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_cta_pls_v1_factory_evidence.py",
+      "sha256": "a7455099f23dd1f38ee9db7a856dd0f9cacf2070941a95502c39e92a189e969c",
+      "size": 3720
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    }
+  ]
+}

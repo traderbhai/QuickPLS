@@ -1,0 +1,152 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "cli_identity": {
+      "built_by_factory": false,
+      "execution": {
+        "command": [
+          "D:\\QuickPLS\\target\\debug\\qpls.exe",
+          "--version"
+        ],
+        "duration_seconds": 0.027,
+        "returncode": 0,
+        "stderr_tail": "",
+        "stdout_tail": "qpls 2.46.0\n"
+      },
+      "last_write_utc": "2026-08-13T12:35:20.305788Z",
+      "passed": true,
+      "path": "target/debug/qpls.exe",
+      "sha256": "52bba4c791625dd8da51e949683855c2e2f3a83b1cbb83879ff39c4c534ef0d0",
+      "size": 54243840
+    },
+    "duration_seconds": 0.464,
+    "exact_current_identity": {
+      "estimation_method_version": "plsc_v2",
+      "payload_kind": "pls_pm_v1",
+      "plsc_method_version": "plsc_v2",
+      "reliability_method_version": "dijkstra_henseler_rho_a_v1"
+    },
+    "fresh_execution": true,
+    "generated_artifacts": {
+      "dataset": {
+        "path": "validation/results/method_factory/plsc_v2/work/independent_plsc_equation3.csv",
+        "sha256": "37de2285c0909a6f0cdc2b6e63fd869c833e545379b8dce2f9a4ce4bf94cb60f"
+      },
+      "recipe": {
+        "path": "validation/results/method_factory/plsc_v2/work/independent_plsc_equation3.recipe.json",
+        "sha256": "65d7afee3aaa115a05a3525003cd85f890a1f43c49f53bcc9b14491634f49197"
+      },
+      "result": {
+        "path": "validation/results/method_factory/plsc_v2/work/independent_plsc_equation3.quickpls.json",
+        "sha256": "8f44d88c705be64e477a077d48e188cc08bf0807ba7c44f87a4a60ec36675b2f"
+      }
+    },
+    "independence": {
+      "attenuation_and_paths": "independent Python matrix calculation in this factory gate",
+      "ordinary_pls": "independent NumPy implementation in higher_order_reference.py",
+      "quickpls_imported_by_reference_math": false,
+      "rho_a": "independent NumPy Equation 3 implementation in plsc_reference.py",
+      "runtime_policy": "development validation only; never packaged"
+    },
+    "max_deltas": {
+      "corrected_correlation": 1.6653345369377348e-16,
+      "corrected_loading": 3.3306690738754696e-16,
+      "corrected_path": 1.1102230246251565e-16,
+      "corrected_r_squared": 1.6653345369377348e-16,
+      "original_correlation": 1.3877787807814457e-16,
+      "rho_a": 6.661338147750939e-16
+    },
+    "passed": true,
+    "tolerance": 1e-06
+  },
+  "execution": {
+    "command": [
+      "D:\\QuickPLS\\target\\debug\\qpls.exe",
+      "run",
+      "validation/results/method_factory/plsc_v2/work/independent_plsc_equation3.recipe.json",
+      "--data",
+      "validation/results/method_factory/plsc_v2/work/independent_plsc_equation3.csv",
+      "--output",
+      "validation/results/method_factory/plsc_v2/work/independent_plsc_equation3.quickpls.json",
+      "--allow-experimental"
+    ],
+    "duration_seconds": 0.229,
+    "returncode": 0,
+    "stderr_tail": "",
+    "stdout_tail": "wrote analysis result validation/results/method_factory/plsc_v2/work/independent_plsc_equation3.quickpls.json\n"
+  },
+  "feature_id": "qpls3.pls.consistent",
+  "generated_at_utc": "2026-08-13T19:01:02.889897Z",
+  "method_version": "plsc_v2",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "independent_reference",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
+      "size": 639198
+    },
+    {
+      "path": "validation/higher_order_reference.py",
+      "sha256": "1467a6bf96b1bd84f15d6042ff8bfe8a9605f3fb6826ae8b63428abc614cc66f",
+      "size": 15607
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/plsc_v2.manifest.json",
+      "sha256": "6390cc9e9b1fc2844d8688700e5f554c9d4efda579e89b9f64b1740ce11d54e8",
+      "size": 15346
+    },
+    {
+      "path": "validation/plsc_reference.py",
+      "sha256": "e8aa16716a345121d5c17b47bc54fb9f9d062bf6b879dd34af8e7d4f5199471c",
+      "size": 11019
+    },
+    {
+      "path": "validation/plsc_v2_factory_common.py",
+      "sha256": "e8df9baab689e4bdab8c648cdfed9433162c9172e009565cfeed5da5b932522d",
+      "size": 13718
+    },
+    {
+      "path": "validation/plsc_v2_factory_evidence.py",
+      "sha256": "d1543659b5c6fdb37a9548385371f7ec7671ffdaef37e8436486f4ee06b6fbbc",
+      "size": 15814
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/work/independent_plsc_equation3.csv",
+      "sha256": "37de2285c0909a6f0cdc2b6e63fd869c833e545379b8dce2f9a4ce4bf94cb60f",
+      "size": 26481
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/work/independent_plsc_equation3.quickpls.json",
+      "sha256": "8f44d88c705be64e477a077d48e188cc08bf0807ba7c44f87a4a60ec36675b2f",
+      "size": 41069
+    },
+    {
+      "path": "validation/results/method_factory/plsc_v2/work/independent_plsc_equation3.recipe.json",
+      "sha256": "65d7afee3aaa115a05a3525003cd85f890a1f43c49f53bcc9b14491634f49197",
+      "size": 1703
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_plsc_v2_factory_evidence.py",
+      "sha256": "9d8249925d07ff3abf79eecea85a2dd32f9b13ad7d395f795c3229b77a7958c8",
+      "size": 3844
+    }
+  ]
+}

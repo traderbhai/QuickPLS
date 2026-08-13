@@ -29,6 +29,45 @@ REPORT = ROOT / "validation" / "results" / "release_artifacts.json"
 TIMESTAMP_PATTERN = re.compile(r"^[0-9]{8}-[0-9]{6}$")
 VERSION_FILENAME_PATTERN = re.compile(r"^[0-9A-Za-z][0-9A-Za-z.+-]*$")
 
+EXPECTED_CHANNEL_POLICY: dict[str, dict[str, object]] = {
+    "internal": {
+        "audience": "maintainers",
+        "artifact_token": "internal",
+        "authenticode_required": False,
+        "distribution": "maintainer_only",
+        "commercial_channel": None,
+        "competitor_claims_policy": "prohibited",
+        "artifact_factory": "unsigned_preview",
+    },
+    "unsigned-preview": {
+        "audience": "named_technical_preview_testers",
+        "artifact_token": "unsigned-preview",
+        "authenticode_required": False,
+        "distribution": "private_named_testers_only",
+        "commercial_channel": None,
+        "competitor_claims_policy": "prohibited",
+        "artifact_factory": "unsigned_preview",
+    },
+    "beta": {
+        "audience": "named_external_beta_testers",
+        "artifact_token": "beta",
+        "authenticode_required": True,
+        "distribution": "signed_prerelease_only",
+        "commercial_channel": "beta",
+        "competitor_claims_policy": "prohibited",
+        "artifact_factory": "signed_candidate",
+    },
+    "stable": {
+        "audience": "public_users",
+        "artifact_token": "stable",
+        "authenticode_required": True,
+        "distribution": "commercial_gate_required",
+        "commercial_channel": "stable",
+        "competitor_claims_policy": "commercial_gate_required",
+        "artifact_factory": "signed_candidate",
+    },
+}
+
 
 def slug(value: str) -> str:
     cleaned = re.sub(r"[^A-Za-z0-9_.-]+", "_", value.strip())
@@ -36,9 +75,24 @@ def slug(value: str) -> str:
 
 
 def _read_json(path: Path, label: str) -> dict[str, Any]:
+    def reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError(f"duplicate key {key!r}")
+            result[key] = value
+        return result
+
+    def reject_non_finite(value: str) -> None:
+        raise ValueError(f"non-finite numeric constant {value!r}")
+
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        value = json.loads(
+            path.read_text(encoding="utf-8"),
+            object_pairs_hook=reject_duplicate_keys,
+            parse_constant=reject_non_finite,
+        )
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as error:
         raise SystemExit(f"Cannot read {label} at {path}: {error}") from error
     if not isinstance(value, dict):
         raise SystemExit(f"{label} must contain a JSON object: {path}")
@@ -59,6 +113,50 @@ def _required_version(value: object, label: str) -> str:
     if not isinstance(value, str) or not value.strip() or value != value.strip():
         raise SystemExit(f"{label} must be a non-empty version string")
     return value
+
+
+def read_release_channel_contract(
+    root: Path = ROOT, *, expected_version: str | None = None
+) -> dict[str, Any]:
+    """Load the frozen channel policy used by the unsigned artifact factory.
+
+    Beta and stable remain in the policy so attempts to route them through the
+    unsigned factory fail explicitly. The exact expected policy is enforced in
+    code so editing a JSON flag cannot silently authorize unsigned distribution.
+    """
+
+    root = root.resolve()
+    contract = _read_json(
+        root / "validation" / "quickpls_release_channels.json",
+        "QuickPLS release channel contract",
+    )
+    required_keys = {
+        "schema_version",
+        "product_version",
+        "default_artifact_channel",
+        "commercial_readiness_contract",
+        "channels",
+    }
+    if set(contract) != required_keys:
+        raise SystemExit(
+            "Release channel contract keys do not match the frozen schema: "
+            f"expected={sorted(required_keys)}, actual={sorted(contract)}"
+        )
+    if contract["schema_version"] != 1:
+        raise SystemExit("Release channel contract schema_version must be 1")
+    version = _required_version(contract["product_version"], "release channel product_version")
+    if expected_version is not None and version != expected_version:
+        raise SystemExit(
+            f"Release channel product_version mismatch: {version}, expected {expected_version}"
+        )
+    if contract["default_artifact_channel"] != "unsigned-preview":
+        raise SystemExit("Default artifact channel must remain unsigned-preview")
+    if contract["commercial_readiness_contract"] != "validation/quickpls_3_release_readiness.json":
+        raise SystemExit("Release channel contract must bind the QuickPLS 3 commercial readiness contract")
+    channels = contract["channels"]
+    if channels != EXPECTED_CHANNEL_POLICY:
+        raise SystemExit("Release channels do not match the frozen fail-closed policy")
+    return contract
 
 
 def _workspace_member_manifests(root: Path, workspace: dict[str, Any]) -> tuple[Path, ...]:
@@ -119,6 +217,10 @@ def read_version_contract(root: Path = ROOT) -> tuple[str, dict[str, Any]]:
         ),
         "Cargo.toml workspace": cargo_version,
         "src-tauri/tauri.conf.json": _required_version(tauri.get("version"), "Tauri version"),
+        "validation/quickpls_release_channels.json": _required_version(
+            read_release_channel_contract(root, expected_version=package_version).get("product_version"),
+            "release channel product_version",
+        ),
     }
     mismatches = {name: value for name, value in versions.items() if value != package_version}
     if mismatches:
@@ -186,6 +288,7 @@ def read_version_contract(root: Path = ROOT) -> tuple[str, dict[str, Any]]:
         "cargo_members": dict(sorted(member_versions.items())),
         "cargo_lock_quickpls_packages": dict(sorted(lock_versions.items())),
         "tauri": versions["src-tauri/tauri.conf.json"],
+        "release_channels": versions["validation/quickpls_release_channels.json"],
     }
 
 
@@ -286,6 +389,7 @@ def package_release_artifacts(
     release_dir: Path = RELEASE_DIR,
     artifact_dir: Path = ARTIFACT_DIR,
     report_path: Path = REPORT,
+    channel: str = "unsigned-preview",
     label: str = "manual_release",
     timestamp: str | None = None,
 ) -> dict[str, Any]:
@@ -294,9 +398,23 @@ def package_release_artifacts(
     artifact_dir = artifact_dir.resolve()
     report_path = report_path.resolve()
     version, version_contract = read_version_contract(root)
+    channel_contract = read_release_channel_contract(root, expected_version=version)
+    channel_policy = channel_contract["channels"].get(channel)
+    if channel_policy is None:
+        raise SystemExit(
+            f"Unknown release channel {channel!r}; expected one of {sorted(channel_contract['channels'])}"
+        )
+    if channel_policy["artifact_factory"] != "unsigned_preview":
+        raise SystemExit(
+            f"Channel {channel!r} requires the signed-candidate factory and cannot be packaged by "
+            "the unsigned-preview artifact command"
+        )
     release_label = slug(label)
     release_timestamp = _validated_timestamp(timestamp)
-    stem = f"QuickPLS_{version}_{release_label}_{release_timestamp}_x64"
+    stem = (
+        f"QuickPLS_{version}_{channel_policy['artifact_token']}_"
+        f"{release_label}_{release_timestamp}_x64"
+    )
 
     sources = (
         ("portable", release_dir / "quickpls-desktop.exe", artifact_dir / f"{stem}_portable.exe"),
@@ -349,18 +467,29 @@ def package_release_artifacts(
         raise
 
     report = {
-        "schema_version": 1,
-        "target": "QuickPLS release artifact preservation",
+        "schema_version": 2,
+        "target": "QuickPLS unsigned preview artifact preservation",
         "passed": True,
         "version": version,
         "version_contract": version_contract,
+        "release_channel": channel,
+        "channel_policy": channel_policy,
+        "trust": {
+            "authenticode_required": False,
+            "authenticode_verification_performed": False,
+            "status": "not_verified",
+            "stable_eligible": False,
+            "competitor_claims_authorized": False,
+        },
         "label": release_label,
         "timestamp_utc": release_timestamp,
         "artifact_directory": _display_path(artifact_dir, root),
         "artifacts": artifacts,
         "note": (
             "Files are copied to unique names so repeated desktop builds do not overwrite prior "
-            "user-testable artifacts; every copied binary is size- and SHA-256-identical to its stable source."
+            "test artifacts. Every copied binary is size- and SHA-256-identical to its source, but "
+            "checksums do not establish publisher authenticity. This unsigned-preview factory never "
+            "authorizes beta, stable, or competitor-ready distribution."
         ),
     }
     report_path.parent.mkdir(parents=True, exist_ok=True)
@@ -370,10 +499,16 @@ def package_release_artifacts(
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--channel",
+        default="unsigned-preview",
+        choices=sorted(EXPECTED_CHANNEL_POLICY),
+        help="Artifact channel. Beta and stable are deliberately rejected by this unsigned factory.",
+    )
     parser.add_argument("--label", default="manual_release", help="Milestone/build label to include in artifact names.")
     parser.add_argument("--timestamp", default=None, help="Optional UTC timestamp override, e.g. 20260722-120000.")
     args = parser.parse_args()
-    report = package_release_artifacts(label=args.label, timestamp=args.timestamp)
+    report = package_release_artifacts(channel=args.channel, label=args.label, timestamp=args.timestamp)
     print(json.dumps(report, indent=2))
 
 

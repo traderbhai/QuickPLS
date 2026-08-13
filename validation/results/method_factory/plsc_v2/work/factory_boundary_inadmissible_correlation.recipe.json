@@ -1,0 +1,91 @@
+{
+  "created_at": "2026-08-13T00:00:00Z",
+  "dataset_fingerprint": "v2:75a6f88e3d90b593c433ba8df2de2b4091e5ac1af415bc6ac295db2784b04011",
+  "id": "37d1c803-5e5b-5787-a44f-d6893a0f95f4",
+  "metadata": {
+    "status": "plsc_v2_factory_bounded_reflective_scope"
+  },
+  "method_config": {
+    "kind": "plsc"
+  },
+  "model": {
+    "constructs": [
+      {
+        "id": "comp",
+        "indicators": [
+          "COMP1",
+          "COMP2",
+          "COMP3"
+        ],
+        "mode": "reflective",
+        "name": "Competence",
+        "short_name": "COMP"
+      },
+      {
+        "id": "like",
+        "indicators": [
+          "LIKE1",
+          "LIKE2"
+        ],
+        "mode": "reflective",
+        "name": "Likeability",
+        "short_name": "LIKE"
+      },
+      {
+        "id": "satisfaction",
+        "indicators": [
+          "CUSA1",
+          "CUSA2"
+        ],
+        "mode": "reflective",
+        "name": "Customer satisfaction",
+        "short_name": "CUSA"
+      },
+      {
+        "id": "loyalty",
+        "indicators": [
+          "CUSL1",
+          "CUSL2"
+        ],
+        "mode": "reflective",
+        "name": "Customer loyalty",
+        "short_name": "CUSL"
+      }
+    ],
+    "controls": [],
+    "higher_order_constructs": [],
+    "id": "3b5ba007-347f-509f-8cd0-5c6c28da5bc5",
+    "interactions": [],
+    "name": "PLSc v2 factory fixture",
+    "paths": [
+      {
+        "source": "comp",
+        "target": "satisfaction"
+      },
+      {
+        "source": "like",
+        "target": "satisfaction"
+      },
+      {
+        "source": "satisfaction",
+        "target": "loyalty"
+      }
+    ]
+  },
+  "schema_version": 3,
+  "settings": {
+    "bootstrap_samples": 0,
+    "case_weight_column": null,
+    "confidence_level": 0.95,
+    "max_iterations": 10000,
+    "method": "plsc",
+    "missing_data": "listwise_deletion",
+    "permutation_samples": 0,
+    "preprocessing": "standardized",
+    "seed": 20260813,
+    "studentized_inner_samples": 0,
+    "tolerance": 1e-10,
+    "weighting_scheme": "path",
+    "workers": 1
+  }
+}

@@ -5,6 +5,7 @@ import type { AnalysisRun, AssessmentResult, HtmtAssessment, PlsResult, ResultWo
 import { findBcaParameter, findBootstrapParameter, findStudentizedParameter, formatParameterIdentity } from "../domain/inference";
 import { analysisReadiness } from "../domain/analysisReadiness";
 import { buildResultInterpretation, copyableInterpretationText, findingsByGroup, findingsForTab, rowSpecificInterpretation, type InterpretationFinding, type ResultInterpretation, type SemDiagramEdgeLike, type SemDiagramNodeLike } from "../domain/resultInterpretation";
+import { spreadsheetSafeCsvCell } from "../domain/spreadsheetSafety";
 import {
   NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING,
   nativeStructuralPathRandomizationProjection,
@@ -1637,10 +1638,5 @@ function csvForCurrentResultTab(run: AnalysisRun, tab: ResultWorkspaceTab) {
   } else {
     rows.push(["message"], [`No exportable ${tab} table is available for this run.`]);
   }
-  return rows.map((row) => row.map(csvCell).join(",")).join("\n");
+  return rows.map((row) => row.map(spreadsheetSafeCsvCell).join(",")).join("\n");
 }
-
-function csvCell(value: string) {
-  return /[",\n]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
-}
-

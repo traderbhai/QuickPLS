@@ -3714,6 +3714,7 @@ dependencies = [
  "qpls-project",
  "qpls-resampling",
  "qpls-runner",
+ "regex",
  "rust_xlsxwriter",
  "serde",
  "serde_json",
@@ -3722,6 +3723,8 @@ dependencies = [
  "tauri-plugin-dialog",
  "tempfile",
  "uuid",
+ "windows-sys 0.61.2",
+ "zip 6.0.0",
 ]
 
 [[package]]

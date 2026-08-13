@@ -144,6 +144,22 @@ class VisualScreenshotIntegrityTests(unittest.TestCase):
             with self.subTest(mutate=mutate):
                 self.assertFalse(randomization_scope_contract(mutate(RANDOMIZATION_DESCRIPTION)))
 
+    def test_compact_properties_focus_and_cta_blocker_match_exact_product_contracts(self) -> None:
+        focus_wait = (
+            'await page.waitForFunction(() => document.activeElement?.id === '
+            '"nd-model-construct-name", null, { timeout: 2_000 });'
+        )
+        cta_blocker = (
+            '/CTA-PLS requires at least one ordinary construct with four or more '
+            'assigned indicators/i.test(check.readinessText)'
+        )
+        self.assertIn(focus_wait, self.source)
+        self.assertIn(cta_blocker, self.source)
+        self.assertNotIn(
+            '/requires at least one ordinary construct with four or more indicators/i',
+            self.source,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

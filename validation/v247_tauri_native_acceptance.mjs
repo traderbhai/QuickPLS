@@ -24,15 +24,17 @@ const validationResultsDir = path.join(root, "validation", "results");
 const windowsNativeSaveHelperPath = path.join(root, "validation", "windows_native_save_export.py");
 const endpoint = process.env.QUICKPLS_CDP_ENDPOINT ?? "http://127.0.0.1:9222";
 const packagedTauriOrigin = "http://tauri.localhost";
+const packagedTauriIpcOrigin = "http://ipc.localhost";
 const acceptanceScope = process.env.QUICKPLS_ACCEPTANCE_SCOPE?.trim().toLocaleLowerCase() || "full";
-if (!["full", "mga", "nca", "prediction", "hoc", "pca", "ols", "logistic", "regression_bootstrap", "process_v2", "structural_path_randomization", "cbsem", "gsca"].includes(acceptanceScope)) {
-  throw new Error(`QUICKPLS_ACCEPTANCE_SCOPE must be "full", "mga", "nca", "prediction", "hoc", "pca", "ols", "logistic", "regression_bootstrap", "process_v2", "structural_path_randomization", "cbsem", or "gsca"; received ${acceptanceScope}.`);
+if (!["full", "mga", "nca", "prediction", "hoc", "pca", "cta_pls", "ols", "logistic", "regression_bootstrap", "process_v2", "structural_path_randomization", "cbsem", "gsca"].includes(acceptanceScope)) {
+  throw new Error(`QUICKPLS_ACCEPTANCE_SCOPE must be "full", "mga", "nca", "prediction", "hoc", "pca", "cta_pls", "ols", "logistic", "regression_bootstrap", "process_v2", "structural_path_randomization", "cbsem", or "gsca"; received ${acceptanceScope}.`);
 }
 const ncaOnly = acceptanceScope === "nca";
 const mgaOnly = acceptanceScope === "mga";
 const predictionOnly = acceptanceScope === "prediction";
 const hocOnly = acceptanceScope === "hoc";
 const pcaOnly = acceptanceScope === "pca";
+const ctaPlsOnly = acceptanceScope === "cta_pls";
 const olsOnly = acceptanceScope === "ols";
 const logisticOnly = acceptanceScope === "logistic";
 const regressionBootstrapOnly = acceptanceScope === "regression_bootstrap";
@@ -41,7 +43,7 @@ const structuralPathRandomizationOnly = acceptanceScope === "structural_path_ran
 const cbsemOnly = acceptanceScope === "cbsem";
 const gscaOnly = acceptanceScope === "gsca";
 const focusedOnly = ncaOnly || mgaOnly || predictionOnly || hocOnly || pcaOnly || olsOnly || logisticOnly
-  || regressionBootstrapOnly || processV2Only || structuralPathRandomizationOnly || cbsemOnly || gscaOnly;
+  || ctaPlsOnly || regressionBootstrapOnly || processV2Only || structuralPathRandomizationOnly || cbsemOnly || gscaOnly;
 const scopedReportPath = focusedOnly
   ? path.join(root, "validation", "results", `v247_tauri_native_acceptance_${acceptanceScope}.json`)
   : reportPath;
@@ -136,6 +138,21 @@ const pcaProjectName = "Native PCA Acceptance";
 const pcaMethodVersion = "pca_v1";
 const pcaVariables = ["x", "m", "w", "y", "z"];
 const pcaVarianceThreshold = 0.95;
+const ctaPlsFixtureCsvPath = path.join(root, "validation", "results", "cta_pls_reference.csv");
+const ctaPlsProjectPath = path.join(root, "validation", "results", `v247-native-cta-pls-${Date.now()}-${process.pid}.qpls`);
+const ctaPlsProjectName = "Native CTA-PLS Acceptance";
+const ctaPlsModelName = "CTA-PLS Descriptive Tetrad Model";
+const ctaPlsMethodVersion = "cta_pls_tetrad_v1";
+const ctaPlsProvenanceMethodVersion = "pls_pm_v1+cta_pls_tetrad_v1+pls_mediation_v1+pls_assessment_v7";
+const ctaPlsCovarianceVersion = "sample_covariance_of_preprocessed_indicators_v1";
+const ctaPlsResultWarning = "CTA-PLS tetrad bootstrap/permutation inference is outside the validated QuickPLS v1.2.3 descriptive scope.";
+const ctaPlsScopeNote = "Descriptive sample-covariance tetrads only. QuickPLS reports all three pairings for every four-indicator subset; it does not classify blocks or calculate bootstrap, permutation, asymptotic, or vanishing-tetrad decisions.";
+const ctaPlsPairings = ["ab_cd_minus_ac_bd", "ac_bd_minus_ad_bc", "ad_bc_minus_ab_cd"];
+const ctaPlsViewports = [
+  { id: "1024x700", width: 1024, height: 700 },
+  { id: "1280x720", width: 1280, height: 720 },
+  { id: "1440x900", width: 1440, height: 900 },
+];
 const olsFixtureCsvPath = path.join(root, "validation", "results", "v08_extended_methods_fixture.csv");
 const olsProjectPath = path.join(root, "validation", "results", `v247-native-ols-${Date.now()}-${process.pid}.qpls`);
 const olsProjectName = "Native OLS Acceptance";
@@ -264,6 +281,9 @@ const predictionRepeats = 10;
 const predictionConfidenceLevel = 0.95;
 const packageVersion = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8")).version;
 const requestedNativeExportPath = process.env.QUICKPLS_NATIVE_EXPORT_PATH?.trim() ?? "";
+const requestedPlscNativeExportPath = process.env.QUICKPLS_PLSC_NATIVE_EXPORT_PATH?.trim() ?? "";
+const requestedWplsNativeExportPath = process.env.QUICKPLS_WPLS_NATIVE_EXPORT_PATH?.trim() ?? "";
+const requestedBootstrapNativeExportPath = process.env.QUICKPLS_BOOTSTRAP_NATIVE_EXPORT_PATH?.trim() ?? "";
 const requestedMgaNativeExportPath = process.env.QUICKPLS_MGA_NATIVE_EXPORT_PATH?.trim() ?? "";
 const requestedCcaNativeExportPath = process.env.QUICKPLS_CCA_NATIVE_EXPORT_PATH?.trim() ?? "";
 const requestedIpmaNativeExportPath = process.env.QUICKPLS_IPMA_NATIVE_EXPORT_PATH?.trim() ?? "";
@@ -271,6 +291,7 @@ const requestedNcaNativeExportPath = process.env.QUICKPLS_NCA_NATIVE_EXPORT_PATH
 const requestedPredictionNativeExportPath = process.env.QUICKPLS_PREDICTION_NATIVE_EXPORT_PATH?.trim() ?? "";
 const requestedHocNativeExportPath = process.env.QUICKPLS_HOC_NATIVE_EXPORT_PATH?.trim() ?? "";
 const requestedPcaNativeExportPath = process.env.QUICKPLS_PCA_NATIVE_EXPORT_PATH?.trim() ?? "";
+const requestedCtaPlsNativeExportPath = process.env.QUICKPLS_CTA_PLS_NATIVE_EXPORT_PATH?.trim() ?? "";
 const requestedOlsNativeExportPath = process.env.QUICKPLS_OLS_NATIVE_EXPORT_PATH?.trim() ?? "";
 const requestedLogisticNativeExportPath = process.env.QUICKPLS_LOGISTIC_NATIVE_EXPORT_PATH?.trim() ?? "";
 const requestedRegressionBootstrapOlsExportPath = process.env.QUICKPLS_REGRESSION_BOOTSTRAP_OLS_EXPORT_PATH?.trim() ?? "";
@@ -281,7 +302,7 @@ const requestedCbsemNativeExportPath = process.env.QUICKPLS_CBSEM_NATIVE_EXPORT_
 const requestedGscaNativeExportPath = process.env.QUICKPLS_GSCA_NATIVE_EXPORT_PATH?.trim() ?? "";
 const pythonExecutable = process.env.QUICKPLS_PYTHON?.trim() || "python";
 
-const isolatedFocusedOnly = processV2Only || structuralPathRandomizationOnly;
+const isolatedFocusedOnly = ctaPlsOnly || processV2Only || structuralPathRandomizationOnly;
 const inheritPriorEvidence = focusedOnly && !isolatedFocusedOnly;
 let priorEvidence = null;
 if (inheritPriorEvidence) {
@@ -293,7 +314,13 @@ if (inheritPriorEvidence) {
 }
 
 const evidence = {
-  ...(logisticOnly ? {
+  ...(ctaPlsOnly ? {
+    schema_version: "quickpls.packaged_acceptance.v1",
+    feature_id: "qpls3.assessment.cta_pls",
+    method_version: ctaPlsMethodVersion,
+    catalogue_snapshot_date: "2026-08-12",
+    acceptance_scope: "cta_pls",
+  } : logisticOnly ? {
     schema_version: "quickpls.packaged_acceptance.v1",
     feature_id: logisticFeatureId,
     method_version: logisticMethodVersion,
@@ -1047,22 +1074,63 @@ async function writeStructuralPathRandomizationPackagedEvidence() {
   await fs.writeFile(structuralPathRandomizationPackagedReportPath, JSON.stringify(report, null, 2) + "\n", "utf8");
 }
 
-const expectedOptionLabels = [
-  "PLS-SEM Algorithm",
-  "Consistent PLS",
-  "Weighted PLS",
-  "GSCA",
-  "CCA composite residual diagnostics",
-  "Importance-Performance Map Analysis",
-  "CB-SEM / CFA",
-  "PLS-SEM Bootstrapping",
-  "Structural Path Randomization",
-  "MICOM and Two-Group Permutation MGA",
-  "PLSpredict / CVPAT",
-  "Necessary Condition Analysis",
-  "Principal Component Analysis",
-  "Regression",
-];
+const EXPECTED_NATIVE_CALCULATION_KIND_ORDER = Object.freeze([
+  "pls_algorithm",
+  "plsc",
+  "wpls",
+  "gsca",
+  "cca",
+  "cta_pls",
+  "ipma",
+  "cbsem",
+  "pls_bootstrap",
+  "pls_permutation",
+  "mga",
+  "predict",
+  "nca",
+  "pca",
+  "regression",
+]);
+
+async function canonicalNativeAnalysisCatalog() {
+  const catalogSource = await fs.readFile(path.join(root, "src", "native", "nativeAnalysisCatalog.ts"), "utf8");
+  const recipeSource = await fs.readFile(path.join(root, "src", "native", "nativeAnalysisRecipe.ts"), "utf8");
+  const calculationModeSource = await fs.readFile(path.join(root, "src", "native", "nativeCalculationMode.ts"), "utf8");
+  const catalogMatch = catalogSource.match(/const CATALOG_DRAFTS[^=]*= \[([\s\S]*?)\n\] as const;/);
+  if (!catalogMatch) throw new Error("Could not locate the canonical native analysis catalogue declaration.");
+
+  const kinds = [...catalogMatch[1].matchAll(/^[ \t]{4}kind:\s*"([a-z_]+)",\r?$/gm)]
+    .map((match) => match[1]);
+  if (JSON.stringify(kinds) !== JSON.stringify(EXPECTED_NATIVE_CALCULATION_KIND_ORDER)) {
+    throw new Error(`The canonical native analysis catalogue must preserve the exact 15-kind order: ${JSON.stringify(kinds)}`);
+  }
+
+  const labelsByKind = new Map(
+    [...recipeSource.matchAll(/\{\s*kind:\s*"([a-z_]+)"[^{}]*?\blabel:\s*"([^"]+)"/g)]
+      .map((match) => [match[1], match[2]]),
+  );
+  const predictionLabel = calculationModeSource.match(/export const NATIVE_PREDICTION_METHOD_LABEL\s*=\s*"([^"]+)";/)?.[1];
+  const regressionLabel = catalogSource.match(/item\.kind\s*===\s*"regression"\s*\?\s*"([^"]+)"/)?.[1];
+  if (!predictionLabel || !regressionLabel) {
+    throw new Error("Could not resolve the canonical Prediction or Regression catalogue label.");
+  }
+  labelsByKind.set("predict", predictionLabel);
+  labelsByKind.set("regression", regressionLabel);
+
+  const methods = kinds.map((kind) => ({ kind, label: labelsByKind.get(kind) ?? null }));
+  if (methods.some((method) => !method.label)
+    || new Set(methods.map((method) => method.label)).size !== methods.length) {
+    throw new Error(`The canonical native analysis catalogue has missing or duplicate labels: ${JSON.stringify(methods)}`);
+  }
+  return methods;
+}
+
+const nativeCalculationMethods = await canonicalNativeAnalysisCatalog();
+const expectedOptionLabels = nativeCalculationMethods.map((method) => method.label);
+
+async function canonicalNativeAnalysisCatalogKinds() {
+  return nativeCalculationMethods.map((method) => method.kind);
+}
 
 await fs.mkdir(screenshotDir, { recursive: true });
 
@@ -1380,6 +1448,12 @@ try {
       projectPath: pcaProjectPath,
       projectName: pcaProjectName,
     });
+  } else if (ctaPlsOnly) {
+    evidence.checks.ctaPlsFixtureProvisioning = await provisionDisposableProject({
+      sourceCsv: ctaPlsFixtureCsvPath,
+      projectPath: ctaPlsProjectPath,
+      projectName: ctaPlsProjectName,
+    });
   } else if (predictionOnly) {
     evidence.checks.fixtureProvisioning = await provisionDisposableProject({
       sourceCsv: fixtureCsvPath,
@@ -1491,6 +1565,7 @@ async function enumerateCdpPages(browserInstance) {
 
 let browser = null;
 let page = null;
+const observedBrowserRequests = [];
 evidence.checks.runtimePreflight = {
   passed: false,
   expectedOrigin: packagedTauriOrigin,
@@ -1520,6 +1595,24 @@ try {
   evidence.checks.runtimePreflight.preReload = qualifying[0].state;
   if (qualifying[0].state.origin !== packagedTauriOrigin) {
     throw new Error(`QuickPLS packaged preflight expected origin ${packagedTauriOrigin}; received ${qualifying[0].state.origin ?? "invalid"} at ${qualifying[0].state.url}.`);
+  }
+
+  if (ctaPlsOnly || acceptanceScope === "full") {
+    page.on("request", (request) => {
+      const url = request.url();
+      let origin = null;
+      try {
+        origin = new URL(url).origin;
+      } catch {
+        origin = null;
+      }
+      observedBrowserRequests.push({
+        method: request.method(),
+        resourceType: request.resourceType(),
+        url,
+        origin,
+      });
+    });
   }
 
   page.on("pageerror", (error) => evidence.consoleErrors.push({ type: "pageerror", message: error.message }));
@@ -1609,6 +1702,62 @@ async function capture(name) {
 async function openMenuItem(menu, item) {
   await page.getByRole("menuitem", { name: menu, exact: true }).click();
   await page.getByRole("menuitem", { name: item, exact: true }).click();
+}
+
+async function inspectBundledSample(sample) {
+  await waitForSurface("launcher");
+  const launcher = page.locator('.nd-launcher[aria-label="Project launcher"]');
+  await launcher.waitFor({ state: "visible", timeout: 15_000 });
+  const sampleCards = launcher.locator('.nd-sample-project-list button[data-sample-id]');
+  const visibleSampleIds = await sampleCards.evaluateAll((elements) => elements.map((element) => (
+    element.getAttribute("data-sample-id")
+  )));
+  const selectedCard = launcher.locator(`.nd-sample-project-list button[data-sample-id="${sample.id}"]`);
+  if (await selectedCard.count() !== 1) {
+    throw new Error(`The live launcher did not expose exactly one ${sample.id} sample card.`);
+  }
+  await selectedCard.click();
+  await waitForSurface("model");
+  await page.locator(".react-flow__node-latent").nth(sample.constructs - 1)
+    .waitFor({ state: "visible", timeout: 30_000 });
+  await openMenuItem("View", "Results");
+  await waitForSurface("results");
+  const selectedRun = page.locator(".nd-run-select select");
+  await selectedRun.waitFor({ state: "visible", timeout: 30_000 });
+  const runOptions = (await selectedRun.locator("option").allTextContents()).map((value) => value.trim());
+  const pathRows = await openResultTable(sample.pathTable);
+  const statusItems = page.locator(".nd-statusbar > span");
+  const observed = {
+    sampleId: sample.id,
+    visibleSampleIds,
+    project: (await page.locator(".nd-window-project").textContent())?.trim() ?? "",
+    dataset: (await statusItems.nth(2).textContent())?.trim() ?? "",
+    cases: (await statusItems.nth(3).textContent())?.trim() ?? "",
+    renderedConstructs: (await statusItems.nth(4).textContent())?.trim() ?? "",
+    runOptions,
+    selectedRunId: await selectedRun.inputValue(),
+    pathTable: sample.pathTable,
+    pathRows,
+  };
+  if (JSON.stringify(visibleSampleIds) !== JSON.stringify(["corporate_reputation", "simple_pls", "mediation"])
+    || observed.project !== sample.project
+    || observed.dataset !== sample.dataset
+    || observed.cases !== `${sample.cases} cases`
+    || observed.renderedConstructs !== `${sample.constructs} constructs`
+    || runOptions.length !== 1
+    || runOptions[0] !== sample.runLabel
+    || !observed.selectedRunId
+    || pathRows !== sample.paths) {
+    throw new Error(`The live ${sample.id} launcher card did not hydrate its exact bundled project/result contract: ${JSON.stringify(observed)}`);
+  }
+  await openMenuItem("View", "Edit Model");
+  await waitForSurface("model");
+  const renderedPaths = await structuralPaths().count();
+  if (await page.locator(".react-flow__node-latent").count() !== sample.constructs
+    || renderedPaths !== sample.paths) {
+    throw new Error(`The live ${sample.id} sample model did not render its exact construct/path shape.`);
+  }
+  return { ...observed, renderedPaths };
 }
 
 async function waitForSurface(surface, timeout = 15_000) {
@@ -1845,9 +1994,15 @@ function structuralPaths() {
   return page.locator('.react-flow__edge[data-id]:not([data-id^="measurement::"])');
 }
 
-async function buildTwoConstructModel() {
-  await clickIndicator("x1");
-  await page.locator(".react-flow__node-latent").nth(0).waitFor({ state: "visible", timeout: 10_000 });
+async function buildTwoConstructModel({ firstIndicatorAlreadyAssigned = false } = {}) {
+  if (!firstIndicatorAlreadyAssigned) {
+    await clickIndicator("x1");
+    await page.locator(".react-flow__node-latent").nth(0).waitFor({ state: "visible", timeout: 10_000 });
+  } else {
+    const firstNode = page.locator(".react-flow__node-latent").nth(0);
+    await firstNode.waitFor({ state: "visible", timeout: 10_000 });
+    await firstNode.dispatchEvent("click");
+  }
   await clickIndicator("x2");
   await clearModelSelection();
   await clickIndicator("y1");
@@ -1863,6 +2018,37 @@ async function buildTwoConstructModel() {
   await nodes.nth(1).dispatchEvent("click");
   await structuralPaths().first().waitFor({ state: "attached", timeout: 10_000 });
   if (await structuralPaths().count() !== 1) throw new Error("The visible Path workflow did not create exactly one structural path.");
+}
+
+async function buildCtaPlsModel() {
+  const nodes = page.locator(".react-flow__node-latent");
+  await clickIndicator("x1");
+  await nodes.nth(0).waitFor({ state: "visible", timeout: 10_000 });
+  for (const indicator of ["x2", "x3", "x4"]) await clickIndicator(indicator);
+  await renameSelectedConstruct("Predictor", "X");
+  await clearModelSelection();
+  await clickIndicator("y1");
+  await nodes.nth(1).waitFor({ state: "visible", timeout: 10_000 });
+  await clickIndicator("y2");
+  await renameSelectedConstruct("Outcome", "Y");
+  await clearModelSelection();
+
+  if (await nodes.count() !== 2) throw new Error("CTA-PLS authoring did not create exactly two constructs.");
+  await createStructuralPath(nodes, 0, 1, 1);
+  const constructIds = await nodes.evaluateAll((elements) => elements.map((element) => element.getAttribute("data-id")));
+  const contract = {
+    constructs: await nodes.count(),
+    assignedIndicators: await page.locator(".nd-variable-item.assigned").count(),
+    structuralPaths: await structuralPaths().count(),
+    constructIds,
+    labels: (await nodes.allTextContents()).map(compactVisibleText),
+  };
+  if (contract.constructs !== 2 || contract.assignedIndicators !== 6 || contract.structuralPaths !== 1
+    || constructIds.some((id) => !id) || !contract.labels.some((label) => /Predictor/.test(label))
+    || !contract.labels.some((label) => /Outcome/.test(label))) {
+    throw new Error(`CTA-PLS model authoring did not retain the exact two-construct, six-indicator, one-path contract: ${JSON.stringify(contract)}`);
+  }
+  return contract;
 }
 
 async function buildTwoConstructGscaModel() {
@@ -3696,6 +3882,202 @@ async function inspectInitialPcaArchive(projectPath) {
   return contract;
 }
 
+function archiveProjectChecksum(projectText, manifest) {
+  const expected = manifest?.checksums?.["project.json"] ?? null;
+  const actual = createHash("sha256").update(projectText, "utf8").digest("hex");
+  return { expected, actual, matches: expected === actual };
+}
+
+async function inspectCtaPlsArchiveCounts(projectPath) {
+  const { project, manifest, projectText } = await readNcaArchive(projectPath);
+  const workspace = project.layouts?.workspace;
+  const contract = {
+    manifestEngineVersion: manifest.engine_version ?? null,
+    packageVersion,
+    projectChecksum: archiveProjectChecksum(projectText, manifest),
+    datasetCount: project.datasets?.length ?? null,
+    modelCount: project.models?.length ?? null,
+    recipeCount: project.recipes?.length ?? null,
+    resultCount: project.results?.length ?? null,
+    runCount: workspace?.runs?.length ?? null,
+    activeModelId: workspace?.activeModelId ?? null,
+  };
+  if (contract.manifestEngineVersion !== packageVersion || !contract.projectChecksum.matches
+    || contract.datasetCount !== 1 || contract.modelCount !== 1
+    || contract.recipeCount !== 0 || contract.resultCount !== 0 || contract.runCount !== 0
+    || !contract.activeModelId) {
+    throw new Error(`The blocked CTA-PLS setup changed the zero-run archive boundary: ${JSON.stringify(contract)}`);
+  }
+  return contract;
+}
+
+async function inspectInitialCtaPlsArchive(projectPath) {
+  const { project, manifest, projectText } = await readNcaArchive(projectPath);
+  const workspace = project.layouts?.workspace;
+  const contract = {
+    manifestEngineVersion: manifest.engine_version ?? null,
+    packageVersion,
+    projectChecksum: archiveProjectChecksum(projectText, manifest),
+    datasetCount: project.datasets?.length ?? null,
+    modelCount: project.models?.length ?? null,
+    recipeCount: project.recipes?.length ?? null,
+    resultCount: project.results?.length ?? null,
+    runCount: Array.isArray(workspace?.runs) ? workspace.runs.length : 0,
+    activeModelId: workspace?.activeModelId ?? null,
+    nodes: Array.isArray(workspace?.nodes) ? workspace.nodes.length : 0,
+    edges: Array.isArray(workspace?.edges) ? workspace.edges.length : 0,
+  };
+  if (contract.manifestEngineVersion !== packageVersion || !contract.projectChecksum.matches
+    || contract.datasetCount !== 1 || contract.modelCount !== 0 || contract.recipeCount !== 0
+    || contract.resultCount !== 0 || contract.runCount !== 0 || contract.activeModelId !== null
+    || contract.nodes !== 0 || contract.edges !== 0) {
+    throw new Error(`The CTA-PLS fixture was not a canonical data-only archive: ${JSON.stringify(contract)}`);
+  }
+  return contract;
+}
+
+async function inspectSavedCtaPlsArchive(projectPath, runId) {
+  const { project, manifest, projectText } = await readNcaArchive(projectPath);
+  const workspace = project.layouts?.workspace;
+  const result = project.results?.find((candidate) => candidate.id === runId);
+  if (!result) throw new Error(`The saved CTA-PLS archive did not contain result ${runId}.`);
+  const recipe = project.recipes?.find((candidate) => candidate.id === result.provenance?.recipe_id);
+  const run = workspace?.runs?.find((candidate) => candidate.id === runId);
+  const estimation = result.payload?.estimation;
+  const cta = estimation?.cta_pls;
+  const estimates = Array.isArray(cta?.estimates) ? cta.estimates : [];
+  const recipeConstructs = Array.isArray(recipe?.model?.constructs) ? recipe.model.constructs : [];
+  const predictor = recipeConstructs.find((construct) => construct.name === "Predictor");
+  const outcome = recipeConstructs.find((construct) => construct.name === "Outcome");
+  const estimateIdentities = estimates.map((row) => [
+    row.construct, row.indicator_a, row.indicator_b, row.indicator_c, row.indicator_d, row.pairing,
+  ].join("\u0000"));
+  const uniqueEstimateIdentities = new Set(estimateIdentities);
+  const exactPairings = estimates.map((row) => row.pairing);
+  const finiteTetrads = estimates.every((row) => Number.isFinite(row.tetrad)
+    && Number.isFinite(row.absolute_tetrad)
+    && Math.abs(row.absolute_tetrad - Math.abs(row.tetrad)) <= 1e-12);
+  const maximum = estimates.reduce((value, row) => Math.max(value, row.absolute_tetrad), 0);
+  const archivedMaximum = predictor ? cta?.max_absolute_tetrad_by_construct?.[predictor.id] : null;
+  const unrelatedPayloads = [
+    "cbsem", "cca", "endogeneity", "fimix", "gsca", "ipma", "mga", "mga_permutation", "micom",
+    "moderated_mediation", "nca", "nonlinear_effects", "pca", "plsc", "predict", "regression",
+    "segmentation", "wpls",
+  ].filter((key) => estimation?.[key] != null);
+  const exactMethodConfig = recipe?.method_config
+    && JSON.stringify(Object.keys(recipe.method_config).sort()) === JSON.stringify(["kind"])
+    && recipe.method_config.kind === "cta_pls";
+  const contract = {
+    manifestEngineVersion: manifest.engine_version ?? null,
+    packageVersion,
+    projectChecksum: archiveProjectChecksum(projectText, manifest),
+    identity: {
+      resultId: result.id ?? null,
+      resultStatus: result.status ?? null,
+      provenanceMethod: result.provenance?.method ?? null,
+      provenanceMethodVersion: result.provenance?.method_version ?? null,
+      provenanceEngineVersion: result.provenance?.engine_version ?? null,
+      payloadKind: result.payload?.kind ?? null,
+      estimationMethodVersion: estimation?.method_version ?? null,
+      ctaMethodVersion: cta?.method_version ?? null,
+      covarianceVersion: cta?.covariance ?? null,
+    },
+    observations: {
+      used: estimation?.used_observations ?? null,
+      omitted: estimation?.omitted_observations ?? null,
+    },
+    tetrads: {
+      count: estimates.length,
+      identities: estimateIdentities,
+      uniqueIdentities: uniqueEstimateIdentities.size,
+      pairings: exactPairings,
+      finite: finiteTetrads,
+      algebraicSum: estimates.reduce((value, row) => value + row.tetrad, 0),
+      maximum,
+      archivedMaximum,
+      maximumMatches: Number.isFinite(archivedMaximum) && Math.abs(maximum - archivedMaximum) <= 1e-12,
+    },
+    warnings: {
+      result: cta?.warnings ?? null,
+      estimation: estimation?.warnings ?? null,
+    },
+    unrelatedPayloads,
+    recipe: recipe ? {
+      schemaVersion: recipe.schema_version ?? null,
+      exactMethodConfig,
+      method: recipe.settings?.method ?? null,
+      weightingScheme: recipe.settings?.weighting_scheme ?? null,
+      preprocessing: recipe.settings?.preprocessing ?? null,
+      missingData: recipe.settings?.missing_data ?? null,
+      bootstrapSamples: recipe.settings?.bootstrap_samples ?? null,
+      studentizedInnerSamples: recipe.settings?.studentized_inner_samples ?? null,
+      permutationSamples: recipe.settings?.permutation_samples ?? null,
+      workers: recipe.settings?.workers ?? null,
+      caseWeightColumn: recipe.settings?.case_weight_column ?? null,
+      constructs: recipeConstructs.map((construct) => ({
+        id: construct.id,
+        name: construct.name,
+        shortName: construct.short_name,
+        mode: construct.mode,
+        indicators: construct.indicators,
+      })),
+      paths: recipe.model?.paths ?? null,
+      controls: recipe.model?.controls ?? null,
+      higherOrderConstructs: recipe.model?.higher_order_constructs ?? null,
+      interactions: recipe.model?.interactions ?? null,
+    } : null,
+    project: {
+      datasetCount: project.datasets?.length ?? null,
+      modelCount: project.models?.length ?? null,
+      recipeCount: project.recipes?.length ?? null,
+      resultCount: project.results?.length ?? null,
+      runCount: workspace?.runs?.length ?? null,
+      activeModelId: workspace?.activeModelId ?? null,
+      runModelId: run?.modelId ?? null,
+      runSnapshotNodes: run?.modelSnapshot?.nodes?.length ?? null,
+      runSnapshotEdges: run?.modelSnapshot?.edges?.length ?? null,
+    },
+  };
+  if (contract.manifestEngineVersion !== packageVersion || !contract.projectChecksum.matches
+    || contract.identity.resultId !== runId || contract.identity.resultStatus !== "completed"
+    || contract.identity.provenanceMethod !== "cta_pls"
+    || contract.identity.provenanceMethodVersion !== ctaPlsProvenanceMethodVersion
+    || contract.identity.provenanceEngineVersion !== packageVersion
+    || contract.identity.payloadKind !== "pls_pm_v1"
+    || contract.identity.estimationMethodVersion !== ctaPlsMethodVersion
+    || contract.identity.ctaMethodVersion !== ctaPlsMethodVersion
+    || contract.identity.covarianceVersion !== ctaPlsCovarianceVersion
+    || contract.observations.used !== 120 || contract.observations.omitted !== 0
+    || contract.tetrads.count !== 3 || contract.tetrads.uniqueIdentities !== 3
+    || JSON.stringify(contract.tetrads.pairings) !== JSON.stringify(ctaPlsPairings)
+    || !contract.tetrads.finite || Math.abs(contract.tetrads.algebraicSum) > 1e-10
+    || !contract.tetrads.maximumMatches
+    || JSON.stringify(contract.warnings.result) !== JSON.stringify([ctaPlsResultWarning])
+    || !Array.isArray(contract.warnings.estimation) || contract.warnings.estimation.length !== 1
+    || !/CTA-PLS tetrad diagnostics are validated/.test(contract.warnings.estimation[0])
+    || unrelatedPayloads.length !== 0 || contract.recipe?.schemaVersion !== 3
+    || !contract.recipe.exactMethodConfig || contract.recipe.method !== "cta_pls"
+    || contract.recipe.weightingScheme !== "path" || contract.recipe.preprocessing !== "standardized"
+    || contract.recipe.missingData !== "listwise_deletion" || contract.recipe.bootstrapSamples !== 0
+    || contract.recipe.studentizedInnerSamples !== 0 || contract.recipe.permutationSamples !== 0
+    || contract.recipe.workers !== 1 || contract.recipe.caseWeightColumn !== null
+    || JSON.stringify(predictor?.indicators) !== JSON.stringify(["x1", "x2", "x3", "x4"])
+    || predictor?.short_name !== "X" || predictor?.mode !== "reflective"
+    || JSON.stringify(outcome?.indicators) !== JSON.stringify(["y1", "y2"])
+    || outcome?.short_name !== "Y" || outcome?.mode !== "reflective"
+    || contract.recipe.paths?.length !== 1 || contract.recipe.controls?.length !== 0
+    || contract.recipe.higherOrderConstructs?.length !== 0 || contract.recipe.interactions?.length !== 0
+    || estimates.some((row) => row.construct !== predictor?.id
+      || JSON.stringify([row.indicator_a, row.indicator_b, row.indicator_c, row.indicator_d]) !== JSON.stringify(["x1", "x2", "x3", "x4"]))
+    || contract.project.datasetCount !== 1 || contract.project.modelCount !== 1
+    || contract.project.recipeCount !== 1 || contract.project.resultCount !== 1 || contract.project.runCount !== 1
+    || !contract.project.activeModelId || contract.project.runModelId !== contract.project.activeModelId
+    || contract.project.runSnapshotNodes !== 2 || contract.project.runSnapshotEdges !== 1) {
+    throw new Error(`The saved CTA-PLS archive did not retain the exact descriptive tetrad result and model snapshot: ${JSON.stringify(contract)}`);
+  }
+  return contract;
+}
+
 async function inspectSavedPcaArchive(projectPath, runId) {
   const { project, manifest } = await readNcaArchive(projectPath);
   const workspace = project.layouts?.workspace;
@@ -3982,6 +4364,23 @@ async function xlsxExcludesValidationWitness(filePath) {
 
 function mediationCaptureName(sequence, state) {
   return `${String(sequence).padStart(2, "0")}-tauri-native-${state}-${nativeViewportLabel}.png`;
+}
+
+async function inspectMediationArchiveRunState(projectPath) {
+  const { project } = await readNcaArchive(projectPath);
+  const recipes = Array.isArray(project.recipes) ? project.recipes : [];
+  const results = Array.isArray(project.results) ? project.results : [];
+  const runs = Array.isArray(project.layouts?.workspace?.runs)
+    ? project.layouts.workspace.runs
+    : [];
+  return {
+    recipeCount: recipes.length,
+    resultCount: results.length,
+    runCount: runs.length,
+    recipeIds: recipes.map((row) => row?.id ?? null),
+    resultIds: results.map((row) => row?.id ?? null),
+    runIds: runs.map((row) => row?.id ?? null),
+  };
 }
 
 function moderationCaptureName(sequence, state) {
@@ -5415,6 +5814,10 @@ function pcaCaptureName(sequence, state) {
   return `${String(sequence).padStart(2, "0")}-tauri-native-pca-${state}-${nativeViewportLabel}.png`;
 }
 
+function ctaPlsCaptureName(sequence, state, viewport = nativeViewportLabel) {
+  return `${String(sequence).padStart(2, "0")}-tauri-native-cta-pls-${state}-${viewport}.png`;
+}
+
 function cbsemCaptureName(sequence, state) {
   return `${String(sequence).padStart(2, "0")}-tauri-native-cbsem-${state}-${nativeViewportLabel}.png`;
 }
@@ -6363,7 +6766,7 @@ async function runFocusedGscaAcceptance() {
     blockers,
     startEnabled: await start.isEnabled(),
   };
-  if (evidence.checks.gscaDialog.catalogCount !== 14
+  if (evidence.checks.gscaDialog.catalogCount !== expectedOptionLabels.length
     || JSON.stringify(evidence.checks.gscaDialog.optionLabels) !== JSON.stringify(expectedOptionLabels)
     || evidence.checks.gscaDialog.selectedMethod !== "GSCA" || evidence.checks.gscaDialog.category !== "Component models"
     || evidence.checks.gscaDialog.weighting !== "Path weighting (fixed)"
@@ -6973,7 +7376,7 @@ async function runFocusedLogisticAcceptance() {
     noModelBlocker: !/construct|structural path|editable model|active model/i.test(blockerText),
     startEnabled: await start.isEnabled(),
   };
-  if (evidence.checks.logisticDialog.catalogCount !== 14
+  if (evidence.checks.logisticDialog.catalogCount !== expectedOptionLabels.length
     || evidence.checks.logisticDialog.selectedMethod !== "Regression"
     || evidence.checks.logisticDialog.category !== "Standalone analysis"
     || evidence.checks.logisticDialog.regressionType !== "logistic"
@@ -7374,7 +7777,7 @@ async function runFocusedRegressionBootstrapAcceptance() {
       startEnabled: await start.isEnabled(),
       modelFree: !/construct|structural path|active model/i.test(compactVisibleText(await calculation.locator('.nd-blocker[role="alert"]').textContent().catch(() => ""))),
     };
-    if (contract.catalogCount !== 14 || contract.selectedMethod !== "Regression"
+    if (contract.catalogCount !== expectedOptionLabels.length || contract.selectedMethod !== "Regression"
       || contract.regressionType !== model || contract.outcome !== (model === "logistic" ? "bin_y" : "y")
       || JSON.stringify(contract.predictors) !== JSON.stringify(regressionBootstrapPredictors)
       || JSON.stringify(contract.controls) !== JSON.stringify(regressionBootstrapControls)
@@ -7955,7 +8358,7 @@ async function runFocusedProcessV2Acceptance() {
     }, { expected: `${processV2Observations} global listwise-complete cases; ${processV2Omitted} rows omitted; 5 OLS equations verified` }, { timeout: 60_000 });
     const start = calculation.getByRole("button", { name: "Start graph-defined path analysis with bootstrap", exact: true });
     const contract = await readProcessV2SetupSnapshot(calculation, start);
-    const valid = contract.catalogCount === 14 && contract.selectedMethod === "Regression"
+    const valid = contract.catalogCount === expectedOptionLabels.length && contract.selectedMethod === "Regression"
       && contract.regressionType === "process" && contract.outcome === "Y" && contract.focalPredictor === "X"
       && JSON.stringify(contract.paths) === JSON.stringify(expectedPaths)
       && JSON.stringify(contract.moderators) === JSON.stringify(expectedModerators)
@@ -8679,6 +9082,345 @@ async function runFocusedProcessV2Acceptance() {
   };
 }
 
+async function runFocusedCtaPlsAcceptance() {
+  if (!requestedCtaPlsNativeExportPath) {
+    throw new Error("QUICKPLS_CTA_PLS_NATIVE_EXPORT_PATH is required for focused packaged CTA-PLS acceptance; enabled-button assertions do not replace a genuine native XLSX Save and workbook-content check.");
+  }
+  const exportTargetPath = await validateRequestedNativeExportPath(
+    requestedCtaPlsNativeExportPath,
+    "QUICKPLS_CTA_PLS_NATIVE_EXPORT_PATH",
+  );
+
+  await seedRecentProject({
+    name: ctaPlsProjectName,
+    path: ctaPlsProjectPath,
+    openedAt: "2026-08-13T00:00:00.000Z",
+  });
+  await reloadToLauncher();
+  await openRecentProject(ctaPlsProjectName, ctaPlsProjectPath);
+  await waitForSurface("data");
+  await page.locator(".nd-data-table").waitFor({ state: "visible", timeout: 15_000 });
+  const status = compactVisibleText(await page.locator(".nd-statusbar").textContent());
+  const columns = (await page.locator(".nd-data-table thead th").allTextContents()).map(compactVisibleText);
+  const initialArchive = await inspectInitialCtaPlsArchive(ctaPlsProjectPath);
+  evidence.checks.ctaPlsFixture = {
+    projectPath: ctaPlsProjectPath,
+    status,
+    cases: status.includes("120 cases") ? 120 : null,
+    columns,
+    initialArchive,
+  };
+  if (evidence.checks.ctaPlsFixture.cases !== 120
+    || JSON.stringify(columns) !== JSON.stringify(["#", "x1", "x2", "x3", "x4", "y1", "y2"])) {
+    throw new Error(`The focused CTA-PLS fixture did not expose the canonical 120-row reference data: ${JSON.stringify(evidence.checks.ctaPlsFixture)}`);
+  }
+  await capture(ctaPlsCaptureName(200, "fixture-data"));
+
+  evidence.checks.ctaPlsInitialModel = await createInitialEditableModel(ctaPlsProjectName, ctaPlsModelName);
+  await page.keyboard.press("Control+S");
+  await page.locator(".nd-toast").filter({ hasText: /Project saved/i }).last().waitFor({ state: "visible", timeout: 15_000 });
+  await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
+  const invalidArchiveBefore = await inspectCtaPlsArchiveCounts(ctaPlsProjectPath);
+  const invalidDialog = await openCalculationFromToolbar();
+  const invalidOption = invalidDialog.locator("#nd-calculation-method-cta_pls");
+  await invalidOption.click();
+  const invalidStart = invalidDialog.getByRole("button", { name: "Start tetrad diagnostics", exact: true });
+  const invalidBlockers = (await invalidDialog.locator(".nd-blocker li").allTextContents()).map(compactVisibleText);
+  const invalidEligibleText = compactVisibleText(await invalidDialog.locator("#nd-calculation-cta-pls-scope strong").textContent());
+  evidence.checks.ctaPlsInvalidSetup = {
+    attempted: true,
+    selectedMethod: compactVisibleText(await invalidDialog.getByRole("option", { selected: true }).locator("strong").textContent()),
+    startEnabled: await invalidStart.isEnabled(),
+    blockers: invalidBlockers,
+    eligibleBlockText: invalidEligibleText,
+    archiveBefore: invalidArchiveBefore,
+    archiveAfter: null,
+    runStateUnchanged: false,
+    resultCreated: false,
+  };
+  const ctaSpecificInvalidBlockers = invalidBlockers.filter((blocker) => (
+    /CTA-PLS requires at least one ordinary construct with four or more assigned indicators/i.test(blocker)
+  ));
+  if (evidence.checks.ctaPlsInvalidSetup.selectedMethod !== "Confirmatory Tetrad Analysis"
+    || evidence.checks.ctaPlsInvalidSetup.startEnabled
+    || ctaSpecificInvalidBlockers.length !== 1
+    || invalidEligibleText !== "None - assign at least four indicators to one ordinary construct") {
+    throw new Error(`The invalid CTA-PLS setup did not fail closed at the exact applicability boundary: ${JSON.stringify(evidence.checks.ctaPlsInvalidSetup)}`);
+  }
+  await capture(ctaPlsCaptureName(201, "invalid-setup"));
+  await invalidDialog.getByRole("button", { name: "Close", exact: true }).click();
+  await page.keyboard.press("Control+S");
+  await page.locator(".nd-toast").filter({ hasText: /Project saved/i }).last().waitFor({ state: "visible", timeout: 15_000 });
+  await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
+  const invalidArchiveAfter = await inspectCtaPlsArchiveCounts(ctaPlsProjectPath);
+  evidence.checks.ctaPlsInvalidSetup.archiveAfter = invalidArchiveAfter;
+  evidence.checks.ctaPlsInvalidSetup.runStateUnchanged = ["recipeCount", "resultCount", "runCount"]
+    .every((field) => invalidArchiveBefore[field] === 0 && invalidArchiveAfter[field] === 0);
+  evidence.checks.ctaPlsInvalidSetup.resultCreated = invalidArchiveAfter.resultCount !== 0;
+  if (!evidence.checks.ctaPlsInvalidSetup.runStateUnchanged || evidence.checks.ctaPlsInvalidSetup.resultCreated) {
+    throw new Error(`The blocked CTA-PLS attempt created persisted calculation state: ${JSON.stringify(evidence.checks.ctaPlsInvalidSetup)}`);
+  }
+
+  evidence.checks.ctaPlsModel = await buildCtaPlsModel();
+  await capture(ctaPlsCaptureName(202, "model"));
+  const calculation = await openCalculationFromToolbar();
+  const listbox = calculation.getByRole("listbox", { name: "Available calculation methods", exact: true });
+  const options = listbox.getByRole("option");
+  await calculation.locator("#nd-calculation-method-cta_pls").click();
+  const eligibleBlockText = compactVisibleText(await calculation.locator("#nd-calculation-cta-pls-scope strong").textContent());
+  const scopeText = compactVisibleText(await calculation.locator("#nd-calculation-cta-pls-scope small").textContent());
+  const weighting = calculation.locator("#nd-calculation-weighting");
+  const preprocessing = calculation.locator("#nd-calculation-preprocessing");
+  const pcaWeightingDisabled = await weighting.locator('option[value="pca"]').evaluate((option) => option.disabled);
+  const start = calculation.getByRole("button", { name: "Start tetrad diagnostics", exact: true });
+  const canonicalCatalogKinds = await canonicalNativeAnalysisCatalogKinds();
+  const catalogKinds = await options.evaluateAll((elements) => elements.map((element) => (
+    element.id.startsWith("nd-calculation-method-") ? element.id.slice("nd-calculation-method-".length) : null
+  )));
+  evidence.checks.ctaPlsDialog = {
+    catalogCount: await options.count(),
+    canonicalCatalogKinds,
+    catalogKinds,
+    selectedMethod: compactVisibleText(await listbox.getByRole("option", { selected: true }).locator("strong").textContent()),
+    category: compactVisibleText(await calculation.locator("#nd-calculation-category-assessment").textContent()),
+    eligibleBlockText,
+    scopeText,
+    weighting: await weighting.inputValue(),
+    pcaWeightingDisabled,
+    preprocessing: await preprocessing.inputValue(),
+    maximumIterations: await calculation.locator("#nd-calculation-max-iterations").inputValue(),
+    tolerance: await calculation.locator("#nd-calculation-tolerance").inputValue(),
+    unsupportedControls: await calculation.locator([
+      "#nd-calculation-bootstrap-samples", "#nd-calculation-confidence", "#nd-calculation-studentized",
+      "#nd-calculation-permutations", "#nd-calculation-workers", "#nd-calculation-case-weight",
+      "#nd-calculation-group-column", "#nd-calculation-ipma-target", "#nd-calculation-nca-permutations",
+    ].join(", ")).count(),
+    blockers: (await calculation.locator(".nd-blocker li").allTextContents()).map(compactVisibleText),
+    startEnabled: await start.isEnabled(),
+  };
+  if (evidence.checks.ctaPlsDialog.catalogCount !== expectedOptionLabels.length
+    || JSON.stringify(catalogKinds) !== JSON.stringify(canonicalCatalogKinds)
+    || evidence.checks.ctaPlsDialog.selectedMethod !== "Confirmatory Tetrad Analysis"
+    || evidence.checks.ctaPlsDialog.category !== "Assessment"
+    || eligibleBlockText !== "Predictor: 4 indicators, 3 tetrads" || scopeText !== ctaPlsScopeNote
+    || evidence.checks.ctaPlsDialog.weighting !== "path" || !pcaWeightingDisabled
+    || evidence.checks.ctaPlsDialog.preprocessing !== "standardized"
+    || evidence.checks.ctaPlsDialog.maximumIterations !== "3000"
+    || Number(evidence.checks.ctaPlsDialog.tolerance) !== 1e-7
+    || evidence.checks.ctaPlsDialog.unsupportedControls !== 0
+    || evidence.checks.ctaPlsDialog.blockers.length !== 0 || !evidence.checks.ctaPlsDialog.startEnabled) {
+    throw new Error(`The focused CTA-PLS dialog did not match the exact bounded descriptive contract: ${JSON.stringify(evidence.checks.ctaPlsDialog)}`);
+  }
+  await capture(ctaPlsCaptureName(203, "dialog"));
+
+  const activeCapture = captureActiveCalculation(calculation, ctaPlsCaptureName(204, "running"), "CTA-PLS descriptive tetrads")
+    .then((state) => ({ captured: true, ...state }))
+    .catch((error) => ({ captured: false, completedBeforeCapture: true, detail: error instanceof Error ? error.message : String(error) }));
+  await start.click();
+  await waitForSurface("results", 120_000);
+  evidence.checks.ctaPlsProgress = await activeCapture;
+
+  const selectedRun = page.locator(".nd-run-select select option:checked");
+  await selectedRun.waitFor({ state: "attached", timeout: 30_000 });
+  const runId = await page.locator(".nd-run-select select").inputValue();
+  if (!runId) throw new Error("The completed CTA-PLS run had no identifier.");
+  const initialSelectedTable = await page.locator('.nd-result-tree [role="treeitem"][aria-selected="true"]').getAttribute("data-result-tree-item-id");
+  const readTable = async (title) => {
+    const rows = await openResultTable(title);
+    return {
+      rows,
+      headers: (await page.locator(".nd-result-table thead th").allTextContents()).map(compactVisibleText),
+      values: await page.locator(".nd-result-table tbody tr").evaluateAll((tableRows) => tableRows.map((row) => Array.from(
+        row.querySelectorAll("th,td"),
+        (cell) => cell.textContent?.replace(/\s+/g, " ").trim() ?? "",
+      ))),
+    };
+  };
+  const summary = await readTable("CTA-PLS tetrad summary");
+  const tetrads = await readTable("CTA-PLS tetrads");
+  const scope = await readTable("CTA-PLS scope and exclusions");
+  const scopeValues = Object.fromEntries(scope.values.map((row) => [row[0], row[1]]));
+  const treeItems = (await page.locator('.nd-result-tree [role="treeitem"]').allTextContents()).map(compactVisibleText);
+  const runDetails = await inspectCurrentRunDetails();
+  const numericTetrads = tetrads.values.map((row) => [Number(row[6]), Number(row[7])]);
+  const ctaText = [summary, tetrads, scope].flatMap((table) => [table.headers, ...table.values]).flat().join(" ");
+  evidence.checks.ctaPlsResult = {
+    runId,
+    runLabel: compactVisibleText(await selectedRun.textContent()),
+    initialSelectedTable,
+    treeItems,
+    summary,
+    tetrads,
+    scope,
+    scopeValues,
+    runDetails,
+    allTetradsFinite: numericTetrads.every((row) => row.every(Number.isFinite)),
+    absoluteColumnsMatch: numericTetrads.every(([signed, absolute]) => Math.abs(Math.abs(signed) - absolute) <= 1e-4),
+    noInferentialDecision: !/\bp[- ]?value\b|confidence interval|statistically significant|vanishing decision/i.test(ctaText),
+  };
+  if (initialSelectedTable !== "cta_pls_summary"
+    || ["CTA-PLS tetrad summary", "CTA-PLS tetrads", "CTA-PLS scope and exclusions"].some((title) => treeItems.filter((item) => item === title).length !== 1)
+    || summary.rows !== 1
+    || JSON.stringify(summary.headers) !== JSON.stringify(["Construct", "Indicators", "Four-indicator subsets", "Tetrads", "Maximum absolute tetrad"])
+    || summary.values[0]?.[0] !== "Predictor" || summary.values[0]?.[1] !== "x1, x2, x3, x4"
+    || summary.values[0]?.[2] !== "1" || summary.values[0]?.[3] !== "3" || !Number.isFinite(Number(summary.values[0]?.[4]))
+    || tetrads.rows !== 3
+    || JSON.stringify(tetrads.headers) !== JSON.stringify(["Construct", "Indicator A", "Indicator B", "Indicator C", "Indicator D", "Pairing", "Tetrad", "Absolute tetrad"])
+    || tetrads.values.some((row) => row[0] !== "Predictor"
+      || JSON.stringify(row.slice(1, 5)) !== JSON.stringify(["x1", "x2", "x3", "x4"]))
+    || new Set(tetrads.values.map((row) => row[5])).size !== 3
+    || scope.rows !== 6 || scopeValues["Method version"] !== ctaPlsMethodVersion
+    || scopeValues["Covariance convention"] !== ctaPlsCovarianceVersion
+    || scopeValues["Complete cases"] !== "120" || scopeValues["Omitted cases"] !== "0"
+    || scopeValues.Interpretation !== ctaPlsScopeNote
+    || scopeValues["Excluded inference"] !== "Bootstrap, permutation, asymptotic, and vanishing-tetrad decisions"
+    || runDetails.properties.Method !== "Confirmatory Tetrad Analysis"
+    || runDetails.properties["Method version"] !== ctaPlsProvenanceMethodVersion
+    || runDetails.properties.Weighting !== "path" || runDetails.properties.Preprocessing !== "standardized"
+    || Object.hasOwn(runDetails.properties, "Recorded seed") || runDetails.logEntries < 1
+    || !evidence.checks.ctaPlsResult.allTetradsFinite || !evidence.checks.ctaPlsResult.absoluteColumnsMatch
+    || !evidence.checks.ctaPlsResult.noInferentialDecision) {
+    throw new Error(`The completed CTA-PLS Results did not expose the exact three descriptive tetrads and scope: ${JSON.stringify(evidence.checks.ctaPlsResult)}`);
+  }
+  await openResultTable("CTA-PLS tetrad summary");
+  await capture(ctaPlsCaptureName(205, "results"));
+
+  const exportCommand = page.locator(".nd-commandbar button").filter({ hasText: /^Export/i });
+  await exportCommand.click();
+  const exportDialog = page.locator('.nd-dialog-export[role="dialog"]');
+  await exportDialog.waitFor({ state: "visible", timeout: 10_000 });
+  const xlsxExport = exportDialog.getByRole("button", { name: /XLSX workbook/i });
+  const expectedSheets = ["CTA-PLS tetrad summary", "CTA-PLS tetrads", "CTA-PLS scope and exclusions", "Run provenance"];
+  const expectedSharedStrings = [
+    ...expectedSheets,
+    "Confirmatory Tetrad Analysis",
+    ctaPlsMethodVersion,
+    ctaPlsCovarianceVersion,
+    ctaPlsResultWarning,
+    "Predictor",
+  ];
+  evidence.checks.ctaPlsExport = {
+    selectedRunId: runId,
+    xlsxEnabled: await xlsxExport.isEnabled(),
+    buttonCount: await exportDialog.locator(".nd-export-list button").count(),
+    nativeXlsx: null,
+  };
+  if (!evidence.checks.ctaPlsExport.xlsxEnabled || evidence.checks.ctaPlsExport.buttonCount < 5) {
+    throw new Error(`The CTA-PLS result did not expose its table exports: ${JSON.stringify(evidence.checks.ctaPlsExport)}`);
+  }
+  const saveHelper = startWindowsNativeSaveExportHelper({
+    targetPath: exportTargetPath,
+    windowTitle: evidence.checks.runtime.title,
+    expectedSheets,
+    expectedSharedStrings,
+  });
+  let helperCompleted = false;
+  try {
+    const ready = await saveHelper.ready;
+    if (!ready.passed || ready.event !== "ready") throw new Error(`Native CTA-PLS XLSX Save helper did not become ready: ${JSON.stringify(ready)}`);
+    await xlsxExport.click();
+    const completion = await saveHelper.completed;
+    helperCompleted = true;
+    if (!completion.passed) throw new Error(`Native CTA-PLS XLSX verification failed: ${JSON.stringify(completion)}`);
+    const expectedFeedback = `Saved ${path.basename(exportTargetPath)}.`;
+    const feedback = exportDialog.locator("#nd-export-feedback").filter({ hasText: expectedFeedback });
+    await feedback.waitFor({ state: "visible", timeout: 15_000 });
+    const file = await fs.stat(exportTargetPath);
+    const workbookSheets = await inspectXlsxWorkbookSheets(exportTargetPath);
+    evidence.checks.ctaPlsExport.nativeXlsx = {
+      attempted: true,
+      targetPath: exportTargetPath,
+      helper: { ready, completion },
+      appFeedback: compactVisibleText(await feedback.textContent()),
+      file: { size: file.size, isFile: file.isFile() },
+      workbookSheets,
+    };
+    if (!file.isFile() || file.size <= 0 || evidence.checks.ctaPlsExport.nativeXlsx.appFeedback !== expectedFeedback
+      || !expectedSheets.every((sheet) => workbookSheets.includes(sheet))) {
+      throw new Error(`The genuine CTA-PLS XLSX did not contain every descriptive tetrad and provenance sheet: ${JSON.stringify(evidence.checks.ctaPlsExport)}`);
+    }
+  } finally {
+    if (!helperCompleted) saveHelper.stop();
+  }
+  await capture(ctaPlsCaptureName(206, "export"));
+  await exportDialog.getByRole("button", { name: "Close", exact: true }).click();
+
+  await page.keyboard.press("Control+S");
+  await page.locator(".nd-toast").filter({ hasText: /Project saved/i }).last().waitFor({ state: "visible", timeout: 15_000 });
+  await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
+  const savedArchive = await inspectSavedCtaPlsArchive(ctaPlsProjectPath, runId);
+  await reloadToLauncher();
+  await openRecentProject(ctaPlsProjectName, ctaPlsProjectPath);
+  await openMenuItem("View", "Results");
+  await waitForSurface("results");
+  const reopenedOption = page.locator(".nd-run-select select option").filter({ hasText: /Confirmatory Tetrad Analysis/i }).first();
+  await reopenedOption.waitFor({ state: "attached", timeout: 15_000 });
+  const reopenedRunId = await reopenedOption.getAttribute("value");
+  if (!reopenedRunId) throw new Error("The reopened CTA-PLS result had no run identifier.");
+  await page.locator(".nd-run-select select").selectOption(reopenedRunId);
+  const reopenedSummary = await readTable("CTA-PLS tetrad summary");
+  const reopenedTetrads = await readTable("CTA-PLS tetrads");
+  const reopenedScope = await readTable("CTA-PLS scope and exclusions");
+  evidence.checks.ctaPlsSaveReopen = {
+    expectedRunId: runId,
+    selectedRunId: reopenedRunId,
+    sameRunRestored: reopenedRunId === runId && await page.locator(".nd-run-select select").inputValue() === runId,
+    sameVisibleValuesRestored: JSON.stringify({ reopenedSummary, reopenedTetrads, reopenedScope })
+      === JSON.stringify({ reopenedSummary: summary, reopenedTetrads: tetrads, reopenedScope: scope }),
+    archive: savedArchive,
+  };
+  if (!evidence.checks.ctaPlsSaveReopen.sameRunRestored || !evidence.checks.ctaPlsSaveReopen.sameVisibleValuesRestored) {
+    throw new Error(`The exact CTA-PLS run and visible tetrads did not survive save/reload/reopen: ${JSON.stringify(evidence.checks.ctaPlsSaveReopen)}`);
+  }
+
+  const responsive = [];
+  for (const viewport of ctaPlsViewports) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.waitForTimeout(150);
+    await openResultTable("CTA-PLS tetrad summary");
+    const metrics = await page.evaluate(() => {
+      const app = document.querySelector(".nd-app");
+      const selected = document.querySelector('.nd-result-tree [role="treeitem"][aria-selected="true"]');
+      return {
+        innerWidth,
+        innerHeight,
+        documentNoHorizontalOverflow: document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
+        appNoHorizontalOverflow: Boolean(app && app.scrollWidth <= app.clientWidth + 1),
+        selectedTableId: selected?.getAttribute("data-result-tree-item-id") ?? null,
+        summaryRows: document.querySelectorAll(".nd-result-table tbody tr").length,
+        treeVisible: Boolean(document.querySelector('.nd-result-tree[role="tree"]')),
+      };
+    });
+    const passed = metrics.innerWidth === viewport.width && metrics.innerHeight === viewport.height
+      && metrics.documentNoHorizontalOverflow && metrics.appNoHorizontalOverflow
+      && metrics.selectedTableId === "cta_pls_summary" && metrics.summaryRows === 1 && metrics.treeVisible;
+    responsive.push({ ...viewport, passed, metrics });
+    await capture(ctaPlsCaptureName(207, "reopened", viewport.id));
+  }
+  await page.setViewportSize({ width: 1440, height: 900 });
+  evidence.checks.ctaPlsResponsiveViewports = {
+    passed: responsive.length === ctaPlsViewports.length && responsive.every((row) => row.passed),
+    exactViewports: responsive,
+  };
+  if (!evidence.checks.ctaPlsResponsiveViewports.passed) {
+    throw new Error(`CTA-PLS result responsiveness failed at a required viewport: ${JSON.stringify(evidence.checks.ctaPlsResponsiveViewports)}`);
+  }
+
+  const packagedInternalOrigins = new Set([packagedTauriOrigin, packagedTauriIpcOrigin]);
+  const externalRequests = observedBrowserRequests.filter((request) => request.origin
+    && request.origin !== "null" && !packagedInternalOrigins.has(request.origin));
+  evidence.checks.ctaPlsBrowserNetwork = {
+    passed: observedBrowserRequests.length > 0 && externalRequests.length === 0,
+    observedRequestCount: observedBrowserRequests.length,
+    externalRequestCount: externalRequests.length,
+    origins: [...new Set(observedBrowserRequests.map((request) => request.origin))].sort(),
+    externalRequests,
+  };
+  if (!evidence.checks.ctaPlsBrowserNetwork.passed) {
+    throw new Error(`CTA-PLS packaged browser traffic crossed the offline boundary: ${JSON.stringify(evidence.checks.ctaPlsBrowserNetwork)}`);
+  }
+}
+
 async function runFocusedPcaAcceptance() {
   if (!requestedPcaNativeExportPath) {
     throw new Error("QUICKPLS_PCA_NATIVE_EXPORT_PATH is required for focused packaged PCA acceptance; enabled-button assertions do not replace a genuine native XLSX Save and workbook-content check.");
@@ -8742,8 +9484,15 @@ async function runFocusedPcaAcceptance() {
     .filter({ hasText: label }).locator("strong").textContent().catch(() => ""));
   const start = calculation.getByRole("button", { name: "Start principal component analysis", exact: true });
   const blockerText = compactVisibleText(await calculation.locator('.nd-blocker[role="alert"]').textContent().catch(() => ""));
+  const canonicalCatalogKinds = await canonicalNativeAnalysisCatalogKinds();
+  const catalogOptionIds = await options.evaluateAll((elements) => elements.map((element) => element.id));
+  const catalogKinds = catalogOptionIds.map((id) => (
+    id.startsWith("nd-calculation-method-") ? id.slice("nd-calculation-method-".length) : null
+  ));
   evidence.checks.pcaDialog = {
     catalogCount: await options.count(),
+    canonicalCatalogKinds,
+    catalogKinds,
     selectedMethod: compactVisibleText(await listbox.getByRole("option", { selected: true }).locator("strong").textContent()),
     category: compactVisibleText(await calculation.locator("#nd-calculation-category-standalone").textContent()),
     availableVariables,
@@ -8766,6 +9515,7 @@ async function runFocusedPcaAcceptance() {
     startEnabled: await start.isEnabled(),
   };
   if (evidence.checks.pcaDialog.catalogCount !== expectedOptionLabels.length
+    || JSON.stringify(catalogKinds) !== JSON.stringify(canonicalCatalogKinds)
     || evidence.checks.pcaDialog.selectedMethod !== "Principal Component Analysis"
     || evidence.checks.pcaDialog.category !== "Standalone analysis"
     || JSON.stringify(availableVariables) !== JSON.stringify(expectedColumns.slice(1))
@@ -9506,6 +10256,8 @@ try {
     await runFocusedOlsAcceptance();
   } else if (pcaOnly) {
     await runFocusedPcaAcceptance();
+  } else if (ctaPlsOnly) {
+    await runFocusedCtaPlsAcceptance();
   } else if (hocOnly) {
     await runFocusedHigherOrderAcceptance();
   } else if (predictionOnly) {
@@ -9516,6 +10268,60 @@ try {
   } else {
     if (!mgaOnly) {
     await capture("12-tauri-native-launcher-1440x900.png");
+
+    const bundledSampleContracts = [
+      {
+        id: "corporate_reputation",
+        project: "Corporate Reputation Sample",
+        dataset: "corporate_reputation.csv",
+        cases: 12,
+        constructs: 4,
+        paths: 3,
+        runLabel: "PLS-SEM Bootstrapping run",
+        pathTable: "Direct effects",
+      },
+      {
+        id: "simple_pls",
+        project: "Simple Reflective PLS Sample",
+        dataset: "simple_reflective.csv",
+        cases: 6,
+        constructs: 2,
+        paths: 1,
+        runLabel: "PLS-SEM Algorithm run",
+        pathTable: "Path coefficients",
+      },
+      {
+        id: "mediation",
+        project: "Mediation Sample",
+        dataset: "mediation_sample.csv",
+        cases: 8,
+        constructs: 3,
+        paths: 2,
+        runLabel: "PLS-SEM Algorithm run",
+        pathTable: "Direct effects",
+      },
+    ];
+    const bundledSamples = [];
+    for (const sampleContract of bundledSampleContracts) {
+      await reloadToLauncher();
+      bundledSamples.push(await inspectBundledSample(sampleContract));
+      await capture(`12-tauri-native-sample-${sampleContract.id}-${nativeViewportLabel}.png`);
+    }
+    evidence.checks.bundledSampleGallery = {
+      passed: bundledSamples.length === bundledSampleContracts.length,
+      sampleIds: bundledSamples.map((sample) => sample.sampleId),
+      samples: bundledSamples,
+      liveLauncher: true,
+      typedSelector: true,
+      completedCanonicalResults: true,
+    };
+    if (!evidence.checks.bundledSampleGallery.passed
+      || JSON.stringify(evidence.checks.bundledSampleGallery.sampleIds)
+        !== JSON.stringify(bundledSampleContracts.map((sample) => sample.id))) {
+      throw new Error(`The packaged bundled-sample gallery was incomplete: ${JSON.stringify(evidence.checks.bundledSampleGallery)}`);
+    }
+
+    await reloadToLauncher();
 
     await openMenuItem("File", "Open Sample Project");
   await waitForSurface("model");
@@ -9571,7 +10377,7 @@ try {
   const calculateMenu = page.locator(`#${calculateMenuId}`);
   await calculateMenu.waitFor({ state: "visible", timeout: 5_000 });
   const calculateMenuLabels = (await calculateMenu.getByRole("menuitem").allTextContents()).map((label) => label.trim());
-  const methodSpecificMenuLabels = calculateMenuLabels.filter((label) => /PLS Algorithm|Bootstrapp|Permutation|Randomization|Construct Prediction|Prediction|Consistent PLS|Weighted PLS|CCA|composite residual|Importance-Performance|IPMA|MGA|Multi-Group|Necessary Condition|NCA/i.test(label));
+  const methodSpecificMenuLabels = calculateMenuLabels.filter((label) => /PLS Algorithm|Bootstrapp|Permutation|Randomization|Construct Prediction|Prediction|Consistent PLS|Weighted PLS|CCA|composite residual|CTA|Tetrad|Importance-Performance|IPMA|MGA|Multi-Group|Necessary Condition|NCA/i.test(label));
   evidence.checks.calculationCommands = {
     toolbarGenericCommands: await calculate.count(),
     calculateMenuEntries: calculateMenuLabels,
@@ -9590,10 +10396,19 @@ try {
   const optionLabels = (await methodOptions.locator("strong").allTextContents()).map((label) => label.trim());
   const pathRandomizationOption = methodListbox.getByRole("option", { name: /Structural Path Randomization/i });
   const pathRandomizationDescription = (await pathRandomizationOption.textContent())?.replace(/\s+/g, " ").trim() ?? "";
+  const ctaPlsOption = methodListbox.getByRole("option", { name: /Confirmatory Tetrad Analysis/i });
+  const ctaPlsDescription = (await ctaPlsOption.textContent())?.replace(/\s+/g, " ").trim() ?? "";
   evidence.checks.calculationCatalog = {
     options: optionLabels,
     optionCount: optionLabels.length,
     legacyTabCount: await calculationDialog.getByRole("tab").count(),
+    ctaPls: {
+      optionCount: await ctaPlsOption.count(),
+      description: ctaPlsDescription,
+      descriptiveTetradScope: /every descriptive sample-covariance tetrad/i.test(ctaPlsDescription)
+        && /four-or-more-indicator PLS blocks/i.test(ctaPlsDescription)
+        && /without inferential classification/i.test(ctaPlsDescription),
+    },
     structuralPathRandomization: {
       optionCount: await pathRandomizationOption.count(),
       description: pathRandomizationDescription,
@@ -9605,9 +10420,13 @@ try {
     },
   };
   if (JSON.stringify(optionLabels) !== JSON.stringify(expectedOptionLabels)) {
-    throw new Error(`The calculation browser did not expose the expected ten-method catalog: ${optionLabels.join(" | ")}`);
+    throw new Error(`The calculation browser did not expose the expected ${expectedOptionLabels.length}-method catalog: ${optionLabels.join(" | ")}`);
   }
   if (evidence.checks.calculationCatalog.legacyTabCount !== 0) throw new Error("The extracted calculation browser still exposed legacy method tabs.");
+  if (evidence.checks.calculationCatalog.ctaPls.optionCount !== 1
+    || !evidence.checks.calculationCatalog.ctaPls.descriptiveTetradScope) {
+    throw new Error(`Confirmatory Tetrad Analysis did not preserve its four-or-more-indicator descriptive-only, non-inferential catalogue scope: ${ctaPlsDescription}`);
+  }
   if (evidence.checks.calculationCatalog.structuralPathRandomization.optionCount !== 1
     || !evidence.checks.calculationCatalog.structuralPathRandomization.singleModelFreedmanLane
     || evidence.checks.calculationCatalog.structuralPathRandomization.mentionsMgaOrMicom) {
@@ -9728,7 +10547,92 @@ try {
   // the first editable model through the same Project Explorer flow exposed to
   // desktop users before entering the model workbench.
   evidence.checks.initialEditableModelCreation = await createInitialEditableModel(disposableProjectName, disposableModelName);
-  await buildTwoConstructModel();
+  await clickIndicator("x1");
+  await page.locator(".react-flow__node-latent").nth(0).waitFor({ state: "visible", timeout: 10_000 });
+  await page.keyboard.press("Control+S");
+  await page.locator(".nd-toast").filter({ hasText: /Project saved/i }).last().waitFor({ state: "visible", timeout: 15_000 });
+  await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
+
+  const plscInvalidArchiveBefore = await inspectMediationArchiveRunState(disposableProjectPath);
+  const plscInvalidDialog = await openCalculationFromToolbar();
+  const plscInvalidListbox = plscInvalidDialog.getByRole("listbox", { name: "Available calculation methods", exact: true });
+  await plscInvalidListbox.getByRole("option", { name: /Consistent PLS/i }).click();
+  const plscInvalidStart = plscInvalidDialog.getByRole("button", { name: "Start consistent PLS", exact: true });
+  const plscInvalidBlockers = (await plscInvalidDialog.locator(".nd-blocker li").allTextContents()).map((row) => row.trim()).filter(Boolean);
+  evidence.checks.plscInvalidSetup = {
+    attempted: true,
+    selectedMethod: (await plscInvalidListbox.getByRole("option", { selected: true }).textContent())?.trim() ?? "",
+    startEnabled: await plscInvalidStart.isEnabled(),
+    blockers: plscInvalidBlockers,
+    underspecifiedReflectiveBlocker: plscInvalidBlockers.some((row) => /Consistent PLS requires at least two indicators per construct/i.test(row)),
+    archiveBefore: plscInvalidArchiveBefore,
+    archiveAfter: null,
+    runStateUnchanged: false,
+    resultCreated: false,
+  };
+  await capture("19b-tauri-native-plsc-invalid-setup-1440x900.png");
+  await plscInvalidDialog.getByRole("button", { name: "Close", exact: true }).click();
+  await plscInvalidDialog.waitFor({ state: "hidden", timeout: 10_000 });
+  await page.keyboard.press("Control+S");
+  await page.locator(".nd-toast").filter({ hasText: /Project saved/i }).last().waitFor({ state: "visible", timeout: 15_000 });
+  await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
+  const plscInvalidArchiveAfter = await inspectMediationArchiveRunState(disposableProjectPath);
+  evidence.checks.plscInvalidSetup.archiveAfter = plscInvalidArchiveAfter;
+  evidence.checks.plscInvalidSetup.runStateUnchanged = JSON.stringify(plscInvalidArchiveAfter) === JSON.stringify(plscInvalidArchiveBefore);
+  evidence.checks.plscInvalidSetup.resultCreated = plscInvalidArchiveAfter.resultCount > plscInvalidArchiveBefore.resultCount;
+  if (!/Consistent PLS/i.test(evidence.checks.plscInvalidSetup.selectedMethod)
+    || evidence.checks.plscInvalidSetup.startEnabled
+    || !evidence.checks.plscInvalidSetup.underspecifiedReflectiveBlocker
+    || plscInvalidArchiveBefore.recipeCount !== 0
+    || plscInvalidArchiveBefore.resultCount !== 0
+    || plscInvalidArchiveBefore.runCount !== 0
+    || !evidence.checks.plscInvalidSetup.runStateUnchanged
+    || evidence.checks.plscInvalidSetup.resultCreated) {
+    throw new Error(`The underspecified packaged PLSc setup did not fail closed without creating calculation state: ${JSON.stringify(evidence.checks.plscInvalidSetup)}`);
+  }
+
+  const wplsInvalidArchiveBefore = await inspectMediationArchiveRunState(disposableProjectPath);
+  const wplsInvalidDialog = await openCalculationFromToolbar();
+  const wplsInvalidListbox = wplsInvalidDialog.getByRole("listbox", { name: "Available calculation methods", exact: true });
+  await wplsInvalidListbox.getByRole("option", { name: /Weighted PLS/i }).click();
+  const wplsInvalidWeight = wplsInvalidDialog.locator("#nd-calculation-case-weight");
+  const wplsInvalidStart = wplsInvalidDialog.getByRole("button", { name: "Start weighted PLS", exact: true });
+  const wplsInvalidBlockers = (await wplsInvalidDialog.locator(".nd-blocker li").allTextContents()).map((row) => row.trim()).filter(Boolean);
+  evidence.checks.wplsInvalidSetup = {
+    attempted: true,
+    selectedMethod: (await wplsInvalidListbox.getByRole("option", { selected: true }).textContent())?.trim() ?? "",
+    caseWeightColumn: await wplsInvalidWeight.inputValue(),
+    startEnabled: await wplsInvalidStart.isEnabled(),
+    blockers: wplsInvalidBlockers,
+    missingWeightBlocker: wplsInvalidBlockers.some((row) => /Choose a positive numeric case-weight variable/i.test(row)),
+    archiveBefore: wplsInvalidArchiveBefore,
+    archiveAfter: null,
+    runStateUnchanged: false,
+    resultCreated: false,
+  };
+  await capture("19c-tauri-native-wpls-invalid-setup-1440x900.png");
+  await wplsInvalidDialog.getByRole("button", { name: "Close", exact: true }).click();
+  await wplsInvalidDialog.waitFor({ state: "hidden", timeout: 10_000 });
+  await page.keyboard.press("Control+S");
+  await page.locator(".nd-toast").filter({ hasText: /Project saved/i }).last().waitFor({ state: "visible", timeout: 15_000 });
+  await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
+  const wplsInvalidArchiveAfter = await inspectMediationArchiveRunState(disposableProjectPath);
+  evidence.checks.wplsInvalidSetup.archiveAfter = wplsInvalidArchiveAfter;
+  evidence.checks.wplsInvalidSetup.runStateUnchanged = JSON.stringify(wplsInvalidArchiveAfter) === JSON.stringify(wplsInvalidArchiveBefore);
+  evidence.checks.wplsInvalidSetup.resultCreated = wplsInvalidArchiveAfter.resultCount > wplsInvalidArchiveBefore.resultCount;
+  if (!/Weighted PLS/i.test(evidence.checks.wplsInvalidSetup.selectedMethod)
+    || evidence.checks.wplsInvalidSetup.caseWeightColumn !== ""
+    || evidence.checks.wplsInvalidSetup.startEnabled
+    || !evidence.checks.wplsInvalidSetup.missingWeightBlocker
+    || wplsInvalidArchiveBefore.recipeCount !== 0
+    || wplsInvalidArchiveBefore.resultCount !== 0
+    || wplsInvalidArchiveBefore.runCount !== 0
+    || !evidence.checks.wplsInvalidSetup.runStateUnchanged
+    || evidence.checks.wplsInvalidSetup.resultCreated) {
+    throw new Error(`The missing-weight packaged WPLS setup did not fail closed without creating calculation state: ${JSON.stringify(evidence.checks.wplsInvalidSetup)}`);
+  }
+
+  await buildTwoConstructModel({ firstIndicatorAlreadyAssigned: true });
   evidence.checks.visibleModelBuild = {
     constructs: await page.locator(".react-flow__node-latent").count(),
     assignedIndicators: await page.locator(".nd-variable-item.assigned").count(),
@@ -9744,7 +10648,7 @@ try {
   await capture("20-tauri-native-method-fixture-model-built-1440x900.png");
 
   await page.keyboard.press("Control+S");
-  await page.locator(".nd-toast").filter({ hasText: /Project saved/i }).waitFor({ state: "visible", timeout: 15_000 });
+  await page.locator(".nd-toast").filter({ hasText: /Project saved/i }).last().waitFor({ state: "visible", timeout: 15_000 });
   await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
   await reloadToLauncher();
   await openDisposableRecentProject();
@@ -9835,11 +10739,60 @@ try {
   await exportDialog.waitFor({ state: "visible", timeout: 10_000 });
   const xlsxExport = exportDialog.getByRole("button", { name: /XLSX workbook/i });
   await xlsxExport.waitFor({ state: "visible", timeout: 10_000 });
-  evidence.checks.export = {
+  const plscExpectedSheets = ["PLSc correction reliability", "PLSc construct correlations", "Run provenance"];
+  evidence.checks.plscExport = {
+    selectedRunId: await page.locator(".nd-run-select select").inputValue(),
+    expectedRunId: plscRunId,
     formats: await exportDialog.locator(".nd-export-list button").count(),
     xlsxEnabled: await xlsxExport.isEnabled(),
+    expectedSheets: plscExpectedSheets,
+    nativeXlsx: null,
   };
-  if (evidence.checks.export.formats < 5 || !evidence.checks.export.xlsxEnabled) throw new Error("The native Export dialog did not expose the expected enabled output formats.");
+  if (evidence.checks.plscExport.selectedRunId !== plscRunId
+    || evidence.checks.plscExport.formats < 5
+    || !evidence.checks.plscExport.xlsxEnabled) {
+    throw new Error(`The exact completed PLSc run did not expose the expected enabled output formats: ${JSON.stringify(evidence.checks.plscExport)}`);
+  }
+  const plscExportTargetPath = await validateRequestedNativeExportPath(
+    requestedPlscNativeExportPath,
+    "QUICKPLS_PLSC_NATIVE_EXPORT_PATH",
+  );
+  const plscSaveHelper = startWindowsNativeSaveExportHelper({
+    targetPath: plscExportTargetPath,
+    windowTitle: evidence.checks.runtime.title,
+    expectedSheets: plscExpectedSheets,
+    expectedSharedStrings: ["rho_A"],
+  });
+  let plscHelperCompleted = false;
+  try {
+    const ready = await plscSaveHelper.ready;
+    if (!ready.passed || ready.event !== "ready") throw new Error(`PLSc native XLSX helper did not become ready: ${JSON.stringify(ready)}`);
+    await xlsxExport.click();
+    const completion = await plscSaveHelper.completed;
+    plscHelperCompleted = true;
+    if (!completion.passed) throw new Error(`PLSc native XLSX export failed: ${JSON.stringify(completion)}`);
+    const expectedFeedback = `Saved ${path.basename(plscExportTargetPath)}.`;
+    const feedback = exportDialog.locator("#nd-export-feedback").filter({ hasText: expectedFeedback });
+    await feedback.waitFor({ state: "visible", timeout: 15_000 });
+    const file = await fs.stat(plscExportTargetPath);
+    const workbookSheets = await inspectXlsxWorkbookSheets(plscExportTargetPath);
+    evidence.checks.plscExport.nativeXlsx = {
+      attempted: true,
+      targetPath: plscExportTargetPath,
+      helper: { ready, completion },
+      appFeedback: (await feedback.textContent())?.trim() ?? "",
+      file: { path: plscExportTargetPath, size: file.size, isFile: file.isFile() },
+      workbookSheets,
+      methodSheetsPresentExactlyOnce: plscExpectedSheets.every((sheet) => workbookSheets.filter((candidate) => candidate === sheet).length === 1),
+    };
+    if (!file.isFile() || file.size <= 0
+      || evidence.checks.plscExport.nativeXlsx.appFeedback !== expectedFeedback
+      || !evidence.checks.plscExport.nativeXlsx.methodSheetsPresentExactlyOnce) {
+      throw new Error(`The packaged PLSc XLSX was not exact and readable: ${JSON.stringify(evidence.checks.plscExport.nativeXlsx)}`);
+    }
+  } finally {
+    if (!plscHelperCompleted) plscSaveHelper.stop();
+  }
   await capture("25-tauri-native-export-dialog-1440x900.png");
   await exportDialog.getByRole("button", { name: "Close", exact: true }).click();
 
@@ -9965,6 +10918,66 @@ try {
   }
   await capture("30-tauri-native-wpls-weights-1440x900.png");
 
+  await exportCommand.click();
+  await exportDialog.waitFor({ state: "visible", timeout: 10_000 });
+  await xlsxExport.waitFor({ state: "visible", timeout: 10_000 });
+  const wplsExpectedSheets = ["WPLS case-weight diagnostics", "Run provenance"];
+  evidence.checks.wplsExport = {
+    selectedRunId: await page.locator(".nd-run-select select").inputValue(),
+    expectedRunId: wplsRunId,
+    formats: await exportDialog.locator(".nd-export-list button").count(),
+    xlsxEnabled: await xlsxExport.isEnabled(),
+    expectedSheets: wplsExpectedSheets,
+    nativeXlsx: null,
+  };
+  if (evidence.checks.wplsExport.selectedRunId !== wplsRunId
+    || evidence.checks.wplsExport.formats < 5
+    || !evidence.checks.wplsExport.xlsxEnabled) {
+    throw new Error(`The exact completed WPLS run did not expose the expected enabled output formats: ${JSON.stringify(evidence.checks.wplsExport)}`);
+  }
+  const wplsExportTargetPath = await validateRequestedNativeExportPath(
+    requestedWplsNativeExportPath,
+    "QUICKPLS_WPLS_NATIVE_EXPORT_PATH",
+  );
+  const wplsSaveHelper = startWindowsNativeSaveExportHelper({
+    targetPath: wplsExportTargetPath,
+    windowTitle: evidence.checks.runtime.title,
+    expectedSheets: wplsExpectedSheets,
+    expectedSharedStrings: ["case_wt"],
+  });
+  let wplsHelperCompleted = false;
+  try {
+    const ready = await wplsSaveHelper.ready;
+    if (!ready.passed || ready.event !== "ready") throw new Error(`WPLS native XLSX helper did not become ready: ${JSON.stringify(ready)}`);
+    await xlsxExport.click();
+    const completion = await wplsSaveHelper.completed;
+    wplsHelperCompleted = true;
+    if (!completion.passed) throw new Error(`WPLS native XLSX export failed: ${JSON.stringify(completion)}`);
+    const expectedFeedback = `Saved ${path.basename(wplsExportTargetPath)}.`;
+    const feedback = exportDialog.locator("#nd-export-feedback").filter({ hasText: expectedFeedback });
+    await feedback.waitFor({ state: "visible", timeout: 15_000 });
+    const file = await fs.stat(wplsExportTargetPath);
+    const workbookSheets = await inspectXlsxWorkbookSheets(wplsExportTargetPath);
+    evidence.checks.wplsExport.nativeXlsx = {
+      attempted: true,
+      targetPath: wplsExportTargetPath,
+      helper: { ready, completion },
+      appFeedback: (await feedback.textContent())?.trim() ?? "",
+      file: { path: wplsExportTargetPath, size: file.size, isFile: file.isFile() },
+      workbookSheets,
+      methodSheetsPresentExactlyOnce: wplsExpectedSheets.every((sheet) => workbookSheets.filter((candidate) => candidate === sheet).length === 1),
+    };
+    if (!file.isFile() || file.size <= 0
+      || evidence.checks.wplsExport.nativeXlsx.appFeedback !== expectedFeedback
+      || !evidence.checks.wplsExport.nativeXlsx.methodSheetsPresentExactlyOnce) {
+      throw new Error(`The packaged WPLS XLSX was not exact and readable: ${JSON.stringify(evidence.checks.wplsExport.nativeXlsx)}`);
+    }
+  } finally {
+    if (!wplsHelperCompleted) wplsSaveHelper.stop();
+  }
+  await capture("30a-tauri-native-wpls-export-dialog-1440x900.png");
+  await exportDialog.getByRole("button", { name: "Close", exact: true }).click();
+
   const predictionRunDialog = await openCalculationFromToolbar();
   const predictionListbox = predictionRunDialog.getByRole("listbox", { name: "Available calculation methods", exact: true });
   await predictionListbox.getByRole("option", { name: /PLSpredict \/ CVPAT/i }).click();
@@ -10054,7 +11067,7 @@ try {
   }
 
   await page.keyboard.press("Control+S");
-  await page.locator(".nd-toast").filter({ hasText: /Project saved/i }).waitFor({ state: "visible", timeout: 15_000 });
+  await page.locator(".nd-toast").filter({ hasText: /Project saved/i }).last().waitFor({ state: "visible", timeout: 15_000 });
   await reloadToLauncher();
   await openDisposableRecentProject();
   await openMenuItem("View", "Results");
@@ -10075,6 +11088,58 @@ try {
     || !evidence.checks.completedResultsSaveReopen.hasPrediction) {
     throw new Error(`Completed method results did not survive explicit save/reload/reopen: ${JSON.stringify(evidence.checks.completedResultsSaveReopen)}`);
   }
+
+  const reopenedPlscOption = page.locator(".nd-run-select select option").filter({ hasText: /Consistent PLS/i }).first();
+  await reopenedPlscOption.waitFor({ state: "attached", timeout: 15_000 });
+  const reopenedPlscRunId = await reopenedPlscOption.getAttribute("value");
+  if (!reopenedPlscRunId) throw new Error("The reopened PLSc option had no run identifier.");
+  await page.locator(".nd-run-select select").selectOption(reopenedPlscRunId);
+  const reopenedPlscReliabilityRows = await openResultTable("PLSc correction reliability");
+  const reopenedPlscCorrelationRows = await openResultTable("PLSc construct correlations");
+  const reopenedPlscText = (await page.locator(".nd-result-table tbody").textContent())?.trim() ?? "";
+  evidence.checks.plscSaveReopen = {
+    attempted: true,
+    expectedRunId: plscRunId,
+    selectedRunId: await page.locator(".nd-run-select select").inputValue(),
+    sameRunRestored: reopenedPlscRunId === plscRunId && await page.locator(".nd-run-select select").inputValue() === plscRunId,
+    reliabilityRows: reopenedPlscReliabilityRows,
+    correlationRows: reopenedPlscCorrelationRows,
+    immutableLabelsRestored: reopenedPlscText.includes("Construct 1") && reopenedPlscText.includes("Construct 2") && !/construct-/i.test(reopenedPlscText),
+  };
+  if (!evidence.checks.plscSaveReopen.sameRunRestored
+    || !reopenedPlscReliabilityRows
+    || !reopenedPlscCorrelationRows
+    || !evidence.checks.plscSaveReopen.immutableLabelsRestored) {
+    throw new Error(`The exact PLSc run and result tables did not survive save/reload/reopen: ${JSON.stringify(evidence.checks.plscSaveReopen)}`);
+  }
+
+  const reopenedWplsOption = page.locator(".nd-run-select select option").filter({ hasText: /Weighted PLS/i }).first();
+  await reopenedWplsOption.waitFor({ state: "attached", timeout: 15_000 });
+  const reopenedWplsRunId = await reopenedWplsOption.getAttribute("value");
+  if (!reopenedWplsRunId) throw new Error("The reopened WPLS option had no run identifier.");
+  await page.locator(".nd-run-select select").selectOption(reopenedWplsRunId);
+  const reopenedWplsPathRows = await openResultTable("Path coefficients");
+  const reopenedWplsPathText = (await page.locator(".nd-result-table tbody").textContent())?.trim() ?? "";
+  const reopenedWplsDiagnosticRows = await openResultTable("WPLS case-weight diagnostics");
+  const reopenedWplsDiagnosticText = (await page.locator(".nd-result-table tbody").textContent())?.trim() ?? "";
+  evidence.checks.wplsSaveReopen = {
+    attempted: true,
+    expectedRunId: wplsRunId,
+    selectedRunId: await page.locator(".nd-run-select select").inputValue(),
+    sameRunRestored: reopenedWplsRunId === wplsRunId && await page.locator(".nd-run-select select").inputValue() === wplsRunId,
+    pathRows: reopenedWplsPathRows,
+    diagnosticRows: reopenedWplsDiagnosticRows,
+    immutableLabelsRestored: reopenedWplsPathText.includes("Construct 1") && reopenedWplsPathText.includes("Construct 2") && !/construct-/i.test(reopenedWplsPathText),
+    caseWeightColumnRestored: /case_wt/.test(reopenedWplsDiagnosticText),
+  };
+  if (!evidence.checks.wplsSaveReopen.sameRunRestored
+    || !reopenedWplsPathRows
+    || !reopenedWplsDiagnosticRows
+    || !evidence.checks.wplsSaveReopen.immutableLabelsRestored
+    || !evidence.checks.wplsSaveReopen.caseWeightColumnRestored) {
+    throw new Error(`The exact WPLS run and result tables did not survive save/reload/reopen: ${JSON.stringify(evidence.checks.wplsSaveReopen)}`);
+  }
+
   const reopenedPredictionOption = page.locator(".nd-run-select select option").filter({ hasText: /PLSpredict \/ CVPAT/i }).first();
   await reopenedPredictionOption.waitFor({ state: "attached", timeout: 15_000 });
   await page.locator(".nd-run-select select").selectOption(await reopenedPredictionOption.getAttribute("value"));
@@ -10088,6 +11153,13 @@ try {
   await bootstrapListbox.getByRole("option", { name: /PLS-SEM Bootstrapping/i }).click();
   await bootstrapDialog.locator("#nd-calculation-bootstrap-samples").fill("1000");
   await bootstrapDialog.locator("#nd-calculation-studentized").selectOption("999");
+  const cancelledBootstrapSetup = {
+    bootstrapSamples: await bootstrapDialog.locator("#nd-calculation-bootstrap-samples").inputValue(),
+    confidenceLevel: await bootstrapDialog.locator("#nd-calculation-confidence").inputValue(),
+    studentizedInnerSamples: await bootstrapDialog.locator("#nd-calculation-studentized").inputValue(),
+    seed: await bootstrapDialog.locator("#nd-calculation-seed").inputValue(),
+    workers: await bootstrapDialog.locator("#nd-calculation-workers").inputValue(),
+  };
   const startBootstrap = bootstrapDialog.getByRole("button", { name: "Start bootstrapping", exact: true });
   if (!await startBootstrap.isEnabled()) {
     throw new Error(`The native studentized Bootstrap acceptance job was blocked: ${(await bootstrapDialog.locator(".nd-blocker li").allTextContents()).join(" | ")}`);
@@ -10102,6 +11174,7 @@ try {
     progressValue: element.querySelector("progress")?.getAttribute("value") ?? null,
     progressMax: element.querySelector("progress")?.getAttribute("max") ?? null,
   }));
+  evidence.checks.bootstrapRunning.requestedSettings = cancelledBootstrapSetup;
   await capture("35-tauri-native-running-bootstrap-1440x900.png");
   await bootstrapDialog.getByRole("button", { name: "Cancel calculation", exact: true }).click();
   const cancelledBootstrap = bootstrapDialog.locator(".nd-run-progress.cancelled");
@@ -10430,6 +11503,86 @@ try {
   await capture(mediationCaptureName(39, "mediation-fixture-data"));
 
   evidence.checks.initialMediationModelCreation = await createInitialEditableModel(mediationProjectName, mediationModelName);
+  await page.keyboard.press("Control+S");
+  await page.locator(".nd-toast").filter({ hasText: /Project saved/i }).last().waitFor({ state: "visible", timeout: 15_000 });
+  await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
+  const invalidPlsArchiveBefore = await inspectMediationArchiveRunState(mediationProjectPath);
+
+  const invalidBootstrapDialog = await openCalculationFromToolbar();
+  const invalidBootstrapListbox = invalidBootstrapDialog.getByRole("listbox", { name: "Available calculation methods", exact: true });
+  await invalidBootstrapListbox.getByRole("option", { name: /PLS-SEM Bootstrapping/i }).click();
+  const invalidBootstrapStart = invalidBootstrapDialog.getByRole("button", { name: "Start bootstrapping", exact: true });
+  const invalidBootstrapSelectedMethod = (await invalidBootstrapListbox.getByRole("option", { selected: true }).textContent())?.trim() ?? "";
+  const invalidBootstrapStartEnabled = await invalidBootstrapStart.isEnabled();
+  const invalidBootstrapBlockers = (await invalidBootstrapDialog.locator(".nd-blocker li").allTextContents()).map((row) => row.trim()).filter(Boolean);
+  await capture(mediationCaptureName(39, "mediation-bootstrap-invalid-setup"));
+  await invalidBootstrapDialog.getByRole("button", { name: "Close", exact: true }).click();
+  await invalidBootstrapDialog.waitFor({ state: "hidden", timeout: 10_000 });
+
+  await page.keyboard.press("Control+S");
+  await page.locator(".nd-toast").filter({ hasText: /Project saved/i }).last().waitFor({ state: "visible", timeout: 15_000 });
+  await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
+  const invalidBootstrapArchiveAfter = await inspectMediationArchiveRunState(mediationProjectPath);
+  const invalidBootstrapRunStateUnchanged = JSON.stringify(invalidBootstrapArchiveAfter) === JSON.stringify(invalidPlsArchiveBefore);
+  const invalidBootstrapResultCreated = invalidBootstrapArchiveAfter.resultCount > invalidPlsArchiveBefore.resultCount
+    || invalidBootstrapArchiveAfter.resultIds.some((runId) => !invalidPlsArchiveBefore.resultIds.includes(runId));
+  evidence.checks.bootstrapInvalidSetup = {
+    attempted: true,
+    selectedMethod: invalidBootstrapSelectedMethod,
+    startEnabled: invalidBootstrapStartEnabled,
+    blockers: invalidBootstrapBlockers,
+    archiveBefore: invalidPlsArchiveBefore,
+    archiveAfter: invalidBootstrapArchiveAfter,
+    runStateUnchanged: invalidBootstrapRunStateUnchanged,
+    resultCreated: invalidBootstrapResultCreated,
+  };
+  if (!invalidBootstrapSelectedMethod.includes("PLS-SEM Bootstrapping")
+    || invalidBootstrapStartEnabled || invalidBootstrapBlockers.length === 0
+    || invalidPlsArchiveBefore.recipeCount !== 0 || invalidPlsArchiveBefore.resultCount !== 0
+    || invalidPlsArchiveBefore.runCount !== 0 || !invalidBootstrapRunStateUnchanged
+    || invalidBootstrapResultCreated) {
+    throw new Error(`Invalid empty-model Bootstrap setup did not remain blocked without creating a run or result: ${JSON.stringify(evidence.checks.bootstrapInvalidSetup)}`);
+  }
+
+  const invalidPlsDialog = await openCalculationFromToolbar();
+  const invalidPlsListbox = invalidPlsDialog.getByRole("listbox", { name: "Available calculation methods", exact: true });
+  await invalidPlsListbox.getByRole("option", { name: /PLS-SEM Algorithm/i }).click();
+  const invalidPlsStart = invalidPlsDialog.getByRole("button", { name: "Start calculation", exact: true });
+  const invalidPlsSelectedMethod = (await invalidPlsListbox.getByRole("option", { selected: true }).textContent())?.trim() ?? "";
+  const invalidPlsStartEnabled = await invalidPlsStart.isEnabled();
+  const invalidPlsBlockers = (await invalidPlsDialog.locator(".nd-blocker li").allTextContents()).map((row) => row.trim()).filter(Boolean);
+  await capture(mediationCaptureName(39, "mediation-pls-invalid-setup"));
+  await invalidPlsDialog.getByRole("button", { name: "Close", exact: true }).click();
+  await invalidPlsDialog.waitFor({ state: "hidden", timeout: 10_000 });
+
+  await page.keyboard.press("Control+S");
+  await page.locator(".nd-toast").filter({ hasText: /Project saved/i }).last().waitFor({ state: "visible", timeout: 15_000 });
+  await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
+  const invalidPlsArchiveAfter = await inspectMediationArchiveRunState(mediationProjectPath);
+  const invalidPlsRunStateUnchanged = JSON.stringify(invalidPlsArchiveAfter) === JSON.stringify(invalidPlsArchiveBefore);
+  const invalidPlsResultCreated = invalidPlsArchiveAfter.resultCount > invalidPlsArchiveBefore.resultCount
+    || invalidPlsArchiveAfter.resultIds.some((runId) => !invalidPlsArchiveBefore.resultIds.includes(runId));
+  evidence.checks.plsAlgorithmInvalidSetup = {
+    attempted: true,
+    selectedMethod: invalidPlsSelectedMethod,
+    startEnabled: invalidPlsStartEnabled,
+    blockers: invalidPlsBlockers,
+    archiveBefore: invalidPlsArchiveBefore,
+    archiveAfter: invalidPlsArchiveAfter,
+    runStateUnchanged: invalidPlsRunStateUnchanged,
+    resultCreated: invalidPlsResultCreated,
+  };
+  if (!invalidPlsSelectedMethod.includes("PLS-SEM Algorithm")
+    || invalidPlsStartEnabled
+    || invalidPlsBlockers.length === 0
+    || invalidPlsArchiveBefore.recipeCount !== 0
+    || invalidPlsArchiveBefore.resultCount !== 0
+    || invalidPlsArchiveBefore.runCount !== 0
+    || !invalidPlsRunStateUnchanged
+    || invalidPlsResultCreated) {
+    throw new Error(`Invalid empty-model PLS setup did not remain blocked without creating a run or result: ${JSON.stringify(evidence.checks.plsAlgorithmInvalidSetup)}`);
+  }
+
   await buildThreeConstructMediationModel();
   const spareIndicators = page.locator(".nd-variable-item").filter({ hasText: /^(x3|m3|y3)$/ });
   evidence.checks.visibleMediationModelBuild = {
@@ -10480,42 +11633,6 @@ try {
   }
   await capture(mediationCaptureName(42, "mediation-pls-results"));
 
-  const mediationBootstrapDialog = await openCalculationFromToolbar();
-  const mediationBootstrapListbox = mediationBootstrapDialog.getByRole("listbox", { name: "Available calculation methods", exact: true });
-  await mediationBootstrapListbox.getByRole("option", { name: /PLS-SEM Bootstrapping/i }).click();
-  await mediationBootstrapDialog.locator("#nd-calculation-bootstrap-samples").fill("100");
-  await mediationBootstrapDialog.locator("#nd-calculation-studentized").selectOption("0");
-  const startMediationBootstrap = mediationBootstrapDialog.getByRole("button", { name: "Start bootstrapping", exact: true });
-  evidence.checks.mediationBootstrapDialog = {
-    selectedMethod: (await mediationBootstrapListbox.getByRole("option", { selected: true }).textContent())?.trim(),
-    bootstrapSamples: await mediationBootstrapDialog.locator("#nd-calculation-bootstrap-samples").inputValue(),
-    studentizedInnerSamples: await mediationBootstrapDialog.locator("#nd-calculation-studentized").inputValue(),
-    startEnabled: await startMediationBootstrap.isEnabled(),
-    blockers: await mediationBootstrapDialog.locator(".nd-blocker li").allTextContents(),
-  };
-  if (!evidence.checks.mediationBootstrapDialog.startEnabled) {
-    throw new Error(`Native Bootstrap was blocked on the 240-row mediation project: ${evidence.checks.mediationBootstrapDialog.blockers.join(" | ")}`);
-  }
-  await capture(mediationCaptureName(43, "mediation-bootstrap-dialog"));
-  await startMediationBootstrap.click();
-
-  await waitForSurface("results", 180_000);
-  await page.locator(".nd-run-select select option:checked").filter({ hasText: /PLS-SEM Bootstrapping/i }).waitFor({ state: "attached", timeout: 180_000 });
-  const mediationBootstrapRunId = await page.locator(".nd-run-select select").inputValue();
-  evidence.checks.mediationBootstrapResult = {
-    runId: mediationBootstrapRunId,
-    runLabel: (await page.locator(".nd-run-select select option:checked").textContent())?.trim() ?? "",
-    navigation: await inspectMediationResultTree({ withBootstrap: true }),
-  };
-  const bootstrapInferenceText = evidence.checks.mediationBootstrapResult.navigation.tableText[mediationBootstrapTableTitle];
-  if (!bootstrapInferenceText.includes("Total indirect effect (aggregate)")
-    || !bootstrapInferenceText.includes("Construct 1")
-    || !bootstrapInferenceText.includes("Construct 3")
-    || /\bN\/A\b/i.test(bootstrapInferenceText)) {
-    throw new Error(`Aggregate mediation effects bootstrap inference did not contain the Construct 1 -> Construct 3 aggregate indirect-effect estimate: ${bootstrapInferenceText}`);
-  }
-  await capture(mediationCaptureName(44, "mediation-bootstrap-results"));
-
   const mediationExportCommand = page.locator(".nd-commandbar button").filter({ hasText: /^Export/i });
   await mediationExportCommand.click();
   const mediationExportDialog = page.locator('.nd-dialog-export[role="dialog"]');
@@ -10523,13 +11640,15 @@ try {
   const mediationXlsxExport = mediationExportDialog.getByRole("button", { name: /XLSX workbook/i });
   await mediationXlsxExport.waitFor({ state: "visible", timeout: 10_000 });
   evidence.checks.mediationExport = {
-    selectedRunId: mediationBootstrapRunId,
+    selectedRunId: await page.locator(".nd-run-select select").inputValue(),
     formats: await mediationExportDialog.locator(".nd-export-list button").count(),
     xlsxEnabled: await mediationXlsxExport.isEnabled(),
-    selectedResultTable: evidence.checks.mediationBootstrapResult.navigation.selectedTable,
+    selectedResultTable: evidence.checks.mediationPlsResult.navigation.selectedTable,
   };
-  if (evidence.checks.mediationExport.formats < 5 || !evidence.checks.mediationExport.xlsxEnabled) {
-    throw new Error("The completed mediation run did not expose the expected enabled native export formats.");
+  if (evidence.checks.mediationExport.selectedRunId !== mediationPlsRunId
+    || evidence.checks.mediationExport.formats < 5
+    || !evidence.checks.mediationExport.xlsxEnabled) {
+    throw new Error(`The exact completed PLS Algorithm run did not expose the expected enabled native export formats: ${JSON.stringify(evidence.checks.mediationExport)}`);
   }
 
   if (requestedNativeExportPath) {
@@ -10537,6 +11656,31 @@ try {
     const nativeSaveHelper = startWindowsNativeSaveExportHelper({
       targetPath,
       windowTitle: evidence.checks.runtime.title,
+      expectedSheets: [
+        "Direct effects",
+        "Outer loadings",
+        "Outer weights",
+        "R-square",
+        "Specific indirect effects",
+        "Total indirect effects",
+        "Total effects",
+        "Construct reliability and valid",
+        "Cross loadings",
+        "Fornell-Larcker criterion",
+        "HTMT+",
+        "Original HTMT",
+        "Structural model",
+        "Inner VIF values",
+        "f-square effect sizes",
+        "Model fit",
+        "Construct cross-validated redun",
+        "Run provenance",
+      ],
+      expectedSharedStrings: [
+        "Direct effects",
+        "Specific indirect effects",
+        "Run provenance",
+      ],
     });
     let helperCompleted = false;
     try {
@@ -10557,7 +11701,7 @@ try {
       helperCompleted = true;
       evidence.checks.mediationExport.nativeXlsx.helper.completion = completion;
       if (!completion.passed) {
-        throw new Error(`Native XLSX Save/export verification failed: ${JSON.stringify(completion)}`);
+        throw new Error(`Native PLS Algorithm XLSX Save/export verification failed: ${JSON.stringify(completion)}`);
       }
 
       const expectedFeedback = `Saved ${path.basename(targetPath)}.`;
@@ -10571,7 +11715,7 @@ try {
         isFile: file.isFile(),
       };
       if (!file.isFile() || file.size <= 0 || evidence.checks.mediationExport.nativeXlsx.appFeedback !== expectedFeedback) {
-        throw new Error(`The packaged app did not confirm the verified native XLSX export: ${JSON.stringify(evidence.checks.mediationExport.nativeXlsx)}`);
+        throw new Error(`The packaged app did not confirm the verified PLS Algorithm XLSX export: ${JSON.stringify(evidence.checks.mediationExport.nativeXlsx)}`);
       }
     } finally {
       if (!helperCompleted) nativeSaveHelper.stop();
@@ -10579,10 +11723,139 @@ try {
   } else {
     evidence.checks.mediationExport.nativeXlsx = {
       attempted: false,
-      reason: "QUICKPLS_NATIVE_EXPORT_PATH was not set; the harness retained the enabled native XLSX UI assertion without opening the Windows Save dialog.",
+      reason: "QUICKPLS_NATIVE_EXPORT_PATH was not set; the harness retained the enabled PLS Algorithm XLSX UI assertion without opening the Windows Save dialog.",
     };
   }
-  await capture(mediationCaptureName(45, "mediation-export-dialog"));
+  await capture(mediationCaptureName(42, "mediation-pls-export-dialog"));
+  await mediationExportDialog.getByRole("button", { name: "Close", exact: true }).click();
+
+  const mediationBootstrapDialog = await openCalculationFromToolbar();
+  const mediationBootstrapListbox = mediationBootstrapDialog.getByRole("listbox", { name: "Available calculation methods", exact: true });
+  await mediationBootstrapListbox.getByRole("option", { name: /PLS-SEM Bootstrapping/i }).click();
+  await mediationBootstrapDialog.locator("#nd-calculation-bootstrap-samples").fill("100");
+  await mediationBootstrapDialog.locator("#nd-calculation-studentized").selectOption("0");
+  const startMediationBootstrap = mediationBootstrapDialog.getByRole("button", { name: "Start bootstrapping", exact: true });
+  evidence.checks.mediationBootstrapDialog = {
+    selectedMethod: (await mediationBootstrapListbox.getByRole("option", { selected: true }).textContent())?.trim(),
+    bootstrapSamples: await mediationBootstrapDialog.locator("#nd-calculation-bootstrap-samples").inputValue(),
+    studentizedInnerSamples: await mediationBootstrapDialog.locator("#nd-calculation-studentized").inputValue(),
+    startEnabled: await startMediationBootstrap.isEnabled(),
+    blockers: await mediationBootstrapDialog.locator(".nd-blocker li").allTextContents(),
+    confidenceLevel: await mediationBootstrapDialog.locator("#nd-calculation-confidence").inputValue(),
+    seed: await mediationBootstrapDialog.locator("#nd-calculation-seed").inputValue(),
+    workers: await mediationBootstrapDialog.locator("#nd-calculation-workers").inputValue(),
+  };
+  if (!evidence.checks.mediationBootstrapDialog.startEnabled) {
+    throw new Error(`Native Bootstrap was blocked on the 240-row mediation project: ${evidence.checks.mediationBootstrapDialog.blockers.join(" | ")}`);
+  }
+  const bootstrapResponsiveSetup = [];
+  for (const viewport of ctaPlsViewports) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.waitForTimeout(150);
+    const metrics = await mediationBootstrapDialog.evaluate((element) => {
+      const bounds = element.getBoundingClientRect();
+      return {
+        innerWidth,
+        innerHeight,
+        documentNoHorizontalOverflow: document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
+        dialogWithinViewport: bounds.left >= 0 && bounds.right <= innerWidth + 1 && bounds.top >= 0 && bounds.bottom <= innerHeight + 1,
+        startVisible: Boolean(element.querySelector('button[type="submit"]')),
+      };
+    });
+    bootstrapResponsiveSetup.push({ ...viewport, passed: metrics.innerWidth === viewport.width
+      && metrics.innerHeight === viewport.height && metrics.documentNoHorizontalOverflow
+      && metrics.dialogWithinViewport && metrics.startVisible, metrics });
+    await capture(`43-tauri-native-mediation-bootstrap-dialog-${viewport.id}.png`);
+  }
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await capture(mediationCaptureName(43, "mediation-bootstrap-dialog"));
+  await startMediationBootstrap.click();
+
+  await waitForSurface("results", 180_000);
+  await page.locator(".nd-run-select select option:checked").filter({ hasText: /PLS-SEM Bootstrapping/i }).waitFor({ state: "attached", timeout: 180_000 });
+  const mediationBootstrapRunId = await page.locator(".nd-run-select select").inputValue();
+  evidence.checks.mediationBootstrapResult = {
+    runId: mediationBootstrapRunId,
+    runLabel: (await page.locator(".nd-run-select select option:checked").textContent())?.trim() ?? "",
+    navigation: await inspectMediationResultTree({ withBootstrap: true }),
+  };
+  const bootstrapInferenceText = evidence.checks.mediationBootstrapResult.navigation.tableText[mediationBootstrapTableTitle];
+  if (!bootstrapInferenceText.includes("Total indirect effect (aggregate)")
+    || !bootstrapInferenceText.includes("Construct 1")
+    || !bootstrapInferenceText.includes("Construct 3")
+    || /\bN\/A\b/i.test(bootstrapInferenceText)) {
+    throw new Error(`Aggregate mediation effects bootstrap inference did not contain the Construct 1 -> Construct 3 aggregate indirect-effect estimate: ${bootstrapInferenceText}`);
+  }
+  await capture(mediationCaptureName(44, "mediation-bootstrap-results"));
+
+  await mediationExportCommand.click();
+  await mediationExportDialog.waitFor({ state: "visible", timeout: 10_000 });
+  await mediationXlsxExport.waitFor({ state: "visible", timeout: 10_000 });
+  evidence.checks.mediationExport.bootstrap = {
+    selectedRunId: await page.locator(".nd-run-select select").inputValue(),
+    formats: await mediationExportDialog.locator(".nd-export-list button").count(),
+    xlsxEnabled: await mediationXlsxExport.isEnabled(),
+    selectedResultTable: evidence.checks.mediationBootstrapResult.navigation.selectedTable,
+    nativeXlsx: null,
+  };
+  if (evidence.checks.mediationExport.bootstrap.selectedRunId !== mediationBootstrapRunId
+    || evidence.checks.mediationExport.bootstrap.formats < 5
+    || !evidence.checks.mediationExport.bootstrap.xlsxEnabled) {
+    throw new Error(`The completed Bootstrap run did not retain its expected enabled native export formats: ${JSON.stringify(evidence.checks.mediationExport.bootstrap)}`);
+  }
+  if (!requestedBootstrapNativeExportPath) {
+    throw new Error("QUICKPLS_BOOTSTRAP_NATIVE_EXPORT_PATH is required for authoritative packaged PLS Bootstrap XLSX acceptance; the PLS Algorithm export cannot stand in for the selected Bootstrap run.");
+  }
+  const bootstrapExportTargetPath = await validateRequestedNativeExportPath(
+    requestedBootstrapNativeExportPath,
+    "QUICKPLS_BOOTSTRAP_NATIVE_EXPORT_PATH",
+  );
+  const bootstrapSaveHelper = startWindowsNativeSaveExportHelper({
+    targetPath: bootstrapExportTargetPath,
+    windowTitle: evidence.checks.runtime.title,
+    expectedSheets: [
+      "Aggregate mediation effects boo",
+      "Bootstrapping",
+      "Bias-corrected and accelerated",
+      "Run provenance",
+    ],
+    expectedSharedStrings: [
+      "Aggregate mediation effects bootstrap inference",
+      "Total indirect effect (aggregate)",
+      "Run provenance",
+    ],
+  });
+  let bootstrapHelperCompleted = false;
+  try {
+    const ready = await bootstrapSaveHelper.ready;
+    if (!ready.passed || ready.event !== "ready") {
+      throw new Error(`Native Bootstrap XLSX Save helper did not become ready: ${JSON.stringify(ready)}`);
+    }
+    await mediationXlsxExport.click();
+    const completion = await bootstrapSaveHelper.completed;
+    bootstrapHelperCompleted = true;
+    if (!completion.passed) throw new Error(`Native Bootstrap XLSX Save/export verification failed: ${JSON.stringify(completion)}`);
+    const expectedFeedback = `Saved ${path.basename(bootstrapExportTargetPath)}.`;
+    const feedback = mediationExportDialog.locator("#nd-export-feedback").filter({ hasText: expectedFeedback });
+    await feedback.waitFor({ state: "visible", timeout: 15_000 });
+    const file = await fs.stat(bootstrapExportTargetPath);
+    evidence.checks.mediationExport.bootstrap.nativeXlsx = {
+      attempted: true,
+      selectedRunId: await page.locator(".nd-run-select select").inputValue(),
+      targetPath: bootstrapExportTargetPath,
+      helper: { ready, completion },
+      appFeedback: (await feedback.textContent())?.trim() ?? "",
+      file: { path: bootstrapExportTargetPath, size: file.size, isFile: file.isFile() },
+    };
+    if (!file.isFile() || file.size <= 0
+      || evidence.checks.mediationExport.bootstrap.nativeXlsx.selectedRunId !== mediationBootstrapRunId
+      || evidence.checks.mediationExport.bootstrap.nativeXlsx.appFeedback !== expectedFeedback) {
+      throw new Error(`The packaged app did not confirm the exact selected Bootstrap XLSX export: ${JSON.stringify(evidence.checks.mediationExport.bootstrap.nativeXlsx)}`);
+    }
+  } finally {
+    if (!bootstrapHelperCompleted) bootstrapSaveHelper.stop();
+  }
+  await capture(mediationCaptureName(45, "mediation-bootstrap-export-dialog"));
   await mediationExportDialog.getByRole("button", { name: "Close", exact: true }).click();
 
   await page.keyboard.press("Control+S");
@@ -10594,6 +11867,12 @@ try {
   await waitForSurface("results");
   await page.locator(".nd-run-select select option").first().waitFor({ state: "attached", timeout: 15_000 });
   const reopenedMediationRuns = await page.locator(".nd-run-select select option").allTextContents();
+  const reopenedMediationPlsOption = page.locator(".nd-run-select select option").filter({ hasText: /PLS-SEM Algorithm/i }).first();
+  await reopenedMediationPlsOption.waitFor({ state: "attached", timeout: 15_000 });
+  const reopenedMediationPlsRunId = await reopenedMediationPlsOption.getAttribute("value");
+  if (!reopenedMediationPlsRunId) throw new Error("The reopened mediation PLS Algorithm run option had no run identifier.");
+  await page.locator(".nd-run-select select").selectOption(reopenedMediationPlsRunId);
+  const reopenedMediationPlsNavigation = await inspectMediationResultTree({ withBootstrap: false });
   const reopenedMediationBootstrapOption = page.locator(".nd-run-select select option").filter({ hasText: /PLS-SEM Bootstrapping/i }).first();
   await reopenedMediationBootstrapOption.waitFor({ state: "attached", timeout: 15_000 });
   const reopenedMediationBootstrapRunId = await reopenedMediationBootstrapOption.getAttribute("value");
@@ -10611,6 +11890,8 @@ try {
   };
   await openMenuItem("View", "Results");
   await waitForSurface("results");
+  await page.locator(".nd-run-select select").selectOption(reopenedMediationPlsRunId);
+  const reopenedMediationPlsFinalNavigation = await inspectMediationResultTree({ withBootstrap: false });
   await page.locator(".nd-run-select select").selectOption(reopenedMediationBootstrapRunId);
   const reopenedMediationFinalNavigation = await inspectMediationResultTree({ withBootstrap: true });
   evidence.checks.mediationSaveReopen = {
@@ -10619,19 +11900,94 @@ try {
     runOptions: reopenedMediationRuns.map((label) => label.trim()),
     hasPlsAlgorithm: reopenedMediationRuns.some((label) => /PLS-SEM Algorithm/i.test(label)),
     hasBootstrap: reopenedMediationRuns.some((label) => /PLS-SEM Bootstrapping/i.test(label)),
+    selectedPlsRunId: reopenedMediationPlsRunId,
+    expectedPlsRunId: mediationPlsRunId,
     selectedRunId: await page.locator(".nd-run-select select").inputValue(),
     expectedBootstrapRunId: mediationBootstrapRunId,
     model: reopenedMediationModel,
+    plsNavigation: reopenedMediationPlsNavigation,
+    plsFinalNavigation: reopenedMediationPlsFinalNavigation,
     navigation: reopenedMediationNavigation,
     finalNavigation: reopenedMediationFinalNavigation,
   };
   if (!evidence.checks.mediationSaveReopen.hasPlsAlgorithm
     || !evidence.checks.mediationSaveReopen.hasBootstrap
+    || evidence.checks.mediationSaveReopen.selectedPlsRunId !== mediationPlsRunId
     || evidence.checks.mediationSaveReopen.selectedRunId !== mediationBootstrapRunId
     || reopenedMediationModel.constructs !== 3
     || reopenedMediationModel.assignedIndicators !== 6
     || reopenedMediationModel.structuralPaths !== 2) {
     throw new Error(`The mediation model, runs, or native results did not survive save/reload/reopen: ${JSON.stringify(evidence.checks.mediationSaveReopen)}`);
+  }
+  const bootstrapResponsiveResults = [];
+  for (const viewport of ctaPlsViewports) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.waitForTimeout(150);
+    const rowCount = await openResultTable(mediationBootstrapTableTitle);
+    const metrics = await page.evaluate(() => {
+      const app = document.querySelector(".nd-app");
+      return {
+        innerWidth,
+        innerHeight,
+        documentNoHorizontalOverflow: document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
+        appNoHorizontalOverflow: Boolean(app && app.scrollWidth <= app.clientWidth + 1),
+        treeVisible: Boolean(document.querySelector('.nd-result-tree[role="tree"]')),
+      };
+    });
+    bootstrapResponsiveResults.push({ ...viewport, passed: metrics.innerWidth === viewport.width
+      && metrics.innerHeight === viewport.height && metrics.documentNoHorizontalOverflow
+      && metrics.appNoHorizontalOverflow && metrics.treeVisible && rowCount === 6
+      && await page.locator(".nd-run-select select").inputValue() === mediationBootstrapRunId,
+    metrics: { ...metrics, rowCount } });
+    await capture(`46-tauri-native-mediation-bootstrap-results-reopened-${viewport.id}.png`);
+  }
+  await page.setViewportSize({ width: 1440, height: 900 });
+  evidence.checks.bootstrapResponsiveViewports = {
+    passed: bootstrapResponsiveSetup.length === ctaPlsViewports.length
+      && bootstrapResponsiveResults.length === ctaPlsViewports.length
+      && bootstrapResponsiveSetup.every((row) => row.passed)
+      && bootstrapResponsiveResults.every((row) => row.passed),
+    setup: bootstrapResponsiveSetup,
+    results: bootstrapResponsiveResults,
+  };
+  if (!evidence.checks.bootstrapResponsiveViewports.passed) {
+    throw new Error(`PLS Bootstrap setup/results responsiveness failed at a required viewport: ${JSON.stringify(evidence.checks.bootstrapResponsiveViewports)}`);
+  }
+  evidence.checks.bootstrapCancellationRetry = {
+    passed: evidence.checks.bootstrapCancelled.status === "cancelled"
+      && evidence.checks.bootstrapCancelled.partialRunVisible === 0
+      && cancelledBootstrapSetup.bootstrapSamples === "1000"
+      && cancelledBootstrapSetup.studentizedInnerSamples === "999"
+      && evidence.checks.mediationBootstrapDialog.bootstrapSamples === "100"
+      && evidence.checks.mediationBootstrapDialog.studentizedInnerSamples === "0"
+      && Boolean(mediationBootstrapRunId)
+      && evidence.checks.mediationExport.bootstrap.selectedRunId === mediationBootstrapRunId
+      && evidence.checks.mediationSaveReopen.selectedRunId === mediationBootstrapRunId,
+    cancelledSettings: cancelledBootstrapSetup,
+    cancelledPartialRunVisible: evidence.checks.bootstrapCancelled.partialRunVisible,
+    retrySettings: evidence.checks.mediationBootstrapDialog,
+    completedRetryRunId: mediationBootstrapRunId,
+    exportedRunId: evidence.checks.mediationExport.bootstrap.selectedRunId,
+    reopenedRunId: evidence.checks.mediationSaveReopen.selectedRunId,
+  };
+  if (!evidence.checks.bootstrapCancellationRetry.passed) {
+    throw new Error(`PLS Bootstrap cancellation/retry identity linkage failed: ${JSON.stringify(evidence.checks.bootstrapCancellationRetry)}`);
+  }
+  const bootstrapInternalOrigins = new Set([packagedTauriOrigin, packagedTauriIpcOrigin]);
+  const bootstrapExternalRequests = observedBrowserRequests.filter((request) => request.origin
+    && request.origin !== "null" && !bootstrapInternalOrigins.has(request.origin));
+  evidence.checks.bootstrapFunctionalOffline = {
+    passed: observedBrowserRequests.length > 0 && bootstrapExternalRequests.length === 0,
+    analyticalWorkflowRequiresInternet: false,
+    strictZeroProcessEgressClaimed: false,
+    platformBackgroundEgressOutsidePageRequestScope: true,
+    observedRequestCount: observedBrowserRequests.length,
+    externalRequestCount: bootstrapExternalRequests.length,
+    origins: [...new Set(observedBrowserRequests.map((request) => request.origin))].sort(),
+    externalRequests: bootstrapExternalRequests,
+  };
+  if (!evidence.checks.bootstrapFunctionalOffline.passed) {
+    throw new Error(`PLS Bootstrap browser/app workflow crossed its functional-offline request boundary: ${JSON.stringify(evidence.checks.bootstrapFunctionalOffline)}`);
   }
   await capture(mediationCaptureName(46, "mediation-results-reopened"));
 

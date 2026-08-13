@@ -130,6 +130,12 @@ describe("native analysis recipe descriptors", () => {
       family: "Assessment",
       label: "CCA composite residual diagnostics",
     });
+    expect(nativeAnalysisRecipeDescriptor("cta_pls")).toMatchObject({
+      engineMethod: "cta_pls",
+      family: "PLS-SEM",
+      label: "Confirmatory Tetrad Analysis",
+      scopeMetadata: "validated_v1_2_3_cta_pls_bounded_scope",
+    });
     expect(nativeAnalysisRecipeDescriptor("ipma")).toMatchObject({
       engineMethod: "ipma",
       family: "Assessment",
@@ -338,7 +344,13 @@ describe("advanced validated backend family mappings", () => {
       ["nca", { ncaX: "x1", ncaY: "y1" }],
     ];
     for (const [kind, patch] of configurations) {
-      const recipe = buildNativeAnalysisRecipe(makeInput(kind, { ...patch, bootstrapSamples: 5_000, studentizedInnerSamples: 99, permutationSamples: 999 }));
+      const baseInput = makeInput(kind, { ...patch, bootstrapSamples: 5_000, studentizedInnerSamples: 99, permutationSamples: 999 });
+      const recipe = buildNativeAnalysisRecipe(kind === "cta_pls" ? {
+        ...baseInput,
+        nodes: baseInput.nodes.map((node) => node.id === "x"
+          ? { ...node, data: { ...node.data, indicators: ["x1", "x2", "x3", "x4"] } }
+          : node),
+      } : baseInput);
       expect(recipe.settings.method).toBe(nativeAnalysisRecipeDescriptor(kind).engineMethod);
       expect(recipe.settings.bootstrap_samples, kind).toBe(0);
       expect(recipe.settings.studentized_inner_samples, kind).toBe(0);
@@ -409,20 +421,38 @@ describe("advanced validated backend family mappings", () => {
     expectFieldError(makeInput(kind, { weightingScheme: "pca", ...(kind === "ipma" ? { ipmaTargets: "y" } : {}) }), "weightingScheme");
   });
 
+  it("requires an eligible ordinary CTA-PLS block and blocks controls and generated constructs", () => {
+    expectFieldError(makeInput("cta_pls"), "model");
+    const eligibleNodes = nodes.map((node) => node.id === "x"
+      ? { ...node, data: { ...node.data, indicators: ["x1", "x2", "x3", "x4"] } }
+      : node);
+    expect(() => buildNativeAnalysisRecipe(makeInput("cta_pls", {}, { nodes: eligibleNodes }))).not.toThrow();
+    expectFieldError(makeInput("cta_pls", {}, {
+      nodes: eligibleNodes,
+      edges: [{ id: "control", source: "x", target: "y", data: { role: "control" } }],
+    }), "model");
+    expectFieldError(makeInput("cta_pls", {}, {
+      nodes: eligibleNodes.map((node) => node.id === "x" ? {
+        ...node,
+        data: { ...node.data, semantic: "higher_order" as const, higherOrder: { id: "x", components: ["y"], method: "repeated_indicators" as const } },
+      } : node),
+    }), "model");
+  });
+
   it("keeps current prediction separate from explicitly requested legacy PLS-POS and FIMIX workflows", () => {
     const base = buildNativeAnalysisRecipe(makeInput("predict", { groupMethods: "mga_permutation" }));
     expect(base.metadata).toEqual({ status: "validated_plspredict_indicator_v2_and_cvpat_indicator_benchmarks_v2_bounded_scope" });
     expect(base.method_config).toEqual({ kind: "predict" });
 
     const pos = buildNativeAnalysisRecipe(makeInput("predict", { groupMethods: "pls_pos", segmentCount: 5, segmentStarts: 50, minimumSegmentShare: 0.4 }));
-    expect(pos.metadata).toEqual({ status: "validated_plspredict_indicator_v2_and_cvpat_indicator_benchmarks_v2_bounded_scope" });
+    expect(pos.metadata).toEqual({ status: "preview_pls_pos_v1_bounded_score_space_diagnostic" });
     expect(pos.method_config).toEqual({
       kind: "predict",
       pls_pos: { segments: 5, starts: 50, minimum_segment_share: 0.4 },
     });
 
     const fimix = buildNativeAnalysisRecipe(makeInput("predict", { groupMethods: "fimix", segmentCount: 3 }));
-    expect(fimix.metadata).toEqual({ status: "validated_plspredict_indicator_v2_and_cvpat_indicator_benchmarks_v2_bounded_scope" });
+    expect(fimix.metadata).toEqual({ status: "preview_fimix_pls_v1_bounded_score_space_diagnostic" });
     expect(fimix.method_config).toEqual({
       kind: "predict",
       fimix: { segments: 3, starts: 10, minimum_segment_share: 0.1 },

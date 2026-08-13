@@ -1,0 +1,101 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "archive": {
+      "path": "validation/results/v247-native-structural-path-randomization-1786603559512-56988.qpls",
+      "sha256": "64c2ef16b628ad1ff3c6c742383d81e393bc5f272ce35cf1c0a9f9a6f90cc280",
+      "size": 22291
+    },
+    "archive_identity_token_present": true,
+    "archive_origin": "historical packaged workflow; revalidated and reopened by the exact current release CLI",
+    "checksum_tamper_rejected_by_current_cli": {
+      "command": [
+        "D:\\QuickPLS\\target\\release\\qpls.exe",
+        "validate",
+        "C:\\Users\\MOHD~1.NAV\\AppData\\Local\\Temp\\quickpls-factory-tamper-h8gwikan\\tampered.qpls",
+        "--json"
+      ],
+      "returncode": 1,
+      "stderr_tail": "Error: invalid project C:\\Users\\MOHD~1.NAV\\AppData\\Local\\Temp\\quickpls-factory-tamper-h8gwikan\\tampered.qpls\n\nCaused by:\n    project recovery failed: primary failed (checksum mismatch for project.json); autosave is absent; backup is absent\n",
+      "stdout_tail": ""
+    },
+    "current_cli": {
+      "path": "target/release/qpls.exe",
+      "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+      "size": 20690432
+    },
+    "current_cli_inspect": {
+      "command": [
+        "D:\\QuickPLS\\target\\release\\qpls.exe",
+        "inspect",
+        "validation/results/v247-native-structural-path-randomization-1786603559512-56988.qpls",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "{\n  \"compatibilityNoticeCount\": 0,\n  \"datasets\": [\n    {\n      \"columns\": 7,\n      \"fingerprint\": \"v2:39cda42ad687e77d85dfeea50afff2b3806b8db4f90386c4529104e0671d9b2c\",\n      \"id\": \"69637712-3c2e-465e-a545-f53f322c8396\",\n      \"kind\": \"raw\",\n      \"name\": \"mga_reference.csv\",\n      \"rows\": 180,\n      \"sampleSize\": null\n    }\n  ],\n  \"engineVersion\": \"2.46.0\",\n  \"futureUnsupported\": {\n    \"models\": 0,\n    \"recipes\": 0,\n    \"results\": 0\n  },\n  \"migrationPending\": false,\n  \"models\": 1,\n  \"name\": \"Native Structural Path Randomization Acceptance\",\n  \"projectId\": \"f8f52db5-f6a2-41c2-ba4d-44a9c7e2249f\",\n  \"readOnly\": false,\n  \"recipes\": 1,\n  \"recovered\": true,\n  \"results\": 1,\n  \"schemaVersion\": 5,\n  \"sourceArchiveVersion\": 5\n}\n"
+    },
+    "current_cli_validate": {
+      "command": [
+        "D:\\QuickPLS\\target\\release\\qpls.exe",
+        "validate",
+        "validation/results/v247-native-structural-path-randomization-1786603559512-56988.qpls",
+        "--json"
+      ],
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "{\n  \"issues\": [],\n  \"recovered\": true,\n  \"valid\": true\n}\n"
+    },
+    "current_desktop_write_not_claimed": true,
+    "passed": true
+  },
+  "feature_id": "qpls3.inference.structural_path_randomization",
+  "generated_at_utc": "2026-08-13T19:54:09.433161Z",
+  "method_version": "freedman_lane_permutation_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "persistence_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/legacy_release_factory_migration.py",
+      "sha256": "5c2c131f972d70746ceed70377f8673d4b67ece6ece07c73d45bb2ac65fa4c5f",
+      "size": 23709
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/structural_path_randomization_v1.manifest.json",
+      "sha256": "c4af70fa296449446e4f987c346b82be6c03c82fdaf73e6e2f66e738d8450b2a",
+      "size": 14560
+    },
+    {
+      "path": "validation/structural_path_randomization_boundary_gate.py",
+      "sha256": "93074fe54942cd3211e17a79989ca535c073c11014ab111d67fa3ee4ea8a7a7a",
+      "size": 9991
+    },
+    {
+      "path": "validation/test_legacy_release_factory_migration.py",
+      "sha256": "d4ce1d582d77f6a861b20c5ee95f7a01446880270e038429712a240194cb23c1",
+      "size": 2519
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_structural_path_randomization_v1_packaged_acceptance.py",
+      "sha256": "c3ccd9036810bca8ac89f11767432128493614ad17ac64d28ce409bc959ccd6d",
+      "size": 30233
+    }
+  ]
+}

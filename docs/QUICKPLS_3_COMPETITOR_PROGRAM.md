@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This program defines the evidence and delivery work required before QuickPLS can be positioned as a professional SmartPLS competitor for documented workflows. It is not a full-parity or numerical-identity claim. QuickPLS remains an independent, fully offline Windows product, and every public method claim remains bounded by its specification, accepted evidence, and known differences.
+This program defines the evidence and delivery work required before QuickPLS can be positioned as a professional SmartPLS competitor for documented workflows. It is not a full-parity or numerical-identity claim. QuickPLS remains an independent Windows product whose analytical workflows require no internet connection, account, or cloud service; its application/page makes no external requests. Every public method claim remains bounded by its specification, accepted evidence, and known differences. A literal fully-offline, no-telemetry, or zero-process-egress claim is separate and remains blocked by the Microsoft-managed WebView2 runtime unless an OS-enforced fixed-WebView2 containment gate passes.
 
 The machine-readable source of truth is [`validation/quickpls_3_competitor_catalogue.json`](../validation/quickpls_3_competitor_catalogue.json). The fail-closed validator is [`validation/quickpls_3_competitor_program.py`](../validation/quickpls_3_competitor_program.py).
 
@@ -14,30 +14,36 @@ The snapshot is a comparison baseline, not a statement that QuickPLS implements 
 
 ## Current evidence baseline
 
-The validated manifest currently reports:
+The validated catalogue currently derives:
 
 | Status | Catalogue entries | Meaning |
 | --- | ---: | --- |
-| `release-qualified` | 4 | A current QuickPLS parity-ledger capability has complete scoped method and packaged acceptance evidence. |
-| `native-qualified` | 18 | An accepted native QuickPLS capability exists, but a current method-scoped release evidence pair is still required. |
-| `engine-preview` | 14 | Engine-only, diagnostic, or partially native implementation evidence exists, but there is no accepted matching capability in the current parity ledger. |
-| `absent` | 8 | No accepted implementation is claimed. |
-| `deferred` | 1 | Intentionally outside the QuickPLS 3 competitor claim gate, with a disclosed rationale. |
+| `release-qualified` | 3 | A current QuickPLS capability has complete scoped method and packaged acceptance evidence through its parity-ledger or strict-factory evidence path. |
+| `native-qualified` | 20 | An accepted native QuickPLS capability exists, but a current method-scoped release evidence pair is still required. |
+| `engine-preview` | 0 | The status remains available for future evidence-derived factory promotion, but no row currently qualifies. |
+| `absent` | 20 | The exact method manifest does not yet derive accepted engine, archive, native, or release evidence. Existing source code or historical audits cannot override this state. |
+| `deferred` | 2 | Intentionally outside the QuickPLS 3 competitor claim gate, with a disclosed legacy rationale. |
 
-These counts cover catalogue entries, not unique QuickPLS capabilities. Shared capabilities explain why 45 catalogue rows map to a 17-feature QuickPLS parity ledger. The validator derives accepted status only from the parity evaluator's current evidence-backed `derived_state`; raw ledger labels, method labels, source files, or old audit artifacts cannot promote a row. A frozen per-method mapping table makes every intentional one-to-many and many-to-one mapping reviewable and rejects capability borrowing.
+These counts cover catalogue entries, not unique QuickPLS capabilities. Every one of the 43 competitor-scope rows maps to a stable capability ID; reviewed PCA, MICOM/MGA, PLSpredict/CVPAT, PROCESS, and CB-SEM/CFA contexts share capabilities, while the Permutation row deliberately maps two capabilities. Together the rows map to 38 factory capabilities. The complete 40-manifest set additionally retains the deferred Blindfolding contract and QuickPLS moderated-mediation extension.
+
+The validator uses two evidence paths and no editable completion flags. The 17 capabilities already governed by the parity ledger derive their accepted status from that evaluator's current evidence-backed `derived_state`. The other 21 catalogue capabilities derive status only from the exact matching method-factory result. Raw ledger labels, catalogue status strings, source files, and historical audit artifacts cannot promote a row. The frozen mapping rejects missing IDs, borrowed IDs, duplicate edges, and cross-row reuse outside the documented shared contexts.
 
 `competitor_ready` is currently `false` by design.
 
-Final readiness also requires [`validation/results/quickpls_3_competitor_approval.json`](../validation/results/quickpls_3_competitor_approval.json). That file is intentionally absent until final approval. Absence is a pending gate, not a malformed roadmap; a present but stale or incomplete envelope fails validation.
+Final readiness also requires the evidence-derived external-beta gate in [`validation/quickpls_external_beta.json`](../validation/quickpls_external_beta.json) and [`validation/results/quickpls_3_competitor_approval.json`](../validation/results/quickpls_3_competitor_approval.json). The approval file is intentionally absent until final approval. A planned beta contract is structurally valid but not beta-ready; an absent approval is a pending gate, while a present stale or incomplete envelope fails validation.
 
 ## Gap inventory
 
-### Engine or partial workflow requiring promotion
+### Not yet factory-qualified
 
-- Blindfolding/Q-squared assessment coverage
-- CTA-PLS
-- HTMT as an independently tracked catalogue capability
+- PLS-SEM sample-size and power analysis
+- Consistent bootstrapping for PLSc
+- Consistent permutation for PLSc
+- HTMT and HTMT+
 - Bounded model-fit metrics
+- PLS model comparison
+- Prediction-oriented model selection
+- Consistent MGA
 - PLS-POS
 - FIMIX-PLS
 - Moderation
@@ -48,22 +54,14 @@ Final readiness also requires [`validation/results/quickpls_3_competitor_approva
 - CB-SEM bootstrapping
 - CB-SEM multigroup analysis
 - CB-SEM measurement invariance
-
-The `engine-preview` label is deliberately conservative. It does not authorize a public native or release-qualified claim.
-
-### Absent workflows to implement
-
-- PLS-SEM sample-size and power analysis
-- Consistent bootstrapping for PLSc
-- Consistent permutation for PLSc
-- PLS model comparison
-- Prediction-oriented model selection
-- Consistent MGA
 - CB-SEM model comparison
 - CB-SEM moderator analysis
 
+These rows currently derive `absent`. Some have bounded implementation or scaffolding in the repository, but that is not promotion evidence. A row can move to `engine-preview`, `native-qualified`, or `release-qualified` only when its exact manifest derives the corresponding state.
+
 ### Intentionally deferred
 
+- Blindfolding remains outside the 3.0 claim gate as a legacy redundancy-analysis workflow superseded in the product strategy by higher-priority prediction assessment. Existing Q-squared output is not silently promoted as this official workflow.
 - PLS Goodness of Fit (GoF) remains outside the 3.0 claim gate because the official catalogue calls it legacy and advises against relying on it. QuickPLS should disclose this decision rather than implementing a low-value method merely for list parity.
 
 ## Release train
@@ -95,7 +93,7 @@ Each competitive-scope catalogue row must become `release-qualified` through a b
 7. Verify displayed values and CSV/XLSX/HTML/SVG outputs against the same completed run.
 8. Persist strict provenance and prove explicit save, close, reopen, and tamper rejection.
 9. Execute the exact packaged Windows application and retain method-scoped acceptance evidence.
-10. Promote the parity ledger only from a current scoped method audit and packaged acceptance report carrying the exact capability ID, method version, and catalogue snapshot identity.
+10. Promote the exact method manifest from current scoped evidence carrying the capability ID, method version, and catalogue snapshot identity; for the 17 established parity capabilities, separately promote the parity ledger from its accepted evidence path.
 
 Unsupported variants must remain blocked, hidden, or clearly disclosed. A descriptive comparison screen, source-code path, or historical passing report is not enough to promote a method.
 
@@ -103,31 +101,40 @@ Unsupported variants must remain blocked, hidden, or clearly disclosed. A descri
 
 The competitor claim is allowed only when:
 
-- all 44 non-deferred catalogue entries are `release-qualified` for their documented QuickPLS scope;
+- all 43 non-deferred catalogue entries are `release-qualified` for their documented QuickPLS scope;
 - the fail-closed commercial-readiness contract independently derives `release_ready: true`, including Authenticode signing and timestamping;
 - clean install, upgrade, recovery, repair, and uninstall are certified on supported Windows configurations;
 - public support, security, vulnerability-response, update, known-issues, and rollback policies operate;
 - high-risk scientific method families receive independent review; and
 - the external beta exit criteria pass without unresolved P0/P1 defects or reproducible data loss;
+- the external-beta validator derives `beta_ready: true` from the frozen privacy, cohort, journey, signed-candidate, lifecycle-rerun, and independent-decision evidence;
 - the method-manifest factory validates successfully, every mapped capability has a manifest, and each is evidence-derived as release-qualified; and
 - the catalogue, parity ledger, and every method manifest carry the exact same canonical catalogue snapshot date; and
 - a final aggregate approval envelope cryptographically binds the exact catalogue, parity ledger, evidence-derived parity report, commercial-readiness contract and report, complete method-manifest file set, and method-manifest report.
 
+These conditions authorize only the bounded competitor statement for documented
+workflows. They do not authorize a literal fully-offline, no-telemetry, or
+zero-egress process-tree claim. That stronger statement requires the separate
+OS-enforced fixed-WebView2 containment gate to pass; application-level browser
+arguments, CSP, and a rejection proxy are insufficient by themselves.
+
 ### Aggregate approval envelope
 
-The final approval envelope is deliberately separate from all inputs it hashes, preventing circular digests. Its seven closed bindings are:
+The final approval envelope is deliberately separate from all inputs it hashes, preventing circular digests. Its nine closed bindings are:
 
 1. `competitor_catalogue`: exact repository-relative catalogue path and SHA-256.
 2. `parity_ledger`: exact repository-relative ledger path and SHA-256.
 3. `parity_report`: canonical evidence-derived report SHA-256 plus parity-validator path and SHA-256.
 4. `commercial_readiness_contract`: exact contract path and SHA-256.
 5. `commercial_readiness_report`: canonical derived report SHA-256 plus commercial-validator path and SHA-256.
-6. `method_manifest_set`: every sorted `validation/methods/*.manifest.json` path and SHA-256 plus a file-set digest.
-7. `method_manifest_report`: canonical factory-report SHA-256 plus factory-validator and schema paths and SHA-256 values.
+6. `external_beta_contract`: exact external-beta contract path and SHA-256.
+7. `external_beta_report`: canonical evidence-derived beta report SHA-256 plus beta-validator path and SHA-256.
+8. `method_manifest_set`: every sorted `validation/methods/*.manifest.json` path and SHA-256 plus a file-set digest.
+9. `method_manifest_report`: canonical factory-report SHA-256 plus factory-validator and schema paths and SHA-256 values.
 
 Repository-local absolute paths in derived reports are normalized to repository-relative POSIX paths before canonical JSON hashing, so the approval is portable across clean workspaces while still binding the same repository inputs. The assembly timestamp must not predate catalogue reverification, any method-manifest freeze timestamp, or final commercial release approval. The separate final approval timestamp must strictly postdate digest assembly. Future timestamps are rejected.
 
-Any later catalogue, parity evidence, readiness contract, validator, schema, method-manifest file, or evidence-derived report change invalidates the envelope and requires fresh assembly and approval. Merely editing a completion flag cannot satisfy this gate.
+Any later catalogue, parity evidence, readiness contract, external-beta contract, validator, schema, method-manifest file, or evidence-derived report change invalidates the envelope and requires fresh assembly and approval. Aggregate assembly must postdate both the commercial release decision and external-beta approval. Merely editing a completion flag cannot satisfy this gate.
 
 This gate supports the bounded statement that QuickPLS is a professional independent competitor for its documented workflows. It does not support "identical to SmartPLS," "complete replacement," or unrestricted full-parity language.
 
@@ -145,10 +152,11 @@ The validator exits zero when the roadmap is internally valid even though planne
 - catalogue omissions, duplicates, reordering, or renamed frozen entries;
 - unknown statuses, priorities, or release targets;
 - missing, cyclic, or release-order-invalid dependencies;
-- missing repository evidence for an `engine-preview` row;
-- capability mappings that differ from the frozen per-method mapping or contradict the parity evaluator's evidence-derived state;
-- accepted parity capabilities omitted from the crosswalk; or
-- invalid commercial-readiness or method-manifest reports, missing manifest coverage, snapshot drift, or invalid competitor claim-gate references.
+- a row status that is not derived from its exact validated capability evidence;
+- missing, borrowed, duplicate, or unexpectedly shared capability mappings;
+- a mapped status that contradicts the exact factory manifest, or for one of the established 17 capabilities, the parity evaluator's evidence-derived state;
+- missing or unexpected parity capabilities, factory manifests, or auxiliary factory contracts; or
+- invalid commercial-readiness, external-beta, or method-manifest reports; missing manifest coverage; snapshot drift; or invalid competitor claim-gate references.
 - a present aggregate approval with missing bindings, digest drift, unsafe timing, an unapproved commercial decision, or any bound input/report mismatch.
 
-To update the frozen vendor baseline, review the official catalogue, change the snapshot and closed expected catalogue together, explain additions/removals in this document, and add mutation tests. To promote a QuickPLS row, first promote its capability through the parity evidence process; changing only this roadmap must fail validation.
+To update the frozen vendor baseline, review the official catalogue, change the snapshot and closed expected catalogue together, explain additions/removals in this document, and add mutation tests. To promote a QuickPLS row, first promote its exact method manifest; when the capability is one of the established parity-ledger set, promote that ledger through its accepted evidence process as well. Changing only this catalogue must fail validation.

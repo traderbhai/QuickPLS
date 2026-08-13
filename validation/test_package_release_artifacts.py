@@ -67,6 +67,19 @@ edition = "2024"
     (root / "src-tauri" / "tauri.conf.json").write_text(
         json.dumps({"productName": "QuickPLS", "version": version}), encoding="utf-8"
     )
+    (root / "validation").mkdir()
+    (root / "validation" / "quickpls_release_channels.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "product_version": version,
+                "default_artifact_channel": "unsigned-preview",
+                "commercial_readiness_contract": "validation/quickpls_3_release_readiness.json",
+                "channels": release.EXPECTED_CHANNEL_POLICY,
+            }
+        ),
+        encoding="utf-8",
+    )
     (root / "Cargo.lock").write_text(
         """version = 4
 
@@ -144,7 +157,8 @@ class RepositoryReleaseMetadataTests(unittest.TestCase):
         self.assertEqual(set(evidence["cargo_lock_quickpls_packages"]), REPOSITORY_CARGO_PACKAGES)
         self.assertEqual(
             package["scripts"]["qpls:release:artifacts"],
-            f"python validation/package_release_artifacts.py --label {REPOSITORY_ARTIFACT_LABEL}",
+            "python validation/package_release_artifacts.py --channel unsigned-preview "
+            f"--label {REPOSITORY_ARTIFACT_LABEL}",
         )
         self.assertEqual(prototype.count('const releaseVersion = "2.46.0";'), 1)
         self.assertNotIn('const releaseVersion = "2.45.0";', prototype)
@@ -152,16 +166,28 @@ class RepositoryReleaseMetadataTests(unittest.TestCase):
         self.assertIn("Current development release: `v2.46.0`.", readme)
         self.assertIn("_x64_cli.exe` - command-line executable for batch recipes.", readme)
         self.assertIn(
-            "The coordinated public 2.46.0 Wave 1 release packages this qualified capability while retaining "
-            "conservative candidate/experimental presentation until the full QuickPLS 3.0 parity gate.",
+            "The capability remains native-qualified rather than release-qualified because the current "
+            "repeated-completion resource report did not prove terminal process-role stability.",
             readme,
         )
+        self.assertNotIn("The coordinated public 2.46.0 Wave 1 release packages this qualified capability", readme)
         self.assertIn("Previous Milestone Notes v2.45.0", readme)
         self.assertNotIn("coordinated public 2.46.0 release transition is still pending", readme)
 
         self.assertIn("Current development release: `v2.46.0`.", installation)
         self.assertIn("_x64_cli.exe` for offline command-line and batch recipe execution.", installation)
-        self.assertIn("All three executables run fully offline after download.", installation)
+        normalized_installation = " ".join(installation.split())
+        self.assertIn(
+            "The desktop, CLI, and analytical workflows require no internet connection, "
+            "account, or cloud service after download.",
+            normalized_installation,
+        )
+        self.assertIn(
+            "This is a functional-offline claim, not a literal fully-offline, no-telemetry, "
+            "or zero-egress process-tree claim",
+            normalized_installation,
+        )
+        self.assertNotIn("All three executables run fully offline after download.", installation)
         self.assertIn("_x64_cli.exe -Algorithm SHA256", installation)
 
 
@@ -199,11 +225,12 @@ class ArtifactPackagingTests(unittest.TestCase):
                 release_dir=release_dir,
                 artifact_dir=artifact_dir,
                 report_path=report_path,
+                channel="unsigned-preview",
                 label="wave 8 candidate",
                 timestamp="20260813-120102",
             )
 
-            stem = "QuickPLS_3.0.0_wave_8_candidate_20260813-120102_x64"
+            stem = "QuickPLS_3.0.0_unsigned-preview_wave_8_candidate_20260813-120102_x64"
             expected_names = [
                 f"{stem}_portable.exe",
                 f"{stem}_cli.exe",
@@ -212,6 +239,11 @@ class ArtifactPackagingTests(unittest.TestCase):
             ]
             self.assertEqual([Path(item["path"]).name for item in report["artifacts"]], expected_names)
             self.assertEqual([item["role"] for item in report["artifacts"]], ["portable", "cli", "setup", "checksums"])
+            self.assertEqual(report["schema_version"], 2)
+            self.assertEqual(report["release_channel"], "unsigned-preview")
+            self.assertEqual(report["trust"]["status"], "not_verified")
+            self.assertFalse(report["trust"]["stable_eligible"])
+            self.assertFalse(report["trust"]["competitor_claims_authorized"])
             for item in report["artifacts"][:3]:
                 destination = root / item["path"]
                 source = root / item["source"]
@@ -232,9 +264,57 @@ class ArtifactPackagingTests(unittest.TestCase):
                     release_dir=release_dir,
                     artifact_dir=artifact_dir,
                     report_path=report_path,
+                    channel="unsigned-preview",
                     label="wave 8 candidate",
                     timestamp="20260813-120102",
                 )
+
+    def test_unsigned_factory_rejects_beta_and_stable_before_copying(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            write_release_contract(root)
+            release_dir = write_release_inputs(root)
+            artifact_dir = release_dir / "artifacts"
+            report_path = root / "validation" / "results" / "release_artifacts.json"
+
+            for channel in ("beta", "stable"):
+                with self.subTest(channel=channel), self.assertRaises(SystemExit):
+                    release.package_release_artifacts(
+                        root=root,
+                        release_dir=release_dir,
+                        artifact_dir=artifact_dir,
+                        report_path=report_path,
+                        channel=channel,
+                        label="must fail",
+                        timestamp="20260813-120103",
+                    )
+            self.assertFalse(artifact_dir.exists())
+
+    def test_channel_contract_rejects_version_drift_and_policy_weakening(self) -> None:
+        mutations = {
+            "version drift": lambda root: _mutate_json(
+                root / "validation" / "quickpls_release_channels.json",
+                ("product_version",),
+                "2.9.9",
+            ),
+            "unsigned beta": lambda root: _mutate_json(
+                root / "validation" / "quickpls_release_channels.json",
+                ("channels", "beta", "authenticode_required"),
+                False,
+            ),
+            "stable claims bypass gate": lambda root: _mutate_json(
+                root / "validation" / "quickpls_release_channels.json",
+                ("channels", "stable", "competitor_claims_policy"),
+                "authorized",
+            ),
+        }
+        for name, mutate in mutations.items():
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                write_release_contract(root)
+                mutate(root)
+                with self.assertRaises(SystemExit):
+                    release.read_version_contract(root)
 
     def test_copy_fails_closed_when_destination_differs_from_source(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

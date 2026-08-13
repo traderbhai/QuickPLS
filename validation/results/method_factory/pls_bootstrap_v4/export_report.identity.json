@@ -1,0 +1,87 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "build_performed": false,
+    "execution": {
+      "command": [
+        "npm.cmd",
+        "exec",
+        "--",
+        "vitest",
+        "run",
+        "src/native/nativeExportTables.test.ts",
+        "src/native/nativeResults.test.ts"
+      ],
+      "duration_seconds": 5.251,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "\n RUN  v4.1.10 D:/QuickPLS\n\n\n Test Files  2 passed (2)\n      Tests  52 passed (52)\n   Start at  00:30:58\n   Duration  1.75s (transform 1.32s, setup 0ms, import 2.07s, tests 158ms, environment 0ms)\n\n"
+    },
+    "gui_runtime_claimed": false,
+    "passed": true,
+    "static_native_contract_only": true,
+    "test_files": [
+      "src/native/nativeExportTables.test.ts",
+      "src/native/nativeResults.test.ts"
+    ]
+  },
+  "feature_id": "qpls3.inference.bootstrap",
+  "generated_at_utc": "2026-08-13T19:01:00.710534Z",
+  "method_version": "indexed_resampling_v4",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "export_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "package-lock.json",
+      "sha256": "950ad806828fcc72af996f571f32b0bf837072664a31aea61dbceeaa79a2eed1",
+      "size": 94576
+    },
+    {
+      "path": "package.json",
+      "sha256": "5338e2c69f2d15a2a1d39d60178b6e774707a95c0228c68b8975fb10db345702",
+      "size": 65788
+    },
+    {
+      "path": "src/native/nativeExportTables.test.ts",
+      "sha256": "ab22330e2e6ed7752f748034adaa2c8e653bb4a149a0e91bef21943e2c6964fd",
+      "size": 19426
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/pls_bootstrap_v4.manifest.json",
+      "sha256": "18e112bc509c06a29621851e6ffb09753028caef5c1dee344960af0df01163f5",
+      "size": 15803
+    },
+    {
+      "path": "validation/pls_bootstrap_v4_factory_common.py",
+      "sha256": "10eadf6f1f7af06e51117645371cc447f82c7ecce873dcf53530d82cd27828fa",
+      "size": 12730
+    },
+    {
+      "path": "validation/pls_bootstrap_v4_factory_evidence.py",
+      "sha256": "15652e268d8b8e28b88a8e4962b010faea4c69761a43ec6057a887d2acd973d5",
+      "size": 8991
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_pls_bootstrap_v4_factory_evidence.py",
+      "sha256": "7b358cfd30cae76f208382b8bddfedc84199d495c92b7f65f500d1c18401f8b1",
+      "size": 6177
+    }
+  ]
+}

@@ -1,5 +1,7 @@
+mod sample_projects;
+
 use arrow::array::{Array, BooleanArray, Float64Array, Int64Array, StringArray};
-use chrono::Utc;
+use chrono::{SecondsFormat, Utc};
 use qpls_core::{
     ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisMethod, AnalysisRecipe, AnalysisResult,
     AnalysisSettings, Construct, JobSnapshot, JobState, METHOD_CAPABILITIES, MeasurementMode,
@@ -15,21 +17,27 @@ use qpls_project::{
     save_project,
 };
 use qpls_runner::{RunnerError, run_pls_analysis};
+use regex::{Captures, Regex};
+use sample_projects::{BundledSampleProject, build_bundled_sample_project};
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
 use std::{
-    collections::{BTreeMap, BTreeSet, HashMap},
+    collections::{BTreeMap, BTreeSet, HashMap, VecDeque},
     fs,
+    io::{self, Cursor, Read, Write},
+    net::{IpAddr, Ipv4Addr, Shutdown, SocketAddr, TcpListener, TcpStream},
     path::{Path, PathBuf},
     process::Command,
     sync::{
-        Arc, Mutex,
+        Arc, LazyLock, Mutex,
         atomic::{AtomicBool, Ordering},
     },
+    time::{Duration, Instant},
 };
 use tauri::State;
 use uuid::Uuid;
+use zip::{ZipWriter, write::SimpleFileOptions};
 
 struct DesktopProject(Arc<Mutex<Project>>);
 
@@ -42,14 +50,229 @@ struct DesktopJob {
 
 struct DesktopJobs(Arc<Mutex<HashMap<Uuid, DesktopJob>>>);
 
+#[derive(Clone)]
+struct DesktopDiagnostics(Arc<Mutex<DiagnosticRuntimeState>>);
+
+#[derive(Debug)]
+struct DiagnosticRuntimeState {
+    next_sequence: u64,
+    events: VecDeque<DiagnosticEvent>,
+    pending_previews: HashMap<String, PendingDiagnosticPreview>,
+}
+
+#[derive(Debug, Clone)]
+struct PendingDiagnosticPreview {
+    staging: DiagnosticStaging,
+    order: u64,
+    expires_at: Instant,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+struct DiagnosticEvent {
+    timestamp: String,
+    sequence: u64,
+    severity: String,
+    code: String,
+}
+
+#[derive(Debug, Clone)]
+struct DiagnosticStaging {
+    created_at: String,
+    event_count: usize,
+    redaction_counts: DiagnosticRedactionCounts,
+    entries: Vec<(&'static str, Vec<u8>)>,
+}
+
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+struct DiagnosticRedactionCounts {
+    windows_paths: usize,
+    email_addresses: usize,
+    url_queries_or_fragments: usize,
+    bearer_tokens: usize,
+}
+
+impl DiagnosticRedactionCounts {
+    fn total(self) -> usize {
+        self.windows_paths
+            + self.email_addresses
+            + self.url_queries_or_fragments
+            + self.bearer_tokens
+    }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DiagnosticBundlePreview {
+    preview_id: String,
+    created_at: String,
+    included_categories: Vec<&'static str>,
+    excluded_categories: Vec<&'static str>,
+    redaction_counts: DiagnosticRedactionCounts,
+    entry_count: usize,
+    event_count: usize,
+    estimated_uncompressed_bytes: usize,
+    local_only: bool,
+    network_activity: &'static str,
+    staged_contents: DiagnosticStagedContents,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DiagnosticBundleSaveResult {
+    bytes: u64,
+    archive_sha256: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+struct DiagnosticSystemMetadata {
+    schema_version: u32,
+    quickpls_version: String,
+    release_channel: String,
+    source_revision: String,
+    os_family: String,
+    architecture: String,
+    desktop_runtime: String,
+    locale: String,
+    webview2_version: String,
+    user_data_included: bool,
+    network_accessed: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+struct DiagnosticEntryDescriptor {
+    name: String,
+    sha256: String,
+    bytes: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+struct DiagnosticArchiveLimits {
+    maximum_entries: usize,
+    maximum_entry_bytes: usize,
+    maximum_uncompressed_bytes: usize,
+    maximum_archive_bytes: usize,
+    compression: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+struct DiagnosticManifestContents {
+    schema_version: u32,
+    policy_version: String,
+    created_at: String,
+    quickpls_version: String,
+    entries: Vec<DiagnosticEntryDescriptor>,
+    redaction_counts: DiagnosticRedactionCounts,
+    redaction_total: usize,
+    archive_limits: DiagnosticArchiveLimits,
+    local_only: bool,
+    network_accessed: bool,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+struct DiagnosticStagedContents {
+    system: DiagnosticSystemMetadata,
+    events: Vec<DiagnosticEvent>,
+    manifest: DiagnosticManifestContents,
+}
+
 const MAX_DATASET_ROW_PAGE_SIZE: usize = 500;
 const MAX_GROUP_PROFILE_VALUES: usize = 1_000;
 const MAX_TEXT_EXPORT_BYTES: usize = 128 * 1024 * 1024;
+const DIAGNOSTIC_POLICY_VERSION: &str = "quickpls-diagnostics-v1";
+const MAX_DIAGNOSTIC_EVENTS: usize = 128;
+const MAX_PENDING_DIAGNOSTIC_PREVIEWS: usize = 4;
+const DIAGNOSTIC_PREVIEW_TTL: Duration = Duration::from_secs(15 * 60);
+const MAX_DIAGNOSTIC_ARCHIVE_ENTRIES: usize = 3;
+const MAX_DIAGNOSTIC_ENTRY_BYTES: usize = 256 * 1024;
+const MAX_DIAGNOSTIC_UNCOMPRESSED_BYTES: usize = 512 * 1024;
+const MAX_DIAGNOSTIC_ARCHIVE_BYTES: usize = 520 * 1024;
+const DIAGNOSTIC_SYSTEM_ENTRY: &str = "metadata/system.json";
+const DIAGNOSTIC_EVENTS_ENTRY: &str = "logs/events.jsonl";
+const DIAGNOSTIC_MANIFEST_ENTRY: &str = "manifest.json";
 const DATA_LINEAGE_LAYOUT_KEY: &str = "data_lineage";
 const WORKSPACE_EXPLORER_LAYOUT_KEY: &str = "workspace_explorer";
 const WORKSPACE_EXPLORER_SCHEMA_VERSION: u32 = 1;
-const SAMPLE_RUN_DISPLAY_NAME: &str = "PLS-SEM Algorithm run";
-const SAMPLE_RUN_METHOD_NAME: &str = "PLS-SEM Algorithm";
+const SAMPLE_RUN_DISPLAY_NAME: &str = "PLS-SEM Bootstrapping run";
+const SAMPLE_RUN_METHOD_NAME: &str = "PLS-SEM Bootstrapping";
+const WEBVIEW2_OFFLINE_PROXY_BIND_ADDRESS: &str = "127.0.0.1:17846";
+const WEBVIEW2_OFFLINE_PROXY_RESPONSE: &[u8] = b"HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\nConnection: close\r\nCache-Control: no-store\r\nX-QuickPLS-Network-Policy: offline\r\n\r\n";
+const MAX_WEBVIEW2_PROXY_REQUEST_HEADER_BYTES: usize = 8 * 1024;
+
+fn bind_webview2_offline_rejection_proxy(bind_address: SocketAddr) -> io::Result<TcpListener> {
+    if bind_address.ip() != IpAddr::V4(Ipv4Addr::LOCALHOST) {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "the WebView2 offline proxy must bind only to 127.0.0.1",
+        ));
+    }
+    TcpListener::bind(bind_address)
+}
+
+fn reject_webview2_proxy_stream(mut stream: TcpStream) -> io::Result<()> {
+    let write_result = (|| {
+        stream.set_read_timeout(Some(Duration::from_millis(250)))?;
+        let mut request_prefix = [0_u8; MAX_WEBVIEW2_PROXY_REQUEST_HEADER_BYTES];
+        let mut received = 0;
+        while received < request_prefix.len() {
+            match stream.read(&mut request_prefix[received..]) {
+                Ok(0) => break,
+                Ok(bytes_read) => {
+                    received += bytes_read;
+                    if request_prefix[..received]
+                        .windows(4)
+                        .any(|window| window == b"\r\n\r\n")
+                    {
+                        break;
+                    }
+                }
+                Err(error)
+                    if matches!(
+                        error.kind(),
+                        io::ErrorKind::WouldBlock | io::ErrorKind::TimedOut
+                    ) =>
+                {
+                    break;
+                }
+                Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
+                Err(error) => return Err(error),
+            }
+        }
+        stream.set_write_timeout(Some(Duration::from_secs(2)))?;
+        stream.write_all(WEBVIEW2_OFFLINE_PROXY_RESPONSE)?;
+        stream.flush()
+    })();
+    let _ = stream.shutdown(Shutdown::Both);
+    write_result
+}
+
+fn serve_webview2_offline_rejection_proxy(listener: TcpListener) -> ! {
+    loop {
+        match listener.accept() {
+            Ok((stream, _peer_address)) => {
+                let _ = reject_webview2_proxy_stream(stream);
+            }
+            Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
+            Err(_) => std::thread::sleep(Duration::from_millis(50)),
+        }
+    }
+}
+
+fn start_webview2_offline_rejection_proxy() -> io::Result<std::thread::JoinHandle<()>> {
+    let bind_address = WEBVIEW2_OFFLINE_PROXY_BIND_ADDRESS
+        .parse::<SocketAddr>()
+        .map_err(|error| io::Error::new(io::ErrorKind::InvalidInput, error))?;
+    let listener = bind_webview2_offline_rejection_proxy(bind_address)?;
+    std::thread::Builder::new()
+        .name("quickpls-webview2-offline-proxy".to_string())
+        .spawn(move || serve_webview2_offline_rejection_proxy(listener))
+}
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -252,6 +475,1102 @@ struct ExportTable {
     warning: Option<String>,
     columns: Vec<String>,
     rows: Vec<Vec<String>>,
+}
+
+impl DesktopDiagnostics {
+    fn new() -> Self {
+        let mut events = VecDeque::new();
+        events.push_back(DiagnosticEvent {
+            timestamp: diagnostic_timestamp(),
+            sequence: 1,
+            severity: "info".to_string(),
+            code: "desktop.session.started".to_string(),
+        });
+        Self(Arc::new(Mutex::new(DiagnosticRuntimeState {
+            next_sequence: 2,
+            events,
+            pending_previews: HashMap::new(),
+        })))
+    }
+
+    fn record_event(&self, code: &'static str) -> Result<(), String> {
+        let mut state = self.0.lock().map_err(|_| {
+            diagnostic_error(
+                "DIAGNOSTIC_STATE_UNAVAILABLE",
+                "Diagnostic state is unavailable.",
+            )
+        })?;
+        let sequence = state.next_sequence;
+        state.next_sequence = state.next_sequence.saturating_add(1);
+        state.events.push_back(DiagnosticEvent {
+            timestamp: diagnostic_timestamp(),
+            sequence,
+            severity: "info".to_string(),
+            code: code.to_string(),
+        });
+        while state.events.len() > MAX_DIAGNOSTIC_EVENTS {
+            state.events.pop_front();
+        }
+        Ok(())
+    }
+
+    fn create_preview(
+        &self,
+        replaces_preview_id: Option<&str>,
+    ) -> Result<DiagnosticBundlePreview, String> {
+        let mut state = self.0.lock().map_err(|_| {
+            diagnostic_error(
+                "DIAGNOSTIC_STATE_UNAVAILABLE",
+                "Diagnostic state is unavailable.",
+            )
+        })?;
+        let now = Instant::now();
+        prune_expired_diagnostic_previews(&mut state, now);
+        let sequence = state.next_sequence;
+        state.next_sequence = state.next_sequence.saturating_add(1);
+        state.events.push_back(DiagnosticEvent {
+            timestamp: diagnostic_timestamp(),
+            sequence,
+            severity: "info".to_string(),
+            code: "diagnostic.preview.requested".to_string(),
+        });
+        while state.events.len() > MAX_DIAGNOSTIC_EVENTS {
+            state.events.pop_front();
+        }
+        let staging = build_diagnostic_staging(state.events.make_contiguous())?;
+        let staged_contents = inspect_diagnostic_staging(&staging.entries)?;
+        let preview_id = Uuid::new_v4().to_string();
+        let preview = DiagnosticBundlePreview {
+            preview_id: preview_id.clone(),
+            created_at: staging.created_at.clone(),
+            included_categories: vec![
+                "QuickPLS build and release identity",
+                "Operating-system family and architecture",
+                "Bounded session diagnostic event codes",
+                "Manifest hashes, sizes, limits, and redaction counts",
+            ],
+            excluded_categories: vec![
+                "Dataset rows, values, and variable names",
+                "Project contents, model labels, and project titles",
+                "Results, reports, and exports",
+                "Credentials, environment values, and command lines",
+                "Arbitrary files, registry data, and memory dumps",
+            ],
+            redaction_counts: staging.redaction_counts,
+            entry_count: staging.entries.len(),
+            event_count: staging.event_count,
+            estimated_uncompressed_bytes: staging
+                .entries
+                .iter()
+                .map(|(_, bytes)| bytes.len())
+                .sum(),
+            local_only: true,
+            network_activity: "none",
+            staged_contents,
+        };
+        if let Some(replaced) = replaces_preview_id {
+            state.pending_previews.remove(replaced);
+        }
+        if state.pending_previews.len() >= MAX_PENDING_DIAGNOSTIC_PREVIEWS {
+            let oldest_preview_id = state
+                .pending_previews
+                .iter()
+                .min_by(|(left_id, left), (right_id, right)| {
+                    left.order
+                        .cmp(&right.order)
+                        .then_with(|| left_id.cmp(right_id))
+                })
+                .map(|(id, _)| id.clone());
+            if let Some(oldest_preview_id) = oldest_preview_id {
+                state.pending_previews.remove(&oldest_preview_id);
+            }
+        }
+        match state.pending_previews.entry(preview_id) {
+            std::collections::hash_map::Entry::Vacant(entry) => {
+                entry.insert(PendingDiagnosticPreview {
+                    staging,
+                    order: sequence,
+                    expires_at: now + DIAGNOSTIC_PREVIEW_TTL,
+                });
+            }
+            std::collections::hash_map::Entry::Occupied(_) => {
+                return Err(diagnostic_error(
+                    "DIAGNOSTIC_PREVIEW_ID_COLLISION",
+                    "QuickPLS could not allocate a unique diagnostic preview ID.",
+                ));
+            }
+        }
+        Ok(preview)
+    }
+
+    fn consume_preview(&self, id: &str) -> Result<DiagnosticStaging, String> {
+        let mut state = self.0.lock().map_err(|_| {
+            diagnostic_error(
+                "DIAGNOSTIC_STATE_UNAVAILABLE",
+                "Diagnostic state is unavailable.",
+            )
+        })?;
+        prune_expired_diagnostic_previews(&mut state, Instant::now());
+        state
+            .pending_previews
+            .remove(id)
+            .map(|pending| pending.staging)
+            .ok_or_else(|| {
+                diagnostic_error(
+                    "DIAGNOSTIC_PREVIEW_REQUIRED",
+                    "This diagnostic preview is absent, expired, or already consumed. Create a new preview.",
+                )
+            })
+    }
+
+    fn cancel_preview(&self, id: &str) -> Result<(), String> {
+        self.consume_preview(id).map(|_| ())
+    }
+}
+
+fn prune_expired_diagnostic_previews(state: &mut DiagnosticRuntimeState, now: Instant) {
+    state
+        .pending_previews
+        .retain(|_, preview| preview.expires_at > now);
+}
+
+fn diagnostic_error(code: &str, message: &str) -> String {
+    format!("{code}: {message}")
+}
+
+fn diagnostic_timestamp() -> String {
+    Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true)
+}
+
+fn diagnostic_release_channel() -> &'static str {
+    match option_env!("QUICKPLS_RELEASE_CHANNEL") {
+        Some(channel) if matches!(channel, "internal" | "unsigned-preview" | "beta" | "stable") => {
+            channel
+        }
+        _ => "internal",
+    }
+}
+
+fn diagnostic_source_revision() -> &'static str {
+    option_env!("QUICKPLS_SOURCE_REVISION")
+        .filter(|value| {
+            (7..=64).contains(&value.len()) && value.bytes().all(|byte| byte.is_ascii_hexdigit())
+        })
+        .unwrap_or("not_provided")
+}
+
+static BEARER_TOKEN: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i)\bbearer[ \t]+[A-Za-z0-9._~+/=-]+").expect("valid bearer-token regex")
+});
+static URL_SUFFIX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"(?i)(https?://[^\s\"'<>?#]+)[?#][^\s\"'<>]*"#).expect("valid URL-suffix regex")
+});
+static EMAIL_ADDRESS: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i)[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}").expect("valid email regex")
+});
+static WINDOWS_PATH: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"(?i)(^|[^A-Z0-9])([A-Z]:[\\/][^\"'\r\n,;<>|?*]+)"#)
+        .expect("valid Windows-path regex")
+});
+
+fn sanitize_diagnostic_basename(value: &str) -> String {
+    let mut sanitized = value
+        .chars()
+        .take(64)
+        .map(|character| {
+            if character.is_ascii_alphanumeric() || matches!(character, '.' | '_' | '-') {
+                character
+            } else {
+                '_'
+            }
+        })
+        .collect::<String>();
+    if sanitized.trim_matches(['.', '_', '-']).is_empty() {
+        sanitized = "file".to_string();
+    }
+    sanitized
+}
+
+fn redact_diagnostic_text(input: &str, counts: &mut DiagnosticRedactionCounts) -> String {
+    let redacted = BEARER_TOKEN
+        .replace_all(input, |_: &Captures<'_>| {
+            counts.bearer_tokens += 1;
+            "Bearer <redacted-token>"
+        })
+        .into_owned();
+    let redacted = URL_SUFFIX
+        .replace_all(&redacted, |captures: &Captures<'_>| {
+            counts.url_queries_or_fragments += 1;
+            captures[1].to_string()
+        })
+        .into_owned();
+    let redacted = EMAIL_ADDRESS
+        .replace_all(&redacted, |_: &Captures<'_>| {
+            counts.email_addresses += 1;
+            "<redacted-email>"
+        })
+        .into_owned();
+    WINDOWS_PATH
+        .replace_all(&redacted, |captures: &Captures<'_>| {
+            counts.windows_paths += 1;
+            let path = captures[2].trim_end_matches(|character: char| {
+                character.is_whitespace() || matches!(character, '.' | ')' | ']' | '}')
+            });
+            let basename = path.rsplit(['\\', '/']).next().unwrap_or("file");
+            format!(
+                "{}<redacted-path>/{}",
+                &captures[1],
+                sanitize_diagnostic_basename(basename)
+            )
+        })
+        .into_owned()
+}
+
+fn checked_diagnostic_entry(
+    name: &'static str,
+    bytes: Vec<u8>,
+) -> Result<(&'static str, Vec<u8>), String> {
+    if !matches!(
+        name,
+        DIAGNOSTIC_SYSTEM_ENTRY | DIAGNOSTIC_EVENTS_ENTRY | DIAGNOSTIC_MANIFEST_ENTRY
+    ) {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_ENTRY_NOT_ALLOWED",
+            "A diagnostic archive entry is not on the fixed allowlist.",
+        ));
+    }
+    if bytes.len() > MAX_DIAGNOSTIC_ENTRY_BYTES {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_ENTRY_TOO_LARGE",
+            "A diagnostic archive entry exceeds the size limit.",
+        ));
+    }
+    Ok((name, bytes))
+}
+
+fn build_diagnostic_staging(events: &[DiagnosticEvent]) -> Result<DiagnosticStaging, String> {
+    let created_at = diagnostic_timestamp();
+    let metadata = DiagnosticSystemMetadata {
+        schema_version: 1,
+        quickpls_version: env!("CARGO_PKG_VERSION").to_string(),
+        release_channel: diagnostic_release_channel().to_string(),
+        source_revision: diagnostic_source_revision().to_string(),
+        os_family: std::env::consts::OS.to_string(),
+        architecture: std::env::consts::ARCH.to_string(),
+        desktop_runtime: "Tauri 2".to_string(),
+        locale: "not_collected".to_string(),
+        webview2_version: "not_collected".to_string(),
+        user_data_included: false,
+        network_accessed: false,
+    };
+    let mut redaction_counts = DiagnosticRedactionCounts::default();
+    let metadata_json = serde_json::to_string_pretty(&metadata).map_err(|_| {
+        diagnostic_error(
+            "DIAGNOSTIC_SERIALIZATION_FAILED",
+            "Diagnostic metadata could not be serialized.",
+        )
+    })?;
+    let metadata_bytes = redact_diagnostic_text(&metadata_json, &mut redaction_counts).into_bytes();
+
+    let mut event_lines = String::new();
+    for event in events.iter().take(MAX_DIAGNOSTIC_EVENTS) {
+        let line = serde_json::to_string(event).map_err(|_| {
+            diagnostic_error(
+                "DIAGNOSTIC_SERIALIZATION_FAILED",
+                "Diagnostic events could not be serialized.",
+            )
+        })?;
+        event_lines.push_str(&redact_diagnostic_text(&line, &mut redaction_counts));
+        event_lines.push('\n');
+    }
+
+    let mut entries = vec![
+        checked_diagnostic_entry(DIAGNOSTIC_SYSTEM_ENTRY, metadata_bytes)?,
+        checked_diagnostic_entry(DIAGNOSTIC_EVENTS_ENTRY, event_lines.into_bytes())?,
+    ];
+    let descriptors = entries
+        .iter()
+        .map(|(name, bytes)| DiagnosticEntryDescriptor {
+            name: (*name).to_string(),
+            sha256: sha256_hex(bytes),
+            bytes: bytes.len(),
+        })
+        .collect::<Vec<_>>();
+    let manifest = DiagnosticManifestContents {
+        schema_version: 1,
+        policy_version: DIAGNOSTIC_POLICY_VERSION.to_string(),
+        created_at: created_at.clone(),
+        quickpls_version: env!("CARGO_PKG_VERSION").to_string(),
+        entries: descriptors,
+        redaction_counts,
+        redaction_total: redaction_counts.total(),
+        archive_limits: DiagnosticArchiveLimits {
+            maximum_entries: MAX_DIAGNOSTIC_ARCHIVE_ENTRIES,
+            maximum_entry_bytes: MAX_DIAGNOSTIC_ENTRY_BYTES,
+            maximum_uncompressed_bytes: MAX_DIAGNOSTIC_UNCOMPRESSED_BYTES,
+            maximum_archive_bytes: MAX_DIAGNOSTIC_ARCHIVE_BYTES,
+            compression: "stored".to_string(),
+        },
+        local_only: true,
+        network_accessed: false,
+    };
+    let manifest_bytes = serde_json::to_vec_pretty(&manifest).map_err(|_| {
+        diagnostic_error(
+            "DIAGNOSTIC_SERIALIZATION_FAILED",
+            "The diagnostic manifest could not be serialized.",
+        )
+    })?;
+    entries.push(checked_diagnostic_entry(
+        DIAGNOSTIC_MANIFEST_ENTRY,
+        manifest_bytes,
+    )?);
+    validate_diagnostic_staging(&entries)?;
+    Ok(DiagnosticStaging {
+        created_at,
+        event_count: events.len().min(MAX_DIAGNOSTIC_EVENTS),
+        redaction_counts,
+        entries,
+    })
+}
+
+fn inspect_diagnostic_staging(
+    entries: &[(&'static str, Vec<u8>)],
+) -> Result<DiagnosticStagedContents, String> {
+    validate_diagnostic_staging(entries)?;
+    let bytes = |name| {
+        entries
+            .iter()
+            .find_map(|(entry_name, bytes)| (*entry_name == name).then_some(bytes.as_slice()))
+            .ok_or_else(|| {
+                diagnostic_error(
+                    "DIAGNOSTIC_ENTRY_SET_INVALID",
+                    "The diagnostic preview entry set is not valid.",
+                )
+            })
+    };
+    let system = serde_json::from_slice(bytes(DIAGNOSTIC_SYSTEM_ENTRY)?).map_err(|_| {
+        diagnostic_error(
+            "DIAGNOSTIC_PREVIEW_INVALID",
+            "Redacted system metadata could not be inspected.",
+        )
+    })?;
+    let events = std::str::from_utf8(bytes(DIAGNOSTIC_EVENTS_ENTRY)?)
+        .map_err(|_| {
+            diagnostic_error(
+                "DIAGNOSTIC_PREVIEW_INVALID",
+                "Redacted diagnostic events could not be inspected.",
+            )
+        })?
+        .lines()
+        .map(|line| {
+            serde_json::from_str(line).map_err(|_| {
+                diagnostic_error(
+                    "DIAGNOSTIC_PREVIEW_INVALID",
+                    "A redacted diagnostic event could not be inspected.",
+                )
+            })
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let manifest = serde_json::from_slice(bytes(DIAGNOSTIC_MANIFEST_ENTRY)?).map_err(|_| {
+        diagnostic_error(
+            "DIAGNOSTIC_PREVIEW_INVALID",
+            "The diagnostic manifest could not be inspected.",
+        )
+    })?;
+    Ok(DiagnosticStagedContents {
+        system,
+        events,
+        manifest,
+    })
+}
+
+fn validate_diagnostic_staging(entries: &[(&'static str, Vec<u8>)]) -> Result<(), String> {
+    if entries.len() != MAX_DIAGNOSTIC_ARCHIVE_ENTRIES {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_ENTRY_COUNT_INVALID",
+            "The diagnostic archive must contain exactly three allowlisted entries.",
+        ));
+    }
+    let expected = [
+        DIAGNOSTIC_SYSTEM_ENTRY,
+        DIAGNOSTIC_EVENTS_ENTRY,
+        DIAGNOSTIC_MANIFEST_ENTRY,
+    ];
+    let mut names = BTreeSet::new();
+    let mut total = 0usize;
+    for ((name, bytes), expected_name) in entries.iter().zip(expected) {
+        if *name != expected_name || !names.insert(*name) {
+            return Err(diagnostic_error(
+                "DIAGNOSTIC_ENTRY_SET_INVALID",
+                "The diagnostic archive entry set is not valid.",
+            ));
+        }
+        if bytes.len() > MAX_DIAGNOSTIC_ENTRY_BYTES {
+            return Err(diagnostic_error(
+                "DIAGNOSTIC_ENTRY_TOO_LARGE",
+                "A diagnostic archive entry exceeds the size limit.",
+            ));
+        }
+        total = total.checked_add(bytes.len()).ok_or_else(|| {
+            diagnostic_error(
+                "DIAGNOSTIC_ARCHIVE_TOO_LARGE",
+                "The diagnostic archive exceeds the total size limit.",
+            )
+        })?;
+    }
+    if total > MAX_DIAGNOSTIC_UNCOMPRESSED_BYTES {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_ARCHIVE_TOO_LARGE",
+            "The diagnostic archive exceeds the total size limit.",
+        ));
+    }
+    Ok(())
+}
+
+fn validate_new_diagnostic_path(path: &Path) -> Result<(), String> {
+    let raw = path.to_str().ok_or_else(|| {
+        diagnostic_error(
+            "DIAGNOSTIC_PATH_ENCODING_BLOCKED",
+            "The diagnostic destination must be a valid Unicode Windows path.",
+        )
+    })?;
+    if raw.starts_with(r"\\")
+        || raw.starts_with(r"//")
+        || raw.starts_with(r"\\?")
+        || raw.starts_with(r"\\.")
+        || raw.starts_with(r"\??\")
+    {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_PATH_NAMESPACE_BLOCKED",
+            "UNC, verbatim, and device namespace destinations are not supported.",
+        ));
+    }
+    validate_diagnostic_path_root(path, raw)?;
+    if diagnostic_path_has_alternate_stream(path, raw) {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_PATH_ADS_BLOCKED",
+            "Diagnostic destination components cannot contain a colon or alternate data stream.",
+        ));
+    }
+    for component in path.components() {
+        match component {
+            std::path::Component::CurDir | std::path::Component::ParentDir => {
+                return Err(diagnostic_error(
+                    "DIAGNOSTIC_PATH_COMPONENT_BLOCKED",
+                    "Diagnostic destinations cannot contain current-directory or parent-directory components.",
+                ));
+            }
+            std::path::Component::Normal(value) => {
+                let value = value.to_str().ok_or_else(|| {
+                    diagnostic_error(
+                        "DIAGNOSTIC_PATH_ENCODING_BLOCKED",
+                        "Diagnostic destination components must use valid Unicode.",
+                    )
+                })?;
+                if value.ends_with(' ') || value.ends_with('.') {
+                    return Err(diagnostic_error(
+                        "DIAGNOSTIC_PATH_COMPONENT_BLOCKED",
+                        "Diagnostic destination components cannot end in a space or period.",
+                    ));
+                }
+                if diagnostic_component_is_reserved(value) {
+                    return Err(diagnostic_error(
+                        "DIAGNOSTIC_DEVICE_NAME_BLOCKED",
+                        "Reserved Windows device names are not valid diagnostic destinations.",
+                    ));
+                }
+            }
+            _ => {}
+        }
+    }
+    let extension = path
+        .extension()
+        .and_then(|value| value.to_str())
+        .map(str::to_ascii_lowercase);
+    if extension.as_deref() != Some("zip") {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_EXTENSION_INVALID",
+            "Diagnostic bundles must use the .zip extension.",
+        ));
+    }
+    let parent = path.parent().ok_or_else(|| {
+        diagnostic_error(
+            "DIAGNOSTIC_PARENT_INVALID",
+            "The selected destination has no parent directory.",
+        )
+    })?;
+    if !parent.is_dir() {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_PARENT_UNAVAILABLE",
+            "The selected destination directory does not exist.",
+        ));
+    }
+    for ancestor in parent
+        .ancestors()
+        .filter(|value| !value.as_os_str().is_empty())
+    {
+        let metadata = fs::symlink_metadata(ancestor).map_err(|_| {
+            diagnostic_error(
+                "DIAGNOSTIC_PARENT_UNAVAILABLE",
+                "The selected destination directory is unavailable.",
+            )
+        })?;
+        if diagnostic_metadata_is_reparse(&metadata) {
+            return Err(diagnostic_error(
+                "DIAGNOSTIC_REPARSE_POINT_BLOCKED",
+                "QuickPLS will not write a diagnostic bundle through a symbolic link, junction, or other reparse point.",
+            ));
+        }
+    }
+    match fs::symlink_metadata(path) {
+        Ok(_) => Err(diagnostic_error(
+            "DIAGNOSTIC_DESTINATION_EXISTS",
+            "Choose a new ZIP filename; diagnostic bundles never overwrite files.",
+        )),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(_) => Err(diagnostic_error(
+            "DIAGNOSTIC_DESTINATION_UNAVAILABLE",
+            "The selected destination could not be inspected safely.",
+        )),
+    }
+}
+
+#[cfg(windows)]
+fn validate_diagnostic_path_root(path: &Path, raw: &str) -> Result<(), String> {
+    let bytes = raw.as_bytes();
+    let drive_rooted = bytes.len() >= 4
+        && bytes[0].is_ascii_alphabetic()
+        && bytes[1] == b':'
+        && matches!(bytes[2], b'\\' | b'/');
+    if !path.is_absolute() || !drive_rooted {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_PATH_NOT_LOCAL_DRIVE",
+            "Choose a drive-rooted local Windows destination such as C:\\Support\\bundle.zip.",
+        ));
+    }
+    if !diagnostic_drive_is_local(bytes[0]) {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_DRIVE_NOT_LOCAL",
+            "Choose a local fixed drive; removable, RAM, and mapped network drives are not supported.",
+        ));
+    }
+    Ok(())
+}
+
+#[cfg(not(windows))]
+fn validate_diagnostic_path_root(path: &Path, _raw: &str) -> Result<(), String> {
+    if !path.is_absolute() {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_PATH_NOT_LOCAL_DRIVE",
+            "Choose an absolute local destination for the diagnostic ZIP.",
+        ));
+    }
+    Ok(())
+}
+
+#[cfg(windows)]
+fn diagnostic_path_has_alternate_stream(_path: &Path, raw: &str) -> bool {
+    raw.as_bytes()
+        .get(2..)
+        .is_some_and(|suffix| suffix.contains(&b':'))
+}
+
+#[cfg(not(windows))]
+fn diagnostic_path_has_alternate_stream(path: &Path, _raw: &str) -> bool {
+    path.components().any(|component| {
+        matches!(component, std::path::Component::Normal(value) if value.to_string_lossy().contains(':'))
+    })
+}
+
+fn diagnostic_component_is_reserved(value: &str) -> bool {
+    let stem = value
+        .split('.')
+        .next()
+        .unwrap_or(value)
+        .to_ascii_uppercase();
+    matches!(stem.as_str(), "CON" | "PRN" | "AUX" | "NUL" | "CLOCK$")
+        || stem
+            .strip_prefix("COM")
+            .or_else(|| stem.strip_prefix("LPT"))
+            .is_some_and(|suffix| {
+                matches!(
+                    suffix,
+                    "1" | "2"
+                        | "3"
+                        | "4"
+                        | "5"
+                        | "6"
+                        | "7"
+                        | "8"
+                        | "9"
+                        | "\u{00B9}"
+                        | "\u{00B2}"
+                        | "\u{00B3}"
+                )
+            })
+}
+
+fn diagnostic_drive_type_is_local(drive_type: u32) -> bool {
+    drive_type == 3
+}
+
+#[cfg(windows)]
+fn diagnostic_drive_is_local(letter: u8) -> bool {
+    use windows_sys::Win32::Storage::FileSystem::GetDriveTypeW;
+    let root = [
+        letter.to_ascii_uppercase() as u16,
+        b':' as u16,
+        b'\\' as u16,
+        0,
+    ];
+    diagnostic_drive_type_is_local(unsafe { GetDriveTypeW(root.as_ptr()) })
+}
+
+#[cfg(not(windows))]
+fn diagnostic_drive_is_local(_letter: u8) -> bool {
+    false
+}
+
+#[cfg(windows)]
+fn diagnostic_metadata_is_reparse(metadata: &fs::Metadata) -> bool {
+    use std::os::windows::fs::MetadataExt;
+    const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x0400;
+    metadata.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT != 0
+}
+
+#[cfg(not(windows))]
+fn diagnostic_metadata_is_reparse(metadata: &fs::Metadata) -> bool {
+    metadata.file_type().is_symlink()
+}
+
+struct OpenDiagnosticDestination {
+    file: fs::File,
+    #[cfg(windows)]
+    _parent_guard: fs::File,
+}
+
+fn expected_diagnostic_destination(path: &Path) -> Result<PathBuf, String> {
+    let parent = path.parent().ok_or_else(|| {
+        diagnostic_error(
+            "DIAGNOSTIC_PARENT_INVALID",
+            "The selected destination has no parent directory.",
+        )
+    })?;
+    let file_name = path.file_name().ok_or_else(|| {
+        diagnostic_error(
+            "DIAGNOSTIC_DESTINATION_UNAVAILABLE",
+            "The selected diagnostic filename is unavailable.",
+        )
+    })?;
+    fs::canonicalize(parent)
+        .map(|canonical_parent| canonical_parent.join(file_name))
+        .map_err(|_| {
+            diagnostic_error(
+                "DIAGNOSTIC_PARENT_UNAVAILABLE",
+                "The selected destination directory could not be bound safely.",
+            )
+        })
+}
+
+fn verify_open_diagnostic_file(file: &fs::File, expected: &Path) -> Result<(), String> {
+    let metadata = file.metadata().map_err(|_| {
+        diagnostic_error(
+            "DIAGNOSTIC_DESTINATION_VERIFY_FAILED",
+            "The opened diagnostic destination could not be inspected safely.",
+        )
+    })?;
+    if !metadata.file_type().is_file() || diagnostic_metadata_is_reparse(&metadata) {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_DESTINATION_TYPE_BLOCKED",
+            "The opened diagnostic destination must be a regular non-reparse file.",
+        ));
+    }
+    verify_open_diagnostic_file_path(file, expected)
+}
+
+#[cfg(windows)]
+fn diagnostic_path_from_handle(file: &fs::File) -> Result<PathBuf, String> {
+    use std::{ffi::OsString, os::windows::ffi::OsStringExt, os::windows::io::AsRawHandle};
+    use windows_sys::Win32::Storage::FileSystem::{
+        FILE_NAME_NORMALIZED, GetFinalPathNameByHandleW, VOLUME_NAME_DOS,
+    };
+
+    let mut buffer = vec![0_u16; 512];
+    loop {
+        let length = unsafe {
+            GetFinalPathNameByHandleW(
+                file.as_raw_handle(),
+                buffer.as_mut_ptr(),
+                buffer.len() as u32,
+                FILE_NAME_NORMALIZED | VOLUME_NAME_DOS,
+            )
+        };
+        if length == 0 {
+            return Err(diagnostic_error(
+                "DIAGNOSTIC_FINAL_PATH_UNAVAILABLE",
+                "Windows could not resolve the opened diagnostic destination.",
+            ));
+        }
+        if (length as usize) < buffer.len() {
+            buffer.truncate(length as usize);
+            return Ok(PathBuf::from(OsString::from_wide(&buffer)));
+        }
+        let required = (length as usize).checked_add(1).ok_or_else(|| {
+            diagnostic_error(
+                "DIAGNOSTIC_FINAL_PATH_UNAVAILABLE",
+                "The opened diagnostic destination path is too long to inspect safely.",
+            )
+        })?;
+        if required > 32_768 {
+            return Err(diagnostic_error(
+                "DIAGNOSTIC_FINAL_PATH_UNAVAILABLE",
+                "The opened diagnostic destination path exceeds the supported limit.",
+            ));
+        }
+        buffer.resize(required, 0);
+    }
+}
+
+#[cfg(windows)]
+fn normalized_windows_diagnostic_path(path: &Path) -> Result<String, String> {
+    let raw = path.to_str().ok_or_else(|| {
+        diagnostic_error(
+            "DIAGNOSTIC_PATH_ENCODING_BLOCKED",
+            "The opened diagnostic destination must have a valid Unicode path.",
+        )
+    })?;
+    let dos_path = raw.strip_prefix(r"\\?\").unwrap_or(raw);
+    if dos_path.starts_with("UNC\\") || dos_path.starts_with(r"\\") {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_FINAL_PATH_NOT_LOCAL",
+            "The opened diagnostic destination resolved outside a local drive.",
+        ));
+    }
+    let bytes = dos_path.as_bytes();
+    let drive_rooted = bytes.len() >= 4
+        && bytes[0].is_ascii_alphabetic()
+        && bytes[1] == b':'
+        && matches!(bytes[2], b'\\' | b'/');
+    if !drive_rooted || !diagnostic_drive_is_local(bytes[0]) {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_FINAL_PATH_NOT_LOCAL",
+            "The opened diagnostic destination must resolve to a local fixed drive.",
+        ));
+    }
+    Ok(dos_path.replace('/', "\\").to_lowercase())
+}
+
+#[cfg(windows)]
+fn verify_open_diagnostic_file_path(file: &fs::File, expected: &Path) -> Result<(), String> {
+    let resolved = diagnostic_path_from_handle(file)?;
+    let expected_identity = normalized_windows_diagnostic_path(expected)?;
+    let resolved_identity = normalized_windows_diagnostic_path(&resolved)?;
+    if expected_identity != resolved_identity {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_FINAL_PATH_MISMATCH",
+            "The opened destination did not resolve to the selected local path. No diagnostic bytes were written.",
+        ));
+    }
+    verify_diagnostic_destination_identity(file, expected)?;
+    Ok(())
+}
+
+#[cfg(windows)]
+fn diagnostic_windows_file_identity(file: &fs::File) -> Result<(u32, u64), String> {
+    use std::{mem::zeroed, os::windows::io::AsRawHandle};
+    use windows_sys::Win32::Storage::FileSystem::{
+        BY_HANDLE_FILE_INFORMATION, GetFileInformationByHandle,
+    };
+
+    let mut information: BY_HANDLE_FILE_INFORMATION = unsafe { zeroed() };
+    if unsafe { GetFileInformationByHandle(file.as_raw_handle(), &mut information) } == 0 {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_DESTINATION_VERIFY_FAILED",
+            "Windows could not identify the opened diagnostic destination.",
+        ));
+    }
+    Ok((
+        information.dwVolumeSerialNumber,
+        ((information.nFileIndexHigh as u64) << 32) | information.nFileIndexLow as u64,
+    ))
+}
+
+#[cfg(windows)]
+fn verify_diagnostic_destination_identity(file: &fs::File, expected: &Path) -> Result<(), String> {
+    use std::os::windows::fs::OpenOptionsExt;
+    use windows_sys::Win32::Storage::FileSystem::FILE_FLAG_OPEN_REPARSE_POINT;
+
+    let mut options = fs::OpenOptions::new();
+    options
+        .read(true)
+        .access_mode(0)
+        .share_mode(0)
+        .custom_flags(FILE_FLAG_OPEN_REPARSE_POINT);
+    let probe = options.open(expected).map_err(|_| {
+        diagnostic_error(
+            "DIAGNOSTIC_DESTINATION_IDENTITY_MISMATCH",
+            "The selected path no longer names the newly opened diagnostic destination.",
+        )
+    })?;
+    let metadata = probe.metadata().map_err(|_| {
+        diagnostic_error(
+            "DIAGNOSTIC_DESTINATION_VERIFY_FAILED",
+            "The selected diagnostic destination identity could not be inspected.",
+        )
+    })?;
+    if !metadata.file_type().is_file() || diagnostic_metadata_is_reparse(&metadata) {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_DESTINATION_TYPE_BLOCKED",
+            "The selected diagnostic destination identity is not a regular non-reparse file.",
+        ));
+    }
+    if diagnostic_windows_file_identity(file)? != diagnostic_windows_file_identity(&probe)? {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_DESTINATION_IDENTITY_MISMATCH",
+            "The selected path no longer names the newly opened diagnostic destination.",
+        ));
+    }
+    Ok(())
+}
+
+#[cfg(not(windows))]
+fn verify_open_diagnostic_file_path(_file: &fs::File, expected: &Path) -> Result<(), String> {
+    let resolved = fs::canonicalize(expected).map_err(|_| {
+        diagnostic_error(
+            "DIAGNOSTIC_FINAL_PATH_UNAVAILABLE",
+            "The opened diagnostic destination could not be resolved safely.",
+        )
+    })?;
+    if resolved != expected {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_FINAL_PATH_MISMATCH",
+            "The opened destination did not resolve to the selected local path. No diagnostic bytes were written.",
+        ));
+    }
+    Ok(())
+}
+
+#[cfg(windows)]
+fn verify_diagnostic_parent_guard(guard: &fs::File, parent: &Path) -> Result<(), String> {
+    let metadata = guard.metadata().map_err(|_| {
+        diagnostic_error(
+            "DIAGNOSTIC_PARENT_GUARD_FAILED",
+            "The selected destination directory could not be verified.",
+        )
+    })?;
+    if !metadata.file_type().is_dir() || diagnostic_metadata_is_reparse(&metadata) {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_REPARSE_POINT_BLOCKED",
+            "The selected destination directory must be a regular non-reparse directory.",
+        ));
+    }
+    let resolved = diagnostic_path_from_handle(&guard)?;
+    if normalized_windows_diagnostic_path(&resolved)? != normalized_windows_diagnostic_path(parent)?
+    {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_PARENT_GUARD_FAILED",
+            "The selected destination directory changed while it was being secured.",
+        ));
+    }
+    Ok(())
+}
+
+#[cfg(windows)]
+fn open_diagnostic_parent_guard(parent: &Path) -> Result<fs::File, String> {
+    use std::os::windows::fs::OpenOptionsExt;
+    use windows_sys::Win32::Storage::FileSystem::{
+        FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT,
+    };
+
+    let mut options = fs::OpenOptions::new();
+    options
+        .read(true)
+        .access_mode(0)
+        .share_mode(0)
+        .custom_flags(FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT);
+    let guard = options.open(parent).map_err(|_| {
+        diagnostic_error(
+            "DIAGNOSTIC_PARENT_GUARD_FAILED",
+            "The selected destination directory could not be locked against replacement.",
+        )
+    })?;
+    verify_diagnostic_parent_guard(&guard, parent)?;
+    Ok(guard)
+}
+
+fn open_new_diagnostic_destination<F>(
+    path: &Path,
+    before_create: F,
+) -> Result<OpenDiagnosticDestination, String>
+where
+    F: FnOnce(),
+{
+    validate_new_diagnostic_path(path)?;
+    let expected = expected_diagnostic_destination(path)?;
+    #[cfg(windows)]
+    let parent_guard = open_diagnostic_parent_guard(expected.parent().ok_or_else(|| {
+        diagnostic_error(
+            "DIAGNOSTIC_PARENT_INVALID",
+            "The selected destination has no parent directory.",
+        )
+    })?)?;
+
+    before_create();
+    let mut options = fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(windows)]
+    {
+        use std::os::windows::fs::OpenOptionsExt;
+        use windows_sys::Win32::Storage::FileSystem::FILE_FLAG_OPEN_REPARSE_POINT;
+        options
+            .share_mode(0)
+            .custom_flags(FILE_FLAG_OPEN_REPARSE_POINT);
+    }
+    let file = options.open(path).map_err(|_| {
+        diagnostic_error(
+            "DIAGNOSTIC_DESTINATION_CREATE_FAILED",
+            "QuickPLS could not create the selected new ZIP file.",
+        )
+    })?;
+    #[cfg(windows)]
+    verify_diagnostic_parent_guard(
+        &parent_guard,
+        expected.parent().ok_or_else(|| {
+            diagnostic_error(
+                "DIAGNOSTIC_PARENT_INVALID",
+                "The selected destination has no parent directory.",
+            )
+        })?,
+    )?;
+    verify_open_diagnostic_file(&file, &expected)?;
+    Ok(OpenDiagnosticDestination {
+        file,
+        #[cfg(windows)]
+        _parent_guard: parent_guard,
+    })
+}
+
+fn build_diagnostic_zip_bytes(staging: &DiagnosticStaging) -> Result<Vec<u8>, String> {
+    validate_diagnostic_staging(&staging.entries)?;
+    let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
+    let options = SimpleFileOptions::default()
+        .compression_method(zip::CompressionMethod::Stored)
+        .unix_permissions(0o600);
+    for (name, bytes) in &staging.entries {
+        writer.start_file(*name, options).map_err(|_| {
+            diagnostic_error(
+                "DIAGNOSTIC_ARCHIVE_BUILD_FAILED",
+                "QuickPLS could not build the diagnostic archive in memory.",
+            )
+        })?;
+        writer.write_all(bytes).map_err(|_| {
+            diagnostic_error(
+                "DIAGNOSTIC_ARCHIVE_BUILD_FAILED",
+                "QuickPLS could not build the diagnostic archive in memory.",
+            )
+        })?;
+    }
+    let archive = writer
+        .finish()
+        .map_err(|_| {
+            diagnostic_error(
+                "DIAGNOSTIC_ARCHIVE_BUILD_FAILED",
+                "QuickPLS could not finalize the diagnostic archive in memory.",
+            )
+        })?
+        .into_inner();
+    if archive.len() > MAX_DIAGNOSTIC_ARCHIVE_BYTES {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_ARCHIVE_TOO_LARGE",
+            "The completed diagnostic ZIP exceeds its bounded size limit.",
+        ));
+    }
+    Ok(archive)
+}
+
+fn write_diagnostic_archive_bytes(
+    path: &Path,
+    archive: &[u8],
+) -> Result<DiagnosticBundleSaveResult, String> {
+    write_diagnostic_archive_bytes_with_hook(path, archive, || {})
+}
+
+fn write_diagnostic_archive_bytes_with_hook<F>(
+    path: &Path,
+    archive: &[u8],
+    before_create: F,
+) -> Result<DiagnosticBundleSaveResult, String>
+where
+    F: FnOnce(),
+{
+    if archive.len() > MAX_DIAGNOSTIC_ARCHIVE_BYTES {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_ARCHIVE_TOO_LARGE",
+            "The completed diagnostic ZIP exceeds its bounded size limit.",
+        ));
+    }
+    let saved = DiagnosticBundleSaveResult {
+        bytes: archive.len() as u64,
+        archive_sha256: sha256_hex(archive),
+    };
+    let mut destination = open_new_diagnostic_destination(path, before_create)?;
+    if destination
+        .file
+        .write_all(archive)
+        .and_then(|_| destination.file.sync_all())
+        .is_err()
+    {
+        return Err(diagnostic_error(
+            "DIAGNOSTIC_ARCHIVE_WRITE_FAILED",
+            "QuickPLS could not save and synchronize the diagnostic archive. A partial new file may remain and will never be overwritten automatically.",
+        ));
+    }
+    Ok(saved)
+}
+
+fn write_diagnostic_bundle(
+    path: &Path,
+    staging: &DiagnosticStaging,
+) -> Result<DiagnosticBundleSaveResult, String> {
+    let archive = build_diagnostic_zip_bytes(staging)?;
+    write_diagnostic_archive_bytes(path, &archive)
+}
+
+fn create_diagnostic_preview(
+    diagnostics: &DesktopDiagnostics,
+    replaces_preview_id: Option<&str>,
+) -> Result<DiagnosticBundlePreview, String> {
+    diagnostics.create_preview(replaces_preview_id)
+}
+
+#[tauri::command]
+fn preview_diagnostic_bundle(
+    replaces_preview_id: Option<String>,
+    diagnostics: State<'_, DesktopDiagnostics>,
+) -> Result<DiagnosticBundlePreview, String> {
+    create_diagnostic_preview(&diagnostics, replaces_preview_id.as_deref())
+}
+
+#[tauri::command]
+fn cancel_diagnostic_bundle_preview(
+    preview_id: String,
+    diagnostics: State<'_, DesktopDiagnostics>,
+) -> Result<(), String> {
+    diagnostics.cancel_preview(&preview_id)?;
+    diagnostics.record_event("diagnostic.preview.cancelled")?;
+    Ok(())
+}
+
+#[tauri::command]
+fn save_diagnostic_bundle(
+    path: String,
+    preview_id: String,
+    diagnostics: State<'_, DesktopDiagnostics>,
+) -> Result<DiagnosticBundleSaveResult, String> {
+    let staging = diagnostics.consume_preview(&preview_id)?;
+    let result = write_diagnostic_bundle(Path::new(&path), &staging)?;
+    diagnostics.record_event("diagnostic.bundle.saved")?;
+    Ok(result)
 }
 
 #[tauri::command]
@@ -880,14 +2199,24 @@ fn append_dataset(project: &mut Project, dataset: Dataset) -> Result<DatasetSnap
 }
 
 #[tauri::command]
-fn open_demo_project(state: State<'_, DesktopProject>) -> Result<ProjectSnapshot, String> {
-    let project = build_demo_project().map_err(|error| error.to_string())?;
+fn open_demo_project(
+    sample_id: Option<String>,
+    state: State<'_, DesktopProject>,
+) -> Result<ProjectSnapshot, String> {
+    let project = build_sample_project(sample_id.as_deref().unwrap_or("corporate_reputation"))?;
     let response = snapshot(&project, None, None);
     *state
         .0
         .lock()
         .map_err(|_| "project state is unavailable".to_owned())? = project;
     Ok(response)
+}
+
+fn build_sample_project(sample_id: &str) -> Result<Project, String> {
+    match sample_id {
+        "corporate_reputation" => build_demo_project(),
+        other => build_bundled_sample_project(BundledSampleProject::parse(other)?),
+    }
 }
 
 #[tauri::command]
@@ -2276,7 +3605,7 @@ fn build_demo_project() -> Result<Project, String> {
     let model = demo_model();
     let mut settings = AnalysisSettings::default();
     settings.bootstrap_samples = 24;
-    settings.permutation_samples = 99;
+    settings.permutation_samples = 0;
     settings.seed = 20_260_718;
     settings.workers = 1;
     let recipe = AnalysisRecipe {
@@ -2389,6 +3718,11 @@ fn run_demo_recipe(dataset: &Dataset, recipe: &AnalysisRecipe) -> Result<Analysi
 
 fn demo_workspace(dataset: &Dataset, result: &AnalysisResult) -> Value {
     let (estimation, assessment, bootstrap, permutation) = match &result.payload {
+        qpls_core::AnalysisPayload::PlsPmV2 {
+            estimation,
+            assessment,
+            bootstrap,
+        } => (estimation, assessment, Some(bootstrap.clone()), None),
         qpls_core::AnalysisPayload::PlsPmV3 {
             estimation,
             assessment,
@@ -2400,14 +3734,14 @@ fn demo_workspace(dataset: &Dataset, result: &AnalysisResult) -> Value {
             bootstrap.clone(),
             permutation.clone(),
         ),
-        _ => unreachable!("demo result is created as pls_pm_v3"),
+        _ => unreachable!("demo result is created as bootstrap-only pls_pm_v2"),
     };
     serde_json::json!({
         "activeDatasetId": dataset.id.to_string(),
         "analysisSettings": {
             "bootstrapSamples": 24,
             "studentizedInnerSamples": 0,
-            "permutationSamples": 99,
+            "permutationSamples": 0,
             "seed": 20260718,
             "workers": 1,
             "confidenceLevel": 0.95
@@ -2438,6 +3772,100 @@ fn demo_workspace(dataset: &Dataset, result: &AnalysisResult) -> Value {
             "permutation": permutation
         }]
     })
+}
+
+#[cfg(test)]
+mod webview2_offline_proxy_tests {
+    use super::*;
+    use std::io::Read;
+
+    fn rejection_response(request: &[u8]) -> Vec<u8> {
+        let listener = bind_webview2_offline_rejection_proxy(
+            "127.0.0.1:0"
+                .parse()
+                .expect("valid ephemeral loopback address"),
+        )
+        .expect("bind test rejection proxy");
+        let proxy_address = listener.local_addr().expect("read proxy address");
+        let worker = std::thread::spawn(move || {
+            let (stream, _) = listener.accept().expect("accept proxy request");
+            reject_webview2_proxy_stream(stream).expect("write rejection response");
+        });
+
+        let mut client =
+            TcpStream::connect(proxy_address).expect("connect to test rejection proxy");
+        client.write_all(request).expect("write proxy request");
+        client
+            .shutdown(Shutdown::Write)
+            .expect("finish proxy request");
+        let mut response = Vec::new();
+        client
+            .read_to_end(&mut response)
+            .expect("read proxy rejection");
+        worker.join().expect("join proxy worker");
+        response
+    }
+
+    #[test]
+    fn webview2_offline_proxy_rejects_connect_without_contacting_requested_upstream() {
+        let upstream = TcpListener::bind("127.0.0.1:0").expect("bind upstream sentinel");
+        upstream
+            .set_nonblocking(true)
+            .expect("make upstream sentinel nonblocking");
+        let upstream_address = upstream.local_addr().expect("read upstream address");
+        let request =
+            format!("CONNECT {upstream_address} HTTP/1.1\r\nHost: {upstream_address}\r\n\r\n");
+
+        let response = rejection_response(request.as_bytes());
+
+        assert!(response.starts_with(b"HTTP/1.1 403 Forbidden\r\n"));
+        assert!(response.ends_with(b"\r\n\r\n"));
+        assert!(matches!(
+            upstream.accept(),
+            Err(error) if error.kind() == io::ErrorKind::WouldBlock
+        ));
+    }
+
+    #[test]
+    fn webview2_offline_proxy_rejects_plain_http_without_using_the_destination() {
+        let response = rejection_response(
+            b"GET http://telemetry.example.test/ping HTTP/1.1\r\nHost: telemetry.example.test\r\n\r\n",
+        );
+
+        assert_eq!(response, WEBVIEW2_OFFLINE_PROXY_RESPONSE);
+        assert!(
+            response
+                .windows(b"X-QuickPLS-Network-Policy: offline".len())
+                .any(|window| window == b"X-QuickPLS-Network-Policy: offline")
+        );
+    }
+
+    #[test]
+    fn webview2_offline_proxy_bind_is_ipv4_loopback_only() {
+        for forbidden in ["0.0.0.0:0", "[::1]:0", "[::]:0"] {
+            let error = bind_webview2_offline_rejection_proxy(
+                forbidden.parse().expect("valid forbidden bind address"),
+            )
+            .expect_err("non-127.0.0.1 bind must be rejected");
+            assert_eq!(error.kind(), io::ErrorKind::InvalidInput);
+        }
+
+        let listener = bind_webview2_offline_rejection_proxy(
+            "127.0.0.1:0".parse().expect("valid allowed bind address"),
+        )
+        .expect("127.0.0.1 bind must be allowed");
+        assert_eq!(listener.local_addr().unwrap().ip(), Ipv4Addr::LOCALHOST);
+    }
+
+    #[test]
+    fn production_webview2_offline_proxy_address_is_fixed_loopback() {
+        let bind_address: SocketAddr = WEBVIEW2_OFFLINE_PROXY_BIND_ADDRESS
+            .parse()
+            .expect("production proxy address must parse");
+
+        assert_eq!(bind_address.ip(), IpAddr::V4(Ipv4Addr::LOCALHOST));
+        assert_eq!(bind_address.port(), 17846);
+    }
 }
 
 #[cfg(test)]
@@ -2683,6 +4111,18 @@ mod desktop_job_tests {
         assert_eq!(project.models.len(), 1);
         assert_eq!(project.recipes.len(), 1);
         assert_eq!(project.results.len(), 1);
+        assert_eq!(
+            project.recipes[0].method_config,
+            Some(MethodConfig::PlsBootstrap)
+        );
+        assert_eq!(project.recipes[0].settings.bootstrap_samples, 24);
+        assert_eq!(project.recipes[0].settings.permutation_samples, 0);
+        match &project.results[0].payload {
+            qpls_core::AnalysisPayload::PlsPmV2 { bootstrap, .. } => {
+                assert_eq!(bootstrap["plan"]["replicates"].as_u64(), Some(24));
+            }
+            payload => panic!("corporate sample produced unexpected payload {payload:?}"),
+        }
         let workspace = project.layouts.get("workspace").unwrap();
         let dataset_id = project.datasets[0].id.to_string();
         assert_eq!(
@@ -2694,6 +4134,10 @@ mod desktop_job_tests {
         assert_eq!(workspace["runs"].as_array().unwrap().len(), 1);
         assert_eq!(workspace["runs"][0]["name"], SAMPLE_RUN_DISPLAY_NAME);
         assert_eq!(workspace["runs"][0]["method"], SAMPLE_RUN_METHOD_NAME);
+        assert_eq!(workspace["analysisSettings"]["bootstrapSamples"], 24);
+        assert_eq!(workspace["analysisSettings"]["permutationSamples"], 0);
+        assert!(workspace["runs"][0]["bootstrap"].is_object());
+        assert!(workspace["runs"][0]["permutation"].is_null());
         let lineage = read_dataset_lineage(&project).unwrap();
         assert_eq!(lineage.schema_version, 1);
         assert_eq!(lineage.records.len(), 1);
@@ -2711,6 +4155,27 @@ mod desktop_job_tests {
             project.recipes[0].id.to_string(),
             "00000000-0000-0000-0000-00000000d004"
         );
+    }
+
+    #[test]
+    fn sample_project_selector_opens_only_the_three_advertised_projects() {
+        for (sample_id, expected_name, expected_constructs) in [
+            ("corporate_reputation", "Corporate Reputation Sample", 4),
+            ("simple_pls", "Simple Reflective PLS Sample", 2),
+            ("mediation", "Mediation Sample", 3),
+        ] {
+            let project = build_sample_project(sample_id).unwrap();
+            assert_eq!(project.manifest.name, expected_name);
+            assert_eq!(project.datasets.len(), 1);
+            assert_eq!(project.models.len(), 1);
+            assert_eq!(project.models[0].constructs.len(), expected_constructs);
+            assert_eq!(project.recipes.len(), 1);
+            assert_eq!(project.results.len(), 1);
+        }
+
+        for invalid in ["", "plspredict", "cbsem_cfa"] {
+            assert!(build_sample_project(invalid).is_err());
+        }
     }
 
     #[test]
@@ -3805,6 +5270,483 @@ mod desktop_job_tests {
     }
 }
 
+#[cfg(test)]
+mod diagnostic_bundle_tests {
+    use super::*;
+    use std::{io::Read, sync::Barrier, thread};
+
+    #[test]
+    fn diagnostic_redaction_removes_paths_emails_url_suffixes_and_bearer_tokens() {
+        let raw = concat!(
+            "parser at C:\\Users\\Alice Smith\\Documents\\study.qpls; ",
+            "contact alice@example.org; ",
+            "GET https://support.example.org/report?token=secret#private; ",
+            "Authorization: Bearer eyJhbGciOiJub25l.secret"
+        );
+        let mut counts = DiagnosticRedactionCounts::default();
+
+        let redacted = redact_diagnostic_text(raw, &mut counts);
+
+        assert!(redacted.contains("<redacted-path>/study.qpls"));
+        assert!(redacted.contains("<redacted-email>"));
+        assert!(redacted.contains("https://support.example.org/report"));
+        assert!(redacted.contains("Bearer <redacted-token>"));
+        for forbidden in [
+            "Alice Smith",
+            "alice@example.org",
+            "token=secret",
+            "#private",
+            "eyJhbGciOiJub25l.secret",
+        ] {
+            assert!(!redacted.contains(forbidden), "found {forbidden}");
+        }
+        assert_eq!(counts.windows_paths, 1);
+        assert_eq!(counts.email_addresses, 1);
+        assert_eq!(counts.url_queries_or_fragments, 1);
+        assert_eq!(counts.bearer_tokens, 1);
+    }
+
+    #[test]
+    fn diagnostic_preview_is_bounded_local_only_and_required_for_save() {
+        let diagnostics = DesktopDiagnostics::new();
+
+        let preview = create_diagnostic_preview(&diagnostics, None).unwrap();
+
+        assert!(preview.local_only);
+        assert_eq!(preview.network_activity, "none");
+        assert_eq!(preview.entry_count, 3);
+        assert!(preview.event_count <= MAX_DIAGNOSTIC_EVENTS);
+        assert!(preview.estimated_uncompressed_bytes <= MAX_DIAGNOSTIC_UNCOMPRESSED_BYTES);
+        assert_eq!(preview.staged_contents.system.user_data_included, false);
+        assert_eq!(preview.staged_contents.system.network_accessed, false);
+        assert_eq!(preview.staged_contents.events.len(), preview.event_count);
+        assert_eq!(preview.staged_contents.manifest.entries.len(), 2);
+        assert!(
+            diagnostics
+                .consume_preview("not-the-current-preview")
+                .is_err()
+        );
+        assert!(diagnostics.consume_preview(&preview.preview_id).is_ok());
+        assert!(diagnostics.consume_preview(&preview.preview_id).is_err());
+        assert!(diagnostics.cancel_preview(&preview.preview_id).is_err());
+    }
+
+    #[test]
+    fn diagnostic_preview_ids_are_atomic_single_use_under_concurrent_saves() {
+        let diagnostics = DesktopDiagnostics::new();
+        let preview = diagnostics.create_preview(None).unwrap();
+        let barrier = Arc::new(Barrier::new(3));
+        let attempts = (0..2)
+            .map(|_| {
+                let diagnostics = diagnostics.clone();
+                let preview_id = preview.preview_id.clone();
+                let barrier = barrier.clone();
+                thread::spawn(move || {
+                    barrier.wait();
+                    diagnostics.consume_preview(&preview_id).is_ok()
+                })
+            })
+            .collect::<Vec<_>>();
+        barrier.wait();
+        let successes = attempts
+            .into_iter()
+            .map(|attempt| attempt.join().unwrap())
+            .filter(|success| *success)
+            .count();
+
+        assert_eq!(successes, 1);
+        assert!(diagnostics.consume_preview(&preview.preview_id).is_err());
+    }
+
+    #[test]
+    fn independently_created_preview_ids_never_overwrite_each_others_staging() {
+        let diagnostics = DesktopDiagnostics::new();
+        let first = diagnostics.create_preview(None).unwrap();
+        let second = diagnostics.create_preview(None).unwrap();
+
+        assert_ne!(first.preview_id, second.preview_id);
+        assert!(diagnostics.consume_preview(&first.preview_id).is_ok());
+        assert!(diagnostics.consume_preview(&second.preview_id).is_ok());
+    }
+
+    #[test]
+    fn abandoned_diagnostic_previews_evict_the_oldest_without_blocking_recovery() {
+        let diagnostics = DesktopDiagnostics::new();
+        let previews = (0..(MAX_PENDING_DIAGNOSTIC_PREVIEWS + 3))
+            .map(|_| diagnostics.create_preview(None).unwrap())
+            .collect::<Vec<_>>();
+
+        let state = diagnostics.0.lock().unwrap();
+        assert_eq!(
+            state.pending_previews.len(),
+            MAX_PENDING_DIAGNOSTIC_PREVIEWS
+        );
+        drop(state);
+        for preview in previews.iter().take(3) {
+            assert!(diagnostics.consume_preview(&preview.preview_id).is_err());
+        }
+        for preview in previews.iter().skip(3) {
+            assert!(diagnostics.consume_preview(&preview.preview_id).is_ok());
+        }
+    }
+
+    #[test]
+    fn expired_diagnostic_previews_are_pruned_before_capacity_and_consumption_checks() {
+        let diagnostics = DesktopDiagnostics::new();
+        let expired = diagnostics.create_preview(None).unwrap();
+        {
+            let mut state = diagnostics.0.lock().unwrap();
+            state
+                .pending_previews
+                .get_mut(&expired.preview_id)
+                .unwrap()
+                .expires_at = Instant::now() - Duration::from_secs(1);
+        }
+
+        for _ in 0..(MAX_PENDING_DIAGNOSTIC_PREVIEWS + 2) {
+            diagnostics.create_preview(None).unwrap();
+        }
+
+        assert!(diagnostics.consume_preview(&expired.preview_id).is_err());
+        assert_eq!(
+            diagnostics.0.lock().unwrap().pending_previews.len(),
+            MAX_PENDING_DIAGNOSTIC_PREVIEWS
+        );
+    }
+
+    #[test]
+    fn concurrent_refresh_and_cancel_leave_only_the_new_preview_consumable() {
+        let diagnostics = DesktopDiagnostics::new();
+        let old = diagnostics.create_preview(None).unwrap();
+        let barrier = Arc::new(Barrier::new(3));
+        let cancel = {
+            let diagnostics = diagnostics.clone();
+            let preview_id = old.preview_id.clone();
+            let barrier = barrier.clone();
+            thread::spawn(move || {
+                barrier.wait();
+                diagnostics.cancel_preview(&preview_id)
+            })
+        };
+        let refresh = {
+            let diagnostics = diagnostics.clone();
+            let preview_id = old.preview_id.clone();
+            let barrier = barrier.clone();
+            thread::spawn(move || {
+                barrier.wait();
+                diagnostics.create_preview(Some(&preview_id))
+            })
+        };
+        barrier.wait();
+        let _ = cancel.join().unwrap();
+        let new_preview = refresh.join().unwrap().unwrap();
+
+        assert_ne!(old.preview_id, new_preview.preview_id);
+        assert!(diagnostics.consume_preview(&old.preview_id).is_err());
+        assert!(diagnostics.consume_preview(&new_preview.preview_id).is_ok());
+        assert!(
+            diagnostics
+                .consume_preview(&new_preview.preview_id)
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn diagnostic_bundle_writes_only_the_fixed_allowlist_and_describes_payload_hashes() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("quickpls-diagnostic-bundle.zip");
+        let events = vec![DiagnosticEvent {
+            timestamp: diagnostic_timestamp(),
+            sequence: 1,
+            severity: "error".to_string(),
+            code: concat!(
+                "C:\\Users\\Alice\\study.qpls ",
+                "alice@example.org ",
+                "https://example.org/help?secret=yes ",
+                "Bearer private-token"
+            )
+            .to_string(),
+        }];
+        let staging = build_diagnostic_staging(&events).unwrap();
+        let inspected = inspect_diagnostic_staging(&staging.entries).unwrap();
+        let archive_bytes = build_diagnostic_zip_bytes(&staging).unwrap();
+        let expected_hash = sha256_hex(&archive_bytes);
+
+        let saved = write_diagnostic_bundle(&path, &staging).unwrap();
+
+        assert_eq!(saved.bytes as usize, archive_bytes.len());
+        assert_eq!(saved.archive_sha256, expected_hash);
+        assert_eq!(fs::read(&path).unwrap(), archive_bytes);
+        assert!(archive_bytes.len() <= MAX_DIAGNOSTIC_ARCHIVE_BYTES);
+        assert_eq!(inspected.events.len(), 1);
+        let inspected_event = &inspected.events[0].code;
+        assert!(inspected_event.contains("<redacted-path>/study.qpls"));
+        assert!(inspected_event.contains("<redacted-email>"));
+        assert!(inspected_event.contains("Bearer <redacted-token>"));
+        assert!(!inspected_event.contains("secret=yes"));
+        let mut archive = zip::ZipArchive::new(Cursor::new(&archive_bytes)).unwrap();
+        assert_eq!(archive.len(), MAX_DIAGNOSTIC_ARCHIVE_ENTRIES);
+        let mut contents = BTreeMap::new();
+        for index in 0..archive.len() {
+            let mut entry = archive.by_index(index).unwrap();
+            assert!(entry.is_file());
+            assert_eq!(entry.compression(), zip::CompressionMethod::Stored);
+            assert!(entry.size() as usize <= MAX_DIAGNOSTIC_ENTRY_BYTES);
+            let name = entry.name().to_string();
+            let mut bytes = Vec::new();
+            entry.read_to_end(&mut bytes).unwrap();
+            contents.insert(name, bytes);
+        }
+        assert_eq!(
+            contents.keys().cloned().collect::<Vec<_>>(),
+            vec![
+                DIAGNOSTIC_EVENTS_ENTRY.to_string(),
+                DIAGNOSTIC_MANIFEST_ENTRY.to_string(),
+                DIAGNOSTIC_SYSTEM_ENTRY.to_string(),
+            ]
+        );
+        let combined = contents
+            .values()
+            .flat_map(|bytes| bytes.iter().copied())
+            .collect::<Vec<_>>();
+        let combined = String::from_utf8(combined).unwrap();
+        for forbidden in [
+            "C:\\Users\\Alice",
+            "alice@example.org",
+            "secret=yes",
+            "private-token",
+        ] {
+            assert!(!combined.contains(forbidden), "found {forbidden}");
+        }
+        let manifest: Value = serde_json::from_slice(&contents[DIAGNOSTIC_MANIFEST_ENTRY]).unwrap();
+        assert_eq!(manifest["schemaVersion"], 1);
+        assert_eq!(manifest["policyVersion"], DIAGNOSTIC_POLICY_VERSION);
+        assert_eq!(manifest["localOnly"], true);
+        assert_eq!(manifest["networkAccessed"], false);
+        let descriptors = manifest["entries"].as_array().unwrap();
+        assert_eq!(descriptors.len(), 2);
+        for descriptor in descriptors {
+            let name = descriptor["name"].as_str().unwrap();
+            let bytes = &contents[name];
+            assert_eq!(descriptor["bytes"], bytes.len());
+            assert_eq!(descriptor["sha256"], sha256_hex(bytes));
+        }
+    }
+
+    #[test]
+    fn diagnostic_bundle_requires_a_new_local_drive_rooted_zip_destination() {
+        let directory = tempfile::tempdir().unwrap();
+        let staging = build_diagnostic_staging(&[]).unwrap();
+        let existing = directory.path().join("existing.zip");
+        fs::write(&existing, b"keep me").unwrap();
+
+        let relative = write_diagnostic_bundle(Path::new("relative.zip"), &staging).unwrap_err();
+        assert!(relative.contains("DIAGNOSTIC_PATH_NOT_LOCAL_DRIVE"));
+        for blocked in [
+            r"\\server\share\bundle.zip",
+            r"//server/share/bundle.zip",
+            r"\\?\C:\Support\bundle.zip",
+            r"\\.\C:\Support\bundle.zip",
+            r"\??\C:\Support\bundle.zip",
+        ] {
+            let error = validate_new_diagnostic_path(Path::new(blocked)).unwrap_err();
+            assert!(
+                error.contains("DIAGNOSTIC_PATH_NAMESPACE_BLOCKED"),
+                "{blocked}: {error}"
+            );
+        }
+        let ads = format!("{}:private", directory.path().join("bundle.zip").display());
+        assert!(
+            validate_new_diagnostic_path(Path::new(&ads))
+                .unwrap_err()
+                .contains("DIAGNOSTIC_PATH_ADS_BLOCKED")
+        );
+        for reserved in [
+            "NUL.zip",
+            "CON.txt.zip",
+            "COM1.zip",
+            "LPT9.zip",
+            "COM\u{00B9}.zip",
+            "COM\u{00B2}.zip",
+            "COM\u{00B3}.zip",
+            "LPT\u{00B9}.zip",
+            "LPT\u{00B2}.zip",
+            "LPT\u{00B3}.zip",
+        ] {
+            let error = validate_new_diagnostic_path(&directory.path().join(reserved)).unwrap_err();
+            assert!(error.contains("DIAGNOSTIC_DEVICE_NAME_BLOCKED"));
+        }
+        let wrong_extension =
+            write_diagnostic_bundle(&directory.path().join("bundle.qpls"), &staging).unwrap_err();
+        assert!(wrong_extension.contains("DIAGNOSTIC_EXTENSION_INVALID"));
+        let overwrite = write_diagnostic_bundle(&existing, &staging).unwrap_err();
+        assert!(overwrite.contains("DIAGNOSTIC_DESTINATION_EXISTS"));
+        assert_eq!(fs::read(&existing).unwrap(), b"keep me");
+        assert!(diagnostic_drive_type_is_local(3));
+        assert!(!diagnostic_drive_type_is_local(2));
+        assert!(!diagnostic_drive_type_is_local(6));
+        assert!(!diagnostic_drive_type_is_local(4));
+        assert!(diagnostic_component_is_reserved("COM\u{00B9}.zip"));
+        assert!(diagnostic_component_is_reserved("LPT\u{00B3}.txt"));
+        assert!(!diagnostic_component_is_reserved("COM\u{2074}.zip"));
+    }
+
+    #[test]
+    fn diagnostic_destination_rejects_reparse_ancestors_when_available() {
+        let directory = tempfile::tempdir().unwrap();
+        let real = directory.path().join("real");
+        let link = directory.path().join("linked");
+        fs::create_dir(&real).unwrap();
+        #[cfg(windows)]
+        let linked = std::os::windows::fs::symlink_dir(&real, &link).is_ok();
+        #[cfg(unix)]
+        let linked = std::os::unix::fs::symlink(&real, &link).is_ok();
+        #[cfg(not(any(windows, unix)))]
+        let linked = false;
+        if linked {
+            let error = validate_new_diagnostic_path(&link.join("bundle.zip")).unwrap_err();
+            assert!(error.contains("DIAGNOSTIC_REPARSE_POINT_BLOCKED"));
+        }
+    }
+
+    #[test]
+    fn diagnostic_create_new_closes_the_destination_toctou_window() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("raced.zip");
+        let archive = build_diagnostic_zip_bytes(&build_diagnostic_staging(&[]).unwrap()).unwrap();
+
+        let error = write_diagnostic_archive_bytes_with_hook(&path, &archive, || {
+            fs::write(&path, b"created by another process").unwrap();
+        })
+        .unwrap_err();
+
+        assert!(error.contains("DIAGNOSTIC_DESTINATION_CREATE_FAILED"));
+        assert_eq!(fs::read(&path).unwrap(), b"created by another process");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn diagnostic_destination_handle_is_exclusive_and_bound_to_the_verified_final_path() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("exclusive.zip");
+        let expected = expected_diagnostic_destination(&path).unwrap();
+        let destination = open_new_diagnostic_destination(&path, || {}).unwrap();
+
+        let resolved = diagnostic_path_from_handle(&destination.file).unwrap();
+        assert_eq!(
+            normalized_windows_diagnostic_path(&resolved).unwrap(),
+            normalized_windows_diagnostic_path(&expected).unwrap()
+        );
+        assert!(destination.file.metadata().unwrap().file_type().is_file());
+        assert!(!diagnostic_metadata_is_reparse(
+            &destination.file.metadata().unwrap()
+        ));
+        assert!(fs::OpenOptions::new().read(true).open(&path).is_err());
+        assert!(fs::rename(&path, directory.path().join("renamed.zip")).is_err());
+
+        drop(destination);
+        assert!(fs::OpenOptions::new().read(true).open(&path).is_ok());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn diagnostic_parent_swap_never_receives_archive_bytes() {
+        let directory = tempfile::tempdir().unwrap();
+        let selected = directory.path().join("selected");
+        let moved = directory.path().join("moved");
+        let alternate = directory.path().join("alternate");
+        fs::create_dir(&selected).unwrap();
+        fs::create_dir(&alternate).unwrap();
+        let path = selected.join("guarded.zip");
+        let archive = build_diagnostic_zip_bytes(&build_diagnostic_staging(&[]).unwrap()).unwrap();
+        let swap_state = Arc::new(Mutex::new((false, false)));
+        let observed = swap_state.clone();
+
+        let result = write_diagnostic_archive_bytes_with_hook(&path, &archive, || {
+            let renamed = fs::rename(&selected, &moved).is_ok();
+            let linked =
+                renamed && std::os::windows::fs::symlink_dir(&alternate, &selected).is_ok();
+            *observed.lock().unwrap() = (renamed, linked);
+        });
+
+        let (renamed, linked) = *swap_state.lock().unwrap();
+        if !renamed {
+            assert!(result.is_ok());
+            assert_eq!(fs::read(&path).unwrap(), archive);
+            return;
+        }
+        let error = result.unwrap_err();
+        assert!(
+            error.contains("DIAGNOSTIC_DESTINATION_CREATE_FAILED")
+                || error.contains("DIAGNOSTIC_FINAL_PATH_MISMATCH")
+                || error.contains("DIAGNOSTIC_PARENT_GUARD_FAILED"),
+            "{error}"
+        );
+        assert!(!moved.join("guarded.zip").exists());
+        if linked && alternate.join("guarded.zip").exists() {
+            assert_eq!(
+                fs::metadata(alternate.join("guarded.zip")).unwrap().len(),
+                0
+            );
+        }
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn diagnostic_parent_guard_detects_same_path_directory_replacement_after_open() {
+        let directory = tempfile::tempdir().unwrap();
+        let selected = directory.path().join("selected");
+        let moved = directory.path().join("moved");
+        fs::create_dir(&selected).unwrap();
+        let path = selected.join("replaced-parent.zip");
+        let archive = build_diagnostic_zip_bytes(&build_diagnostic_staging(&[]).unwrap()).unwrap();
+
+        let result = write_diagnostic_archive_bytes_with_hook(&path, &archive, || {
+            fs::rename(&selected, &moved).unwrap();
+            fs::create_dir(&selected).unwrap();
+        });
+
+        assert!(
+            result
+                .unwrap_err()
+                .contains("DIAGNOSTIC_PARENT_GUARD_FAILED")
+        );
+        assert!(!moved.join("replaced-parent.zip").exists());
+        assert_eq!(
+            fs::metadata(selected.join("replaced-parent.zip"))
+                .unwrap()
+                .len(),
+            0
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn diagnostic_handle_verification_rejects_directories_and_resolved_link_targets() {
+        let directory = tempfile::tempdir().unwrap();
+        let parent = fs::canonicalize(directory.path()).unwrap();
+        let parent_guard = open_diagnostic_parent_guard(&parent).unwrap();
+        assert!(
+            verify_open_diagnostic_file(&parent_guard, &parent)
+                .unwrap_err()
+                .contains("DIAGNOSTIC_DESTINATION_TYPE_BLOCKED")
+        );
+
+        let target = directory.path().join("target.zip");
+        let link = directory.path().join("link.zip");
+        fs::write(&target, b"target").unwrap();
+        if std::os::windows::fs::symlink_file(&target, &link).is_ok() {
+            let linked_file = fs::File::open(&link).unwrap();
+            let expected_link = fs::canonicalize(directory.path()).unwrap().join("link.zip");
+            assert!(
+                verify_open_diagnostic_file(&linked_file, &expected_link)
+                    .unwrap_err()
+                    .contains("DIAGNOSTIC_FINAL_PATH_MISMATCH")
+            );
+        }
+    }
+}
+
 #[test]
 fn desktop_native_v11_workflow_smoke_import_run_save_reopen_and_export() {
     use qpls_project::{load_project, save_project};
@@ -3893,12 +5835,18 @@ fn desktop_native_v11_workflow_smoke_import_run_save_reopen_and_export() {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let _webview2_offline_proxy = start_webview2_offline_rejection_proxy().unwrap_or_else(|error| {
+        panic!(
+            "QuickPLS refused to start because the fail-closed WebView2 offline proxy could not bind to {WEBVIEW2_OFFLINE_PROXY_BIND_ADDRESS}: {error}"
+        )
+    });
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .manage(DesktopProject(Arc::new(Mutex::new(Project::new(
             "Untitled project",
         )))))
         .manage(DesktopJobs(Arc::new(Mutex::new(HashMap::new()))))
+        .manage(DesktopDiagnostics::new())
         .invoke_handler(tauri::generate_handler![
             validate_analysis_recipe,
             method_capabilities,
@@ -3915,6 +5863,9 @@ pub fn run() {
             export_text_file,
             open_default_export_folder,
             verify_latest_release_checksums,
+            preview_diagnostic_bundle,
+            cancel_diagnostic_bundle_preview,
+            save_diagnostic_bundle,
             open_project,
             save_active_project,
             autosave_active_project,

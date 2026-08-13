@@ -757,8 +757,8 @@
     "r_script": "validation/regression_bootstrap_v1_reference.R",
     "tested_cli": {
       "path": "target/release/qpls.exe",
-      "size": 19183104,
-      "sha256": "4fe8265708dd5b1bcb65c0397490fa430b1afa225a6ed2d45e4f99bde57193b8"
+      "size": 20690432,
+      "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e"
     },
     "ols": {
       "recipe": "validation/results/regression_bootstrap_v1_ols.recipe.json",

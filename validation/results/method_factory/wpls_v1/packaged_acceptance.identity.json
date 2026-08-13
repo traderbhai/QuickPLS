@@ -1,0 +1,1383 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "cumulative_receipt": {
+      "checks": {
+        "clean_report": true,
+        "exact_check_count": true,
+        "final_scope_exact": true,
+        "fresh_for_invocation": true,
+        "graceful_cleanup_verified": true,
+        "one_wpls_export": true,
+        "receipt_identity": true,
+        "receipt_passed": true,
+        "report_hash_and_size_exact": true,
+        "report_path_exact": true,
+        "wpls_export_exact": true
+      },
+      "passed": true,
+      "receipt": {
+        "checks": 177,
+        "completed_at_utc": "2026-08-13T19:17:18.6025307Z",
+        "console_errors": 0,
+        "exports": [
+          {
+            "path": "validation/results/v247-native-full-20260814-003257084-50236-6df5af42.xlsx",
+            "role": "generic",
+            "sha256": "c440f7f9317d20822e1f789eee7d5dd50508b78899c734d4149fa2a1d76c116a",
+            "size": 18322
+          },
+          {
+            "path": "validation/results/v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx",
+            "role": "bootstrap",
+            "sha256": "566577b9e9284fbbb161f3624812c756a291e209e0214613614f74423d5c6564",
+            "size": 22849
+          },
+          {
+            "path": "validation/results/v247-native-plsc-20260814-003257084-50236-6df5af42.xlsx",
+            "role": "plsc",
+            "sha256": "f4b3be660d05782fd0e21651691fdee69a543661d96f0ba8ad1a91f87f6d76cc",
+            "size": 17912
+          },
+          {
+            "path": "validation/results/v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx",
+            "role": "wpls",
+            "sha256": "0e5ae92fbea1c01d6c1aecc0f54e4aab3339e3a813b1fa1e5194bb453cfee87d",
+            "size": 16626
+          },
+          {
+            "path": "validation/results/v247-native-mga-20260814-003257084-50236-6df5af42.xlsx",
+            "role": "mga",
+            "sha256": "981f0f19bdf676fc351fcec6228693e79d87d77513c8ca0108fb70b88781ce1c",
+            "size": 20177
+          },
+          {
+            "path": "validation/results/v247-native-cca-20260814-003257084-50236-6df5af42.xlsx",
+            "role": "cca",
+            "sha256": "88f0c7ebe89f88cbd103138c06a905243f275d10e20a68744f44b22066ca9c6f",
+            "size": 19847
+          },
+          {
+            "path": "validation/results/v247-native-ipma-20260814-003257084-50236-6df5af42.xlsx",
+            "role": "ipma",
+            "sha256": "1f35fc5b2f3c982961d8f3f50eb06058683cb80bdf56e32da58898a5cc658fe7",
+            "size": 20276
+          },
+          {
+            "path": "validation/results/v247-native-nca-20260814-003257084-50236-6df5af42.xlsx",
+            "role": "nca",
+            "sha256": "47f2a7661251dca02865098e74400e6c759996dae6d8b340d4e22dea449f03fc",
+            "size": 9598
+          },
+          {
+            "path": "validation/results/v247-native-prediction-20260814-003257084-50236-6df5af42.xlsx",
+            "role": "prediction",
+            "sha256": "4989b708c004d5d4c11da7f03edfa77a4215bd062ca4125a5d1f4184eee50f41",
+            "size": 23909
+          },
+          {
+            "path": "validation/results/v247-native-hoc-20260814-003257084-50236-6df5af42.xlsx",
+            "role": "hoc",
+            "sha256": "0f2d1aaaa2c7850a8ae4aa359829da11a8ff7176a725dc1a7ab778ac9bf8f3ca",
+            "size": 15425
+          },
+          {
+            "path": "validation/results/v247-native-pca-20260814-003257084-50236-6df5af42.xlsx",
+            "role": "pca",
+            "sha256": "aa1c239fb1440eea018ef4398c87b49de61eea4f21bb2f727ffc952ff6b072af",
+            "size": 15753
+          },
+          {
+            "path": "validation/results/v247-native-ols-20260814-003257084-50236-6df5af42.xlsx",
+            "role": "ols",
+            "sha256": "7b9c99bbcf170bf637e9ec9fd8cedf54bc6b1e6429862a3daac70eed8898b86b",
+            "size": 13543
+          },
+          {
+            "path": "validation/results/v247-native-cbsem-20260814-003257084-50236-6df5af42.xlsx",
+            "role": "cbsem",
+            "sha256": "8aa8806d744e9c4956eb553b508c514edde9c7e433e1cd70dc1b3a748f38c485",
+            "size": 17783
+          },
+          {
+            "path": "validation/results/v247-native-gsca-20260814-003257084-50236-6df5af42.xlsx",
+            "role": "gsca",
+            "sha256": "f8ae0f82bca02b9809b133f9359ae33f5dfc7659e387523f3152c16f6fb849af",
+            "size": 11437
+          },
+          {
+            "path": "validation/results/v247-native-logistic-20260814-003257084-50236-6df5af42.xlsx",
+            "role": "logistic",
+            "sha256": "08061192e164f7ab4308794a19384718a7d3d9e4db4a5155971584088b15bb4a",
+            "size": 16133
+          },
+          {
+            "path": "validation/results/v247-native-regression-bootstrap-ols-20260814-003257084-50236-6df5af42.xlsx",
+            "role": "regression_bootstrap_ols",
+            "sha256": "27969c7184d31e8d37d4a54d1b29251b4fb3560eea30c8738666d9345dbfb367",
+            "size": 18281
+          },
+          {
+            "path": "validation/results/v247-native-regression-bootstrap-logistic-20260814-003257084-50236-6df5af42.xlsx",
+            "role": "regression_bootstrap_logistic",
+            "sha256": "5f30f3e17ab02495000ab8138197653ab0fb85396291bbd2518a674d6c786dfa",
+            "size": 21909
+          }
+        ],
+        "failures": 0,
+        "final_scope": "regression_bootstrap",
+        "graceful_process_cleanup_verified": true,
+        "kind": "quickpls_v247_cumulative_native_acceptance_receipt",
+        "passed": true,
+        "report": "validation/results/v247_tauri_native_acceptance.json",
+        "report_sha256": "6b56fa15b60e40def2959bb43a4514a654012c1a63724b8eea084743431cfbd7",
+        "report_size": 499999,
+        "schema_version": 1,
+        "supervisor_started_at_utc": "2026-08-13T19:02:56.9977028Z",
+        "unique_checks": 177
+      },
+      "wpls_export": {
+        "path": "validation/results/v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx",
+        "role": "wpls",
+        "sha256": "0e5ae92fbea1c01d6c1aecc0f54e4aab3339e3a813b1fa1e5194bb453cfee87d",
+        "size": 16626
+      }
+    },
+    "native": {
+      "checks": {
+        "clean_console": true,
+        "clean_failures": true,
+        "completed_run_identity": true,
+        "current_cumulative_chain": true,
+        "exact_cumulative_check_count": true,
+        "export_bound_to_exact_run": true,
+        "fresh_after_invocation_start": true,
+        "invalid_weight_blocked": true,
+        "invalid_weight_created_no_state": true,
+        "method_tables_nonempty": true,
+        "raw_report_passed": true,
+        "reopened_tables_exact": true,
+        "same_run_reopened": true,
+        "tauri_runtime": true,
+        "valid_setup_selected": true,
+        "xlsx_created_and_read_back": true,
+        "xlsx_method_identity": true,
+        "xlsx_receipt_exact": true
+      },
+      "export": {
+        "expectedRunId": "a516700d-bdde-4f95-b523-9b1f178a29af",
+        "expectedSheets": [
+          "WPLS case-weight diagnostics",
+          "Run provenance"
+        ],
+        "formats": 6,
+        "nativeXlsx": {
+          "appFeedback": "Saved v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx.",
+          "attempted": true,
+          "file": {
+            "isFile": true,
+            "path": "D:\\QuickPLS\\validation\\results\\v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx",
+            "size": 16626
+          },
+          "helper": {
+            "completion": {
+              "boundControls": {
+                "filenameEditControlId": 1001,
+                "saveButtonControlId": 1
+              },
+              "dialog": {
+                "className": "#32770",
+                "directOwner": 14747320,
+                "handle": 8783712,
+                "pid": 13184,
+                "rootOwner": 14747320,
+                "title": "Save As"
+              },
+              "event": "complete",
+              "mainWindow": {
+                "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                "handle": 14747320,
+                "pid": 13184,
+                "title": "QuickPLS"
+              },
+              "passed": true,
+              "phase": "xlsx_creation_and_readback",
+              "saveSubmission": {
+                "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx",
+                "filenameBefore": "quickpls-result-tables",
+                "filenameVerified": true,
+                "saveButtonEnabled": true,
+                "saveButtonVisible": true,
+                "setAttempts": [
+                  {
+                    "attempt": 1,
+                    "settledReads": [
+                      "D:\\QuickPLS\\validation\\results\\v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx",
+                      "D:\\QuickPLS\\validation\\results\\v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx"
+                    ]
+                  }
+                ],
+                "submissionMethod": "BM_CLICK",
+                "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx"
+              },
+              "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx",
+              "transport": {
+                "events": [
+                  {
+                    "event": "ready",
+                    "mainWindow": {
+                      "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                      "handle": 14747320,
+                      "pid": 13184,
+                      "title": "QuickPLS"
+                    },
+                    "passed": true,
+                    "phase": "main_window_binding",
+                    "resultsRoot": "D:\\QuickPLS\\validation\\results",
+                    "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx"
+                  },
+                  {
+                    "boundControls": {
+                      "filenameEditControlId": 1001,
+                      "saveButtonControlId": 1
+                    },
+                    "dialog": {
+                      "className": "#32770",
+                      "directOwner": 14747320,
+                      "handle": 8783712,
+                      "pid": 13184,
+                      "rootOwner": 14747320,
+                      "title": "Save As"
+                    },
+                    "event": "complete",
+                    "mainWindow": {
+                      "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                      "handle": 14747320,
+                      "pid": 13184,
+                      "title": "QuickPLS"
+                    },
+                    "passed": true,
+                    "phase": "xlsx_creation_and_readback",
+                    "saveSubmission": {
+                      "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx",
+                      "filenameBefore": "quickpls-result-tables",
+                      "filenameVerified": true,
+                      "saveButtonEnabled": true,
+                      "saveButtonVisible": true,
+                      "setAttempts": [
+                        {
+                          "attempt": 1,
+                          "settledReads": [
+                            "D:\\QuickPLS\\validation\\results\\v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx",
+                            "D:\\QuickPLS\\validation\\results\\v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx"
+                          ]
+                        }
+                      ],
+                      "submissionMethod": "BM_CLICK",
+                      "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx"
+                    },
+                    "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx",
+                    "workbook": {
+                      "path": "D:\\QuickPLS\\validation\\results\\v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx",
+                      "requiredSharedStrings": [
+                        "case_wt"
+                      ],
+                      "requiredSheets": [
+                        "WPLS case-weight diagnostics",
+                        "Run provenance"
+                      ],
+                      "sha256": "0e5ae92fbea1c01d6c1aecc0f54e4aab3339e3a813b1fa1e5194bb453cfee87d",
+                      "sheetNames": [
+                        "Path coefficients",
+                        "Outer loadings",
+                        "Outer weights",
+                        "R-square",
+                        "Total effects",
+                        "WPLS case-weight diagnostics",
+                        "Construct reliability and valid",
+                        "Cross loadings",
+                        "Fornell-Larcker criterion",
+                        "HTMT+",
+                        "Original HTMT",
+                        "Structural model",
+                        "Inner VIF values",
+                        "f-square effect sizes",
+                        "Model fit",
+                        "Run provenance"
+                      ],
+                      "size": 16626
+                    }
+                  }
+                ],
+                "exitCode": 0,
+                "protocolErrors": [],
+                "signal": null,
+                "stderr": ""
+              },
+              "workbook": {
+                "path": "D:\\QuickPLS\\validation\\results\\v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx",
+                "requiredSharedStrings": [
+                  "case_wt"
+                ],
+                "requiredSheets": [
+                  "WPLS case-weight diagnostics",
+                  "Run provenance"
+                ],
+                "sha256": "0e5ae92fbea1c01d6c1aecc0f54e4aab3339e3a813b1fa1e5194bb453cfee87d",
+                "sheetNames": [
+                  "Path coefficients",
+                  "Outer loadings",
+                  "Outer weights",
+                  "R-square",
+                  "Total effects",
+                  "WPLS case-weight diagnostics",
+                  "Construct reliability and valid",
+                  "Cross loadings",
+                  "Fornell-Larcker criterion",
+                  "HTMT+",
+                  "Original HTMT",
+                  "Structural model",
+                  "Inner VIF values",
+                  "f-square effect sizes",
+                  "Model fit",
+                  "Run provenance"
+                ],
+                "size": 16626
+              }
+            },
+            "ready": {
+              "event": "ready",
+              "mainWindow": {
+                "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                "handle": 14747320,
+                "pid": 13184,
+                "title": "QuickPLS"
+              },
+              "passed": true,
+              "phase": "main_window_binding",
+              "resultsRoot": "D:\\QuickPLS\\validation\\results",
+              "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx"
+            }
+          },
+          "methodSheetsPresentExactlyOnce": true,
+          "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx",
+          "workbookSheets": [
+            "Path coefficients",
+            "Outer loadings",
+            "Outer weights",
+            "R-square",
+            "Total effects",
+            "WPLS case-weight diagnostics",
+            "Construct reliability and valid",
+            "Cross loadings",
+            "Fornell-Larcker criterion",
+            "HTMT+",
+            "Original HTMT",
+            "Structural model",
+            "Inner VIF values",
+            "f-square effect sizes",
+            "Model fit",
+            "Run provenance"
+          ]
+        },
+        "selectedRunId": "a516700d-bdde-4f95-b523-9b1f178a29af",
+        "xlsxEnabled": true
+      },
+      "invalid_setup": {
+        "archiveAfter": {
+          "recipeCount": 0,
+          "recipeIds": [],
+          "resultCount": 0,
+          "resultIds": [],
+          "runCount": 0,
+          "runIds": []
+        },
+        "archiveBefore": {
+          "recipeCount": 0,
+          "recipeIds": [],
+          "resultCount": 0,
+          "resultIds": [],
+          "runCount": 0,
+          "runIds": []
+        },
+        "attempted": true,
+        "blockers": [
+          "Choose a positive numeric case-weight variable."
+        ],
+        "caseWeightColumn": "",
+        "missingWeightBlocker": true,
+        "resultCreated": false,
+        "runStateUnchanged": true,
+        "selectedMethod": "Weighted PLSEstimate a reflective PLS model using positive case weights.",
+        "startEnabled": false
+      },
+      "passed": true,
+      "run_id": "a516700d-bdde-4f95-b523-9b1f178a29af",
+      "save_reopen": {
+        "attempted": true,
+        "caseWeightColumnRestored": true,
+        "diagnosticRows": 4,
+        "expectedRunId": "a516700d-bdde-4f95-b523-9b1f178a29af",
+        "immutableLabelsRestored": true,
+        "pathRows": 1,
+        "sameRunRestored": true,
+        "selectedRunId": "a516700d-bdde-4f95-b523-9b1f178a29af"
+      }
+    },
+    "passed": true,
+    "prior_factory_stages": {
+      "artifacts": [
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/wpls_v1/method_spec.identity.json",
+          "roles": [
+            "method_spec"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/wpls_v1/independent_reference.identity.json",
+          "roles": [
+            "independent_reference"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/wpls_v1/simulation_report.identity.json",
+          "roles": [
+            "simulation_report"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/wpls_v1/boundary_report.identity.json",
+          "roles": [
+            "boundary_report"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/wpls_v1/persistence_report.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "stage": "archive_qualified"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/wpls_v1/frontend_report.identity.json",
+          "roles": [
+            "frontend_report"
+          ],
+          "stage": "native_qualified"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/wpls_v1/export_report.identity.json",
+          "roles": [
+            "export_report"
+          ],
+          "stage": "native_qualified"
+        }
+      ],
+      "passed": true
+    },
+    "responsive_viewports": {
+      "artifact_paths": [
+        "validation/results/screens/v247-native-desktop-visual/08-wpls-dialog-1024x700.png",
+        "validation/results/screens/v247-native-desktop-visual/08-wpls-dialog-1280x720.png",
+        "validation/results/screens/v247-native-desktop-visual/08-wpls-dialog-1440x900.png"
+      ],
+      "checks": {
+        "all_method_viewports_pass": true,
+        "clean_console": true,
+        "clean_failures": true,
+        "exact_required_viewports": true,
+        "fresh_after_invocation_start": true,
+        "one_check_per_viewport": true,
+        "production_bundle_not_mislabeled_as_tauri": true,
+        "raw_report_passed": true,
+        "screenshot_integrity_passes": true
+      },
+      "passed": true,
+      "viewports": {
+        "1024x700": {
+          "passed": true,
+          "row": {
+            "blockerText": "Cannot start this calculationCalculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.Choose a positive numeric case-weight variable.",
+            "caseWeightCount": 1,
+            "caseWeightNote": "Positive finite values; complete column validated at start",
+            "caseWeightPlaceholder": "Select a numeric variable",
+            "closeFocus": {
+              "closeButtonCount": 1,
+              "dialogClosed": true,
+              "focusRestored": true
+            },
+            "dialogOpened": true,
+            "linkage": {
+              "expectedKind": "wpls",
+              "expectedLabel": "Weighted PLS",
+              "headingCount": 1,
+              "headingId": "nd-calculation-panel-wpls-title",
+              "headingLabel": "Weighted PLS",
+              "linkage": true,
+              "panelCount": 1,
+              "panelId": "nd-calculation-panel",
+              "panelLabelledBy": "nd-calculation-panel-wpls-title",
+              "selectedCount": 1,
+              "selectedId": "nd-calculation-method-wpls",
+              "selectedLabel": "Weighted PLS"
+            },
+            "missingWeightBlocker": true,
+            "pointerSelected": true,
+            "resultData": "Standardized (fixed)",
+            "startCommandCount": 1,
+            "startCommandDisabled": true,
+            "truthAndOverflow": {
+              "fabricatedRunState": {
+                "calculationLogs": 0,
+                "iterationRows": 0,
+                "progressElements": 0,
+                "statusSections": 0
+              },
+              "horizontalOverflow": {
+                "dialogClientWidth": 848,
+                "dialogContentOverflow": false,
+                "dialogOutsideViewport": false,
+                "dialogScrollWidth": 848,
+                "pageOverflow": false
+              },
+              "noFabricatedRunState": true,
+              "noHorizontalOverflow": true
+            },
+            "viewport": "1024x700"
+          },
+          "screenshot": {
+            "passed": true,
+            "path": "validation/results/screens/v247-native-desktop-visual/08-wpls-dialog-1024x700.png"
+          }
+        },
+        "1280x720": {
+          "passed": true,
+          "row": {
+            "blockerText": "Cannot start this calculationCalculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.Choose a positive numeric case-weight variable.",
+            "caseWeightCount": 1,
+            "caseWeightNote": "Positive finite values; complete column validated at start",
+            "caseWeightPlaceholder": "Select a numeric variable",
+            "closeFocus": {
+              "closeButtonCount": 1,
+              "dialogClosed": true,
+              "focusRestored": true
+            },
+            "dialogOpened": true,
+            "linkage": {
+              "expectedKind": "wpls",
+              "expectedLabel": "Weighted PLS",
+              "headingCount": 1,
+              "headingId": "nd-calculation-panel-wpls-title",
+              "headingLabel": "Weighted PLS",
+              "linkage": true,
+              "panelCount": 1,
+              "panelId": "nd-calculation-panel",
+              "panelLabelledBy": "nd-calculation-panel-wpls-title",
+              "selectedCount": 1,
+              "selectedId": "nd-calculation-method-wpls",
+              "selectedLabel": "Weighted PLS"
+            },
+            "missingWeightBlocker": true,
+            "pointerSelected": true,
+            "resultData": "Standardized (fixed)",
+            "startCommandCount": 1,
+            "startCommandDisabled": true,
+            "truthAndOverflow": {
+              "fabricatedRunState": {
+                "calculationLogs": 0,
+                "iterationRows": 0,
+                "progressElements": 0,
+                "statusSections": 0
+              },
+              "horizontalOverflow": {
+                "dialogClientWidth": 848,
+                "dialogContentOverflow": false,
+                "dialogOutsideViewport": false,
+                "dialogScrollWidth": 848,
+                "pageOverflow": false
+              },
+              "noFabricatedRunState": true,
+              "noHorizontalOverflow": true
+            },
+            "viewport": "1280x720"
+          },
+          "screenshot": {
+            "passed": true,
+            "path": "validation/results/screens/v247-native-desktop-visual/08-wpls-dialog-1280x720.png"
+          }
+        },
+        "1440x900": {
+          "passed": true,
+          "row": {
+            "blockerText": "Cannot start this calculationCalculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them.Choose a positive numeric case-weight variable.",
+            "caseWeightCount": 1,
+            "caseWeightNote": "Positive finite values; complete column validated at start",
+            "caseWeightPlaceholder": "Select a numeric variable",
+            "closeFocus": {
+              "closeButtonCount": 1,
+              "dialogClosed": true,
+              "focusRestored": true
+            },
+            "dialogOpened": true,
+            "linkage": {
+              "expectedKind": "wpls",
+              "expectedLabel": "Weighted PLS",
+              "headingCount": 1,
+              "headingId": "nd-calculation-panel-wpls-title",
+              "headingLabel": "Weighted PLS",
+              "linkage": true,
+              "panelCount": 1,
+              "panelId": "nd-calculation-panel",
+              "panelLabelledBy": "nd-calculation-panel-wpls-title",
+              "selectedCount": 1,
+              "selectedId": "nd-calculation-method-wpls",
+              "selectedLabel": "Weighted PLS"
+            },
+            "missingWeightBlocker": true,
+            "pointerSelected": true,
+            "resultData": "Standardized (fixed)",
+            "startCommandCount": 1,
+            "startCommandDisabled": true,
+            "truthAndOverflow": {
+              "fabricatedRunState": {
+                "calculationLogs": 0,
+                "iterationRows": 0,
+                "progressElements": 0,
+                "statusSections": 0
+              },
+              "horizontalOverflow": {
+                "dialogClientWidth": 848,
+                "dialogContentOverflow": false,
+                "dialogOutsideViewport": false,
+                "dialogScrollWidth": 848,
+                "pageOverflow": false
+              },
+              "noFabricatedRunState": true,
+              "noHorizontalOverflow": true
+            },
+            "viewport": "1440x900"
+          },
+          "screenshot": {
+            "passed": true,
+            "path": "validation/results/screens/v247-native-desktop-visual/08-wpls-dialog-1440x900.png"
+          }
+        }
+      }
+    },
+    "runner_cleanup_verified": true,
+    "source_freshness": {
+      "after": {
+        "build_receipt": {
+          "mtime_ns": 1786636747532798800,
+          "path": "validation/results/diagnostic_bundle_build_receipt.json",
+          "sha256": "c66c3f4a7df3933cc667f3387e6cb6e65103509b84799de8a7c06faeea83f4c4",
+          "size": 144210
+        },
+        "build_receipt_schema_version": "quickpls.diagnostic_bundle_build_receipt.v1",
+        "desktop": {
+          "mtime_ns": 1786636746102237000,
+          "path": "target/release/quickpls-desktop.exe",
+          "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
+          "size": 30507008
+        },
+        "desktop_receipt_exact": true,
+        "gate_sources_excluded_from_binary_freshness": [
+          {
+            "mtime_ns": 1786627059621599000,
+            "path": "validation/diagnostic_bundle_source_manifest.py",
+            "sha256": "77e21bfa7e2a87386c36a33ee2242f8cda61f85f440cedae35a222958f9d3a4e",
+            "size": 28025
+          },
+          {
+            "mtime_ns": 1786610514590924400,
+            "path": "validation/method_promotion_manifest.py",
+            "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+            "size": 34283
+          },
+          {
+            "mtime_ns": 1786610379730126700,
+            "path": "validation/methods/method_promotion_manifest.schema.json",
+            "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+            "size": 15836
+          },
+          {
+            "mtime_ns": 1786635164324164700,
+            "path": "validation/methods/wpls_v1.manifest.json",
+            "sha256": "3daca54776596694059dab1bb9ee9f732d910b69e481feea817f780ba6ef4d42",
+            "size": 15256
+          },
+          {
+            "mtime_ns": 1786642486586263000,
+            "path": "validation/run_v247_cumulative_native_acceptance.ps1",
+            "sha256": "73694af3f595932abcd22b85d33e966aef368c3a5944279d6db2846465ba6784",
+            "size": 29684
+          },
+          {
+            "mtime_ns": 1786635157509851200,
+            "path": "validation/test_extended_pls_cumulative_receipt.py",
+            "sha256": "e1ceda45700df347cf4177cc32ac965e05cafad89a44fa9297997e3ad95a9f8c",
+            "size": 3581
+          },
+          {
+            "mtime_ns": 1786642486588751200,
+            "path": "validation/test_v247_cumulative_native_acceptance_supervisor.py",
+            "sha256": "37521b7382fdab372b67775f1fe8c6d86de9f4113e34850cacf38c6c622f61ba",
+            "size": 15052
+          },
+          {
+            "mtime_ns": 1786634980589495500,
+            "path": "validation/test_wpls_v1_packaged_adapter.py",
+            "sha256": "d7d1753feb6c176df2bce109487778b3a6b871e221a282da389f72da1c7f4c04",
+            "size": 4386
+          },
+          {
+            "mtime_ns": 1786639543726298400,
+            "path": "validation/v247_native_desktop_visual_acceptance.mjs",
+            "sha256": "9b5119a6175753a54caa8819db483666849df99fd6e8a0d7cd4b17256db0744d",
+            "size": 280796
+          },
+          {
+            "mtime_ns": 1786638335159990200,
+            "path": "validation/v247_tauri_native_acceptance.mjs",
+            "sha256": "5b5060833eabaf38697118cf272ce2952a07f827aa23b68e35720bfe65d93563",
+            "size": 809598
+          },
+          {
+            "mtime_ns": 1786635034557889200,
+            "path": "validation/wpls_v1_factory_audit.py",
+            "sha256": "6a2158b6d0f42c0aa2aac09c1ef4eabfd3954c073e57aa028c6a37e0b0a0e605",
+            "size": 3996
+          },
+          {
+            "mtime_ns": 1786625006354609500,
+            "path": "validation/wpls_v1_factory_common.py",
+            "sha256": "c4e3afed2f83563f3667b1ac2d03d8a9e9d6aab35253a1fb339218581f2390ad",
+            "size": 14019
+          },
+          {
+            "mtime_ns": 1786635164309626500,
+            "path": "validation/wpls_v1_packaged_acceptance.py",
+            "sha256": "852689ffdc055f740a26f91c02784bcdf53da077ab73e08aa07e3da1ca73f937",
+            "size": 17851
+          }
+        ],
+        "passed": true,
+        "release_cli": {
+          "mtime_ns": 1786620631883365000,
+          "path": "target/release/qpls.exe",
+          "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+          "size": 20690432
+        },
+        "release_cli_build_sources": [
+          {
+            "mtime_ns": 1786618668433447400,
+            "path": "Cargo.lock",
+            "sha256": "8f185dea0cf7650e378d9b608270cd8e78b026d1bacae2ce0d521242055c74ee",
+            "size": 154279
+          },
+          {
+            "mtime_ns": 1786607995439584400,
+            "path": "Cargo.toml",
+            "sha256": "594290f8f0e731badc4cb85383cdd5cf2d09ad3c1cb24f86b270895d5e5172d2",
+            "size": 914
+          },
+          {
+            "mtime_ns": 1784372817481351800,
+            "path": "crates/qpls-assessment/Cargo.toml",
+            "sha256": "22a0cc3da4ada9be1f385495ef7af8354fbdf87baa8a5bac6f3dda891eecb01d",
+            "size": 456
+          },
+          {
+            "mtime_ns": 1786607995450741900,
+            "path": "crates/qpls-assessment/src/lib.rs",
+            "sha256": "6cffe850b3e8c1f90eeb570985f6a9ae4448622efa5370d7623ed283d948aafa",
+            "size": 144364
+          },
+          {
+            "mtime_ns": 1784436493165886700,
+            "path": "crates/qpls-cli/Cargo.toml",
+            "sha256": "ede9b7845e6439c9bff5bd05cb07933938a1ad8f82e859e0c3f5676de0119ba8",
+            "size": 678
+          },
+          {
+            "mtime_ns": 1786607995455877000,
+            "path": "crates/qpls-cli/src/main.rs",
+            "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
+            "size": 216983
+          },
+          {
+            "mtime_ns": 1784352071986106700,
+            "path": "crates/qpls-core/Cargo.toml",
+            "sha256": "86a7c44ae9511cb39f65d70fdfca581be24837462c8e4fa062513f9166d2634f",
+            "size": 363
+          },
+          {
+            "mtime_ns": 1786607995461617100,
+            "path": "crates/qpls-core/src/contract.rs",
+            "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
+            "size": 107095
+          },
+          {
+            "mtime_ns": 1784383048514318800,
+            "path": "crates/qpls-core/src/lib.rs",
+            "sha256": "9b534c12e343c4f518969e2f28195a5f733355d4fb1f338ec2447f81fd2bdf52",
+            "size": 180
+          },
+          {
+            "mtime_ns": 1786607995463756700,
+            "path": "crates/qpls-core/src/methods.rs",
+            "sha256": "18bed856d6dec2e7fe6fdc6d5478872b913f1a56c163fee73ee89c7ca53b7ac6",
+            "size": 3790
+          },
+          {
+            "mtime_ns": 1786607995466130100,
+            "path": "crates/qpls-core/src/roadmap.rs",
+            "sha256": "19cf8baad1d217636f3f7ef2d97081156692ed0050561e54bc0bf7b364106fe8",
+            "size": 12376
+          },
+          {
+            "mtime_ns": 1786607995469322800,
+            "path": "crates/qpls-core/src/statistics.rs",
+            "sha256": "dda4eb9df673b892be963933a3f32b32ade133b5c24c70aae76de3648b063769",
+            "size": 8527
+          },
+          {
+            "mtime_ns": 1786620129020320300,
+            "path": "crates/qpls-core/src/validation.rs",
+            "sha256": "ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573",
+            "size": 177352
+          },
+          {
+            "mtime_ns": 1784364586747181800,
+            "path": "crates/qpls-data/Cargo.toml",
+            "sha256": "a284129091841b5742e0ea5b6eeb5fff924cbc4f1eed059bfd075af5256ecb80",
+            "size": 437
+          },
+          {
+            "mtime_ns": 1786607995478642000,
+            "path": "crates/qpls-data/src/lib.rs",
+            "sha256": "a1cab41fc8c82a71dbf7ee674f037040009c0e8340976b98a9ebcfc99851a7e1",
+            "size": 44865
+          },
+          {
+            "mtime_ns": 1786607995481159200,
+            "path": "crates/qpls-estimation/Cargo.toml",
+            "sha256": "fb0d420f1c43919cb9e7a980cd9da270ce3a989e8729ba92e681dae509c60dd2",
+            "size": 503
+          },
+          {
+            "mtime_ns": 1784360087780652100,
+            "path": "crates/qpls-estimation/src/lib.rs",
+            "sha256": "901076baab7b745ef0d1b9cf48a7dc818a64631469cae26cced15a0a41b25890",
+            "size": 26
+          },
+          {
+            "mtime_ns": 1786617342744705100,
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
+            "size": 639198
+          },
+          {
+            "mtime_ns": 1786607995489944600,
+            "path": "crates/qpls-project/Cargo.toml",
+            "sha256": "ef1e3c8e1e5d9d723a43f4b567f6fe490d57d0458f73c8ae281673c0505756d5",
+            "size": 628
+          },
+          {
+            "mtime_ns": 1786607995492067200,
+            "path": "crates/qpls-project/src/archive_integrity.rs",
+            "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+            "size": 31085
+          },
+          {
+            "mtime_ns": 1786620129494578100,
+            "path": "crates/qpls-project/src/lib.rs",
+            "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
+            "size": 660277
+          },
+          {
+            "mtime_ns": 1784375063189640300,
+            "path": "crates/qpls-resampling/Cargo.toml",
+            "sha256": "a922a975499d4c211cfe96399a16ceeb2b248d29fc04cfd7a350c46d18f7ab4d",
+            "size": 589
+          },
+          {
+            "mtime_ns": 1786607995501017700,
+            "path": "crates/qpls-resampling/src/lib.rs",
+            "sha256": "edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0",
+            "size": 170900
+          },
+          {
+            "mtime_ns": 1784390064413583300,
+            "path": "crates/qpls-runner/Cargo.toml",
+            "sha256": "fea3cb8a82dae196097285ffe8c5763e39f1dfe0a485faff99b6cba601b16662",
+            "size": 428
+          },
+          {
+            "mtime_ns": 1786620129040430400,
+            "path": "crates/qpls-runner/src/lib.rs",
+            "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
+            "size": 49349
+          },
+          {
+            "mtime_ns": 1786607996206752100,
+            "path": "validation/development_slices.json",
+            "sha256": "5722f3b6b6d5c6cc19089a097bd1eaae294e55f4830bdae2423fc2861dd1ec10",
+            "size": 374221
+          }
+        ],
+        "release_cli_newer_build_sources": []
+      },
+      "before": {
+        "build_receipt": {
+          "mtime_ns": 1786636747532798800,
+          "path": "validation/results/diagnostic_bundle_build_receipt.json",
+          "sha256": "c66c3f4a7df3933cc667f3387e6cb6e65103509b84799de8a7c06faeea83f4c4",
+          "size": 144210
+        },
+        "build_receipt_schema_version": "quickpls.diagnostic_bundle_build_receipt.v1",
+        "desktop": {
+          "mtime_ns": 1786636746102237000,
+          "path": "target/release/quickpls-desktop.exe",
+          "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
+          "size": 30507008
+        },
+        "desktop_receipt_exact": true,
+        "gate_sources_excluded_from_binary_freshness": [
+          {
+            "mtime_ns": 1786627059621599000,
+            "path": "validation/diagnostic_bundle_source_manifest.py",
+            "sha256": "77e21bfa7e2a87386c36a33ee2242f8cda61f85f440cedae35a222958f9d3a4e",
+            "size": 28025
+          },
+          {
+            "mtime_ns": 1786610514590924400,
+            "path": "validation/method_promotion_manifest.py",
+            "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+            "size": 34283
+          },
+          {
+            "mtime_ns": 1786610379730126700,
+            "path": "validation/methods/method_promotion_manifest.schema.json",
+            "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+            "size": 15836
+          },
+          {
+            "mtime_ns": 1786635164324164700,
+            "path": "validation/methods/wpls_v1.manifest.json",
+            "sha256": "3daca54776596694059dab1bb9ee9f732d910b69e481feea817f780ba6ef4d42",
+            "size": 15256
+          },
+          {
+            "mtime_ns": 1786642486586263000,
+            "path": "validation/run_v247_cumulative_native_acceptance.ps1",
+            "sha256": "73694af3f595932abcd22b85d33e966aef368c3a5944279d6db2846465ba6784",
+            "size": 29684
+          },
+          {
+            "mtime_ns": 1786635157509851200,
+            "path": "validation/test_extended_pls_cumulative_receipt.py",
+            "sha256": "e1ceda45700df347cf4177cc32ac965e05cafad89a44fa9297997e3ad95a9f8c",
+            "size": 3581
+          },
+          {
+            "mtime_ns": 1786642486588751200,
+            "path": "validation/test_v247_cumulative_native_acceptance_supervisor.py",
+            "sha256": "37521b7382fdab372b67775f1fe8c6d86de9f4113e34850cacf38c6c622f61ba",
+            "size": 15052
+          },
+          {
+            "mtime_ns": 1786634980589495500,
+            "path": "validation/test_wpls_v1_packaged_adapter.py",
+            "sha256": "d7d1753feb6c176df2bce109487778b3a6b871e221a282da389f72da1c7f4c04",
+            "size": 4386
+          },
+          {
+            "mtime_ns": 1786639543726298400,
+            "path": "validation/v247_native_desktop_visual_acceptance.mjs",
+            "sha256": "9b5119a6175753a54caa8819db483666849df99fd6e8a0d7cd4b17256db0744d",
+            "size": 280796
+          },
+          {
+            "mtime_ns": 1786638335159990200,
+            "path": "validation/v247_tauri_native_acceptance.mjs",
+            "sha256": "5b5060833eabaf38697118cf272ce2952a07f827aa23b68e35720bfe65d93563",
+            "size": 809598
+          },
+          {
+            "mtime_ns": 1786635034557889200,
+            "path": "validation/wpls_v1_factory_audit.py",
+            "sha256": "6a2158b6d0f42c0aa2aac09c1ef4eabfd3954c073e57aa028c6a37e0b0a0e605",
+            "size": 3996
+          },
+          {
+            "mtime_ns": 1786625006354609500,
+            "path": "validation/wpls_v1_factory_common.py",
+            "sha256": "c4e3afed2f83563f3667b1ac2d03d8a9e9d6aab35253a1fb339218581f2390ad",
+            "size": 14019
+          },
+          {
+            "mtime_ns": 1786635164309626500,
+            "path": "validation/wpls_v1_packaged_acceptance.py",
+            "sha256": "852689ffdc055f740a26f91c02784bcdf53da077ab73e08aa07e3da1ca73f937",
+            "size": 17851
+          }
+        ],
+        "passed": true,
+        "release_cli": {
+          "mtime_ns": 1786620631883365000,
+          "path": "target/release/qpls.exe",
+          "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+          "size": 20690432
+        },
+        "release_cli_build_sources": [
+          {
+            "mtime_ns": 1786618668433447400,
+            "path": "Cargo.lock",
+            "sha256": "8f185dea0cf7650e378d9b608270cd8e78b026d1bacae2ce0d521242055c74ee",
+            "size": 154279
+          },
+          {
+            "mtime_ns": 1786607995439584400,
+            "path": "Cargo.toml",
+            "sha256": "594290f8f0e731badc4cb85383cdd5cf2d09ad3c1cb24f86b270895d5e5172d2",
+            "size": 914
+          },
+          {
+            "mtime_ns": 1784372817481351800,
+            "path": "crates/qpls-assessment/Cargo.toml",
+            "sha256": "22a0cc3da4ada9be1f385495ef7af8354fbdf87baa8a5bac6f3dda891eecb01d",
+            "size": 456
+          },
+          {
+            "mtime_ns": 1786607995450741900,
+            "path": "crates/qpls-assessment/src/lib.rs",
+            "sha256": "6cffe850b3e8c1f90eeb570985f6a9ae4448622efa5370d7623ed283d948aafa",
+            "size": 144364
+          },
+          {
+            "mtime_ns": 1784436493165886700,
+            "path": "crates/qpls-cli/Cargo.toml",
+            "sha256": "ede9b7845e6439c9bff5bd05cb07933938a1ad8f82e859e0c3f5676de0119ba8",
+            "size": 678
+          },
+          {
+            "mtime_ns": 1786607995455877000,
+            "path": "crates/qpls-cli/src/main.rs",
+            "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
+            "size": 216983
+          },
+          {
+            "mtime_ns": 1784352071986106700,
+            "path": "crates/qpls-core/Cargo.toml",
+            "sha256": "86a7c44ae9511cb39f65d70fdfca581be24837462c8e4fa062513f9166d2634f",
+            "size": 363
+          },
+          {
+            "mtime_ns": 1786607995461617100,
+            "path": "crates/qpls-core/src/contract.rs",
+            "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
+            "size": 107095
+          },
+          {
+            "mtime_ns": 1784383048514318800,
+            "path": "crates/qpls-core/src/lib.rs",
+            "sha256": "9b534c12e343c4f518969e2f28195a5f733355d4fb1f338ec2447f81fd2bdf52",
+            "size": 180
+          },
+          {
+            "mtime_ns": 1786607995463756700,
+            "path": "crates/qpls-core/src/methods.rs",
+            "sha256": "18bed856d6dec2e7fe6fdc6d5478872b913f1a56c163fee73ee89c7ca53b7ac6",
+            "size": 3790
+          },
+          {
+            "mtime_ns": 1786607995466130100,
+            "path": "crates/qpls-core/src/roadmap.rs",
+            "sha256": "19cf8baad1d217636f3f7ef2d97081156692ed0050561e54bc0bf7b364106fe8",
+            "size": 12376
+          },
+          {
+            "mtime_ns": 1786607995469322800,
+            "path": "crates/qpls-core/src/statistics.rs",
+            "sha256": "dda4eb9df673b892be963933a3f32b32ade133b5c24c70aae76de3648b063769",
+            "size": 8527
+          },
+          {
+            "mtime_ns": 1786620129020320300,
+            "path": "crates/qpls-core/src/validation.rs",
+            "sha256": "ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573",
+            "size": 177352
+          },
+          {
+            "mtime_ns": 1784364586747181800,
+            "path": "crates/qpls-data/Cargo.toml",
+            "sha256": "a284129091841b5742e0ea5b6eeb5fff924cbc4f1eed059bfd075af5256ecb80",
+            "size": 437
+          },
+          {
+            "mtime_ns": 1786607995478642000,
+            "path": "crates/qpls-data/src/lib.rs",
+            "sha256": "a1cab41fc8c82a71dbf7ee674f037040009c0e8340976b98a9ebcfc99851a7e1",
+            "size": 44865
+          },
+          {
+            "mtime_ns": 1786607995481159200,
+            "path": "crates/qpls-estimation/Cargo.toml",
+            "sha256": "fb0d420f1c43919cb9e7a980cd9da270ce3a989e8729ba92e681dae509c60dd2",
+            "size": 503
+          },
+          {
+            "mtime_ns": 1784360087780652100,
+            "path": "crates/qpls-estimation/src/lib.rs",
+            "sha256": "901076baab7b745ef0d1b9cf48a7dc818a64631469cae26cced15a0a41b25890",
+            "size": 26
+          },
+          {
+            "mtime_ns": 1786617342744705100,
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
+            "size": 639198
+          },
+          {
+            "mtime_ns": 1786607995489944600,
+            "path": "crates/qpls-project/Cargo.toml",
+            "sha256": "ef1e3c8e1e5d9d723a43f4b567f6fe490d57d0458f73c8ae281673c0505756d5",
+            "size": 628
+          },
+          {
+            "mtime_ns": 1786607995492067200,
+            "path": "crates/qpls-project/src/archive_integrity.rs",
+            "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+            "size": 31085
+          },
+          {
+            "mtime_ns": 1786620129494578100,
+            "path": "crates/qpls-project/src/lib.rs",
+            "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
+            "size": 660277
+          },
+          {
+            "mtime_ns": 1784375063189640300,
+            "path": "crates/qpls-resampling/Cargo.toml",
+            "sha256": "a922a975499d4c211cfe96399a16ceeb2b248d29fc04cfd7a350c46d18f7ab4d",
+            "size": 589
+          },
+          {
+            "mtime_ns": 1786607995501017700,
+            "path": "crates/qpls-resampling/src/lib.rs",
+            "sha256": "edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0",
+            "size": 170900
+          },
+          {
+            "mtime_ns": 1784390064413583300,
+            "path": "crates/qpls-runner/Cargo.toml",
+            "sha256": "fea3cb8a82dae196097285ffe8c5763e39f1dfe0a485faff99b6cba601b16662",
+            "size": 428
+          },
+          {
+            "mtime_ns": 1786620129040430400,
+            "path": "crates/qpls-runner/src/lib.rs",
+            "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
+            "size": 49349
+          },
+          {
+            "mtime_ns": 1786607996206752100,
+            "path": "validation/development_slices.json",
+            "sha256": "5722f3b6b6d5c6cc19089a097bd1eaae294e55f4830bdae2423fc2861dd1ec10",
+            "size": 374221
+          }
+        ],
+        "release_cli_newer_build_sources": []
+      },
+      "passed": true,
+      "source_stable_during_gate": true
+    }
+  },
+  "execution": {
+    "commands": [],
+    "reused_successful_cumulative_chain": true
+  },
+  "feature_id": "qpls3.pls.weighted",
+  "generated_at_utc": "2026-08-13T19:26:41.042970Z",
+  "method_version": "wpls_case_weighted_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "packaged_acceptance",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "8f185dea0cf7650e378d9b608270cd8e78b026d1bacae2ce0d521242055c74ee",
+      "size": 154279
+    },
+    {
+      "path": "src-tauri/Cargo.toml",
+      "sha256": "83afaf99ecf91c90a6ae4ee83221a6d3dafe3b8a86bae4a11e2148f27948da41",
+      "size": 1101
+    },
+    {
+      "path": "src-tauri/src/lib.rs",
+      "sha256": "b5884e190043bbcaeed246d7d06d148c4565bbcb92ad4bfd067678e2592215ea",
+      "size": 214108
+    },
+    {
+      "path": "src/native/nativeAnalysisRecipe.ts",
+      "sha256": "eaf427095305c578a3634da1c50d3afacc9a73a604607d5d75a0bf4d6ae3e61d",
+      "size": 42423
+    },
+    {
+      "path": "src/native/nativeExportTables.ts",
+      "sha256": "ca8ebea6a2607152bd539a56ca73a7178f2e4270b7b3284ff62bd88c20562c88",
+      "size": 20407
+    },
+    {
+      "path": "src/native/nativeResults.ts",
+      "sha256": "e81f4563ca317d7ce56cb8f8fa29daa4b3674c472bf75eea0fa8d2149eaf6f39",
+      "size": 214672
+    },
+    {
+      "path": "target/release/qpls.exe",
+      "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+      "size": 20690432
+    },
+    {
+      "path": "target/release/quickpls-desktop.exe",
+      "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
+      "size": 30507008
+    },
+    {
+      "path": "validation/diagnostic_bundle_source_manifest.py",
+      "sha256": "77e21bfa7e2a87386c36a33ee2242f8cda61f85f440cedae35a222958f9d3a4e",
+      "size": 28025
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/wpls_v1.manifest.json",
+      "sha256": "3daca54776596694059dab1bb9ee9f732d910b69e481feea817f780ba6ef4d42",
+      "size": 15256
+    },
+    {
+      "path": "validation/results/diagnostic_bundle_build_receipt.json",
+      "sha256": "c66c3f4a7df3933cc667f3387e6cb6e65103509b84799de8a7c06faeea83f4c4",
+      "size": 144210
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-visual/08-wpls-dialog-1024x700.png",
+      "sha256": "7aa38fbe768797241c789313f9f85f63f1b265e984128b6c423b5f3b7aaf84ae",
+      "size": 99589
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-visual/08-wpls-dialog-1280x720.png",
+      "sha256": "20a37bf48c72a1dd126d35c7e1f22227aca431b3b4a6958f115d3f773adf9502",
+      "size": 107831
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-visual/08-wpls-dialog-1440x900.png",
+      "sha256": "e43438d2445e5569e15c1115d0a5cbe9bfc990a28c8c28b85cb3d097d42d6495",
+      "size": 133627
+    },
+    {
+      "path": "validation/results/v247-native-wpls-20260814-003257084-50236-6df5af42.xlsx",
+      "sha256": "0e5ae92fbea1c01d6c1aecc0f54e4aab3339e3a813b1fa1e5194bb453cfee87d",
+      "size": 16626
+    },
+    {
+      "path": "validation/results/v247_cumulative_native_acceptance_receipt.json",
+      "sha256": "c17e0dec92106a8762b8cec4d608b96ac510c1cc3cd846073a1b62094c87ac9f",
+      "size": 6655
+    },
+    {
+      "path": "validation/results/v247_native_desktop_visual_acceptance.json",
+      "sha256": "3fca6d38de201f6309bfec13d20c5136f82789fb450fe9a4617c710cc33793c1",
+      "size": 464629
+    },
+    {
+      "path": "validation/results/v247_tauri_native_acceptance.json",
+      "sha256": "6b56fa15b60e40def2959bb43a4514a654012c1a63724b8eea084743431cfbd7",
+      "size": 499999
+    },
+    {
+      "path": "validation/run_v247_cumulative_native_acceptance.ps1",
+      "sha256": "73694af3f595932abcd22b85d33e966aef368c3a5944279d6db2846465ba6784",
+      "size": 29684
+    },
+    {
+      "path": "validation/test_extended_pls_cumulative_receipt.py",
+      "sha256": "e1ceda45700df347cf4177cc32ac965e05cafad89a44fa9297997e3ad95a9f8c",
+      "size": 3581
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_v247_cumulative_native_acceptance_supervisor.py",
+      "sha256": "37521b7382fdab372b67775f1fe8c6d86de9f4113e34850cacf38c6c622f61ba",
+      "size": 15052
+    },
+    {
+      "path": "validation/test_wpls_v1_factory_evidence.py",
+      "sha256": "5080160efdf8190400f7a946cb7c25ea297182faf7577b4a386420dab3be6884",
+      "size": 4238
+    },
+    {
+      "path": "validation/test_wpls_v1_packaged_adapter.py",
+      "sha256": "d7d1753feb6c176df2bce109487778b3a6b871e221a282da389f72da1c7f4c04",
+      "size": 4386
+    },
+    {
+      "path": "validation/v247_native_desktop_visual_acceptance.mjs",
+      "sha256": "9b5119a6175753a54caa8819db483666849df99fd6e8a0d7cd4b17256db0744d",
+      "size": 280796
+    },
+    {
+      "path": "validation/v247_tauri_native_acceptance.mjs",
+      "sha256": "5b5060833eabaf38697118cf272ce2952a07f827aa23b68e35720bfe65d93563",
+      "size": 809598
+    },
+    {
+      "path": "validation/wpls_v1_factory_audit.py",
+      "sha256": "6a2158b6d0f42c0aa2aac09c1ef4eabfd3954c073e57aa028c6a37e0b0a0e605",
+      "size": 3996
+    },
+    {
+      "path": "validation/wpls_v1_factory_common.py",
+      "sha256": "c4e3afed2f83563f3667b1ac2d03d8a9e9d6aab35253a1fb339218581f2390ad",
+      "size": 14019
+    },
+    {
+      "path": "validation/wpls_v1_packaged_acceptance.py",
+      "sha256": "852689ffdc055f740a26f91c02784bcdf53da077ab73e08aa07e3da1ca73f937",
+      "size": 17851
+    }
+  ]
+}

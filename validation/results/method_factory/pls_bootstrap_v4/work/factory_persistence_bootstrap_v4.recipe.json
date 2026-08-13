@@ -1,0 +1,62 @@
+{
+  "created_at": "2026-08-13T00:00:00Z",
+  "dataset_fingerprint": "v2:9b814a8a22eace42776bc479c637de36bc973dfd8a7b3d5b3e60baba98803373",
+  "id": "e78a6819-58c1-5982-ab6f-21e99aab9f78",
+  "metadata": {
+    "status": "factory_bootstrap_v4_bounded_scope"
+  },
+  "method_config": {
+    "kind": "pls_bootstrap"
+  },
+  "model": {
+    "constructs": [
+      {
+        "id": "x",
+        "indicators": [
+          "x1",
+          "x2"
+        ],
+        "mode": "reflective",
+        "name": "X",
+        "short_name": "X"
+      },
+      {
+        "id": "y",
+        "indicators": [
+          "y1",
+          "y2"
+        ],
+        "mode": "reflective",
+        "name": "Y",
+        "short_name": "Y"
+      }
+    ],
+    "controls": [],
+    "higher_order_constructs": [],
+    "id": "8e0808ae-a1fc-553f-a14c-b6813511050a",
+    "interactions": [],
+    "name": "PLS bootstrap v4 factory fixture",
+    "paths": [
+      {
+        "source": "x",
+        "target": "y"
+      }
+    ]
+  },
+  "schema_version": 3,
+  "settings": {
+    "bootstrap_samples": 999,
+    "case_weight_column": null,
+    "confidence_level": 0.95,
+    "max_iterations": 3000,
+    "method": "pls_pm",
+    "missing_data": "listwise_deletion",
+    "permutation_samples": 0,
+    "preprocessing": "standardized",
+    "seed": 20260831,
+    "studentized_inner_samples": 0,
+    "tolerance": 1e-07,
+    "weighting_scheme": "path",
+    "workers": 4
+  }
+}

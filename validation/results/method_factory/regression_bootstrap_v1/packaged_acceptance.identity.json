@@ -1,0 +1,1429 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "native": {
+      "artifact_paths": [
+        "validation/results/regression_bootstrap_v1_packaged_acceptance.json",
+        "validation/results/screens/v247-native-desktop-acceptance/160-tauri-native-regression-bootstrap-fixture-data-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/161-tauri-native-regression-bootstrap-cancellation-running-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/162-tauri-native-regression-bootstrap-cancelled-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/163-tauri-native-regression-bootstrap-ols-dialog-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/164-tauri-native-regression-bootstrap-ols-running-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/165-tauri-native-regression-bootstrap-ols-results-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/166-tauri-native-regression-bootstrap-ols-export-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/167-tauri-native-regression-bootstrap-logistic-dialog-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/168-tauri-native-regression-bootstrap-logistic-running-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/169-tauri-native-regression-bootstrap-logistic-results-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/170-tauri-native-regression-bootstrap-logistic-export-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/171-tauri-native-regression-bootstrap-reopened-1536x794.png",
+        "validation/results/v247-native-regression-bootstrap-1786648524414-57288.qpls",
+        "validation/results/v247-native-regression-bootstrap-logistic-20260814-003257084-50236-6df5af42.xlsx",
+        "validation/results/v247-native-regression-bootstrap-ols-20260814-003257084-50236-6df5af42.xlsx",
+        "validation/results/v247_cumulative_native_acceptance_receipt.json",
+        "validation/results/v247_tauri_native_acceptance_regression_bootstrap.json"
+      ],
+      "checks": {
+        "all_reported_artifacts_exact": {
+          "artifacts": [
+            {
+              "actual": {
+                "path": "validation/results/v247-native-regression-bootstrap-ols-20260814-003257084-50236-6df5af42.xlsx",
+                "sha256": "27969c7184d31e8d37d4a54d1b29251b4fb3560eea30c8738666d9345dbfb367",
+                "size": 18281
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/v247-native-regression-bootstrap-ols-20260814-003257084-50236-6df5af42.xlsx",
+                "sha256": "27969c7184d31e8d37d4a54d1b29251b4fb3560eea30c8738666d9345dbfb367",
+                "size": 18281
+              }
+            },
+            {
+              "actual": {
+                "path": "validation/results/v247-native-regression-bootstrap-logistic-20260814-003257084-50236-6df5af42.xlsx",
+                "sha256": "5f30f3e17ab02495000ab8138197653ab0fb85396291bbd2518a674d6c786dfa",
+                "size": 21909
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/v247-native-regression-bootstrap-logistic-20260814-003257084-50236-6df5af42.xlsx",
+                "sha256": "5f30f3e17ab02495000ab8138197653ab0fb85396291bbd2518a674d6c786dfa",
+                "size": 21909
+              }
+            },
+            {
+              "actual": {
+                "path": "validation/results/v247-native-regression-bootstrap-1786648524414-57288.qpls",
+                "sha256": "238aa6217f22e5eb911c01958a27afb3a4081b28a5ec250793e0b622a45c093d",
+                "size": 944352
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/v247-native-regression-bootstrap-1786648524414-57288.qpls",
+                "sha256": "238aa6217f22e5eb911c01958a27afb3a4081b28a5ec250793e0b622a45c093d",
+                "size": 944352
+              }
+            },
+            {
+              "actual": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/160-tauri-native-regression-bootstrap-fixture-data-1536x794.png",
+                "sha256": "93818582b7e4d6bb9279d101e7ed103d9916766847aec4ae0bacb7a150bab5ff",
+                "size": 293913
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/160-tauri-native-regression-bootstrap-fixture-data-1536x794.png",
+                "sha256": "93818582b7e4d6bb9279d101e7ed103d9916766847aec4ae0bacb7a150bab5ff",
+                "size": 293913
+              }
+            },
+            {
+              "actual": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/161-tauri-native-regression-bootstrap-cancellation-running-1536x794.png",
+                "sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a",
+                "size": 232032
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/161-tauri-native-regression-bootstrap-cancellation-running-1536x794.png",
+                "sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a",
+                "size": 232032
+              }
+            },
+            {
+              "actual": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/162-tauri-native-regression-bootstrap-cancelled-1536x794.png",
+                "sha256": "dd6ec983a2df778dd3cdab4a1c845f559090cd4f145b389f91f7969ac4a7c036",
+                "size": 284306
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/162-tauri-native-regression-bootstrap-cancelled-1536x794.png",
+                "sha256": "dd6ec983a2df778dd3cdab4a1c845f559090cd4f145b389f91f7969ac4a7c036",
+                "size": 284306
+              }
+            },
+            {
+              "actual": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/163-tauri-native-regression-bootstrap-ols-dialog-1536x794.png",
+                "sha256": "7ecf52821dc59f125aaeef326835046bbae7eba9ca4c4f081e3fad8fa4223aa7",
+                "size": 299690
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/163-tauri-native-regression-bootstrap-ols-dialog-1536x794.png",
+                "sha256": "7ecf52821dc59f125aaeef326835046bbae7eba9ca4c4f081e3fad8fa4223aa7",
+                "size": 299690
+              }
+            },
+            {
+              "actual": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/164-tauri-native-regression-bootstrap-ols-running-1536x794.png",
+                "sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a",
+                "size": 232032
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/164-tauri-native-regression-bootstrap-ols-running-1536x794.png",
+                "sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a",
+                "size": 232032
+              }
+            },
+            {
+              "actual": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/165-tauri-native-regression-bootstrap-ols-results-1536x794.png",
+                "sha256": "25030f530f3b00c6bc19997818f5f2fc6401eab7df057eed88f1bba4e9ba3907",
+                "size": 111851
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/165-tauri-native-regression-bootstrap-ols-results-1536x794.png",
+                "sha256": "25030f530f3b00c6bc19997818f5f2fc6401eab7df057eed88f1bba4e9ba3907",
+                "size": 111851
+              }
+            },
+            {
+              "actual": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/166-tauri-native-regression-bootstrap-ols-export-1536x794.png",
+                "sha256": "25030f530f3b00c6bc19997818f5f2fc6401eab7df057eed88f1bba4e9ba3907",
+                "size": 111851
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/166-tauri-native-regression-bootstrap-ols-export-1536x794.png",
+                "sha256": "25030f530f3b00c6bc19997818f5f2fc6401eab7df057eed88f1bba4e9ba3907",
+                "size": 111851
+              }
+            },
+            {
+              "actual": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/167-tauri-native-regression-bootstrap-logistic-dialog-1536x794.png",
+                "sha256": "efe800431cf09999a0d4c5ea10442b4f598f4429e1e6306444c2b46a9ffac377",
+                "size": 306791
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/167-tauri-native-regression-bootstrap-logistic-dialog-1536x794.png",
+                "sha256": "efe800431cf09999a0d4c5ea10442b4f598f4429e1e6306444c2b46a9ffac377",
+                "size": 306791
+              }
+            },
+            {
+              "actual": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/168-tauri-native-regression-bootstrap-logistic-running-1536x794.png",
+                "sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a",
+                "size": 232032
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/168-tauri-native-regression-bootstrap-logistic-running-1536x794.png",
+                "sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a",
+                "size": 232032
+              }
+            },
+            {
+              "actual": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/169-tauri-native-regression-bootstrap-logistic-results-1536x794.png",
+                "sha256": "0d0a6cfd7c3096b17857972cd58ba555110e502c80f634b293409676b41b9b46",
+                "size": 117547
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/169-tauri-native-regression-bootstrap-logistic-results-1536x794.png",
+                "sha256": "0d0a6cfd7c3096b17857972cd58ba555110e502c80f634b293409676b41b9b46",
+                "size": 117547
+              }
+            },
+            {
+              "actual": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/170-tauri-native-regression-bootstrap-logistic-export-1536x794.png",
+                "sha256": "0d0a6cfd7c3096b17857972cd58ba555110e502c80f634b293409676b41b9b46",
+                "size": 117547
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/170-tauri-native-regression-bootstrap-logistic-export-1536x794.png",
+                "sha256": "0d0a6cfd7c3096b17857972cd58ba555110e502c80f634b293409676b41b9b46",
+                "size": 117547
+              }
+            },
+            {
+              "actual": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/171-tauri-native-regression-bootstrap-reopened-1536x794.png",
+                "sha256": "1ae3e6877243898b2df2e7accc9e3b103d3e179d3f63ea32e857c53c156cad09",
+                "size": 115831
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/171-tauri-native-regression-bootstrap-reopened-1536x794.png",
+                "sha256": "1ae3e6877243898b2df2e7accc9e3b103d3e179d3f63ea32e857c53c156cad09",
+                "size": 115831
+              }
+            }
+          ],
+          "passed": true
+        },
+        "cleanup": {
+          "mode": "cumulative_receipt",
+          "passed": true
+        },
+        "cumulative_receipt": {
+          "artifact_paths": [
+            "validation/results/v247-native-regression-bootstrap-logistic-20260814-003257084-50236-6df5af42.xlsx",
+            "validation/results/v247-native-regression-bootstrap-ols-20260814-003257084-50236-6df5af42.xlsx",
+            "validation/results/v247_cumulative_native_acceptance_receipt.json"
+          ],
+          "checks": {
+            "exact_177_checks": true,
+            "exact_report_bytes": true,
+            "exact_report_path": true,
+            "export_roles_unique": true,
+            "final_scope_regression_bootstrap": true,
+            "final_scoped_report_byte_identical": true,
+            "fresh_after_requested_boundary": true,
+            "graceful_cleanup_verified": true,
+            "method_exports_exact_and_bound": true,
+            "packaged_stage_inside_supervisor_window": true,
+            "receipt_passed_cleanly": true,
+            "schema_and_kind": true,
+            "supervisor_source_not_newer_than_receipt": true,
+            "timestamps_ordered": true
+          },
+          "exports": {
+            "regression_bootstrap_logistic": {
+              "packaged_artifact": {
+                "path": "validation/results/v247-native-regression-bootstrap-logistic-20260814-003257084-50236-6df5af42.xlsx",
+                "sha256": "5f30f3e17ab02495000ab8138197653ab0fb85396291bbd2518a674d6c786dfa",
+                "size": 21909
+              },
+              "passed": true,
+              "receipt": {
+                "path": "validation/results/v247-native-regression-bootstrap-logistic-20260814-003257084-50236-6df5af42.xlsx",
+                "role": "regression_bootstrap_logistic",
+                "sha256": "5f30f3e17ab02495000ab8138197653ab0fb85396291bbd2518a674d6c786dfa",
+                "size": 21909
+              }
+            },
+            "regression_bootstrap_ols": {
+              "packaged_artifact": {
+                "path": "validation/results/v247-native-regression-bootstrap-ols-20260814-003257084-50236-6df5af42.xlsx",
+                "sha256": "27969c7184d31e8d37d4a54d1b29251b4fb3560eea30c8738666d9345dbfb367",
+                "size": 18281
+              },
+              "passed": true,
+              "receipt": {
+                "path": "validation/results/v247-native-regression-bootstrap-ols-20260814-003257084-50236-6df5af42.xlsx",
+                "role": "regression_bootstrap_ols",
+                "sha256": "27969c7184d31e8d37d4a54d1b29251b4fb3560eea30c8738666d9345dbfb367",
+                "size": 18281
+              }
+            }
+          },
+          "passed": true,
+          "receipt": {
+            "path": "validation/results/v247_cumulative_native_acceptance_receipt.json",
+            "sha256": "c17e0dec92106a8762b8cec4d608b96ac510c1cc3cd846073a1b62094c87ac9f",
+            "size": 6655
+          },
+          "report": {
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "sha256": "6b56fa15b60e40def2959bb43a4514a654012c1a63724b8eea084743431cfbd7",
+            "size": 499999
+          }
+        },
+        "required_artifact_roles": {
+          "passed": true,
+          "roles": {
+            "logistic_xlsx": {
+              "minimum": 1,
+              "observed": 1,
+              "passed": true
+            },
+            "ols_xlsx": {
+              "minimum": 1,
+              "observed": 1,
+              "passed": true
+            },
+            "project_archive": {
+              "minimum": 1,
+              "observed": 1,
+              "passed": true
+            },
+            "screenshots": {
+              "minimum": 9,
+              "observed": 12,
+              "passed": true
+            }
+          }
+        },
+        "runtime_sources_frozen_before_report": {
+          "passed": true,
+          "sources": [
+            {
+              "mtime_ns": 1786642486586263000,
+              "not_newer_than_report": true,
+              "path": "validation/run_v247_cumulative_native_acceptance.ps1",
+              "sha256": "73694af3f595932abcd22b85d33e966aef368c3a5944279d6db2846465ba6784",
+              "size": 29684
+            },
+            {
+              "mtime_ns": 1786607996811262400,
+              "not_newer_than_report": true,
+              "path": "validation/run_v247_regression_bootstrap_native_acceptance.ps1",
+              "sha256": "1208096b55453001e160a92a2df240fd6a2e1a3a1e6491f7f3df8366c100b357",
+              "size": 6944
+            },
+            {
+              "mtime_ns": 1786638335159990200,
+              "not_newer_than_report": true,
+              "path": "validation/v247_tauri_native_acceptance.mjs",
+              "sha256": "5b5060833eabaf38697118cf272ce2952a07f827aa23b68e35720bfe65d93563",
+              "size": 809598
+            },
+            {
+              "mtime_ns": 1786607997196503400,
+              "not_newer_than_report": true,
+              "path": "validation/windows_native_save_export.py",
+              "sha256": "da5ed8fb53d78375130c20dbd4cf57aa14980b4304424fe4cb65ba048c419542",
+              "size": 18957
+            }
+          ]
+        },
+        "scoped_report": {
+          "checks": {
+            "all_scoped_checks_linked_and_passing": true,
+            "clean_packaged_console": true,
+            "clean_packaged_failures": true,
+            "clean_raw_console": true,
+            "clean_raw_failures": true,
+            "exact_catalogue_snapshot": true,
+            "exact_feature_id": true,
+            "exact_method_version": true,
+            "exact_package_check_set": true,
+            "exact_scope": true,
+            "exact_scoped_report_path": true,
+            "fresh_after_requested_boundary": true,
+            "generated_after_current_build": true,
+            "loopback_acceptance_endpoint": true,
+            "packaged_kind": true,
+            "packaged_passed": true,
+            "packaged_schema": true,
+            "packaged_tauri_runtime": true,
+            "raw_report_passed": true,
+            "timestamps_match_exactly": true,
+            "timestamps_ordered": true
+          },
+          "completed_at_utc": "2026-08-13T19:17:09.144000Z",
+          "generated_at_utc": "2026-08-13T19:15:24.423000Z",
+          "linked_checks": {
+            "cancellation": {
+              "package_source_bound": true,
+              "passed": true,
+              "raw_check": "regressionBootstrapCancellation",
+              "raw_row_bound": true
+            },
+            "logistic_export": {
+              "package_source_bound": true,
+              "passed": true,
+              "raw_check": "regressionBootstrapLogisticExport",
+              "raw_row_bound": true
+            },
+            "ols_export": {
+              "package_source_bound": true,
+              "passed": true,
+              "raw_check": "regressionBootstrapOlsExport",
+              "raw_row_bound": true
+            },
+            "results": {
+              "package_source_bound": true,
+              "passed": true,
+              "raw_check": "regressionBootstrapResults",
+              "raw_row_bound": true
+            },
+            "save_reopen": {
+              "package_source_bound": true,
+              "passed": true,
+              "raw_check": "regressionBootstrapSaveReopen",
+              "raw_row_bound": true
+            },
+            "witness_boundary": {
+              "package_source_bound": true,
+              "passed": true,
+              "raw_check": "regressionBootstrapWitnessBoundary",
+              "raw_row_bound": true
+            },
+            "workflow": {
+              "package_source_bound": true,
+              "passed": true,
+              "raw_check": "regressionBootstrapWorkflow",
+              "raw_row_bound": true
+            }
+          },
+          "passed": true
+        },
+        "tested_product": {
+          "cli_exact_or_not_reported": true,
+          "current_cli": {
+            "mtime_ns": 1786620631883365000,
+            "path": "target/release/qpls.exe",
+            "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+            "size": 20690432
+          },
+          "current_desktop": {
+            "mtime_ns": 1786636746102237000,
+            "path": "target/release/quickpls-desktop.exe",
+            "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
+            "size": 30507008
+          },
+          "desktop_bound_by_current_cumulative_receipt": false,
+          "desktop_exact": true,
+          "explicit_desktop_exact": true,
+          "passed": true,
+          "reported": {
+            "dist_bundle": {
+              "file_count": 19,
+              "manifest": [
+                {
+                  "path": "assets/NativeCalculationDialog-CekKsDqn.js",
+                  "sha256": "3b3a2fb6c5f03765fa77208b7f76ddabf083710ad5c6e38fdc62f6101ec6d694",
+                  "size": 51101
+                },
+                {
+                  "path": "assets/NativeExportDialog-CTZOLsrg.js",
+                  "sha256": "523da583f3a66f89cb2d8f11d6b122ff2aa2c03640d1dabcad00cd4ef9bfc2f2",
+                  "size": 6432
+                },
+                {
+                  "path": "assets/NativeGroupSetupDialog-DncLahbL.js",
+                  "sha256": "2f9eb02cfd1224c3a9b3a87c94b2006d10514184b995345adf7c7238ae901190",
+                  "size": 6779
+                },
+                {
+                  "path": "assets/NativeHigherOrderDialog-Bn4cY5Gi.js",
+                  "sha256": "08dbb627b5b031b9bad9287e7017c43277efcfdb3b3358a811a753f66eb5e609",
+                  "size": 2948
+                },
+                {
+                  "path": "assets/NativeModerationDialog-D2IfblSQ.js",
+                  "sha256": "a7143c8cd4dfcaa4d58adffc392c4edfa4861e78970484d35b6c3683ee876840",
+                  "size": 3081
+                },
+                {
+                  "path": "assets/NativeResultsSurface-Bv7Fchdi.js",
+                  "sha256": "2692880853872db149cfb86a7041a849e6cc114faf6dbfe571d85a54550ba79f",
+                  "size": 31251
+                },
+                {
+                  "path": "assets/NativeUtilityDialog-B_BR7mw4.js",
+                  "sha256": "a4c73c06ffcf8b4dd5dca228a4895f7bbe7a4718ec34da32d9f568fbbf0e9f06",
+                  "size": 12164
+                },
+                {
+                  "path": "assets/flow-BN-PNp2v.js",
+                  "sha256": "e96e69cde521273e387064b0ff3ea9f94e29834ea085646f0b8e1fe9e0ea8fde",
+                  "size": 83921
+                },
+                {
+                  "path": "assets/flow-BnuhLJ6X.css",
+                  "sha256": "1243b61a71923367ce620fb944427c80c9b03e863e18374fcf4f74d6d06f63fc",
+                  "size": 15869
+                },
+                {
+                  "path": "assets/icons-CWW7Ihoi.js",
+                  "sha256": "11135cfa4b1cefe02205ec00e7f23204127146720a75ccbb5941632226a4a3c6",
+                  "size": 20835
+                },
+                {
+                  "path": "assets/index-DBKNtbUu.js",
+                  "sha256": "d37b081cac27b076af6c5c288c0280ace77424912b173849ed9517381d9879f7",
+                  "size": 528769
+                },
+                {
+                  "path": "assets/index-DpTHova4.css",
+                  "sha256": "e756299a2d8d0620f5d62a8f60f0265b0059aa2599790474b940218826096182",
+                  "size": 74714
+                },
+                {
+                  "path": "assets/largeModelSmoke-PEBccAlJ.js",
+                  "sha256": "a4977bf130c85a688b570fb1f17f8dac958787116a585c9300f3d4c3fbd6b535",
+                  "size": 880
+                },
+                {
+                  "path": "assets/nativeMga-DgYeq6DN.js",
+                  "sha256": "024828f88efaf03205588f9bc34ca763bd8f484b36f5172f92d4a83ac4aa12ff",
+                  "size": 3108
+                },
+                {
+                  "path": "assets/publicationDiagram-BlkNs4Z4.js",
+                  "sha256": "19cd3e3c69779a47c603cc3be9269a62e4871492416c549b8938250eb9e6f8df",
+                  "size": 8648
+                },
+                {
+                  "path": "assets/smokeRun-CMXwsrTO.js",
+                  "sha256": "33388a0e9df739d8812f2a03c2980f00a3f49046375ae48c9a854d8f94f7f962",
+                  "size": 7141
+                },
+                {
+                  "path": "assets/tauri-CZBL8huA.js",
+                  "sha256": "8fbb85b9879fc37af89bc405134891d8b7dec19829e03c6d7900ba79f71dbe77",
+                  "size": 15818
+                },
+                {
+                  "path": "assets/vendor-3AznE2Td.js",
+                  "sha256": "7dadeaa73f481ffd1ab52c5247997462fd195062a4dbe10353701ffbbc45711f",
+                  "size": 317214
+                },
+                {
+                  "path": "index.html",
+                  "sha256": "ffa343bcc205c9541dcddd98ce187604001ef7fc3b279b6a460a25b5009b3b50",
+                  "size": 821
+                }
+              ],
+              "path": "dist",
+              "sha256": "364eb8ee0a73bade09dfde958755fac09983ffd34f998b41755edee95f5a8e74",
+              "size": 1191494
+            },
+            "quickpls_desktop_exe": {
+              "path": "target/release/quickpls-desktop.exe",
+              "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
+              "size": 30507008
+            }
+          }
+        }
+      },
+      "passed": true
+    },
+    "prior_factory_stages": {
+      "artifacts": [
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/regression_bootstrap_v1/engine_stage.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "simulation_report",
+            "boundary_report"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/regression_bootstrap_v1/persistence_report.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "stage": "archive_qualified"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/regression_bootstrap_v1/native_stage.identity.json",
+          "roles": [
+            "frontend_report",
+            "export_report"
+          ],
+          "stage": "native_qualified"
+        }
+      ],
+      "passed": true
+    },
+    "responsive_viewports": {
+      "artifact_paths": [
+        "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1024x700.png",
+        "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1280x720.png",
+        "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1440x900.png",
+        "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1024x700.png",
+        "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1280x720.png",
+        "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1440x900.png"
+      ],
+      "checks": {
+        "all_method_rows_pass": true,
+        "all_required_screenshots_exact": true,
+        "clean_console": true,
+        "clean_failures": true,
+        "exact_required_viewports": true,
+        "fresh_after_requested_boundary": true,
+        "one_method_row_per_viewport": true,
+        "production_bundle_not_mislabeled_as_tauri": true,
+        "raw_report_passed": true,
+        "screenshot_integrity_passes": true,
+        "visual_harness_not_newer_than_report": true
+      },
+      "generated_at_utc": "2026-08-13T19:18:52.475Z",
+      "passed": true,
+      "report": {
+        "path": "validation/results/v247_native_desktop_visual_acceptance.json",
+        "sha256": "3fca6d38de201f6309bfec13d20c5136f82789fb450fe9a4617c710cc33793c1",
+        "size": 464629
+      },
+      "screenshots": [
+        {
+          "actual": {
+            "path": "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1024x700.png",
+            "sha256": "0ee6c866739c9bbcbd14cd52fdd0107c2ce76028f3a69c200e8e1936c7883b68",
+            "size": 117254
+          },
+          "passed": true,
+          "state": "regression-bootstrap-ols-dialog",
+          "viewport": "1024x700"
+        },
+        {
+          "actual": {
+            "path": "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1024x700.png",
+            "sha256": "b0fd22eb52193701a28faf33b6a109e2dc01f457db6c69cb8cd7d5019342b398",
+            "size": 113627
+          },
+          "passed": true,
+          "state": "regression-bootstrap-logistic-dialog",
+          "viewport": "1024x700"
+        },
+        {
+          "actual": {
+            "path": "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1280x720.png",
+            "sha256": "98e2fc62a6ee4afefa0da7e08a96971a5f78c61eca82b2f2993c908f34f9af2a",
+            "size": 136681
+          },
+          "passed": true,
+          "state": "regression-bootstrap-ols-dialog",
+          "viewport": "1280x720"
+        },
+        {
+          "actual": {
+            "path": "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1280x720.png",
+            "sha256": "f68e354c8a9446d3046bdb16f1be85e963ab36fbac0570caff41e0766d4f5748",
+            "size": 133296
+          },
+          "passed": true,
+          "state": "regression-bootstrap-logistic-dialog",
+          "viewport": "1280x720"
+        },
+        {
+          "actual": {
+            "path": "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1440x900.png",
+            "sha256": "80bb996503f253d42c1d1f32d61aa9ec1d5e920cda70f344015257f5b5778280",
+            "size": 179356
+          },
+          "passed": true,
+          "state": "regression-bootstrap-ols-dialog",
+          "viewport": "1440x900"
+        },
+        {
+          "actual": {
+            "path": "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1440x900.png",
+            "sha256": "a411647a3a63857219a31cdd5ed222f356ca43bc98ee18ae1e24f5c7d9158665",
+            "size": 177878
+          },
+          "passed": true,
+          "state": "regression-bootstrap-logistic-dialog",
+          "viewport": "1440x900"
+        }
+      ]
+    },
+    "runner_cleanup_verified": true,
+    "source_freshness": {
+      "after": {
+        "build_finished_at_utc": "2026-08-13T15:59:06.155218Z",
+        "build_receipt": {
+          "path": "validation/results/diagnostic_bundle_build_receipt.json",
+          "sha256": "c66c3f4a7df3933cc667f3387e6cb6e65103509b84799de8a7c06faeea83f4c4",
+          "size": 144210
+        },
+        "desktop": {
+          "mtime_ns": 1786636746102237000,
+          "path": "target/release/quickpls-desktop.exe",
+          "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
+          "size": 30507008
+        },
+        "desktop_receipt_exact": true,
+        "gate_sources_excluded_from_binary_freshness": [
+          {
+            "mtime_ns": 1786627059621599000,
+            "path": "validation/diagnostic_bundle_source_manifest.py",
+            "sha256": "77e21bfa7e2a87386c36a33ee2242f8cda61f85f440cedae35a222958f9d3a4e",
+            "size": 28025
+          },
+          {
+            "mtime_ns": 1786640237815572600,
+            "path": "validation/legacy_release_adapter_common.py",
+            "sha256": "daddcd525696fb7e45d0c39a5aa5ba919782df44382acb3692af5bf90fc413e0",
+            "size": 51955
+          },
+          {
+            "mtime_ns": 1786610514590924400,
+            "path": "validation/method_promotion_manifest.py",
+            "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+            "size": 34283
+          },
+          {
+            "mtime_ns": 1786610379730126700,
+            "path": "validation/methods/method_promotion_manifest.schema.json",
+            "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+            "size": 15836
+          },
+          {
+            "mtime_ns": 1786650293213485600,
+            "path": "validation/methods/regression_bootstrap_v1.manifest.json",
+            "sha256": "857b25d5822321d8ddfb16255849e5932170f733c11523317210a3a600935d72",
+            "size": 15009
+          },
+          {
+            "mtime_ns": 1786638098612096600,
+            "path": "validation/regression_bootstrap_v1_factory_audit.py",
+            "sha256": "917dc2e2487a0be0895645a476e139e3f5380ce6169666d7fd0617ae57229270",
+            "size": 211
+          },
+          {
+            "mtime_ns": 1786638098610097800,
+            "path": "validation/regression_bootstrap_v1_packaged_acceptance.py",
+            "sha256": "194125cffdff71fc56bd9660cbda67338b42c18f4a2e3eaa3fe4146b19ba0d9a",
+            "size": 223
+          },
+          {
+            "mtime_ns": 1786642486586263000,
+            "path": "validation/run_v247_cumulative_native_acceptance.ps1",
+            "sha256": "73694af3f595932abcd22b85d33e966aef368c3a5944279d6db2846465ba6784",
+            "size": 29684
+          },
+          {
+            "mtime_ns": 1786607996811262400,
+            "path": "validation/run_v247_regression_bootstrap_native_acceptance.ps1",
+            "sha256": "1208096b55453001e160a92a2df240fd6a2e1a3a1e6491f7f3df8366c100b357",
+            "size": 6944
+          },
+          {
+            "mtime_ns": 1786650833649550100,
+            "path": "validation/test_legacy_release_adapters.py",
+            "sha256": "8be8b702aad674175bdcb9cacd5bb99612bf805e19431740a2771c664b35c9be",
+            "size": 13396
+          },
+          {
+            "mtime_ns": 1786639543726298400,
+            "path": "validation/v247_native_desktop_visual_acceptance.mjs",
+            "sha256": "9b5119a6175753a54caa8819db483666849df99fd6e8a0d7cd4b17256db0744d",
+            "size": 280796
+          },
+          {
+            "mtime_ns": 1786638335159990200,
+            "path": "validation/v247_tauri_native_acceptance.mjs",
+            "sha256": "5b5060833eabaf38697118cf272ce2952a07f827aa23b68e35720bfe65d93563",
+            "size": 809598
+          },
+          {
+            "mtime_ns": 1786607997196503400,
+            "path": "validation/windows_native_save_export.py",
+            "sha256": "da5ed8fb53d78375130c20dbd4cf57aa14980b4304424fe4cb65ba048c419542",
+            "size": 18957
+          }
+        ],
+        "passed": true,
+        "release_cli": {
+          "mtime_ns": 1786620631883365000,
+          "path": "target/release/qpls.exe",
+          "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+          "size": 20690432
+        },
+        "release_cli_build_sources": [
+          {
+            "mtime_ns": 1786618668433447400,
+            "path": "Cargo.lock",
+            "sha256": "8f185dea0cf7650e378d9b608270cd8e78b026d1bacae2ce0d521242055c74ee",
+            "size": 154279
+          },
+          {
+            "mtime_ns": 1786607995439584400,
+            "path": "Cargo.toml",
+            "sha256": "594290f8f0e731badc4cb85383cdd5cf2d09ad3c1cb24f86b270895d5e5172d2",
+            "size": 914
+          },
+          {
+            "mtime_ns": 1784372817481351800,
+            "path": "crates/qpls-assessment/Cargo.toml",
+            "sha256": "22a0cc3da4ada9be1f385495ef7af8354fbdf87baa8a5bac6f3dda891eecb01d",
+            "size": 456
+          },
+          {
+            "mtime_ns": 1786607995450741900,
+            "path": "crates/qpls-assessment/src/lib.rs",
+            "sha256": "6cffe850b3e8c1f90eeb570985f6a9ae4448622efa5370d7623ed283d948aafa",
+            "size": 144364
+          },
+          {
+            "mtime_ns": 1784436493165886700,
+            "path": "crates/qpls-cli/Cargo.toml",
+            "sha256": "ede9b7845e6439c9bff5bd05cb07933938a1ad8f82e859e0c3f5676de0119ba8",
+            "size": 678
+          },
+          {
+            "mtime_ns": 1786607995455877000,
+            "path": "crates/qpls-cli/src/main.rs",
+            "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
+            "size": 216983
+          },
+          {
+            "mtime_ns": 1784352071986106700,
+            "path": "crates/qpls-core/Cargo.toml",
+            "sha256": "86a7c44ae9511cb39f65d70fdfca581be24837462c8e4fa062513f9166d2634f",
+            "size": 363
+          },
+          {
+            "mtime_ns": 1786607995461617100,
+            "path": "crates/qpls-core/src/contract.rs",
+            "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
+            "size": 107095
+          },
+          {
+            "mtime_ns": 1784383048514318800,
+            "path": "crates/qpls-core/src/lib.rs",
+            "sha256": "9b534c12e343c4f518969e2f28195a5f733355d4fb1f338ec2447f81fd2bdf52",
+            "size": 180
+          },
+          {
+            "mtime_ns": 1786607995463756700,
+            "path": "crates/qpls-core/src/methods.rs",
+            "sha256": "18bed856d6dec2e7fe6fdc6d5478872b913f1a56c163fee73ee89c7ca53b7ac6",
+            "size": 3790
+          },
+          {
+            "mtime_ns": 1786607995466130100,
+            "path": "crates/qpls-core/src/roadmap.rs",
+            "sha256": "19cf8baad1d217636f3f7ef2d97081156692ed0050561e54bc0bf7b364106fe8",
+            "size": 12376
+          },
+          {
+            "mtime_ns": 1786607995469322800,
+            "path": "crates/qpls-core/src/statistics.rs",
+            "sha256": "dda4eb9df673b892be963933a3f32b32ade133b5c24c70aae76de3648b063769",
+            "size": 8527
+          },
+          {
+            "mtime_ns": 1786620129020320300,
+            "path": "crates/qpls-core/src/validation.rs",
+            "sha256": "ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573",
+            "size": 177352
+          },
+          {
+            "mtime_ns": 1784364586747181800,
+            "path": "crates/qpls-data/Cargo.toml",
+            "sha256": "a284129091841b5742e0ea5b6eeb5fff924cbc4f1eed059bfd075af5256ecb80",
+            "size": 437
+          },
+          {
+            "mtime_ns": 1786607995478642000,
+            "path": "crates/qpls-data/src/lib.rs",
+            "sha256": "a1cab41fc8c82a71dbf7ee674f037040009c0e8340976b98a9ebcfc99851a7e1",
+            "size": 44865
+          },
+          {
+            "mtime_ns": 1786607995481159200,
+            "path": "crates/qpls-estimation/Cargo.toml",
+            "sha256": "fb0d420f1c43919cb9e7a980cd9da270ce3a989e8729ba92e681dae509c60dd2",
+            "size": 503
+          },
+          {
+            "mtime_ns": 1784360087780652100,
+            "path": "crates/qpls-estimation/src/lib.rs",
+            "sha256": "901076baab7b745ef0d1b9cf48a7dc818a64631469cae26cced15a0a41b25890",
+            "size": 26
+          },
+          {
+            "mtime_ns": 1786617342744705100,
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
+            "size": 639198
+          },
+          {
+            "mtime_ns": 1786607995489944600,
+            "path": "crates/qpls-project/Cargo.toml",
+            "sha256": "ef1e3c8e1e5d9d723a43f4b567f6fe490d57d0458f73c8ae281673c0505756d5",
+            "size": 628
+          },
+          {
+            "mtime_ns": 1786607995492067200,
+            "path": "crates/qpls-project/src/archive_integrity.rs",
+            "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+            "size": 31085
+          },
+          {
+            "mtime_ns": 1786620129494578100,
+            "path": "crates/qpls-project/src/lib.rs",
+            "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
+            "size": 660277
+          },
+          {
+            "mtime_ns": 1784375063189640300,
+            "path": "crates/qpls-resampling/Cargo.toml",
+            "sha256": "a922a975499d4c211cfe96399a16ceeb2b248d29fc04cfd7a350c46d18f7ab4d",
+            "size": 589
+          },
+          {
+            "mtime_ns": 1786607995501017700,
+            "path": "crates/qpls-resampling/src/lib.rs",
+            "sha256": "edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0",
+            "size": 170900
+          },
+          {
+            "mtime_ns": 1784390064413583300,
+            "path": "crates/qpls-runner/Cargo.toml",
+            "sha256": "fea3cb8a82dae196097285ffe8c5763e39f1dfe0a485faff99b6cba601b16662",
+            "size": 428
+          },
+          {
+            "mtime_ns": 1786620129040430400,
+            "path": "crates/qpls-runner/src/lib.rs",
+            "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
+            "size": 49349
+          },
+          {
+            "mtime_ns": 1786607996206752100,
+            "path": "validation/development_slices.json",
+            "sha256": "5722f3b6b6d5c6cc19089a097bd1eaae294e55f4830bdae2423fc2861dd1ec10",
+            "size": 374221
+          }
+        ],
+        "release_cli_newer_build_sources": []
+      },
+      "before": {
+        "build_finished_at_utc": "2026-08-13T15:59:06.155218Z",
+        "build_receipt": {
+          "path": "validation/results/diagnostic_bundle_build_receipt.json",
+          "sha256": "c66c3f4a7df3933cc667f3387e6cb6e65103509b84799de8a7c06faeea83f4c4",
+          "size": 144210
+        },
+        "desktop": {
+          "mtime_ns": 1786636746102237000,
+          "path": "target/release/quickpls-desktop.exe",
+          "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
+          "size": 30507008
+        },
+        "desktop_receipt_exact": true,
+        "gate_sources_excluded_from_binary_freshness": [
+          {
+            "mtime_ns": 1786627059621599000,
+            "path": "validation/diagnostic_bundle_source_manifest.py",
+            "sha256": "77e21bfa7e2a87386c36a33ee2242f8cda61f85f440cedae35a222958f9d3a4e",
+            "size": 28025
+          },
+          {
+            "mtime_ns": 1786640237815572600,
+            "path": "validation/legacy_release_adapter_common.py",
+            "sha256": "daddcd525696fb7e45d0c39a5aa5ba919782df44382acb3692af5bf90fc413e0",
+            "size": 51955
+          },
+          {
+            "mtime_ns": 1786610514590924400,
+            "path": "validation/method_promotion_manifest.py",
+            "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+            "size": 34283
+          },
+          {
+            "mtime_ns": 1786610379730126700,
+            "path": "validation/methods/method_promotion_manifest.schema.json",
+            "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+            "size": 15836
+          },
+          {
+            "mtime_ns": 1786650293213485600,
+            "path": "validation/methods/regression_bootstrap_v1.manifest.json",
+            "sha256": "857b25d5822321d8ddfb16255849e5932170f733c11523317210a3a600935d72",
+            "size": 15009
+          },
+          {
+            "mtime_ns": 1786638098612096600,
+            "path": "validation/regression_bootstrap_v1_factory_audit.py",
+            "sha256": "917dc2e2487a0be0895645a476e139e3f5380ce6169666d7fd0617ae57229270",
+            "size": 211
+          },
+          {
+            "mtime_ns": 1786638098610097800,
+            "path": "validation/regression_bootstrap_v1_packaged_acceptance.py",
+            "sha256": "194125cffdff71fc56bd9660cbda67338b42c18f4a2e3eaa3fe4146b19ba0d9a",
+            "size": 223
+          },
+          {
+            "mtime_ns": 1786642486586263000,
+            "path": "validation/run_v247_cumulative_native_acceptance.ps1",
+            "sha256": "73694af3f595932abcd22b85d33e966aef368c3a5944279d6db2846465ba6784",
+            "size": 29684
+          },
+          {
+            "mtime_ns": 1786607996811262400,
+            "path": "validation/run_v247_regression_bootstrap_native_acceptance.ps1",
+            "sha256": "1208096b55453001e160a92a2df240fd6a2e1a3a1e6491f7f3df8366c100b357",
+            "size": 6944
+          },
+          {
+            "mtime_ns": 1786650833649550100,
+            "path": "validation/test_legacy_release_adapters.py",
+            "sha256": "8be8b702aad674175bdcb9cacd5bb99612bf805e19431740a2771c664b35c9be",
+            "size": 13396
+          },
+          {
+            "mtime_ns": 1786639543726298400,
+            "path": "validation/v247_native_desktop_visual_acceptance.mjs",
+            "sha256": "9b5119a6175753a54caa8819db483666849df99fd6e8a0d7cd4b17256db0744d",
+            "size": 280796
+          },
+          {
+            "mtime_ns": 1786638335159990200,
+            "path": "validation/v247_tauri_native_acceptance.mjs",
+            "sha256": "5b5060833eabaf38697118cf272ce2952a07f827aa23b68e35720bfe65d93563",
+            "size": 809598
+          },
+          {
+            "mtime_ns": 1786607997196503400,
+            "path": "validation/windows_native_save_export.py",
+            "sha256": "da5ed8fb53d78375130c20dbd4cf57aa14980b4304424fe4cb65ba048c419542",
+            "size": 18957
+          }
+        ],
+        "passed": true,
+        "release_cli": {
+          "mtime_ns": 1786620631883365000,
+          "path": "target/release/qpls.exe",
+          "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+          "size": 20690432
+        },
+        "release_cli_build_sources": [
+          {
+            "mtime_ns": 1786618668433447400,
+            "path": "Cargo.lock",
+            "sha256": "8f185dea0cf7650e378d9b608270cd8e78b026d1bacae2ce0d521242055c74ee",
+            "size": 154279
+          },
+          {
+            "mtime_ns": 1786607995439584400,
+            "path": "Cargo.toml",
+            "sha256": "594290f8f0e731badc4cb85383cdd5cf2d09ad3c1cb24f86b270895d5e5172d2",
+            "size": 914
+          },
+          {
+            "mtime_ns": 1784372817481351800,
+            "path": "crates/qpls-assessment/Cargo.toml",
+            "sha256": "22a0cc3da4ada9be1f385495ef7af8354fbdf87baa8a5bac6f3dda891eecb01d",
+            "size": 456
+          },
+          {
+            "mtime_ns": 1786607995450741900,
+            "path": "crates/qpls-assessment/src/lib.rs",
+            "sha256": "6cffe850b3e8c1f90eeb570985f6a9ae4448622efa5370d7623ed283d948aafa",
+            "size": 144364
+          },
+          {
+            "mtime_ns": 1784436493165886700,
+            "path": "crates/qpls-cli/Cargo.toml",
+            "sha256": "ede9b7845e6439c9bff5bd05cb07933938a1ad8f82e859e0c3f5676de0119ba8",
+            "size": 678
+          },
+          {
+            "mtime_ns": 1786607995455877000,
+            "path": "crates/qpls-cli/src/main.rs",
+            "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
+            "size": 216983
+          },
+          {
+            "mtime_ns": 1784352071986106700,
+            "path": "crates/qpls-core/Cargo.toml",
+            "sha256": "86a7c44ae9511cb39f65d70fdfca581be24837462c8e4fa062513f9166d2634f",
+            "size": 363
+          },
+          {
+            "mtime_ns": 1786607995461617100,
+            "path": "crates/qpls-core/src/contract.rs",
+            "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
+            "size": 107095
+          },
+          {
+            "mtime_ns": 1784383048514318800,
+            "path": "crates/qpls-core/src/lib.rs",
+            "sha256": "9b534c12e343c4f518969e2f28195a5f733355d4fb1f338ec2447f81fd2bdf52",
+            "size": 180
+          },
+          {
+            "mtime_ns": 1786607995463756700,
+            "path": "crates/qpls-core/src/methods.rs",
+            "sha256": "18bed856d6dec2e7fe6fdc6d5478872b913f1a56c163fee73ee89c7ca53b7ac6",
+            "size": 3790
+          },
+          {
+            "mtime_ns": 1786607995466130100,
+            "path": "crates/qpls-core/src/roadmap.rs",
+            "sha256": "19cf8baad1d217636f3f7ef2d97081156692ed0050561e54bc0bf7b364106fe8",
+            "size": 12376
+          },
+          {
+            "mtime_ns": 1786607995469322800,
+            "path": "crates/qpls-core/src/statistics.rs",
+            "sha256": "dda4eb9df673b892be963933a3f32b32ade133b5c24c70aae76de3648b063769",
+            "size": 8527
+          },
+          {
+            "mtime_ns": 1786620129020320300,
+            "path": "crates/qpls-core/src/validation.rs",
+            "sha256": "ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573",
+            "size": 177352
+          },
+          {
+            "mtime_ns": 1784364586747181800,
+            "path": "crates/qpls-data/Cargo.toml",
+            "sha256": "a284129091841b5742e0ea5b6eeb5fff924cbc4f1eed059bfd075af5256ecb80",
+            "size": 437
+          },
+          {
+            "mtime_ns": 1786607995478642000,
+            "path": "crates/qpls-data/src/lib.rs",
+            "sha256": "a1cab41fc8c82a71dbf7ee674f037040009c0e8340976b98a9ebcfc99851a7e1",
+            "size": 44865
+          },
+          {
+            "mtime_ns": 1786607995481159200,
+            "path": "crates/qpls-estimation/Cargo.toml",
+            "sha256": "fb0d420f1c43919cb9e7a980cd9da270ce3a989e8729ba92e681dae509c60dd2",
+            "size": 503
+          },
+          {
+            "mtime_ns": 1784360087780652100,
+            "path": "crates/qpls-estimation/src/lib.rs",
+            "sha256": "901076baab7b745ef0d1b9cf48a7dc818a64631469cae26cced15a0a41b25890",
+            "size": 26
+          },
+          {
+            "mtime_ns": 1786617342744705100,
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
+            "size": 639198
+          },
+          {
+            "mtime_ns": 1786607995489944600,
+            "path": "crates/qpls-project/Cargo.toml",
+            "sha256": "ef1e3c8e1e5d9d723a43f4b567f6fe490d57d0458f73c8ae281673c0505756d5",
+            "size": 628
+          },
+          {
+            "mtime_ns": 1786607995492067200,
+            "path": "crates/qpls-project/src/archive_integrity.rs",
+            "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+            "size": 31085
+          },
+          {
+            "mtime_ns": 1786620129494578100,
+            "path": "crates/qpls-project/src/lib.rs",
+            "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
+            "size": 660277
+          },
+          {
+            "mtime_ns": 1784375063189640300,
+            "path": "crates/qpls-resampling/Cargo.toml",
+            "sha256": "a922a975499d4c211cfe96399a16ceeb2b248d29fc04cfd7a350c46d18f7ab4d",
+            "size": 589
+          },
+          {
+            "mtime_ns": 1786607995501017700,
+            "path": "crates/qpls-resampling/src/lib.rs",
+            "sha256": "edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0",
+            "size": 170900
+          },
+          {
+            "mtime_ns": 1784390064413583300,
+            "path": "crates/qpls-runner/Cargo.toml",
+            "sha256": "fea3cb8a82dae196097285ffe8c5763e39f1dfe0a485faff99b6cba601b16662",
+            "size": 428
+          },
+          {
+            "mtime_ns": 1786620129040430400,
+            "path": "crates/qpls-runner/src/lib.rs",
+            "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
+            "size": 49349
+          },
+          {
+            "mtime_ns": 1786607996206752100,
+            "path": "validation/development_slices.json",
+            "sha256": "5722f3b6b6d5c6cc19089a097bd1eaae294e55f4830bdae2423fc2861dd1ec10",
+            "size": 374221
+          }
+        ],
+        "release_cli_newer_build_sources": []
+      },
+      "passed": true,
+      "source_stable_during_gate": true
+    }
+  },
+  "execution": {
+    "commands": []
+  },
+  "feature_id": "qpls3.standalone.regression_bootstrap",
+  "generated_at_utc": "2026-08-13T19:55:26.259542Z",
+  "method_version": "regression_bootstrap_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "packaged_acceptance",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "target/release/qpls.exe",
+      "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+      "size": 20690432
+    },
+    {
+      "path": "target/release/quickpls-desktop.exe",
+      "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
+      "size": 30507008
+    },
+    {
+      "path": "validation/legacy_release_adapter_common.py",
+      "sha256": "daddcd525696fb7e45d0c39a5aa5ba919782df44382acb3692af5bf90fc413e0",
+      "size": 51955
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/regression_bootstrap_v1.manifest.json",
+      "sha256": "857b25d5822321d8ddfb16255849e5932170f733c11523317210a3a600935d72",
+      "size": 15009
+    },
+    {
+      "path": "validation/regression_bootstrap_v1_factory_audit.py",
+      "sha256": "917dc2e2487a0be0895645a476e139e3f5380ce6169666d7fd0617ae57229270",
+      "size": 211
+    },
+    {
+      "path": "validation/regression_bootstrap_v1_packaged_acceptance.py",
+      "sha256": "194125cffdff71fc56bd9660cbda67338b42c18f4a2e3eaa3fe4146b19ba0d9a",
+      "size": 223
+    },
+    {
+      "path": "validation/results/diagnostic_bundle_build_receipt.json",
+      "sha256": "c66c3f4a7df3933cc667f3387e6cb6e65103509b84799de8a7c06faeea83f4c4",
+      "size": 144210
+    },
+    {
+      "path": "validation/results/regression_bootstrap_v1_packaged_acceptance.json",
+      "sha256": "bee972d7a0d35c9e8714ef09f82d8a50867bd31f8a85e81c2ea63fdc2ac6cde5",
+      "size": 15537
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/160-tauri-native-regression-bootstrap-fixture-data-1536x794.png",
+      "sha256": "93818582b7e4d6bb9279d101e7ed103d9916766847aec4ae0bacb7a150bab5ff",
+      "size": 293913
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/161-tauri-native-regression-bootstrap-cancellation-running-1536x794.png",
+      "sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a",
+      "size": 232032
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/162-tauri-native-regression-bootstrap-cancelled-1536x794.png",
+      "sha256": "dd6ec983a2df778dd3cdab4a1c845f559090cd4f145b389f91f7969ac4a7c036",
+      "size": 284306
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/163-tauri-native-regression-bootstrap-ols-dialog-1536x794.png",
+      "sha256": "7ecf52821dc59f125aaeef326835046bbae7eba9ca4c4f081e3fad8fa4223aa7",
+      "size": 299690
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/164-tauri-native-regression-bootstrap-ols-running-1536x794.png",
+      "sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a",
+      "size": 232032
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/165-tauri-native-regression-bootstrap-ols-results-1536x794.png",
+      "sha256": "25030f530f3b00c6bc19997818f5f2fc6401eab7df057eed88f1bba4e9ba3907",
+      "size": 111851
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/166-tauri-native-regression-bootstrap-ols-export-1536x794.png",
+      "sha256": "25030f530f3b00c6bc19997818f5f2fc6401eab7df057eed88f1bba4e9ba3907",
+      "size": 111851
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/167-tauri-native-regression-bootstrap-logistic-dialog-1536x794.png",
+      "sha256": "efe800431cf09999a0d4c5ea10442b4f598f4429e1e6306444c2b46a9ffac377",
+      "size": 306791
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/168-tauri-native-regression-bootstrap-logistic-running-1536x794.png",
+      "sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a",
+      "size": 232032
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/169-tauri-native-regression-bootstrap-logistic-results-1536x794.png",
+      "sha256": "0d0a6cfd7c3096b17857972cd58ba555110e502c80f634b293409676b41b9b46",
+      "size": 117547
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/170-tauri-native-regression-bootstrap-logistic-export-1536x794.png",
+      "sha256": "0d0a6cfd7c3096b17857972cd58ba555110e502c80f634b293409676b41b9b46",
+      "size": 117547
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/171-tauri-native-regression-bootstrap-reopened-1536x794.png",
+      "sha256": "1ae3e6877243898b2df2e7accc9e3b103d3e179d3f63ea32e857c53c156cad09",
+      "size": 115831
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1024x700.png",
+      "sha256": "0ee6c866739c9bbcbd14cd52fdd0107c2ce76028f3a69c200e8e1936c7883b68",
+      "size": 117254
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1280x720.png",
+      "sha256": "98e2fc62a6ee4afefa0da7e08a96971a5f78c61eca82b2f2993c908f34f9af2a",
+      "size": 136681
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1440x900.png",
+      "sha256": "80bb996503f253d42c1d1f32d61aa9ec1d5e920cda70f344015257f5b5778280",
+      "size": 179356
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1024x700.png",
+      "sha256": "b0fd22eb52193701a28faf33b6a109e2dc01f457db6c69cb8cd7d5019342b398",
+      "size": 113627
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1280x720.png",
+      "sha256": "f68e354c8a9446d3046bdb16f1be85e963ab36fbac0570caff41e0766d4f5748",
+      "size": 133296
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1440x900.png",
+      "sha256": "a411647a3a63857219a31cdd5ed222f356ca43bc98ee18ae1e24f5c7d9158665",
+      "size": 177878
+    },
+    {
+      "path": "validation/results/v247-native-regression-bootstrap-1786648524414-57288.qpls",
+      "sha256": "238aa6217f22e5eb911c01958a27afb3a4081b28a5ec250793e0b622a45c093d",
+      "size": 944352
+    },
+    {
+      "path": "validation/results/v247-native-regression-bootstrap-logistic-20260814-003257084-50236-6df5af42.xlsx",
+      "sha256": "5f30f3e17ab02495000ab8138197653ab0fb85396291bbd2518a674d6c786dfa",
+      "size": 21909
+    },
+    {
+      "path": "validation/results/v247-native-regression-bootstrap-ols-20260814-003257084-50236-6df5af42.xlsx",
+      "sha256": "27969c7184d31e8d37d4a54d1b29251b4fb3560eea30c8738666d9345dbfb367",
+      "size": 18281
+    },
+    {
+      "path": "validation/results/v247_cumulative_native_acceptance_receipt.json",
+      "sha256": "c17e0dec92106a8762b8cec4d608b96ac510c1cc3cd846073a1b62094c87ac9f",
+      "size": 6655
+    },
+    {
+      "path": "validation/results/v247_native_desktop_visual_acceptance.json",
+      "sha256": "3fca6d38de201f6309bfec13d20c5136f82789fb450fe9a4617c710cc33793c1",
+      "size": 464629
+    },
+    {
+      "path": "validation/results/v247_tauri_native_acceptance_regression_bootstrap.json",
+      "sha256": "6b56fa15b60e40def2959bb43a4514a654012c1a63724b8eea084743431cfbd7",
+      "size": 499999
+    },
+    {
+      "path": "validation/run_v247_cumulative_native_acceptance.ps1",
+      "sha256": "73694af3f595932abcd22b85d33e966aef368c3a5944279d6db2846465ba6784",
+      "size": 29684
+    },
+    {
+      "path": "validation/run_v247_regression_bootstrap_native_acceptance.ps1",
+      "sha256": "1208096b55453001e160a92a2df240fd6a2e1a3a1e6491f7f3df8366c100b357",
+      "size": 6944
+    },
+    {
+      "path": "validation/test_legacy_release_adapters.py",
+      "sha256": "8be8b702aad674175bdcb9cacd5bb99612bf805e19431740a2771c664b35c9be",
+      "size": 13396
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/v247_native_desktop_visual_acceptance.mjs",
+      "sha256": "9b5119a6175753a54caa8819db483666849df99fd6e8a0d7cd4b17256db0744d",
+      "size": 280796
+    },
+    {
+      "path": "validation/v247_tauri_native_acceptance.mjs",
+      "sha256": "5b5060833eabaf38697118cf272ce2952a07f827aa23b68e35720bfe65d93563",
+      "size": 809598
+    },
+    {
+      "path": "validation/windows_native_save_export.py",
+      "sha256": "da5ed8fb53d78375130c20dbd4cf57aa14980b4304424fe4cb65ba048c419542",
+      "size": 18957
+    }
+  ]
+}

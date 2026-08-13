@@ -13,6 +13,7 @@ import type {
   NativeModelPresentation,
   NativeProjectExplorerMutationRequest,
   NativeProjectSnapshot,
+  NativeSampleProjectId,
   RecodeColumnSpec,
 } from "../types";
 
@@ -31,7 +32,85 @@ export interface NativeTextExportRequest {
   contents: string;
 }
 
-export const isNativeDesktop = () => "__TAURI_INTERNALS__" in window;
+export interface DiagnosticRedactionCounts {
+  windowsPaths: number;
+  emailAddresses: number;
+  urlQueriesOrFragments: number;
+  bearerTokens: number;
+}
+
+export interface DiagnosticSystemMetadata {
+  schemaVersion: number;
+  quickplsVersion: string;
+  releaseChannel: string;
+  sourceRevision: string;
+  osFamily: string;
+  architecture: string;
+  desktopRuntime: string;
+  locale: string;
+  webview2Version: string;
+  userDataIncluded: boolean;
+  networkAccessed: boolean;
+}
+
+export interface DiagnosticEventRow {
+  timestamp: string;
+  sequence: number;
+  severity: string;
+  code: string;
+}
+
+export interface DiagnosticEntryDescriptor {
+  name: string;
+  sha256: string;
+  bytes: number;
+}
+
+export interface DiagnosticManifestContents {
+  schemaVersion: number;
+  policyVersion: string;
+  createdAt: string;
+  quickplsVersion: string;
+  entries: DiagnosticEntryDescriptor[];
+  redactionCounts: DiagnosticRedactionCounts;
+  redactionTotal: number;
+  archiveLimits: {
+    maximumEntries: number;
+    maximumEntryBytes: number;
+    maximumUncompressedBytes: number;
+    maximumArchiveBytes: number;
+    compression: "stored";
+  };
+  localOnly: boolean;
+  networkAccessed: boolean;
+}
+
+export interface DiagnosticStagedContents {
+  system: DiagnosticSystemMetadata;
+  events: DiagnosticEventRow[];
+  manifest: DiagnosticManifestContents;
+}
+
+export interface DiagnosticBundlePreview {
+  previewId: string;
+  createdAt: string;
+  includedCategories: string[];
+  excludedCategories: string[];
+  redactionCounts: DiagnosticRedactionCounts;
+  entryCount: number;
+  eventCount: number;
+  estimatedUncompressedBytes: number;
+  localOnly: boolean;
+  networkActivity: "none";
+  stagedContents: DiagnosticStagedContents;
+}
+
+export interface DiagnosticBundleSaveResult {
+  bytes: number;
+  archiveSha256: string;
+}
+
+export const isNativeDesktop = () => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
 const normalizeDataset = (dataset: Dataset): Dataset => ({
   ...dataset,
@@ -71,8 +150,8 @@ export async function openNativeProject() {
   return openNativeProjectAt(path);
 }
 
-export async function openNativeDemoProject() {
-  const project = await invoke<NativeProjectSnapshot>("open_demo_project");
+export async function openNativeDemoProject(sampleId: NativeSampleProjectId = "corporate_reputation") {
+  const project = await invoke<NativeProjectSnapshot>("open_demo_project", { sampleId });
   return normalizeProjectSnapshot(project);
 }
 
@@ -217,4 +296,24 @@ export async function openNativeDefaultExportFolder() {
 
 export async function verifyNativeLatestReleaseChecksums() {
   return invoke<ChecksumVerification>("verify_latest_release_checksums");
+}
+
+export async function previewNativeDiagnosticBundle(replacesPreviewId: string | null = null) {
+  return invoke<DiagnosticBundlePreview>("preview_diagnostic_bundle", { replacesPreviewId });
+}
+
+export async function cancelNativeDiagnosticBundlePreview(previewId: string) {
+  return invoke<void>("cancel_diagnostic_bundle_preview", { previewId });
+}
+
+export async function saveNativeDiagnosticBundle(previewId: string) {
+  const path = await save({
+    defaultPath: "quickpls-diagnostic-bundle.zip",
+    filters: [{ name: "QuickPLS diagnostic bundle", extensions: ["zip"] }],
+  });
+  if (!path) {
+    await cancelNativeDiagnosticBundlePreview(previewId);
+    return null;
+  }
+  return invoke<DiagnosticBundleSaveResult>("save_diagnostic_bundle", { path, previewId });
 }

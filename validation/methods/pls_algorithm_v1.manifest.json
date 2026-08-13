@@ -1,0 +1,293 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-13T09:59:21Z",
+    "manifest_path": "validation/methods/pls_algorithm_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.pls.algorithm",
+    "label": "PLS-SEM Algorithm",
+    "method_version": "pls_pm_v1",
+    "method_kind": "deterministic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls/"
+  },
+  "claim": {
+    "supported_scope": "Deterministic PLS path modelling for supported recursive composite models with numeric raw observations, reflective Mode A, formative Mode B, single-item blocks, and path, factor, or bounded PCA block weighting.",
+    "estimand": "The converged PLS composite scores, outer weights and loadings, standardized recursive structural path coefficients, R-squared values, and deterministic direct, indirect, and total effects for the declared model.",
+    "assumptions": [
+      "The structural model is recursive and every measurement block and indicator assignment passes the typed recipe validator.",
+      "Listwise-deleted complete observations are finite and each estimated block retains nonzero variance.",
+      "The selected preprocessing, weighting scheme, tolerance, and iteration limit are persisted as part of the run identity."
+    ],
+    "exclusions": [
+      "Cyclic structural models, covariance-only input, unspecified missing-data treatment, and untyped model extensions are excluded.",
+      "This contract does not itself qualify bootstrap, permutation, prediction, group comparison, PLSc, WPLS, or CB-SEM inference.",
+      "QuickPLS does not claim numerical identity with another implementation's initialization, orientation, or convergence path outside the frozen invariants."
+    ],
+    "warnings": [
+      "PLS composite estimates are model- and preprocessing-dependent and do not by themselves establish causality.",
+      "Inferential interpretation requires a separately qualified inference workflow."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {
+        "id": "outer_score_update",
+        "expression": "y_j = standardize(sum_k w_jk x_jk)",
+        "variables": ["y_j", "w_jk", "x_jk"],
+        "source_reference_id": "wold_1982"
+      },
+      {
+        "id": "structural_path_estimate",
+        "expression": "beta_j = (Y_pred' Y_pred)^-1 Y_pred' y_j",
+        "variables": ["beta_j", "Y_pred", "y_j"],
+        "source_reference_id": "lohmoeller_1989"
+      }
+    ],
+    "references": [
+      {
+        "id": "wold_1982",
+        "kind": "primary_paper",
+        "citation": "Wold (1982), Soft Modeling: The Basic Design and Some Extensions",
+        "locator": "docs/methods/PLS_PM_V1.md",
+        "independence_group": "published_pls_algorithm",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "lohmoeller_1989",
+        "kind": "primary_paper",
+        "citation": "Lohmoller (1989), Latent Variable Path Modeling with Partial Least Squares",
+        "locator": "docs/methods/PLS_PM_V1.md",
+        "independence_group": "published_pls_monograph",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "independent_python_plspm",
+        "kind": "independent_python",
+        "citation": "Independent Python implementation used for fixed QuickPLS PLS reference fixtures",
+        "locator": "validation/python_plspm_reference.py",
+        "independence_group": "python_reference",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "simulations": [
+      {
+        "id": "parameter_recovery",
+        "purpose": "recovery",
+        "design": "Recursive reflective, formative, and mixed supported models across sample size, loading strength, path strength, collinearity, and construct order.",
+        "seed_policy": "Frozen scenario-indexed seeds; deterministic estimator runs use identical generated rows across implementations.",
+        "metrics": ["path_bias", "loading_bias", "weight_error", "convergence_rate"],
+        "acceptance_rule": "Supported scenarios must meet preregistered recovery tolerances and converge in at least 99 percent of nonpathological cases; every failure remains counted."
+      }
+    ],
+    "boundaries": [
+      {
+        "id": "constant_or_singular_block",
+        "category": "data_pathology",
+        "case": "A retained indicator block or predecessor score has zero variance or a singular required regression design.",
+        "expected_behavior": "Execution fails with a typed numerical diagnostic and emits no partial current result."
+      },
+      {
+        "id": "cycle_or_untyped_extension",
+        "category": "unsupported_scope",
+        "case": "The structural graph is cyclic or the recipe requests an unqualified method extension.",
+        "expected_behavior": "The typed recipe validator blocks execution before estimation."
+      },
+      {
+        "id": "row_construct_indicator_reorder",
+        "category": "metamorphic",
+        "case": "Rows, constructs, paths, and indicators are consistently reordered without changing the model or observations.",
+        "expected_behavior": "Mapped estimates remain equal within the frozen numerical tolerance and canonical identities remain stable."
+      },
+      {
+        "id": "repeat_execution",
+        "category": "determinism",
+        "case": "The same typed recipe and dataset fingerprint are executed repeatedly.",
+        "expected_behavior": "Analytical payloads are bit-identical apart from explicitly operational identifiers and timestamps."
+      },
+      {
+        "id": "archive_parameter_tamper",
+        "category": "tamper",
+        "case": "A saved model path, measurement assignment, estimate, method identity, or dataset fingerprint is altered.",
+        "expected_behavior": "Strict project validation rejects the archive rather than displaying the modified result."
+      }
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 3,
+      "result_schema_version": 1,
+      "payload_kind": "pls_pm_v1",
+      "tamper_tests": [
+        {"category": "feature_identity", "expected_behavior": "Reject a result whose stable capability identity differs from its recipe."},
+        {"category": "method_version", "expected_behavior": "Reject a current result relabeled as another PLS method version."},
+        {"category": "dataset_fingerprint", "expected_behavior": "Reject a result whose saved dataset fingerprint no longer matches."},
+        {"category": "checksum", "expected_behavior": "Reject any modified archive member whose SHA-256 differs from the manifest."},
+        {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, non-finite values, invalid dimensions, or inconsistent identities."},
+        {"category": "legacy_reinterpretation", "expected_behavior": "Load supported legacy data under its original identity and never promote it as current evidence."}
+      ],
+      "legacy_policy": "Historical PLS payloads remain explicitly versioned and cannot satisfy current promotion evidence without an accepted migration contract."
+    },
+    "native": {
+      "setup_controls": ["Dataset and model", "Weighting scheme", "Preprocessing", "Missing-data policy", "Tolerance", "Maximum iterations"],
+      "applicability_blockers": ["Cyclic structural graph", "Invalid measurement block", "Nonfinite or insufficient complete data", "Unsupported method combination"],
+      "result_surfaces": ["Model estimates", "Outer loadings", "Outer weights", "R-square", "Direct and indirect effects", "Run provenance"],
+      "gui_cli_parity_rule": "For the same typed recipe, dataset fingerprint, method version, and settings, GUI and CLI analytical payloads must be exactly equal apart from operational timestamps and run identifiers.",
+      "accessibility_rules": ["Every estimate and warning is available in an accessible table.", "Keyboard users can configure, execute, inspect, export, save, and reopen the workflow."]
+    },
+    "export": {
+      "formats": ["csv", "xlsx", "html", "svg", "png"],
+      "tables": ["Path coefficients", "Outer loadings", "Outer weights", "R-square", "Effects", "Run provenance"],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": ["windows"],
+      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
+      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "offline_required": true,
+      "cancellation_required": false,
+      "process_cleanup_required": true
+    },
+    "audit": {
+      "exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
+  },
+  "qualification": {
+    "declared_state": "release_qualified",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": ["docs/methods/PLS_PM_V1.md"],
+      "independent_reference": [
+        "validation/Resolve-Rscript.ps1",
+        "validation/r_csem_reference.R",
+        "validation/r_csem_threecommonfactors_reference.R",
+        "validation/python_plspm_reference.py",
+        "validation/pls_pca_reference.py"
+      ],
+      "simulation_report": ["validation/pls_core_simulation.py"],
+      "boundary_report": ["validation/pls_core_boundary_gate.py"],
+      "persistence_report": ["validation/pls_core_persistence_gate.py"],
+      "frontend_report": ["src/native/nativeAnalysisRecipe.test.ts", "src/native/NativeResultsSurface.test.tsx"],
+      "export_report": ["src/native/nativeExportTables.test.ts"],
+      "method_audit": ["validation/pls_algorithm_v1_factory_audit.py"],
+      "packaged_acceptance": [
+        "validation/pls_algorithm_v1_packaged_acceptance.py",
+        "validation/diagnostic_bundle_source_manifest.py",
+        "validation/run_v247_cumulative_native_acceptance.ps1",
+        "validation/test_pls_algorithm_v1_packaged_adapter.py",
+        "validation/test_pls_algorithm_v1_packaged_contract.py",
+        "validation/v247_native_desktop_visual_acceptance.mjs",
+        "validation/v247_tauri_native_acceptance.mjs"
+      ]
+    },
+    "evidence": {
+      "engine_only": [
+        {
+          "path": "validation/results/method_factory/pls_algorithm_v1/method_spec.identity.json",
+          "roles": ["method_spec"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/pls_algorithm_v1/independent_reference.identity.json",
+          "roles": ["independent_reference"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/pls_algorithm_v1/simulation_report.identity.json",
+          "roles": ["simulation_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/pls_algorithm_v1/boundary_report.identity.json",
+          "roles": ["boundary_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "archive_qualified": [
+        {
+          "path": "validation/results/method_factory/pls_algorithm_v1/persistence_report.identity.json",
+          "roles": ["persistence_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "native_qualified": [
+        {
+          "path": "validation/results/method_factory/pls_algorithm_v1/frontend_report.identity.json",
+          "roles": ["frontend_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/pls_algorithm_v1/export_report.identity.json",
+          "roles": ["export_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "release_qualified": [
+        {
+          "path": "validation/results/method_factory/pls_algorithm_v1/method_audit.identity.json",
+          "roles": ["method_audit"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/pls_algorithm_v1/packaged_acceptance.identity.json",
+          "roles": ["packaged_acceptance"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,4064 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "cleanup": {
+      "passed": true,
+      "probe": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "@(Get-Process -Name 'quickpls-desktop' -ErrorAction SilentlyContinue).Count"
+        ],
+        "duration_seconds": 0.66,
+        "returncode": 0,
+        "stderr_tail": "",
+        "stdout_tail": "0\n"
+      }
+    },
+    "exact_archive": {
+      "passed": true,
+      "path": "validation/results/method_factory/cta_pls_v1/cta_pls_v1_packaged.qpls",
+      "schema_version": 5,
+      "sha256": "709f30262ee22632d07636874ffb9fb91f028cf5696f88e76ad6e8ac6d54121e"
+    },
+    "exact_xlsx": {
+      "exact_values": {
+        "archive_identity": true,
+        "exact_sheet_order": true,
+        "pairing_count": 3,
+        "passed": true,
+        "provenance_binds_same_run": true,
+        "same_run_restored": true,
+        "ui_matches_archive": true,
+        "xlsx_matches_archive": true
+      },
+      "passed": true,
+      "path": "validation/results/method_factory/cta_pls_v1/cta_pls_v1_packaged.xlsx",
+      "sha256": "a52250e27bc66db97a7c989ac73439dd201d1157726eb6494df80a60b924fdd1",
+      "sheets": [
+        "CTA-PLS scope and exclusions",
+        "CTA-PLS tetrad summary",
+        "CTA-PLS tetrads",
+        "Construct cross-validated redun",
+        "Construct reliability and valid",
+        "Cross loadings",
+        "Fornell-Larcker criterion",
+        "HTMT+",
+        "Inner VIF values",
+        "Model fit",
+        "Original HTMT",
+        "Outer loadings",
+        "Outer weights",
+        "Path coefficients",
+        "R-square",
+        "Run provenance",
+        "Structural model",
+        "Total effects",
+        "f-square effect sizes"
+      ]
+    },
+    "fail_closed_mutations": {
+      "categories": {
+        "checksum": {
+          "archive": "validation/results/method_factory/cta_pls_v1/mutation_checksum.qpls",
+          "execution": {
+            "command": [
+              "D:\\QuickPLS\\target\\debug\\qpls.exe",
+              "inspect",
+              "validation/results/method_factory/cta_pls_v1/mutation_checksum.qpls",
+              "--json"
+            ],
+            "duration_seconds": 0.037,
+            "returncode": 1,
+            "stderr_tail": "Error: invalid project validation/results/method_factory/cta_pls_v1/mutation_checksum.qpls\n\nCaused by:\n    project recovery failed: primary failed (checksum mismatch for project.json); autosave is absent; backup is absent\n",
+            "stdout_tail": ""
+          },
+          "passed": true,
+          "sha256": "ab7d3296770274639ad694996492394cfd658325480098b6e4e0a4954c0522dd"
+        },
+        "dataset_fingerprint": {
+          "archive": "validation/results/method_factory/cta_pls_v1/mutation_dataset_fingerprint.qpls",
+          "execution": {
+            "command": [
+              "D:\\QuickPLS\\target\\debug\\qpls.exe",
+              "inspect",
+              "validation/results/method_factory/cta_pls_v1/mutation_dataset_fingerprint.qpls",
+              "--json"
+            ],
+            "duration_seconds": 0.058,
+            "returncode": 1,
+            "stderr_tail": "Error: invalid project validation/results/method_factory/cta_pls_v1/mutation_dataset_fingerprint.qpls\n\nCaused by:\n    project recovery failed: primary failed (project archive is invalid: result ccea8d56-532b-4dd8-909f-66beba5c4c5a dataset fingerprint differs from its immutable analysis recipe); autosave is absent; backup is absent\n",
+            "stdout_tail": ""
+          },
+          "passed": true,
+          "sha256": "6a1e391173d20fbaf9b7c67b2a7a320cdf6a9f836f72b509b69d5283169ee5b6"
+        },
+        "feature_identity": {
+          "archive": "validation/results/method_factory/cta_pls_v1/mutation_feature_identity.qpls",
+          "execution": {
+            "command": [
+              "D:\\QuickPLS\\target\\debug\\qpls.exe",
+              "inspect",
+              "validation/results/method_factory/cta_pls_v1/mutation_feature_identity.qpls",
+              "--json"
+            ],
+            "duration_seconds": 0.064,
+            "returncode": 1,
+            "stderr_tail": "Error: invalid project validation/results/method_factory/cta_pls_v1/mutation_feature_identity.qpls\n\nCaused by:\n    project recovery failed: primary failed (project archive is invalid: result ccea8d56-532b-4dd8-909f-66beba5c4c5a method differs from its immutable provenance settings); autosave is absent; backup is absent\n",
+            "stdout_tail": ""
+          },
+          "passed": true,
+          "sha256": "3ba4cff0ced2a3b1b0389f268cd345cbdb49891c4acc570e43bf923d416e86f5"
+        },
+        "legacy_reinterpretation": {
+          "archive": "validation/results/method_factory/cta_pls_v1/mutation_legacy_reinterpretation.qpls",
+          "execution": {
+            "command": [
+              "D:\\QuickPLS\\target\\debug\\qpls.exe",
+              "inspect",
+              "validation/results/method_factory/cta_pls_v1/mutation_legacy_reinterpretation.qpls",
+              "--json"
+            ],
+            "duration_seconds": 0.058,
+            "returncode": 1,
+            "stderr_tail": "Error: invalid project validation/results/method_factory/cta_pls_v1/mutation_legacy_reinterpretation.qpls\n\nCaused by:\n    project recovery failed: primary failed (project archive is invalid: analysis recipe 9ae78658-3cc5-40a1-912a-a8e7038b362c is invalid: method_config.method_mismatch: method_config kind cta_pls is incompatible with settings.method pls_pm); autosave is absent; backup is absent\n",
+            "stdout_tail": ""
+          },
+          "passed": true,
+          "sha256": "a938cb53f4c6e4b72f98cc24c3aacf1737212d5e2fdb960f3f8fa836c64fd12d"
+        },
+        "malformed_payload": {
+          "archive": "validation/results/method_factory/cta_pls_v1/mutation_malformed_payload.qpls",
+          "execution": {
+            "command": [
+              "D:\\QuickPLS\\target\\debug\\qpls.exe",
+              "inspect",
+              "validation/results/method_factory/cta_pls_v1/mutation_malformed_payload.qpls",
+              "--json"
+            ],
+            "duration_seconds": 0.048,
+            "returncode": 1,
+            "stderr_tail": "Error: invalid project validation/results/method_factory/cta_pls_v1/mutation_malformed_payload.qpls\n\nCaused by:\n    project recovery failed: primary failed (project archive is invalid: result ccea8d56-532b-4dd8-909f-66beba5c4c5a uses unsupported PLS payload versions); autosave is absent; backup is absent\n",
+            "stdout_tail": ""
+          },
+          "passed": true,
+          "sha256": "96882e73b18c77a6f251798a12d1185b3a4d2f3fbfd198427f0918a50be7c2ab"
+        },
+        "method_version": {
+          "archive": "validation/results/method_factory/cta_pls_v1/mutation_method_version.qpls",
+          "execution": {
+            "command": [
+              "D:\\QuickPLS\\target\\debug\\qpls.exe",
+              "inspect",
+              "validation/results/method_factory/cta_pls_v1/mutation_method_version.qpls",
+              "--json"
+            ],
+            "duration_seconds": 0.056,
+            "returncode": 1,
+            "stderr_tail": "Error: invalid project validation/results/method_factory/cta_pls_v1/mutation_method_version.qpls\n\nCaused by:\n    project recovery failed: primary failed (project archive is invalid: result ccea8d56-532b-4dd8-909f-66beba5c4c5a uses unsupported PLS payload versions); autosave is absent; backup is absent\n",
+            "stdout_tail": ""
+          },
+          "passed": true,
+          "sha256": "b944a2ae888696996d0a364ac5007e9327cee60b295e0a064f323671dfe17443"
+        }
+      },
+      "passed": true
+    },
+    "focused_report": {
+      "focused_run": {
+        "completedAt": "2026-08-13T18:55:45.807Z",
+        "priorGeneratedAt": null,
+        "scope": "cta_pls"
+      },
+      "generated_at_utc": "2026-08-13T18:55:02.834Z",
+      "passed": true,
+      "path": "validation/results/method_factory/cta_pls_v1/cta_pls_v1_packaged_raw.json",
+      "sha256": "575cbe463c976c5e5ac477548171f301d5630ffebc6f92b98b1ef41c4407b45c"
+    },
+    "invalid_setup": {
+      "evidence": {
+        "archiveAfter": {
+          "activeModelId": "aca941b8-9fe6-4105-b1a6-2a2a0dea2cdd",
+          "datasetCount": 1,
+          "manifestEngineVersion": "2.46.0",
+          "modelCount": 1,
+          "packageVersion": "2.46.0",
+          "projectChecksum": {
+            "actual": "be83641e469f14b1f929dc81ce0679992907d104d161e4ad7fcf5542655bca64",
+            "expected": "be83641e469f14b1f929dc81ce0679992907d104d161e4ad7fcf5542655bca64",
+            "matches": true
+          },
+          "recipeCount": 0,
+          "resultCount": 0,
+          "runCount": 0
+        },
+        "archiveBefore": {
+          "activeModelId": "aca941b8-9fe6-4105-b1a6-2a2a0dea2cdd",
+          "datasetCount": 1,
+          "manifestEngineVersion": "2.46.0",
+          "modelCount": 1,
+          "packageVersion": "2.46.0",
+          "projectChecksum": {
+            "actual": "be83641e469f14b1f929dc81ce0679992907d104d161e4ad7fcf5542655bca64",
+            "expected": "be83641e469f14b1f929dc81ce0679992907d104d161e4ad7fcf5542655bca64",
+            "matches": true
+          },
+          "recipeCount": 0,
+          "resultCount": 0,
+          "runCount": 0
+        },
+        "attempted": true,
+        "blockers": [
+          "The model does not contain any constructs.",
+          "The model does not contain any assigned indicators.",
+          "Structural validity cannot be checked without constructs.",
+          "CTA-PLS requires at least one ordinary construct with four or more assigned indicators."
+        ],
+        "eligibleBlockText": "None - assign at least four indicators to one ordinary construct",
+        "resultCreated": false,
+        "runStateUnchanged": true,
+        "selectedMethod": "Confirmatory Tetrad Analysis",
+        "startEnabled": false
+      },
+      "passed": true
+    },
+    "method_functional_offline": {
+      "allowed_origins": [
+        "http://ipc.localhost",
+        "http://tauri.localhost"
+      ],
+      "analysis_export_save_reopen_succeeded": true,
+      "browser": {
+        "externalRequestCount": 0,
+        "externalRequests": [],
+        "observedRequestCount": 47,
+        "origins": [
+          "http://ipc.localhost",
+          "http://tauri.localhost"
+        ],
+        "passed": true
+      },
+      "external_request_count": 0,
+      "external_requests": [],
+      "no_external_app_requests": true,
+      "observed_origins": [
+        "http://ipc.localhost",
+        "http://tauri.localhost"
+      ],
+      "observed_request_count": 47,
+      "passed": true,
+      "runtime_network_dependency": false
+    },
+    "passed": true,
+    "platform_background_egress_observation": {
+      "commercial_zero_egress_passed": false,
+      "observation_kind": "sampled_exact_process_tree_tcp_v1",
+      "passed": true,
+      "platform_background_egress_observed": true,
+      "remote_connections": [
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 54960,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        },
+        {
+          "local_address": "10.1.33.13",
+          "local_port": 50750,
+          "owning_process": 56044,
+          "remote_access": true,
+          "remote_address": "52.110.15.158",
+          "remote_port": 443,
+          "state": "Established"
+        }
+      ],
+      "root_present_every_sample": true,
+      "sample_count": 63
+    },
+    "prior_factory_stages": {
+      "artifacts": [
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/cta_pls_v1/method_spec.identity.json",
+          "roles": [
+            "method_spec"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/cta_pls_v1/independent_reference.identity.json",
+          "roles": [
+            "independent_reference"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/cta_pls_v1/simulation_report.identity.json",
+          "roles": [
+            "simulation_report"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/cta_pls_v1/boundary_report.identity.json",
+          "roles": [
+            "boundary_report"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/cta_pls_v1/persistence_report.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "stage": "archive_qualified"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/cta_pls_v1/frontend_report.identity.json",
+          "roles": [
+            "frontend_report"
+          ],
+          "stage": "native_qualified"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/cta_pls_v1/export_report.identity.json",
+          "roles": [
+            "export_report"
+          ],
+          "stage": "native_qualified"
+        }
+      ],
+      "passed": true
+    },
+    "responsive_viewports": {
+      "evidence": {
+        "exactViewports": [
+          {
+            "height": 700,
+            "id": "1024x700",
+            "metrics": {
+              "appNoHorizontalOverflow": true,
+              "documentNoHorizontalOverflow": true,
+              "innerHeight": 700,
+              "innerWidth": 1024,
+              "selectedTableId": "cta_pls_summary",
+              "summaryRows": 1,
+              "treeVisible": true
+            },
+            "passed": true,
+            "width": 1024
+          },
+          {
+            "height": 720,
+            "id": "1280x720",
+            "metrics": {
+              "appNoHorizontalOverflow": true,
+              "documentNoHorizontalOverflow": true,
+              "innerHeight": 720,
+              "innerWidth": 1280,
+              "selectedTableId": "cta_pls_summary",
+              "summaryRows": 1,
+              "treeVisible": true
+            },
+            "passed": true,
+            "width": 1280
+          },
+          {
+            "height": 900,
+            "id": "1440x900",
+            "metrics": {
+              "appNoHorizontalOverflow": true,
+              "documentNoHorizontalOverflow": true,
+              "innerHeight": 900,
+              "innerWidth": 1440,
+              "selectedTableId": "cta_pls_summary",
+              "summaryRows": 1,
+              "treeVisible": true
+            },
+            "passed": true,
+            "width": 1440
+          }
+        ],
+        "passed": true
+      },
+      "passed": true,
+      "screenshot_integrity": {
+        "artifacts": [
+          {
+            "passed": true,
+            "path": "validation/results/screens/v247-native-desktop-acceptance/200-tauri-native-cta-pls-fixture-data-1536x794.png",
+            "sha256": "3a381b511068151b9860a9ac4c91cff3fa1f254cea88ca1e2647637334283d1a",
+            "size": 268000
+          },
+          {
+            "passed": true,
+            "path": "validation/results/screens/v247-native-desktop-acceptance/201-tauri-native-cta-pls-invalid-setup-1536x794.png",
+            "sha256": "e779e0d42870b6e85a24ecf5677276d0594a8fc30ad5d76f998375e409fc4923",
+            "size": 183556
+          },
+          {
+            "passed": true,
+            "path": "validation/results/screens/v247-native-desktop-acceptance/202-tauri-native-cta-pls-model-1536x794.png",
+            "sha256": "320a53cd7ef869e17ef166f7b9538a116c0be73b2dc760e43df28ab95b0fc405",
+            "size": 154407
+          },
+          {
+            "passed": true,
+            "path": "validation/results/screens/v247-native-desktop-acceptance/203-tauri-native-cta-pls-dialog-1536x794.png",
+            "sha256": "1a5f540168ba8aba4f7c07cd33101ee05217ebf6f1e862198a9d5ea7d735f4ae",
+            "size": 189369
+          },
+          {
+            "passed": true,
+            "path": "validation/results/screens/v247-native-desktop-acceptance/204-tauri-native-cta-pls-running-1536x794.png",
+            "sha256": "8843443fab9a641f96838559c575f886d07a4eb573e7dea19f7b2d4371d3a17e",
+            "size": 154850
+          },
+          {
+            "passed": true,
+            "path": "validation/results/screens/v247-native-desktop-acceptance/205-tauri-native-cta-pls-results-1536x794.png",
+            "sha256": "574f081ca0e8d5f4fbab8e4103d8da4a666651b728e050c6755b4897660aaaa5",
+            "size": 89247
+          },
+          {
+            "passed": true,
+            "path": "validation/results/screens/v247-native-desktop-acceptance/206-tauri-native-cta-pls-export-1536x794.png",
+            "sha256": "a68cf5dac69909c23a2c10adf613a2456db8b088d70b75962e671882336c056b",
+            "size": 120602
+          },
+          {
+            "passed": true,
+            "path": "validation/results/screens/v247-native-desktop-acceptance/207-tauri-native-cta-pls-reopened-1024x700.png",
+            "sha256": "6febbb2f53ca7dbdd267074446f8442c557af6ea76f10a9de33643ab1997220a",
+            "size": 61333
+          },
+          {
+            "passed": true,
+            "path": "validation/results/screens/v247-native-desktop-acceptance/207-tauri-native-cta-pls-reopened-1280x720.png",
+            "sha256": "44c11cb36e24fa8d580e0c3ad646aa14224e6133a1b7d268745653b18af25165",
+            "size": 63769
+          },
+          {
+            "passed": true,
+            "path": "validation/results/screens/v247-native-desktop-acceptance/207-tauri-native-cta-pls-reopened-1440x900.png",
+            "sha256": "7972e7a21bc5e2fc0a8f1f358f2f8510a4bd0563a3aaa9a39906790f1a019218",
+            "size": 67364
+          }
+        ],
+        "passed": true,
+        "paths": [
+          "validation/results/screens/v247-native-desktop-acceptance/200-tauri-native-cta-pls-fixture-data-1536x794.png",
+          "validation/results/screens/v247-native-desktop-acceptance/201-tauri-native-cta-pls-invalid-setup-1536x794.png",
+          "validation/results/screens/v247-native-desktop-acceptance/202-tauri-native-cta-pls-model-1536x794.png",
+          "validation/results/screens/v247-native-desktop-acceptance/203-tauri-native-cta-pls-dialog-1536x794.png",
+          "validation/results/screens/v247-native-desktop-acceptance/204-tauri-native-cta-pls-running-1536x794.png",
+          "validation/results/screens/v247-native-desktop-acceptance/205-tauri-native-cta-pls-results-1536x794.png",
+          "validation/results/screens/v247-native-desktop-acceptance/206-tauri-native-cta-pls-export-1536x794.png",
+          "validation/results/screens/v247-native-desktop-acceptance/207-tauri-native-cta-pls-reopened-1024x700.png",
+          "validation/results/screens/v247-native-desktop-acceptance/207-tauri-native-cta-pls-reopened-1280x720.png",
+          "validation/results/screens/v247-native-desktop-acceptance/207-tauri-native-cta-pls-reopened-1440x900.png"
+        ],
+        "required_responsive_screenshots": [
+          "207-tauri-native-cta-pls-reopened-1024x700.png",
+          "207-tauri-native-cta-pls-reopened-1280x720.png",
+          "207-tauri-native-cta-pls-reopened-1440x900.png"
+        ]
+      }
+    },
+    "same_run": {
+      "passed": true,
+      "run_id": "ccea8d56-532b-4dd8-909f-66beba5c4c5a"
+    },
+    "source_freshness": {
+      "cli_mtime_ns": 1786624520305787600,
+      "cli_newer_sources": [],
+      "cli_sources": [
+        {
+          "mtime_ns": 1786618668433447400,
+          "path": "Cargo.lock"
+        },
+        {
+          "mtime_ns": 1786607995439584400,
+          "path": "Cargo.toml"
+        },
+        {
+          "mtime_ns": 1784372817481351800,
+          "path": "crates/qpls-assessment/Cargo.toml"
+        },
+        {
+          "mtime_ns": 1786607995450741900,
+          "path": "crates/qpls-assessment/src/lib.rs"
+        },
+        {
+          "mtime_ns": 1784436493165886700,
+          "path": "crates/qpls-cli/Cargo.toml"
+        },
+        {
+          "mtime_ns": 1786607995455877000,
+          "path": "crates/qpls-cli/src/main.rs"
+        },
+        {
+          "mtime_ns": 1784352071986106700,
+          "path": "crates/qpls-core/Cargo.toml"
+        },
+        {
+          "mtime_ns": 1786607995461617100,
+          "path": "crates/qpls-core/src/contract.rs"
+        },
+        {
+          "mtime_ns": 1784383048514318800,
+          "path": "crates/qpls-core/src/lib.rs"
+        },
+        {
+          "mtime_ns": 1786607995463756700,
+          "path": "crates/qpls-core/src/methods.rs"
+        },
+        {
+          "mtime_ns": 1786607995466130100,
+          "path": "crates/qpls-core/src/roadmap.rs"
+        },
+        {
+          "mtime_ns": 1786607995469322800,
+          "path": "crates/qpls-core/src/statistics.rs"
+        },
+        {
+          "mtime_ns": 1786620129020320300,
+          "path": "crates/qpls-core/src/validation.rs"
+        },
+        {
+          "mtime_ns": 1784364586747181800,
+          "path": "crates/qpls-data/Cargo.toml"
+        },
+        {
+          "mtime_ns": 1786607995478642000,
+          "path": "crates/qpls-data/src/lib.rs"
+        },
+        {
+          "mtime_ns": 1786607995481159200,
+          "path": "crates/qpls-estimation/Cargo.toml"
+        },
+        {
+          "mtime_ns": 1784360087780652100,
+          "path": "crates/qpls-estimation/src/lib.rs"
+        },
+        {
+          "mtime_ns": 1786617342744705100,
+          "path": "crates/qpls-estimation/src/pls.rs"
+        },
+        {
+          "mtime_ns": 1786607995489944600,
+          "path": "crates/qpls-project/Cargo.toml"
+        },
+        {
+          "mtime_ns": 1786607995492067200,
+          "path": "crates/qpls-project/src/archive_integrity.rs"
+        },
+        {
+          "mtime_ns": 1786620129494578100,
+          "path": "crates/qpls-project/src/lib.rs"
+        },
+        {
+          "mtime_ns": 1784375063189640300,
+          "path": "crates/qpls-resampling/Cargo.toml"
+        },
+        {
+          "mtime_ns": 1786607995501017700,
+          "path": "crates/qpls-resampling/src/lib.rs"
+        },
+        {
+          "mtime_ns": 1784390064413583300,
+          "path": "crates/qpls-runner/Cargo.toml"
+        },
+        {
+          "mtime_ns": 1786620129040430400,
+          "path": "crates/qpls-runner/src/lib.rs"
+        }
+      ],
+      "desktop_mtime_ns": 1786636746102237000,
+      "desktop_newer_sources": [],
+      "desktop_sources": [
+        {
+          "mtime_ns": 1786618668433447400,
+          "path": "Cargo.lock"
+        },
+        {
+          "mtime_ns": 1784372817481351800,
+          "path": "crates/qpls-assessment/Cargo.toml"
+        },
+        {
+          "mtime_ns": 1786607995450741900,
+          "path": "crates/qpls-assessment/src/lib.rs"
+        },
+        {
+          "mtime_ns": 1784436493165886700,
+          "path": "crates/qpls-cli/Cargo.toml"
+        },
+        {
+          "mtime_ns": 1786607995455877000,
+          "path": "crates/qpls-cli/src/main.rs"
+        },
+        {
+          "mtime_ns": 1784352071986106700,
+          "path": "crates/qpls-core/Cargo.toml"
+        },
+        {
+          "mtime_ns": 1786607995461617100,
+          "path": "crates/qpls-core/src/contract.rs"
+        },
+        {
+          "mtime_ns": 1784383048514318800,
+          "path": "crates/qpls-core/src/lib.rs"
+        },
+        {
+          "mtime_ns": 1786607995463756700,
+          "path": "crates/qpls-core/src/methods.rs"
+        },
+        {
+          "mtime_ns": 1786607995466130100,
+          "path": "crates/qpls-core/src/roadmap.rs"
+        },
+        {
+          "mtime_ns": 1786607995469322800,
+          "path": "crates/qpls-core/src/statistics.rs"
+        },
+        {
+          "mtime_ns": 1786620129020320300,
+          "path": "crates/qpls-core/src/validation.rs"
+        },
+        {
+          "mtime_ns": 1784364586747181800,
+          "path": "crates/qpls-data/Cargo.toml"
+        },
+        {
+          "mtime_ns": 1786607995478642000,
+          "path": "crates/qpls-data/src/lib.rs"
+        },
+        {
+          "mtime_ns": 1786607995481159200,
+          "path": "crates/qpls-estimation/Cargo.toml"
+        },
+        {
+          "mtime_ns": 1784360087780652100,
+          "path": "crates/qpls-estimation/src/lib.rs"
+        },
+        {
+          "mtime_ns": 1786617342744705100,
+          "path": "crates/qpls-estimation/src/pls.rs"
+        },
+        {
+          "mtime_ns": 1786607995489944600,
+          "path": "crates/qpls-project/Cargo.toml"
+        },
+        {
+          "mtime_ns": 1786607995492067200,
+          "path": "crates/qpls-project/src/archive_integrity.rs"
+        },
+        {
+          "mtime_ns": 1786620129494578100,
+          "path": "crates/qpls-project/src/lib.rs"
+        },
+        {
+          "mtime_ns": 1784375063189640300,
+          "path": "crates/qpls-resampling/Cargo.toml"
+        },
+        {
+          "mtime_ns": 1786607995501017700,
+          "path": "crates/qpls-resampling/src/lib.rs"
+        },
+        {
+          "mtime_ns": 1784390064413583300,
+          "path": "crates/qpls-runner/Cargo.toml"
+        },
+        {
+          "mtime_ns": 1786620129040430400,
+          "path": "crates/qpls-runner/src/lib.rs"
+        },
+        {
+          "mtime_ns": 1784352071844880000,
+          "path": "index.html"
+        },
+        {
+          "mtime_ns": 1786607995821326700,
+          "path": "package-lock.json"
+        },
+        {
+          "mtime_ns": 1786619612747561200,
+          "path": "package.json"
+        },
+        {
+          "mtime_ns": 1786622040206466700,
+          "path": "src-tauri/Cargo.toml"
+        },
+        {
+          "mtime_ns": 1784353361523817800,
+          "path": "src-tauri/build.rs"
+        },
+        {
+          "mtime_ns": 1786607995825304600,
+          "path": "src-tauri/capabilities/default.json"
+        },
+        {
+          "mtime_ns": 1784355478108070600,
+          "path": "src-tauri/gen/schemas/acl-manifests.json"
+        },
+        {
+          "mtime_ns": 1786607995825304600,
+          "path": "src-tauri/gen/schemas/capabilities.json"
+        },
+        {
+          "mtime_ns": 1784355478157883700,
+          "path": "src-tauri/gen/schemas/desktop-schema.json"
+        },
+        {
+          "mtime_ns": 1784355478157883700,
+          "path": "src-tauri/gen/schemas/windows-schema.json"
+        },
+        {
+          "mtime_ns": 1786636099326272800,
+          "path": "src-tauri/src/lib.rs"
+        },
+        {
+          "mtime_ns": 1784775649334637600,
+          "path": "src-tauri/src/main.rs"
+        },
+        {
+          "mtime_ns": 1786623005052559100,
+          "path": "src-tauri/src/sample_projects.rs"
+        },
+        {
+          "mtime_ns": 1786631689564367400,
+          "path": "src-tauri/tauri.conf.json"
+        },
+        {
+          "mtime_ns": 1786607995833822400,
+          "path": "src/App.tsx"
+        },
+        {
+          "mtime_ns": 1786618211833009200,
+          "path": "src/components/AnalysisCatalog.tsx"
+        },
+        {
+          "mtime_ns": 1786607995840637800,
+          "path": "src/components/ConstructNode.tsx"
+        },
+        {
+          "mtime_ns": 1786607995840637800,
+          "path": "src/components/DataWorkspace.tsx"
+        },
+        {
+          "mtime_ns": 1786607995840637800,
+          "path": "src/components/Explorer.tsx"
+        },
+        {
+          "mtime_ns": 1786618030282091600,
+          "path": "src/components/GroupsWorkspace.test.tsx"
+        },
+        {
+          "mtime_ns": 1786618019771178100,
+          "path": "src/components/GroupsWorkspace.tsx"
+        },
+        {
+          "mtime_ns": 1786607995848599600,
+          "path": "src/components/IndicatorNode.tsx"
+        },
+        {
+          "mtime_ns": 1786607995850086000,
+          "path": "src/components/Inspector.tsx"
+        },
+        {
+          "mtime_ns": 1786607995852499700,
+          "path": "src/components/LatentNode.tsx"
+        },
+        {
+          "mtime_ns": 1786607995852499700,
+          "path": "src/components/ModelCanvas.tsx"
+        },
+        {
+          "mtime_ns": 1786607995856455800,
+          "path": "src/components/ModelIssuesPane.tsx"
+        },
+        {
+          "mtime_ns": 1786607995860518000,
+          "path": "src/components/NavRail.tsx"
+        },
+        {
+          "mtime_ns": 1786622313811648700,
+          "path": "src/components/OnboardingWorkspace.test.tsx"
+        },
+        {
+          "mtime_ns": 1786622211081841900,
+          "path": "src/components/OnboardingWorkspace.tsx"
+        },
+        {
+          "mtime_ns": 1786607995866429800,
+          "path": "src/components/ProductivityOverlays.tsx"
+        },
+        {
+          "mtime_ns": 1784485937188941100,
+          "path": "src/components/ReadinessPanel.tsx"
+        },
+        {
+          "mtime_ns": 1786607995869483300,
+          "path": "src/components/ReportsWorkspace.test.ts"
+        },
+        {
+          "mtime_ns": 1786615659054434200,
+          "path": "src/components/ReportsWorkspace.tsx"
+        },
+        {
+          "mtime_ns": 1786615665397816900,
+          "path": "src/components/RunHistory.tsx"
+        },
+        {
+          "mtime_ns": 1786607995873970900,
+          "path": "src/components/RunWorkspace.tsx"
+        },
+        {
+          "mtime_ns": 1784777801428088000,
+          "path": "src/components/SemEdge.tsx"
+        },
+        {
+          "mtime_ns": 1786624196991753600,
+          "path": "src/components/SettingsWorkspace.test.tsx"
+        },
+        {
+          "mtime_ns": 1786624162830223700,
+          "path": "src/components/SettingsWorkspace.tsx"
+        },
+        {
+          "mtime_ns": 1786607995877439100,
+          "path": "src/components/StatusBar.tsx"
+        },
+        {
+          "mtime_ns": 1786622211088530700,
+          "path": "src/components/TopBar.tsx"
+        },
+        {
+          "mtime_ns": 1786607995884341100,
+          "path": "src/components/TrustCenterWorkspace.test.tsx"
+        },
+        {
+          "mtime_ns": 1786607995885790000,
+          "path": "src/components/TrustCenterWorkspace.tsx"
+        },
+        {
+          "mtime_ns": 1786607995889914500,
+          "path": "src/components/Ui.tsx"
+        },
+        {
+          "mtime_ns": 1786607995889914500,
+          "path": "src/components/WorkflowStrip.tsx"
+        },
+        {
+          "mtime_ns": 1786607995889914500,
+          "path": "src/components/WorkspaceCoach.tsx"
+        },
+        {
+          "mtime_ns": 1786607995889914500,
+          "path": "src/components/accessibilityContracts.test.ts"
+        },
+        {
+          "mtime_ns": 1786607995889914500,
+          "path": "src/data/largeModelSmoke.ts"
+        },
+        {
+          "mtime_ns": 1786607995897787700,
+          "path": "src/data/sample.ts"
+        },
+        {
+          "mtime_ns": 1786607995901838400,
+          "path": "src/data/smokeRun.test.ts"
+        },
+        {
+          "mtime_ns": 1786607995904196600,
+          "path": "src/data/smokeRun.ts"
+        },
+        {
+          "mtime_ns": 1785333576479663400,
+          "path": "src/domain/analysisReadiness.test.ts"
+        },
+        {
+          "mtime_ns": 1785332861760003900,
+          "path": "src/domain/analysisReadiness.ts"
+        },
+        {
+          "mtime_ns": 1784743760597394300,
+          "path": "src/domain/dataWorkspace.test.ts"
+        },
+        {
+          "mtime_ns": 1784777584415352700,
+          "path": "src/domain/dataWorkspace.ts"
+        },
+        {
+          "mtime_ns": 1786607995904196600,
+          "path": "src/domain/desktopCommands.ts"
+        },
+        {
+          "mtime_ns": 1786607995904196600,
+          "path": "src/domain/diagramGraph.test.ts"
+        },
+        {
+          "mtime_ns": 1786607995904196600,
+          "path": "src/domain/diagramGraph.ts"
+        },
+        {
+          "mtime_ns": 1784415405476144900,
+          "path": "src/domain/inference.test.ts"
+        },
+        {
+          "mtime_ns": 1784415405473150300,
+          "path": "src/domain/inference.ts"
+        },
+        {
+          "mtime_ns": 1786607995912481100,
+          "path": "src/domain/methodApplicability.test.ts"
+        },
+        {
+          "mtime_ns": 1786618211835009900,
+          "path": "src/domain/methodApplicability.ts"
+        },
+        {
+          "mtime_ns": 1786607995918523800,
+          "path": "src/domain/methodStatus.ts"
+        },
+        {
+          "mtime_ns": 1784485937223328200,
+          "path": "src/domain/modelLayout.test.ts"
+        },
+        {
+          "mtime_ns": 1784485937225325900,
+          "path": "src/domain/modelLayout.ts"
+        },
+        {
+          "mtime_ns": 1786607995920273700,
+          "path": "src/domain/modelValidation.test.ts"
+        },
+        {
+          "mtime_ns": 1786607995924290200,
+          "path": "src/domain/modelValidation.ts"
+        },
+        {
+          "mtime_ns": 1786607995926844400,
+          "path": "src/domain/publicationDiagram.test.ts"
+        },
+        {
+          "mtime_ns": 1786607995926844400,
+          "path": "src/domain/publicationDiagram.ts"
+        },
+        {
+          "mtime_ns": 1786607995930697400,
+          "path": "src/domain/resultInterpretation.test.ts"
+        },
+        {
+          "mtime_ns": 1786617736098039900,
+          "path": "src/domain/resultInterpretation.ts"
+        },
+        {
+          "mtime_ns": 1786617995104121000,
+          "path": "src/domain/resultTables.test.ts"
+        },
+        {
+          "mtime_ns": 1786617720204775600,
+          "path": "src/domain/resultTables.ts"
+        },
+        {
+          "mtime_ns": 1784435933570844600,
+          "path": "src/domain/runComparison.test.ts"
+        },
+        {
+          "mtime_ns": 1784435933570844600,
+          "path": "src/domain/runComparison.ts"
+        },
+        {
+          "mtime_ns": 1784626715110362000,
+          "path": "src/domain/semGeometry.test.ts"
+        },
+        {
+          "mtime_ns": 1784626812199777300,
+          "path": "src/domain/semGeometry.ts"
+        },
+        {
+          "mtime_ns": 1786615619767899200,
+          "path": "src/domain/spreadsheetSafety.test.ts"
+        },
+        {
+          "mtime_ns": 1786615619764201600,
+          "path": "src/domain/spreadsheetSafety.ts"
+        },
+        {
+          "mtime_ns": 1786607995936383300,
+          "path": "src/domain/workflowCoach.ts"
+        },
+        {
+          "mtime_ns": 1786607995936383300,
+          "path": "src/domain/workflowProgress.ts"
+        },
+        {
+          "mtime_ns": 1786607995936383300,
+          "path": "src/domain/workspaceCommands.ts"
+        },
+        {
+          "mtime_ns": 1786607995946093500,
+          "path": "src/main.tsx"
+        },
+        {
+          "mtime_ns": 1786620002433454100,
+          "path": "src/native/NativeCalculationDialog.test.ts"
+        },
+        {
+          "mtime_ns": 1786619538532142200,
+          "path": "src/native/NativeCalculationDialog.tsx"
+        },
+        {
+          "mtime_ns": 1786607995948217900,
+          "path": "src/native/NativeDataImportDialog.tsx"
+        },
+        {
+          "mtime_ns": 1786607995952062600,
+          "path": "src/native/NativeDataSurface.test.tsx"
+        },
+        {
+          "mtime_ns": 1786607995954289100,
+          "path": "src/native/NativeDataSurface.tsx"
+        },
+        {
+          "mtime_ns": 1786623630679065000,
+          "path": "src/native/NativeDesktopApp.test.ts"
+        },
+        {
+          "mtime_ns": 1786623630679065000,
+          "path": "src/native/NativeDesktopApp.tsx"
+        },
+        {
+          "mtime_ns": 1786622211083690000,
+          "path": "src/native/NativeDesktopController.tsx"
+        },
+        {
+          "mtime_ns": 1786607995960347200,
+          "path": "src/native/NativeExportDialog.test.ts"
+        },
+        {
+          "mtime_ns": 1786607995960347200,
+          "path": "src/native/NativeExportDialog.tsx"
+        },
+        {
+          "mtime_ns": 1786607995960347200,
+          "path": "src/native/NativeGroupSetupDialog.test.tsx"
+        },
+        {
+          "mtime_ns": 1786607995960347200,
+          "path": "src/native/NativeGroupSetupDialog.tsx"
+        },
+        {
+          "mtime_ns": 1786607995967835400,
+          "path": "src/native/NativeHigherOrderDialog.test.tsx"
+        },
+        {
+          "mtime_ns": 1786607995967835400,
+          "path": "src/native/NativeHigherOrderDialog.tsx"
+        },
+        {
+          "mtime_ns": 1786607995970034600,
+          "path": "src/native/NativeModerationDialog.test.tsx"
+        },
+        {
+          "mtime_ns": 1786607995972042200,
+          "path": "src/native/NativeModerationDialog.tsx"
+        },
+        {
+          "mtime_ns": 1786607995972042200,
+          "path": "src/native/NativeProcessSetup.tsx"
+        },
+        {
+          "mtime_ns": 1786607995974438900,
+          "path": "src/native/NativeProcessSurface.test.tsx"
+        },
+        {
+          "mtime_ns": 1786607995974438900,
+          "path": "src/native/NativeRecodeDialog.test.ts"
+        },
+        {
+          "mtime_ns": 1786607995978779800,
+          "path": "src/native/NativeRecodeDialog.tsx"
+        },
+        {
+          "mtime_ns": 1786607995980051300,
+          "path": "src/native/NativeResultsSurface.test.tsx"
+        },
+        {
+          "mtime_ns": 1786607995980051300,
+          "path": "src/native/NativeResultsSurface.tsx"
+        },
+        {
+          "mtime_ns": 1786624192421107800,
+          "path": "src/native/NativeUtilityDialog.test.tsx"
+        },
+        {
+          "mtime_ns": 1786624173676717600,
+          "path": "src/native/NativeUtilityDialog.tsx"
+        },
+        {
+          "mtime_ns": 1786607995983688000,
+          "path": "src/native/NativeWorkspaceExplorer.test.tsx"
+        },
+        {
+          "mtime_ns": 1786607995988814900,
+          "path": "src/native/NativeWorkspaceExplorer.tsx"
+        },
+        {
+          "mtime_ns": 1786619957240919400,
+          "path": "src/native/nativeAnalysisCatalog.test.ts"
+        },
+        {
+          "mtime_ns": 1786619506140020400,
+          "path": "src/native/nativeAnalysisCatalog.ts"
+        },
+        {
+          "mtime_ns": 1786619976568207000,
+          "path": "src/native/nativeAnalysisRecipe.test.ts"
+        },
+        {
+          "mtime_ns": 1786619639316696600,
+          "path": "src/native/nativeAnalysisRecipe.ts"
+        },
+        {
+          "mtime_ns": 1786607995991419800,
+          "path": "src/native/nativeCalculationLifecycle.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996000946000,
+          "path": "src/native/nativeCalculationLifecycle.ts"
+        },
+        {
+          "mtime_ns": 1786607996000946000,
+          "path": "src/native/nativeCalculationMode.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996000946000,
+          "path": "src/native/nativeCalculationMode.ts"
+        },
+        {
+          "mtime_ns": 1786619957254816700,
+          "path": "src/native/nativeCalculationRequest.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996006302200,
+          "path": "src/native/nativeCalculationRequest.ts"
+        },
+        {
+          "mtime_ns": 1786636050346506500,
+          "path": "src/native/nativeCanonicalProject.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996009573500,
+          "path": "src/native/nativeCanonicalProject.ts"
+        },
+        {
+          "mtime_ns": 1786607996009573500,
+          "path": "src/native/nativeCanvas.css"
+        },
+        {
+          "mtime_ns": 1786607996012387300,
+          "path": "src/native/nativeCbsem.testFixture.ts"
+        },
+        {
+          "mtime_ns": 1786607996015311300,
+          "path": "src/native/nativeCcaCanonicalIntegration.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996015311300,
+          "path": "src/native/nativeCommandAccessibilityContracts.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996015311300,
+          "path": "src/native/nativeCommands.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996019262200,
+          "path": "src/native/nativeCommands.ts"
+        },
+        {
+          "mtime_ns": 1786607996019262200,
+          "path": "src/native/nativeContextCommands.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996022098300,
+          "path": "src/native/nativeControllerContracts.test.ts"
+        },
+        {
+          "mtime_ns": 1786619496040249200,
+          "path": "src/native/nativeCtaPls.test.ts"
+        },
+        {
+          "mtime_ns": 1786619790815013400,
+          "path": "src/native/nativeCtaPls.testFixture.ts"
+        },
+        {
+          "mtime_ns": 1786619790815013400,
+          "path": "src/native/nativeCtaPls.ts"
+        },
+        {
+          "mtime_ns": 1786619918260963100,
+          "path": "src/native/nativeCtaPlsExport.test.ts"
+        },
+        {
+          "mtime_ns": 1786619918260963100,
+          "path": "src/native/nativeCtaPlsResults.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996024107000,
+          "path": "src/native/nativeDataContext.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996026099800,
+          "path": "src/native/nativeDataContext.ts"
+        },
+        {
+          "mtime_ns": 1786607996028574100,
+          "path": "src/native/nativeDataGrid.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996031080300,
+          "path": "src/native/nativeDataGrid.ts"
+        },
+        {
+          "mtime_ns": 1786607996032306200,
+          "path": "src/native/nativeDataImport.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996034536800,
+          "path": "src/native/nativeDataImport.ts"
+        },
+        {
+          "mtime_ns": 1786607996035983500,
+          "path": "src/native/nativeDatasetStore.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996038223600,
+          "path": "src/native/nativeDatasetVersions.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996039490100,
+          "path": "src/native/nativeDatasetVersions.ts"
+        },
+        {
+          "mtime_ns": 1786623630679065000,
+          "path": "src/native/nativeDesktop.css"
+        },
+        {
+          "mtime_ns": 1786607996044094800,
+          "path": "src/native/nativeExportTables.test.ts"
+        },
+        {
+          "mtime_ns": 1786619866583919700,
+          "path": "src/native/nativeExportTables.ts"
+        },
+        {
+          "mtime_ns": 1786607996049004000,
+          "path": "src/native/nativeGsca.testFixture.ts"
+        },
+        {
+          "mtime_ns": 1786607996050208500,
+          "path": "src/native/nativeGsca.ts"
+        },
+        {
+          "mtime_ns": 1786607996053791200,
+          "path": "src/native/nativeGscaCanonicalIntegration.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996055005400,
+          "path": "src/native/nativeHigherOrder.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996056469100,
+          "path": "src/native/nativeHigherOrder.ts"
+        },
+        {
+          "mtime_ns": 1786607996058391500,
+          "path": "src/native/nativeIpma.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996059992800,
+          "path": "src/native/nativeIpma.ts"
+        },
+        {
+          "mtime_ns": 1786607996062524700,
+          "path": "src/native/nativeIpmaCanonicalIntegration.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996062524700,
+          "path": "src/native/nativeLogistic.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996064322600,
+          "path": "src/native/nativeLogistic.ts"
+        },
+        {
+          "mtime_ns": 1786607996064322600,
+          "path": "src/native/nativeMenuNavigation.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996068228200,
+          "path": "src/native/nativeMenuNavigation.ts"
+        },
+        {
+          "mtime_ns": 1786607996074426500,
+          "path": "src/native/nativeMga.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996074426500,
+          "path": "src/native/nativeMga.ts"
+        },
+        {
+          "mtime_ns": 1786607996074426500,
+          "path": "src/native/nativeModeration.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996079083800,
+          "path": "src/native/nativeModeration.ts"
+        },
+        {
+          "mtime_ns": 1786607996081263000,
+          "path": "src/native/nativeNca.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996081263000,
+          "path": "src/native/nativeNca.ts"
+        },
+        {
+          "mtime_ns": 1786607996086496500,
+          "path": "src/native/nativeOls.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996089182800,
+          "path": "src/native/nativeOls.ts"
+        },
+        {
+          "mtime_ns": 1786607996089182800,
+          "path": "src/native/nativePathProperties.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996089182800,
+          "path": "src/native/nativePathProperties.ts"
+        },
+        {
+          "mtime_ns": 1786607996094928900,
+          "path": "src/native/nativePca.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996094928900,
+          "path": "src/native/nativePca.ts"
+        },
+        {
+          "mtime_ns": 1786607996100458300,
+          "path": "src/native/nativePlsReadiness.test.ts"
+        },
+        {
+          "mtime_ns": 1786619639316696600,
+          "path": "src/native/nativePlsReadiness.ts"
+        },
+        {
+          "mtime_ns": 1786607996104520300,
+          "path": "src/native/nativeProcess.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996104520300,
+          "path": "src/native/nativeProcess.ts"
+        },
+        {
+          "mtime_ns": 1786607996107872900,
+          "path": "src/native/nativeProcessAuthoring.test.tsx"
+        },
+        {
+          "mtime_ns": 1786607996109333600,
+          "path": "src/native/nativeProcessResults.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996110703500,
+          "path": "src/native/nativeProcessResults.ts"
+        },
+        {
+          "mtime_ns": 1786607996110703500,
+          "path": "src/native/nativeProcessTestFixture.ts"
+        },
+        {
+          "mtime_ns": 1786607996116381500,
+          "path": "src/native/nativeProjectLifecycle.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996116381500,
+          "path": "src/native/nativeProjectLifecycle.ts"
+        },
+        {
+          "mtime_ns": 1786607996120251600,
+          "path": "src/native/nativeRecentProjects.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996123058600,
+          "path": "src/native/nativeRecentProjects.ts"
+        },
+        {
+          "mtime_ns": 1786607996125460300,
+          "path": "src/native/nativeRecode.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996127028700,
+          "path": "src/native/nativeRecode.ts"
+        },
+        {
+          "mtime_ns": 1786607996128621600,
+          "path": "src/native/nativeRegressionBootstrapWitness.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996129875300,
+          "path": "src/native/nativeRegressionBootstrapWitness.ts"
+        },
+        {
+          "mtime_ns": 1786607996129875300,
+          "path": "src/native/nativeResults.test.ts"
+        },
+        {
+          "mtime_ns": 1786619848915373800,
+          "path": "src/native/nativeResults.ts"
+        },
+        {
+          "mtime_ns": 1786607996129875300,
+          "path": "src/native/nativeRunModelSnapshot.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996138708500,
+          "path": "src/native/nativeRunModelSnapshot.ts"
+        },
+        {
+          "mtime_ns": 1786607996138708500,
+          "path": "src/native/nativeScientificGrid.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996143041600,
+          "path": "src/native/nativeScientificGrid.tsx"
+        },
+        {
+          "mtime_ns": 1786607996145040600,
+          "path": "src/native/nativeScopedSubmission.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996148067400,
+          "path": "src/native/nativeScopedSubmission.ts"
+        },
+        {
+          "mtime_ns": 1786607996149350600,
+          "path": "src/native/nativeStandaloneAnalysis.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996150354500,
+          "path": "src/native/nativeStandaloneAnalysis.ts"
+        },
+        {
+          "mtime_ns": 1786607996153712500,
+          "path": "src/native/nativeStructuralPathRandomization.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996155759300,
+          "path": "src/native/nativeStructuralPathRandomization.testFixture.ts"
+        },
+        {
+          "mtime_ns": 1786607996156755800,
+          "path": "src/native/nativeStructuralPathRandomization.ts"
+        },
+        {
+          "mtime_ns": 1786607996158132300,
+          "path": "src/native/nativeSurfaceContracts.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996160153800,
+          "path": "src/native/nativeVariableMetadata.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996162307300,
+          "path": "src/native/nativeVariableMetadata.ts"
+        },
+        {
+          "mtime_ns": 1786607996164358900,
+          "path": "src/native/nativeWorkspaceTree.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996165352900,
+          "path": "src/native/nativeWorkspaceTree.ts"
+        },
+        {
+          "mtime_ns": 1786619877661319600,
+          "path": "src/native/plsAlgorithmFactory.test.ts"
+        },
+        {
+          "mtime_ns": 1786622211092241500,
+          "path": "src/services/projectService.test.ts"
+        },
+        {
+          "mtime_ns": 1786622230901824900,
+          "path": "src/services/projectService.ts"
+        },
+        {
+          "mtime_ns": 1786607996171016700,
+          "path": "src/store.test.ts"
+        },
+        {
+          "mtime_ns": 1786607996174856300,
+          "path": "src/store.ts"
+        },
+        {
+          "mtime_ns": 1786607996174856300,
+          "path": "src/styles.css"
+        },
+        {
+          "mtime_ns": 1786622211073890500,
+          "path": "src/types.ts"
+        },
+        {
+          "mtime_ns": 1786607996185302100,
+          "path": "src/v2/NativePrototypeApp.tsx"
+        },
+        {
+          "mtime_ns": 1786607996186368500,
+          "path": "src/v2/nativePrototype.css"
+        },
+        {
+          "mtime_ns": 1786607996188886600,
+          "path": "src/v2/nativePrototypeAdapters.ts"
+        },
+        {
+          "mtime_ns": 1786607996190638700,
+          "path": "src/v2/nativePrototypeData.ts"
+        },
+        {
+          "mtime_ns": 1784377543128178000,
+          "path": "src/vite-env.d.ts"
+        },
+        {
+          "mtime_ns": 1784352071828760500,
+          "path": "tsconfig.json"
+        },
+        {
+          "mtime_ns": 1784352246142879600,
+          "path": "tsconfig.node.json"
+        },
+        {
+          "mtime_ns": 1784428287100314300,
+          "path": "vite.config.ts"
+        }
+      ],
+      "gate_sources": [
+        {
+          "mtime_ns": 1786633615637011900,
+          "path": "validation/cta_pls_v1_factory_audit.py"
+        },
+        {
+          "mtime_ns": 1786624449776138800,
+          "path": "validation/cta_pls_v1_factory_common.py"
+        },
+        {
+          "mtime_ns": 1786633417313948000,
+          "path": "validation/cta_pls_v1_packaged_acceptance.py"
+        },
+        {
+          "mtime_ns": 1786633435264380600,
+          "path": "validation/cta_pls_v1_packaged_acceptance.schema.json"
+        },
+        {
+          "mtime_ns": 1786610514590924400,
+          "path": "validation/method_promotion_manifest.py"
+        },
+        {
+          "mtime_ns": 1786633476425232700,
+          "path": "validation/methods/cta_pls_v1.manifest.json"
+        },
+        {
+          "mtime_ns": 1786610379730126700,
+          "path": "validation/methods/method_promotion_manifest.schema.json"
+        },
+        {
+          "mtime_ns": 1786624589614043900,
+          "path": "validation/monitor_quickpls_network.ps1"
+        },
+        {
+          "mtime_ns": 1786626886752148300,
+          "path": "validation/run_cta_pls_native_acceptance.ps1"
+        },
+        {
+          "mtime_ns": 1786627184864414500,
+          "path": "validation/test_cta_pls_v1_factory_evidence.py"
+        },
+        {
+          "mtime_ns": 1786633461346726000,
+          "path": "validation/test_cta_pls_v1_packaged_acceptance.py"
+        },
+        {
+          "mtime_ns": 1786638335159990200,
+          "path": "validation/v247_tauri_native_acceptance.mjs"
+        }
+      ],
+      "passed": true
+    },
+    "tested_binary": {
+      "cli": "target/debug/qpls.exe",
+      "cli_sha256": "52bba4c791625dd8da51e949683855c2e2f3a83b1cbb83879ff39c4c534ef0d0",
+      "desktop": "target/release/quickpls-desktop.exe",
+      "desktop_sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
+      "passed": true
+    }
+  },
+  "execution": {
+    "clean_after_wrapper": true,
+    "cleanup_probe": {
+      "command": [
+        "powershell",
+        "-NoProfile",
+        "-Command",
+        "@(Get-Process -Name 'quickpls-desktop' -ErrorAction SilentlyContinue).Count"
+      ],
+      "duration_seconds": 0.66,
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "0\n"
+    },
+    "command": [
+      "powershell",
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      "validation/run_cta_pls_native_acceptance.ps1",
+      "-ExportPath",
+      "D:\\QuickPLS\\validation\\results\\cta_pls_v1_packaged_runtime.xlsx",
+      "-NetworkSamplesPath",
+      "D:\\QuickPLS\\validation\\results\\cta_pls_v1_network_runtime.jsonl"
+    ],
+    "duration_seconds": 50.859,
+    "returncode": 0,
+    "stderr_tail": "",
+    "stdout_tail": "{\n  \"passed\": true,\n  \"checks\": [\n    \"ctaPlsFixtureProvisioning\",\n    \"runtimePreflight\",\n    \"runtime\",\n    \"ctaPlsFixture\",\n    \"ctaPlsInitialModel\",\n    \"ctaPlsInvalidSetup\",\n    \"ctaPlsModel\",\n    \"ctaPlsDialog\",\n    \"ctaPlsProgress\",\n    \"ctaPlsResult\",\n    \"ctaPlsExport\",\n    \"ctaPlsSaveReopen\",\n    \"ctaPlsResponsiveViewports\",\n    \"ctaPlsBrowserNetwork\",\n    \"recentProjectsRestored\"\n  ],\n  \"screenshots\": 10,\n  \"consoleErrors\": 0,\n  \"failures\": [],\n  \"reportPath\": \"D:\\\\QuickPLS\\\\validation\\\\results\\\\v247_tauri_native_acceptance.json\",\n  \"scopedReportPath\": \"D:\\\\QuickPLS\\\\validation\\\\results\\\\v247_tauri_native_acceptance_cta_pls.json\"\n}\n\nFullName                                                        Length LastWriteTimeUtc   \n--------                                                        ------ ----------------   \nD:\\QuickPLS\\validation\\results\\cta_pls_v1_packaged_runtime.xlsx  19421 13-08-2026 18:55:43\nD:\\QuickPLS\\validation\\results\\cta_pls_v1_network_runtime.jsonl 117005 13-08-2026 18:55:45\n\n\n"
+  },
+  "feature_id": "qpls3.assessment.cta_pls",
+  "generated_at_utc": "2026-08-13T18:55:48.574573Z",
+  "method_version": "cta_pls_tetrad_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "packaged_acceptance",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "8f185dea0cf7650e378d9b608270cd8e78b026d1bacae2ce0d521242055c74ee",
+      "size": 154279
+    },
+    {
+      "path": "crates/qpls-assessment/Cargo.toml",
+      "sha256": "22a0cc3da4ada9be1f385495ef7af8354fbdf87baa8a5bac6f3dda891eecb01d",
+      "size": 456
+    },
+    {
+      "path": "crates/qpls-assessment/src/lib.rs",
+      "sha256": "6cffe850b3e8c1f90eeb570985f6a9ae4448622efa5370d7623ed283d948aafa",
+      "size": 144364
+    },
+    {
+      "path": "crates/qpls-cli/Cargo.toml",
+      "sha256": "ede9b7845e6439c9bff5bd05cb07933938a1ad8f82e859e0c3f5676de0119ba8",
+      "size": 678
+    },
+    {
+      "path": "crates/qpls-cli/src/main.rs",
+      "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
+      "size": 216983
+    },
+    {
+      "path": "crates/qpls-core/Cargo.toml",
+      "sha256": "86a7c44ae9511cb39f65d70fdfca581be24837462c8e4fa062513f9166d2634f",
+      "size": 363
+    },
+    {
+      "path": "crates/qpls-core/src/contract.rs",
+      "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
+      "size": 107095
+    },
+    {
+      "path": "crates/qpls-core/src/lib.rs",
+      "sha256": "9b534c12e343c4f518969e2f28195a5f733355d4fb1f338ec2447f81fd2bdf52",
+      "size": 180
+    },
+    {
+      "path": "crates/qpls-core/src/methods.rs",
+      "sha256": "18bed856d6dec2e7fe6fdc6d5478872b913f1a56c163fee73ee89c7ca53b7ac6",
+      "size": 3790
+    },
+    {
+      "path": "crates/qpls-core/src/roadmap.rs",
+      "sha256": "19cf8baad1d217636f3f7ef2d97081156692ed0050561e54bc0bf7b364106fe8",
+      "size": 12376
+    },
+    {
+      "path": "crates/qpls-core/src/statistics.rs",
+      "sha256": "dda4eb9df673b892be963933a3f32b32ade133b5c24c70aae76de3648b063769",
+      "size": 8527
+    },
+    {
+      "path": "crates/qpls-core/src/validation.rs",
+      "sha256": "ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573",
+      "size": 177352
+    },
+    {
+      "path": "crates/qpls-data/Cargo.toml",
+      "sha256": "a284129091841b5742e0ea5b6eeb5fff924cbc4f1eed059bfd075af5256ecb80",
+      "size": 437
+    },
+    {
+      "path": "crates/qpls-data/src/lib.rs",
+      "sha256": "a1cab41fc8c82a71dbf7ee674f037040009c0e8340976b98a9ebcfc99851a7e1",
+      "size": 44865
+    },
+    {
+      "path": "crates/qpls-estimation/Cargo.toml",
+      "sha256": "fb0d420f1c43919cb9e7a980cd9da270ce3a989e8729ba92e681dae509c60dd2",
+      "size": 503
+    },
+    {
+      "path": "crates/qpls-estimation/src/lib.rs",
+      "sha256": "901076baab7b745ef0d1b9cf48a7dc818a64631469cae26cced15a0a41b25890",
+      "size": 26
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
+      "size": 639198
+    },
+    {
+      "path": "crates/qpls-project/Cargo.toml",
+      "sha256": "ef1e3c8e1e5d9d723a43f4b567f6fe490d57d0458f73c8ae281673c0505756d5",
+      "size": 628
+    },
+    {
+      "path": "crates/qpls-project/src/archive_integrity.rs",
+      "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+      "size": 31085
+    },
+    {
+      "path": "crates/qpls-project/src/lib.rs",
+      "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
+      "size": 660277
+    },
+    {
+      "path": "crates/qpls-resampling/Cargo.toml",
+      "sha256": "a922a975499d4c211cfe96399a16ceeb2b248d29fc04cfd7a350c46d18f7ab4d",
+      "size": 589
+    },
+    {
+      "path": "crates/qpls-resampling/src/lib.rs",
+      "sha256": "edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0",
+      "size": 170900
+    },
+    {
+      "path": "crates/qpls-runner/Cargo.toml",
+      "sha256": "fea3cb8a82dae196097285ffe8c5763e39f1dfe0a485faff99b6cba601b16662",
+      "size": 428
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
+      "size": 49349
+    },
+    {
+      "path": "index.html",
+      "sha256": "67b0ffd64afca2ab23a86ba87cd806c35fd9e499bc07848001a259277bc17454",
+      "size": 346
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "950ad806828fcc72af996f571f32b0bf837072664a31aea61dbceeaa79a2eed1",
+      "size": 94576
+    },
+    {
+      "path": "package.json",
+      "sha256": "5338e2c69f2d15a2a1d39d60178b6e774707a95c0228c68b8975fb10db345702",
+      "size": 65788
+    },
+    {
+      "path": "src-tauri/Cargo.toml",
+      "sha256": "83afaf99ecf91c90a6ae4ee83221a6d3dafe3b8a86bae4a11e2148f27948da41",
+      "size": 1101
+    },
+    {
+      "path": "src-tauri/build.rs",
+      "sha256": "487059eaf8a947b80f20a9aacac038a5047b2ad69d2401b827376c67d6fe847f",
+      "size": 39
+    },
+    {
+      "path": "src-tauri/capabilities/default.json",
+      "sha256": "d476ab62762d8945628bc3975e39e8b7b4c838f064be744b259da20770abead5",
+      "size": 290
+    },
+    {
+      "path": "src-tauri/gen/schemas/acl-manifests.json",
+      "sha256": "d3eace193b1e453756736eaf27bb156df62c7a41b2fe101403ee92ef93e69699",
+      "size": 68210
+    },
+    {
+      "path": "src-tauri/gen/schemas/capabilities.json",
+      "sha256": "a5a4985ad0caf75eaf7621988a72b97caddfd0f1455d4492addc8db471ba1f16",
+      "size": 242
+    },
+    {
+      "path": "src-tauri/gen/schemas/desktop-schema.json",
+      "sha256": "2a16f62c90a059a1b67e4501216bb3476f402087e99ba659dd38c9d0521f3b07",
+      "size": 120083
+    },
+    {
+      "path": "src-tauri/gen/schemas/windows-schema.json",
+      "sha256": "2a16f62c90a059a1b67e4501216bb3476f402087e99ba659dd38c9d0521f3b07",
+      "size": 120083
+    },
+    {
+      "path": "src-tauri/src/lib.rs",
+      "sha256": "b5884e190043bbcaeed246d7d06d148c4565bbcb92ad4bfd067678e2592215ea",
+      "size": 214108
+    },
+    {
+      "path": "src-tauri/src/main.rs",
+      "sha256": "64f997dac530a6109e66fe7c8231d5c899f38fa7737148c664c8b49f3de8bc88",
+      "size": 115
+    },
+    {
+      "path": "src-tauri/src/sample_projects.rs",
+      "sha256": "9092aabdef5358fccc1f6f4669903157b0f39cd9c361792b63aaa83553dba593",
+      "size": 9907
+    },
+    {
+      "path": "src-tauri/tauri.conf.json",
+      "sha256": "1bdbdc202474defb7ad4b076f04207c0368d1b88fae4907e2cdd6bd1f0cf69b5",
+      "size": 1426
+    },
+    {
+      "path": "src/App.tsx",
+      "sha256": "73bb7e585093ecfbc0d8996bb92294af1117b31a1fe65b631c31bf13696e5583",
+      "size": 120
+    },
+    {
+      "path": "src/components/AnalysisCatalog.tsx",
+      "sha256": "8776a59726af4c68be0014271da23216ad62aa9269fbd6503a174f5c84d3bed9",
+      "size": 36426
+    },
+    {
+      "path": "src/components/ConstructNode.tsx",
+      "sha256": "28d0c52b636c6dae0ea023e0c444ba17835e02965799957132796401656da623",
+      "size": 3233
+    },
+    {
+      "path": "src/components/DataWorkspace.tsx",
+      "sha256": "7b8d4fa77d5fa9f0d0b44cbb8db81250daa43f39e51915a0057ec8c095558bce",
+      "size": 36437
+    },
+    {
+      "path": "src/components/Explorer.tsx",
+      "sha256": "6a4c235e75076d3788afecd45d8f30ae7b72841fdf6c45a76bf296092c69bcab",
+      "size": 25218
+    },
+    {
+      "path": "src/components/GroupsWorkspace.test.tsx",
+      "sha256": "3e10cf4c6e51a91ca8cc08430d14f5308b80c86b7b4528688ccfb2629ace3b79",
+      "size": 3308
+    },
+    {
+      "path": "src/components/GroupsWorkspace.tsx",
+      "sha256": "a9cc9405808e9a4ce1809b0ace92a2b752ca9b71af6e8091ed445e7d9ebfe83e",
+      "size": 11490
+    },
+    {
+      "path": "src/components/IndicatorNode.tsx",
+      "sha256": "800f67ce7f965fa6476e6fb5446f392149fa4f18b5594fc2e534088ad560cac4",
+      "size": 2289
+    },
+    {
+      "path": "src/components/Inspector.tsx",
+      "sha256": "dc9468a5f0b2ceb7500c807795823c11f4e4a69fc060b8141dfb7cfbea5eae4e",
+      "size": 17524
+    },
+    {
+      "path": "src/components/LatentNode.tsx",
+      "sha256": "5394f840ed303984c7d4319f498fd3812ea0672929327362f90f97d894c4d989",
+      "size": 7687
+    },
+    {
+      "path": "src/components/ModelCanvas.tsx",
+      "sha256": "f94eb9c60e9096a863fb7c82a28be158db327a2ace91b1e101f1864bd0e30371",
+      "size": 27995
+    },
+    {
+      "path": "src/components/ModelIssuesPane.tsx",
+      "sha256": "3fdbe9d7da14ce0f70c0a4b95025e8fd7a9c71e8f3521b89c06504b7c522324c",
+      "size": 6733
+    },
+    {
+      "path": "src/components/NavRail.tsx",
+      "sha256": "7815308a3945a7628cb66203bfc8a0331e7d4c360a6e32f6f8b2fda9d44b8220",
+      "size": 2652
+    },
+    {
+      "path": "src/components/OnboardingWorkspace.test.tsx",
+      "sha256": "10c5634c0a932a9000c38904c691f9fa585e495dcc65100577ed68f41a05cd46",
+      "size": 1292
+    },
+    {
+      "path": "src/components/OnboardingWorkspace.tsx",
+      "sha256": "7dd6170b7c7a481db3ee04c0d1d7c7fa1a6ce57485f9e7c5e28c644837a83b68",
+      "size": 12171
+    },
+    {
+      "path": "src/components/ProductivityOverlays.tsx",
+      "sha256": "0c33bee8738481cbd53bfdc0a08f6aa2ab25ea9230ea90e96716e2aec69845a1",
+      "size": 8146
+    },
+    {
+      "path": "src/components/ReadinessPanel.tsx",
+      "sha256": "c9cdc0c3dd2cb9e6b5201df300e4d3090500be79e79a5b04f1b9400de63539d8",
+      "size": 1353
+    },
+    {
+      "path": "src/components/ReportsWorkspace.test.ts",
+      "sha256": "f979c5a01e323823e57f12783e9fafa899d2b9912bf89defe35e82d1deb1d534",
+      "size": 5804
+    },
+    {
+      "path": "src/components/ReportsWorkspace.tsx",
+      "sha256": "0dd4481ed1b65214d9df8460a3d4220dd026af3836a052f6271d4e3077fcd963",
+      "size": 38059
+    },
+    {
+      "path": "src/components/RunHistory.tsx",
+      "sha256": "d20c2e1ccd5e556ff01d0217621a3a8788bacc5d46583d5994b9f524c4511aa3",
+      "size": 140072
+    },
+    {
+      "path": "src/components/RunWorkspace.tsx",
+      "sha256": "6028c0725324d277f0af57d1492b21ef61bb9fdea406f5cb28800c007ebf57b8",
+      "size": 13778
+    },
+    {
+      "path": "src/components/SemEdge.tsx",
+      "sha256": "a6e9de63934dc6d886644fb2a17ca8173b19a1a9e29de53a592e30d040a56485",
+      "size": 4152
+    },
+    {
+      "path": "src/components/SettingsWorkspace.test.tsx",
+      "sha256": "0b90f75728af80f4a4e0605727d224dec375bcca69e28576cef7c4f1d100b076",
+      "size": 3575
+    },
+    {
+      "path": "src/components/SettingsWorkspace.tsx",
+      "sha256": "5174872ce03ff2992ad48157eaaaf792b19f6202a1a853e46a663073f62665c1",
+      "size": 20639
+    },
+    {
+      "path": "src/components/StatusBar.tsx",
+      "sha256": "3284dd64424949c8ad0699a4cb939f296312b26a66d54ff6d4374b810b01fcf6",
+      "size": 2347
+    },
+    {
+      "path": "src/components/TopBar.tsx",
+      "sha256": "f2cdac2099e571aea6966b6777525f27b30f90adbe77280353b0f1aec53a3afb",
+      "size": 49798
+    },
+    {
+      "path": "src/components/TrustCenterWorkspace.test.tsx",
+      "sha256": "a04250d362ce744153a343e581de61eec43438b2c3fc2a3ac8e42aaecc8c9736",
+      "size": 995
+    },
+    {
+      "path": "src/components/TrustCenterWorkspace.tsx",
+      "sha256": "68c8cc130f5092b59e01ca51aeda1c501cc514ddad54539c4bb443ecf89d68ce",
+      "size": 13449
+    },
+    {
+      "path": "src/components/Ui.tsx",
+      "sha256": "700323df22fc0aec0e627b4648a5dd1423bacaac4f65067ca648ddb7981f52ac",
+      "size": 9631
+    },
+    {
+      "path": "src/components/WorkflowStrip.tsx",
+      "sha256": "65be4f490474f1676c648cfb41acef5796746c7cff5a46d93d7ce24e0644fa52",
+      "size": 2775
+    },
+    {
+      "path": "src/components/WorkspaceCoach.tsx",
+      "sha256": "c83c5d629a51f17aab3a42dfebb8b997ac24d80289327206f8f55751f96b6f4f",
+      "size": 7328
+    },
+    {
+      "path": "src/components/accessibilityContracts.test.ts",
+      "sha256": "34b11d0f67042c196a7fddd9a8e0fa1e4277591730463756801211baceb99d6b",
+      "size": 5497
+    },
+    {
+      "path": "src/data/largeModelSmoke.ts",
+      "sha256": "9ca14efe5847152fb7fd4d151f90a584f24066f976821ba360e9be66ae7bbbe5",
+      "size": 1922
+    },
+    {
+      "path": "src/data/sample.ts",
+      "sha256": "e0571908b1032ad1075931189475d92ca329d972ec6223e2d3926bda009602c0",
+      "size": 4001
+    },
+    {
+      "path": "src/data/smokeRun.test.ts",
+      "sha256": "271c886c299705475f10c76c92d7b03a24db043fb10b20fe2d52f4f4d2e452d0",
+      "size": 629
+    },
+    {
+      "path": "src/data/smokeRun.ts",
+      "sha256": "8bc50af154f1b73d83f22da22001710257ae66d07948cf75b90838e200a17a4b",
+      "size": 9383
+    },
+    {
+      "path": "src/domain/analysisReadiness.test.ts",
+      "sha256": "b0da7af74a86ac2c7a3e9e004a2d8f39ba1553c4e93877bf4e5a31cc8f9654d5",
+      "size": 3021
+    },
+    {
+      "path": "src/domain/analysisReadiness.ts",
+      "sha256": "66d453adf4480d2e3e124896c3f3453dcb925064917c4c03dfd7a13520c21d36",
+      "size": 6917
+    },
+    {
+      "path": "src/domain/dataWorkspace.test.ts",
+      "sha256": "ee8ba01e160b0227f3a4338e16d015ce15b5561db8cf6b0f8d9367e84b4dbe5e",
+      "size": 2863
+    },
+    {
+      "path": "src/domain/dataWorkspace.ts",
+      "sha256": "2282011088638655358755a99946f0543ca8f4372c1c6672869cc77c06af1eb9",
+      "size": 5430
+    },
+    {
+      "path": "src/domain/desktopCommands.ts",
+      "sha256": "75840a09486f10dbf17403c0bbfa5a78fed837ec7ae4609addbc06e7b33d0a57",
+      "size": 5273
+    },
+    {
+      "path": "src/domain/diagramGraph.test.ts",
+      "sha256": "ae650406b9ca1fa682dbdf3a9cc6b8c5f68ca27658c902861ee46a0a68f1762a",
+      "size": 14566
+    },
+    {
+      "path": "src/domain/diagramGraph.ts",
+      "sha256": "11ab254700d93df62d3cc4d19465ed6ee8eb04885eedd89503190c654556195a",
+      "size": 24553
+    },
+    {
+      "path": "src/domain/inference.test.ts",
+      "sha256": "8fc1ba54ad3154a3afc030b1ed95a6a720fcd8a4c9b1805ce7fba20f9d90f367",
+      "size": 1631
+    },
+    {
+      "path": "src/domain/inference.ts",
+      "sha256": "69824018728daf346af5faa5f5aedabd602e7fefbb08d2fd9d17bf48a70bddcd",
+      "size": 1751
+    },
+    {
+      "path": "src/domain/methodApplicability.test.ts",
+      "sha256": "4bcac23cd46d6de2dce37eeb23e6cbe144c13ff0f8b2e7099e7de84795fa6618",
+      "size": 8276
+    },
+    {
+      "path": "src/domain/methodApplicability.ts",
+      "sha256": "7d9900b311499ed038afe9f5b82fa0ba2c8a95cb830ec781c081adacfa200474",
+      "size": 31619
+    },
+    {
+      "path": "src/domain/methodStatus.ts",
+      "sha256": "d35e821581979d925635d2ab28b09f9f6425fa96280b62d30783ae52951ef9cd",
+      "size": 3928
+    },
+    {
+      "path": "src/domain/modelLayout.test.ts",
+      "sha256": "3ca0aaabb93aac5ee75864166f905f86c699d958a4a8a371cbf7a3fd3c4cedff",
+      "size": 2470
+    },
+    {
+      "path": "src/domain/modelLayout.ts",
+      "sha256": "cdd18724773c89d40ca9090f2ff78fd8b07644ff75e3f8d22a029cb8c08cefdd",
+      "size": 4803
+    },
+    {
+      "path": "src/domain/modelValidation.test.ts",
+      "sha256": "545021298cb0bf8e8b6a1b5a42c4d0dec9844e7974a0974f0b64dc7e8c4edc32",
+      "size": 5312
+    },
+    {
+      "path": "src/domain/modelValidation.ts",
+      "sha256": "ae08adbcf269f79896df22bc284c06115ad59d5ae2fa0cad28644c6e99853ef6",
+      "size": 5329
+    },
+    {
+      "path": "src/domain/publicationDiagram.test.ts",
+      "sha256": "bcd87b4e2cd027cb4855105eaa0dec2153c0d559513e123054ca414f4813bf6f",
+      "size": 4820
+    },
+    {
+      "path": "src/domain/publicationDiagram.ts",
+      "sha256": "aba20f9bdc11d36ae7b2ccd4d5212a4c5327aa5213bdc2a70e4dd1f950987a23",
+      "size": 14205
+    },
+    {
+      "path": "src/domain/resultInterpretation.test.ts",
+      "sha256": "af03f8774fff17cae4370abf5669bd939aac6aa108a81a55e8b730bd5155bff1",
+      "size": 10590
+    },
+    {
+      "path": "src/domain/resultInterpretation.ts",
+      "sha256": "76afef3af8cd2f1e16e98e8496d85801970db9173fc4be823c7ae795a3d4fc64",
+      "size": 60122
+    },
+    {
+      "path": "src/domain/resultTables.test.ts",
+      "sha256": "de58261b6650a9916e360eddb7d86f8423d9a87d022c9131c46b6fae5e6516e7",
+      "size": 22203
+    },
+    {
+      "path": "src/domain/resultTables.ts",
+      "sha256": "09e5f3cc8deba90aadde182750c28177242e68356693a91bc63347ead3d75591",
+      "size": 38416
+    },
+    {
+      "path": "src/domain/runComparison.test.ts",
+      "sha256": "2cef9854a6acb2f3f6c8b531793926f89b1b6debadb4f2d50a45e9968b1a4532",
+      "size": 1141
+    },
+    {
+      "path": "src/domain/runComparison.ts",
+      "sha256": "052fb167593dd5776a67b8c05ebf467e173c016235c14290f453dba44e41fdb2",
+      "size": 1643
+    },
+    {
+      "path": "src/domain/semGeometry.test.ts",
+      "sha256": "597a363fa771c6d82c11bb39e4aa03b0ae468632f7c350c245282b6c5caa3aa5",
+      "size": 3009
+    },
+    {
+      "path": "src/domain/semGeometry.ts",
+      "sha256": "70bd24b89e59598fd01fa687b34e0161f0fbf0a2a807d12cc48c328a8274d52f",
+      "size": 8903
+    },
+    {
+      "path": "src/domain/spreadsheetSafety.test.ts",
+      "sha256": "f6bb864ba323a5d679e178c3082e3893d12b17f65479f81ad031ec7788fc5716",
+      "size": 1399
+    },
+    {
+      "path": "src/domain/spreadsheetSafety.ts",
+      "sha256": "c605aa0d510d761002887f03a7bb5c21820ce632a7ffa9b0248e604d2f34d61f",
+      "size": 804
+    },
+    {
+      "path": "src/domain/workflowCoach.ts",
+      "sha256": "57af48fad4595dbc390fee2a6fe6ff5a328f98e58ae814d6dc5ee9c7995d850c",
+      "size": 9922
+    },
+    {
+      "path": "src/domain/workflowProgress.ts",
+      "sha256": "1f4805c01ff1da891d69d94f3c062054ed89bc8701697d6ba1f76678feebe6e0",
+      "size": 5125
+    },
+    {
+      "path": "src/domain/workspaceCommands.ts",
+      "sha256": "70f9ac7226b8241e98676c22a78d660ff49a1a3680a7a7e5676fc4d3c013f68d",
+      "size": 513
+    },
+    {
+      "path": "src/main.tsx",
+      "sha256": "45beaea621cb5951ea8d77ee3b8b5b6bc8d3569dedf574e9f710fce90c621525",
+      "size": 253
+    },
+    {
+      "path": "src/native/NativeCalculationDialog.test.ts",
+      "sha256": "d0933d36ac7b6966ab8fc2b20a9c36b51481ed8b77831bd0dc3828ce7ffb434e",
+      "size": 29849
+    },
+    {
+      "path": "src/native/NativeCalculationDialog.tsx",
+      "sha256": "e99af834fda46a5c0197b26ab504d67b5f4e2fc1ca5874d939013b1e3f54f098",
+      "size": 71729
+    },
+    {
+      "path": "src/native/NativeDataImportDialog.tsx",
+      "sha256": "524ffbf937266bb877e21420f236930e2c4c174cf3af7147b6a885b3a01eee8a",
+      "size": 3220
+    },
+    {
+      "path": "src/native/NativeDataSurface.test.tsx",
+      "sha256": "15f2b552312024b7594abda5b417948b3a2586090003e60c5823d41bdb3fc5a7",
+      "size": 4294
+    },
+    {
+      "path": "src/native/NativeDataSurface.tsx",
+      "sha256": "d3742ec828cb11981ad115f5bfbc8fa48e98f890e9a7e61cf45f6c06befece4a",
+      "size": 30402
+    },
+    {
+      "path": "src/native/NativeDesktopApp.test.ts",
+      "sha256": "b55d570ecc380aa002bc9e7e844734d39deb2fcdf1d0b6f5ded012ca945c1158",
+      "size": 8652
+    },
+    {
+      "path": "src/native/NativeDesktopApp.tsx",
+      "sha256": "8f8d0c3cf52ba85128d4bd6fa8854dc18291ca2de1142b12f44f1c73f8cd1940",
+      "size": 93979
+    },
+    {
+      "path": "src/native/NativeDesktopController.tsx",
+      "sha256": "9cb6466b30ff1eebf11c780900d18afa567464885b48a6979272e1372cc89372",
+      "size": 53902
+    },
+    {
+      "path": "src/native/NativeExportDialog.test.ts",
+      "sha256": "7fe0ac9ca5fef80b51e7897ffd6d5c25241e7cff7763faebc944ac035ccad380",
+      "size": 8119
+    },
+    {
+      "path": "src/native/NativeExportDialog.tsx",
+      "sha256": "51944e6ef72be0cafb2db9ab6b7be77e9aa648d8dc4f45f344acb63d9d14ff0c",
+      "size": 9603
+    },
+    {
+      "path": "src/native/NativeGroupSetupDialog.test.tsx",
+      "sha256": "3238e674bf0831ac9f32c2823a40e7f77d38fada584f9f6c5c550442e14d02e3",
+      "size": 3536
+    },
+    {
+      "path": "src/native/NativeGroupSetupDialog.tsx",
+      "sha256": "aa1164c983a3ee903c9fb64fa6e1c1d11850b7f8ce075d39eed3457656678ff7",
+      "size": 11881
+    },
+    {
+      "path": "src/native/NativeHigherOrderDialog.test.tsx",
+      "sha256": "2990109fcd30330cbc00fd3adf5c1a162da006d6914ace401d529aa30d6df2b8",
+      "size": 1481
+    },
+    {
+      "path": "src/native/NativeHigherOrderDialog.tsx",
+      "sha256": "efb6373c8449a80e505e5f05991c4fb7aeadd5b0059bcb5c184c89bdfb362576",
+      "size": 4477
+    },
+    {
+      "path": "src/native/NativeModerationDialog.test.tsx",
+      "sha256": "fffb174012a4a5573affd1d1727b7e615d3fa0d82a4b2ceb10da7c230a532551",
+      "size": 1871
+    },
+    {
+      "path": "src/native/NativeModerationDialog.tsx",
+      "sha256": "e384a24273f43b959e77b47c0b2c15a03bdfdbae99ccd7c346318c73cf96526c",
+      "size": 5086
+    },
+    {
+      "path": "src/native/NativeProcessSetup.tsx",
+      "sha256": "ced31780e36e3b9d9520a9fe2acdf48fb20b8ba732cc4157bfc8800cdf77710b",
+      "size": 23493
+    },
+    {
+      "path": "src/native/NativeProcessSurface.test.tsx",
+      "sha256": "3f4ec128f91dd9e221ad7069ec34683974690ef64b438f33ea515483f344b9d1",
+      "size": 5877
+    },
+    {
+      "path": "src/native/NativeRecodeDialog.test.ts",
+      "sha256": "f4513b97b73192deb7da3bd41c50bd493619c21b966f5178982c4027bdb2a3e0",
+      "size": 771
+    },
+    {
+      "path": "src/native/NativeRecodeDialog.tsx",
+      "sha256": "09a4133232bec3d3876f6c8151ae00dea1366bf92e89ba7871a9c5d871c6a751",
+      "size": 10820
+    },
+    {
+      "path": "src/native/NativeResultsSurface.test.tsx",
+      "sha256": "545630216d5270304f7040a25be47c31d1d99558eb2c1817c6ec6947244a70b7",
+      "size": 10157
+    },
+    {
+      "path": "src/native/NativeResultsSurface.tsx",
+      "sha256": "061b2f8dec7f88b78900937e382c89451c719ae434c6bd158b5f8785b0831e46",
+      "size": 44070
+    },
+    {
+      "path": "src/native/NativeUtilityDialog.test.tsx",
+      "sha256": "fbb1ea49cca80aa2b954abf605c708b932ecca442734bdc81da3f28c539ce591",
+      "size": 3274
+    },
+    {
+      "path": "src/native/NativeUtilityDialog.tsx",
+      "sha256": "80c7c67bd0f6993ab65cd0a0a25a004763a9160f51f4f4da02b23d32eb0c612a",
+      "size": 4758
+    },
+    {
+      "path": "src/native/NativeWorkspaceExplorer.test.tsx",
+      "sha256": "5d191b190ae06155a9f8336de19b9917d937fa184d2e09e8e7ca43d3cfaab618",
+      "size": 5206
+    },
+    {
+      "path": "src/native/NativeWorkspaceExplorer.tsx",
+      "sha256": "28f2881dcd49f98348ceabe53698b51b1940912ec48a19bce2000ba778430afb",
+      "size": 29567
+    },
+    {
+      "path": "src/native/nativeAnalysisCatalog.test.ts",
+      "sha256": "47b525b7c3ac28a66ac730c6741d9f2eeec43263234819049122bc4500d03ba0",
+      "size": 18488
+    },
+    {
+      "path": "src/native/nativeAnalysisCatalog.ts",
+      "sha256": "b80ee2f04d704a89c42f05d9a99005efb7faf0251c4467e4e2b96d9f802d130b",
+      "size": 19693
+    },
+    {
+      "path": "src/native/nativeAnalysisRecipe.test.ts",
+      "sha256": "f09b36ffbeabe578cc75dd93567dcbab830e6c87bc48ee3fcc388a8e96d664c7",
+      "size": 37911
+    },
+    {
+      "path": "src/native/nativeAnalysisRecipe.ts",
+      "sha256": "eaf427095305c578a3634da1c50d3afacc9a73a604607d5d75a0bf4d6ae3e61d",
+      "size": 42423
+    },
+    {
+      "path": "src/native/nativeCalculationLifecycle.test.ts",
+      "sha256": "d51d887ed539589e65c552fc49f3ff4bbe88105fb8c4c15544c8d0364512bd10",
+      "size": 4105
+    },
+    {
+      "path": "src/native/nativeCalculationLifecycle.ts",
+      "sha256": "ef2cacbd1a71506cea5889931f80bf18142e9f00581b985eee47090788322f88",
+      "size": 2457
+    },
+    {
+      "path": "src/native/nativeCalculationMode.test.ts",
+      "sha256": "7f58bab5ee8e5cb1736d8eb24b90a2dca8035f6c2aa81a0ce460247bce2c2dd5",
+      "size": 3759
+    },
+    {
+      "path": "src/native/nativeCalculationMode.ts",
+      "sha256": "5833be20f115696f4e0d835ee82c62f1aa15d423d2b5294afd61fe39131b78e7",
+      "size": 4061
+    },
+    {
+      "path": "src/native/nativeCalculationRequest.test.ts",
+      "sha256": "5bb0aba66cb4f5731de44eff29dca24a9f21b60441e777fff7694f312c4bac1d",
+      "size": 8627
+    },
+    {
+      "path": "src/native/nativeCalculationRequest.ts",
+      "sha256": "e9771f3883c4101a36cf96cdbc5e22d0ddad7a0d20e99c6be82933d864dc1de0",
+      "size": 4984
+    },
+    {
+      "path": "src/native/nativeCanonicalProject.test.ts",
+      "sha256": "8444ddfd7b96223edf88b9dbf0ff5c91ec4db439f250000e1ebd0ca428c86e21",
+      "size": 27492
+    },
+    {
+      "path": "src/native/nativeCanonicalProject.ts",
+      "sha256": "0f7eb360f5769da512b4e9cbb39a3ba9f20d2619a52a51cbb62ffbb1647edcb8",
+      "size": 29255
+    },
+    {
+      "path": "src/native/nativeCanvas.css",
+      "sha256": "6d45f8d41de4691cec22fcc0afc4343de7e832bc9d2c737ce157eecfeb721a11",
+      "size": 20470
+    },
+    {
+      "path": "src/native/nativeCbsem.testFixture.ts",
+      "sha256": "272f47b29b9a89d166574e5f5834e5403ca9ecfc4821692efb292b7e62d3a11e",
+      "size": 5903
+    },
+    {
+      "path": "src/native/nativeCcaCanonicalIntegration.test.ts",
+      "sha256": "d359109eb4a6e4d222544681ee00b92057e9c0480f5898676d66451634847afc",
+      "size": 10197
+    },
+    {
+      "path": "src/native/nativeCommandAccessibilityContracts.test.ts",
+      "sha256": "076540ecb20ca96c1b809f139bfe062126d9cda67b81594f1b96c0e6764288b9",
+      "size": 4475
+    },
+    {
+      "path": "src/native/nativeCommands.test.ts",
+      "sha256": "16ad41b2d736de9f827b29c5b64b8ca3a9f0c8e6c4d238f66e845e6bfe77ce2b",
+      "size": 17504
+    },
+    {
+      "path": "src/native/nativeCommands.ts",
+      "sha256": "0286cef69461f0df6d19dd9ed98fd0848bebf37a95fc7f4e21230bb0ba0749ab",
+      "size": 24786
+    },
+    {
+      "path": "src/native/nativeContextCommands.test.ts",
+      "sha256": "483014670f6d65fcc53f6f142a6b74182e9d9bc1e30ddfe496cdd635e3188cb7",
+      "size": 1543
+    },
+    {
+      "path": "src/native/nativeControllerContracts.test.ts",
+      "sha256": "88681af6fe6571f60ebb50797a1f7f1a8b48135980f51ef0dcb36d46062740ef",
+      "size": 17276
+    },
+    {
+      "path": "src/native/nativeCtaPls.test.ts",
+      "sha256": "328d7f021c9557736184fe1053b88376ecaffd0b49944c81f7676626cd199002",
+      "size": 4800
+    },
+    {
+      "path": "src/native/nativeCtaPls.testFixture.ts",
+      "sha256": "9b8bd47c3ccfb007aa54938c0613f43df1107bd05216e318006ca85ac2044bc1",
+      "size": 3183
+    },
+    {
+      "path": "src/native/nativeCtaPls.ts",
+      "sha256": "8f90b064cdd6c097d6cbf3949d03f472b11780df82fbd59d6ad30c53a079d726",
+      "size": 7107
+    },
+    {
+      "path": "src/native/nativeCtaPlsExport.test.ts",
+      "sha256": "3849c9578aaff513cc193019caa09a0661a11023a7202606725293533fce0cdf",
+      "size": 1419
+    },
+    {
+      "path": "src/native/nativeCtaPlsResults.test.ts",
+      "sha256": "1a53552146fabdd904b1d35f45bc05f52c8cc63adfd57f5c9fc35898506cf45a",
+      "size": 3047
+    },
+    {
+      "path": "src/native/nativeDataContext.test.ts",
+      "sha256": "51a405a6fd25ecbf5360dc18172098008a83505af8337992d9ee03e4867d9917",
+      "size": 839
+    },
+    {
+      "path": "src/native/nativeDataContext.ts",
+      "sha256": "d8590bed1b5b15dca11549765fb24adb799591fa586702e5d49ff0be1f01f958",
+      "size": 746
+    },
+    {
+      "path": "src/native/nativeDataGrid.test.ts",
+      "sha256": "92d7fbefdfb8aacd3f389f9ef6855cc0db16ad258036c8385c96c4fa13137af5",
+      "size": 3200
+    },
+    {
+      "path": "src/native/nativeDataGrid.ts",
+      "sha256": "d67575f53f543e1b6c0346314e566fce4e2e2605af834d25ed4b30d49b314cbd",
+      "size": 1683
+    },
+    {
+      "path": "src/native/nativeDataImport.test.ts",
+      "sha256": "548a2155b79986b74e9b85c51c1102bf74c132b39de828ddfc8510b3d3956be1",
+      "size": 1432
+    },
+    {
+      "path": "src/native/nativeDataImport.ts",
+      "sha256": "740a3be7363ee4d523644166bf6c9cb9ce73ada49944643b2c86d4c2add0e5fd",
+      "size": 2597
+    },
+    {
+      "path": "src/native/nativeDatasetStore.test.ts",
+      "sha256": "4ed3572766545f58ec2e717efc3853088f419a98dbd3e0178ca7b6d0f85bd622",
+      "size": 2766
+    },
+    {
+      "path": "src/native/nativeDatasetVersions.test.ts",
+      "sha256": "dee09ad2e71a866197e2733e2780bb8f10a685ba568ebcd92498208673b0a737",
+      "size": 2001
+    },
+    {
+      "path": "src/native/nativeDatasetVersions.ts",
+      "sha256": "a479175404aa139959638fc4b9c86aee449f704be21c127853edfd9a36543f2c",
+      "size": 2030
+    },
+    {
+      "path": "src/native/nativeDesktop.css",
+      "sha256": "601733825aacf84930aae4bd451f362071c8aa0f76ed075e6f4200947be26ae1",
+      "size": 63498
+    },
+    {
+      "path": "src/native/nativeExportTables.test.ts",
+      "sha256": "ab22330e2e6ed7752f748034adaa2c8e653bb4a149a0e91bef21943e2c6964fd",
+      "size": 19426
+    },
+    {
+      "path": "src/native/nativeExportTables.ts",
+      "sha256": "ca8ebea6a2607152bd539a56ca73a7178f2e4270b7b3284ff62bd88c20562c88",
+      "size": 20407
+    },
+    {
+      "path": "src/native/nativeGsca.testFixture.ts",
+      "sha256": "36021db2edadb0a182ad7d8c20766e941df5b83f183688e0d4ded737399d4151",
+      "size": 4785
+    },
+    {
+      "path": "src/native/nativeGsca.ts",
+      "sha256": "612fbeaa432578b6c27125ab2be3eadac416ac5270efbbdb766984940465a29f",
+      "size": 942
+    },
+    {
+      "path": "src/native/nativeGscaCanonicalIntegration.test.ts",
+      "sha256": "b21a723bb907aef91397b579bc241b102b0fc1e6fd9944bf20bd92600a177a1a",
+      "size": 3484
+    },
+    {
+      "path": "src/native/nativeHigherOrder.test.ts",
+      "sha256": "90cc5a07fd81dade7136112b2169768b55025d3c73b455a6b71956d611ac28a9",
+      "size": 3635
+    },
+    {
+      "path": "src/native/nativeHigherOrder.ts",
+      "sha256": "7e560da4f4f027962c4b1b93e4d23aa99490663dc53611ba85c8e0fda1d479c1",
+      "size": 8927
+    },
+    {
+      "path": "src/native/nativeIpma.test.ts",
+      "sha256": "ecc84e4d740fcf406c6402eec50657ed6648a340ea1a705343bdf54958ae266b",
+      "size": 2052
+    },
+    {
+      "path": "src/native/nativeIpma.ts",
+      "sha256": "7f5bd5190f8813a07f875dd0c6001520f0af686108f64bd344678b5cc4b46e4c",
+      "size": 1912
+    },
+    {
+      "path": "src/native/nativeIpmaCanonicalIntegration.test.ts",
+      "sha256": "f5248f6ec64c4250b9ac1f0e376363ab8f5ea8a02ff098e266418907c6780536",
+      "size": 8422
+    },
+    {
+      "path": "src/native/nativeLogistic.test.ts",
+      "sha256": "402448113819fbc9df0fe894f103d419ac2532ecacc6da4fde23dc294e01c736",
+      "size": 6352
+    },
+    {
+      "path": "src/native/nativeLogistic.ts",
+      "sha256": "b9fb844a4a73d0148759f911e655123632f52078ad3462c76a735e3578020f1a",
+      "size": 14368
+    },
+    {
+      "path": "src/native/nativeMenuNavigation.test.ts",
+      "sha256": "073ae7dbc177ebba433dade5532d98dcbe9bc9d10979c47066b73904cfb2f788",
+      "size": 1313
+    },
+    {
+      "path": "src/native/nativeMenuNavigation.ts",
+      "sha256": "c5d25731e4fe6484fb83b261ede769049f3f78427be80d6c4859cce47a557e9b",
+      "size": 1418
+    },
+    {
+      "path": "src/native/nativeMga.test.ts",
+      "sha256": "5a7cd8cfb7a437b66c4f96ce6edff3ff63933da501e2a122de864a44dd9596e0",
+      "size": 4303
+    },
+    {
+      "path": "src/native/nativeMga.ts",
+      "sha256": "45ddf151a6df548b58af9b8f2d8c095779fb72b8140e5bd55e6c00d060172bcf",
+      "size": 6098
+    },
+    {
+      "path": "src/native/nativeModeration.test.ts",
+      "sha256": "1bf11a14510321139845eca7f8fb2748d014625a6a6c539f6661979c3da8df49",
+      "size": 2625
+    },
+    {
+      "path": "src/native/nativeModeration.ts",
+      "sha256": "87b65adeedeb39699afaf69898fec06d9097daa8749175661f625928ad4c6695",
+      "size": 3790
+    },
+    {
+      "path": "src/native/nativeNca.test.ts",
+      "sha256": "ee9dab8845e5a575eb84f27e1ce0478b7090f1cf6ffd1b40acbbb49c5db198f4",
+      "size": 3111
+    },
+    {
+      "path": "src/native/nativeNca.ts",
+      "sha256": "67f81e861ac50727ad5fdc3dbdbcb2debd2ca066de3f43eee1e69d0211503003",
+      "size": 5308
+    },
+    {
+      "path": "src/native/nativeOls.test.ts",
+      "sha256": "5c79d0272542a9b626873054a2820c9b092fff5d4f7d7c536ebd8a5cc2f5ec33",
+      "size": 2668
+    },
+    {
+      "path": "src/native/nativeOls.ts",
+      "sha256": "133c080850bc81ca334e57fc10f5371874e5d8731d56c81a6551ece232b6c83c",
+      "size": 4934
+    },
+    {
+      "path": "src/native/nativePathProperties.test.ts",
+      "sha256": "0ecee13fc5901a55c59e159d5dcdee2ac0eaf88cfabf9a7975363acf8ad742b1",
+      "size": 1363
+    },
+    {
+      "path": "src/native/nativePathProperties.ts",
+      "sha256": "cf0989828ed2464581d1fb638ee270b28ee4ce04e7e195b447ffc3a44aac05e2",
+      "size": 2094
+    },
+    {
+      "path": "src/native/nativePca.test.ts",
+      "sha256": "9ebb47bd7ed62efb1193860eaeadeca696abc4d48853a41f3c56cc9f986f9257",
+      "size": 3217
+    },
+    {
+      "path": "src/native/nativePca.ts",
+      "sha256": "80ad64ebe070350c3e148374a7243ec3458fef6a77805f12b6137dab0e506ef0",
+      "size": 4989
+    },
+    {
+      "path": "src/native/nativePlsReadiness.test.ts",
+      "sha256": "d17ebb1e4337c4964ef6e9a6ee43a4a40dfa4cd46a2d52013a23724e5ccb52ff",
+      "size": 37401
+    },
+    {
+      "path": "src/native/nativePlsReadiness.ts",
+      "sha256": "c5d799f1ac2cff9c7c6ee004bf7446095a3f8656eac57b28156552383bb73c44",
+      "size": 45393
+    },
+    {
+      "path": "src/native/nativeProcess.test.ts",
+      "sha256": "8b28b8538cc35ac33cc6cba9158b29ee5b92dbd33b5ce8297bf3538998fbd418",
+      "size": 11945
+    },
+    {
+      "path": "src/native/nativeProcess.ts",
+      "sha256": "5bff51d4c7c773930e108bc36de9938d79db5da207c2ce6a206d52aa21afd2d5",
+      "size": 33789
+    },
+    {
+      "path": "src/native/nativeProcessAuthoring.test.tsx",
+      "sha256": "1eaa8e1b8eaf64f9166d45595c2b199bd06e4f8ff1b23314988b718d52103fe4",
+      "size": 5041
+    },
+    {
+      "path": "src/native/nativeProcessResults.test.ts",
+      "sha256": "e920663254753a80b458c846c77c66d0c97df33adc5f3f7effb2999d285036d8",
+      "size": 15330
+    },
+    {
+      "path": "src/native/nativeProcessResults.ts",
+      "sha256": "63688fd949a5b293cbecdc3b2758c6483ac4ff6f82d1cb10d5a36ca24d2f1652",
+      "size": 49345
+    },
+    {
+      "path": "src/native/nativeProcessTestFixture.ts",
+      "sha256": "8f08d7ca13a5f4669aac87ca7023ac249476b70a75cec3ee60dcb8ad99d9079f",
+      "size": 14622
+    },
+    {
+      "path": "src/native/nativeProjectLifecycle.test.ts",
+      "sha256": "63ec0dad3e4009239e9eb48f8eda4f929908207df22f5a8d5b28f0ed6dc85bc3",
+      "size": 11967
+    },
+    {
+      "path": "src/native/nativeProjectLifecycle.ts",
+      "sha256": "29deac19db4d90b03fe8588491b8ea2218ee3344531dd83379328ff06fd48e43",
+      "size": 6962
+    },
+    {
+      "path": "src/native/nativeRecentProjects.test.ts",
+      "sha256": "6c92b5e49b2e3fc46517617f2086c970593d2faf1f6ce757f32e401a50f43edb",
+      "size": 1619
+    },
+    {
+      "path": "src/native/nativeRecentProjects.ts",
+      "sha256": "da3f71ea8f4c73f20a579e67f8086ad61d09edd8b9ea69e08eb00fb272fb7c78",
+      "size": 1774
+    },
+    {
+      "path": "src/native/nativeRecode.test.ts",
+      "sha256": "0d0daf5a8d7cd5f85bf25fcedf3b4765d52dd9b5b74e370a21e3fd065cd74b6b",
+      "size": 11647
+    },
+    {
+      "path": "src/native/nativeRecode.ts",
+      "sha256": "fde0458ab013d873a8236258180377c9ace9ba46a2b8d44049513128a5298652",
+      "size": 10048
+    },
+    {
+      "path": "src/native/nativeRegressionBootstrapWitness.test.ts",
+      "sha256": "c9fffe98967e6267bf96ffa69ec4af8e969550c5ef595bf5f9c3248ca76fb04f",
+      "size": 4291
+    },
+    {
+      "path": "src/native/nativeRegressionBootstrapWitness.ts",
+      "sha256": "534fd1cb368da2dc78d5543d595a4b6d23486396304b3be26eb8dc1e88823322",
+      "size": 5160
+    },
+    {
+      "path": "src/native/nativeResults.test.ts",
+      "sha256": "de86e071dd0948df07b15b9a5c0505bef3c29440fe2ef58679b7e0d5794eeade",
+      "size": 120937
+    },
+    {
+      "path": "src/native/nativeResults.ts",
+      "sha256": "e81f4563ca317d7ce56cb8f8fa29daa4b3674c472bf75eea0fa8d2149eaf6f39",
+      "size": 214672
+    },
+    {
+      "path": "src/native/nativeRunModelSnapshot.test.ts",
+      "sha256": "3d0f5119969dc06df162d6c16b1d05cf0ef50e1dd4e02f5af79c76753718e1cd",
+      "size": 3028
+    },
+    {
+      "path": "src/native/nativeRunModelSnapshot.ts",
+      "sha256": "95cfa87771125e855f52735f01bf8820884cb6ab511b9ff3239eb3edd4fde68f",
+      "size": 1253
+    },
+    {
+      "path": "src/native/nativeScientificGrid.test.ts",
+      "sha256": "6b311e460365d1ae8c135576b2f9b0594c961b6b447e7b40ff64ec63176b2dfa",
+      "size": 3431
+    },
+    {
+      "path": "src/native/nativeScientificGrid.tsx",
+      "sha256": "388d452d0d2fcbe0334daf157fab3f799f8089c23538d8d7443658b403148c6d",
+      "size": 7439
+    },
+    {
+      "path": "src/native/nativeScopedSubmission.test.ts",
+      "sha256": "f1e62885e7ce3f0cb5d7cad8dfb5768e43f47e98bb8f19c86cfec6103d574b6e",
+      "size": 2311
+    },
+    {
+      "path": "src/native/nativeScopedSubmission.ts",
+      "sha256": "a7f68fb0e168c48759df370961c8b4e95dfdeb09af3162fb53681c7d5abae323",
+      "size": 719
+    },
+    {
+      "path": "src/native/nativeStandaloneAnalysis.test.ts",
+      "sha256": "360d4bbe7e67f4e8c9eb6922b0c2a34ec6eb354db1bd507e4b550b7d90f42c7d",
+      "size": 649
+    },
+    {
+      "path": "src/native/nativeStandaloneAnalysis.ts",
+      "sha256": "495879a31eca2cc01e9a283ee86b06a9793d3ebb8e434d39ae5a8ba51c6104ed",
+      "size": 542
+    },
+    {
+      "path": "src/native/nativeStructuralPathRandomization.test.ts",
+      "sha256": "819fb9d23678d8e850af45c9e06085492798bf3f71f0fa60e384105f1dca0e2c",
+      "size": 10350
+    },
+    {
+      "path": "src/native/nativeStructuralPathRandomization.testFixture.ts",
+      "sha256": "0743ba6d40f52ffbd7172a109ebedbe875defa2e3d0f6567e90354ddf53b76e3",
+      "size": 3995
+    },
+    {
+      "path": "src/native/nativeStructuralPathRandomization.ts",
+      "sha256": "0f5df977209295c3fa00c0c8f7f69b9c492135c6353188c0f16e116fa0b206b1",
+      "size": 11637
+    },
+    {
+      "path": "src/native/nativeSurfaceContracts.test.ts",
+      "sha256": "cc199064ab7ea299103b310e121042ede7bd3fbc099ebe35c7fe71cc50418f4a",
+      "size": 9271
+    },
+    {
+      "path": "src/native/nativeVariableMetadata.test.ts",
+      "sha256": "f85573c77c38b64d36fba798031e5410454c55225bfed1925a06d4eb3f61bf02",
+      "size": 1879
+    },
+    {
+      "path": "src/native/nativeVariableMetadata.ts",
+      "sha256": "22cb4f04b06be80be47873e7a80e2ec31b0685f0be9ef39273c3589d1418874a",
+      "size": 2611
+    },
+    {
+      "path": "src/native/nativeWorkspaceTree.test.ts",
+      "sha256": "f315431b053766d5782ae98ddf994d1f18bf9a7791aaae147d2b52279563b749",
+      "size": 4424
+    },
+    {
+      "path": "src/native/nativeWorkspaceTree.ts",
+      "sha256": "2a47a112ca78d1cbf708468b9ca62d3fa05569b2508f7a85a81777efb1dbcbfa",
+      "size": 6302
+    },
+    {
+      "path": "src/native/plsAlgorithmFactory.test.ts",
+      "sha256": "f2c30de1aa3879e766575982a4fe1de104f21596709992275fac16a66af54b8b",
+      "size": 5651
+    },
+    {
+      "path": "src/services/projectService.test.ts",
+      "sha256": "bed1b9f9d5a2311c606e128d2a34431c536062dc062a631c94aa3d8dca596c3f",
+      "size": 15807
+    },
+    {
+      "path": "src/services/projectService.ts",
+      "sha256": "0734f764020f5bd90ccf1b63f40dddfdaee80afe4f13938ce29b88ebf9601530",
+      "size": 10454
+    },
+    {
+      "path": "src/store.test.ts",
+      "sha256": "a23acb20d5156d09bc0bc347ada9480e912b0ffefe322ac9890f858c9391663d",
+      "size": 37550
+    },
+    {
+      "path": "src/store.ts",
+      "sha256": "1520d381a2f0f8b527bd8bb4747543293a1eb5ed19bba2377af87ee23cf3f29e",
+      "size": 79119
+    },
+    {
+      "path": "src/styles.css",
+      "sha256": "28f447d946aae1bd3ae97e6fe417e98b50462a9f7c97336a3cd0879c4bc4134f",
+      "size": 226705
+    },
+    {
+      "path": "src/types.ts",
+      "sha256": "92e30c76761a5bfeeb9eb264e5550b83ab4504b62ffba60a5769fdc2d4125b01",
+      "size": 54102
+    },
+    {
+      "path": "src/v2/NativePrototypeApp.tsx",
+      "sha256": "24d89856c3cf309aabfd699083ec23e8effeab208669b876759879dd40a9cb0f",
+      "size": 153776
+    },
+    {
+      "path": "src/v2/nativePrototype.css",
+      "sha256": "47363e027f16041dab6e535e5cbf643dc84b8a9b47568a51d3aa28fb9cbb3281",
+      "size": 127052
+    },
+    {
+      "path": "src/v2/nativePrototypeAdapters.ts",
+      "sha256": "96c16643ad899333c6c67b872b9f14bd600099b86d5b6db5d11018a54543b160",
+      "size": 24171
+    },
+    {
+      "path": "src/v2/nativePrototypeData.ts",
+      "sha256": "65fb8e95e53ea1e2e12f08cc6c36e0d60bc980a7840c6b1dfbaf247ac9edbceb",
+      "size": 14163
+    },
+    {
+      "path": "src/vite-env.d.ts",
+      "sha256": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
+      "size": 38
+    },
+    {
+      "path": "tsconfig.json",
+      "sha256": "69581e1c8b5e42730cca001cc2bb2b7db774021c19ba56ab6be1a251c753590b",
+      "size": 108
+    },
+    {
+      "path": "tsconfig.node.json",
+      "sha256": "852dd34c364878962b4b0bd4f197be26cb8b7602fb071e27bf2979864d6c47c1",
+      "size": 231
+    },
+    {
+      "path": "validation/cta_pls_v1_factory_audit.py",
+      "sha256": "3c4d1331d790ad3c343ead5c0e23ad65719f69a28658e5940ce5dc28d04e3a1a",
+      "size": 4795
+    },
+    {
+      "path": "validation/cta_pls_v1_factory_common.py",
+      "sha256": "726ee52650510f685e5ebdf1f90c06800e46dd021cef9d720c38a8bf5cf64294",
+      "size": 12502
+    },
+    {
+      "path": "validation/cta_pls_v1_packaged_acceptance.py",
+      "sha256": "b949556a3f80aaa2ad3616829f9cc5fe5fcaa5700148b3688b7a82bdd6b73a84",
+      "size": 28404
+    },
+    {
+      "path": "validation/cta_pls_v1_packaged_acceptance.schema.json",
+      "sha256": "37db306ddac183fa2c08dea7eb8159ddf0c749ea8c97498b444394083fa83148",
+      "size": 6119
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/cta_pls_v1.manifest.json",
+      "sha256": "9c185db215ed40fd30d77557a9e8448d109f6e3f1acf015d25e47fd4bc62257e",
+      "size": 14741
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/monitor_quickpls_network.ps1",
+      "sha256": "28f97dadfa585f922a4a3da721f23385c2d921eff8b1528fd25e81c0a5f5270b",
+      "size": 4568
+    },
+    {
+      "path": "validation/results/method_factory/cta_pls_v1/cta_pls_v1_network_samples.jsonl",
+      "sha256": "a25d330630aa820552ab9c0dae2caae437186d6aa3989b3c85f849249654b843",
+      "size": 117005
+    },
+    {
+      "path": "validation/results/method_factory/cta_pls_v1/cta_pls_v1_packaged.qpls",
+      "sha256": "709f30262ee22632d07636874ffb9fb91f028cf5696f88e76ad6e8ac6d54121e",
+      "size": 14982
+    },
+    {
+      "path": "validation/results/method_factory/cta_pls_v1/cta_pls_v1_packaged.xlsx",
+      "sha256": "a52250e27bc66db97a7c989ac73439dd201d1157726eb6494df80a60b924fdd1",
+      "size": 19421
+    },
+    {
+      "path": "validation/results/method_factory/cta_pls_v1/cta_pls_v1_packaged_raw.json",
+      "sha256": "575cbe463c976c5e5ac477548171f301d5630ffebc6f92b98b1ef41c4407b45c",
+      "size": 27887
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/200-tauri-native-cta-pls-fixture-data-1536x794.png",
+      "sha256": "3a381b511068151b9860a9ac4c91cff3fa1f254cea88ca1e2647637334283d1a",
+      "size": 268000
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/201-tauri-native-cta-pls-invalid-setup-1536x794.png",
+      "sha256": "e779e0d42870b6e85a24ecf5677276d0594a8fc30ad5d76f998375e409fc4923",
+      "size": 183556
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/202-tauri-native-cta-pls-model-1536x794.png",
+      "sha256": "320a53cd7ef869e17ef166f7b9538a116c0be73b2dc760e43df28ab95b0fc405",
+      "size": 154407
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/203-tauri-native-cta-pls-dialog-1536x794.png",
+      "sha256": "1a5f540168ba8aba4f7c07cd33101ee05217ebf6f1e862198a9d5ea7d735f4ae",
+      "size": 189369
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/204-tauri-native-cta-pls-running-1536x794.png",
+      "sha256": "8843443fab9a641f96838559c575f886d07a4eb573e7dea19f7b2d4371d3a17e",
+      "size": 154850
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/205-tauri-native-cta-pls-results-1536x794.png",
+      "sha256": "574f081ca0e8d5f4fbab8e4103d8da4a666651b728e050c6755b4897660aaaa5",
+      "size": 89247
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/206-tauri-native-cta-pls-export-1536x794.png",
+      "sha256": "a68cf5dac69909c23a2c10adf613a2456db8b088d70b75962e671882336c056b",
+      "size": 120602
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/207-tauri-native-cta-pls-reopened-1024x700.png",
+      "sha256": "6febbb2f53ca7dbdd267074446f8442c557af6ea76f10a9de33643ab1997220a",
+      "size": 61333
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/207-tauri-native-cta-pls-reopened-1280x720.png",
+      "sha256": "44c11cb36e24fa8d580e0c3ad646aa14224e6133a1b7d268745653b18af25165",
+      "size": 63769
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/207-tauri-native-cta-pls-reopened-1440x900.png",
+      "sha256": "7972e7a21bc5e2fc0a8f1f358f2f8510a4bd0563a3aaa9a39906790f1a019218",
+      "size": 67364
+    },
+    {
+      "path": "validation/run_cta_pls_native_acceptance.ps1",
+      "sha256": "3d996e7007670f559796572d3c29d94f6daaec23cd191d9047948be9bf2302e1",
+      "size": 7367
+    },
+    {
+      "path": "validation/test_cta_pls_v1_factory_evidence.py",
+      "sha256": "a7455099f23dd1f38ee9db7a856dd0f9cacf2070941a95502c39e92a189e969c",
+      "size": 3720
+    },
+    {
+      "path": "validation/test_cta_pls_v1_packaged_acceptance.py",
+      "sha256": "819dc76ecafee315ed60313936844163311fee1ebc030244789602ff2f31a503",
+      "size": 13113
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/v247_tauri_native_acceptance.mjs",
+      "sha256": "5b5060833eabaf38697118cf272ce2952a07f827aa23b68e35720bfe65d93563",
+      "size": 809598
+    },
+    {
+      "path": "vite.config.ts",
+      "sha256": "3d5e6cf643cfd4f36868d150dea6598986e416e4cb40729c2bf2c7084f72ba1a",
+      "size": 622
+    }
+  ]
+}

@@ -1165,7 +1165,7 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
             "shell_visible": True, "tauri_runtime": True,
         }
         retry_setup_snapshot = {
-            "catalogCount": 14, "selectedMethod": "Regression", "regressionType": "process",
+            "catalogCount": 15, "selectedMethod": "Regression", "regressionType": "process",
             "outcome": "Y", "focalPredictor": "X",
             "paths": [
                 {"from": "X", "to": "Y"}, {"from": "X", "to": "M1"},
@@ -2344,7 +2344,7 @@ class ProcessV2PromotionAuditTests(unittest.TestCase):
         self.assertIn("runtimePreflight.reloadCount = 1", source)
         self.assertIn("postReload.origin === packagedTauriOrigin", source)
         self.assertIn(
-            "const isolatedFocusedOnly = processV2Only || structuralPathRandomizationOnly;",
+            "const isolatedFocusedOnly = ctaPlsOnly || processV2Only || structuralPathRandomizationOnly;",
             source,
         )
         self.assertIn("const inheritPriorEvidence = focusedOnly && !isolatedFocusedOnly;", source)

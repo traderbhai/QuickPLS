@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "id": "c7273ea5-40b5-4ead-af7f-6a6fbc0e7218",
+  "id": "24c23078-ff6e-42ad-83f1-1737407b9993",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000121908",
     "dataset_fingerprint": "v2:8008ad68a98051f7b76d97eada5b787d7c70edc09f5c6c590b2b70fe24d882fe",
     "method": "pca",
     "method_version": "pca_v1",
-    "engine_version": "2.45.0",
+    "engine_version": "2.46.0",
     "seed": 20260721,
     "settings": {
       "method": "pca",
@@ -24,8 +24,8 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-08-11T20:36:01.279971500Z",
-    "completed_at": "2026-08-11T20:36:01.281181700Z"
+    "started_at": "2026-08-13T19:31:32.379874100Z",
+    "completed_at": "2026-08-13T19:31:32.381082500Z"
   },
   "diagnostics": [
     {
@@ -54,27 +54,11 @@
       "gsca": null,
       "ipma": null,
       "iterations": 0,
-      "mediation": {
-        "estimates": [],
-        "method_version": "pls_mediation_v1",
-        "tolerance": 1e-12,
-        "warnings": []
-      },
       "method_version": "pca_v1",
       "mga": null,
       "mga_permutation": null,
       "micom": null,
       "moderated_mediation": null,
-      "moderation": {
-        "estimates": [],
-        "method_version": "pls_two_stage_moderation_v1",
-        "moderator_score_levels": [
-          -1.0,
-          0.0,
-          1.0
-        ],
-        "warnings": []
-      },
       "nca": null,
       "nonlinear_effects": null,
       "omitted_observations": 0,

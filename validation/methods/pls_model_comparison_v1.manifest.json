@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "governance": {"contract_frozen_at_utc":"2026-08-13T10:26:17Z","manifest_path":"validation/methods/pls_model_comparison_v1.manifest.json","schema_path":"validation/methods/method_promotion_manifest.schema.json","validator_path":"validation/method_promotion_manifest.py","focused_test_path":"validation/test_method_promotion_manifest.py"},
+  "feature": {"id":"qpls3.comparison.pls_models","label":"PLS Model Comparison","method_version":"pls_model_comparison_v1","method_kind":"stochastic","catalogue_snapshot_date":"2026-08-12","catalogue_url":"https://smartpls.com/documentation/algorithms-and-techniques/"},
+  "claim": {
+    "supported_scope":"Pairwise comparison of exactly two preregistered PLS path models using identical seeded prediction folds, targets, row eligibility, preprocessing, and loss, with CVPAT as primary evidence and target-specific BIC/GM only when their frozen definitions are applicable.",
+    "estimand":"The paired out-of-sample loss difference L_A minus L_B for a common prediction task, plus conditional BIC and GM differences for compatible candidate models.",
+    "assumptions":["Qualified plspredict_indicator_v2 predictions are available for both candidates on the same immutable fold plan and pairwise CVPAT is computed from their common target losses.","Candidate definitions and comparison direction are frozen before any test-fold outcome is inspected.","Any reported target-specific BIC or GM value uses identical cases and targets, the published parameter-count rule and normal homoscedastic residual approximation, and a user-confirmed saturated full model for the GM error denominator."],
+    "exclusions":["Automatic graph search, post-hoc candidate generation, mismatched targets or folds, more than two candidates, and formative prediction targets are excluded.","A saved-run side-by-side view is descriptive and is not this analytical method.","Model preference does not establish causal truth, construct validity, or universal predictive superiority."],
+    "warnings":["Direction depends on the persisted A-minus-B convention and loss definition.","Fold failures and non-comparable information criteria must remain explicit and may make the comparison unavailable."]
+  },
+  "scientific_contract": {
+    "equations":[
+      {"id":"paired_loss_difference","expression":"d_i = L_A,i - L_B,i","variables":["d_i","L_A,i","L_B,i"],"source_reference_id":"liengaard_2021"},
+      {"id":"target_bic","expression":"BIC_tk = n log(SSE_tk / n) + p_tk log(n)","variables":["BIC_tk","n","SSE_tk","p_tk"],"source_reference_id":"sharma_2019"},
+      {"id":"target_gm","expression":"GM_tk = SSE_tk / MSE_t_full + p_tk log(n)","variables":["GM_tk","SSE_tk","MSE_t_full","p_tk","n"],"source_reference_id":"sharma_2019"}
+    ],
+    "references":[
+      {"id":"sharma_2021","kind":"primary_paper","citation":"Sharma et al. (2021), Prediction-Oriented Model Selection in Partial Least Squares Path Modeling, DOI 10.1111/deci.12329","locator":"docs/methods/PLS_MODEL_COMPARISON_V1.md","independence_group":"published_prediction_selection","runtime_policy":"no_runtime_dependency"},
+      {"id":"liengaard_2021","kind":"primary_paper","citation":"Liengaard et al. (2021), Prediction: Coveted, Yet Forsaken? Introducing a Cross-Validated Predictive Ability Test in Partial Least Squares Path Modeling, DOI 10.1111/deci.12445","locator":"docs/methods/PLS_MODEL_COMPARISON_V1.md","independence_group":"published_cvpat","runtime_policy":"no_runtime_dependency"},
+      {"id":"sharma_2019","kind":"primary_paper","citation":"Sharma et al. (2019), PLS-Based Model Selection: The Role of Alternative Explanations in Information Systems Research, DOI 10.17005/1jais.00538","locator":"docs/methods/PLS_MODEL_COMPARISON_V1.md","independence_group":"published_information_criteria","runtime_policy":"no_runtime_dependency"},
+      {"id":"independent_python_model_comparison","kind":"independent_python","citation":"Independent Python paired-fold comparison and BIC/GM reference","locator":"validation/pls_model_comparison_reference.py","independence_group":"python_reference","runtime_policy":"development_validation_only"}
+    ],
+    "simulations":[{"id":"pairwise_selection_accuracy","purpose":"model_selection","design":"Two compatible PLS candidates across null, small, and large predictive-loss differences, sample sizes, loading strengths, and candidate complexities.","seed_policy":"Frozen scenario, data-generation, and common-fold streams indexed independently of worker order.","metrics":["selection_accuracy","loss_difference_bias","cvpat_type_i_error","criterion_availability_accuracy"],"acceptance_rule":"The preregistered null error interval must contain the nominal rate, directional selection accuracy must meet its threshold, and failed or non-comparable cases must never yield a preference."}],
+    "boundaries":[
+      {"id":"failed_common_fold","category":"data_pathology","case":"Either candidate has a singular, constant, non-finite, or failed common fold.","expected_behavior":"The fold remains in the ledger and the frozen usability rule either excludes the complete pair explicitly or makes the comparison unavailable."},
+      {"id":"mismatched_comparison","category":"unsupported_scope","case":"Candidates use different targets, cases, folds, preprocessing, estimators, or more than two models.","expected_behavior":"Setup is blocked before comparison."},
+      {"id":"candidate_order_swap","category":"metamorphic","case":"Candidate A and B identities are swapped without changing their results.","expected_behavior":"Every signed delta reverses and all two-sided inferential magnitudes remain equal within tolerance."},
+      {"id":"seed_worker_repeat","category":"determinism","case":"The same candidates, data, settings, and seed run with different worker counts.","expected_behavior":"Folds, predictions, failures, criteria, and comparison summaries are exactly equal."},
+      {"id":"comparison_archive_tamper","category":"tamper","case":"A candidate checksum, fold loss, direction, criterion, test result, seed, or method identity is changed.","expected_behavior":"Strict project validation rejects the archive."}
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence":{"recipe_schema_version":3,"result_schema_version":1,"payload_kind":"pls_pm_v1","tamper_tests":[
+      {"category":"feature_identity","expected_behavior":"Reject an archive whose capability identity differs from pairwise PLS model comparison."},
+      {"category":"method_version","expected_behavior":"Reject a comparison relabeled as another method version."},
+      {"category":"dataset_fingerprint","expected_behavior":"Reject candidates or folds whose dataset fingerprint differs from saved input."},
+      {"category":"checksum","expected_behavior":"Reject an archive entry whose candidate or result checksum differs."},
+      {"category":"malformed_payload","expected_behavior":"Reject duplicate keys, unknown fields, non-finite losses, invalid fold counts, or inconsistent direction."},
+      {"category":"legacy_reinterpretation","expected_behavior":"Never reinterpret descriptive saved-run comparison as analytical v1 evidence."}
+    ],"legacy_policy":"Historical descriptive comparisons remain view-only and cannot satisfy this method identity."},
+    "native":{"setup_controls":["Candidate A","Candidate B","Common prediction targets","Loss metric","Folds and repetitions","Seed","Optional target-specific BIC and GM with saturated full model"],"applicability_blockers":["Candidate count other than two","Mismatched data, targets, rows, folds, or preprocessing","Unsupported target measurement","Insufficient usable paired folds"],"result_surfaces":["Candidate identity and comparability","Paired loss and CVPAT result","Conditional target-specific BIC and GM deltas","Fold and failure ledger","Warnings and provenance"],"gui_cli_parity_rule":"GUI and CLI must produce the same common folds, failures, criteria, and signed comparison payload for identical inputs and seed.","accessibility_rules":["Every comparison visual has an equivalent accessible table.","Direction, uncertainty, failures, and unavailable criteria are conveyed without color alone."]},
+    "export":{"formats":["csv","xlsx"],"tables":["Candidate definitions","Paired loss comparison","Conditional information criteria","Fold ledger","Run provenance"],"same_run_required":true,"provenance_required":true},
+    "packaged":{"platforms":["windows"],"workflow_steps":["setup","invalid_setup_blocked","execute","cancel_retry","inspect_results","export","save","close","reopen_same_run","cleanup"],"viewports":["1024x700","1280x720","1440x900"],"offline_required":true,"cancellation_required":true,"process_cleanup_required":true},
+    "audit":{"exact_identity_fields":["passed","feature_id","method_version","catalogue_snapshot_date"],"source_hashes_required":true,"freshness_required":true,"reports_must_pass":true}
+  },
+  "qualification":{"declared_state":"absent","target_state":"release_qualified","source_requirements":{
+    "method_spec":["docs/methods/PLS_MODEL_COMPARISON_V1.md"],"independent_reference":["validation/pls_model_comparison_reference.py"],"simulation_report":["validation/pls_model_comparison_release_simulation.py"],"boundary_report":["validation/pls_model_comparison_release_boundary_gate.py"],"persistence_report":["validation/pls_model_comparison_release_persistence_gate.py"],"frontend_report":["src/native/nativePlsModelComparison.test.ts"],"export_report":["src/native/nativeExportTables.test.ts"],"method_audit":["validation/pls_model_comparison_method_promotion_audit.py"],"packaged_acceptance":["validation/run_v252_pls_model_comparison_native_acceptance.ps1"]
+  },"evidence":{"engine_only":[],"archive_qualified":[],"native_qualified":[],"release_qualified":[]}}
+}

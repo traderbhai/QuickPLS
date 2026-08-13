@@ -94,18 +94,19 @@ while (-not (Test-Path -LiteralPath $StopSignalPath)) {
     $processes = @()
     foreach ($descriptor in $rows | Where-Object { $treeIds.Contains([int]$_.ProcessId) } | Sort-Object ProcessId) {
         $live = Get-Process -Id ([int]$descriptor.ProcessId) -ErrorAction SilentlyContinue
-        if ($live) {
-            $processes += [ordered]@{
-                pid = [int]$descriptor.ProcessId
-                parent_pid = [int]$descriptor.ParentProcessId
-                name = [string]$descriptor.Name
-                role = Get-QuickPlsProcessRole -Descriptor $descriptor
-                creation_date = [string]$descriptor.CreationDate
-                working_set_bytes = [long]$live.WorkingSet64
-                private_memory_bytes = [long]$live.PrivateMemorySize64
-                handle_count = [int]$live.HandleCount
-                thread_count = [int]$live.Threads.Count
-            }
+        $processes += [ordered]@{
+            pid = [int]$descriptor.ProcessId
+            parent_pid = [int]$descriptor.ParentProcessId
+            name = [string]$descriptor.Name
+            role = Get-QuickPlsProcessRole -Descriptor $descriptor
+            creation_date = [string]$descriptor.CreationDate
+            executable_path = [string]$descriptor.ExecutablePath
+            command_line = [string]$descriptor.CommandLine
+            metrics_available = [bool]$live
+            working_set_bytes = if ($live) { [long]$live.WorkingSet64 } else { 0L }
+            private_memory_bytes = if ($live) { [long]$live.PrivateMemorySize64 } else { 0L }
+            handle_count = if ($live) { [int]$live.HandleCount } else { 0 }
+            thread_count = if ($live) { [int]$live.Threads.Count } else { 0 }
         }
     }
     [long]$total = 0

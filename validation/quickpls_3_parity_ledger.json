@@ -149,7 +149,7 @@
           {
             "description": "Native XLSX export was available.",
             "path": "validation/results/v247_tauri_native_acceptance.json",
-            "pointer": "/checks/export/xlsxEnabled",
+            "pointer": "/checks/plscExport/xlsxEnabled",
             "equals": true
           }
         ]
@@ -218,7 +218,7 @@
           {
             "description": "Native XLSX export was available.",
             "path": "validation/results/v247_tauri_native_acceptance.json",
-            "pointer": "/checks/export/xlsxEnabled",
+            "pointer": "/checks/wplsExport/xlsxEnabled",
             "equals": true
           }
         ]
@@ -563,7 +563,7 @@
           {
             "description": "Native Bootstrap XLSX export was available.",
             "path": "validation/results/v247_tauri_native_acceptance.json",
-            "pointer": "/checks/mediationExport/xlsxEnabled",
+            "pointer": "/checks/mediationExport/bootstrap/xlsxEnabled",
             "equals": true
           }
         ]
@@ -1110,7 +1110,7 @@
       "official_family": "PROCESS",
       "quickpls_scope": "Independently implemented graph-defined continuous-outcome OLS path analysis with parallel and serial mediation, continuous or exact-0/1 moderation, bounded moderated mediation, conditional effects, HC3 and Student-t inference, simple slopes, Johnson-Neyman regions, and optional dedicated percentile and conditional-BCa case bootstrap without copied numbered macros.",
       "method_version": "regression_process_v2",
-      "state": "release_qualified",
+      "state": "native_qualified",
       "known_differences": [
         "Historical regression_process_v1 output is archive-readable only and is not accepted as current v2 execution or qualification evidence.",
         "QuickPLS authors equivalent relationships visually and does not copy proprietary numbered PROCESS templates, source code, or SmartPLS project files.",

@@ -2,6 +2,7 @@ import type { ResultTable } from "../domain/resultTables";
 import type {
   AnalysisRun,
   CbsemAnalysis,
+  CtaPlsAnalysis,
   CvpatBenchmarkAssessment,
   HtmtAssessment,
   PlsPredictIndicatorTarget,
@@ -35,6 +36,16 @@ import {
   NATIVE_GSCA_METHOD_VERSION,
   NATIVE_GSCA_SCOPE_NOTE,
 } from "./nativeGsca";
+import {
+  NATIVE_CTA_PLS_COVARIANCE_VERSION,
+  NATIVE_CTA_PLS_ESTIMATION_WARNING,
+  NATIVE_CTA_PLS_METHOD_VERSION,
+  NATIVE_CTA_PLS_PAIRINGS,
+  NATIVE_CTA_PLS_RESULT_WARNING,
+  NATIVE_CTA_PLS_SCOPE_NOTE,
+  nativeCtaPlsEligibleBlocks,
+  type NativeCtaPlsEligibleBlock,
+} from "./nativeCtaPls";
 import {
   NATIVE_LEGACY_PROCESS_RESULT_IDS,
   NATIVE_PROCESS_RESULT_IDS,
@@ -136,6 +147,17 @@ export interface NativePcaResultProjection {
   components: PcaAnalysis["components"];
   loadings: PcaAnalysis["loadings"];
   scoresStored: number;
+  warnings: string[];
+}
+
+export interface NativeCtaPlsResultProjection {
+  methodVersion: typeof NATIVE_CTA_PLS_METHOD_VERSION;
+  covarianceVersion: typeof NATIVE_CTA_PLS_COVARIANCE_VERSION;
+  usedObservations: number;
+  omittedObservations: number;
+  blocks: NativeCtaPlsEligibleBlock[];
+  estimates: CtaPlsAnalysis["estimates"];
+  maxAbsoluteTetradByConstruct: Record<string, number>;
   warnings: string[];
 }
 
@@ -316,6 +338,12 @@ const CCA_ASSESSMENT_IDS = [
   "cca_composite_residuals",
 ] as const;
 
+const CTA_PLS_ASSESSMENT_IDS = [
+  "cta_pls_summary",
+  "cta_pls_tetrads",
+  "cta_pls_scope",
+] as const;
+
 const IPMA_RESULT_IDS = [
   "ipma_constructs",
   "ipma_indicators",
@@ -422,6 +450,117 @@ export function resolveSelectedCompletedRun(
 
 export function isCompletedResultRun(run: AnalysisRun | null | undefined): run is AnalysisRun & { result: NonNullable<AnalysisRun["result"]> } {
   return Boolean(run && run.status === "completed" && run.result);
+}
+
+export function nativeCtaPlsResultProjection(
+  run: AnalysisRun | null | undefined,
+): NativeCtaPlsResultProjection | null {
+  if (!isCompletedResultRun(run) || !run.modelSnapshot) return null;
+  const result = run.result;
+  const provenance = run.provenance;
+  const cta = result.cta_pls;
+  if (!cta
+    || provenance?.method !== "cta_pls"
+    || provenance.settings.method !== "cta_pls"
+    || !["path", "factor"].includes(provenance.settings.weighting_scheme)
+    || provenance.settings.missing_data !== "listwise_deletion"
+    || provenance.settings.case_weight_column !== null
+    || provenance.settings.bootstrap_samples !== 0
+    || provenance.settings.studentized_inner_samples !== 0
+    || provenance.settings.permutation_samples !== 0
+    || provenance.settings.workers !== 1
+    || provenance.method_version.split("+").filter((version) => version === NATIVE_CTA_PLS_METHOD_VERSION).length !== 1
+    || result.method_version !== NATIVE_CTA_PLS_METHOD_VERSION
+    || cta.method_version !== NATIVE_CTA_PLS_METHOD_VERSION
+    || cta.covariance !== NATIVE_CTA_PLS_COVARIANCE_VERSION
+    || cta.warnings.length !== 1
+    || cta.warnings[0] !== NATIVE_CTA_PLS_RESULT_WARNING
+    || !result.warnings.includes(NATIVE_CTA_PLS_ESTIMATION_WARNING)
+    || run.bootstrap
+    || run.permutation) return null;
+
+  if (run.modelSnapshot.nodes.some((node) => Boolean(node.data.semantic))
+    || run.modelSnapshot.edges.some((edge) => {
+      const role = (edge.data as { role?: string } | undefined)?.role;
+      return role === "control" || role === "covariance";
+    })) return null;
+  const blocks = nativeCtaPlsEligibleBlocks(run.modelSnapshot.nodes);
+  if (!blocks.length) return null;
+
+  const expected = new Set<string>();
+  for (const block of blocks) {
+    const indicators = block.indicators;
+    for (let a = 0; a < indicators.length - 3; a += 1) {
+      for (let b = a + 1; b < indicators.length - 2; b += 1) {
+        for (let c = b + 1; c < indicators.length - 1; c += 1) {
+          for (let d = c + 1; d < indicators.length; d += 1) {
+            for (const pairing of NATIVE_CTA_PLS_PAIRINGS) {
+              expected.add(ctaIdentity(block.constructId, indicators[a], indicators[b], indicators[c], indicators[d], pairing));
+            }
+          }
+        }
+      }
+    }
+  }
+  if (cta.estimates.length !== expected.size) return null;
+
+  const actual = new Set<string>();
+  const valuesByQuadruple = new Map<string, Map<string, number>>();
+  const maxima = new Map<string, number>();
+  for (const row of cta.estimates) {
+    if (!isFiniteNumber(row.tetrad)
+      || !isFiniteNumber(row.absolute_tetrad)
+      || row.absolute_tetrad < 0
+      || !numbersClose(row.absolute_tetrad, Math.abs(row.tetrad))
+      || !NATIVE_CTA_PLS_PAIRINGS.includes(row.pairing as typeof NATIVE_CTA_PLS_PAIRINGS[number])) return null;
+    const identity = ctaIdentity(row.construct, row.indicator_a, row.indicator_b, row.indicator_c, row.indicator_d, row.pairing);
+    if (!expected.has(identity) || actual.has(identity)) return null;
+    actual.add(identity);
+    const quadruple = [row.construct, row.indicator_a, row.indicator_b, row.indicator_c, row.indicator_d].join("\u0000");
+    const values = valuesByQuadruple.get(quadruple) ?? new Map<string, number>();
+    if (values.has(row.pairing)) return null;
+    values.set(row.pairing, row.tetrad);
+    valuesByQuadruple.set(quadruple, values);
+    maxima.set(row.construct, Math.max(maxima.get(row.construct) ?? 0, row.absolute_tetrad));
+  }
+  if (actual.size !== expected.size
+    || [...valuesByQuadruple.values()].some((values) => values.size !== 3
+      || !numbersClose([...values.values()].reduce((sum, value) => sum + value, 0), 0))) return null;
+  const summaryEntries = Object.entries(cta.max_absolute_tetrad_by_construct);
+  if (summaryEntries.length !== blocks.length
+    || blocks.some((block) => {
+      const value = cta.max_absolute_tetrad_by_construct[block.constructId];
+      return !isFiniteNumber(value) || !numbersClose(value, maxima.get(block.constructId) ?? Number.NaN);
+    })) return null;
+
+  const unsupportedArtifacts = [
+    result.plsc, result.endogeneity, result.nonlinear_effects, result.moderated_mediation,
+    result.wpls, result.cca, result.predict, result.segmentation, result.mga, result.micom,
+    result.mga_permutation, result.fimix, result.ipma, result.cbsem, result.pca,
+    result.regression, result.nca, result.gsca,
+  ];
+  if (unsupportedArtifacts.some(Boolean)) return null;
+  return {
+    methodVersion: NATIVE_CTA_PLS_METHOD_VERSION,
+    covarianceVersion: NATIVE_CTA_PLS_COVARIANCE_VERSION,
+    usedObservations: result.used_observations,
+    omittedObservations: result.omitted_observations,
+    blocks,
+    estimates: cta.estimates,
+    maxAbsoluteTetradByConstruct: cta.max_absolute_tetrad_by_construct,
+    warnings: [...cta.warnings],
+  };
+}
+
+function ctaIdentity(
+  construct: string,
+  a: string,
+  b: string,
+  c: string,
+  d: string,
+  pairing: string,
+): string {
+  return [construct, a, b, c, d, pairing].join("\u0000");
 }
 
 export function nativeModerationPlot(run: AnalysisRun | null | undefined): NativeModerationPlot | null {
@@ -1548,6 +1687,10 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
   const inferenceRun = run.permutation && !structuralPathRandomization
     ? { ...run, permutation: undefined }
     : run;
+  const ctaPls = nativeCtaPlsResultProjection(run);
+  if ((run.provenance?.method === "cta_pls" || result.cta_pls || result.method_version === NATIVE_CTA_PLS_METHOD_VERSION) && !ctaPls) {
+    return [];
+  }
   if (run.provenance?.method === "gsca" || result.gsca || result.method_version === NATIVE_GSCA_METHOD_VERSION) {
     addGscaResultTables(tables, run);
     return tables;
@@ -1842,6 +1985,56 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
         formatNumber(row.residual),
         formatNumber(row.absolute_residual),
       ]),
+    });
+  }
+
+  if (ctaPls) {
+    const constructLabel = constructDisplayLabelResolver(run);
+    addTable(tables, {
+      id: "cta_pls_summary",
+      title: "CTA-PLS tetrad summary",
+      status: "validated",
+      warning: NATIVE_CTA_PLS_RESULT_WARNING,
+      columns: ["Construct", "Indicators", "Four-indicator subsets", "Tetrads", "Maximum absolute tetrad"],
+      rows: ctaPls.blocks.map((block) => [
+        constructLabel(block.constructId),
+        block.indicators.join(", "),
+        String(block.quadruples),
+        String(block.tetrads),
+        formatNumber(ctaPls.maxAbsoluteTetradByConstruct[block.constructId]),
+      ]),
+    });
+    addTable(tables, {
+      id: "cta_pls_tetrads",
+      title: "CTA-PLS tetrads",
+      status: "validated",
+      warning: NATIVE_CTA_PLS_RESULT_WARNING,
+      columns: ["Construct", "Indicator A", "Indicator B", "Indicator C", "Indicator D", "Pairing", "Tetrad", "Absolute tetrad"],
+      rows: ctaPls.estimates.map((row) => [
+        constructLabel(row.construct),
+        row.indicator_a,
+        row.indicator_b,
+        row.indicator_c,
+        row.indicator_d,
+        sentenceCase(row.pairing.replaceAll("_", " ")),
+        formatNumber(row.tetrad),
+        formatNumber(row.absolute_tetrad),
+      ]),
+    });
+    addTable(tables, {
+      id: "cta_pls_scope",
+      title: "CTA-PLS scope and exclusions",
+      status: "validated",
+      warning: NATIVE_CTA_PLS_RESULT_WARNING,
+      columns: ["Field", "Value"],
+      rows: [
+        ["Method version", ctaPls.methodVersion],
+        ["Covariance convention", ctaPls.covarianceVersion],
+        ["Complete cases", String(ctaPls.usedObservations)],
+        ["Omitted cases", String(ctaPls.omittedObservations)],
+        ["Interpretation", NATIVE_CTA_PLS_SCOPE_NOTE],
+        ["Excluded inference", "Bootstrap, permutation, asymptotic, and vanishing-tetrad decisions"],
+      ],
     });
   }
 
@@ -2208,6 +2401,7 @@ export function buildNativeResultTree(run: AnalysisRun | null | undefined, table
   addTableGroup(groups, "covariance_sem", "CB-SEM / CFA", CBSEM_RESULT_IDS, byId);
   addTableGroup(groups, "gsca_component_model", "GSCA component model", GSCA_RESULT_IDS, byId);
   addTableGroup(groups, "assessment", "Assessment", CCA_ASSESSMENT_IDS, byId);
+  addTableGroup(groups, "assessment", "Assessment", CTA_PLS_ASSESSMENT_IDS, byId);
   addTableGroup(groups, "higher_order", "Higher-order construct", HIGHER_ORDER_IDS, byId);
 
   const hasMediation = MEDIATION_IDS.some((id) => id !== "total_effects" && byId.has(id));
@@ -2235,6 +2429,7 @@ export function buildNativeResultNavigation(run: AnalysisRun | null | undefined)
     .find((id) => tables.some((table) => table.id === id));
   const predictionDefault = PREDICTION_IDS.find((id) => tables.some((table) => table.id === id));
   const ccaDefault = CCA_ASSESSMENT_IDS.find((id) => tables.some((table) => table.id === id));
+  const ctaPlsDefault = CTA_PLS_ASSESSMENT_IDS.find((id) => tables.some((table) => table.id === id));
   const ipmaDefault = IPMA_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
   const ncaDefault = NCA_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
   const pcaDefault = PCA_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
@@ -2255,7 +2450,7 @@ export function buildNativeResultNavigation(run: AnalysisRun | null | undefined)
   const fallbackDefault = run.result.mga || standalone ? tables[0]?.id ?? null : "model_estimates";
   return {
     runId: run.id,
-    defaultItemId: processDefault ?? regressionBootstrapDefault ?? groupDefault ?? ipmaDefault ?? ncaDefault ?? pcaDefault ?? logisticDefault ?? legacyLogisticDefault ?? olsDefault ?? cbsemDefault ?? gscaDefault ?? ccaDefault ?? predictionDefault ?? higherOrderDefault ?? fallbackDefault,
+    defaultItemId: processDefault ?? regressionBootstrapDefault ?? groupDefault ?? ipmaDefault ?? ncaDefault ?? pcaDefault ?? logisticDefault ?? legacyLogisticDefault ?? olsDefault ?? cbsemDefault ?? gscaDefault ?? ctaPlsDefault ?? ccaDefault ?? predictionDefault ?? higherOrderDefault ?? fallbackDefault,
     groups: buildNativeResultTree(run, tables),
     tables,
   };
@@ -4614,6 +4809,7 @@ function constructIdsInRun(run: AnalysisRun): ReadonlySet<string> {
     for (const row of result.predict?.repeated_kfold?.targets ?? []) add(row.construct);
     for (const row of result.predict?.repeated_kfold?.cvpat ?? []) add(row.target);
     for (const row of result.cca?.correlations ?? []) addPair(row.left, row.right);
+    for (const row of result.cta_pls?.estimates ?? []) add(row.construct);
     for (const target of result.ipma?.targets ?? []) add(target);
     for (const row of result.ipma?.constructs ?? []) addPair(row.construct, row.target);
     for (const row of result.ipma?.indicators ?? []) addPair(row.construct, row.target);

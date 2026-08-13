@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-13T10:12:27Z",
+    "manifest_path": "validation/methods/consistent_mga_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.groups.consistent_mga",
+    "label": "PLSc Consistent Multigroup Analysis",
+    "method_version": "plsc_mga_v1",
+    "method_kind": "stochastic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/consistent-multigroup-analysis/"
+  },
+  "claim": {
+    "supported_scope": "A planned bootstrap-based comparison of exactly two observed groups using independently indexed plsc_bootstrap_v1 distributions, attenuation-corrected Group A minus Group B paths and loadings, and a required plsc_permutation_v1 measurement-invariance decision.",
+    "estimand": "The group-specific attenuation-corrected PLSc parameters and their difference, with a frozen two-sided empirical bootstrap-tail probability and group/difference confidence intervals under the bounded two-group design.",
+    "assumptions": [
+      "Both groups satisfy the same reflective plsc_v2 model, preprocessing, missing-data, weighting, convergence, and canonical orientation contract.",
+      "Cases are exchangeable sampling units within each group and the two group samples are independent.",
+      "Structural group differences are interpreted only for constructs with at least partial invariance under the exact paired plsc_permutation_v1 result."
+    ],
+    "exclusions": [
+      "More than two groups, parametric pooled-variance tests, Welch-Satterthwaite tests, one-tailed claims, interactions, higher-order constructs, weights, PCA weighting, and matrix-only input are excluded.",
+      "Ordinary PLS group bootstrap or permutation output cannot be relabeled as consistent MGA evidence.",
+      "Bootstrap-tail evidence does not establish causality, practical importance, semantic equivalence, or measurement invariance."
+    ],
+    "warnings": [
+      "Parameters without paired partial-invariance support remain visible only as uninterpretable diagnostics.",
+      "Both group bootstraps must meet their frozen usable-replicate thresholds; one successful group cannot compensate for failure in the other."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {"id": "consistent_group_difference", "expression": "d_j = PLSc_v2(D_A)_j - PLSc_v2(D_B)_j; d*_bj = theta*_(A,b),j - theta*_(B,b),j", "variables": ["d_j", "D_A", "D_B", "d*_bj", "theta*_(A,b),j", "theta*_(B,b),j"], "source_reference_id": "consistent_mga_independent_reference"},
+      {"id": "two_sided_bootstrap_tail", "expression": "q_lower = (1 + count_b(d*_bj <= 0))/(B+1); q_upper = (1 + count_b(d*_bj >= 0))/(B+1); p_two = min(1, 2 min(q_lower,q_upper))", "variables": ["q_lower", "q_upper", "d*_bj", "B", "p_two"], "source_reference_id": "consistent_mga_independent_reference"},
+      {"id": "difference_percentile_interval", "expression": "CI_diff_j = [Q_type7(alpha/2,d*_j), Q_type7(1-alpha/2,d*_j)]", "variables": ["CI_diff_j", "Q_type7", "alpha", "d*_j"], "source_reference_id": "sarstedt_henseler_ringle_2011"}
+    ],
+    "references": [
+      {"id": "dijkstra_henseler_2015", "kind": "primary_paper", "citation": "Dijkstra and Henseler (2015), Consistent Partial Least Squares Path Modeling", "locator": "https://doi.org/10.25300/MISQ/2015/39.2.02", "independence_group": "primary_plsc_method", "runtime_policy": "no_runtime_dependency"},
+      {"id": "sarstedt_henseler_ringle_2011", "kind": "primary_paper", "citation": "Sarstedt, Henseler, and Ringle (2011), Multigroup Analysis in Partial Least Squares Path Modeling: Alternative Methods and Empirical Results", "locator": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2383848", "independence_group": "primary_mga_method", "runtime_policy": "no_runtime_dependency"},
+      {"id": "henseler_ringle_sarstedt_2016", "kind": "primary_paper", "citation": "Henseler, Ringle, and Sarstedt (2016), Testing Measurement Invariance of Composites Using Partial Least Squares", "locator": "https://doi.org/10.1108/IMR-09-2014-0304", "independence_group": "primary_invariance_method", "runtime_policy": "no_runtime_dependency"},
+      {"id": "consistent_mga_independent_reference", "kind": "independent_python", "citation": "Planned independent Python PLSc group bootstrap, empirical-tail, interval, and invariance-link implementation", "locator": "validation/consistent_mga_reference.py", "independence_group": "python_reference", "runtime_policy": "development_validation_only"}
+    ],
+    "simulations": [
+      {"id": "equal_parameter_type_i_error", "purpose": "type_i_error", "design": "Two-group reflective common-factor models with equal parameters across sample size, imbalance, reliability, collinearity, and nonnormality cells that satisfy partial invariance.", "seed_policy": "Scenario and group-bootstrap indexed streams are independently domain separated and worker invariant.", "metrics": ["path_type_i_error", "loading_type_i_error", "interval_coverage", "usable_pair_rate", "invariance_join_accuracy"], "acceptance_rule": "For each supported cell, empirical rejection and interval coverage must lie within preregistered binomial bands, and every parameter must join the exact applicable invariance identity."},
+      {"id": "known_difference_power", "purpose": "power", "design": "Known attenuation-corrected path and loading differences spanning effect size, imbalance, reliability, sample size, and partial/full invariance states.", "seed_policy": "Frozen scenario-indexed data and independent domain-separated group-bootstrap streams.", "metrics": ["difference_bias", "direction_recovery", "path_power", "loading_power", "confidence_interval_width", "invariance_block_rate"], "acceptance_rule": "Preregistered identifiable effects must meet the frozen bias, direction, and power envelopes; parameters lacking partial invariance must never yield an interpretable comparison claim."},
+      {"id": "asymmetric_group_failure", "purpose": "failure_behavior", "design": "One or both groups produce weak reliability, inadmissible corrected correlations, nonconvergence, singularity, or insufficient usable bootstrap fits.", "seed_policy": "Every group and replicate has a stable stream identity with no replacement after failure.", "metrics": ["group_a_failure_count", "group_b_failure_count", "usable_pair_count", "reason_count_identity", "suppressed_inference_count"], "acceptance_rule": "Failure accounting must independently reproduce and no tail probability or difference interval may be emitted unless both group distributions satisfy the frozen usability contract."}
+    ],
+    "boundaries": [
+      {"id": "inadmissible_group_or_bootstrap", "category": "data_pathology", "case": "An original group is inadmissible or one group bootstrap fails its usable threshold because of improper rho_A, corrected-correlation failure, nonconvergence, singularity, or nonfinite values.", "expected_behavior": "Original failure blocks the run; bootstrap insufficiency suppresses MGA inference with explicit group-specific accounting."},
+      {"id": "unsupported_mga_design", "category": "unsupported_scope", "case": "The request has other than two groups, configural mismatch, too few complete cases, unsupported PLSc shapes, missing consistent-permutation evidence, or parametric/Welch/one-tailed options.", "expected_behavior": "Typed setup validation blocks execution or blocks interpretation with the exact reason."},
+      {"id": "group_swap_and_reorder", "category": "metamorphic", "case": "Group A/B are swapped or rows and constructs are consistently reordered.", "expected_behavior": "Mapped differences reverse sign on group swap, two-sided tail probabilities remain equal, and reordered results agree within tolerance."},
+      {"id": "worker_schedule_invariance", "category": "determinism", "case": "Both group bootstraps execute under every supported worker count and schedule.", "expected_behavior": "Resample plans, failures, paired differences, intervals, probabilities, invariance joins, and ordering are exactly equal."},
+      {"id": "mga_archive_tamper", "category": "tamper", "case": "Group identity, bootstrap plan, counts, difference, probability, interval, invariance link, dataset fingerprint, or method identity is modified.", "expected_behavior": "Strict project validation rejects the archive rather than displaying or exporting the changed comparison."}
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 3,
+      "result_schema_version": 1,
+      "payload_kind": "pls_pm_v3",
+      "tamper_tests": [
+        {"category": "feature_identity", "expected_behavior": "Reject a result whose consistent-MGA identity differs from the typed PLSc group recipe."},
+        {"category": "method_version", "expected_behavior": "Reject plsc_mga_v1 paired with incompatible PLSc, consistent-bootstrap, or consistent-permutation versions."},
+        {"category": "dataset_fingerprint", "expected_behavior": "Reject changed pooled/group complete-case manifests or a mismatched dataset fingerprint."},
+        {"category": "checksum", "expected_behavior": "Reject any changed archive member whose checksum differs."},
+        {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, nonfinite values, bad counts, identities, differences, probabilities, intervals, or invariance joins."},
+        {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret pls_mga_two_group_v1/v2, pls_mga_permutation_v1/v2, or ordinary bootstrap output as consistent MGA evidence."}
+      ],
+      "legacy_policy": "Only a typed plsc_mga_v1 result with exact plsc_bootstrap_v1 summaries and plsc_permutation_v1 invariance identity may satisfy this contract."
+    },
+    "native": {
+      "setup_controls": ["Group column and exact Group A/B values", "Bootstrap replicates", "Fixed seed", "Confidence level", "Worker count", "Paired consistent-permutation result"],
+      "applicability_blockers": ["Other than two groups", "Configural mismatch", "Too few complete cases", "Unsupported PLSc shape", "Missing or failed consistent-permutation invariance", "Insufficient group bootstrap usability"],
+      "result_surfaces": ["Measurement-invariance status", "Group-specific corrected estimates and intervals", "A-minus-B differences and intervals", "Two-sided bootstrap-tail probabilities", "Group failure accounting", "Warnings and provenance"],
+      "gui_cli_parity_rule": "For the same recipe, seed, method identities, groups, invariance result, and dataset fingerprint, GUI and CLI plans and analytical payloads must be exactly equal apart from operational timestamps.",
+      "accessibility_rules": ["Every group comparison graphic has an equivalent accessible table.", "Invariance blockers, significance, direction, unavailable states, and warnings do not rely only on color or pointer interaction."]
+    },
+    "export": {"formats": ["csv", "xlsx", "html", "pdf"], "tables": ["Consistent MGA differences", "Group estimates and intervals", "Difference intervals and probabilities", "Measurement-invariance status", "Bootstrap accounting", "Method scope", "Run provenance"], "same_run_required": true, "provenance_required": true},
+    "packaged": {"platforms": ["windows"], "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"], "viewports": ["1024x700", "1280x720", "1440x900"], "offline_required": true, "cancellation_required": true, "process_cleanup_required": true},
+    "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
+  },
+  "qualification": {
+    "declared_state": "absent",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": ["docs/methods/CONSISTENT_MGA_V1.md"],
+      "independent_reference": ["validation/consistent_mga_reference.py", "validation/consistent_mga_reference.R"],
+      "simulation_report": ["validation/consistent_mga_simulation.py"],
+      "boundary_report": ["validation/consistent_mga_boundary_gate.py"],
+      "persistence_report": ["validation/consistent_mga_persistence_gate.py"],
+      "frontend_report": ["src/native/nativeConsistentMga.test.ts"],
+      "export_report": ["validation/consistent_mga_export_gate.py"],
+      "method_audit": ["validation/consistent_mga_method_promotion_audit.py"],
+      "packaged_acceptance": ["validation/run_consistent_mga_native_acceptance.ps1"]
+    },
+    "evidence": {"engine_only": [], "archive_qualified": [], "native_qualified": [], "release_qualified": []}
+  }
+}

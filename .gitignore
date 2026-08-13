@@ -25,7 +25,7 @@ __pycache__/
 release/
 release_artifacts_backup_before_clean/
 validation/results/screens/
-validation/results/*.xlsx
+validation/results/**/*.xlsx
 validation/results/*.png
 validation/results/*.console.txt
 validation/results/v2*_audit.json

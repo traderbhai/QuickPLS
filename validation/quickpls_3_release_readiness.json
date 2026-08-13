@@ -9,17 +9,35 @@
     "telemetry_default": "disabled",
     "update_check_default": "manual",
     "positioning": "competitor_for_documented_supported_workflows",
+    "functional_offline_scope": "analytical_workflows_require_no_internet_account_or_cloud",
+    "application_network_behavior": "quickpls_application_and_page_make_no_external_requests",
+    "webview2_runtime_boundary": "microsoft_managed_background_service_connections_may_occur",
+    "strict_zero_egress_claim_gate": {
+      "status": "pending",
+      "required_control": "os_enforced_fixed_webview2_runtime_containment",
+      "application_level_containment_sufficient": false,
+      "evidence": []
+    },
     "prohibited_claims": [
       "complete_smartpls_parity",
       "identical_undocumented_behavior",
       "smartpls_project_compatibility",
-      "smartpls_affiliation"
+      "smartpls_affiliation",
+      "fully_offline_without_os_enforced_fixed_webview2_containment",
+      "no_telemetry_without_os_enforced_fixed_webview2_containment",
+      "zero_egress_without_os_enforced_fixed_webview2_containment"
     ]
   },
   "release_channels": {
     "internal": "maintainer_only",
     "beta": "signed_prerelease",
     "stable": "all_mandatory_gates_passed"
+  },
+  "signing_identity_policy": {
+    "record": "validation/quickpls_signing_identity.json",
+    "candidate_binding": "exact_record_sha256_and_identity_id",
+    "leaf_verification": "windows_authenticode_subject_and_sha1_thumbprint",
+    "caller_supplied_patterns": "prohibited"
   },
   "evidence_policy": {
     "record_schema_version": 1,
@@ -36,6 +54,10 @@
     "updater_zip_safety": true,
     "sbom_provenance_binding": true,
     "candidate_manifest_binding": true,
+    "durable_candidate_storage": true,
+    "approved_leaf_signer_binding": true,
+    "protected_build_attestation_binding": true,
+    "signed_channel_manifest_binding": true,
     "criterion_result_binding": "structured_json",
     "approval_after_evidence": true,
     "reuse_across_requirements": "prohibited",
@@ -64,7 +86,7 @@
         "signing.identity.secret_protection"
       ],
       "acceptance_criteria": [
-        "A CA-trusted or managed Authenticode identity is approved for QuickPLS releases.",
+        "One CA-trusted or managed QuickPLS leaf certificate is approved by exact subject and SHA-1 thumbprint and bound into every candidate.",
         "Private signing material is hardware-backed or service-managed and is not stored in the repository."
       ],
       "evidence": []
@@ -83,8 +105,8 @@
       ],
       "acceptance_criteria": [
         "Desktop, CLI, and final installer are SHA-256 Authenticode signed and RFC 3161 timestamped.",
-        "SignTool verifies publisher, trust chain, timestamp, and every signature without warnings.",
-        "Checksums identify the post-signing binaries accepted on clean machines."
+        "SignTool and Windows APIs verify trust, timestamp, exact approved leaf, QuickPLS product/version identity, and every signature without warnings.",
+        "Durable candidate copies are rehashed and reverified after copying and match the accepted source binaries exactly."
       ],
       "evidence": []
     },
@@ -155,8 +177,8 @@
         "updater.trust_channels.channels_and_downgrade"
       ],
       "acceptance_criteria": [
-        "Updater artifacts use a protected signing key and signature verification cannot be disabled.",
-        "Beta and stable manifests are isolated and automatic downgrade is rejected."
+        "The manual updater contains the exact full installer plus a detached-CMS channel manifest signed by the approved QuickPLS leaf.",
+        "Beta and stable manifests bind channel, payload identity, version floor, installer/recovery hashes, and automatic downgrade rejection."
       ],
       "evidence": []
     },
@@ -220,11 +242,13 @@
       "evidence_identity": "reviewer_identity",
       "acceptance_check_ids": [
         "trust.privacy_telemetry.privacy_notice",
-        "trust.privacy_telemetry.network_behavior"
+        "trust.privacy_telemetry.network_behavior",
+        "trust.privacy_telemetry.webview2_claim_boundary"
       ],
       "acceptance_criteria": [
         "A privacy notice covers offline processing, manual update checks, distribution-site logs, diagnostics, and support submissions.",
-        "Packaged network tests prove no undisclosed telemetry or automatic launch-time network request."
+        "Packaged network tests prove that the QuickPLS application and page make no undisclosed telemetry or automatic external launch-time request.",
+        "Published claims distinguish QuickPLS application/page behavior from Microsoft-managed WebView2 process behavior; fully-offline, no-telemetry, and zero-egress claims remain blocked until an OS-enforced fixed-WebView2 containment gate passes."
       ],
       "evidence": []
     },
@@ -291,7 +315,7 @@
         "supply_chain.sbom_licenses.advisory_disposition"
       ],
       "acceptance_criteria": [
-        "The exact release has a machine-readable SBOM and reviewed third-party license inventory.",
+        "The exact release has an actual CycloneDX 1.6 SBOM with package identifiers, licenses, and a complete dependency graph plus reviewed third-party license inventory.",
         "Critical or high dependency advisories have an approved resolution or documented release-blocking disposition."
       ],
       "evidence": []
@@ -308,7 +332,7 @@
         "supply_chain.provenance.exact_promotion"
       ],
       "acceptance_criteria": [
-        "A protected clean build records source commit, toolchain, versions, artifact hashes, SBOM, signatures, and attestation.",
+        "An in-toto/SLSA provenance statement binds the protected clean build, source commit, lockfiles, toolchain, candidate subjects, SBOM, signatures, and signed build attestation.",
         "The exact tested signed hashes are promoted to the immutable stable tag and release."
       ],
       "evidence": []
@@ -343,7 +367,7 @@
       ],
       "acceptance_criteria": [
         "No unresolved P0 or P1 defect, reproducible data loss, or archive corruption remains.",
-        "Scientifically material discrepancies are fixed or explicitly explained and final signed lifecycle acceptance is rerun after beta fixes."
+        "Scientifically material discrepancies are disposed and a structured lifecycle report rehashes the exact signed candidate manifest, artifacts, signature reports, and all mandatory recovery phases after beta fixes."
       ],
       "evidence": []
     },

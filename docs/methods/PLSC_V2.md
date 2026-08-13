@@ -1,6 +1,6 @@
 # PLSc v2
 
-Status: current for the documented QuickPLS reflective path/factor-weighting PLSc scope.
+Status: evidence-derived native-qualified for the documented reflective path/factor-weighting PLSc scope. Method-scoped packaged Windows acceptance and the final release audit remain required before release qualification.
 
 `AnalysisMethod::Plsc` first estimates the ordinary Mode A PLS model, then applies the consistent correction for reflective constructs. New results emit `method_version = "plsc_v2"` and a typed PLSc payload containing Dijkstra-Henseler rho_A reliabilities, original and corrected construct correlations, corrected structural paths, corrected outer loadings, corrected R2, and warnings.
 
@@ -38,5 +38,7 @@ The two-indicator case is allowed but has limited reliability information. Broad
 - `qpls-estimation` compares the PLSc payload against independently evaluated canonical rho_A values on the committed 120-case PLSc fixture.
 - `npm run qpls:plsc:reference` regenerates the deterministic dataset, recipe, QuickPLS payload, and independent NumPy Equation 3 report.
 - `qpls-project` proves current `plsc_v2` save/reopen behavior, exact legacy `plsc_v1` compatibility, and rejection of mismatched or unknown payload/provenance versions.
+
+The native method selector, applicability checks, correction/result tables, and export projections are source-bound and tested. Release qualification remains pending genuine packaged Windows execution, export, save/reopen, and the final method audit.
 
 The 12-case Corporate Reputation demo is intentionally not positive PLSc evidence: its attenuation-corrected correlation matrix is inadmissible under the canonical equation. That failure must remain visible rather than being clamped or hidden.

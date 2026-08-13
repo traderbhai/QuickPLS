@@ -1,0 +1,293 @@
+{
+  "schema_version": 1,
+  "program": "quickpls_3_operational_foundation",
+  "scope": "pre_certificate_operational_foundation",
+  "target_release": "3.0.0",
+  "support_routes": [
+    {
+      "id": "public_support",
+      "url": "https://github.com/traderbhai/QuickPLS/issues/new/choose",
+      "privacy": "public_no_confidential_data"
+    },
+    {
+      "id": "private_security",
+      "url": "https://github.com/traderbhai/QuickPLS/security/advisories/new",
+      "privacy": "private_security_reports"
+    }
+  ],
+  "privacy_defaults": {
+    "offline_processing": true,
+    "telemetry_enabled": false,
+    "launch_network_request": false,
+    "diagnostics_user_initiated": true,
+    "diagnostics_auto_upload": false
+  },
+  "documents": [
+    {
+      "id": "support_policy",
+      "path": "docs/SUPPORT_POLICY.md",
+      "size": 4428,
+      "sha256": "51b5f8cdf0b665492b52511d9c18ed9934f409878c69f31275f25d08c088910c",
+      "required_headings": [
+        "# QuickPLS Support Policy",
+        "## Support Channels",
+        "## Severity And Response Targets",
+        "## Triage And Escalation",
+        "## Operational Evidence Required"
+      ]
+    },
+    {
+      "id": "version_support_policy",
+      "path": "docs/VERSION_SUPPORT_POLICY.md",
+      "size": 2886,
+      "sha256": "048628bd18442ba6400db16f8ca8cb7383a4dc6d2ec8664a9d1886d9b2f21092",
+      "required_headings": [
+        "# QuickPLS Version Support Policy",
+        "## Release Lines",
+        "## Supported Platform Matrix",
+        "## Compatibility And Project Safety",
+        "## End Of Support"
+      ]
+    },
+    {
+      "id": "rollback_recovery",
+      "path": "docs/RELEASE_ROLLBACK_AND_RECOVERY.md",
+      "size": 3431,
+      "sha256": "57dc53f7688a3be788e8e4da60838a9dafe3ede3df3a71f6a6afcec22aaffd53",
+      "required_headings": [
+        "# QuickPLS Release Rollback And Recovery",
+        "## Rollback Triggers",
+        "## User Data Protection",
+        "## Recovery Paths",
+        "## Requalification"
+      ]
+    },
+    {
+      "id": "known_issues",
+      "path": "docs/KNOWN_ISSUES.md",
+      "size": 2488,
+      "sha256": "cd5963109cbe8f19fb2c6bc13abcf01d775265b38cfc121268a255f4fd3ff769",
+      "required_headings": [
+        "# QuickPLS Known Issues",
+        "## Active Release Blockers",
+        "## Documented Scope Limitations",
+        "## Reporting A New Issue"
+      ]
+    },
+    {
+      "id": "security_model",
+      "path": "docs/SECURITY_MODEL.md",
+      "size": 5413,
+      "sha256": "114dafc5755c796c638a56dd966ea5595d13f2adbcd9b2adda1e4fff03496dbe",
+      "required_headings": [
+        "# QuickPLS Security Model",
+        "## Protected Assets",
+        "## Trust Boundaries And Required Controls",
+        "## Frontend Security Baseline",
+        "## Verification Status"
+      ]
+    },
+    {
+      "id": "privacy_notice",
+      "path": "docs/PRIVACY_NOTICE.md",
+      "size": 3636,
+      "sha256": "9dddf8aeb01770c85b68fa87e24e3d9a114ba6feb4d3cd04c9395b41c151f2fa",
+      "required_headings": [
+        "# QuickPLS Product Privacy Notice",
+        "## Local Processing",
+        "## Optional Network Activity",
+        "## Support Submissions",
+        "## Diagnostics",
+        "## User Choices"
+      ]
+    },
+    {
+      "id": "diagnostics_logging",
+      "path": "docs/DIAGNOSTICS_AND_LOGGING.md",
+      "size": 9106,
+      "sha256": "711f051a40ae6e4ea743c4b98581187fbacc2ba8e47c263d8e00ec8ed88eb7d6",
+      "required_headings": [
+        "# QuickPLS Diagnostics And Logging Contract",
+        "## User Control",
+        "## Log Retention",
+        "## Mandatory Exclusions And Redaction",
+        "## Archive Safety",
+        "## Required Tests"
+      ]
+    },
+    {
+      "id": "supply_chain_policy",
+      "path": "docs/SUPPLY_CHAIN_POLICY.md",
+      "size": 4234,
+      "sha256": "a661caf49d0375533cf5477d03402604dae48429269cdfbe1f9800fb63e373f2",
+      "required_headings": [
+        "# QuickPLS Supply-Chain And Release Evidence Policy",
+        "## Reproducible Inputs",
+        "## Required Scans",
+        "## SBOM",
+        "## Provenance",
+        "## Signing And Secret Custody"
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "id": "support.channel_policy",
+      "state": "policy_defined",
+      "release_requirement_ids": [
+        "support.operations"
+      ],
+      "policy_document_ids": [
+        "support_policy"
+      ],
+      "remaining_release_evidence": [
+        "Named primary and backup owners",
+        "Target-release channel monitoring record",
+        "Response-target performance review"
+      ]
+    },
+    {
+      "id": "support.version_policy",
+      "state": "policy_defined",
+      "release_requirement_ids": [
+        "support.operations",
+        "support.docs_diagnostics"
+      ],
+      "policy_document_ids": [
+        "version_support_policy"
+      ],
+      "remaining_release_evidence": [
+        "Exact target-release Windows support matrix",
+        "Published versioned target-release documentation set"
+      ]
+    },
+    {
+      "id": "support.rollback_known_issues",
+      "state": "policy_defined",
+      "release_requirement_ids": [
+        "support.operations"
+      ],
+      "policy_document_ids": [
+        "rollback_recovery",
+        "known_issues"
+      ],
+      "remaining_release_evidence": [
+        "Exact-candidate rollback rehearsal",
+        "Release-manager review of target-release known issues"
+      ]
+    },
+    {
+      "id": "diagnostics.bundle_contract",
+      "state": "implementation_required",
+      "release_requirement_ids": [
+        "support.docs_diagnostics"
+      ],
+      "policy_document_ids": [
+        "diagnostics_logging",
+        "privacy_notice"
+      ],
+      "remaining_release_evidence": [
+        "Desktop logging and diagnostic-bundle implementation",
+        "Redaction and archive boundary tests",
+        "Packaged Windows preview, cancel, save, and no-network acceptance"
+      ]
+    },
+    {
+      "id": "docs.versioned_release_set",
+      "state": "implementation_required",
+      "release_requirement_ids": [
+        "support.docs_diagnostics"
+      ],
+      "policy_document_ids": [
+        "version_support_policy",
+        "known_issues"
+      ],
+      "remaining_release_evidence": [
+        "Versioned system requirements, install, update, uninstall, scope, tutorial, citation, notes, and troubleshooting for the target release"
+      ]
+    },
+    {
+      "id": "privacy.offline_network",
+      "state": "implementation_required",
+      "release_requirement_ids": [
+        "trust.privacy_telemetry"
+      ],
+      "policy_document_ids": [
+        "privacy_notice",
+        "diagnostics_logging"
+      ],
+      "remaining_release_evidence": [
+        "Qualified privacy/legal disposition",
+        "Packaged launch, diagnostics, and manual-update network-behavior tests"
+      ]
+    },
+    {
+      "id": "security.threat_model",
+      "state": "external_review_required",
+      "release_requirement_ids": [
+        "trust.security"
+      ],
+      "policy_document_ids": [
+        "security_model",
+        "diagnostics_logging",
+        "supply_chain_policy"
+      ],
+      "remaining_release_evidence": [
+        "Qualified review of the exact target scope",
+        "Hostile-file, export, path, IPC, updater, and key-control results",
+        "Closure of release-blocking findings"
+      ]
+    },
+    {
+      "id": "legal.release_review",
+      "state": "external_review_required",
+      "release_requirement_ids": [
+        "trust.legal"
+      ],
+      "policy_document_ids": [
+        "privacy_notice",
+        "support_policy",
+        "supply_chain_policy"
+      ],
+      "remaining_release_evidence": [
+        "Qualified review of EULA, license, notices, privacy, trademark, comparative claims, liability, and institutional distribution",
+        "Checked-in disposition with a stable confidential-record reference"
+      ]
+    },
+    {
+      "id": "supply_chain.sbom_licenses",
+      "state": "implementation_required",
+      "release_requirement_ids": [
+        "supply_chain.sbom_licenses"
+      ],
+      "policy_document_ids": [
+        "supply_chain_policy"
+      ],
+      "remaining_release_evidence": [
+        "Exact-candidate CycloneDX SBOM",
+        "Reviewed license inventory",
+        "Dependency advisory disposition"
+      ]
+    },
+    {
+      "id": "supply_chain.provenance",
+      "state": "implementation_required",
+      "release_requirement_ids": [
+        "supply_chain.provenance"
+      ],
+      "policy_document_ids": [
+        "supply_chain_policy",
+        "rollback_recovery"
+      ],
+      "remaining_release_evidence": [
+        "Protected clean-build provenance for the exact signed candidate",
+        "Immutable promotion record binding tested hashes"
+      ]
+    }
+  ],
+  "release_claim": {
+    "commercial_ready": false,
+    "reason": "Operational policies are defined, but runtime, exact-candidate, monitored-channel, and external-review evidence remains pending.",
+    "authoritative_gate": "validation/quickpls_3_release_readiness.json"
+  }
+}

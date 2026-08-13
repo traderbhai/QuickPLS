@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-13T09:59:21Z",
+    "manifest_path": "validation/methods/pca_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.standalone.pca",
+    "label": "Principal Component Analysis",
+    "method_version": "pca_v1",
+    "method_kind": "deterministic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/core-algorithm/pls-pca/"
+  },
+  "claim": {
+    "supported_scope": "Standalone correlation-matrix PCA for 2 to 50 selected numeric raw-data variables using listwise deletion, deterministic component orientation, and fixed, Kaiser, or variance-threshold retention.",
+    "estimand": "The eigenvalues and deterministically oriented eigenvectors of the complete-case sample correlation matrix, with explained variance, component loadings, weights, and complete-case scores.",
+    "assumptions": [
+      "At least three complete finite observations remain across all selected variables.",
+      "Every selected variable has nonzero finite sample standard deviation.",
+      "The selected retention rule and its parameters are persisted in the typed standalone recipe."
+    ],
+    "exclusions": [
+      "Rotations, pairwise deletion, covariance-only or correlation-only input, automatic categorical encoding, and nonnumeric conversion are excluded.",
+      "Loading uncertainty, component-score uncertainty, and inferential resampling are not supported.",
+      "This standalone workflow does not create or imply an editable SEM model."
+    ],
+    "warnings": [
+      "Component signs are arbitrary mathematically and are made reproducible only by the frozen deterministic orientation rule.",
+      "Retention criteria are descriptive choices and do not establish substantive validity."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {
+        "id": "correlation_eigensystem",
+        "expression": "R v_j = lambda_j v_j with lambda_1 >= ... >= lambda_p",
+        "variables": ["R", "v_j", "lambda_j", "p"],
+        "source_reference_id": "jolliffe_2002"
+      },
+      {
+        "id": "component_loadings",
+        "expression": "loading_kj = v_kj sqrt(max(lambda_j,0))",
+        "variables": ["loading_kj", "v_kj", "lambda_j"],
+        "source_reference_id": "jolliffe_2002"
+      }
+    ],
+    "references": [
+      {
+        "id": "jolliffe_2002",
+        "kind": "primary_paper",
+        "citation": "Jolliffe (2002), Principal Component Analysis, second edition",
+        "locator": "docs/methods/PCA_V1.md",
+        "independence_group": "published_pca_method",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "independent_numpy_eigensystem",
+        "kind": "independent_python",
+        "citation": "Independent NumPy correlation-matrix eigensystem and retention implementation",
+        "locator": "validation/pca_method_promotion_audit.py",
+        "independence_group": "numpy_reference",
+        "runtime_policy": "development_validation_only"
+      },
+      {
+        "id": "two_variable_hand_fixture",
+        "kind": "hand_calculation",
+        "citation": "Committed two-variable PCA eigenvalue and orientation fixture",
+        "locator": "validation/results/pca_promotion_hand_fixture.csv",
+        "independence_group": "hand_reference",
+        "runtime_policy": "no_runtime_dependency"
+      }
+    ],
+    "simulations": [
+      {
+        "id": "component_recovery",
+        "purpose": "recovery",
+        "design": "Known low-rank Gaussian and non-Gaussian correlation structures across variable counts, sample sizes, missing rows, near-ties, and every supported retention rule.",
+        "seed_policy": "Frozen scenario-indexed seeds; QuickPLS and independent eigensystems receive identical complete-case matrices.",
+        "metrics": ["eigenvalue_error", "subspace_error", "loading_error", "score_error", "retained_component_count"],
+        "acceptance_rule": "Eigenvalues, oriented loadings, weights, scores, and retained counts meet the frozen tolerance; near-tied subspaces use a preregistered subspace criterion."
+      }
+    ],
+    "boundaries": [
+      {"id": "constant_or_insufficient_data", "category": "data_pathology", "case": "A selected variable is constant/nonfinite or fewer than three complete rows remain.", "expected_behavior": "Execution is rejected with a typed diagnostic and no partial PCA result."},
+      {"id": "unsupported_input_or_retention", "category": "unsupported_scope", "case": "The recipe requests rotation, matrix-only input, pairwise deletion, invalid variable count, or an unsupported retention rule.", "expected_behavior": "The typed validator blocks execution before the eigensystem is evaluated."},
+      {"id": "variable_and_row_reorder", "category": "metamorphic", "case": "Rows or selected variables are consistently reordered.", "expected_behavior": "Mapped eigenvalues, oriented loadings, weights, and scores remain equal within tolerance."},
+      {"id": "orientation_and_repeat", "category": "determinism", "case": "The same dataset is executed repeatedly, including components whose raw solver signs may differ.", "expected_behavior": "The frozen pivot-orientation rule produces an exact repeated analytical payload."},
+      {"id": "retention_or_score_tamper", "category": "tamper", "case": "A saved variable manifest, retention rule, eigenvalue, loading, score, or method identity is altered.", "expected_behavior": "Strict project validation rejects the archive rather than displaying the modified PCA result."}
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 3,
+      "result_schema_version": 1,
+      "payload_kind": "pls_pm_v1",
+      "tamper_tests": [
+        {"category": "feature_identity", "expected_behavior": "Reject a result whose capability identity differs from the standalone PCA recipe."},
+        {"category": "method_version", "expected_behavior": "Reject a PCA result relabeled with another method version."},
+        {"category": "dataset_fingerprint", "expected_behavior": "Reject a PCA result whose dataset fingerprint no longer matches."},
+        {"category": "checksum", "expected_behavior": "Reject any modified archive member whose checksum differs."},
+        {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, non-finite values, invalid dimensions, ordering, retention, or cumulative variance."},
+        {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret PLS block weighting or an older preview as a standalone pca_v1 result."}
+      ],
+      "legacy_policy": "Only typed standalone pca_v1 results with a null model association can satisfy current evidence."
+    },
+    "native": {
+      "setup_controls": ["Selected numeric variables", "Kaiser, fixed, or variance-threshold retention", "Fixed component count", "Variance threshold"],
+      "applicability_blockers": ["Fewer than two or more than fifty variables", "Duplicate variable", "Invalid retention parameter", "Insufficient complete rows", "Constant selected variable"],
+      "result_surfaces": ["Component summary", "Component loadings and weights", "Calculation scope", "Run provenance"],
+      "gui_cli_parity_rule": "For the same typed standalone PCA recipe and dataset fingerprint, GUI and CLI analytical payloads must be exactly equal apart from operational identifiers and timestamps.",
+      "accessibility_rules": ["Component tables and scope warnings are keyboard and screen-reader accessible.", "Explained variance is available numerically without relying on charts or color."]
+    },
+    "export": {
+      "formats": ["csv", "xlsx", "html", "pdf"],
+      "tables": ["Component summary", "Component loadings and weights", "Complete-case component scores", "Calculation scope", "Run provenance"],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": ["windows"],
+      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
+      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "offline_required": true,
+      "cancellation_required": false,
+      "process_cleanup_required": true
+    },
+    "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
+  },
+  "qualification": {
+    "declared_state": "release_qualified",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": ["docs/methods/PCA_V1.md"],
+      "independent_reference": ["validation/pca_method_promotion_audit.py", "validation/pls_pca_reference.py"],
+      "simulation_report": ["validation/pca_simulation.py"],
+      "boundary_report": ["validation/pca_boundary_gate.py"],
+      "persistence_report": ["validation/pca_persistence_gate.py"],
+      "frontend_report": ["src/native/nativePca.test.ts", "src/native/NativeCalculationDialog.test.ts"],
+      "export_report": ["src/native/nativeExportTables.test.ts"],
+      "method_audit": ["validation/pca_method_promotion_audit.py"],
+      "packaged_acceptance": ["validation/run_v247_pca_native_acceptance.ps1"]
+    },
+    "evidence": {
+      "engine_only": [
+        {
+          "path": "validation/results/method_factory/pca_v1/method_spec.identity.json",
+          "roles": ["method_spec"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/pca_v1/independent_reference.identity.json",
+          "roles": ["independent_reference"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/pca_v1/simulation_report.identity.json",
+          "roles": ["simulation_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/pca_v1/boundary_report.identity.json",
+          "roles": ["boundary_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "archive_qualified": [
+        {
+          "path": "validation/results/method_factory/pca_v1/persistence_report.identity.json",
+          "roles": ["persistence_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "native_qualified": [
+        {
+          "path": "validation/results/method_factory/pca_v1/frontend_report.identity.json",
+          "roles": ["frontend_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/pca_v1/export_report.identity.json",
+          "roles": ["export_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "release_qualified": [
+        {
+          "path": "validation/results/method_factory/pca_v1/method_audit.identity.json",
+          "roles": ["method_audit"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/pca_v1/packaged_acceptance.identity.json",
+          "roles": ["packaged_acceptance"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ]
+    }
+  }
+}

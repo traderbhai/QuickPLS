@@ -1,0 +1,560 @@
+{
+  "schema_version": 1,
+  "id": "485c9769-5ad2-4e66-ae01-7daa2dcbbabc",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "956d604c-f863-5d3b-b62b-26854d5b1911",
+    "dataset_fingerprint": "v2:ee20391d4c6600384f8b4ddf975921147a0a7f74e3813a909d1a9c32e8b6f91e",
+    "method": "cta_pls",
+    "method_version": "pls_pm_v1+cta_pls_tetrad_v1+pls_mediation_v1+pls_assessment_v7",
+    "engine_version": "2.46.0",
+    "seed": 20260813,
+    "settings": {
+      "method": "cta_pls",
+      "weighting_scheme": "path",
+      "tolerance": 1e-10,
+      "max_iterations": 10000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260813,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion",
+      "case_weight_column": null
+    },
+    "started_at": "2026-08-13T18:53:51.216297700Z",
+    "completed_at": "2026-08-13T18:53:51.232781500Z"
+  },
+  "diagnostics": [
+    {
+      "code": "estimation.warning",
+      "level": "warning",
+      "message": "CTA-PLS tetrad diagnostics are validated for the documented QuickPLS v1.2.3 descriptive tetrad scope; bootstrap/permutation tetrad decision rules remain unsupported."
+    }
+  ],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "cbsem": null,
+      "cca": null,
+      "construct_scores": {
+        "x": [
+          0.7519591211822417,
+          2.8799020889463227,
+          -0.047929691299011624,
+          1.554498981154807,
+          -0.7026424407342126,
+          -0.8346638367668844,
+          -1.3239611858230151,
+          1.1492796694934393,
+          -1.8288797332917688,
+          -0.5113607127711228,
+          -0.21020761150837117,
+          0.1420284723504037,
+          1.2072833084619237,
+          -1.0212894354267488,
+          -0.5025735211920324,
+          -0.6667936256366447,
+          0.09333253491495433,
+          -0.48808845037332554,
+          1.44844792328095,
+          -0.6311775571855522,
+          0.2546611745248361,
+          -0.1193093807384525,
+          0.6034126689358639,
+          -0.5551554470312423,
+          0.4705326800318542,
+          0.7823563187114922,
+          1.096686061794193,
+          -1.2140679365153093,
+          0.35350200927085085,
+          -0.6124906481262921,
+          -0.30563933856492287,
+          0.006656986787019257,
+          1.522055713367357,
+          -1.3505839286020607,
+          -0.29758849817469957,
+          1.2784269325214246,
+          -0.3898123244052957,
+          -1.391353493160305,
+          -0.9526778040105542,
+          0.36322395560789184
+        ],
+        "y": [
+          0.4970089319090555,
+          1.6387064234943567,
+          1.7746535705324629,
+          0.7266679813027876,
+          -0.9667218342724252,
+          2.3527729295699786,
+          -1.0585128189662272,
+          1.3080167166306131,
+          0.6399617528005104,
+          -0.3189688505334935,
+          -0.9069210981701911,
+          -1.1060439618668312,
+          1.0513484696305653,
+          -0.9206713122164195,
+          0.4869710779218419,
+          -1.0874753436084834,
+          -0.6150178807091264,
+          0.18158761793522074,
+          -0.023571250156539682,
+          -0.7248372223181133,
+          0.022013549057774428,
+          0.33996276301015943,
+          0.451450015826857,
+          -0.20866827326591783,
+          0.6772548286295837,
+          1.3619524132646752,
+          -0.0038466457678817045,
+          -2.5877123229812278,
+          -1.2725477247147607,
+          -1.0970455703007238,
+          -0.3254905682089084,
+          0.3914910004542088,
+          1.0066932630077023,
+          -0.030907097861466358,
+          -0.6578231181773365,
+          0.8053992298325113,
+          -0.32009936851523624,
+          -0.6125660621993868,
+          -1.072886392728303,
+          0.20442218272813395
+        ]
+      },
+      "control_estimates": [],
+      "converged": true,
+      "cta_pls": {
+        "covariance": "sample_covariance_of_preprocessed_indicators_v1",
+        "estimates": [
+          {
+            "absolute_tetrad": 0.019422292573639588,
+            "construct": "x",
+            "indicator_a": "x1",
+            "indicator_b": "x2",
+            "indicator_c": "x3",
+            "indicator_d": "x4",
+            "pairing": "ab_cd_minus_ac_bd",
+            "tetrad": -0.019422292573639588
+          },
+          {
+            "absolute_tetrad": 0.020358382565686672,
+            "construct": "x",
+            "indicator_a": "x1",
+            "indicator_b": "x2",
+            "indicator_c": "x3",
+            "indicator_d": "x4",
+            "pairing": "ac_bd_minus_ad_bc",
+            "tetrad": -0.020358382565686672
+          },
+          {
+            "absolute_tetrad": 0.03978067513932626,
+            "construct": "x",
+            "indicator_a": "x1",
+            "indicator_b": "x2",
+            "indicator_c": "x3",
+            "indicator_d": "x4",
+            "pairing": "ad_bc_minus_ab_cd",
+            "tetrad": 0.03978067513932626
+          }
+        ],
+        "max_absolute_tetrad_by_construct": {
+          "x": 0.03978067513932626
+        },
+        "method_version": "cta_pls_tetrad_v1",
+        "warnings": [
+          "CTA-PLS tetrad bootstrap/permutation inference is outside the validated QuickPLS v1.2.3 descriptive scope."
+        ]
+      },
+      "effects": [
+        {
+          "direct": 0.5082879773898392,
+          "indirect": 0.0,
+          "source": "x",
+          "target": "y",
+          "total": 0.5082879773898392
+        }
+      ],
+      "endogeneity": null,
+      "fimix": null,
+      "gsca": null,
+      "ipma": null,
+      "iterations": 5,
+      "mediation": {
+        "estimates": [
+          {
+            "classification": "direct_only",
+            "direct": 0.5082879773898392,
+            "indirect": 0.0,
+            "source": "x",
+            "target": "y",
+            "total": 0.5082879773898392,
+            "variance_accounted_for": 0.0,
+            "warning": "direct-only structural effect; no mediated component exceeds tolerance"
+          }
+        ],
+        "method_version": "pls_mediation_v1",
+        "tolerance": 1e-12,
+        "warnings": [
+          "PLS mediation effect decomposition is validated for the documented QuickPLS v1.2.1 scope when paired with validated bootstrap or permutation intervals for the relevant indirect effect."
+        ]
+      },
+      "method_version": "cta_pls_tetrad_v1",
+      "mga": null,
+      "mga_permutation": null,
+      "micom": null,
+      "moderated_mediation": null,
+      "nca": null,
+      "nonlinear_effects": null,
+      "omitted_observations": 0,
+      "outer_estimates": [
+        {
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9869700618548877,
+          "weight": 0.25203749234678813
+        },
+        {
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.982189840151695,
+          "weight": 0.25181095401951337
+        },
+        {
+          "construct": "x",
+          "indicator": "x3",
+          "loading": 0.9764401064927506,
+          "weight": 0.25720658734960106
+        },
+        {
+          "construct": "x",
+          "indicator": "x4",
+          "loading": 0.9754727500132396,
+          "weight": 0.2591292810241554
+        },
+        {
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9698056635478678,
+          "weight": 0.5238237161728235
+        },
+        {
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9679031938729349,
+          "weight": 0.508307851931206
+        }
+      ],
+      "paths": [
+        {
+          "coefficient": 0.5082879773898392,
+          "source": "x",
+          "target": "y"
+        }
+      ],
+      "pca": null,
+      "plsc": null,
+      "predict": null,
+      "r_squared": {
+        "y": 0.2583566679590539
+      },
+      "regression": null,
+      "segmentation": null,
+      "transforms": [
+        {
+          "indicator": "x1",
+          "mean": 0.07760212332640419,
+          "scale": 0.9664154660852087
+        },
+        {
+          "indicator": "x2",
+          "mean": 0.04621474742155248,
+          "scale": 0.9558792451553361
+        },
+        {
+          "indicator": "x3",
+          "mean": 0.05835285841131734,
+          "scale": 0.8293827898330811
+        },
+        {
+          "indicator": "x4",
+          "mean": 0.03366785639386536,
+          "scale": 0.8758126891857947
+        },
+        {
+          "indicator": "y1",
+          "mean": 0.026096483456022196,
+          "scale": 0.675062052454826
+        },
+        {
+          "indicator": "y2",
+          "mean": -0.036367159163029614,
+          "scale": 0.6939661237916601
+        }
+      ],
+      "used_observations": 40,
+      "warnings": [
+        "CTA-PLS tetrad diagnostics are validated for the documented QuickPLS v1.2.3 descriptive tetrad scope; bootstrap/permutation tetrad decision rules remain unsupported."
+      ],
+      "wpls": null
+    },
+    "assessment": {
+      "blindfolding": {
+        "constructs": [
+          {
+            "construct": "y",
+            "observation_sum_squares": 100.97890616759344,
+            "prediction_error_sum_squares": 79.17395902089065,
+            "q_squared": 0.21593566393473684
+          }
+        ],
+        "settings": {
+          "missing_value_treatment": "indicator_mean_replacement",
+          "omission_distance": 7,
+          "selection": "preferred_7_then_smallest_valid_5_to_12"
+        }
+      },
+      "construct_quality": [
+        {
+          "ave": 0.9609472881702548,
+          "construct": "x",
+          "cronbach_alpha": 0.9864461043206525,
+          "normalized_weight_norm_squared": 0.2602348669727984,
+          "off_diagonal_denominator": 0.050780991005014424,
+          "off_diagonal_numerator": 0.7397651330272017,
+          "rho_a": 0.9865603434485488,
+          "rho_a_indicator_count": 4,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [],
+          "rho_c": 0.9899420113469893,
+          "score_variance_before_normalization": 1.0
+        },
+        {
+          "ave": 0.9386798088794741,
+          "construct": "y",
+          "cronbach_alpha": 0.9346887029480233,
+          "normalized_weight_norm_squared": 0.5327681579600236,
+          "off_diagonal_denominator": 0.14179272435154386,
+          "off_diagonal_numerator": 0.4672318420399764,
+          "rho_a": 0.9353087693853827,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": null,
+          "rho_a_status": "available",
+          "rho_a_warning_codes": [
+            "rho_a.two_indicator_limited_information"
+          ],
+          "rho_c": 0.9683701000649233,
+          "score_variance_before_normalization": 1.0
+        }
+      ],
+      "cross_loadings": [
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.986970061854888
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x1",
+          "loading": 0.49227695235977353
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9821898401516946
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x2",
+          "loading": 0.4918344801078232
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x3",
+          "loading": 0.9764401064927507
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x3",
+          "loading": 0.5023731738035563
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x4",
+          "loading": 0.9754727500132399
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x4",
+          "loading": 0.5061285586598525
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y1",
+          "loading": 0.499754524034751
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9698056635478673
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y2",
+          "loading": 0.484951598719622
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9679031938729347
+        }
+      ],
+      "f_squared": [
+        {
+          "excluded_r_squared": 0.0,
+          "f_squared": 0.3483570293122921,
+          "included_r_squared": 0.2583566679590539,
+          "source_construct": "x",
+          "target_construct": "y"
+        }
+      ],
+      "formative_indicator_vif": [],
+      "fornell_larcker": {
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "values": [
+          [
+            0.9802791888897033,
+            0.5082879773898392
+          ],
+          [
+            0.5082879773898392,
+            0.9688548956781269
+          ]
+        ]
+      },
+      "htmt": null,
+      "htmt_original": {
+        "absolute_correlations": false,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.5291178659804002
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.5291178659804002
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_original_method_version": "henseler_et_al_htmt_v1",
+      "htmt_plus": {
+        "absolute_correlations": true,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.5291178659804002
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 0.5291178659804002
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
+      "method_version": "pls_assessment_v7",
+      "model_fit": {
+        "estimated": {
+          "d_uls": 0.00650178877886981,
+          "srmr": 0.017595709405135985
+        },
+        "saturated": {
+          "d_uls": 0.00650178877886981,
+          "srmr": 0.017595709405135985
+        }
+      },
+      "r_squared": {
+        "y": 0.2583566679590539
+      },
+      "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
+      "structural_quality": [
+        {
+          "adjusted_r_squared": 0.23883973816850268,
+          "construct": "y",
+          "predictor_count": 1,
+          "r_squared": 0.2583566679590539
+        }
+      ],
+      "structural_vif": [
+        {
+          "predictor_construct": "x",
+          "target_construct": "y",
+          "vif": 1.0
+        }
+      ],
+      "warnings": [
+        "rho_a.two_indicator_limited_information for construct 'y'"
+      ]
+    }
+  }
+}

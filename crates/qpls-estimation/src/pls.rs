@@ -9479,7 +9479,21 @@ fn dominant_eigenpair(
     tolerance: f64,
 ) -> Result<(f64, Vec<f64>), EstimationError> {
     let size = matrix.len();
-    let mut vector = vec![1.0 / (size as f64).sqrt(); size];
+    let mut candidates = Vec::with_capacity(size + 1);
+    candidates.push(vec![1.0 / (size as f64).sqrt(); size]);
+    for index in 0..size {
+        let mut basis = vec![0.0; size];
+        basis[index] = 1.0;
+        candidates.push(basis);
+    }
+    let mut vector = candidates
+        .into_iter()
+        .max_by(|left, right| {
+            let left_value = dot(left, &matrix_vector_product(matrix, left)).abs();
+            let right_value = dot(right, &matrix_vector_product(matrix, right)).abs();
+            left_value.total_cmp(&right_value)
+        })
+        .unwrap_or_default();
     for _ in 0..max_iterations.max(10) {
         let next = matrix_vector_product(matrix, &vector);
         let norm = vector_norm(&next);
@@ -16069,6 +16083,32 @@ mod tests {
         let pca = result.pca.unwrap();
         assert_eq!(pca.observations, 3);
         assert_eq!(pca.retained_components, 2);
+    }
+
+    #[test]
+    fn standalone_pca_v1_fixed_retention_recovers_component_orthogonal_to_ones() {
+        let dataset = import_delimited_bytes(
+            b"a,b\n-3,1\n-2,-1\n-1,2\n1,-2\n2,3\n3,-3\n",
+            "pca-orthogonal-second-component.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe = standalone_pca_recipe(&dataset, "fixed");
+        recipe.method_config = Some(MethodConfig::Pca {
+            variables: vec!["a".into(), "b".into()],
+            retention: PcaRetentionConfig::Fixed { components: 2 },
+        });
+        let execution_recipe = recipe.with_effective_metadata().unwrap();
+        let result =
+            estimate_pls_with_effective_recipe_control(&dataset, &execution_recipe, |_| true)
+                .unwrap();
+        let pca = result.pca.unwrap();
+        assert_eq!(pca.retained_components, 2);
+        assert_eq!(pca.components.len(), 2);
+        assert!(pca.components[1].eigenvalue > 0.0);
+        assert_eq!(pca.loadings.len(), 4);
+        assert_eq!(pca.scores.len(), 12);
     }
 
     fn fixture() -> (Dataset, AnalysisRecipe) {

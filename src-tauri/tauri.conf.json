@@ -18,7 +18,9 @@
         "minWidth": 1024,
         "minHeight": 700,
         "maximized": true,
-        "resizable": true
+        "resizable": true,
+        "proxyUrl": "http://127.0.0.1:17846",
+        "additionalBrowserArgs": "--disable-background-networking --disable-component-update --disable-sync --metrics-recording-only --disable-quic --disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --proxy-server=http://127.0.0.1:17846"
       }
     ],
     "security": {
@@ -32,6 +34,13 @@
     "resources": {
       "../THIRD_PARTY_NOTICES.md": "THIRD_PARTY_NOTICES.md"
     },
-    "useLocalToolsDir": true
+    "useLocalToolsDir": true,
+    "windows": {
+      "webviewInstallMode": {
+        "type": "offlineInstaller",
+        "silent": true
+      },
+      "allowDowngrades": false
+    }
   }
 }

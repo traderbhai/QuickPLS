@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "id": "019a9324-2d7f-4ff8-b053-040fd74ee879",
+  "id": "19dcabb2-8d0a-4d23-a5e0-2f503adf6510",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000122259",
     "dataset_fingerprint": "v2:0341c27af4c3a95cf1879c90f436d53239c58ae882be78e3ee5c42c2ccd3664d",
     "method": "pca",
     "method_version": "pca_v1",
-    "engine_version": "2.45.0",
+    "engine_version": "2.46.0",
     "seed": 20260721,
     "settings": {
       "method": "pca",
@@ -24,8 +24,8 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-08-11T20:36:01.812175400Z",
-    "completed_at": "2026-08-11T20:36:01.813502200Z"
+    "started_at": "2026-08-13T19:31:32.774894400Z",
+    "completed_at": "2026-08-13T19:31:32.775703400Z"
   },
   "diagnostics": [
     {
@@ -54,27 +54,11 @@
       "gsca": null,
       "ipma": null,
       "iterations": 0,
-      "mediation": {
-        "estimates": [],
-        "method_version": "pls_mediation_v1",
-        "tolerance": 1e-12,
-        "warnings": []
-      },
       "method_version": "pca_v1",
       "mga": null,
       "mga_permutation": null,
       "micom": null,
       "moderated_mediation": null,
-      "moderation": {
-        "estimates": [],
-        "method_version": "pls_two_stage_moderation_v1",
-        "moderator_score_levels": [
-          -1.0,
-          0.0,
-          1.0
-        ],
-        "warnings": []
-      },
       "nca": null,
       "nonlinear_effects": null,
       "omitted_observations": 1,
@@ -92,8 +76,8 @@
           {
             "component": "PC2",
             "cumulative_variance": 0.9991456419421471,
-            "eigenvalue": 0.05626041483589472,
-            "explained_variance": 0.018753471611964907
+            "eigenvalue": 0.05626041483589473,
+            "explained_variance": 0.01875347161196491
           }
         ],
         "loadings": [
@@ -117,21 +101,21 @@
           },
           {
             "component": "PC2",
-            "loading": -0.12236951621689506,
+            "loading": -0.12236951621689715,
             "variable": "a",
-            "weight": -0.515907424624605
+            "weight": -0.5159074246246138
           },
           {
             "component": "PC2",
-            "loading": 0.1918065604963858,
+            "loading": 0.1918065604963854,
             "variable": "b",
-            "weight": 0.8086526098248289
+            "weight": 0.808652609824827
           },
           {
             "component": "PC2",
-            "loading": -0.06705490054637363,
+            "loading": -0.0670549005463711,
             "variable": "c",
-            "weight": -0.2827021150269316
+            "weight": -0.28270211502692094
           }
         ],
         "method_version": "pca_v1",
@@ -166,27 +150,27 @@
           {
             "component": "PC2",
             "observation": 0,
-            "score": 0.16680284833311815
+            "score": 0.16680284833311848
           },
           {
             "component": "PC2",
             "observation": 1,
-            "score": 0.04590813497411747
+            "score": 0.04590813497411669
           },
           {
             "component": "PC2",
             "observation": 2,
-            "score": -0.2940086283921123
+            "score": -0.2940086283921114
           },
           {
             "component": "PC2",
             "observation": 3,
-            "score": -0.1888780660322465
+            "score": -0.1888780660322472
           },
           {
             "component": "PC2",
             "observation": 4,
-            "score": 0.27017571111712374
+            "score": 0.2701757111171241
           }
         ],
         "variables": [

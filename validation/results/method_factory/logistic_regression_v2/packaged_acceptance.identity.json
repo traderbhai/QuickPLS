@@ -1,0 +1,1112 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "native": {
+      "artifact_paths": [
+        "validation/results/logistic_v2_packaged_acceptance.json",
+        "validation/results/screens/v247-native-desktop-acceptance/150-tauri-native-logistic-fixture-data-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/151-tauri-native-logistic-dialog-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/152-tauri-native-logistic-running-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/153-tauri-native-logistic-results-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/154-tauri-native-logistic-export-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/155-tauri-native-logistic-reopened-1536x794.png",
+        "validation/results/v247-native-logistic-1786648298136-35352.qpls",
+        "validation/results/v247-native-logistic-20260814-003257084-50236-6df5af42.xlsx",
+        "validation/results/v247_cumulative_native_acceptance_receipt.json",
+        "validation/results/v247_tauri_native_acceptance_logistic.json"
+      ],
+      "checks": {
+        "all_reported_artifacts_exact": {
+          "artifacts": [
+            {
+              "actual": {
+                "path": "validation/results/v247-native-logistic-20260814-003257084-50236-6df5af42.xlsx",
+                "sha256": "08061192e164f7ab4308794a19384718a7d3d9e4db4a5155971584088b15bb4a",
+                "size": 16133
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/v247-native-logistic-20260814-003257084-50236-6df5af42.xlsx",
+                "sha256": "08061192e164f7ab4308794a19384718a7d3d9e4db4a5155971584088b15bb4a",
+                "size": 16133
+              }
+            },
+            {
+              "actual": {
+                "path": "validation/results/v247-native-logistic-1786648298136-35352.qpls",
+                "sha256": "57b7497daedce39d64bff0ca7451033c87255e1a303e116137b1709af31ebaa8",
+                "size": 20157
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/v247-native-logistic-1786648298136-35352.qpls",
+                "sha256": "57b7497daedce39d64bff0ca7451033c87255e1a303e116137b1709af31ebaa8",
+                "size": 20157
+              }
+            },
+            {
+              "actual": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/150-tauri-native-logistic-fixture-data-1536x794.png",
+                "sha256": "629a325c18d9fd856e2bd9b8ca68d7eb72d5c909f068ea3e22c2f70200967860",
+                "size": 292324
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/150-tauri-native-logistic-fixture-data-1536x794.png",
+                "sha256": "629a325c18d9fd856e2bd9b8ca68d7eb72d5c909f068ea3e22c2f70200967860",
+                "size": 292324
+              }
+            },
+            {
+              "actual": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/151-tauri-native-logistic-dialog-1536x794.png",
+                "sha256": "164046f3fff839f75b0cd97a84d09b584892ab855a7e5a22f66050b7dac3b94e",
+                "size": 284477
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/151-tauri-native-logistic-dialog-1536x794.png",
+                "sha256": "164046f3fff839f75b0cd97a84d09b584892ab855a7e5a22f66050b7dac3b94e",
+                "size": 284477
+              }
+            },
+            {
+              "actual": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/152-tauri-native-logistic-running-1536x794.png",
+                "sha256": "412b6a5216d536a10a489d3dc38897b26325a0bdabccdf4898237eb4aa2a9c4a",
+                "size": 230670
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/152-tauri-native-logistic-running-1536x794.png",
+                "sha256": "412b6a5216d536a10a489d3dc38897b26325a0bdabccdf4898237eb4aa2a9c4a",
+                "size": 230670
+              }
+            },
+            {
+              "actual": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/153-tauri-native-logistic-results-1536x794.png",
+                "sha256": "669ef9172fa9834f71f2855e2b90db6655e6d6fbf2629a71ce0890ebb391ae8f",
+                "size": 90868
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/153-tauri-native-logistic-results-1536x794.png",
+                "sha256": "669ef9172fa9834f71f2855e2b90db6655e6d6fbf2629a71ce0890ebb391ae8f",
+                "size": 90868
+              }
+            },
+            {
+              "actual": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/154-tauri-native-logistic-export-1536x794.png",
+                "sha256": "18c18417199acbadf439d13236bad3edc111d519061be44a4a27b9d38bd7b31d",
+                "size": 117075
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/154-tauri-native-logistic-export-1536x794.png",
+                "sha256": "18c18417199acbadf439d13236bad3edc111d519061be44a4a27b9d38bd7b31d",
+                "size": 117075
+              }
+            },
+            {
+              "actual": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/155-tauri-native-logistic-reopened-1536x794.png",
+                "sha256": "b504fc1c7da2861b4701c156e86d862012c32520c46850faaf3ccf56c10a0d43",
+                "size": 98134
+              },
+              "passed": true,
+              "reported": {
+                "path": "validation/results/screens/v247-native-desktop-acceptance/155-tauri-native-logistic-reopened-1536x794.png",
+                "sha256": "b504fc1c7da2861b4701c156e86d862012c32520c46850faaf3ccf56c10a0d43",
+                "size": 98134
+              }
+            }
+          ],
+          "passed": true
+        },
+        "cleanup": {
+          "mode": "cumulative_receipt",
+          "passed": true
+        },
+        "cumulative_receipt": {
+          "artifact_paths": [
+            "validation/results/v247-native-logistic-20260814-003257084-50236-6df5af42.xlsx",
+            "validation/results/v247_cumulative_native_acceptance_receipt.json"
+          ],
+          "checks": {
+            "exact_177_checks": true,
+            "exact_report_bytes": true,
+            "exact_report_path": true,
+            "export_roles_unique": true,
+            "final_scope_regression_bootstrap": true,
+            "fresh_after_requested_boundary": true,
+            "graceful_cleanup_verified": true,
+            "method_exports_exact_and_bound": true,
+            "packaged_stage_inside_supervisor_window": true,
+            "receipt_passed_cleanly": true,
+            "schema_and_kind": true,
+            "supervisor_source_not_newer_than_receipt": true,
+            "timestamps_ordered": true
+          },
+          "exports": {
+            "logistic": {
+              "packaged_artifact": {
+                "path": "validation/results/v247-native-logistic-20260814-003257084-50236-6df5af42.xlsx",
+                "sha256": "08061192e164f7ab4308794a19384718a7d3d9e4db4a5155971584088b15bb4a",
+                "size": 16133
+              },
+              "passed": true,
+              "receipt": {
+                "path": "validation/results/v247-native-logistic-20260814-003257084-50236-6df5af42.xlsx",
+                "role": "logistic",
+                "sha256": "08061192e164f7ab4308794a19384718a7d3d9e4db4a5155971584088b15bb4a",
+                "size": 16133
+              }
+            }
+          },
+          "passed": true,
+          "receipt": {
+            "path": "validation/results/v247_cumulative_native_acceptance_receipt.json",
+            "sha256": "c17e0dec92106a8762b8cec4d608b96ac510c1cc3cd846073a1b62094c87ac9f",
+            "size": 6655
+          },
+          "report": {
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "sha256": "6b56fa15b60e40def2959bb43a4514a654012c1a63724b8eea084743431cfbd7",
+            "size": 499999
+          }
+        },
+        "required_artifact_roles": {
+          "passed": true,
+          "roles": {
+            "project_archive": {
+              "minimum": 1,
+              "observed": 1,
+              "passed": true
+            },
+            "screenshots": {
+              "minimum": 6,
+              "observed": 6,
+              "passed": true
+            },
+            "xlsx": {
+              "minimum": 1,
+              "observed": 1,
+              "passed": true
+            }
+          }
+        },
+        "runtime_sources_frozen_before_report": {
+          "passed": true,
+          "sources": [
+            {
+              "mtime_ns": 1786642486586263000,
+              "not_newer_than_report": true,
+              "path": "validation/run_v247_cumulative_native_acceptance.ps1",
+              "sha256": "73694af3f595932abcd22b85d33e966aef368c3a5944279d6db2846465ba6784",
+              "size": 29684
+            },
+            {
+              "mtime_ns": 1786607996792704900,
+              "not_newer_than_report": true,
+              "path": "validation/run_v247_logistic_native_acceptance.ps1",
+              "sha256": "45bbd05a4aeef358c4420087ffc6ab14547e2093fa30149412589e4e0da759ee",
+              "size": 2552
+            },
+            {
+              "mtime_ns": 1786638335159990200,
+              "not_newer_than_report": true,
+              "path": "validation/v247_tauri_native_acceptance.mjs",
+              "sha256": "5b5060833eabaf38697118cf272ce2952a07f827aa23b68e35720bfe65d93563",
+              "size": 809598
+            },
+            {
+              "mtime_ns": 1786607997196503400,
+              "not_newer_than_report": true,
+              "path": "validation/windows_native_save_export.py",
+              "sha256": "da5ed8fb53d78375130c20dbd4cf57aa14980b4304424fe4cb65ba048c419542",
+              "size": 18957
+            }
+          ]
+        },
+        "scoped_report": {
+          "checks": {
+            "all_scoped_checks_linked_and_passing": true,
+            "clean_packaged_console": true,
+            "clean_packaged_failures": true,
+            "clean_raw_console": true,
+            "clean_raw_failures": true,
+            "exact_catalogue_snapshot": true,
+            "exact_feature_id": true,
+            "exact_method_version": true,
+            "exact_package_check_set": true,
+            "exact_scope": true,
+            "exact_scoped_report_path": true,
+            "fresh_after_requested_boundary": true,
+            "generated_after_current_build": true,
+            "loopback_acceptance_endpoint": true,
+            "packaged_kind": true,
+            "packaged_passed": true,
+            "packaged_schema": true,
+            "packaged_tauri_runtime": true,
+            "raw_report_passed": true,
+            "timestamps_match_exactly": true,
+            "timestamps_ordered": true
+          },
+          "completed_at_utc": "2026-08-13T19:15:15.159000Z",
+          "generated_at_utc": "2026-08-13T19:11:38.144000Z",
+          "linked_checks": {
+            "export": {
+              "package_source_bound": true,
+              "passed": true,
+              "raw_check": "logisticExport",
+              "raw_row_bound": true
+            },
+            "failure_lifecycle": {
+              "package_source_bound": true,
+              "passed": true,
+              "raw_check": "logisticFailureLifecycle",
+              "raw_row_bound": true
+            },
+            "legacy_v1": {
+              "package_source_bound": true,
+              "passed": true,
+              "raw_check": "logisticLegacyV1",
+              "raw_row_bound": true
+            },
+            "results": {
+              "package_source_bound": true,
+              "passed": true,
+              "raw_check": "logisticResult",
+              "raw_row_bound": true
+            },
+            "save_reopen": {
+              "package_source_bound": true,
+              "passed": true,
+              "raw_check": "logisticSaveReopen",
+              "raw_row_bound": true
+            },
+            "workflow": {
+              "package_source_bound": true,
+              "passed": true,
+              "raw_check": "logisticWorkflow",
+              "raw_row_bound": true
+            }
+          },
+          "passed": true
+        },
+        "tested_product": {
+          "cli_exact_or_not_reported": true,
+          "current_cli": {
+            "mtime_ns": 1786620631883365000,
+            "path": "target/release/qpls.exe",
+            "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+            "size": 20690432
+          },
+          "current_desktop": {
+            "mtime_ns": 1786636746102237000,
+            "path": "target/release/quickpls-desktop.exe",
+            "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
+            "size": 30507008
+          },
+          "desktop_bound_by_current_cumulative_receipt": true,
+          "desktop_exact": true,
+          "explicit_desktop_exact": false,
+          "passed": true,
+          "reported": null
+        }
+      },
+      "passed": true
+    },
+    "prior_factory_stages": {
+      "artifacts": [
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/logistic_regression_v2/engine_stage.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "simulation_report",
+            "boundary_report"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/logistic_regression_v2/persistence_report.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "stage": "archive_qualified"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/logistic_regression_v2/native_stage.identity.json",
+          "roles": [
+            "frontend_report",
+            "export_report"
+          ],
+          "stage": "native_qualified"
+        }
+      ],
+      "passed": true
+    },
+    "responsive_viewports": {
+      "artifact_paths": [
+        "validation/results/screens/v247-native-desktop-visual/18-logistic-standalone-dialog-1024x700.png",
+        "validation/results/screens/v247-native-desktop-visual/18-logistic-standalone-dialog-1280x720.png",
+        "validation/results/screens/v247-native-desktop-visual/18-logistic-standalone-dialog-1440x900.png"
+      ],
+      "checks": {
+        "all_method_rows_pass": true,
+        "all_required_screenshots_exact": true,
+        "clean_console": true,
+        "clean_failures": true,
+        "exact_required_viewports": true,
+        "fresh_after_requested_boundary": true,
+        "one_method_row_per_viewport": true,
+        "production_bundle_not_mislabeled_as_tauri": true,
+        "raw_report_passed": true,
+        "screenshot_integrity_passes": true,
+        "visual_harness_not_newer_than_report": true
+      },
+      "generated_at_utc": "2026-08-13T19:18:52.475Z",
+      "passed": true,
+      "report": {
+        "path": "validation/results/v247_native_desktop_visual_acceptance.json",
+        "sha256": "3fca6d38de201f6309bfec13d20c5136f82789fb450fe9a4617c710cc33793c1",
+        "size": 464629
+      },
+      "screenshots": [
+        {
+          "actual": {
+            "path": "validation/results/screens/v247-native-desktop-visual/18-logistic-standalone-dialog-1024x700.png",
+            "sha256": "07ebeb0a835474151f5ab4b3e386ec626c7a5580f06a79b8e3aef8c52d7f1d0e",
+            "size": 114280
+          },
+          "passed": true,
+          "state": "logistic-standalone-dialog",
+          "viewport": "1024x700"
+        },
+        {
+          "actual": {
+            "path": "validation/results/screens/v247-native-desktop-visual/18-logistic-standalone-dialog-1280x720.png",
+            "sha256": "ccac927f417ee053c477415f224be5a381a9f5d65b1a66e91f27bdf548b5fd1c",
+            "size": 133043
+          },
+          "passed": true,
+          "state": "logistic-standalone-dialog",
+          "viewport": "1280x720"
+        },
+        {
+          "actual": {
+            "path": "validation/results/screens/v247-native-desktop-visual/18-logistic-standalone-dialog-1440x900.png",
+            "sha256": "b51714e73dd62054d77aea43820d327452860dc062c1790a1a8e09ac338e0e8d",
+            "size": 179429
+          },
+          "passed": true,
+          "state": "logistic-standalone-dialog",
+          "viewport": "1440x900"
+        }
+      ]
+    },
+    "runner_cleanup_verified": true,
+    "source_freshness": {
+      "after": {
+        "build_finished_at_utc": "2026-08-13T15:59:06.155218Z",
+        "build_receipt": {
+          "path": "validation/results/diagnostic_bundle_build_receipt.json",
+          "sha256": "c66c3f4a7df3933cc667f3387e6cb6e65103509b84799de8a7c06faeea83f4c4",
+          "size": 144210
+        },
+        "desktop": {
+          "mtime_ns": 1786636746102237000,
+          "path": "target/release/quickpls-desktop.exe",
+          "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
+          "size": 30507008
+        },
+        "desktop_receipt_exact": true,
+        "gate_sources_excluded_from_binary_freshness": [
+          {
+            "mtime_ns": 1786627059621599000,
+            "path": "validation/diagnostic_bundle_source_manifest.py",
+            "sha256": "77e21bfa7e2a87386c36a33ee2242f8cda61f85f440cedae35a222958f9d3a4e",
+            "size": 28025
+          },
+          {
+            "mtime_ns": 1786640237815572600,
+            "path": "validation/legacy_release_adapter_common.py",
+            "sha256": "daddcd525696fb7e45d0c39a5aa5ba919782df44382acb3692af5bf90fc413e0",
+            "size": 51955
+          },
+          {
+            "mtime_ns": 1786638098608890700,
+            "path": "validation/logistic_regression_v2_factory_audit.py",
+            "sha256": "89150a9a25133e0731db3426801cbe0f9472421c010dac16defda0a475dc609b",
+            "size": 216
+          },
+          {
+            "mtime_ns": 1786638098606418100,
+            "path": "validation/logistic_regression_v2_packaged_acceptance.py",
+            "sha256": "a1b2481639b1a3f0e572b3f05e222f513ebc103b8cfbba68baabaab08d0a630e",
+            "size": 228
+          },
+          {
+            "mtime_ns": 1786610514590924400,
+            "path": "validation/method_promotion_manifest.py",
+            "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+            "size": 34283
+          },
+          {
+            "mtime_ns": 1786650293212485600,
+            "path": "validation/methods/logistic_regression_v2.manifest.json",
+            "sha256": "d37e0fa1b6e67a91ec3b885163114e07c7da08de88d54385f960a77abcc73c7f",
+            "size": 13621
+          },
+          {
+            "mtime_ns": 1786610379730126700,
+            "path": "validation/methods/method_promotion_manifest.schema.json",
+            "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+            "size": 15836
+          },
+          {
+            "mtime_ns": 1786642486586263000,
+            "path": "validation/run_v247_cumulative_native_acceptance.ps1",
+            "sha256": "73694af3f595932abcd22b85d33e966aef368c3a5944279d6db2846465ba6784",
+            "size": 29684
+          },
+          {
+            "mtime_ns": 1786607996792704900,
+            "path": "validation/run_v247_logistic_native_acceptance.ps1",
+            "sha256": "45bbd05a4aeef358c4420087ffc6ab14547e2093fa30149412589e4e0da759ee",
+            "size": 2552
+          },
+          {
+            "mtime_ns": 1786650833649550100,
+            "path": "validation/test_legacy_release_adapters.py",
+            "sha256": "8be8b702aad674175bdcb9cacd5bb99612bf805e19431740a2771c664b35c9be",
+            "size": 13396
+          },
+          {
+            "mtime_ns": 1786639543726298400,
+            "path": "validation/v247_native_desktop_visual_acceptance.mjs",
+            "sha256": "9b5119a6175753a54caa8819db483666849df99fd6e8a0d7cd4b17256db0744d",
+            "size": 280796
+          },
+          {
+            "mtime_ns": 1786638335159990200,
+            "path": "validation/v247_tauri_native_acceptance.mjs",
+            "sha256": "5b5060833eabaf38697118cf272ce2952a07f827aa23b68e35720bfe65d93563",
+            "size": 809598
+          },
+          {
+            "mtime_ns": 1786607997196503400,
+            "path": "validation/windows_native_save_export.py",
+            "sha256": "da5ed8fb53d78375130c20dbd4cf57aa14980b4304424fe4cb65ba048c419542",
+            "size": 18957
+          }
+        ],
+        "passed": true,
+        "release_cli": {
+          "mtime_ns": 1786620631883365000,
+          "path": "target/release/qpls.exe",
+          "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+          "size": 20690432
+        },
+        "release_cli_build_sources": [
+          {
+            "mtime_ns": 1786618668433447400,
+            "path": "Cargo.lock",
+            "sha256": "8f185dea0cf7650e378d9b608270cd8e78b026d1bacae2ce0d521242055c74ee",
+            "size": 154279
+          },
+          {
+            "mtime_ns": 1786607995439584400,
+            "path": "Cargo.toml",
+            "sha256": "594290f8f0e731badc4cb85383cdd5cf2d09ad3c1cb24f86b270895d5e5172d2",
+            "size": 914
+          },
+          {
+            "mtime_ns": 1784372817481351800,
+            "path": "crates/qpls-assessment/Cargo.toml",
+            "sha256": "22a0cc3da4ada9be1f385495ef7af8354fbdf87baa8a5bac6f3dda891eecb01d",
+            "size": 456
+          },
+          {
+            "mtime_ns": 1786607995450741900,
+            "path": "crates/qpls-assessment/src/lib.rs",
+            "sha256": "6cffe850b3e8c1f90eeb570985f6a9ae4448622efa5370d7623ed283d948aafa",
+            "size": 144364
+          },
+          {
+            "mtime_ns": 1784436493165886700,
+            "path": "crates/qpls-cli/Cargo.toml",
+            "sha256": "ede9b7845e6439c9bff5bd05cb07933938a1ad8f82e859e0c3f5676de0119ba8",
+            "size": 678
+          },
+          {
+            "mtime_ns": 1786607995455877000,
+            "path": "crates/qpls-cli/src/main.rs",
+            "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
+            "size": 216983
+          },
+          {
+            "mtime_ns": 1784352071986106700,
+            "path": "crates/qpls-core/Cargo.toml",
+            "sha256": "86a7c44ae9511cb39f65d70fdfca581be24837462c8e4fa062513f9166d2634f",
+            "size": 363
+          },
+          {
+            "mtime_ns": 1786607995461617100,
+            "path": "crates/qpls-core/src/contract.rs",
+            "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
+            "size": 107095
+          },
+          {
+            "mtime_ns": 1784383048514318800,
+            "path": "crates/qpls-core/src/lib.rs",
+            "sha256": "9b534c12e343c4f518969e2f28195a5f733355d4fb1f338ec2447f81fd2bdf52",
+            "size": 180
+          },
+          {
+            "mtime_ns": 1786607995463756700,
+            "path": "crates/qpls-core/src/methods.rs",
+            "sha256": "18bed856d6dec2e7fe6fdc6d5478872b913f1a56c163fee73ee89c7ca53b7ac6",
+            "size": 3790
+          },
+          {
+            "mtime_ns": 1786607995466130100,
+            "path": "crates/qpls-core/src/roadmap.rs",
+            "sha256": "19cf8baad1d217636f3f7ef2d97081156692ed0050561e54bc0bf7b364106fe8",
+            "size": 12376
+          },
+          {
+            "mtime_ns": 1786607995469322800,
+            "path": "crates/qpls-core/src/statistics.rs",
+            "sha256": "dda4eb9df673b892be963933a3f32b32ade133b5c24c70aae76de3648b063769",
+            "size": 8527
+          },
+          {
+            "mtime_ns": 1786620129020320300,
+            "path": "crates/qpls-core/src/validation.rs",
+            "sha256": "ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573",
+            "size": 177352
+          },
+          {
+            "mtime_ns": 1784364586747181800,
+            "path": "crates/qpls-data/Cargo.toml",
+            "sha256": "a284129091841b5742e0ea5b6eeb5fff924cbc4f1eed059bfd075af5256ecb80",
+            "size": 437
+          },
+          {
+            "mtime_ns": 1786607995478642000,
+            "path": "crates/qpls-data/src/lib.rs",
+            "sha256": "a1cab41fc8c82a71dbf7ee674f037040009c0e8340976b98a9ebcfc99851a7e1",
+            "size": 44865
+          },
+          {
+            "mtime_ns": 1786607995481159200,
+            "path": "crates/qpls-estimation/Cargo.toml",
+            "sha256": "fb0d420f1c43919cb9e7a980cd9da270ce3a989e8729ba92e681dae509c60dd2",
+            "size": 503
+          },
+          {
+            "mtime_ns": 1784360087780652100,
+            "path": "crates/qpls-estimation/src/lib.rs",
+            "sha256": "901076baab7b745ef0d1b9cf48a7dc818a64631469cae26cced15a0a41b25890",
+            "size": 26
+          },
+          {
+            "mtime_ns": 1786617342744705100,
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
+            "size": 639198
+          },
+          {
+            "mtime_ns": 1786607995489944600,
+            "path": "crates/qpls-project/Cargo.toml",
+            "sha256": "ef1e3c8e1e5d9d723a43f4b567f6fe490d57d0458f73c8ae281673c0505756d5",
+            "size": 628
+          },
+          {
+            "mtime_ns": 1786607995492067200,
+            "path": "crates/qpls-project/src/archive_integrity.rs",
+            "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+            "size": 31085
+          },
+          {
+            "mtime_ns": 1786620129494578100,
+            "path": "crates/qpls-project/src/lib.rs",
+            "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
+            "size": 660277
+          },
+          {
+            "mtime_ns": 1784375063189640300,
+            "path": "crates/qpls-resampling/Cargo.toml",
+            "sha256": "a922a975499d4c211cfe96399a16ceeb2b248d29fc04cfd7a350c46d18f7ab4d",
+            "size": 589
+          },
+          {
+            "mtime_ns": 1786607995501017700,
+            "path": "crates/qpls-resampling/src/lib.rs",
+            "sha256": "edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0",
+            "size": 170900
+          },
+          {
+            "mtime_ns": 1784390064413583300,
+            "path": "crates/qpls-runner/Cargo.toml",
+            "sha256": "fea3cb8a82dae196097285ffe8c5763e39f1dfe0a485faff99b6cba601b16662",
+            "size": 428
+          },
+          {
+            "mtime_ns": 1786620129040430400,
+            "path": "crates/qpls-runner/src/lib.rs",
+            "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
+            "size": 49349
+          },
+          {
+            "mtime_ns": 1786607996206752100,
+            "path": "validation/development_slices.json",
+            "sha256": "5722f3b6b6d5c6cc19089a097bd1eaae294e55f4830bdae2423fc2861dd1ec10",
+            "size": 374221
+          }
+        ],
+        "release_cli_newer_build_sources": []
+      },
+      "before": {
+        "build_finished_at_utc": "2026-08-13T15:59:06.155218Z",
+        "build_receipt": {
+          "path": "validation/results/diagnostic_bundle_build_receipt.json",
+          "sha256": "c66c3f4a7df3933cc667f3387e6cb6e65103509b84799de8a7c06faeea83f4c4",
+          "size": 144210
+        },
+        "desktop": {
+          "mtime_ns": 1786636746102237000,
+          "path": "target/release/quickpls-desktop.exe",
+          "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
+          "size": 30507008
+        },
+        "desktop_receipt_exact": true,
+        "gate_sources_excluded_from_binary_freshness": [
+          {
+            "mtime_ns": 1786627059621599000,
+            "path": "validation/diagnostic_bundle_source_manifest.py",
+            "sha256": "77e21bfa7e2a87386c36a33ee2242f8cda61f85f440cedae35a222958f9d3a4e",
+            "size": 28025
+          },
+          {
+            "mtime_ns": 1786640237815572600,
+            "path": "validation/legacy_release_adapter_common.py",
+            "sha256": "daddcd525696fb7e45d0c39a5aa5ba919782df44382acb3692af5bf90fc413e0",
+            "size": 51955
+          },
+          {
+            "mtime_ns": 1786638098608890700,
+            "path": "validation/logistic_regression_v2_factory_audit.py",
+            "sha256": "89150a9a25133e0731db3426801cbe0f9472421c010dac16defda0a475dc609b",
+            "size": 216
+          },
+          {
+            "mtime_ns": 1786638098606418100,
+            "path": "validation/logistic_regression_v2_packaged_acceptance.py",
+            "sha256": "a1b2481639b1a3f0e572b3f05e222f513ebc103b8cfbba68baabaab08d0a630e",
+            "size": 228
+          },
+          {
+            "mtime_ns": 1786610514590924400,
+            "path": "validation/method_promotion_manifest.py",
+            "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+            "size": 34283
+          },
+          {
+            "mtime_ns": 1786650293212485600,
+            "path": "validation/methods/logistic_regression_v2.manifest.json",
+            "sha256": "d37e0fa1b6e67a91ec3b885163114e07c7da08de88d54385f960a77abcc73c7f",
+            "size": 13621
+          },
+          {
+            "mtime_ns": 1786610379730126700,
+            "path": "validation/methods/method_promotion_manifest.schema.json",
+            "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+            "size": 15836
+          },
+          {
+            "mtime_ns": 1786642486586263000,
+            "path": "validation/run_v247_cumulative_native_acceptance.ps1",
+            "sha256": "73694af3f595932abcd22b85d33e966aef368c3a5944279d6db2846465ba6784",
+            "size": 29684
+          },
+          {
+            "mtime_ns": 1786607996792704900,
+            "path": "validation/run_v247_logistic_native_acceptance.ps1",
+            "sha256": "45bbd05a4aeef358c4420087ffc6ab14547e2093fa30149412589e4e0da759ee",
+            "size": 2552
+          },
+          {
+            "mtime_ns": 1786650833649550100,
+            "path": "validation/test_legacy_release_adapters.py",
+            "sha256": "8be8b702aad674175bdcb9cacd5bb99612bf805e19431740a2771c664b35c9be",
+            "size": 13396
+          },
+          {
+            "mtime_ns": 1786639543726298400,
+            "path": "validation/v247_native_desktop_visual_acceptance.mjs",
+            "sha256": "9b5119a6175753a54caa8819db483666849df99fd6e8a0d7cd4b17256db0744d",
+            "size": 280796
+          },
+          {
+            "mtime_ns": 1786638335159990200,
+            "path": "validation/v247_tauri_native_acceptance.mjs",
+            "sha256": "5b5060833eabaf38697118cf272ce2952a07f827aa23b68e35720bfe65d93563",
+            "size": 809598
+          },
+          {
+            "mtime_ns": 1786607997196503400,
+            "path": "validation/windows_native_save_export.py",
+            "sha256": "da5ed8fb53d78375130c20dbd4cf57aa14980b4304424fe4cb65ba048c419542",
+            "size": 18957
+          }
+        ],
+        "passed": true,
+        "release_cli": {
+          "mtime_ns": 1786620631883365000,
+          "path": "target/release/qpls.exe",
+          "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+          "size": 20690432
+        },
+        "release_cli_build_sources": [
+          {
+            "mtime_ns": 1786618668433447400,
+            "path": "Cargo.lock",
+            "sha256": "8f185dea0cf7650e378d9b608270cd8e78b026d1bacae2ce0d521242055c74ee",
+            "size": 154279
+          },
+          {
+            "mtime_ns": 1786607995439584400,
+            "path": "Cargo.toml",
+            "sha256": "594290f8f0e731badc4cb85383cdd5cf2d09ad3c1cb24f86b270895d5e5172d2",
+            "size": 914
+          },
+          {
+            "mtime_ns": 1784372817481351800,
+            "path": "crates/qpls-assessment/Cargo.toml",
+            "sha256": "22a0cc3da4ada9be1f385495ef7af8354fbdf87baa8a5bac6f3dda891eecb01d",
+            "size": 456
+          },
+          {
+            "mtime_ns": 1786607995450741900,
+            "path": "crates/qpls-assessment/src/lib.rs",
+            "sha256": "6cffe850b3e8c1f90eeb570985f6a9ae4448622efa5370d7623ed283d948aafa",
+            "size": 144364
+          },
+          {
+            "mtime_ns": 1784436493165886700,
+            "path": "crates/qpls-cli/Cargo.toml",
+            "sha256": "ede9b7845e6439c9bff5bd05cb07933938a1ad8f82e859e0c3f5676de0119ba8",
+            "size": 678
+          },
+          {
+            "mtime_ns": 1786607995455877000,
+            "path": "crates/qpls-cli/src/main.rs",
+            "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
+            "size": 216983
+          },
+          {
+            "mtime_ns": 1784352071986106700,
+            "path": "crates/qpls-core/Cargo.toml",
+            "sha256": "86a7c44ae9511cb39f65d70fdfca581be24837462c8e4fa062513f9166d2634f",
+            "size": 363
+          },
+          {
+            "mtime_ns": 1786607995461617100,
+            "path": "crates/qpls-core/src/contract.rs",
+            "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
+            "size": 107095
+          },
+          {
+            "mtime_ns": 1784383048514318800,
+            "path": "crates/qpls-core/src/lib.rs",
+            "sha256": "9b534c12e343c4f518969e2f28195a5f733355d4fb1f338ec2447f81fd2bdf52",
+            "size": 180
+          },
+          {
+            "mtime_ns": 1786607995463756700,
+            "path": "crates/qpls-core/src/methods.rs",
+            "sha256": "18bed856d6dec2e7fe6fdc6d5478872b913f1a56c163fee73ee89c7ca53b7ac6",
+            "size": 3790
+          },
+          {
+            "mtime_ns": 1786607995466130100,
+            "path": "crates/qpls-core/src/roadmap.rs",
+            "sha256": "19cf8baad1d217636f3f7ef2d97081156692ed0050561e54bc0bf7b364106fe8",
+            "size": 12376
+          },
+          {
+            "mtime_ns": 1786607995469322800,
+            "path": "crates/qpls-core/src/statistics.rs",
+            "sha256": "dda4eb9df673b892be963933a3f32b32ade133b5c24c70aae76de3648b063769",
+            "size": 8527
+          },
+          {
+            "mtime_ns": 1786620129020320300,
+            "path": "crates/qpls-core/src/validation.rs",
+            "sha256": "ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573",
+            "size": 177352
+          },
+          {
+            "mtime_ns": 1784364586747181800,
+            "path": "crates/qpls-data/Cargo.toml",
+            "sha256": "a284129091841b5742e0ea5b6eeb5fff924cbc4f1eed059bfd075af5256ecb80",
+            "size": 437
+          },
+          {
+            "mtime_ns": 1786607995478642000,
+            "path": "crates/qpls-data/src/lib.rs",
+            "sha256": "a1cab41fc8c82a71dbf7ee674f037040009c0e8340976b98a9ebcfc99851a7e1",
+            "size": 44865
+          },
+          {
+            "mtime_ns": 1786607995481159200,
+            "path": "crates/qpls-estimation/Cargo.toml",
+            "sha256": "fb0d420f1c43919cb9e7a980cd9da270ce3a989e8729ba92e681dae509c60dd2",
+            "size": 503
+          },
+          {
+            "mtime_ns": 1784360087780652100,
+            "path": "crates/qpls-estimation/src/lib.rs",
+            "sha256": "901076baab7b745ef0d1b9cf48a7dc818a64631469cae26cced15a0a41b25890",
+            "size": 26
+          },
+          {
+            "mtime_ns": 1786617342744705100,
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
+            "size": 639198
+          },
+          {
+            "mtime_ns": 1786607995489944600,
+            "path": "crates/qpls-project/Cargo.toml",
+            "sha256": "ef1e3c8e1e5d9d723a43f4b567f6fe490d57d0458f73c8ae281673c0505756d5",
+            "size": 628
+          },
+          {
+            "mtime_ns": 1786607995492067200,
+            "path": "crates/qpls-project/src/archive_integrity.rs",
+            "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+            "size": 31085
+          },
+          {
+            "mtime_ns": 1786620129494578100,
+            "path": "crates/qpls-project/src/lib.rs",
+            "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
+            "size": 660277
+          },
+          {
+            "mtime_ns": 1784375063189640300,
+            "path": "crates/qpls-resampling/Cargo.toml",
+            "sha256": "a922a975499d4c211cfe96399a16ceeb2b248d29fc04cfd7a350c46d18f7ab4d",
+            "size": 589
+          },
+          {
+            "mtime_ns": 1786607995501017700,
+            "path": "crates/qpls-resampling/src/lib.rs",
+            "sha256": "edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0",
+            "size": 170900
+          },
+          {
+            "mtime_ns": 1784390064413583300,
+            "path": "crates/qpls-runner/Cargo.toml",
+            "sha256": "fea3cb8a82dae196097285ffe8c5763e39f1dfe0a485faff99b6cba601b16662",
+            "size": 428
+          },
+          {
+            "mtime_ns": 1786620129040430400,
+            "path": "crates/qpls-runner/src/lib.rs",
+            "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
+            "size": 49349
+          },
+          {
+            "mtime_ns": 1786607996206752100,
+            "path": "validation/development_slices.json",
+            "sha256": "5722f3b6b6d5c6cc19089a097bd1eaae294e55f4830bdae2423fc2861dd1ec10",
+            "size": 374221
+          }
+        ],
+        "release_cli_newer_build_sources": []
+      },
+      "passed": true,
+      "source_stable_during_gate": true
+    }
+  },
+  "execution": {
+    "commands": []
+  },
+  "feature_id": "qpls3.standalone.logistic",
+  "generated_at_utc": "2026-08-13T19:55:20.894503Z",
+  "method_version": "regression_logistic_v2",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "packaged_acceptance",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "target/release/qpls.exe",
+      "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+      "size": 20690432
+    },
+    {
+      "path": "target/release/quickpls-desktop.exe",
+      "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
+      "size": 30507008
+    },
+    {
+      "path": "validation/legacy_release_adapter_common.py",
+      "sha256": "daddcd525696fb7e45d0c39a5aa5ba919782df44382acb3692af5bf90fc413e0",
+      "size": 51955
+    },
+    {
+      "path": "validation/logistic_regression_v2_factory_audit.py",
+      "sha256": "89150a9a25133e0731db3426801cbe0f9472421c010dac16defda0a475dc609b",
+      "size": 216
+    },
+    {
+      "path": "validation/logistic_regression_v2_packaged_acceptance.py",
+      "sha256": "a1b2481639b1a3f0e572b3f05e222f513ebc103b8cfbba68baabaab08d0a630e",
+      "size": 228
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/logistic_regression_v2.manifest.json",
+      "sha256": "d37e0fa1b6e67a91ec3b885163114e07c7da08de88d54385f960a77abcc73c7f",
+      "size": 13621
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/results/diagnostic_bundle_build_receipt.json",
+      "sha256": "c66c3f4a7df3933cc667f3387e6cb6e65103509b84799de8a7c06faeea83f4c4",
+      "size": 144210
+    },
+    {
+      "path": "validation/results/logistic_v2_packaged_acceptance.json",
+      "sha256": "79749a731cb402c58558c5962ccf10c6abc140ff71153c5e4beb6863b8cab80a",
+      "size": 4390
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/150-tauri-native-logistic-fixture-data-1536x794.png",
+      "sha256": "629a325c18d9fd856e2bd9b8ca68d7eb72d5c909f068ea3e22c2f70200967860",
+      "size": 292324
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/151-tauri-native-logistic-dialog-1536x794.png",
+      "sha256": "164046f3fff839f75b0cd97a84d09b584892ab855a7e5a22f66050b7dac3b94e",
+      "size": 284477
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/152-tauri-native-logistic-running-1536x794.png",
+      "sha256": "412b6a5216d536a10a489d3dc38897b26325a0bdabccdf4898237eb4aa2a9c4a",
+      "size": 230670
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/153-tauri-native-logistic-results-1536x794.png",
+      "sha256": "669ef9172fa9834f71f2855e2b90db6655e6d6fbf2629a71ce0890ebb391ae8f",
+      "size": 90868
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/154-tauri-native-logistic-export-1536x794.png",
+      "sha256": "18c18417199acbadf439d13236bad3edc111d519061be44a4a27b9d38bd7b31d",
+      "size": 117075
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/155-tauri-native-logistic-reopened-1536x794.png",
+      "sha256": "b504fc1c7da2861b4701c156e86d862012c32520c46850faaf3ccf56c10a0d43",
+      "size": 98134
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-visual/18-logistic-standalone-dialog-1024x700.png",
+      "sha256": "07ebeb0a835474151f5ab4b3e386ec626c7a5580f06a79b8e3aef8c52d7f1d0e",
+      "size": 114280
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-visual/18-logistic-standalone-dialog-1280x720.png",
+      "sha256": "ccac927f417ee053c477415f224be5a381a9f5d65b1a66e91f27bdf548b5fd1c",
+      "size": 133043
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-visual/18-logistic-standalone-dialog-1440x900.png",
+      "sha256": "b51714e73dd62054d77aea43820d327452860dc062c1790a1a8e09ac338e0e8d",
+      "size": 179429
+    },
+    {
+      "path": "validation/results/v247-native-logistic-1786648298136-35352.qpls",
+      "sha256": "57b7497daedce39d64bff0ca7451033c87255e1a303e116137b1709af31ebaa8",
+      "size": 20157
+    },
+    {
+      "path": "validation/results/v247-native-logistic-20260814-003257084-50236-6df5af42.xlsx",
+      "sha256": "08061192e164f7ab4308794a19384718a7d3d9e4db4a5155971584088b15bb4a",
+      "size": 16133
+    },
+    {
+      "path": "validation/results/v247_cumulative_native_acceptance_receipt.json",
+      "sha256": "c17e0dec92106a8762b8cec4d608b96ac510c1cc3cd846073a1b62094c87ac9f",
+      "size": 6655
+    },
+    {
+      "path": "validation/results/v247_native_desktop_visual_acceptance.json",
+      "sha256": "3fca6d38de201f6309bfec13d20c5136f82789fb450fe9a4617c710cc33793c1",
+      "size": 464629
+    },
+    {
+      "path": "validation/results/v247_tauri_native_acceptance_logistic.json",
+      "sha256": "aa7cffe2cbe57a9be187a8c586166c0846b4187b7a68b568652f87fba4d09c22",
+      "size": 444724
+    },
+    {
+      "path": "validation/run_v247_cumulative_native_acceptance.ps1",
+      "sha256": "73694af3f595932abcd22b85d33e966aef368c3a5944279d6db2846465ba6784",
+      "size": 29684
+    },
+    {
+      "path": "validation/run_v247_logistic_native_acceptance.ps1",
+      "sha256": "45bbd05a4aeef358c4420087ffc6ab14547e2093fa30149412589e4e0da759ee",
+      "size": 2552
+    },
+    {
+      "path": "validation/test_legacy_release_adapters.py",
+      "sha256": "8be8b702aad674175bdcb9cacd5bb99612bf805e19431740a2771c664b35c9be",
+      "size": 13396
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/v247_native_desktop_visual_acceptance.mjs",
+      "sha256": "9b5119a6175753a54caa8819db483666849df99fd6e8a0d7cd4b17256db0744d",
+      "size": 280796
+    },
+    {
+      "path": "validation/v247_tauri_native_acceptance.mjs",
+      "sha256": "5b5060833eabaf38697118cf272ce2952a07f827aa23b68e35720bfe65d93563",
+      "size": 809598
+    },
+    {
+      "path": "validation/windows_native_save_export.py",
+      "sha256": "da5ed8fb53d78375130c20dbd4cf57aa14980b4304424fe4cb65ba048c419542",
+      "size": 18957
+    }
+  ]
+}

@@ -569,6 +569,7 @@ def _visual_attestation(root: Path, path: Path) -> dict[str, Any]:
     expected_types = [
         {"value": "ols", "label": "Ordinary least squares"},
         {"value": "logistic", "label": "Binary logistic (outcome coded 0/1)"},
+        {"value": "process", "label": "Graph-defined Path Analysis / PROCESS"},
     ]
     expected_bootstrap = [
         {"value": "off", "label": "Off"},
@@ -607,7 +608,7 @@ def _visual_attestation(root: Path, path: Path) -> dict[str, Any]:
             and row.get("visibleModelNodes") == 0
             and row.get("analyzeCommandCount") == 1
             and row.get("dialogOpened") is True
-            and row.get("catalogCount") == 14
+            and row.get("catalogCount") == 15
             and row.get("selectedMethod") == "Regression"
             and json_value(row, "linkage.linkage", False) is True
             and row.get("category") == "Standalone analysis"

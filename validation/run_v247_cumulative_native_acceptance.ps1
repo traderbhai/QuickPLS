@@ -9,9 +9,10 @@ $cliExecutable = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot "targe
 $harnessPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot "validation\v247_tauri_native_acceptance.mjs"))
 $closeHelperPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot "validation\close_tauri_test_window.mjs"))
 $cumulativeReportPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot "validation\results\v247_tauri_native_acceptance.json"))
+$cumulativeReceiptPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot "validation\results\v247_cumulative_native_acceptance_receipt.json"))
 $resultsDirectory = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot "validation\results"))
 $cdpEndpoint = "http://127.0.0.1:9222"
-$expectedFinalCheckCount = 166
+$expectedFinalCheckCount = 177
 $supervisorStartedUtc = [DateTime]::UtcNow
 
 foreach ($requiredFile in @($desktopExecutable, $cliExecutable, $harnessPath, $closeHelperPath)) {
@@ -240,6 +241,25 @@ function Assert-AcceptanceReport {
     }
 }
 
+function Wait-AcceptanceReportPublished {
+    param(
+        [string]$Path,
+        [DateTime]$NotBeforeUtc,
+        [int]$TimeoutMilliseconds = 5000
+    )
+    $deadline = [DateTime]::UtcNow.AddMilliseconds($TimeoutMilliseconds)
+    do {
+        if (Test-Path -LiteralPath $Path -PathType Leaf) {
+            $file = Get-Item -LiteralPath $Path
+            if ($file.Length -gt 0 -and $file.LastWriteTimeUtc -ge $NotBeforeUtc.AddSeconds(-2)) {
+                return $true
+            }
+        }
+        Start-Sleep -Milliseconds 100
+    } while ([DateTime]::UtcNow -lt $deadline)
+    return $false
+}
+
 function Assert-ExportArtifacts {
     param([string[]]$Paths)
     foreach ($path in $Paths) {
@@ -269,7 +289,8 @@ function Invoke-FreshFullAcceptance {
     $environmentNames = @(
         "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "QUICKPLS_CDP_ENDPOINT", "QUICKPLS_CLI_PATH",
         "QUICKPLS_DESKTOP_EXE_PATH", "QUICKPLS_PYTHON", "QUICKPLS_ACCEPTANCE_SCOPE",
-        "QUICKPLS_NATIVE_EXPORT_PATH", "QUICKPLS_MGA_NATIVE_EXPORT_PATH", "QUICKPLS_CCA_NATIVE_EXPORT_PATH",
+        "QUICKPLS_NATIVE_EXPORT_PATH", "QUICKPLS_BOOTSTRAP_NATIVE_EXPORT_PATH", "QUICKPLS_PLSC_NATIVE_EXPORT_PATH", "QUICKPLS_WPLS_NATIVE_EXPORT_PATH",
+        "QUICKPLS_MGA_NATIVE_EXPORT_PATH", "QUICKPLS_CCA_NATIVE_EXPORT_PATH",
         "QUICKPLS_IPMA_NATIVE_EXPORT_PATH", "QUICKPLS_NCA_NATIVE_EXPORT_PATH"
     )
     $priorEnvironment = @{}
@@ -293,6 +314,9 @@ function Invoke-FreshFullAcceptance {
         [Environment]::SetEnvironmentVariable("QUICKPLS_PYTHON", $pythonExecutable, "Process")
         [Environment]::SetEnvironmentVariable("QUICKPLS_ACCEPTANCE_SCOPE", "full", "Process")
         [Environment]::SetEnvironmentVariable("QUICKPLS_NATIVE_EXPORT_PATH", $ExportPaths.generic, "Process")
+        [Environment]::SetEnvironmentVariable("QUICKPLS_BOOTSTRAP_NATIVE_EXPORT_PATH", $ExportPaths.bootstrap, "Process")
+        [Environment]::SetEnvironmentVariable("QUICKPLS_PLSC_NATIVE_EXPORT_PATH", $ExportPaths.plsc, "Process")
+        [Environment]::SetEnvironmentVariable("QUICKPLS_WPLS_NATIVE_EXPORT_PATH", $ExportPaths.wpls, "Process")
         [Environment]::SetEnvironmentVariable("QUICKPLS_MGA_NATIVE_EXPORT_PATH", $ExportPaths.mga, "Process")
         [Environment]::SetEnvironmentVariable("QUICKPLS_CCA_NATIVE_EXPORT_PATH", $ExportPaths.cca, "Process")
         [Environment]::SetEnvironmentVariable("QUICKPLS_IPMA_NATIVE_EXPORT_PATH", $ExportPaths.ipma, "Process")
@@ -320,7 +344,7 @@ function Invoke-FreshFullAcceptance {
             throw "Fresh full packaged acceptance exited $harnessExitCode. stdout=$(Read-LogText $stdoutPath) stderr=$(Read-LogText $stderrPath)"
         }
         $null = Assert-AcceptanceReport -Path $cumulativeReportPath -NotBeforeUtc $stageStartedUtc -ExpectedScope $null -ExpectedCheckCount $null
-        Assert-ExportArtifacts -Paths @($ExportPaths.generic, $ExportPaths.mga, $ExportPaths.cca, $ExportPaths.ipma, $ExportPaths.nca)
+        Assert-ExportArtifacts -Paths @($ExportPaths.generic, $ExportPaths.bootstrap, $ExportPaths.plsc, $ExportPaths.wpls, $ExportPaths.mga, $ExportPaths.cca, $ExportPaths.ipma, $ExportPaths.nca)
     } catch {
         $stageError = $_.Exception.Message
     } finally {
@@ -374,11 +398,14 @@ function Invoke-FocusedWrapper {
     $stderrPath = Join-Path ([System.IO.Path]::GetTempPath()) "quickpls-cumulative-$Name-$PID.stderr.txt"
     $rootIds = New-Object 'System.Collections.Generic.HashSet[int]'
     $tracked = @{}
+    $acceptedDesktopIdentities = @{}
+    $unresolvedDesktopIdentities = @{}
     $unexpectedDesktop = @{}
     $observeWrapper = {
         foreach ($desktop in @(Get-QuickPlsDesktopProcesses)) {
             $descriptor = ConvertTo-ProcessDescriptor -Process $desktop
             Add-TrackedProcessTree -RootProcessId ([int]$descriptor.ProcessId) -TrackedProcesses $tracked
+            $identityKey = "$($descriptor.ProcessId)|$($descriptor.CreationDate)|$($descriptor.Name)"
             $observedPath = ""
             if (-not [string]::IsNullOrWhiteSpace([string]$descriptor.ExecutablePath)) {
                 try {
@@ -387,10 +414,18 @@ function Invoke-FocusedWrapper {
                     $observedPath = ""
                 }
             }
-            if (-not [string]::Equals($observedPath, $desktopExecutable, [System.StringComparison]::OrdinalIgnoreCase)) {
-                $unexpectedDesktop[[string]$descriptor.ProcessId] = $descriptor
+            if ([string]::IsNullOrWhiteSpace($observedPath)) {
+                if (-not $acceptedDesktopIdentities.ContainsKey($identityKey)) {
+                    $unresolvedDesktopIdentities[$identityKey] = $descriptor
+                }
                 continue
             }
+            $unresolvedDesktopIdentities.Remove($identityKey)
+            if (-not [string]::Equals($observedPath, $desktopExecutable, [System.StringComparison]::OrdinalIgnoreCase)) {
+                $unexpectedDesktop[$identityKey] = $descriptor
+                continue
+            }
+            $acceptedDesktopIdentities[$identityKey] = $descriptor
             $null = $rootIds.Add([int]$descriptor.ProcessId)
         }
     }
@@ -412,9 +447,11 @@ function Invoke-FocusedWrapper {
     }
     $stdout = Read-LogText -Path $stdoutPath
     $stderr = Read-LogText -Path $stderrPath
-    Remove-Item -LiteralPath $stdoutPath, $stderrPath -Force -ErrorAction SilentlyContinue
     if ($unexpectedDesktop.Count -ne 0) {
         throw "Focused $Name acceptance observed an unexpected QuickPLS executable: $($unexpectedDesktop.Values | ConvertTo-Json -Compress)"
+    }
+    if ($unresolvedDesktopIdentities.Count -ne 0) {
+        throw "Focused $Name acceptance could not authenticate every observed QuickPLS executable: $($unresolvedDesktopIdentities.Values | ConvertTo-Json -Compress)"
     }
     if ($rootIds.Count -ne 1) {
         throw "Focused $Name acceptance observed $($rootIds.Count) release desktop PIDs; expected exactly one."
@@ -427,18 +464,28 @@ function Invoke-FocusedWrapper {
     }
     Assert-ExportArtifacts -Paths $ExportPaths
     $scopedReportPath = Join-Path $resultsDirectory "v247_tauri_native_acceptance_$Scope.json"
+    $scopedPublished = Wait-AcceptanceReportPublished -Path $scopedReportPath -NotBeforeUtc $stageStartedUtc
+    $cumulativePublished = Wait-AcceptanceReportPublished -Path $cumulativeReportPath -NotBeforeUtc $stageStartedUtc
+    if (-not $scopedPublished -or -not $cumulativePublished) {
+        throw "Focused $Name wrapper exited 0 without publishing fresh reports (scoped=$scopedPublished, cumulative=$cumulativePublished). stdout=$stdout stderr=$stderr"
+    }
     $scoped = Assert-AcceptanceReport -Path $scopedReportPath -NotBeforeUtc $stageStartedUtc -ExpectedScope $Scope -ExpectedCheckCount $null
     $cumulative = Assert-AcceptanceReport -Path $cumulativeReportPath -NotBeforeUtc $stageStartedUtc -ExpectedScope $Scope -ExpectedCheckCount $null
     if ($scoped.Size -ne $cumulative.Size -or $scoped.Sha256 -ne $cumulative.Sha256) {
         throw "Focused $Name scoped and cumulative reports are not byte-identical."
     }
+    Remove-Item -LiteralPath $stdoutPath, $stderrPath -Force -ErrorAction SilentlyContinue
     Assert-CleanLaunchBoundary -Stage "After focused $Name acceptance"
 }
 
 New-Item -ItemType Directory -Path $resultsDirectory -Force | Out-Null
+Remove-Item -LiteralPath $cumulativeReceiptPath -Force -ErrorAction SilentlyContinue
 $runStamp = "$(Get-Date -Format 'yyyyMMdd-HHmmssfff')-$PID-$([Guid]::NewGuid().ToString('N').Substring(0, 8))"
 $exports = [ordered]@{
     generic = Join-Path $resultsDirectory "v247-native-full-$runStamp.xlsx"
+    bootstrap = Join-Path $resultsDirectory "v247-native-pls-bootstrap-v4-$runStamp.xlsx"
+    plsc = Join-Path $resultsDirectory "v247-native-plsc-$runStamp.xlsx"
+    wpls = Join-Path $resultsDirectory "v247-native-wpls-$runStamp.xlsx"
     mga = Join-Path $resultsDirectory "v247-native-mga-$runStamp.xlsx"
     cca = Join-Path $resultsDirectory "v247-native-cca-$runStamp.xlsx"
     ipma = Join-Path $resultsDirectory "v247-native-ipma-$runStamp.xlsx"
@@ -490,13 +537,31 @@ $final = Assert-AcceptanceReport -Path $cumulativeReportPath -NotBeforeUtc $supe
 Assert-ExportArtifacts -Paths @($exports.Values)
 Assert-CleanLaunchBoundary -Stage "Completed cumulative native acceptance"
 
-[pscustomobject]@{
+$exportDescriptors = @($exports.GetEnumerator() | ForEach-Object {
+    $file = Get-Item -LiteralPath $_.Value
+    [pscustomobject]@{
+        role = [string]$_.Key
+        path = "validation/results/$($file.Name)"
+        size = [int64]$file.Length
+        sha256 = (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+    }
+})
+$receipt = [pscustomobject]@{
+    schema_version = 1
+    kind = "quickpls_v247_cumulative_native_acceptance_receipt"
     passed = $true
-    report = $cumulativeReportPath
+    supervisor_started_at_utc = $supervisorStartedUtc.ToString("o")
+    completed_at_utc = [DateTime]::UtcNow.ToString("o")
+    report = "validation/results/v247_tauri_native_acceptance.json"
     checks = $final.CheckNames.Count
     unique_checks = $final.CheckNames.Count
     failures = 0
     console_errors = 0
     report_sha256 = $final.Sha256
-    exports = @($exports.Values)
-} | ConvertTo-Json -Depth 4
+    report_size = $final.Size
+    final_scope = "regression_bootstrap"
+    graceful_process_cleanup_verified = $true
+    exports = $exportDescriptors
+}
+$receipt | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $cumulativeReceiptPath -Encoding UTF8
+$receipt | ConvertTo-Json -Depth 6

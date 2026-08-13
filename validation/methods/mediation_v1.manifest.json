@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-13T10:10:45Z",
+    "manifest_path": "validation/methods/mediation_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.pls.mediation",
+    "label": "PLS Mediation",
+    "method_version": "pls_mediation_v1",
+    "method_kind": "stochastic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/"
+  },
+  "claim": {
+    "supported_scope": "Direct, total indirect, and total-effect decomposition across directed paths in a supported recursive PLS model, descriptive mediation-pattern labels, variance accounted for when defined, and matching bootstrap inference for emitted indirect-effect identities.",
+    "estimand": "For each ordered construct pair, the direct path coefficient, the sum of products over all directed mediated paths, their total, and the indirect-to-total ratio when the total is not numerically zero.",
+    "assumptions": [
+      "The structural graph is recursive and every reported mediated path is composed only of estimated directed structural edges.",
+      "Effect decomposition uses the same converged PLS result and construct orientation as the saved run.",
+      "Publication inference is attached only when its indirect-effect identity, recipe, dataset fingerprint, seed, and method versions match the point estimate."
+    ],
+    "exclusions": [
+      "Causal identification, unmeasured-confounding correction, longitudinal mediation, and counterfactual mediation effects are excluded.",
+      "Moderated mediation, observed-variable PROCESS templates, and cyclic or reciprocal mediation are separate capabilities.",
+      "Descriptive VAF labels are not substituted for qualified uncertainty intervals."
+    ],
+    "warnings": [
+      "A nonzero indirect point estimate does not establish mediation without design assumptions and qualified uncertainty evidence.",
+      "The descriptive class label does not determine causal mechanism, practical importance, or publication suitability."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {
+        "id": "total_indirect_effect",
+        "expression": "indirect_ij = sum_{p in P_ij, length(p) >= 2} product_{e in p} beta_e",
+        "variables": ["indirect_ij", "P_ij", "p", "beta_e"],
+        "source_reference_id": "nitzl_roldan_cepeda_2016"
+      },
+      {
+        "id": "total_and_vaf",
+        "expression": "total_ij = direct_ij + indirect_ij; VAF_ij = indirect_ij / total_ij when abs(total_ij) > 1e-12",
+        "variables": ["total_ij", "direct_ij", "indirect_ij", "VAF_ij"],
+        "source_reference_id": "nitzl_roldan_cepeda_2016"
+      }
+    ],
+    "references": [
+      {
+        "id": "nitzl_roldan_cepeda_2016",
+        "kind": "primary_paper",
+        "citation": "Nitzl, Roldan, and Cepeda (2016), Mediation Analysis in Partial Least Squares Path Modeling, Industrial Management and Data Systems 116(9), 1849-1864",
+        "locator": "https://doi.org/10.1108/IMDS-07-2015-0302",
+        "independence_group": "primary_pls_mediation_method",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "independent_python_mediation",
+        "kind": "independent_python",
+        "citation": "Independent standardized OLS and path-product mediation fixture",
+        "locator": "validation/mediation_reference.py",
+        "independence_group": "python_reference",
+        "runtime_policy": "development_validation_only"
+      },
+      {
+        "id": "independent_r_mediation",
+        "kind": "independent_r",
+        "citation": "Independent development-only R base-lm mediation fixture",
+        "locator": "validation/mediation_r_reference.R",
+        "independence_group": "r_reference",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "simulations": [
+      {
+        "id": "indirect_effect_recovery",
+        "purpose": "coverage",
+        "design": "Single, parallel, and serial mediation graphs over bounded loading, path, sample-size, reliability, and nonnormality grids.",
+        "seed_policy": "Frozen scenario-indexed data and bootstrap streams; replicate identity is independent of worker count and completion order.",
+        "metrics": ["direct_error", "indirect_error", "total_error", "interval_coverage", "failure_rate"],
+        "acceptance_rule": "Point decompositions must match an independent path-product reference within 1e-6 and preregistered indirect-effect interval coverage must pass with every failure retained."
+      },
+      {
+        "id": "null_indirect_effect",
+        "purpose": "type_i_error",
+        "design": "Graphs with one broken mediation stage while retaining bounded direct and nuisance structural effects.",
+        "seed_policy": "Frozen indexed null scenarios and resampling streams shared only by scenario identity.",
+        "metrics": ["false_positive_rate", "binomial_confidence_interval", "classification_error"],
+        "acceptance_rule": "The preregistered false-positive confidence interval must contain the nominal level and descriptive class labels must reflect the frozen tolerance exactly."
+      }
+    ],
+    "boundaries": [
+      {"id": "singular_or_failed_path_model", "category": "data_pathology", "case": "The PLS model cannot estimate one or more edges required for a requested indirect path.", "expected_behavior": "No completed mediation estimate is emitted; the underlying estimation failure remains explicit."},
+      {"id": "cyclic_or_moderated_graph", "category": "unsupported_scope", "case": "The requested effect relies on a cycle, reciprocal path, unsupported generated construct, or moderated stage.", "expected_behavior": "The graph is blocked or the unsupported effect is excluded with an explicit scope message."},
+      {"id": "graph_and_indicator_reorder", "category": "metamorphic", "case": "Rows, constructs, indicators, or independent path declaration order are consistently permuted.", "expected_behavior": "Mapped direct, indirect, total, VAF, class, and matching inference rows remain equal within tolerance."},
+      {"id": "seed_worker_invariance", "category": "determinism", "case": "The same mediation bootstrap recipe is run repeatedly with different supported worker counts.", "expected_behavior": "Resample plans, effect identities, intervals, probabilities, and aggregate order are exactly equal."},
+      {"id": "mediation_archive_tamper", "category": "tamper", "case": "A path, effect identity, decomposition, class, interval, seed, or method version is altered.", "expected_behavior": "Strict project validation rejects the archive rather than displaying the changed mediation result."}
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 3,
+      "result_schema_version": 1,
+      "payload_kind": "pls_pm_v3",
+      "tamper_tests": [
+        {"category": "feature_identity", "expected_behavior": "Reject a result whose mediation capability identity differs from its recipe."},
+        {"category": "method_version", "expected_behavior": "Reject a mediation payload relabeled with another method version."},
+        {"category": "dataset_fingerprint", "expected_behavior": "Reject a mediation result whose dataset fingerprint no longer matches."},
+        {"category": "checksum", "expected_behavior": "Reject any modified archive member whose checksum differs."},
+        {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, non-finite effects, invalid classes, or decompositions inconsistent with saved paths."},
+        {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret unversioned path products or inference from another effect identity as current mediation evidence."}
+      ],
+      "legacy_policy": "Only pls_mediation_v1 effect identities regenerated or strictly loaded under the current recipe contract may satisfy current evidence."
+    },
+    "native": {
+      "setup_controls": ["Supported recursive PLS model", "Source and target effect review", "Bootstrap settings", "Seed and workers"],
+      "applicability_blockers": ["Cyclic graph", "No mediated path", "Unsupported generated construct", "Mismatched inference recipe", "Failed underlying PLS estimation"],
+      "result_surfaces": ["Direct, indirect, and total effects", "VAF and descriptive class", "Indirect-effect intervals and probabilities", "Method warnings", "Run provenance"],
+      "gui_cli_parity_rule": "For the same model, data fingerprint, resampling plan, seed, and method versions, GUI and CLI mediation and inference payloads must be exactly equal apart from operational identifiers and timestamps.",
+      "accessibility_rules": ["All decompositions, labels, intervals, and unavailable reasons are available in accessible tables.", "Effect identity and uncertainty are understandable without diagram position, color, or pointer interaction."]
+    },
+    "export": {
+      "formats": ["csv", "xlsx", "html", "svg", "png"],
+      "tables": ["Mediation effects", "Indirect-effect inference", "Mediation method scope", "Run provenance"],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": ["windows"],
+      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
+      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "offline_required": true,
+      "cancellation_required": true,
+      "process_cleanup_required": true
+    },
+    "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
+  },
+  "qualification": {
+    "declared_state": "absent",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": ["docs/methods/PLS_MEDIATION_V1.md"],
+      "independent_reference": ["validation/mediation_reference.py", "validation/mediation_r_reference.py", "validation/mediation_r_reference.R", "validation/mediation_published_example.py"],
+      "simulation_report": ["validation/mediation_metamorphic.py", "validation/mediation_randomization.py", "validation/mediation_coverage_qualification.py"],
+      "boundary_report": ["validation/mediation_boundary_gate.py"],
+      "persistence_report": ["validation/mediation_persistence_gate.py"],
+      "frontend_report": ["src/native/nativeResults.test.ts", "src/domain/resultInterpretation.test.ts"],
+      "export_report": ["src/native/nativeExportTables.test.ts", "src/domain/resultTables.test.ts"],
+      "method_audit": ["validation/mediation_method_promotion_audit.py"],
+      "packaged_acceptance": ["validation/run_mediation_native_acceptance.ps1"]
+    },
+    "evidence": {"engine_only": [], "archive_qualified": [], "native_qualified": [], "release_qualified": []}
+  }
+}

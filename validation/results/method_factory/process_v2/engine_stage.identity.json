@@ -1,0 +1,167 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "archive_native_release_evidence_borrowed": false,
+    "bounded_state": "engine_only",
+    "current_cli_binding": {
+      "current_cli": {
+        "path": "target/release/qpls.exe",
+        "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+        "size": 20690432
+      },
+      "execution_binding": "reference script executed in this evidence run with QUICKPLS_CLI_PATH set to current_cli",
+      "explicit_report_binding": true,
+      "passed": true,
+      "reference_report_cli": {
+        "path": "target/release/qpls.exe",
+        "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+        "size": 20690432
+      }
+    },
+    "current_reference_execution": {
+      "command": [
+        "not_rerun"
+      ],
+      "returncode": null,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    "expected_checks": [
+      "binary_endogenous_outcome_rejected_in_original_sample",
+      "bootstrap_index_partitions",
+      "bootstrap_witness_type7_bca_ratio",
+      "conditional_plot_arithmetic",
+      "continuous_binary_three_way_slopes",
+      "dedicated_graph_result_not_generic_regression",
+      "equation_order_terms_hc3_fit",
+      "first_second_stage_moderated_mediation",
+      "global_listwise_sample_and_profiles",
+      "hc3_covariance_diagonal_fail_closed",
+      "hc3_high_leverage_fail_closed",
+      "independent_python_resampling_distribution",
+      "independent_r_equations_effects_resampling",
+      "johnson_neyman_invalid_covariance_fail_closed",
+      "johnson_neyman_root_solver_affine_stability",
+      "johnson_neyman_roots_regions_curves",
+      "legacy_v1_not_current_evidence",
+      "parallel_serial_effect_arithmetic",
+      "point_metamorphic_invariance",
+      "reference_effect_condition_policy",
+      "scale_aware_solver_affine_unit_invariance_and_relative_collinearity",
+      "seed_worker_invariance",
+      "semantic_probe_grid_rejects_collapsed_f64_levels",
+      "simple_slope_variance_fail_closed",
+      "typed_recipe_and_method_identity"
+    ],
+    "focused_fail_closed_tests": {
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "validation.test_process_v2_reference"
+      ],
+      "returncode": 0,
+      "stderr_tail": "..............\n----------------------------------------------------------------------\nRan 14 tests in 0.188s\n\nOK\n",
+      "stdout_tail": ""
+    },
+    "observed_passed_checks": [
+      "binary_endogenous_outcome_rejected_in_original_sample",
+      "bootstrap_index_partitions",
+      "bootstrap_witness_type7_bca_ratio",
+      "conditional_plot_arithmetic",
+      "continuous_binary_three_way_slopes",
+      "dedicated_graph_result_not_generic_regression",
+      "equation_order_terms_hc3_fit",
+      "first_second_stage_moderated_mediation",
+      "global_listwise_sample_and_profiles",
+      "hc3_covariance_diagonal_fail_closed",
+      "hc3_high_leverage_fail_closed",
+      "independent_python_resampling_distribution",
+      "independent_r_equations_effects_resampling",
+      "johnson_neyman_invalid_covariance_fail_closed",
+      "johnson_neyman_root_solver_affine_stability",
+      "johnson_neyman_roots_regions_curves",
+      "legacy_v1_not_current_evidence",
+      "parallel_serial_effect_arithmetic",
+      "point_metamorphic_invariance",
+      "reference_effect_condition_policy",
+      "scale_aware_solver_affine_unit_invariance_and_relative_collinearity",
+      "seed_worker_invariance",
+      "semantic_probe_grid_rejects_collapsed_f64_levels",
+      "simple_slope_variance_fail_closed",
+      "typed_recipe_and_method_identity"
+    ],
+    "passed": true,
+    "reference_identity_exact": true,
+    "reference_report": {
+      "path": "validation/results/process_v2_reference_report.json",
+      "sha256": "dd7ced9a771c250951fc80551d7c283202360c67b569ee7632a964c5d6f3dae3",
+      "size": 255108
+    },
+    "required_check_set_exact": true
+  },
+  "feature_id": "qpls3.standalone.process",
+  "generated_at_utc": "2026-08-13T19:54:41.033682Z",
+  "method_version": "regression_process_v2",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "engine_stage",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "docs/methods/PROCESS_V2.md",
+      "sha256": "4c558d77d912c3034379dc9fbb2fb47a012a4aba031fb62b467f4fe65ade66dc",
+      "size": 11315
+    },
+    {
+      "path": "validation/legacy_release_factory_migration.py",
+      "sha256": "5c2c131f972d70746ceed70377f8673d4b67ece6ece07c73d45bb2ac65fa4c5f",
+      "size": 23709
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/process_v2.manifest.json",
+      "sha256": "fd20d61294e00bb78ef227c1e719ae9830a569a1657437dcc1cd307b31903d4b",
+      "size": 14818
+    },
+    {
+      "path": "validation/process_v2_boundary_gate.py",
+      "sha256": "5f9fa9cc8b628883053b7d284a19d30bb6f04d4cbac68b083b54c8c62b0226f5",
+      "size": 9023
+    },
+    {
+      "path": "validation/process_v2_reference.R",
+      "sha256": "e578c5ca9c1a4b4d9d53229a4c5ad6f51343e6ba7e56393332e4f4b18b3137bd",
+      "size": 30941
+    },
+    {
+      "path": "validation/process_v2_reference.py",
+      "sha256": "7d6bd0865c4618c17b3472b714f7d450bbee7754676491a144245225897443d7",
+      "size": 88214
+    },
+    {
+      "path": "validation/test_legacy_release_factory_migration.py",
+      "sha256": "d4ce1d582d77f6a861b20c5ee95f7a01446880270e038429712a240194cb23c1",
+      "size": 2519
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_process_v2_reference.py",
+      "sha256": "9e89905ec2c4548dd58daf789e5f5b510736d57fe3a51beb946bbf5adb783981",
+      "size": 15684
+    }
+  ]
+}

@@ -4,7 +4,7 @@
   "feature_id": "qpls3.inference.structural_path_randomization",
   "method_version": "freedman_lane_permutation_v1",
   "catalogue_snapshot_date": "2026-08-12",
-  "generated_at_utc": "2026-08-13T07:04:36.075841Z",
+  "generated_at_utc": "2026-08-13T19:27:19.024968Z",
   "promotion_state": "release_qualified",
   "promoted_scope": "Single-model two-sided Freedman-Lane structural-path randomization using the original converged PLS construct scores, intercept nuisance equations, path-specific deterministic streams, unadjusted plus-one probabilities, and exchangeable reduced-model residuals.",
   "excluded_claims": [
@@ -62,12 +62,12 @@
       "tested_cli": {
         "artifact": {
           "path": "target/release/qpls.exe",
-          "reported_size": 20648448,
-          "reported_sha256": "bd4e1780563055398729dc6d2c16cab655bbdb17af0b1c2133bd56283413879b",
+          "reported_size": 20690432,
+          "reported_sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
           "present": true,
           "inside_repository": true,
-          "actual_size": 20648448,
-          "actual_sha256": "bd4e1780563055398729dc6d2c16cab655bbdb17af0b1c2133bd56283413879b",
+          "actual_size": 20690432,
+          "actual_sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
           "passed": true
         },
         "source_freshness": [
@@ -323,12 +323,12 @@
           },
           {
             "path": "validation/structural_path_randomization_reference.R",
-            "reported_size": 5681,
-            "reported_sha256": "7d116ca49a4371921da59c2c4bb0f1dba25eefd574346a6c5ccfc422f5f9e0a7",
+            "reported_size": 5811,
+            "reported_sha256": "28dcc4d5ba8e823c6b9ce6fc7660f7035428c924a1e8c0563f13272062c1fd42",
             "present": true,
             "inside_repository": true,
-            "actual_size": 5681,
-            "actual_sha256": "7d116ca49a4371921da59c2c4bb0f1dba25eefd574346a6c5ccfc422f5f9e0a7",
+            "actual_size": 5811,
+            "actual_sha256": "28dcc4d5ba8e823c6b9ce6fc7660f7035428c924a1e8c0563f13272062c1fd42",
             "passed": true
           },
           {
@@ -374,21 +374,21 @@
           {
             "path": "validation/structural_path_randomization_method_promotion_audit.py",
             "reported_size": 99637,
-            "reported_sha256": "33a86d0abc1915eca95107c8c21fe90cdea102104a6302bf7225eb1670b35104",
+            "reported_sha256": "60f067d3255410559592c5c3ff58b77aa877f4052d609bc2a195627bc212e100",
             "present": true,
             "inside_repository": true,
             "actual_size": 99637,
-            "actual_sha256": "33a86d0abc1915eca95107c8c21fe90cdea102104a6302bf7225eb1670b35104",
+            "actual_sha256": "60f067d3255410559592c5c3ff58b77aa877f4052d609bc2a195627bc212e100",
             "passed": true
           },
           {
             "path": "validation/test_structural_path_randomization_method_promotion_audit.py",
             "reported_size": 47059,
-            "reported_sha256": "c7a80c2b2ed25be1b48d2363ffe7ff56c62cb770c0eb70647fc15cbe142cb369",
+            "reported_sha256": "f2e8cc03de3ca710a840b39a485b29e0352b0ab2414339e3466823b488d209eb",
             "present": true,
             "inside_repository": true,
             "actual_size": 47059,
-            "actual_sha256": "c7a80c2b2ed25be1b48d2363ffe7ff56c62cb770c0eb70647fc15cbe142cb369",
+            "actual_sha256": "f2e8cc03de3ca710a840b39a485b29e0352b0ab2414339e3466823b488d209eb",
             "passed": true
           },
           {
@@ -417,7 +417,7 @@
       "report_artifact": {
         "path": "validation/results/structural_path_randomization_reference_report.json",
         "size": 17703,
-        "sha256": "e00efbad4b387c956bf8f2f03367a19229ce1fbd95cbad92dfed5660c01a362b"
+        "sha256": "2b999b90aead450236d88c54e6f85d5d00846e459fb5e2975e9656cc7933cf0a"
       },
       "calibration_exact": true,
       "freshness": {
@@ -581,12 +581,12 @@
         "qpls_resampling": {
           "artifact": {
             "path": "target/release/deps/qpls_resampling-b5bff3e7363d410e.exe",
-            "reported_size": 11158528,
-            "reported_sha256": "114c617e99e9f748d839495b0a9fa83a33ed0edc8210060626fed36f260457df",
+            "reported_size": 11164160,
+            "reported_sha256": "fc0acc401cfa5af0a2797094cf237d5a6984a03280bca401d77873ffc488191f",
             "present": true,
             "inside_repository": true,
-            "actual_size": 11158528,
-            "actual_sha256": "114c617e99e9f748d839495b0a9fa83a33ed0edc8210060626fed36f260457df",
+            "actual_size": 11164160,
+            "actual_sha256": "fc0acc401cfa5af0a2797094cf237d5a6984a03280bca401d77873ffc488191f",
             "passed": true
           },
           "exact_path": true,
@@ -597,12 +597,12 @@
         "qpls_project": {
           "artifact": {
             "path": "target/release/deps/qpls_project-f5d02c0d541c8f45.exe",
-            "reported_size": 23628288,
-            "reported_sha256": "bc4d033af028173075e3c26cff3b87eb00443cd66f9a2be16f23164d2aa4235a",
+            "reported_size": 24059904,
+            "reported_sha256": "9431ade8c71e64a83557c7d2c7d4f76dd3dec0c272c755359c8f7314352b8d90",
             "present": true,
             "inside_repository": true,
-            "actual_size": 23628288,
-            "actual_sha256": "bc4d033af028173075e3c26cff3b87eb00443cd66f9a2be16f23164d2aa4235a",
+            "actual_size": 24059904,
+            "actual_sha256": "9431ade8c71e64a83557c7d2c7d4f76dd3dec0c272c755359c8f7314352b8d90",
             "passed": true
           },
           "exact_path": true,
@@ -887,6 +887,11 @@
             "report_not_older": true
           },
           {
+            "path": "D:/QuickPLS/src/components/GroupsWorkspace.test.tsx",
+            "present": true,
+            "report_not_older": true
+          },
+          {
             "path": "D:/QuickPLS/src/components/GroupsWorkspace.tsx",
             "present": true,
             "report_not_older": true
@@ -918,6 +923,11 @@
           },
           {
             "path": "D:/QuickPLS/src/components/NavRail.tsx",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/components/OnboardingWorkspace.test.tsx",
             "present": true,
             "report_not_older": true
           },
@@ -958,6 +968,11 @@
           },
           {
             "path": "D:/QuickPLS/src/components/SemEdge.tsx",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/components/SettingsWorkspace.test.tsx",
             "present": true,
             "report_not_older": true
           },
@@ -1153,6 +1168,16 @@
           },
           {
             "path": "D:/QuickPLS/src/domain/semGeometry.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/domain/spreadsheetSafety.test.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/domain/spreadsheetSafety.ts",
             "present": true,
             "report_not_older": true
           },
@@ -1398,6 +1423,31 @@
           },
           {
             "path": "D:/QuickPLS/src/native/nativeControllerContracts.test.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/nativeCtaPls.test.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/nativeCtaPls.testFixture.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/nativeCtaPls.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/nativeCtaPlsExport.test.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/nativeCtaPlsResults.test.ts",
             "present": true,
             "report_not_older": true
           },
@@ -1743,6 +1793,11 @@
           },
           {
             "path": "D:/QuickPLS/src/native/nativeWorkspaceTree.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/plsAlgorithmFactory.test.ts",
             "present": true,
             "report_not_older": true
           },
@@ -1837,20 +1892,20 @@
             },
             "descriptor": {
               "path": "validation/results/screens/v247-native-desktop-visual/11-structural-path-randomization-dialog-1024x700.png",
-              "size": 114818,
-              "sha256": "9cfbd9f6849f6ca0a4d5699749def4fa87c17bd818c1af40a147d9919e17697f",
+              "size": 114551,
+              "sha256": "aa2d55ea1bdc942d43334f5631442c17bccd2a90afdd45fb6a823ebdbdd76cf5",
               "viewport": "1024x700",
               "state": "structural-path-randomization-dialog"
             },
             "exact_descriptor": true,
             "artifact": {
               "path": "validation/results/screens/v247-native-desktop-visual/11-structural-path-randomization-dialog-1024x700.png",
-              "reported_size": 114818,
-              "reported_sha256": "9cfbd9f6849f6ca0a4d5699749def4fa87c17bd818c1af40a147d9919e17697f",
+              "reported_size": 114551,
+              "reported_sha256": "aa2d55ea1bdc942d43334f5631442c17bccd2a90afdd45fb6a823ebdbdd76cf5",
               "present": true,
               "inside_repository": true,
-              "actual_size": 114818,
-              "actual_sha256": "9cfbd9f6849f6ca0a4d5699749def4fa87c17bd818c1af40a147d9919e17697f",
+              "actual_size": 114551,
+              "actual_sha256": "aa2d55ea1bdc942d43334f5631442c17bccd2a90afdd45fb6a823ebdbdd76cf5",
               "passed": true
             },
             "passed": true
@@ -1863,20 +1918,20 @@
             },
             "descriptor": {
               "path": "validation/results/screens/v247-native-desktop-visual/11-structural-path-randomization-dialog-1280x720.png",
-              "size": 123100,
-              "sha256": "b2d5cdbf0c481c8cd58147725980db9484cce69ec27d6ba5426e95f61a5b5183",
+              "size": 123353,
+              "sha256": "5f070b79bf25ce00217c31973d14481fe3900aa1e5d36e88ef6136e8d0155493",
               "viewport": "1280x720",
               "state": "structural-path-randomization-dialog"
             },
             "exact_descriptor": true,
             "artifact": {
               "path": "validation/results/screens/v247-native-desktop-visual/11-structural-path-randomization-dialog-1280x720.png",
-              "reported_size": 123100,
-              "reported_sha256": "b2d5cdbf0c481c8cd58147725980db9484cce69ec27d6ba5426e95f61a5b5183",
+              "reported_size": 123353,
+              "reported_sha256": "5f070b79bf25ce00217c31973d14481fe3900aa1e5d36e88ef6136e8d0155493",
               "present": true,
               "inside_repository": true,
-              "actual_size": 123100,
-              "actual_sha256": "b2d5cdbf0c481c8cd58147725980db9484cce69ec27d6ba5426e95f61a5b5183",
+              "actual_size": 123353,
+              "actual_sha256": "5f070b79bf25ce00217c31973d14481fe3900aa1e5d36e88ef6136e8d0155493",
               "passed": true
             },
             "passed": true
@@ -1889,20 +1944,20 @@
             },
             "descriptor": {
               "path": "validation/results/screens/v247-native-desktop-visual/11-structural-path-randomization-dialog-1440x900.png",
-              "size": 150143,
-              "sha256": "21f163acebac7d03e07b280354b9a766afd81b633431d9f9a82bc08526a5f83e",
+              "size": 149906,
+              "sha256": "69a6836b2178f593b0aaef4e527eb5caf0bdc60089af743ce0f2540494a4d5ae",
               "viewport": "1440x900",
               "state": "structural-path-randomization-dialog"
             },
             "exact_descriptor": true,
             "artifact": {
               "path": "validation/results/screens/v247-native-desktop-visual/11-structural-path-randomization-dialog-1440x900.png",
-              "reported_size": 150143,
-              "reported_sha256": "21f163acebac7d03e07b280354b9a766afd81b633431d9f9a82bc08526a5f83e",
+              "reported_size": 149906,
+              "reported_sha256": "69a6836b2178f593b0aaef4e527eb5caf0bdc60089af743ce0f2540494a4d5ae",
               "present": true,
               "inside_repository": true,
-              "actual_size": 150143,
-              "actual_sha256": "21f163acebac7d03e07b280354b9a766afd81b633431d9f9a82bc08526a5f83e",
+              "actual_size": 149906,
+              "actual_sha256": "69a6836b2178f593b0aaef4e527eb5caf0bdc60089af743ce0f2540494a4d5ae",
               "passed": true
             },
             "passed": true
@@ -1974,6 +2029,11 @@
             "report_not_older": true
           },
           {
+            "path": "D:/QuickPLS/src/components/GroupsWorkspace.test.tsx",
+            "present": true,
+            "report_not_older": true
+          },
+          {
             "path": "D:/QuickPLS/src/components/GroupsWorkspace.tsx",
             "present": true,
             "report_not_older": true
@@ -2005,6 +2065,11 @@
           },
           {
             "path": "D:/QuickPLS/src/components/NavRail.tsx",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/components/OnboardingWorkspace.test.tsx",
             "present": true,
             "report_not_older": true
           },
@@ -2045,6 +2110,11 @@
           },
           {
             "path": "D:/QuickPLS/src/components/SemEdge.tsx",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/components/SettingsWorkspace.test.tsx",
             "present": true,
             "report_not_older": true
           },
@@ -2240,6 +2310,16 @@
           },
           {
             "path": "D:/QuickPLS/src/domain/semGeometry.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/domain/spreadsheetSafety.test.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/domain/spreadsheetSafety.ts",
             "present": true,
             "report_not_older": true
           },
@@ -2485,6 +2565,31 @@
           },
           {
             "path": "D:/QuickPLS/src/native/nativeControllerContracts.test.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/nativeCtaPls.test.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/nativeCtaPls.testFixture.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/nativeCtaPls.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/nativeCtaPlsExport.test.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/nativeCtaPlsResults.test.ts",
             "present": true,
             "report_not_older": true
           },
@@ -2830,6 +2935,11 @@
           },
           {
             "path": "D:/QuickPLS/src/native/nativeWorkspaceTree.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/plsAlgorithmFactory.test.ts",
             "present": true,
             "report_not_older": true
           },
@@ -2984,12 +3094,12 @@
       "tested_cli": {
         "artifact": {
           "path": "target/release/qpls.exe",
-          "reported_size": 20648448,
-          "reported_sha256": "bd4e1780563055398729dc6d2c16cab655bbdb17af0b1c2133bd56283413879b",
+          "reported_size": 20690432,
+          "reported_sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
           "present": true,
           "inside_repository": true,
-          "actual_size": 20648448,
-          "actual_sha256": "bd4e1780563055398729dc6d2c16cab655bbdb17af0b1c2133bd56283413879b",
+          "actual_size": 20690432,
+          "actual_sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
           "passed": true
         },
         "source_freshness": [
@@ -3124,12 +3234,12 @@
       "tested_desktop": {
         "artifact": {
           "path": "target/release/quickpls-desktop.exe",
-          "reported_size": 28276736,
-          "reported_sha256": "988a9006b9e63bd6a91c6d86b84a0449f9bc999e6b394c531320846d68efcaa1",
+          "reported_size": 30507008,
+          "reported_sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
           "present": true,
           "inside_repository": true,
-          "actual_size": 28276736,
-          "actual_sha256": "988a9006b9e63bd6a91c6d86b84a0449f9bc999e6b394c531320846d68efcaa1",
+          "actual_size": 30507008,
+          "actual_sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
           "passed": true
         },
         "source_freshness": [
@@ -3319,6 +3429,11 @@
             "binary_not_older": true
           },
           {
+            "path": "src/components/GroupsWorkspace.test.tsx",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
             "path": "src/components/GroupsWorkspace.tsx",
             "present": true,
             "binary_not_older": true
@@ -3350,6 +3465,11 @@
           },
           {
             "path": "src/components/NavRail.tsx",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "src/components/OnboardingWorkspace.test.tsx",
             "present": true,
             "binary_not_older": true
           },
@@ -3390,6 +3510,11 @@
           },
           {
             "path": "src/components/SemEdge.tsx",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "src/components/SettingsWorkspace.test.tsx",
             "present": true,
             "binary_not_older": true
           },
@@ -3585,6 +3710,16 @@
           },
           {
             "path": "src/domain/semGeometry.ts",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "src/domain/spreadsheetSafety.test.ts",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "src/domain/spreadsheetSafety.ts",
             "present": true,
             "binary_not_older": true
           },
@@ -3830,6 +3965,31 @@
           },
           {
             "path": "src/native/nativeControllerContracts.test.ts",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "src/native/nativeCtaPls.test.ts",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "src/native/nativeCtaPls.testFixture.ts",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "src/native/nativeCtaPls.ts",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "src/native/nativeCtaPlsExport.test.ts",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
+            "path": "src/native/nativeCtaPlsResults.test.ts",
             "present": true,
             "binary_not_older": true
           },
@@ -4179,6 +4339,11 @@
             "binary_not_older": true
           },
           {
+            "path": "src/native/plsAlgorithmFactory.test.ts",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
             "path": "src/services/projectService.test.ts",
             "present": true,
             "binary_not_older": true
@@ -4289,6 +4454,11 @@
             "binary_not_older": true
           },
           {
+            "path": "src-tauri/src/sample_projects.rs",
+            "present": true,
+            "binary_not_older": true
+          },
+          {
             "path": "src-tauri/tauri.conf.json",
             "present": true,
             "binary_not_older": true
@@ -4298,44 +4468,44 @@
       },
       "dist_reported": {
         "path": "dist",
-        "size": 1170615,
+        "size": 1191494,
         "file_count": 19,
-        "sha256": "6df4c180f6d338dc7d4dd07db9f2862e40f9e17d3c7fe27762bcb966973eccfb",
+        "sha256": "364eb8ee0a73bade09dfde958755fac09983ffd34f998b41755edee95f5a8e74",
         "manifest": [
           {
-            "path": "assets/NativeCalculationDialog-Bozvjmo2.js",
-            "size": 50628,
-            "sha256": "b66c6bf6cd92a6ffd025bee490caaee81e968be017d55f8910f87745ad78c132"
+            "path": "assets/NativeCalculationDialog-CekKsDqn.js",
+            "size": 51101,
+            "sha256": "3b3a2fb6c5f03765fa77208b7f76ddabf083710ad5c6e38fdc62f6101ec6d694"
           },
           {
-            "path": "assets/NativeExportDialog-DRkEBJgy.js",
-            "size": 6227,
-            "sha256": "9b2ad9135d963146fa0792b052f9b0a8851b34db50c31c504c966a073f29eb4e"
+            "path": "assets/NativeExportDialog-CTZOLsrg.js",
+            "size": 6432,
+            "sha256": "523da583f3a66f89cb2d8f11d6b122ff2aa2c03640d1dabcad00cd4ef9bfc2f2"
           },
           {
-            "path": "assets/NativeGroupSetupDialog-BBekaerZ.js",
+            "path": "assets/NativeGroupSetupDialog-DncLahbL.js",
             "size": 6779,
-            "sha256": "21a5df0bbf4e6402830eb82c38333ff22a4b987a1b6c1053cece32af5f08f02d"
+            "sha256": "2f9eb02cfd1224c3a9b3a87c94b2006d10514184b995345adf7c7238ae901190"
           },
           {
-            "path": "assets/NativeHigherOrderDialog-Crr0cFk9.js",
+            "path": "assets/NativeHigherOrderDialog-Bn4cY5Gi.js",
             "size": 2948,
-            "sha256": "2efa06bd7f77832abff54fa915b8f042812c0f456e9f35d631c1592781f0fe22"
+            "sha256": "08dbb627b5b031b9bad9287e7017c43277efcfdb3b3358a811a753f66eb5e609"
           },
           {
-            "path": "assets/NativeModerationDialog-DgnDSg5q.js",
+            "path": "assets/NativeModerationDialog-D2IfblSQ.js",
             "size": 3081,
-            "sha256": "7362c82ed1c5380a752b83b99a3759087dbb5bdf065638aed22b1dc9f7456d32"
+            "sha256": "a7143c8cd4dfcaa4d58adffc392c4edfa4861e78970484d35b6c3683ee876840"
           },
           {
-            "path": "assets/NativeResultsSurface-D5M3tPKK.js",
+            "path": "assets/NativeResultsSurface-Bv7Fchdi.js",
             "size": 31251,
-            "sha256": "5d789cf33e40d1c3b1c5fbf29aa6fd7fcae46699a7df68a6ec548474350fd1c8"
+            "sha256": "2692880853872db149cfb86a7041a849e6cc114faf6dbfe571d85a54550ba79f"
           },
           {
-            "path": "assets/NativeUtilityDialog-CyUdf7Td.js",
-            "size": 4346,
-            "sha256": "af2f5dfce8681cd3bbd7601937242846743df9e16558359fbb6aec65aa679a91"
+            "path": "assets/NativeUtilityDialog-B_BR7mw4.js",
+            "size": 12164,
+            "sha256": "a4c73c06ffcf8b4dd5dca228a4895f7bbe7a4718ec34da32d9f568fbbf0e9f06"
           },
           {
             "path": "assets/flow-BN-PNp2v.js",
@@ -4348,19 +4518,19 @@
             "sha256": "1243b61a71923367ce620fb944427c80c9b03e863e18374fcf4f74d6d06f63fc"
           },
           {
-            "path": "assets/icons-B3Zfv1lt.js",
-            "size": 20320,
-            "sha256": "44c646ff3a637e2eeb2ce149868b7b46b7407809366f31c77cd3845c34ecfef9"
+            "path": "assets/icons-CWW7Ihoi.js",
+            "size": 20835,
+            "sha256": "11135cfa4b1cefe02205ec00e7f23204127146720a75ccbb5941632226a4a3c6"
           },
           {
-            "path": "assets/index-CCeoAjeY.js",
-            "size": 517696,
-            "sha256": "07bf64aa1f19765913686ccce679de99253173bfb4a36f4e1e5e887ebf8d62b6"
+            "path": "assets/index-DBKNtbUu.js",
+            "size": 528769,
+            "sha256": "d37b081cac27b076af6c5c288c0280ace77424912b173849ed9517381d9879f7"
           },
           {
-            "path": "assets/index-CI3Uacl2.css",
-            "size": 73914,
-            "sha256": "22799add8872c2513a8cb9e43b438a23d58a2ecda11863539c143a97ff105365"
+            "path": "assets/index-DpTHova4.css",
+            "size": 74714,
+            "sha256": "e756299a2d8d0620f5d62a8f60f0265b0059aa2599790474b940218826096182"
           },
           {
             "path": "assets/largeModelSmoke-PEBccAlJ.js",
@@ -4373,9 +4543,9 @@
             "sha256": "024828f88efaf03205588f9bc34ca763bd8f484b36f5172f92d4a83ac4aa12ff"
           },
           {
-            "path": "assets/publicationDiagram-DBdD1Z-g.js",
-            "size": 8653,
-            "sha256": "d6afa743d4c0b4202732a7cfed58a514d6ec3ed01be08559bee595df67bbed67"
+            "path": "assets/publicationDiagram-BlkNs4Z4.js",
+            "size": 8648,
+            "sha256": "19cd3e3c69779a47c603cc3be9269a62e4871492416c549b8938250eb9e6f8df"
           },
           {
             "path": "assets/smokeRun-CMXwsrTO.js",
@@ -4395,50 +4565,50 @@
           {
             "path": "index.html",
             "size": 821,
-            "sha256": "2d9b0e87594f669c9a72d5b6c0f9a74be89b8c6f63cb557a588a3122b53b3fd6"
+            "sha256": "ffa343bcc205c9541dcddd98ce187604001ef7fc3b279b6a460a25b5009b3b50"
           }
         ]
       },
       "dist_actual": {
         "path": "dist",
-        "size": 1170615,
+        "size": 1191494,
         "file_count": 19,
-        "sha256": "6df4c180f6d338dc7d4dd07db9f2862e40f9e17d3c7fe27762bcb966973eccfb",
+        "sha256": "364eb8ee0a73bade09dfde958755fac09983ffd34f998b41755edee95f5a8e74",
         "manifest": [
           {
-            "path": "assets/NativeCalculationDialog-Bozvjmo2.js",
-            "size": 50628,
-            "sha256": "b66c6bf6cd92a6ffd025bee490caaee81e968be017d55f8910f87745ad78c132"
+            "path": "assets/NativeCalculationDialog-CekKsDqn.js",
+            "size": 51101,
+            "sha256": "3b3a2fb6c5f03765fa77208b7f76ddabf083710ad5c6e38fdc62f6101ec6d694"
           },
           {
-            "path": "assets/NativeExportDialog-DRkEBJgy.js",
-            "size": 6227,
-            "sha256": "9b2ad9135d963146fa0792b052f9b0a8851b34db50c31c504c966a073f29eb4e"
+            "path": "assets/NativeExportDialog-CTZOLsrg.js",
+            "size": 6432,
+            "sha256": "523da583f3a66f89cb2d8f11d6b122ff2aa2c03640d1dabcad00cd4ef9bfc2f2"
           },
           {
-            "path": "assets/NativeGroupSetupDialog-BBekaerZ.js",
+            "path": "assets/NativeGroupSetupDialog-DncLahbL.js",
             "size": 6779,
-            "sha256": "21a5df0bbf4e6402830eb82c38333ff22a4b987a1b6c1053cece32af5f08f02d"
+            "sha256": "2f9eb02cfd1224c3a9b3a87c94b2006d10514184b995345adf7c7238ae901190"
           },
           {
-            "path": "assets/NativeHigherOrderDialog-Crr0cFk9.js",
+            "path": "assets/NativeHigherOrderDialog-Bn4cY5Gi.js",
             "size": 2948,
-            "sha256": "2efa06bd7f77832abff54fa915b8f042812c0f456e9f35d631c1592781f0fe22"
+            "sha256": "08dbb627b5b031b9bad9287e7017c43277efcfdb3b3358a811a753f66eb5e609"
           },
           {
-            "path": "assets/NativeModerationDialog-DgnDSg5q.js",
+            "path": "assets/NativeModerationDialog-D2IfblSQ.js",
             "size": 3081,
-            "sha256": "7362c82ed1c5380a752b83b99a3759087dbb5bdf065638aed22b1dc9f7456d32"
+            "sha256": "a7143c8cd4dfcaa4d58adffc392c4edfa4861e78970484d35b6c3683ee876840"
           },
           {
-            "path": "assets/NativeResultsSurface-D5M3tPKK.js",
+            "path": "assets/NativeResultsSurface-Bv7Fchdi.js",
             "size": 31251,
-            "sha256": "5d789cf33e40d1c3b1c5fbf29aa6fd7fcae46699a7df68a6ec548474350fd1c8"
+            "sha256": "2692880853872db149cfb86a7041a849e6cc114faf6dbfe571d85a54550ba79f"
           },
           {
-            "path": "assets/NativeUtilityDialog-CyUdf7Td.js",
-            "size": 4346,
-            "sha256": "af2f5dfce8681cd3bbd7601937242846743df9e16558359fbb6aec65aa679a91"
+            "path": "assets/NativeUtilityDialog-B_BR7mw4.js",
+            "size": 12164,
+            "sha256": "a4c73c06ffcf8b4dd5dca228a4895f7bbe7a4718ec34da32d9f568fbbf0e9f06"
           },
           {
             "path": "assets/flow-BN-PNp2v.js",
@@ -4451,19 +4621,19 @@
             "sha256": "1243b61a71923367ce620fb944427c80c9b03e863e18374fcf4f74d6d06f63fc"
           },
           {
-            "path": "assets/icons-B3Zfv1lt.js",
-            "size": 20320,
-            "sha256": "44c646ff3a637e2eeb2ce149868b7b46b7407809366f31c77cd3845c34ecfef9"
+            "path": "assets/icons-CWW7Ihoi.js",
+            "size": 20835,
+            "sha256": "11135cfa4b1cefe02205ec00e7f23204127146720a75ccbb5941632226a4a3c6"
           },
           {
-            "path": "assets/index-CCeoAjeY.js",
-            "size": 517696,
-            "sha256": "07bf64aa1f19765913686ccce679de99253173bfb4a36f4e1e5e887ebf8d62b6"
+            "path": "assets/index-DBKNtbUu.js",
+            "size": 528769,
+            "sha256": "d37b081cac27b076af6c5c288c0280ace77424912b173849ed9517381d9879f7"
           },
           {
-            "path": "assets/index-CI3Uacl2.css",
-            "size": 73914,
-            "sha256": "22799add8872c2513a8cb9e43b438a23d58a2ecda11863539c143a97ff105365"
+            "path": "assets/index-DpTHova4.css",
+            "size": 74714,
+            "sha256": "e756299a2d8d0620f5d62a8f60f0265b0059aa2599790474b940218826096182"
           },
           {
             "path": "assets/largeModelSmoke-PEBccAlJ.js",
@@ -4476,9 +4646,9 @@
             "sha256": "024828f88efaf03205588f9bc34ca763bd8f484b36f5172f92d4a83ac4aa12ff"
           },
           {
-            "path": "assets/publicationDiagram-DBdD1Z-g.js",
-            "size": 8653,
-            "sha256": "d6afa743d4c0b4202732a7cfed58a514d6ec3ed01be08559bee595df67bbed67"
+            "path": "assets/publicationDiagram-BlkNs4Z4.js",
+            "size": 8648,
+            "sha256": "19cd3e3c69779a47c603cc3be9269a62e4871492416c549b8938250eb9e6f8df"
           },
           {
             "path": "assets/smokeRun-CMXwsrTO.js",
@@ -4498,7 +4668,7 @@
           {
             "path": "index.html",
             "size": 821,
-            "sha256": "2d9b0e87594f669c9a72d5b6c0f9a74be89b8c6f63cb557a588a3122b53b3fd6"
+            "sha256": "ffa343bcc205c9541dcddd98ce187604001ef7fc3b279b6a460a25b5009b3b50"
           }
         ]
       },
@@ -4539,13 +4709,13 @@
         "result_archive_binding": true,
         "archive_inspection": {
           "artifact": {
-            "path": "validation/results/v247-native-structural-path-randomization-1786603559512-56988.qpls",
+            "path": "validation/results/v247-native-structural-path-randomization-1786649121581-11172.qpls",
             "reported_size": 22291,
-            "reported_sha256": "64c2ef16b628ad1ff3c6c742383d81e393bc5f272ce35cf1c0a9f9a6f90cc280",
+            "reported_sha256": "8b16f213de4c1dc21b44939bc4ce82f076f726377cebc34b70607aa0234ef66c",
             "present": true,
             "inside_repository": true,
             "actual_size": 22291,
-            "actual_sha256": "64c2ef16b628ad1ff3c6c742383d81e393bc5f272ce35cf1c0a9f9a6f90cc280",
+            "actual_sha256": "8b16f213de4c1dc21b44939bc4ce82f076f726377cebc34b70607aa0234ef66c",
             "passed": true
           },
           "contract": {
@@ -4553,8 +4723,8 @@
               "schemaVersion": 5,
               "engineVersion": "2.46.0",
               "checksumAlgorithm": "sha256",
-              "declaredProjectChecksum": "5da2b7592e5605500eedb70759b43c6a79db66078f7669ae8a483a39666e0606",
-              "projectChecksum": "5da2b7592e5605500eedb70759b43c6a79db66078f7669ae8a483a39666e0606",
+              "declaredProjectChecksum": "4a796034e55bb400375a754fe517eb76db9de70108698f33a41d7221b5aa6290",
+              "projectChecksum": "4a796034e55bb400375a754fe517eb76db9de70108698f33a41d7221b5aa6290",
               "projectChecksumMatches": true
             },
             "project": {
@@ -4563,7 +4733,7 @@
               "resultCount": 1,
               "matchingRunCount": 1
             },
-            "resultId": "b9826e52-7d63-48b1-b653-066ecc366e92",
+            "resultId": "02531282-370e-4f26-89c7-95942197b21b",
             "resultSchemaVersion": 1,
             "resultStatus": "completed",
             "payloadKind": "pls_pm_v3",
@@ -4571,7 +4741,7 @@
             "bootstrapAbsent": true,
             "provenanceMethod": "pls_pm",
             "provenanceMethodVersion": "pls_pm_v1+pls_mediation_v1+pls_assessment_v7+freedman_lane_permutation_v1",
-            "recipeId": "0802e18e-1d70-4061-b1a2-3c8e89b7304b",
+            "recipeId": "8444f798-791d-40e4-ad2a-17cd6c18a966",
             "recipeSchemaVersion": 3,
             "recipeMethodConfig": {
               "kind": "pls_permutation"
@@ -4594,7 +4764,7 @@
             },
             "constructs": [
               {
-                "id": "construct-1786603561852",
+                "id": "construct-1786649123222",
                 "name": "X",
                 "indicators": [
                   "x1",
@@ -4602,7 +4772,7 @@
                 ]
               },
               {
-                "id": "construct-1786603562204",
+                "id": "construct-1786649123540",
                 "name": "Z",
                 "indicators": [
                   "z1",
@@ -4610,7 +4780,7 @@
                 ]
               },
               {
-                "id": "construct-1786603562553",
+                "id": "construct-1786649123889",
                 "name": "Y",
                 "indicators": [
                   "y1",
@@ -4620,22 +4790,22 @@
             ],
             "recipePathIds": [
               [
-                "construct-1786603561852",
-                "construct-1786603562553"
+                "construct-1786649123222",
+                "construct-1786649123889"
               ],
               [
-                "construct-1786603562204",
-                "construct-1786603562553"
+                "construct-1786649123540",
+                "construct-1786649123889"
               ]
             ],
             "resultPathIds": [
               [
-                "construct-1786603561852",
-                "construct-1786603562553"
+                "construct-1786649123222",
+                "construct-1786649123889"
               ],
               [
-                "construct-1786603562204",
-                "construct-1786603562553"
+                "construct-1786649123540",
+                "construct-1786649123889"
               ]
             ],
             "pathLabels": [
@@ -4652,8 +4822,8 @@
               "operation": "pls_pm_freedman_lane_v1",
               "parameterCount": 2,
               "parameterIds": [
-                "[\"path\",[\"construct-1786603561852\",\"construct-1786603562553\"]]",
-                "[\"path\",[\"construct-1786603562204\",\"construct-1786603562553\"]]"
+                "[\"path\",[\"construct-1786649123222\",\"construct-1786649123889\"]]",
+                "[\"path\",[\"construct-1786649123540\",\"construct-1786649123889\"]]"
               ],
               "exceedances": [
                 0,
@@ -4666,10 +4836,10 @@
               "parameterContract": true
             },
             "run": {
-              "id": "b9826e52-7d63-48b1-b653-066ecc366e92",
+              "id": "02531282-370e-4f26-89c7-95942197b21b",
               "method": "Structural Path Randomization",
               "status": "completed",
-              "modelId": "d8550247-07de-480c-b6ba-f0185d00d451",
+              "modelId": "1a0a9cd0-2dc7-4374-ab7e-af376b4bb37f",
               "snapshotNodes": 3,
               "snapshotEdges": 2,
               "logs": 9
@@ -4693,13 +4863,13 @@
         "top_level_binding": true,
         "archive_before_snapshot": {
           "artifact": {
-            "path": "validation/results/v247-native-structural-path-randomization-1786603559512-56988-cancellation-before.qpls",
-            "reported_size": 12168,
-            "reported_sha256": "aa87371a50ecf25f6e998a5c74635851e190105ae201dbf069d75d40075cdf3e",
+            "path": "validation/results/v247-native-structural-path-randomization-1786649121581-11172-cancellation-before.qpls",
+            "reported_size": 12166,
+            "reported_sha256": "2dd9ac00c1ba806d6e3328cc0de8c7119674605e3cb393cd71f1a589597fe023",
             "present": true,
             "inside_repository": true,
-            "actual_size": 12168,
-            "actual_sha256": "aa87371a50ecf25f6e998a5c74635851e190105ae201dbf069d75d40075cdf3e",
+            "actual_size": 12166,
+            "actual_sha256": "2dd9ac00c1ba806d6e3328cc0de8c7119674605e3cb393cd71f1a589597fe023",
             "passed": true
           },
           "contract": {
@@ -4727,13 +4897,13 @@
         },
         "archive_after_snapshot": {
           "artifact": {
-            "path": "validation/results/v247-native-structural-path-randomization-1786603559512-56988-cancellation-after.qpls",
-            "reported_size": 12168,
-            "reported_sha256": "aa87371a50ecf25f6e998a5c74635851e190105ae201dbf069d75d40075cdf3e",
+            "path": "validation/results/v247-native-structural-path-randomization-1786649121581-11172-cancellation-after.qpls",
+            "reported_size": 12166,
+            "reported_sha256": "2dd9ac00c1ba806d6e3328cc0de8c7119674605e3cb393cd71f1a589597fe023",
             "present": true,
             "inside_repository": true,
-            "actual_size": 12168,
-            "actual_sha256": "aa87371a50ecf25f6e998a5c74635851e190105ae201dbf069d75d40075cdf3e",
+            "actual_size": 12166,
+            "actual_sha256": "2dd9ac00c1ba806d6e3328cc0de8c7119674605e3cb393cd71f1a589597fe023",
             "passed": true
           },
           "contract": {
@@ -4764,73 +4934,73 @@
       },
       "artifacts": [
         {
-          "path": "validation/results/structural-path-randomization-v1-20260813-121555545.xlsx",
-          "reported_size": 18364,
-          "reported_sha256": "b8004c08f201b141762c445a0c75232e07b2c1f2df3102ae394203bb3d519f1f",
+          "path": "validation/results/structural-path-randomization-v1-20260814-005519029.xlsx",
+          "reported_size": 18361,
+          "reported_sha256": "3401c977c8dad32246d2dbc85db54adc07add53acb8e0f3bf0d36e3f78e93c8e",
           "present": true,
           "inside_repository": true,
-          "actual_size": 18364,
-          "actual_sha256": "b8004c08f201b141762c445a0c75232e07b2c1f2df3102ae394203bb3d519f1f",
+          "actual_size": 18361,
+          "actual_sha256": "3401c977c8dad32246d2dbc85db54adc07add53acb8e0f3bf0d36e3f78e93c8e",
           "passed": true
         },
         {
-          "path": "validation/results/v247-native-structural-path-randomization-1786603559512-56988.qpls",
+          "path": "validation/results/v247-native-structural-path-randomization-1786649121581-11172.qpls",
           "reported_size": 22291,
-          "reported_sha256": "64c2ef16b628ad1ff3c6c742383d81e393bc5f272ce35cf1c0a9f9a6f90cc280",
+          "reported_sha256": "8b16f213de4c1dc21b44939bc4ce82f076f726377cebc34b70607aa0234ef66c",
           "present": true,
           "inside_repository": true,
           "actual_size": 22291,
-          "actual_sha256": "64c2ef16b628ad1ff3c6c742383d81e393bc5f272ce35cf1c0a9f9a6f90cc280",
+          "actual_sha256": "8b16f213de4c1dc21b44939bc4ce82f076f726377cebc34b70607aa0234ef66c",
           "passed": true
         },
         {
           "path": "validation/results/structural_path_randomization_v1_process_samples.jsonl",
-          "reported_size": 161984,
-          "reported_sha256": "2f2b741e618c6e0fa8826fc176fa6eb1b44718eac7023b346d38fe8b37e0ca13",
+          "reported_size": 742799,
+          "reported_sha256": "c73dd7515f485f7f2c8e106aeb27487b728659ba369f3a4cdef4d4a79e8a3fef",
           "present": true,
           "inside_repository": true,
-          "actual_size": 161984,
-          "actual_sha256": "2f2b741e618c6e0fa8826fc176fa6eb1b44718eac7023b346d38fe8b37e0ca13",
+          "actual_size": 742799,
+          "actual_sha256": "c73dd7515f485f7f2c8e106aeb27487b728659ba369f3a4cdef4d4a79e8a3fef",
           "passed": true
         },
         {
           "path": "validation/results/structural_path_randomization_v1_resource_report.json",
-          "reported_size": 10539,
-          "reported_sha256": "e251f69be3f84ad441e2f309318548d33f5013774513f4d30bc347838e6f4351",
+          "reported_size": 29847,
+          "reported_sha256": "06a7cf79aa2bdaf74e344589ed74d8addcb3b79bbd66160e831cfab6d8fad9b3",
           "present": true,
           "inside_repository": true,
-          "actual_size": 10539,
-          "actual_sha256": "e251f69be3f84ad441e2f309318548d33f5013774513f4d30bc347838e6f4351",
+          "actual_size": 29847,
+          "actual_sha256": "06a7cf79aa2bdaf74e344589ed74d8addcb3b79bbd66160e831cfab6d8fad9b3",
           "passed": true
         },
         {
           "path": "validation/results/structural_path_randomization_v1_process_cleanup.json",
-          "reported_size": 3748,
-          "reported_sha256": "1cf8e8fa0ea454392bd7249062ede13d48c1ce35cdd9a75136bc596b52d6791d",
+          "reported_size": 3746,
+          "reported_sha256": "949d11c4d3ea84fb676145edb3d822241a53211674be10d6568d17cd802460e0",
           "present": true,
           "inside_repository": true,
-          "actual_size": 3748,
-          "actual_sha256": "1cf8e8fa0ea454392bd7249062ede13d48c1ce35cdd9a75136bc596b52d6791d",
+          "actual_size": 3746,
+          "actual_sha256": "949d11c4d3ea84fb676145edb3d822241a53211674be10d6568d17cd802460e0",
           "passed": true
         },
         {
-          "path": "validation/results/v247-native-structural-path-randomization-1786603559512-56988-cancellation-before.qpls",
-          "reported_size": 12168,
-          "reported_sha256": "aa87371a50ecf25f6e998a5c74635851e190105ae201dbf069d75d40075cdf3e",
+          "path": "validation/results/v247-native-structural-path-randomization-1786649121581-11172-cancellation-before.qpls",
+          "reported_size": 12166,
+          "reported_sha256": "2dd9ac00c1ba806d6e3328cc0de8c7119674605e3cb393cd71f1a589597fe023",
           "present": true,
           "inside_repository": true,
-          "actual_size": 12168,
-          "actual_sha256": "aa87371a50ecf25f6e998a5c74635851e190105ae201dbf069d75d40075cdf3e",
+          "actual_size": 12166,
+          "actual_sha256": "2dd9ac00c1ba806d6e3328cc0de8c7119674605e3cb393cd71f1a589597fe023",
           "passed": true
         },
         {
-          "path": "validation/results/v247-native-structural-path-randomization-1786603559512-56988-cancellation-after.qpls",
-          "reported_size": 12168,
-          "reported_sha256": "aa87371a50ecf25f6e998a5c74635851e190105ae201dbf069d75d40075cdf3e",
+          "path": "validation/results/v247-native-structural-path-randomization-1786649121581-11172-cancellation-after.qpls",
+          "reported_size": 12166,
+          "reported_sha256": "2dd9ac00c1ba806d6e3328cc0de8c7119674605e3cb393cd71f1a589597fe023",
           "present": true,
           "inside_repository": true,
-          "actual_size": 12168,
-          "actual_sha256": "aa87371a50ecf25f6e998a5c74635851e190105ae201dbf069d75d40075cdf3e",
+          "actual_size": 12166,
+          "actual_sha256": "2dd9ac00c1ba806d6e3328cc0de8c7119674605e3cb393cd71f1a589597fe023",
           "passed": true
         },
         {
@@ -4845,72 +5015,72 @@
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/191-tauri-native-structural-path-randomization-model-1536x794.png",
-          "reported_size": 133993,
-          "reported_sha256": "a6e6bbcb7a45d9cb21d5bf12d7970e55772ea8d51276ff3edd2e34643531eff1",
+          "reported_size": 133981,
+          "reported_sha256": "95ad1315ca1a46798e8c042564f1d9832f38a1e729b80c39b09870fda6e143a6",
           "present": true,
           "inside_repository": true,
-          "actual_size": 133993,
-          "actual_sha256": "a6e6bbcb7a45d9cb21d5bf12d7970e55772ea8d51276ff3edd2e34643531eff1",
+          "actual_size": 133981,
+          "actual_sha256": "95ad1315ca1a46798e8c042564f1d9832f38a1e729b80c39b09870fda6e143a6",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/192-tauri-native-structural-path-randomization-dialog-1536x794.png",
-          "reported_size": 200694,
-          "reported_sha256": "e08d176dbc11c85b7b69fb0d543c486de4ef98b7a868e2fca4641a42d6cd5d01",
+          "reported_size": 200636,
+          "reported_sha256": "2860a07123583dec7c4b14b1342fcd10f02fd51ffe79b0f9b4877e23d814005c",
           "present": true,
           "inside_repository": true,
-          "actual_size": 200694,
-          "actual_sha256": "e08d176dbc11c85b7b69fb0d543c486de4ef98b7a868e2fca4641a42d6cd5d01",
+          "actual_size": 200636,
+          "actual_sha256": "2860a07123583dec7c4b14b1342fcd10f02fd51ffe79b0f9b4877e23d814005c",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/194-tauri-native-structural-path-randomization-cancelled-1536x794.png",
-          "reported_size": 205065,
-          "reported_sha256": "1d608481ad9521a5a429274803a417422be5717d547726e4a0121920bf819b30",
+          "reported_size": 204891,
+          "reported_sha256": "a2da0f281188019ccc4f4ae8c652b1013115d65186fb81e5e279296b3c25be03",
           "present": true,
           "inside_repository": true,
-          "actual_size": 205065,
-          "actual_sha256": "1d608481ad9521a5a429274803a417422be5717d547726e4a0121920bf819b30",
+          "actual_size": 204891,
+          "actual_sha256": "a2da0f281188019ccc4f4ae8c652b1013115d65186fb81e5e279296b3c25be03",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/195-tauri-native-structural-path-randomization-running-1536x794.png",
-          "reported_size": 153823,
-          "reported_sha256": "77adba7f23c0206be872da16a52104f87ce27e960096a676fc7211f2e263f115",
+          "reported_size": 153974,
+          "reported_sha256": "53f2efb0b96ee66d8837f9802d8f05c41950ec1ab794f42b7c6281b627f3b03b",
           "present": true,
           "inside_repository": true,
-          "actual_size": 153823,
-          "actual_sha256": "77adba7f23c0206be872da16a52104f87ce27e960096a676fc7211f2e263f115",
+          "actual_size": 153974,
+          "actual_sha256": "53f2efb0b96ee66d8837f9802d8f05c41950ec1ab794f42b7c6281b627f3b03b",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/196-tauri-native-structural-path-randomization-results-1536x794.png",
-          "reported_size": 100145,
-          "reported_sha256": "56741956c95eab00fcca3746f29551f9a423be3344e56021ae2412b749b5b1ed",
+          "reported_size": 100150,
+          "reported_sha256": "43621ddddec8307b70db7ca99415ab2adb7e0675f141a91c90b66440c6f4432a",
           "present": true,
           "inside_repository": true,
-          "actual_size": 100145,
-          "actual_sha256": "56741956c95eab00fcca3746f29551f9a423be3344e56021ae2412b749b5b1ed",
+          "actual_size": 100150,
+          "actual_sha256": "43621ddddec8307b70db7ca99415ab2adb7e0675f141a91c90b66440c6f4432a",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/197-tauri-native-structural-path-randomization-export-1536x794.png",
-          "reported_size": 126282,
-          "reported_sha256": "5fe078efd1549432725f199748a4c06236a23df3aaa68e0c71b6ec9a853f5bf2",
+          "reported_size": 126511,
+          "reported_sha256": "b7fea6b8e3dda1475d7e673a4958ce26b43a5145871ae2d927cf0332a9889623",
           "present": true,
           "inside_repository": true,
-          "actual_size": 126282,
-          "actual_sha256": "5fe078efd1549432725f199748a4c06236a23df3aaa68e0c71b6ec9a853f5bf2",
+          "actual_size": 126511,
+          "actual_sha256": "b7fea6b8e3dda1475d7e673a4958ce26b43a5145871ae2d927cf0332a9889623",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/198-tauri-native-structural-path-randomization-reopened-1536x794.png",
-          "reported_size": 109518,
-          "reported_sha256": "38abf104eeab9e88a198ce8efa78fdd930b314e0427f7d9d0fbca2f0a86f7a6a",
+          "reported_size": 109525,
+          "reported_sha256": "6a69ee4a3f9eb3f90f69c432774ae453e84fa7c8d642071998f8f27b910ea360",
           "present": true,
           "inside_repository": true,
-          "actual_size": 109518,
-          "actual_sha256": "38abf104eeab9e88a198ce8efa78fdd930b314e0427f7d9d0fbca2f0a86f7a6a",
+          "actual_size": 109525,
+          "actual_sha256": "6a69ee4a3f9eb3f90f69c432774ae453e84fa7c8d642071998f8f27b910ea360",
           "passed": true
         }
       ],
@@ -5137,6 +5307,11 @@
             "report_not_older": true
           },
           {
+            "path": "D:/QuickPLS/src/components/GroupsWorkspace.test.tsx",
+            "present": true,
+            "report_not_older": true
+          },
+          {
             "path": "D:/QuickPLS/src/components/GroupsWorkspace.tsx",
             "present": true,
             "report_not_older": true
@@ -5168,6 +5343,11 @@
           },
           {
             "path": "D:/QuickPLS/src/components/NavRail.tsx",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/components/OnboardingWorkspace.test.tsx",
             "present": true,
             "report_not_older": true
           },
@@ -5208,6 +5388,11 @@
           },
           {
             "path": "D:/QuickPLS/src/components/SemEdge.tsx",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/components/SettingsWorkspace.test.tsx",
             "present": true,
             "report_not_older": true
           },
@@ -5403,6 +5588,16 @@
           },
           {
             "path": "D:/QuickPLS/src/domain/semGeometry.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/domain/spreadsheetSafety.test.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/domain/spreadsheetSafety.ts",
             "present": true,
             "report_not_older": true
           },
@@ -5648,6 +5843,31 @@
           },
           {
             "path": "D:/QuickPLS/src/native/nativeControllerContracts.test.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/nativeCtaPls.test.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/nativeCtaPls.testFixture.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/nativeCtaPls.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/nativeCtaPlsExport.test.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/nativeCtaPlsResults.test.ts",
             "present": true,
             "report_not_older": true
           },
@@ -5997,6 +6217,11 @@
             "report_not_older": true
           },
           {
+            "path": "D:/QuickPLS/src/native/plsAlgorithmFactory.test.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
             "path": "D:/QuickPLS/src/services/projectService.test.ts",
             "present": true,
             "report_not_older": true
@@ -6103,6 +6328,11 @@
           },
           {
             "path": "D:/QuickPLS/src-tauri/src/main.rs",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src-tauri/src/sample_projects.rs",
             "present": true,
             "report_not_older": true
           },
@@ -6327,6 +6557,11 @@
             "report_not_older": true
           },
           {
+            "path": "D:/QuickPLS/src/components/GroupsWorkspace.test.tsx",
+            "present": true,
+            "report_not_older": true
+          },
+          {
             "path": "D:/QuickPLS/src/components/GroupsWorkspace.tsx",
             "present": true,
             "report_not_older": true
@@ -6358,6 +6593,11 @@
           },
           {
             "path": "D:/QuickPLS/src/components/NavRail.tsx",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/components/OnboardingWorkspace.test.tsx",
             "present": true,
             "report_not_older": true
           },
@@ -6398,6 +6638,11 @@
           },
           {
             "path": "D:/QuickPLS/src/components/SemEdge.tsx",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/components/SettingsWorkspace.test.tsx",
             "present": true,
             "report_not_older": true
           },
@@ -6593,6 +6838,16 @@
           },
           {
             "path": "D:/QuickPLS/src/domain/semGeometry.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/domain/spreadsheetSafety.test.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/domain/spreadsheetSafety.ts",
             "present": true,
             "report_not_older": true
           },
@@ -6838,6 +7093,31 @@
           },
           {
             "path": "D:/QuickPLS/src/native/nativeControllerContracts.test.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/nativeCtaPls.test.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/nativeCtaPls.testFixture.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/nativeCtaPls.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/nativeCtaPlsExport.test.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src/native/nativeCtaPlsResults.test.ts",
             "present": true,
             "report_not_older": true
           },
@@ -7187,6 +7467,11 @@
             "report_not_older": true
           },
           {
+            "path": "D:/QuickPLS/src/native/plsAlgorithmFactory.test.ts",
+            "present": true,
+            "report_not_older": true
+          },
+          {
             "path": "D:/QuickPLS/src/services/projectService.test.ts",
             "present": true,
             "report_not_older": true
@@ -7293,6 +7578,11 @@
           },
           {
             "path": "D:/QuickPLS/src-tauri/src/main.rs",
+            "present": true,
+            "report_not_older": true
+          },
+          {
+            "path": "D:/QuickPLS/src-tauri/src/sample_projects.rs",
             "present": true,
             "report_not_older": true
           },

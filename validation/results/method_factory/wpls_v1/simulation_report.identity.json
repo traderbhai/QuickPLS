@@ -1,0 +1,205 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "coverage": {
+      "includes_listwise_missingness": true,
+      "includes_nongaussian_data": true,
+      "includes_uniform_reduction_fixture": true,
+      "scenario_count": 5,
+      "weight_patterns": [
+        "moderate",
+        "strong",
+        "uniform"
+      ],
+      "weighting_schemes": [
+        "factor",
+        "path"
+      ]
+    },
+    "independent_reference": "validation/wpls_reference.py",
+    "latent_path_recovery_max_abs_error": 0.16,
+    "passed": true,
+    "reference_tolerance": 1e-06,
+    "scenarios": [
+      {
+        "effective_sample_size": 180.0,
+        "latent_path_recovery_error": 0.08705482879256499,
+        "loading_error": 5.551115123125783e-16,
+        "max_abs_error": 5.551115123125783e-16,
+        "metadata_errors": {
+          "effective_sample_size": 0.0,
+          "weight_sum": 0.0
+        },
+        "missing": false,
+        "name": "uniform_path",
+        "non_gaussian": false,
+        "observations": 180,
+        "outer_weight_error": 2.220446049250313e-16,
+        "output": "validation/results/method_factory/wpls_v1/work/factory_simulation_uniform_path.quickpls.json",
+        "output_sha256": "d9158b9cbfe08a73fa22ad9ed6b2b03faf0a4396a7484eacfd762a2a40e7d93e",
+        "passed": true,
+        "path_error": 4.440892098500626e-16,
+        "quickpls_iterations": 3,
+        "reference_iterations": 3,
+        "retained_observations": 180,
+        "weight_pattern": "uniform",
+        "weighted_r2_error": 0.0,
+        "weighting_scheme": "path"
+      },
+      {
+        "effective_sample_size": 204.46124763704995,
+        "latent_path_recovery_error": 0.06749066046633567,
+        "loading_error": 4.440892098500626e-16,
+        "max_abs_error": 1.0800249583553523e-12,
+        "metadata_errors": {
+          "effective_sample_size": 1.0800249583553523e-12,
+          "weight_sum": 2.8421709430404007e-13
+        },
+        "missing": false,
+        "name": "moderate_path",
+        "non_gaussian": false,
+        "observations": 240,
+        "outer_weight_error": 2.7755575615628914e-16,
+        "output": "validation/results/method_factory/wpls_v1/work/factory_simulation_moderate_path.quickpls.json",
+        "output_sha256": "33745d4e94d3c226cd1d4d0005b4892a3f4864ff53abe7111e51a661e569d5ce",
+        "passed": true,
+        "path_error": 2.220446049250313e-16,
+        "quickpls_iterations": 3,
+        "reference_iterations": 3,
+        "retained_observations": 240,
+        "weight_pattern": "moderate",
+        "weighted_r2_error": 0.0,
+        "weighting_scheme": "path"
+      },
+      {
+        "effective_sample_size": 81.16164383561645,
+        "latent_path_recovery_error": 0.09400595637437326,
+        "loading_error": 6.661338147750939e-16,
+        "max_abs_error": 6.661338147750939e-16,
+        "metadata_errors": {
+          "effective_sample_size": 0.0,
+          "weight_sum": 0.0
+        },
+        "missing": false,
+        "name": "strong_factor",
+        "non_gaussian": false,
+        "observations": 280,
+        "outer_weight_error": 2.220446049250313e-16,
+        "output": "validation/results/method_factory/wpls_v1/work/factory_simulation_strong_factor.quickpls.json",
+        "output_sha256": "1bad530ba7cd95019d3e2a1e41555e8facb0c8ebdb5f4ae60d63568662bd8828",
+        "passed": true,
+        "path_error": 4.440892098500626e-16,
+        "quickpls_iterations": 4,
+        "reference_iterations": 4,
+        "retained_observations": 280,
+        "weight_pattern": "strong",
+        "weighted_r2_error": 2.220446049250313e-16,
+        "weighting_scheme": "factor"
+      },
+      {
+        "effective_sample_size": 213.82708200889897,
+        "latent_path_recovery_error": 0.088693957678047,
+        "loading_error": 4.440892098500626e-16,
+        "max_abs_error": 1.2221335055073723e-12,
+        "metadata_errors": {
+          "effective_sample_size": 1.2221335055073723e-12,
+          "weight_sum": 3.410605131648481e-13
+        },
+        "missing": true,
+        "name": "listwise_missing",
+        "non_gaussian": false,
+        "observations": 260,
+        "outer_weight_error": 5.551115123125783e-16,
+        "output": "validation/results/method_factory/wpls_v1/work/factory_simulation_listwise_missing.quickpls.json",
+        "output_sha256": "aed847c2c9e8aa8bd7c7d893e182f8b8ab08751e79c6ac0b8ab7d63253521cdb",
+        "passed": true,
+        "path_error": 2.220446049250313e-16,
+        "quickpls_iterations": 3,
+        "reference_iterations": 3,
+        "retained_observations": 251,
+        "weight_pattern": "moderate",
+        "weighted_r2_error": 5.551115123125783e-16,
+        "weighting_scheme": "path"
+      },
+      {
+        "effective_sample_size": 92.75616438356164,
+        "latent_path_recovery_error": 0.05787050948313277,
+        "loading_error": 6.661338147750939e-16,
+        "max_abs_error": 6.661338147750939e-16,
+        "metadata_errors": {
+          "effective_sample_size": 0.0,
+          "weight_sum": 0.0
+        },
+        "missing": false,
+        "name": "nongaussian_factor",
+        "non_gaussian": true,
+        "observations": 320,
+        "outer_weight_error": 2.220446049250313e-16,
+        "output": "validation/results/method_factory/wpls_v1/work/factory_simulation_nongaussian_factor.quickpls.json",
+        "output_sha256": "3e0c528c4b4dd6db24600da5ecb8e4c00673e2fdc66b4919479ab4091deffdde",
+        "passed": true,
+        "path_error": 4.440892098500626e-16,
+        "quickpls_iterations": 3,
+        "reference_iterations": 3,
+        "retained_observations": 320,
+        "weight_pattern": "strong",
+        "weighted_r2_error": 0.0,
+        "weighting_scheme": "factor"
+      }
+    ]
+  },
+  "feature_id": "qpls3.pls.weighted",
+  "generated_at_utc": "2026-08-13T19:01:22.919822Z",
+  "method_version": "wpls_case_weighted_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "simulation_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
+      "size": 639198
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/wpls_v1.manifest.json",
+      "sha256": "3daca54776596694059dab1bb9ee9f732d910b69e481feea817f780ba6ef4d42",
+      "size": 15256
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_wpls_v1_factory_evidence.py",
+      "sha256": "5080160efdf8190400f7a946cb7c25ea297182faf7577b4a386420dab3be6884",
+      "size": 4238
+    },
+    {
+      "path": "validation/wpls_reference.py",
+      "sha256": "44cd7eca6b17bdeab236749002f647849adbbb18f9656a82ba5509fe98e8af92",
+      "size": 13821
+    },
+    {
+      "path": "validation/wpls_v1_factory_common.py",
+      "sha256": "c4e3afed2f83563f3667b1ac2d03d8a9e9d6aab35253a1fb339218581f2390ad",
+      "size": 14019
+    },
+    {
+      "path": "validation/wpls_v1_simulation.py",
+      "sha256": "90ebc5c8b45fc56767294d6d5f0003cf99aae417dab9c3b6470c8f4514336403",
+      "size": 8526
+    }
+  ]
+}

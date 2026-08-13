@@ -1,37 +1,91 @@
 {
   "passed": true,
   "section": "v176_samples_guided",
-  "generated_at": "2026-07-29T12:30:01.471054+00:00",
+  "generated_at": "2026-08-13T12:45:43.459775+00:00",
   "checked_files": [
-    "src/components/OnboardingWorkspace.tsx"
+    "src-tauri/src/lib.rs",
+    "src-tauri/src/sample_projects.rs",
+    "src/App.tsx",
+    "src/native/NativeDesktopApp.tsx",
+    "src/native/NativeDesktopController.tsx",
+    "src/services/projectService.ts"
   ],
   "passed_checks": [
     {
-      "file": "src/components/OnboardingWorkspace.tsx",
-      "label": "sample project gallery"
+      "file": "src/App.tsx",
+      "label": "production entry mounts the native desktop app"
     },
     {
-      "file": "src/components/OnboardingWorkspace.tsx",
+      "file": "src/native/NativeDesktopApp.tsx",
+      "label": "typed production sample catalogue"
+    },
+    {
+      "file": "src/native/NativeDesktopApp.tsx",
+      "label": "corporate reputation sample"
+    },
+    {
+      "file": "src/native/NativeDesktopApp.tsx",
       "label": "simple PLS sample"
     },
     {
-      "file": "src/components/OnboardingWorkspace.tsx",
-      "label": "group sample"
+      "file": "src/native/NativeDesktopApp.tsx",
+      "label": "mediation sample"
     },
     {
-      "file": "src/components/OnboardingWorkspace.tsx",
-      "label": "CB-SEM sample"
+      "file": "src/native/NativeDesktopApp.tsx",
+      "label": "live launcher binds exact sample action"
     },
     {
-      "file": "src/components/OnboardingWorkspace.tsx",
-      "label": "guided dataset workflow"
+      "file": "src/native/NativeDesktopApp.tsx",
+      "label": "selected sample identity forwarded"
     },
     {
-      "file": "src/components/OnboardingWorkspace.tsx",
-      "label": "guided prefix step"
+      "file": "src/native/NativeDesktopApp.tsx",
+      "label": "File menu preserves corporate default"
+    },
+    {
+      "file": "src/native/NativeDesktopController.tsx",
+      "label": "native event reads selected sample identity"
+    },
+    {
+      "file": "src/native/NativeDesktopController.tsx",
+      "label": "native controller forwards selected sample"
+    },
+    {
+      "file": "src/services/projectService.ts",
+      "label": "Tauri invocation forwards camelCase sample ID"
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "label": "corporate sample selector"
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "label": "typed bundled sample selector"
+    },
+    {
+      "file": "src-tauri/src/sample_projects.rs",
+      "label": "simple PLS backend identity"
+    },
+    {
+      "file": "src-tauri/src/sample_projects.rs",
+      "label": "mediation backend identity"
+    },
+    {
+      "file": "src-tauri/src/sample_projects.rs",
+      "label": "sample contains a contract-validated completed result"
+    },
+    {
+      "file": "src-tauri/src/sample_projects.rs",
+      "label": "sample save test"
+    },
+    {
+      "file": "src-tauri/src/sample_projects.rs",
+      "label": "sample reopen test"
     }
   ],
   "missing": [],
-  "frontend_only": true,
+  "frontend_only": false,
+  "native_backend_bound": true,
   "numerical_outputs_changed": false
 }

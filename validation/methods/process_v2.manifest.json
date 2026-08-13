@@ -1,0 +1,251 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-13T00:00:00Z",
+    "manifest_path": "validation/methods/process_v2.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.standalone.process",
+    "label": "Graph-defined Path Analysis and PROCESS",
+    "method_version": "regression_process_v2",
+    "method_kind": "stochastic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/process/"
+  },
+  "claim": {
+    "supported_scope": "Independently implemented graph-defined continuous-outcome OLS path analysis with bounded parallel and serial mediation, continuous or exact-0/1 moderation, bounded moderated mediation, conditional effects, HC3 and Student-t inference, simple slopes, Johnson-Neyman regions, and optional dedicated percentile and conditional-BCa case bootstrap.",
+    "estimand": "Graph-defined direct, indirect, conditional, and moderated-mediation effects for bounded observed-variable continuous-outcome OLS systems.",
+    "assumptions": [
+      "The authored directed graph is acyclic and all endogenous equations share one listwise-complete continuous-outcome sample.",
+      "Each unstandardized OLS equation is full rank and its exact HC3 covariance remains finite and positive on every requested conditional-effect domain.",
+      "Case-bootstrap sampling units are exchangeable and at least 90 percent of requested fits are usable when bootstrap inference is requested."
+    ],
+    "exclusions": [
+      "Copied numbered PROCESS templates, proprietary macros, and SmartPLS project import or numerical-identity claims are excluded.",
+      "Binary endogenous equations, weights, clusters, broader categorical coding, cycles, reciprocal paths, and custom confidence levels or tails are excluded.",
+      "Intermediate-stage moderation, multiple moderated edges on one indirect path, and two-moderator products on a mediated path are excluded."
+    ],
+    "warnings": [
+      "Observed-variable path coefficients and conditional effects do not by themselves establish causality.",
+      "Reference-condition effects must not be described as unconditional when a relevant path is moderated.",
+      "Bootstrap BCa output is available only when its complete delete-one acceleration contract passes."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {
+        "id": "hc3_covariance",
+        "expression": "V_HC3 = inverse(X_prime X) X_prime diag((e_i / (1 - h_i))^2) X inverse(X_prime X)",
+        "variables": ["V_HC3", "X", "e_i", "h_i"],
+        "source_reference_id": "mackinnon_white_1985"
+      },
+      {
+        "id": "conditional_indirect_effect",
+        "expression": "indirect(w) = product_k path_k(w)",
+        "variables": ["indirect", "w", "path_k"],
+        "source_reference_id": "hayes_2015"
+      },
+      {
+        "id": "simple_slope",
+        "expression": "slope(w) = beta_x + beta_xw w",
+        "variables": ["slope", "w", "beta_x", "beta_xw"],
+        "source_reference_id": "preacher_curran_bauer_2006"
+      }
+    ],
+    "references": [
+      {
+        "id": "mackinnon_white_1985",
+        "kind": "primary_paper",
+        "citation": "MacKinnon and White (1985), Some Heteroskedasticity-Consistent Covariance Matrix Estimators with Improved Finite Sample Properties",
+        "locator": "https://doi.org/10.1016/0304-4076(85)90158-7",
+        "independence_group": "hc3_equations",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "preacher_curran_bauer_2006",
+        "kind": "primary_paper",
+        "citation": "Preacher, Curran, and Bauer (2006), Computational Tools for Probing Interactions",
+        "locator": "https://doi.org/10.3102/10769986031004437",
+        "independence_group": "conditional_effect_equations",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "hayes_2015",
+        "kind": "primary_paper",
+        "citation": "Hayes (2015), An Index and Test of Linear Moderated Mediation",
+        "locator": "https://doi.org/10.1080/00273171.2014.962683",
+        "independence_group": "moderated_mediation_equations",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "process_v2_python_r_reference",
+        "kind": "independent_python",
+        "citation": "Independent Python and R reconstruction of the frozen graph-defined PROCESS v2 arithmetic",
+        "locator": "validation/process_v2_reference.py",
+        "independence_group": "independent_reference",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "simulations": [
+      {
+        "id": "effect_recovery",
+        "purpose": "recovery",
+        "design": "Preregistered direct, parallel and serial mediation, one- and two-moderator, and bounded moderated-mediation graphs with known continuous-outcome coefficients.",
+        "seed_policy": "Frozen indexed data-generation streams and deterministic point estimation.",
+        "metrics": ["coefficient_bias", "direct_effect_recovery", "indirect_effect_recovery", "conditional_effect_recovery", "coverage"],
+        "acceptance_rule": "The dedicated report must satisfy its frozen recovery and coverage boundaries for every advertised graph family."
+      },
+      {
+        "id": "bootstrap_and_failure_envelope",
+        "purpose": "failure_behavior",
+        "design": "Rank-deficient equations, near-unit leverage, invalid covariance, degenerate probe grids, unsupported graphs, failed resamples, and incomplete jackknife sets.",
+        "seed_policy": "Deterministic named boundary fixtures plus fixed replicate-index-addressed bootstrap streams.",
+        "metrics": ["typed_failure_accuracy", "usable_fraction", "bca_unavailability_accuracy", "partial_result_count"],
+        "acceptance_rule": "Every invalid case receives the frozen diagnostic, bootstrap failures remain accounted for, and no cancelled or invalid run commits partial analytical output."
+      }
+    ],
+    "boundaries": [
+      {
+        "id": "unstable_equation_or_probe",
+        "category": "data_pathology",
+        "case": "An equation is rank deficient, HC3 leverage is unstable, covariance is invalid, or a requested conditional-effect variance is nonpositive.",
+        "expected_behavior": "The affected analysis fails with its typed diagnostic and no fabricated statistic, interval, or partial result."
+      },
+      {
+        "id": "unsupported_graph",
+        "category": "unsupported_scope",
+        "case": "The graph is cyclic, exceeds documented caps, uses an unsupported endogenous family, or contains an unsupported moderation position.",
+        "expected_behavior": "Setup is blocked before estimation and identifies the offending graph feature."
+      },
+      {
+        "id": "semantic_graph_reorder",
+        "category": "metamorphic",
+        "case": "Variables and graph declarations are consistently reordered without changing their semantic identities.",
+        "expected_behavior": "Canonical mapped equation, path, and conditional-effect outputs remain equal within the frozen tolerance."
+      },
+      {
+        "id": "bootstrap_worker_invariance",
+        "category": "determinism",
+        "case": "The same graph, dataset, seed, and settings are executed with different supported worker counts.",
+        "expected_behavior": "Replicate identities, failures, effect summaries, and analytical payloads are exactly equal."
+      },
+      {
+        "id": "process_archive_tamper",
+        "category": "tamper",
+        "case": "A graph identity, coefficient, covariance, probe token, bootstrap witness, method version, or dataset fingerprint is altered after execution.",
+        "expected_behavior": "Strict archive validation rejects the entire changed result instead of rendering or exporting it."
+      }
+    ],
+    "numerical_tolerance": 1e-8
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 3,
+      "result_schema_version": 1,
+      "payload_kind": "regression_process_v2",
+      "tamper_tests": [
+        {"category": "feature_identity", "expected_behavior": "Reject a result whose capability identity differs from its recipe."},
+        {"category": "method_version", "expected_behavior": "Reject a result relabeled as another PROCESS method version."},
+        {"category": "dataset_fingerprint", "expected_behavior": "Reject a result whose saved dataset fingerprint no longer matches."},
+        {"category": "checksum", "expected_behavior": "Reject any modified archive entry whose checksum no longer matches."},
+        {"category": "malformed_payload", "expected_behavior": "Reject duplicated keys, unknown fields, non-finite values, ambiguous effect identities, or inconsistent sufficient statistics."},
+        {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret regression_process_v1 or unrelated mediation and moderation shells as a current v2 result."}
+      ],
+      "legacy_policy": "Historical regression_process_v1 payloads remain immutable and readable but cannot be executed, appended, or promoted as graph-defined v2 evidence."
+    },
+    "native": {
+      "setup_controls": ["Focal predictor and terminal outcome", "Directed mediator paths", "Path-scoped moderators", "Control", "Optional bootstrap replicates, seed, and workers"],
+      "applicability_blockers": ["Cycle or reciprocal path", "Unsupported endogenous family", "Graph cap exceeded", "Unsupported moderated path", "Invalid numeric outcome or design"],
+      "result_surfaces": ["Equation coefficients and fit", "Direct and indirect effects", "Conditional effects and simple slopes", "Johnson-Neyman regions", "Bootstrap inference", "Run provenance"],
+      "gui_cli_parity_rule": "For the same graph, dataset, settings, and seed, GUI and CLI analytical payloads must be exactly equal apart from operational timestamps; bootstrap scientific output must also be worker-invariant.",
+      "accessibility_rules": ["Every graph, interaction plot, and Johnson-Neyman display has an equivalent accessible data table.", "Effect conditions, unavailable results, exclusions, and warnings are available without color or pointer interaction."]
+    },
+    "export": {
+      "formats": ["csv", "xlsx"],
+      "tables": ["Equation coefficients", "Equation fit", "Direct and indirect effects", "Conditional effects", "Simple slopes", "Johnson-Neyman regions", "Conditional plot points", "Bootstrap inference", "Run provenance"],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": ["windows"],
+      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
+      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "offline_required": true,
+      "cancellation_required": true,
+      "process_cleanup_required": true
+    },
+    "audit": {
+      "exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
+  },
+  "qualification": {
+    "declared_state": "native_qualified",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": ["docs/methods/PROCESS_V2.md"],
+      "independent_reference": ["validation/process_v2_reference.py", "validation/process_v2_reference.R"],
+      "simulation_report": ["validation/process_v2_reference.py", "validation/test_process_v2_reference.py"],
+      "boundary_report": ["validation/process_v2_boundary_gate.py", "validation/test_process_v2_reference.py"],
+      "persistence_report": ["validation/test_process_v2_method_promotion_audit.py", "crates/qpls-project/src/lib.rs"],
+      "frontend_report": ["validation/process_v2_frontend_gate.py", "src/native/nativeProcess.test.ts", "src/native/NativeProcessSurface.test.tsx"],
+      "export_report": ["src/native/nativeExportTables.test.ts"],
+      "method_audit": ["validation/process_v2_method_promotion_audit.py", "validation/test_process_v2_method_promotion_audit.py", "validation/process_v2_factory_audit.py", "validation/legacy_release_adapter_common.py", "validation/test_legacy_release_adapters.py"],
+      "packaged_acceptance": ["validation/run_v247_process_v2_native_acceptance.ps1", "validation/v247_tauri_native_acceptance.mjs", "validation/v247_native_desktop_visual_acceptance.mjs", "validation/process_v2_packaged_acceptance.py", "validation/legacy_release_adapter_common.py", "validation/test_legacy_release_adapters.py"]
+    },
+    "evidence": {
+      "engine_only": [
+        {
+          "path": "validation/results/method_factory/process_v2/engine_stage.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "simulation_report",
+            "boundary_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "archive_qualified": [
+        {
+          "path": "validation/results/method_factory/process_v2/persistence_report.identity.json",
+          "roles": ["persistence_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "native_qualified": [
+        {
+          "path": "validation/results/method_factory/process_v2/native_stage.identity.json",
+          "roles": ["frontend_report", "export_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "release_qualified": []
+    }
+  }
+}

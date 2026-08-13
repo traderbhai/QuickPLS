@@ -1,0 +1,70 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "bounded_case_weight_scope": true,
+    "document": "docs/methods/PLS_WPLS_V1.md",
+    "historical_preview_ui_note_is_not_used_as_native_evidence": true,
+    "native_qualification_is_assessed_separately": true,
+    "passed": true,
+    "scientific_contract_fragments": {
+      "PCA weighting": true,
+      "bootstrap, permutation, or jackknife inference under case weights": true,
+      "effective sample size": true,
+      "formative constructs": true,
+      "weighted covariance between indicators and inner proxies": true,
+      "weighted least squares": true,
+      "weighted means and unbiased weighted sample standard deviations": true,
+      "wpls_case_weighted_v1": true,
+      "zero, or negative weights are rejected": true
+    }
+  },
+  "feature_id": "qpls3.pls.weighted",
+  "generated_at_utc": "2026-08-13T19:01:21.257618Z",
+  "method_version": "wpls_case_weighted_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_spec",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "docs/methods/PLS_WPLS_V1.md",
+      "sha256": "d124a53ca38912a72b913f6595473e3d7b00c20f44eb378d132c608aa2658491",
+      "size": 2372
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/wpls_v1.manifest.json",
+      "sha256": "3daca54776596694059dab1bb9ee9f732d910b69e481feea817f780ba6ef4d42",
+      "size": 15256
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_wpls_v1_factory_evidence.py",
+      "sha256": "5080160efdf8190400f7a946cb7c25ea297182faf7577b4a386420dab3be6884",
+      "size": 4238
+    },
+    {
+      "path": "validation/wpls_v1_factory_common.py",
+      "sha256": "c4e3afed2f83563f3667b1ac2d03d8a9e9d6aab35253a1fb339218581f2390ad",
+      "size": 14019
+    },
+    {
+      "path": "validation/wpls_v1_factory_evidence.py",
+      "sha256": "cdc72c8bfc33565cb9845e61acd033afca1152103384a0d92b400cfe57d316a9",
+      "size": 11315
+    }
+  ]
+}

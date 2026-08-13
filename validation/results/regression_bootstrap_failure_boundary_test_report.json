@@ -3,7 +3,7 @@
   "target": "regression_bootstrap_v1_failure_boundary_rust_tests",
   "feature_id": "qpls3.standalone.regression_bootstrap",
   "method_version": "regression_bootstrap_v1",
-  "generated_at_utc": "2026-08-12T13:26:49.603766Z",
+  "generated_at_utc": "2026-08-13T18:11:08.859236Z",
   "passed": true,
   "checks": {
     "regression_bootstrap_failure_boundary_captures_zero_based_single_class_replicates": true,
@@ -39,14 +39,14 @@
   },
   "test_executables": {
     "qpls_resampling": {
-      "path": "target/release/deps/qpls_resampling-c4e49d418770bebc.exe",
-      "size": 10044416,
-      "sha256": "45553e2e71628620bfef1c6dc1bef588544361edd9f01780c975c6629161f476"
+      "path": "target/release/deps/qpls_resampling-b5bff3e7363d410e.exe",
+      "size": 11164160,
+      "sha256": "fc0acc401cfa5af0a2797094cf237d5a6984a03280bca401d77873ffc488191f"
     },
     "qpls_project": {
-      "path": "target/release/deps/qpls_project-f307b35747183d92.exe",
-      "size": 19873280,
-      "sha256": "dda98f2966311e42d4e1e1740e95828f4e395581354836441844211b53f7f02d"
+      "path": "target/release/deps/qpls_project-f5d02c0d541c8f45.exe",
+      "size": 24059904,
+      "sha256": "9431ade8c71e64a83557c7d2c7d4f76dd3dec0c272c755359c8f7314352b8d90"
     }
   },
   "executions": {
@@ -55,7 +55,7 @@
       "full_name": "tests::regression_bootstrap_append_save_reopen_and_tamper_contract_are_atomic",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest tests::regression_bootstrap_append_save_reopen_and_tamper_contract_are_atomic ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 61 filtered out; finished in 0.16s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest tests::regression_bootstrap_append_save_reopen_and_tamper_contract_are_atomic ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.13s\n\n",
       "stderr_tail": ""
     },
     "regression_bootstrap_failure_boundary_captures_zero_based_single_class_replicates": {
@@ -63,7 +63,7 @@
       "full_name": "tests::regression_bootstrap_failure_boundary_captures_zero_based_single_class_replicates",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest tests::regression_bootstrap_failure_boundary_captures_zero_based_single_class_replicates ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.01s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest tests::regression_bootstrap_failure_boundary_captures_zero_based_single_class_replicates ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s\n\n",
       "stderr_tail": ""
     },
     "regression_bootstrap_failure_boundary_listwise_complete_cases_are_the_only_sampling_frame": {
@@ -71,7 +71,7 @@
       "full_name": "tests::regression_bootstrap_failure_boundary_listwise_complete_cases_are_the_only_sampling_frame",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest tests::regression_bootstrap_failure_boundary_listwise_complete_cases_are_the_only_sampling_frame ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.00s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest tests::regression_bootstrap_failure_boundary_listwise_complete_cases_are_the_only_sampling_frame ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s\n\n",
       "stderr_tail": ""
     },
     "regression_bootstrap_failure_boundary_real_delete_one_failure_disables_all_bca": {
@@ -79,7 +79,7 @@
       "full_name": "tests::regression_bootstrap_failure_boundary_real_delete_one_failure_disables_all_bca",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest tests::regression_bootstrap_failure_boundary_real_delete_one_failure_disables_all_bca ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.00s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest tests::regression_bootstrap_failure_boundary_real_delete_one_failure_disables_all_bca ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s\n\n",
       "stderr_tail": ""
     },
     "regression_bootstrap_failure_boundary_rejects_below_ninety_percent_usable": {
@@ -87,7 +87,7 @@
       "full_name": "tests::regression_bootstrap_failure_boundary_rejects_below_ninety_percent_usable",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest tests::regression_bootstrap_failure_boundary_rejects_below_ninety_percent_usable ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.00s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest tests::regression_bootstrap_failure_boundary_rejects_below_ninety_percent_usable ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s\n\n",
       "stderr_tail": ""
     },
     "regression_bootstrap_json_roundtrip_tolerance_is_narrow": {
@@ -95,7 +95,7 @@
       "full_name": "tests::regression_bootstrap_json_roundtrip_tolerance_is_narrow",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest tests::regression_bootstrap_json_roundtrip_tolerance_is_narrow ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 61 filtered out; finished in 0.00s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest tests::regression_bootstrap_json_roundtrip_tolerance_is_narrow ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.00s\n\n",
       "stderr_tail": ""
     }
   }

@@ -261,7 +261,7 @@
       "properties": {
         "passed": { "const": true },
         "model": { "type": "object" },
-        "catalogCount": { "const": 14 },
+        "catalogCount": { "const": 15 },
         "selectedMethod": { "const": "Structural Path Randomization" },
         "permutations": { "$ref": "#/$defs/permutationInput" },
         "workers": { "$ref": "#/$defs/workerInput" },
@@ -286,7 +286,7 @@
         "startLabel", "startEnabled"
       ],
       "properties": {
-        "catalogCount": { "const": 14 },
+        "catalogCount": { "const": 15 },
         "selectedMethod": { "const": "Structural Path Randomization" },
         "permutations": { "$ref": "#/$defs/permutationInput" },
         "workers": { "$ref": "#/$defs/numericInput" },

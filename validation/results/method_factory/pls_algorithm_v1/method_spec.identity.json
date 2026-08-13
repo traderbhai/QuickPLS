@@ -1,0 +1,71 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "bounded_estimator_scope": true,
+    "document": "docs/methods/PLS_PM_V1.md",
+    "passed": true,
+    "required_contract_fragments": {
+      "1e-6": true,
+      "No random initialization is used": true,
+      "PCA block weighting": true,
+      "Rows missing any model indicator are removed listwise": true,
+      "column-pivoted QR": true,
+      "formative Mode B blocks": true,
+      "indirect effects equal total minus direct": true,
+      "maximum absolute signed weight change": true,
+      "path and factor inner weighting": true,
+      "recursive PLS path models": true,
+      "reflective Mode A blocks": true,
+      "single-item blocks": true
+    }
+  },
+  "feature_id": "qpls3.pls.algorithm",
+  "generated_at_utc": "2026-08-13T19:17:35.666817Z",
+  "method_version": "pls_pm_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_spec",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "docs/methods/PLS_PM_V1.md",
+      "sha256": "576658ac9b2b00938ffa794ac175792c3242c7db039a6eb8aa66aa6e9ac02087",
+      "size": 3592
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/pls_algorithm_v1.manifest.json",
+      "sha256": "ec18270309bd1dce2b5064e2f727893d03a44eaa04376efcd99a6dee57dc1ead",
+      "size": 15592
+    },
+    {
+      "path": "validation/pls_algorithm_v1_factory_common.py",
+      "sha256": "2047408b08f5a7d0f0955ffc5902d063820551d0a37c6c3e595c9441591df3d7",
+      "size": 12465
+    },
+    {
+      "path": "validation/pls_algorithm_v1_factory_evidence.py",
+      "sha256": "602116f4aff15716487a29f711c6f7373bbc9fab9ab58d3aead06b09a7a57530",
+      "size": 22699
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_pls_algorithm_v1_factory_evidence.py",
+      "sha256": "3296d72e15da0d8bf6c7c87d7e1a74c7db3cdb40d49d807374953cdf1c98499f",
+      "size": 12583
+    }
+  ]
+}

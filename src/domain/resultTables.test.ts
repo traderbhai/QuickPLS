@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { methodResultTables, runExportTables, tablesToCsv, tablesToHtml } from "./resultTables";
+import { methodResultTables, resultScopeStatus, runExportTables, tablesToCsv, tablesToHtml } from "./resultTables";
 import type { AnalysisRun, PlsResult } from "../types";
 import { processV2Run } from "../native/nativeProcessTestFixture";
 
@@ -263,7 +263,7 @@ describe("result export tables", () => {
     expect(methodResultTables(futureEnvelope).every((table) => table.status === "experimental")).toBe(true);
   });
 
-  it("builds validated method-specific tables for promoted scopes", () => {
+  it("builds method-specific tables and keeps PLS-POS as a bounded preview", () => {
     const tables = methodResultTables(result);
     expect(tables.map((table) => table.id)).toEqual([
       "wpls_weights",
@@ -286,13 +286,53 @@ describe("result export tables", () => {
       "ipma_indicators",
     ]);
     expect(tables.some((table) => table.status === "validated")).toBe(true);
-    expect(tables.some((table) => table.status === "experimental")).toBe(false);
+    expect(tables.filter((table) => table.id.startsWith("segmentation_")).every((table) => table.status === "experimental")).toBe(true);
+    expect(tables.find((table) => table.id === "segmentation_summary")?.warning).toContain("does not claim unrestricted published PLS-POS equivalence");
     expect(tables.find((table) => table.id === "wpls_weights")?.status).toBe("validated");
     expect(tables.find((table) => table.id === "plspredict_holdout")?.status).toBe("validated");
     expect(tables.find((table) => table.id === "ipma_constructs")?.status).toBe("validated");
     expect(tables.find((table) => table.id === "cca_residuals")?.status).toBe("validated");
     expect(tables[0].warning).toContain("Validated for the documented QuickPLS supported scope");
     expect(tables[0].rows[0]).toEqual(["WEIGHT", "135.250000", "111.1250", "weighted sample covariance"]);
+  });
+
+  it("marks FIMIX-style output experimental and discloses its non-EM boundary", () => {
+    const fimixResult: PlsResult = {
+      ...result,
+      wpls: undefined,
+      cca: undefined,
+      cta_pls: undefined,
+      predict: undefined,
+      segmentation: undefined,
+      mga: undefined,
+      ipma: undefined,
+      fimix: {
+        method_version: "fimix_pls_v1",
+        classes: 2,
+        starts: 10,
+        iterations: 4,
+        log_likelihood: -12,
+        aic: 30,
+        bic: 33,
+        caic: 35,
+        entropy: 0.6,
+        classes_summary: [{
+          class: "class_1",
+          observations: 20,
+          share: 1,
+          paths: [{ source: "A", target: "B", coefficient: 0.5 }],
+          r_squared: { B: 0.25 },
+        }],
+        memberships: [{ observation: 0, class: "class_1", probability: 1 }],
+        warnings: [],
+      },
+    };
+    const fimixTables = methodResultTables(fimixResult);
+
+    expect(fimixTables.map((table) => table.id)).toEqual(["fimix_summary", "fimix_paths"]);
+    expect(fimixTables.every((table) => table.status === "experimental")).toBe(true);
+    expect(fimixTables.every((table) => table.warning?.includes("not finite-mixture posterior probabilities"))).toBe(true);
+    expect(resultScopeStatus(fimixResult)).toBe("experimental");
   });
 
   it("marks promoted PCA, OLS, logistic, and historical bounded PROCESS v1 tables as validated", () => {
@@ -517,7 +557,8 @@ describe("result export tables", () => {
     };
     const tables = runExportTables(run);
     expect(tables[0].id).toBe("run_provenance");
-    expect(tables[0].status).toBe("validated");
+    expect(tables[0].status).toBe("experimental");
+    expect(tables[0].warning).toContain("Experimental output");
     const csv = tablesToCsv(tables);
     expect(csv).toContain("WPLS case-weight metadata");
     expect(csv).toContain("PLSpredict holdout metrics");

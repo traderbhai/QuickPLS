@@ -605,8 +605,8 @@ Remaining later-batch methods remain experimental: CB-SEM/CFA, GSCA, higher-orde
 
 ## QuickPLS 3 Wave 1 capability qualification checkpoint
 
-- `regression_logistic_v2`, `regression_bootstrap_v1`, bounded graph-defined `regression_process_v2`, and bounded `freedman_lane_permutation_v1` Structural Path Randomization now have current method-specific `release_qualified` evidence in the QuickPLS 3 parity ledger.
-- PROCESS v2 evidence covers independent Python/R arithmetic, scale-aware OLS/HC3 and Johnson-Neyman boundaries, strict archive/tamper validation, focused frontend/type checks, responsive browser authoring, genuine packaged 10,000-resample execution, cancellation/retry, complete accessible result and plot-data tables, native XLSX, explicit save/reopen, repeated completion identity, and clean process/resource lifecycle.
+- `regression_logistic_v2`, `regression_bootstrap_v1`, and bounded `freedman_lane_permutation_v1` Structural Path Randomization have current method-specific `release_qualified` evidence in the QuickPLS 3 parity ledger. Bounded graph-defined `regression_process_v2` remains `native_qualified`.
+- PROCESS v2 evidence covers independent Python/R arithmetic, scale-aware OLS/HC3 and Johnson-Neyman boundaries, strict archive/tamper validation, focused frontend/type checks, responsive browser authoring, genuine packaged 10,000-resample execution, cancellation/retry, complete accessible result and plot-data tables, native XLSX, explicit save/reopen, and clean shutdown. Release qualification is pending a passing repeated-completion process-role stability gate.
 - Historical `regression_logistic_v1` and `regression_process_v1` payloads remain archive-only and are not current qualification evidence.
 - QuickPLS 2.46.0 coordinates these Wave 1 capability qualifications. Historical 2.45.0 evidence artifacts retain their original labels, and all method-specific exclusions remain in force.
 
@@ -1293,7 +1293,7 @@ Notes:
 
 ## QuickPLS 2.46.0 Wave 1 capability qualification
 
-- The QuickPLS 3 parity ledger now records 17 in-scope capabilities: 13 remain `native_qualified`, while Structural Path Randomization v1, Binary Logistic Regression v2, Regression Bootstrapping v1, and Graph-defined PROCESS v2 are `release_qualified` through their own current method-specific and packaged evidence.
+- The QuickPLS 3 parity ledger records 17 in-scope capabilities: 14 are `native_qualified`, while Structural Path Randomization v1, Binary Logistic Regression v2, and Regression Bootstrapping v1 are `release_qualified`. Graph-defined PROCESS v2 remains native-qualified pending repeated-completion process-role stability evidence.
 - `qpls3.inference.structural_path_randomization` is qualified only for single-model direct structural-score paths using fixed original converged PLS scores, intercept nuisance equations, path-specific deterministic streams, two-sided unadjusted plus-one probabilities, and exchangeable reduced-model residuals.
 - Its independent Python/R arithmetic, exact deterministic-index and worker-invariance boundaries, calibrated paired homoscedastic Gaussian null/power scenarios, strict archive/tamper checks, focused frontend/type checks, three-viewport visual acceptance, genuine packaged cancellation/retry/completion, native XLSX, explicit save/reopen, and clean process/resource evidence pass.
 - Evidence: `validation/results/structural_path_randomization_reference_report.json`, `validation/results/structural_path_randomization_boundary_test_report.json`, `validation/results/structural_path_randomization_frontend_gate_report.json`, `validation/results/v247_native_desktop_visual_acceptance.json`, `validation/results/structural_path_randomization_v1_packaged_acceptance.json`, and `validation/results/structural_path_randomization_method_promotion_audit.json`.

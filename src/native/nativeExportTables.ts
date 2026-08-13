@@ -9,6 +9,7 @@ import {
   nativeNcaCeilingLabel,
   nativeNcaResultProjection,
   nativeCbsemResultProjection,
+  nativeCtaPlsResultProjection,
   nativeGscaResultProjection,
   nativePcaComponentRuleLabel,
   nativePcaResultProjection,
@@ -61,6 +62,7 @@ export function nativeRunProvenanceTable(
   const process = nativeProcessResultProjection(run);
   const cbsem = nativeCbsemResultProjection(run);
   const gsca = nativeGscaResultProjection(run);
+  const ctaPls = nativeCtaPlsResultProjection(run);
   const structuralPathRandomization = nativeStructuralPathRandomizationProjection(run);
   const effectiveStatus = structuralPathRandomization ? "experimental" : status;
   const prediction = currentPredictionResult(run);
@@ -98,6 +100,17 @@ export function nativeRunProvenanceTable(
         ["Missing data", "Listwise deletion"],
         ["Maximum eigensolver iterations", String(run.provenance.settings.max_iterations)],
         ["Eigensolver stop criterion", String(run.provenance.settings.tolerance)],
+      );
+    } else if (ctaPls) {
+      rows.push(
+        ["Diagnostic", "CTA-PLS descriptive sample-covariance tetrads"],
+        ["Eligible blocks", String(ctaPls.blocks.length)],
+        ["Reported tetrads", String(ctaPls.estimates.length)],
+        ["Analyzed observations", String(ctaPls.usedObservations)],
+        ["Omitted observations", String(ctaPls.omittedObservations)],
+        ["Covariance convention", ctaPls.covarianceVersion],
+        ["Inference", "Not calculated; bootstrap, permutation, asymptotic, and vanishing-tetrad decisions are excluded"],
+        ["Missing data", "Listwise deletion across model indicators"],
       );
     } else if (process) {
       rows.push(

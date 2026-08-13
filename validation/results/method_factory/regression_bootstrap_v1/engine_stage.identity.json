@@ -1,0 +1,143 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "archive_native_release_evidence_borrowed": false,
+    "bounded_state": "engine_only",
+    "current_cli_binding": {
+      "current_cli": {
+        "path": "target/release/qpls.exe",
+        "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+        "size": 20690432
+      },
+      "execution_binding": "reference script executed in this evidence run with QUICKPLS_CLI_PATH set to current_cli",
+      "explicit_report_binding": true,
+      "passed": true,
+      "reference_report_cli": {
+        "path": "target/release/qpls.exe",
+        "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+        "size": 20690432
+      }
+    },
+    "current_reference_execution": {
+      "command": [
+        "not_rerun"
+      ],
+      "returncode": null,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    "expected_checks": [
+      "deterministic_worker_invariant_logistic",
+      "deterministic_worker_invariant_ols",
+      "exact_witness_arithmetic_logistic",
+      "exact_witness_arithmetic_ols",
+      "external_r_logistic_resampling",
+      "external_r_ols_resampling",
+      "frozen_supplied_type7_bca_normal_ratio_or",
+      "independent_python_logistic_resampling",
+      "independent_python_ols_resampling",
+      "quickpls_logistic_exact_contract",
+      "quickpls_ols_exact_contract",
+      "witness_index_partitions_logistic",
+      "witness_index_partitions_ols"
+    ],
+    "focused_fail_closed_tests": {
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "validation.test_regression_bootstrap_v1_reference"
+      ],
+      "returncode": 0,
+      "stderr_tail": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.009s\n\nOK\n",
+      "stdout_tail": ""
+    },
+    "observed_passed_checks": [
+      "deterministic_worker_invariant_logistic",
+      "deterministic_worker_invariant_ols",
+      "exact_witness_arithmetic_logistic",
+      "exact_witness_arithmetic_ols",
+      "external_r_logistic_resampling",
+      "external_r_ols_resampling",
+      "frozen_supplied_type7_bca_normal_ratio_or",
+      "independent_python_logistic_resampling",
+      "independent_python_ols_resampling",
+      "quickpls_logistic_exact_contract",
+      "quickpls_ols_exact_contract",
+      "witness_index_partitions_logistic",
+      "witness_index_partitions_ols"
+    ],
+    "passed": true,
+    "reference_identity_exact": true,
+    "reference_report": {
+      "path": "validation/results/regression_bootstrap_v1_reference_report.json",
+      "sha256": "f50c3a2e2a80b4e5a21f215f69e2df908c073cc2a8a5b6ecabdab209d7f21e6c",
+      "size": 28934
+    },
+    "required_check_set_exact": true
+  },
+  "feature_id": "qpls3.standalone.regression_bootstrap",
+  "generated_at_utc": "2026-08-13T19:54:31.074907Z",
+  "method_version": "regression_bootstrap_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "engine_stage",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "docs/methods/REGRESSION_BOOTSTRAP_V1.md",
+      "sha256": "b1b47af36bc1aee50e75c55f83ac210552e3470442cc7b60d5405fca79312a42",
+      "size": 6776
+    },
+    {
+      "path": "validation/legacy_release_factory_migration.py",
+      "sha256": "5c2c131f972d70746ceed70377f8673d4b67ece6ece07c73d45bb2ac65fa4c5f",
+      "size": 23709
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/regression_bootstrap_v1.manifest.json",
+      "sha256": "857b25d5822321d8ddfb16255849e5932170f733c11523317210a3a600935d72",
+      "size": 15009
+    },
+    {
+      "path": "validation/regression_bootstrap_failure_boundary_gate.py",
+      "sha256": "56a7df4db38e439be1584cb325c44e1f4f0d306be653d469cee1e29d092066b9",
+      "size": 7139
+    },
+    {
+      "path": "validation/regression_bootstrap_v1_reference.R",
+      "sha256": "75019aad57b9fd1b074c72dc68b1a24a6354be2d60b979e7da98ee82fb056f3f",
+      "size": 6779
+    },
+    {
+      "path": "validation/regression_bootstrap_v1_reference.py",
+      "sha256": "593d313bc81ee4c5e7c99f07da0983a24c38daab37cf5ecf189efcd51d59a03e",
+      "size": 49672
+    },
+    {
+      "path": "validation/test_legacy_release_factory_migration.py",
+      "sha256": "d4ce1d582d77f6a861b20c5ee95f7a01446880270e038429712a240194cb23c1",
+      "size": 2519
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_regression_bootstrap_v1_reference.py",
+      "sha256": "c829a4bff81fb344318a7934212be240d99d6d87c89f85fc1af43088ef5c72a2",
+      "size": 4600
+    }
+  ]
+}

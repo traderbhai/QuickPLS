@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "governance": {"contract_frozen_at_utc":"2026-08-13T10:26:17Z","manifest_path":"validation/methods/prediction_oriented_model_selection_v1.manifest.json","schema_path":"validation/methods/method_promotion_manifest.schema.json","validator_path":"validation/method_promotion_manifest.py","focused_test_path":"validation/test_method_promotion_manifest.py"},
+  "feature": {"id":"qpls3.selection.prediction_oriented","label":"Prediction-Oriented PLS Model Selection","method_version":"prediction_oriented_model_selection_v1","method_kind":"stochastic","catalogue_snapshot_date":"2026-08-12","catalogue_url":"https://smartpls.com/documentation/algorithms-and-techniques/"},
+  "claim": {
+    "supported_scope":"Nested seeded repeated cross-validation over a preregistered finite set of 2 through 20 compatible PLS models, using common targets and RMSE or MAE, with deterministic complexity and identifier tie-breaking.",
+    "estimand":"Outer-test loss of the complete candidate-selection procedure, with candidate selection frequency and outer-fold regret as stability diagnostics.",
+    "assumptions":["The candidate set, target set, row policy, loss, nested fold plan, seed, and tie rule are frozen before test outcomes are inspected.","Qualified PLS estimation and prediction are available for every supported candidate inside training folds.","All preprocessing and selection occur inside the relevant training split and at least 80 percent of planned outer folds remain usable."],
+    "exclusions":["Automatic graph generation, evolutionary search, unrestricted tuning, more than 20 candidates, temporal/grouped folds, and formative targets are excluded.","Naive selection of the smallest non-nested test loss without outer evaluation is excluded.","Selection does not establish causal truth or preserve unadjusted post-selection inference."],
+    "warnings":["The selected model is preferred only for the frozen data-generating context, target, loss, and candidate set.","Candidate failures, selection instability, and tie resolution must be visible rather than reduced to a winner-only result."]
+  },
+  "scientific_contract": {
+    "equations":[
+      {"id":"outer_selection_loss","expression":"L_outer = sum_o sum_i_in_o L(y_i, yhat_selected_train_o,i) / N_outer","variables":["L_outer","o","L","y_i","yhat_selected_train_o,i","N_outer"],"source_reference_id":"sharma_2021"},
+      {"id":"selection_frequency","expression":"f_m = count_o(selected_o = m) / O","variables":["f_m","m","o","O"],"source_reference_id":"sharma_2021"}
+    ],
+    "references":[
+      {"id":"sharma_2021","kind":"primary_paper","citation":"Sharma et al. (2021), Prediction-Oriented Model Selection in Partial Least Squares Path Modeling, DOI 10.1111/deci.12329","locator":"docs/methods/PREDICTION_ORIENTED_MODEL_SELECTION_V1.md","independence_group":"published_prediction_selection","runtime_policy":"no_runtime_dependency"},
+      {"id":"sharma_2019","kind":"primary_paper","citation":"Sharma et al. (2019), PLS-Based Model Selection: The Role of Alternative Explanations in Information Systems Research, DOI 10.17005/1jais.00538","locator":"docs/methods/PREDICTION_ORIENTED_MODEL_SELECTION_V1.md","independence_group":"published_information_criteria","runtime_policy":"no_runtime_dependency"},
+      {"id":"varma_simon_2006","kind":"primary_paper","citation":"Varma and Simon (2006), Bias in Error Estimation When Using Cross-Validation for Model Selection, DOI 10.1186/1471-2105-7-91","locator":"docs/methods/PREDICTION_ORIENTED_MODEL_SELECTION_V1.md","independence_group":"published_nested_cross_validation","runtime_policy":"no_runtime_dependency"},
+      {"id":"independent_python_nested_selection","kind":"independent_python","citation":"Independent Python nested-fold model-selection reference","locator":"validation/prediction_model_selection_reference.py","independence_group":"python_reference","runtime_policy":"development_validation_only"}
+    ],
+    "simulations":[
+      {"id":"nested_selection_recovery","purpose":"model_selection","design":"Candidate sets with one best, tied, misspecified, and intermittently failing candidates across sample size, signal, loading, and complexity conditions.","seed_policy":"Frozen independent data-generation, outer-fold, and inner-fold streams indexed by scenario and replicate.","metrics":["outer_loss_bias","oracle_regret","selection_frequency_error","failure_accounting_accuracy"],"acceptance_rule":"Outer loss and selection frequencies must match the independent reference within tolerance, regret must meet preregistered scenario limits, and no failed candidate or fold may disappear."},
+      {"id":"null_selection_optimism","purpose":"false_positive_containment","design":"Exchangeable candidates with equal expected predictive loss and varying candidate-set sizes.","seed_policy":"Frozen scenario and nested-fold streams independent of worker order.","metrics":["winner_optimism","tie_rule_accuracy","outer_interval_coverage"],"acceptance_rule":"Outer evaluation must remain unbiased within the preregistered Monte Carlo interval and the frozen tie rule must be exact."}
+    ],
+    "boundaries":[
+      {"id":"insufficient_usable_outer_folds","category":"data_pathology","case":"Candidate failures leave fewer than 80 percent of outer folds usable.","expected_behavior":"Selection is unavailable and every planned failure remains reported."},
+      {"id":"unfrozen_or_oversized_candidates","category":"unsupported_scope","case":"The candidate set is post-hoc, generated automatically, exceeds 20, or uses incompatible targets or preprocessing.","expected_behavior":"Setup is blocked before nested validation."},
+      {"id":"candidate_identifier_permutation","category":"metamorphic","case":"Candidate input order changes while immutable identifiers and definitions remain fixed.","expected_behavior":"Losses and selected identifiers remain invariant under the frozen tie rule."},
+      {"id":"nested_seed_worker_repeat","category":"determinism","case":"Identical data, candidates, folds, and seed run with different worker counts.","expected_behavior":"All nested folds, failures, choices, predictions, and summaries are exactly equal."},
+      {"id":"selection_archive_tamper","category":"tamper","case":"A candidate, fold assignment, inner loss, selected identity, outer prediction, failure, or seed is changed.","expected_behavior":"Strict project validation rejects the archive."}
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence":{"recipe_schema_version":3,"result_schema_version":1,"payload_kind":"pls_pm_v1","tamper_tests":[
+      {"category":"feature_identity","expected_behavior":"Reject an archive whose capability identity differs from prediction-oriented model selection."},
+      {"category":"method_version","expected_behavior":"Reject selection output relabeled as another version."},
+      {"category":"dataset_fingerprint","expected_behavior":"Reject a candidate or fold whose data fingerprint differs from saved input."},
+      {"category":"checksum","expected_behavior":"Reject an archive entry whose candidate, fold, or result checksum differs."},
+      {"category":"malformed_payload","expected_behavior":"Reject duplicate keys, unknown fields, non-finite losses, invalid nested folds, or impossible selections."},
+      {"category":"legacy_reinterpretation","expected_behavior":"Never reinterpret pairwise/descriptive comparison or non-nested minimum loss as nested-selection v1 evidence."}
+    ],"legacy_policy":"Historical comparisons and winner-only summaries retain their original identity and cannot satisfy this contract."},
+    "native":{"setup_controls":["Candidate set","Common targets","RMSE or MAE","Outer folds and repetitions","Inner folds and repetitions","Seed","Tie rule summary"],"applicability_blockers":["Candidate count outside 2 through 20","Unfrozen or incompatible candidates","Unsupported targets","Insufficient usable outer folds"],"result_surfaces":["Candidate registry","Nested fold ledger","Selection frequencies","Outer predictive performance and regret","Failures, ties, and provenance"],"gui_cli_parity_rule":"GUI and CLI must produce identical nested folds, candidate choices, failures, outer predictions, and summaries for the same recipe and seed.","accessibility_rules":["Candidate rankings and stability visuals have equivalent accessible tables.","Winner, ties, uncertainty, and failures are communicated without color alone."]},
+    "export":{"formats":["csv","xlsx"],"tables":["Candidate registry","Inner selection losses","Outer predictions and losses","Selection stability","Failure ledger","Run provenance"],"same_run_required":true,"provenance_required":true},
+    "packaged":{"platforms":["windows"],"workflow_steps":["setup","invalid_setup_blocked","execute","cancel_retry","inspect_results","export","save","close","reopen_same_run","cleanup"],"viewports":["1024x700","1280x720","1440x900"],"offline_required":true,"cancellation_required":true,"process_cleanup_required":true},
+    "audit":{"exact_identity_fields":["passed","feature_id","method_version","catalogue_snapshot_date"],"source_hashes_required":true,"freshness_required":true,"reports_must_pass":true}
+  },
+  "qualification":{"declared_state":"absent","target_state":"release_qualified","source_requirements":{
+    "method_spec":["docs/methods/PREDICTION_ORIENTED_MODEL_SELECTION_V1.md"],"independent_reference":["validation/prediction_model_selection_reference.py"],"simulation_report":["validation/prediction_model_selection_release_simulation.py"],"boundary_report":["validation/prediction_model_selection_release_boundary_gate.py"],"persistence_report":["validation/prediction_model_selection_release_persistence_gate.py"],"frontend_report":["src/native/nativePredictionModelSelection.test.ts"],"export_report":["src/native/nativeExportTables.test.ts"],"method_audit":["validation/prediction_model_selection_method_promotion_audit.py"],"packaged_acceptance":["validation/run_v252_prediction_model_selection_native_acceptance.ps1"]
+  },"evidence":{"engine_only":[],"archive_qualified":[],"native_qualified":[],"release_qualified":[]}}
+}

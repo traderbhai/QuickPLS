@@ -71,7 +71,30 @@ function Get-ArtifactDescriptor {
 function Write-Utf8Json {
     param([string]$Path, [object]$Value, [int]$Depth = 12)
     $utf8WithoutBom = New-Object System.Text.UTF8Encoding($false)
-    [System.IO.File]::WriteAllText($Path, (($Value | ConvertTo-Json -Depth $Depth) + [Environment]::NewLine), $utf8WithoutBom)
+    $content = (($Value | ConvertTo-Json -Depth $Depth) + [Environment]::NewLine)
+    $deadline = [DateTime]::UtcNow.AddSeconds(5)
+    while ($true) {
+        try {
+            [System.IO.File]::WriteAllText($Path, $content, $utf8WithoutBom)
+            break
+        } catch [System.IO.IOException] {
+            if ([DateTime]::UtcNow -ge $deadline) { throw }
+            Start-Sleep -Milliseconds 100
+        }
+    }
+}
+
+function Remove-FileWithRetry {
+    param([string]$Path)
+    $deadline = [DateTime]::UtcNow.AddSeconds(5)
+    while ([System.IO.File]::Exists($Path)) {
+        try {
+            [System.IO.File]::Delete($Path)
+        } catch [System.IO.IOException] {
+            if ([DateTime]::UtcNow -ge $deadline) { throw }
+            Start-Sleep -Milliseconds 100
+        }
+    }
 }
 
 $stamp = Get-Date -Format "yyyyMMdd-HHmmssfff"
@@ -96,6 +119,9 @@ if (Get-Process -Name "quickpls-desktop" -ErrorAction SilentlyContinue) {
 }
 foreach ($transient in @($samplePath, $resourceReportPath, $cleanupReportPath, $stopSignalPath, $monitorStderrPath)) {
     Remove-Item -LiteralPath $transient -Force -ErrorAction SilentlyContinue
+}
+foreach ($priorReport in @($rawReportPath, $packagedReportPath)) {
+    Remove-FileWithRetry -Path $priorReport
 }
 
 $environmentNames = @(

@@ -227,7 +227,7 @@
     }
   },
   "qualification": {
-    "declared_state": "absent",
+    "declared_state": "release_qualified",
     "target_state": "release_qualified",
     "source_requirements": {
       "method_spec": [
@@ -257,18 +257,103 @@
       ],
       "method_audit": [
         "validation/structural_path_randomization_method_promotion_audit.py",
-        "validation/test_structural_path_randomization_method_promotion_audit.py"
+        "validation/test_structural_path_randomization_method_promotion_audit.py",
+        "validation/structural_path_randomization_v1_factory_audit.py",
+        "validation/legacy_release_adapter_common.py",
+        "validation/test_legacy_release_adapters.py"
       ],
       "packaged_acceptance": [
         "validation/run_v247_structural_path_randomization_native_acceptance.ps1",
-        "validation/v247_tauri_native_acceptance.mjs"
+        "validation/v247_tauri_native_acceptance.mjs",
+        "validation/v247_native_desktop_visual_acceptance.mjs",
+        "validation/structural_path_randomization_v1_packaged_acceptance.py",
+        "validation/legacy_release_adapter_common.py",
+        "validation/test_legacy_release_adapters.py"
       ]
     },
     "evidence": {
-      "engine_only": [],
-      "archive_qualified": [],
-      "native_qualified": [],
-      "release_qualified": []
+      "engine_only": [
+        {
+          "path": "validation/results/method_factory/structural_path_randomization_v1/engine_stage.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "simulation_report",
+            "boundary_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "archive_qualified": [
+        {
+          "path": "validation/results/method_factory/structural_path_randomization_v1/persistence_report.identity.json",
+          "roles": ["persistence_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "native_qualified": [
+        {
+          "path": "validation/results/method_factory/structural_path_randomization_v1/native_stage.identity.json",
+          "roles": ["frontend_report", "export_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "release_qualified": [
+        {
+          "path": "validation/results/method_factory/structural_path_randomization_v1/method_audit.identity.json",
+          "roles": [
+            "method_audit"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/structural_path_randomization_v1/packaged_acceptance.identity.json",
+          "roles": [
+            "packaged_acceptance"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ]
     }
   }
 }

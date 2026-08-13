@@ -1,0 +1,99 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "passed": true,
+    "required_test_sources": [
+      "src/native/nativeExportTables.test.ts",
+      "src/native/NativeExportDialog.test.ts"
+    ],
+    "same_run_export_scope_exercised": true,
+    "table_projection_exercised": true,
+    "vitest_summary": {
+      "expected_test_files": 2,
+      "minimum_tests": 18,
+      "observed_test_files_passed": 2,
+      "observed_test_files_total": 2,
+      "observed_tests_passed": 18,
+      "observed_tests_total": 18,
+      "passed": true
+    }
+  },
+  "execution": {
+    "command": [
+      "npx.cmd",
+      "vitest",
+      "run",
+      "src/native/nativeExportTables.test.ts",
+      "src/native/NativeExportDialog.test.ts",
+      "--reporter=verbose"
+    ],
+    "duration_seconds": 4.84,
+    "returncode": 0,
+    "stderr_tail": "",
+    "stdout_tail": "\n RUN  v4.1.10 D:/QuickPLS\n\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports exact GSCA ALS v2 provenance without PLS or inference settings 7ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports bounded CB-SEM/CFA optimizer, identification, and method-version provenance without resampling fields 1ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports model-free PCA scores and PCA-specific provenance without SEM weighting claims 2ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > builds one truthful provenance table without legacy N/A placeholders 1ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > omits unavailable optional fields instead of manufacturing a value 0ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports immutable engine settings when native provenance is available 1ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > omits unused inference settings from descriptive CCA exports 1ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports the genuine MICOM permutation plan without claiming parallel workers 1ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports exact standalone NCA provenance without irrelevant SEM iteration settings 2ms\n \u00e2\u0153\u201c src/native/nativeExportTables.test.ts > native export provenance > exports exact PLSpredict / CVPAT v2 provenance and the assignment digest 1ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > keeps ordinary completed-run diagram exports and reviewer diagrams 3ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > keeps a standardized model diagram in CB-SEM/CFA reviewer and SVG exports 1ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > keeps the immutable GSCA model diagram alongside its dedicated result tables 1ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > keeps candidate Structural Path Randomization model exports visibly scoped 20ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > makes completed MGA exports table-only and never injects a pooled model diagram 1ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > omits the SVG action from the completed MGA export dialog 2ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > exports standalone NCA as five table-backed formats without a fabricated model diagram 2ms\n \u00e2\u0153\u201c src/native/NativeExportDialog.test.ts > NativeExportDialog export scope > keeps standalone PCA and binary logistic exports table-only 2ms\n\n Test Files  2 passed (2)\n      Tests  18 passed (18)\n   Start at  01:05:53\n   Duration  1.28s (transform 687ms, setup 0ms, import 1.52s, tests 54ms, environment 0ms)\n\n"
+  },
+  "feature_id": "qpls3.standalone.pca",
+  "generated_at_utc": "2026-08-13T19:35:54.842713Z",
+  "method_version": "pca_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "export_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "src/native/NativeExportDialog.test.ts",
+      "sha256": "7fe0ac9ca5fef80b51e7897ffd6d5c25241e7cff7763faebc944ac035ccad380",
+      "size": 8119
+    },
+    {
+      "path": "src/native/NativeExportDialog.tsx",
+      "sha256": "51944e6ef72be0cafb2db9ab6b7be77e9aa648d8dc4f45f344acb63d9d14ff0c",
+      "size": 9603
+    },
+    {
+      "path": "src/native/nativeExportTables.test.ts",
+      "sha256": "ab22330e2e6ed7752f748034adaa2c8e653bb4a149a0e91bef21943e2c6964fd",
+      "size": 19426
+    },
+    {
+      "path": "src/native/nativeExportTables.ts",
+      "sha256": "ca8ebea6a2607152bd539a56ca73a7178f2e4270b7b3284ff62bd88c20562c88",
+      "size": 20407
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/pca_v1.manifest.json",
+      "sha256": "c190031338e9790dd64cf280a2e419585b254c5e3a109b81ecc4849f5cad7433",
+      "size": 14506
+    },
+    {
+      "path": "validation/pca_v1_factory_common.py",
+      "sha256": "9a0ce1a0fb76f83ee124b5927e1990f354a70b0ed28fe7d038919dd9f1e11c61",
+      "size": 11599
+    },
+    {
+      "path": "validation/pca_v1_factory_evidence.py",
+      "sha256": "5889a32132a2ade9e6a8cb612dfedee76ede84682213adbc1ba43088ff5156b7",
+      "size": 10692
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_pca_v1_factory_evidence.py",
+      "sha256": "45f58bcbd84e0e5b6adc9aadb334ad50085aa9c4e63c23ad9eedb53d15a6278f",
+      "size": 3537
+    }
+  ]
+}

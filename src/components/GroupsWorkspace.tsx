@@ -5,6 +5,10 @@ import type { PlsResult } from "../types";
 
 type GroupTab = "MGA" | "MICOM" | "FIMIX" | "PLS-POS" | "IPMA";
 
+function groupTabStatus(tab: GroupTab) {
+  return tab === "FIMIX" || tab === "PLS-POS" ? "experimental" : "validated";
+}
+
 export function GroupsWorkspace() {
   const runs = useWorkspace((state) => state.runs);
   const setView = useWorkspace((state) => state.setView);
@@ -24,15 +28,15 @@ export function GroupsWorkspace() {
   }
 
   return <section className="workspace-page">
-    <div className="page-heading"><div><h1>Groups</h1><p>Validated group and segmentation payloads are limited to the documented QuickPLS v1.2.2 scopes.</p></div></div>
+    <div className="page-heading"><div><h1>Groups</h1><p>Method status is shown per payload. PLS-POS and FIMIX remain bounded diagnostic previews until current QuickPLS 3 evidence qualifies them.</p></div></div>
     <div className="analysis-settings">
-      <div><strong>Group result</strong><span className="status-text validated">validated scope</span></div>
+      <div><strong>Group result</strong><span className={`status-text ${groupTabStatus(tab)}`}>{groupTabStatus(tab) === "validated" ? "validated scope" : "bounded preview"}</span></div>
       <label>Saved run<select value={selectedRun?.id ?? ""} onChange={(event) => setSelectedRunId(event.target.value)}>
         {groupRuns.map((run) => <option key={run.id} value={run.id}>{run.name}</option>)}
       </select></label>
     </div>
     <div className="method-table">
-      {availableTabs.map((item) => <button key={item} type="button" className={`method-row ${tab === item ? "selected" : ""}`} onClick={() => setActiveTab(item)}><strong>{item}</strong><span>Groups</span><span className="status-text validated">validated</span></button>)}
+      {availableTabs.map((item) => <button key={item} type="button" className={`method-row ${tab === item ? "selected" : ""}`} onClick={() => setActiveTab(item)}><strong>{item}</strong><span>Groups</span><span className={`status-text ${groupTabStatus(item)}`}>{groupTabStatus(item) === "validated" ? "validated" : "preview"}</span></button>)}
     </div>
     <div className="report-preview">
       {tab === "MGA" && result.mga && <MgaPanel result={result} />}
@@ -44,7 +48,7 @@ export function GroupsWorkspace() {
   </section>;
 }
 
-function hasGroupPayload(result: PlsResult | undefined) {
+export function hasGroupPayload(result: PlsResult | undefined) {
   return Boolean(result?.segmentation || result?.mga || result?.micom || result?.mga_permutation || result?.fimix || result?.ipma);
 }
 
@@ -92,20 +96,21 @@ function MicomPanel({ result }: { result: PlsResult }) {
   </article>;
 }
 
-function FimixPanel({ result }: { result: PlsResult }) {
+export function FimixPanel({ result }: { result: PlsResult }) {
   const fimix = result.fimix!;
   return <>
     <article>
-      <div><strong>FIMIX-PLS</strong><span className="status-text validated">{fimix.classes} classes</span></div>
+      <div><strong>FIMIX-style diagnostic</strong><span className="status-text experimental">bounded preview</span></div>
       <div className="group-metrics">
         <Metric label="Starts" value={String(fimix.starts)} />
         <Metric label="Log likelihood" value={fimix.log_likelihood.toFixed(4)} />
         <Metric label="BIC" value={fimix.bic.toFixed(4)} />
         <Metric label="Entropy" value={fimix.entropy.toFixed(4)} />
       </div>
+      <p>Inverse-distance membership scores and pseudo-likelihood criteria are diagnostic only; they are not posterior probabilities or full finite-mixture EM/FIMIX-PLS equivalence.</p>
     </article>
     <article>
-      <div><strong>Class paths</strong><span className="status-text validated">bounded scope</span></div>
+      <div><strong>Class paths</strong><span className="status-text experimental">preview scope</span></div>
       <div className="bootstrap-table-scroll" tabIndex={0} role="region" aria-label="FIMIX class paths table"><table><thead><tr><th>Class</th><th>Observations</th><th>Share</th><th>Path</th><th>Coefficient</th><th>R2</th></tr></thead><tbody>
         {fimix.classes_summary.flatMap((item) => item.paths.map((path) => <tr key={`${item.class}-${path.source}-${path.target}`}><td>{item.class}</td><td>{item.observations}</td><td>{item.share.toFixed(4)}</td><td>{path.source} -&gt; {path.target}</td><td>{path.coefficient.toFixed(6)}</td><td>{item.r_squared[path.target]?.toFixed(4) ?? "N/A"}</td></tr>))}
       </tbody></table></div>
@@ -113,21 +118,21 @@ function FimixPanel({ result }: { result: PlsResult }) {
   </>;
 }
 
-function PosPanel({ result }: { result: PlsResult }) {
+export function PosPanel({ result }: { result: PlsResult }) {
   const segmentation = result.segmentation!;
   return <>
     <article>
-      <div><strong>PLS-POS</strong><span className="status-text validated">{segmentation.method_version}</span></div>
+      <div><strong>PLS-POS-style diagnostic</strong><span className="status-text experimental">bounded preview</span></div>
       <div className="group-metrics">
         <Metric label="Segments" value={`${segmentation.selected_segments} / ${segmentation.requested_segments}`} />
         <Metric label="Observations" value={String(segmentation.observations)} />
         <Metric label="Objective gain" value={segmentation.objective_improvement.toFixed(4)} />
         <Metric label="Max path separation" value={segmentation.max_path_separation.toFixed(4)} />
       </div>
-      <p>{segmentation.algorithm.replaceAll("_", " ")}. {segmentation.assignment}</p>
+      <p>This frozen deterministic score-space routine is not yet QuickPLS 3 release-qualified and does not claim unrestricted published PLS-POS equivalence. {segmentation.algorithm.replaceAll("_", " ")}. {segmentation.assignment}</p>
     </article>
     <article>
-      <div><strong>Segment paths</strong><span className="status-text validated">bounded scope</span></div>
+      <div><strong>Segment paths</strong><span className="status-text experimental">preview scope</span></div>
       <div className="bootstrap-table-scroll" tabIndex={0} role="region" aria-label="PLS-POS segment paths table"><table><thead><tr><th>Segment</th><th>Observations</th><th>Share</th><th>Path</th><th>Coefficient</th><th>R2</th></tr></thead><tbody>
         {segmentation.segments.flatMap((segment) => segment.paths.map((path) => <tr key={`${segment.segment}-${path.source}-${path.target}`}><td>{segment.segment.replaceAll("_", " ")}</td><td>{segment.observations}</td><td>{segment.share.toFixed(4)}</td><td>{path.source} -&gt; {path.target}</td><td>{path.coefficient.toFixed(6)}</td><td>{segment.r_squared[path.target]?.toFixed(4) ?? "N/A"}</td></tr>))}
       </tbody></table></div>

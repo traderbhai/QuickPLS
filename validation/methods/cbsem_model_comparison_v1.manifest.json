@@ -1,0 +1,54 @@
+{
+  "schema_version":1,
+  "governance":{"contract_frozen_at_utc":"2026-08-13T10:26:17Z","manifest_path":"validation/methods/cbsem_model_comparison_v1.manifest.json","schema_path":"validation/methods/method_promotion_manifest.schema.json","validator_path":"validation/method_promotion_manifest.py","focused_test_path":"validation/test_method_promotion_manifest.py"},
+  "feature":{"id":"qpls3.cbsem.model_comparison","label":"CB-SEM Model Comparison","method_version":"cbsem_model_comparison_v1","method_kind":"deterministic","catalogue_snapshot_date":"2026-08-12","catalogue_url":"https://smartpls.com/documentation/algorithms-and-techniques/"},
+  "claim":{
+    "supported_scope":"Comparison of exactly two converged admissible cbsem_ml_v1 models on identical complete cases and observed variables: ordinary-ML likelihood-ratio testing for verified nested pairs, or descriptive AIC/BIC deltas for explicitly non-nested pairs.",
+    "estimand":"For nested models, the restricted-minus-unrestricted chi-square and degrees-of-freedom differences; for non-nested models, A-minus-B AIC and BIC differences without a significance test.",
+    "assumptions":["Both models use the same dataset fingerprint, exact retained row identities, observed-variable order, ML discrepancy, and preprocessing.","A nested declaration is mechanically verified as fixed or equality constraints on the unrestricted parameterization.","Both fits converge to finite admissible solutions with positive comparison degrees of freedom where a likelihood-ratio test is requested."],
+    "exclusions":["More than two models, different cases or variables, unverified nesting, robust or ordinal estimators, boundary-parameter mixtures, and automatic search are excluded.","No significance test is emitted for non-nested models.","A lower criterion or significant difference does not prove that the favored model is true."],
+    "warnings":["Likelihood-ratio inference is valid only for the verified nested ordinary-ML scope.","AIC/BIC comparisons are conditional on identical data and likelihood conventions and should be interpreted with theory and diagnostics." ]
+  },
+  "scientific_contract":{
+    "equations":[
+      {"id":"nested_likelihood_ratio","expression":"Delta_chi2 = chi2_restricted - chi2_unrestricted; Delta_df = df_restricted - df_unrestricted","variables":["Delta_chi2","chi2_restricted","chi2_unrestricted","Delta_df","df_restricted","df_unrestricted"],"source_reference_id":"satorra_bentler_2001"},
+      {"id":"aic","expression":"AIC = -2 ell + 2k","variables":["AIC","ell","k"],"source_reference_id":"akaike_1974"},
+      {"id":"bic","expression":"BIC = -2 ell + k log(n)","variables":["BIC","ell","k","n"],"source_reference_id":"schwarz_1978"}
+    ],
+    "references":[
+      {"id":"satorra_bentler_2001","kind":"primary_paper","citation":"Satorra and Bentler (2001), A Scaled Difference Chi-Square Test Statistic for Moment Structure Analysis, DOI 10.1007/BF02296192; v1 uses its ordinary-ML nested special case only","locator":"docs/methods/CBSEM_MODEL_COMPARISON_V1.md","independence_group":"published_nested_sem","runtime_policy":"no_runtime_dependency"},
+      {"id":"akaike_1974","kind":"primary_paper","citation":"Akaike (1974), A New Look at the Statistical Model Identification, DOI 10.1109/TAC.1974.1100705","locator":"docs/methods/CBSEM_MODEL_COMPARISON_V1.md","independence_group":"published_aic","runtime_policy":"no_runtime_dependency"},
+      {"id":"schwarz_1978","kind":"primary_paper","citation":"Schwarz (1978), Estimating the Dimension of a Model, DOI 10.1214/aos/1176344136","locator":"docs/methods/CBSEM_MODEL_COMPARISON_V1.md","independence_group":"published_information_criterion","runtime_policy":"no_runtime_dependency"},
+      {"id":"independent_python_cbsem_comparison","kind":"independent_python","citation":"Independent Python nesting validator and ML difference/AIC/BIC reference","locator":"validation/cbsem_model_comparison_reference.py","independence_group":"python_reference","runtime_policy":"development_validation_only"}
+    ],
+    "simulations":[
+      {"id":"nested_comparison_error_power","purpose":"type_i_error","design":"Verified nested CFA and recursive SEM pairs under null and alternative constraints across sample size, loading/path magnitude, and covariance conditions.","seed_policy":"Frozen indexed data-generation seeds; both models use identical generated samples and deterministic fits.","metrics":["type_i_error","power","delta_chi2_error","delta_df_accuracy","nesting_classification_accuracy"],"acceptance_rule":"The null rejection interval must contain nominal alpha, power and numerical agreement must meet preregistered limits, and any invalid nesting must be blocked."},
+      {"id":"nonnested_criterion_ranking","purpose":"model_selection","design":"Non-nested pairs with known relative Kullback-Leibler risk and equal-risk controls.","seed_policy":"Frozen scenario and replicate seeds with deterministic fits.","metrics":["aic_ranking_accuracy","bic_ranking_accuracy","false_lrt_emission_count"],"acceptance_rule":"Criterion calculations must match the independent reference and no non-nested case may emit a chi-square-difference p-value."}
+    ],
+    "boundaries":[
+      {"id":"inadmissible_candidate_fit","category":"data_pathology","case":"Either model is nonconverged, non-finite, unidentified, or has an inadmissible variance.","expected_behavior":"Comparison is unavailable and no inferential preference is emitted."},
+      {"id":"incompatible_or_unverified_pair","category":"unsupported_scope","case":"Models differ in cases, observed variables, estimator, preprocessing, exceed two candidates, or claim unverified nesting.","expected_behavior":"Setup is blocked before comparison."},
+      {"id":"nonnested_order_swap","category":"metamorphic","case":"Non-nested model A and B are swapped.","expected_behavior":"AIC/BIC deltas reverse sign and magnitudes remain equal within tolerance."},
+      {"id":"repeat_comparison","category":"determinism","case":"The same model pair and data execute repeatedly.","expected_behavior":"Nesting decision, fits, deltas, p-value availability, and diagnostics are exactly equal."},
+      {"id":"cbsem_comparison_tamper","category":"tamper","case":"A model checksum, row set, nesting declaration, fit, parameter count, delta, p-value, or method identity is changed.","expected_behavior":"Strict project validation rejects the archive."}
+    ],
+    "numerical_tolerance":0.000001
+  },
+  "product_contract":{
+    "persistence":{"recipe_schema_version":3,"result_schema_version":1,"payload_kind":"pls_pm_v1","tamper_tests":[
+      {"category":"feature_identity","expected_behavior":"Reject an archive whose identity differs from CB-SEM model comparison."},
+      {"category":"method_version","expected_behavior":"Reject a comparison relabeled as another version."},
+      {"category":"dataset_fingerprint","expected_behavior":"Reject either candidate when its dataset or retained-row identity differs."},
+      {"category":"checksum","expected_behavior":"Reject an archive entry whose candidate or comparison checksum differs."},
+      {"category":"malformed_payload","expected_behavior":"Reject duplicate keys, unknown fields, invalid nesting, non-finite fits, inconsistent degrees of freedom, or a non-nested p-value."},
+      {"category":"legacy_reinterpretation","expected_behavior":"Never reinterpret descriptive saved-run comparison as CB-SEM analytical comparison v1."}
+    ],"legacy_policy":"Historical side-by-side CB-SEM results remain descriptive and cannot satisfy this contract."},
+    "native":{"setup_controls":["Model A","Model B","Nested or non-nested declaration","Constraint map for nested comparison","Comparison direction"],"applicability_blockers":["Different data, rows, variables, estimator, or preprocessing","Unverified nesting","Nonconverged or inadmissible fit","More than two models"],"result_surfaces":["Candidate identity and comparability","Nesting validation","Fit and parameter-count table","Likelihood-ratio or AIC/BIC deltas","Diagnostics and provenance"],"gui_cli_parity_rule":"GUI and CLI must produce the same nesting validation, fits, criterion deltas, inference availability, and diagnostics for identical inputs.","accessibility_rules":["Every fit or comparison visual has an equivalent accessible table.","Direction, unavailable tests, and warnings are exposed without color alone."]},
+    "export":{"formats":["csv","xlsx"],"tables":["Model definitions","Nesting and constraints","Fit comparison","Information criteria","Diagnostics","Run provenance"],"same_run_required":true,"provenance_required":true},
+    "packaged":{"platforms":["windows"],"workflow_steps":["setup","invalid_setup_blocked","execute","inspect_results","export","save","close","reopen_same_run","cleanup"],"viewports":["1024x700","1280x720","1440x900"],"offline_required":true,"cancellation_required":false,"process_cleanup_required":true},
+    "audit":{"exact_identity_fields":["passed","feature_id","method_version","catalogue_snapshot_date"],"source_hashes_required":true,"freshness_required":true,"reports_must_pass":true}
+  },
+  "qualification":{"declared_state":"absent","target_state":"release_qualified","source_requirements":{
+    "method_spec":["docs/methods/CBSEM_MODEL_COMPARISON_V1.md"],"independent_reference":["validation/cbsem_model_comparison_reference.py"],"simulation_report":["validation/cbsem_model_comparison_release_simulation.py"],"boundary_report":["validation/cbsem_model_comparison_release_boundary_gate.py"],"persistence_report":["validation/cbsem_model_comparison_release_persistence_gate.py"],"frontend_report":["src/native/nativeCbsemModelComparison.test.ts"],"export_report":["src/native/nativeExportTables.test.ts"],"method_audit":["validation/cbsem_model_comparison_method_promotion_audit.py"],"packaged_acceptance":["validation/run_v252_cbsem_model_comparison_native_acceptance.ps1"]
+  },"evidence":{"engine_only":[],"archive_qualified":[],"native_qualified":[],"release_qualified":[]}}
+}

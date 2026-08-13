@@ -1,0 +1,104 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "accessible_result_surface_test": true,
+    "method_scoped_contract_test": true,
+    "passed": true,
+    "test_files_passed": true,
+    "typed_recipe_identity_test": true
+  },
+  "execution": {
+    "command": [
+      "npx.cmd",
+      "vitest",
+      "run",
+      "src/native/plsAlgorithmFactory.test.ts",
+      "src/native/nativeAnalysisRecipe.test.ts",
+      "src/native/NativeResultsSurface.test.tsx",
+      "--reporter=verbose"
+    ],
+    "duration_seconds": 5.753,
+    "returncode": 0,
+    "stderr_tail": "",
+    "stdout_tail": "ires an eligible ordinary CTA-PLS block and blocks controls and generated constructs 1ms\n \u00e2\u0153\u201c src/native/nativeAnalysisRecipe.test.ts > advanced validated backend family mappings > keeps current prediction separate from explicitly requested legacy PLS-POS and FIMIX workflows 1ms\n \u00e2\u0153\u201c src/native/nativeAnalysisRecipe.test.ts > advanced validated backend family mappings > does not carry a hidden legacy segmentation plan into the compact Prediction dialog workflow 0ms\n \u00e2\u0153\u201c src/native/nativeAnalysisRecipe.test.ts > advanced validated backend family mappings > maps the explicit bounded joint MICOM and permutation-MGA contract 1ms\n \u00e2\u0153\u201c src/native/nativeAnalysisRecipe.test.ts > advanced validated backend family mappings > maps one ID-backed endogenous IPMA target into the fixed native recipe scope 2ms\n \u00e2\u0153\u201c src/native/nativeAnalysisRecipe.test.ts > advanced validated backend family mappings > keeps CB-SEM inside the validated raw single-group ML scope 1ms\n \u00e2\u0153\u201c src/native/nativeAnalysisRecipe.test.ts > advanced validated backend family mappings > builds only the fixed recursive GSCA ALS v2 scope 1ms\n \u00e2\u0153\u201c src/native/nativeAnalysisRecipe.test.ts > advanced validated backend family mappings > emits typed PCA configuration without executable metadata 1ms\n \u00e2\u0153\u201c src/native/nativeAnalysisRecipe.test.ts > advanced validated backend family mappings > maps OLS with its explicit HC3 contract and preserves bounded hidden regression variants 4ms\n \u00e2\u0153\u201c src/native/nativeAnalysisRecipe.test.ts > advanced validated backend family mappings > maps typed NCA variables, ceiling, and permutations with independent bounds 1ms\n \u00e2\u0153\u201c src/native/nativeAnalysisRecipe.test.ts > native recipe identity contract > rejects invalid recipeId before producing a wire payload 0ms\n \u00e2\u0153\u201c src/native/nativeAnalysisRecipe.test.ts > native recipe identity contract > rejects invalid modelId before producing a wire payload 0ms\n \u00e2\u0153\u201c src/native/nativeAnalysisRecipe.test.ts > native recipe identity contract > rejects invalid createdAt before producing a wire payload 0ms\n \u00e2\u0153\u201c src/native/nativeAnalysisRecipe.test.ts > native recipe identity contract > rejects invalid createdAt before producing a wire payload 0ms\n \u00e2\u0153\u201c src/native/nativeAnalysisRecipe.test.ts > native recipe identity contract > rejects invalid datasetFingerprint before producing a wire payload 0ms\n \u00e2\u0153\u201c src/native/nativeAnalysisRecipe.test.ts > native recipe identity contract > rejects invalid projectName before producing a wire payload 0ms\n \u00e2\u0153\u201c src/native/plsAlgorithmFactory.test.ts > PLS Algorithm v1 factory-native contract > serializes the exact deterministic PLS algorithm recipe without inference state 5ms\n \u00e2\u0153\u201c src/native/plsAlgorithmFactory.test.ts > PLS Algorithm v1 factory-native contract > projects accessible point-estimate tables and same-run provenance without inference claims 10ms\n \u00e2\u0153\u201c src/native/NativeResultsSurface.test.tsx > native Results tree accessibility > renders GSCA-specific fit and convergence properties without generic PLS settings 85ms\n \u00e2\u0153\u201c src/native/NativeResultsSurface.test.tsx > native Results tree accessibility > renders CB-SEM/CFA run information from the ML payload rather than generic PLS iterations 6ms\n \u00e2\u0153\u201c src/native/NativeResultsSurface.test.tsx > native Results tree accessibility > renders an accessible observed-range NCA ceiling plot backed by the result table 3ms\n \u00e2\u0153\u201c src/native/NativeResultsSurface.test.tsx > native Results tree accessibility > renders one roving tab stop with hierarchical and current-item semantics 4ms\n \u00e2\u0153\u201c src/native/NativeResultsSurface.test.tsx > native Results tree accessibility > moves among only visible entries with arrows and Home/End 1ms\n \u00e2\u0153\u201c src/native/NativeResultsSurface.test.tsx > native Results tree accessibility > expands, enters, collapses, returns to parents, and activates consistently 0ms\n\n Test Files  3 passed (3)\n      Tests  54 passed (54)\n   Start at  00:48:35\n   Duration  1.55s (transform 1.11s, setup 0ms, import 2.27s, tests 154ms, environment 0ms)\n\n"
+  },
+  "feature_id": "qpls3.pls.algorithm",
+  "generated_at_utc": "2026-08-13T19:18:36.781341Z",
+  "method_version": "pls_pm_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "frontend_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "src/data/smokeRun.ts",
+      "sha256": "8bc50af154f1b73d83f22da22001710257ae66d07948cf75b90838e200a17a4b",
+      "size": 9383
+    },
+    {
+      "path": "src/native/NativeResultsSurface.test.tsx",
+      "sha256": "545630216d5270304f7040a25be47c31d1d99558eb2c1817c6ec6947244a70b7",
+      "size": 10157
+    },
+    {
+      "path": "src/native/NativeResultsSurface.tsx",
+      "sha256": "061b2f8dec7f88b78900937e382c89451c719ae434c6bd158b5f8785b0831e46",
+      "size": 44070
+    },
+    {
+      "path": "src/native/nativeAnalysisRecipe.test.ts",
+      "sha256": "f09b36ffbeabe578cc75dd93567dcbab830e6c87bc48ee3fcc388a8e96d664c7",
+      "size": 37911
+    },
+    {
+      "path": "src/native/nativeAnalysisRecipe.ts",
+      "sha256": "eaf427095305c578a3634da1c50d3afacc9a73a604607d5d75a0bf4d6ae3e61d",
+      "size": 42423
+    },
+    {
+      "path": "src/native/nativeResults.ts",
+      "sha256": "e81f4563ca317d7ce56cb8f8fa29daa4b3674c472bf75eea0fa8d2149eaf6f39",
+      "size": 214672
+    },
+    {
+      "path": "src/native/plsAlgorithmFactory.test.ts",
+      "sha256": "f2c30de1aa3879e766575982a4fe1de104f21596709992275fac16a66af54b8b",
+      "size": 5651
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/pls_algorithm_v1.manifest.json",
+      "sha256": "ec18270309bd1dce2b5064e2f727893d03a44eaa04376efcd99a6dee57dc1ead",
+      "size": 15592
+    },
+    {
+      "path": "validation/pls_algorithm_v1_factory_common.py",
+      "sha256": "2047408b08f5a7d0f0955ffc5902d063820551d0a37c6c3e595c9441591df3d7",
+      "size": 12465
+    },
+    {
+      "path": "validation/pls_algorithm_v1_factory_evidence.py",
+      "sha256": "602116f4aff15716487a29f711c6f7373bbc9fab9ab58d3aead06b09a7a57530",
+      "size": 22699
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_pls_algorithm_v1_factory_evidence.py",
+      "sha256": "3296d72e15da0d8bf6c7c87d7e1a74c7db3cdb40d49d807374953cdf1c98499f",
+      "size": 12583
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "document_type": "quickpls_authenticode_signing_identity",
+  "status": "pending",
+  "identity_id": null,
+  "leaf_subject": null,
+  "leaf_sha1_thumbprint": null,
+  "approved_by": null,
+  "approved_at": null,
+  "key_protection": null,
+  "notes": "Populate only after purchasing and independently approving the exact QuickPLS leaf code-signing certificate. Candidate factories reject this pending record."
+}

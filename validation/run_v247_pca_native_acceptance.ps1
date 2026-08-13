@@ -11,6 +11,25 @@ if ($existingProcess) {
     throw "Close every existing quickpls-desktop.exe instance before packaged acceptance."
 }
 
+function Remove-FileWithRetry {
+    param([string]$Path)
+    $deadline = [DateTime]::UtcNow.AddSeconds(5)
+    while ([System.IO.File]::Exists($Path)) {
+        try {
+            [System.IO.File]::Delete($Path)
+        } catch [System.IO.IOException] {
+            if ([DateTime]::UtcNow -ge $deadline) { throw }
+            Start-Sleep -Milliseconds 100
+        }
+    }
+}
+
+$mainReportPath = Join-Path $repositoryRoot "validation\results\v247_tauri_native_acceptance.json"
+$scopedReportPath = Join-Path $repositoryRoot "validation\results\v247_tauri_native_acceptance_pca.json"
+foreach ($priorReport in @($mainReportPath, $scopedReportPath)) {
+    Remove-FileWithRetry -Path $priorReport
+}
+
 if ([string]::IsNullOrWhiteSpace($ExportPath)) {
     $stamp = Get-Date -Format "yyyyMMdd-HHmmssfff"
     $ExportPath = Join-Path $repositoryRoot "validation\results\v247-native-pca-$stamp.xlsx"

@@ -133,13 +133,25 @@ def run_recipe(name, method, metadata, model=None):
     recipe = RESULTS / f"{name}.recipe.json"
     output = RESULTS / f"{name}_quickpls.json"
     payload = {
-        "schema_version": 2,
+        "schema_version": 3,
         "id": f"00000000-0000-0000-0000-00000008{sum(ord(ch) for ch in name) % 10000:04d}",
         "created_at": "2026-07-19T00:00:00Z",
         "dataset_fingerprint": fingerprint,
         "model": model or empty_model(),
         "settings": base_settings(method),
-        "metadata": {"fixture": "v08_extended_methods_reference", **metadata},
+        "method_config": (
+            {
+                "kind": "pca",
+                "variables": metadata["pca_variables"].split(","),
+                "retention": {
+                    "rule": metadata["pca_component_rule"],
+                    "components": int(metadata["pca_components"]),
+                },
+            }
+            if method == "pca"
+            else {"kind": method}
+        ),
+        "metadata": {"fixture": "v08_extended_methods_reference"},
     }
     recipe.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     qpls(["run", str(recipe.relative_to(ROOT)), "--data", str(DATA.relative_to(ROOT)), "--output", str(output.relative_to(ROOT)), "--allow-experimental"], check=True, stdout=subprocess.DEVNULL)

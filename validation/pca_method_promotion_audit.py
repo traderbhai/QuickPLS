@@ -51,7 +51,7 @@ def run_pca(csv_path, name, variables, rule="fixed", components=2, variance_thre
     recipe = RESULTS / f"{name}.recipe.json"
     output = RESULTS / f"{name}_quickpls.json"
     payload = {
-        "schema_version": 2,
+        "schema_version": 3,
         "id": f"00000000-0000-0000-0000-00000012{sum(ord(c) for c in name) % 10000:04d}",
         "created_at": "2026-07-21T00:00:00Z",
         "dataset_fingerprint": fingerprint(csv_path, name),
@@ -71,16 +71,17 @@ def run_pca(csv_path, name, variables, rule="fixed", components=2, variance_thre
             "preprocessing": "standardized",
             "missing_data": "listwise_deletion",
         },
-        "metadata": {
-            "fixture": "pca_method_promotion_audit",
-            "pca_variables": ",".join(variables),
-            "pca_component_rule": rule,
+        "method_config": {
+            "kind": "pca",
+            "variables": list(variables),
+            "retention": {
+                "rule": rule,
+                **({"components": components} if rule == "fixed" else {}),
+                **({"threshold": variance_threshold} if rule == "variance_threshold" else {}),
+            },
         },
+        "metadata": {"fixture": "pca_method_promotion_audit"},
     }
-    if rule == "fixed":
-        payload["metadata"]["pca_components"] = str(components)
-    if rule == "variance_threshold":
-        payload["metadata"]["pca_variance_threshold"] = str(variance_threshold)
     recipe.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     proc = run([
         str(CLI),
@@ -333,7 +334,7 @@ def native_browser_check():
             report.get("passed") is True
             and len(rows) == 3
             and all(row.get("selectedMethod") == "Principal Component Analysis" for row in rows)
-            and all(row.get("catalogCount") == 11 for row in rows)
+            and all(row.get("catalogCount") == 15 for row in rows)
             and all(row.get("fixture") == {"variables": 5, "models": 0} for row in rows)
             and all(row.get("noModelBlocker") is True for row in rows)
         ),
@@ -343,7 +344,7 @@ def native_browser_check():
 
 
 def packaged_native_check():
-    path = ROOT / "validation" / "results" / "v247_tauri_native_acceptance.json"
+    path = ROOT / "validation" / "results" / "method_factory" / "pca_v1" / "pca_v1_packaged_raw.json"
     report = json.loads(path.read_text(encoding="utf-8"))
     checks = report.get("checks", {})
     result = checks.get("pcaResult", {})
@@ -458,7 +459,7 @@ def main():
         "method_spec": (ROOT / "docs/methods/PCA_V1.md").exists(),
         "known_differences": (ROOT / "docs/KNOWN_DIFFERENCES.md").exists(),
         "method_compatibility_updated": "Standalone PCA | Validated for documented model-free PCA scope" in (ROOT / "docs/METHOD_COMPATIBILITY.md").read_text(encoding="utf-8"),
-        "native_workbench_lists_eleven_workflows": "eleven packaged-accepted calculation workflows" in native_docs,
+        "native_workbench_lists_fifteen_workflows": "fifteen calculation-catalog workflows" in native_docs,
         "native_backlog_no_longer_lists_pca": "CB-SEM/CFA, PCA, GSCA" not in native_docs,
     }
     report = {

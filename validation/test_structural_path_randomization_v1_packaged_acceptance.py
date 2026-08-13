@@ -98,7 +98,7 @@ def qualified_page() -> dict[str, object]:
 
 def valid_report() -> dict[str, object]:
     setup_contract = {
-        "catalogCount": 14,
+        "catalogCount": 15,
         "selectedMethod": "Structural Path Randomization",
         "permutations": {"count": 1, "type": "number", "minimum": "99", "maximum": "10000", "step": "1", "value": "10000"},
         "workers": {"count": 1, "type": "number", "minimum": "1", "maximum": "64", "value": "4"},
@@ -406,7 +406,7 @@ class StructuralPathRandomizationPackagedAcceptanceTests(unittest.TestCase):
     def test_harness_uses_an_isolated_scope_and_exact_scientific_contract(self) -> None:
         required = [
             'const structuralPathRandomizationOnly = acceptanceScope === "structural_path_randomization";',
-            "const isolatedFocusedOnly = processV2Only || structuralPathRandomizationOnly;",
+            "const isolatedFocusedOnly = ctaPlsOnly || processV2Only || structuralPathRandomizationOnly;",
             "if (isolatedFocusedOnly && scopedReportPath !== reportPath)",
             "if (structuralPathRandomizationOnly) await writeStructuralPathRandomizationPackagedEvidence();",
             "async function runFocusedStructuralPathRandomizationAcceptance()",
@@ -454,6 +454,17 @@ class StructuralPathRandomizationPackagedAcceptanceTests(unittest.TestCase):
             self.harness,
             re.compile(r"structuralPathRandomizationOnly[\s\S]{0,120}priorEvidence\?\.checks"),
         )
+
+    def test_wrapper_retries_transient_json_publication_sharing_violations(self) -> None:
+        wrapper = (ROOT / "validation" / "run_v247_structural_path_randomization_native_acceptance.ps1").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("catch [System.IO.IOException]", wrapper)
+        self.assertIn("[DateTime]::UtcNow.AddSeconds(5)", wrapper)
+        self.assertIn("Start-Sleep -Milliseconds 100", wrapper)
+        self.assertIn("if ([DateTime]::UtcNow -ge $deadline) { throw }", wrapper)
+        self.assertIn("function Remove-FileWithRetry", wrapper)
+        self.assertIn("foreach ($priorReport in @($rawReportPath, $packagedReportPath))", wrapper)
         cancellation_block = self.harness.split("const cancellationArchiveBefore", 1)[1].split(
             "const activeCompletionPromise", 1
         )[0]

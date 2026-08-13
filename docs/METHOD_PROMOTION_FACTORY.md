@@ -4,6 +4,21 @@ This factory makes every scientific capability earn its product claim from the
 same fail-closed evidence contract. It supplements the QuickPLS 3 parity ledger;
 it does not replace that ledger or independently make a marketing claim.
 
+The strict command, `python validation/method_promotion_manifest.py`, is the
+only factory validator that derives qualification from current hash-bound
+evidence. It deliberately fails when local release artifacts are missing or
+changed. Clean-checkout CI uses
+`python validation/method_promotion_contracts.py` to validate only the closed
+JSON, schema, and semantic contracts. That portable command explicitly reports
+`evidence_verified: false` and `claim_authorized: false`; it cannot promote a
+method or authorize parity, release, or competitor claims. A trusted release
+evidence job must restore the exact digest-bound artifact bundle before running
+the strict validator. CI also runs
+`python validation/quickpls_3_competitor_contracts.py` plus the portable
+factory and catalogue mutation runners. Those runners exercise the strict
+contract rules with non-claiming fixtures; they never substitute for the local
+materialized-evidence gate.
+
 ## Manifest contract
 
 Each capability owns one `validation/methods/*.manifest.json` document validated
@@ -74,14 +89,17 @@ Later-stage evidence cannot compensate for a failed or missing earlier stage.
 The validator derives the highest state on disk and rejects a higher declared
 state.
 
-The repository includes two reference manifests:
+The repository currently carries 40 method contracts. Nine derive
+`release_qualified`: PLS Algorithm, WPLS, PLSc, PLS Bootstrapping, PCA, CTA-PLS,
+Structural Path Randomization, Binary Logistic Regression, and Regression
+Bootstrapping. Graph-defined PROCESS v2 derives `native_qualified`; the other 30
+contracts remain `absent`. These states come from the strict evidence validator,
+not from this inventory paragraph.
 
-- `structural_path_randomization_v1.manifest.json` freezes the contract for an
-  existing parity-ledger capability but conservatively derives `absent` in this
-  new factory. Its older reports predate and therefore do not bind the factory
-  manifest, schema, validator, and focused test.
-- `pls_sample_size_power_v1.manifest.json` demonstrates a complete future
-  contract that truthfully remains `absent` until its evidence is produced.
+`pls_sample_size_power_v1.manifest.json` is one example of a complete future
+contract that truthfully remains `absent` until its implementation evidence is
+produced. Planned contracts retain exact source requirements and empty evidence
+ladders; they cannot inherit qualification from legacy reports or UI labels.
 
 The existing parity ledger retains its own qualification state and validation
 rules. Factory promotion requires newly generated, factory-bound reports; it

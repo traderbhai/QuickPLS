@@ -1,0 +1,64 @@
+{
+  "created_at": "2026-08-13T00:00:00Z",
+  "dataset_fingerprint": "v2:ee20391d4c6600384f8b4ddf975921147a0a7f74e3813a909d1a9c32e8b6f91e",
+  "id": "956d604c-f863-5d3b-b62b-26854d5b1911",
+  "metadata": {
+    "status": "validated_cta_pls_v1_bounded_descriptive_scope"
+  },
+  "method_config": {
+    "kind": "cta_pls"
+  },
+  "model": {
+    "constructs": [
+      {
+        "id": "x",
+        "indicators": [
+          "x1",
+          "x2",
+          "x3",
+          "x4"
+        ],
+        "mode": "reflective",
+        "name": "X",
+        "short_name": "X"
+      },
+      {
+        "id": "y",
+        "indicators": [
+          "y1",
+          "y2"
+        ],
+        "mode": "reflective",
+        "name": "Y",
+        "short_name": "Y"
+      }
+    ],
+    "controls": [],
+    "higher_order_constructs": [],
+    "id": "dbec9331-9166-5160-9743-e31a632fdb71",
+    "interactions": [],
+    "name": "CTA-PLS v1 factory fixture",
+    "paths": [
+      {
+        "source": "x",
+        "target": "y"
+      }
+    ]
+  },
+  "schema_version": 3,
+  "settings": {
+    "bootstrap_samples": 0,
+    "case_weight_column": null,
+    "confidence_level": 0.95,
+    "max_iterations": 10000,
+    "method": "cta_pls",
+    "missing_data": "listwise_deletion",
+    "permutation_samples": 0,
+    "preprocessing": "standardized",
+    "seed": 20260813,
+    "studentized_inner_samples": 0,
+    "tolerance": 1e-10,
+    "weighting_scheme": "path",
+    "workers": 1
+  }
+}

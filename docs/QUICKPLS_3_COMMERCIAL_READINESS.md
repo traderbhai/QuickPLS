@@ -3,8 +3,8 @@
 ## Purpose
 
 This document defines the minimum release gate for positioning QuickPLS 3 as an
-independently implemented, fully offline Windows competitor for the workflows
-that QuickPLS explicitly documents as supported. It does not authorize claims
+independently implemented Windows competitor whose documented analytical
+workflows require no internet connection, account, or cloud service. It does not authorize claims
 of complete SmartPLS parity, numerical identity, SmartPLS project
 compatibility, or affiliation.
 
@@ -20,7 +20,9 @@ counted as completed work.
 - **License:** the launch product remains free proprietary software. Accounts,
   activation, and a time-limited trial are not required.
 - **Offline and privacy:** calculations, projects, documentation, and exports
-  remain local. Product telemetry is disabled by default.
+  remain local. Product telemetry is disabled by default, and the QuickPLS
+  application/page makes no external requests. Microsoft-managed WebView2
+  background connections remain a separately disclosed platform boundary.
 - **Updates:** update checks are user-initiated by default. Offline users can
   install a complete signed package without an updater service.
 - **Positioning:** publish an evidence-linked comparison matrix using
@@ -57,11 +59,16 @@ Every item below is release-blocking.
 
 - Obtain an organization-appropriate CA-trusted Authenticode certificate or a
   managed Windows signing identity.
+- Approve one exact QuickPLS leaf identity in
+  `validation/quickpls_signing_identity.json`, binding its full subject and SHA-1
+  certificate thumbprint. Wildcards, regular expressions, and caller-supplied
+  publisher claims are prohibited.
 - Sign and RFC 3161 timestamp the desktop executable, CLI executable, and final
   NSIS installer with SHA-256.
-- Verify publisher, chain, timestamp, and all signatures with Windows
-  SignTool. Keep signing credentials outside the repository and require
-  human-reviewed release authorization.
+- Verify chain, timestamp, and all signatures with Windows SignTool, then use
+  Windows Authenticode APIs to verify the leaf subject/thumbprint and PE product,
+  version, and original-filename identity. Keep signing credentials outside the
+  repository and require human-reviewed release authorization.
 - Produce checksums only after signing. Preserve the exact signed hashes used
   by clean-machine acceptance.
 
@@ -82,10 +89,11 @@ Every item below is release-blocking.
 
 ### 3. Updates and recovery
 
-- Use separately protected Tauri updater signing keys and distinct beta/stable
-  manifests.
-- Require package signature and hash validation, prohibit automatic downgrade,
-  retain a full-installer fallback, and test interrupted-update recovery.
+- Use detached-CMS signed, channel-isolated beta/stable manifests bound to the
+  same frozen QuickPLS leaf release identity.
+- Require manifest, installer-signature, and hash validation; prohibit automatic
+  downgrade; retain a full-installer fallback; and test interrupted-update
+  recovery.
 - Do not perform a network request at launch unless the user has explicitly
   enabled it. Disclose that update hosts can receive ordinary server metadata
   such as IP address and request time.
@@ -105,6 +113,10 @@ Every item below is release-blocking.
 - Verify the packaged application's network behavior and publish a privacy
   notice for the offline product, manual update checks, website logs, and
   support submissions.
+- Keep any literal fully-offline, no-telemetry, or zero-egress process-tree
+  claim blocked until a separate OS-enforced fixed-WebView2 containment gate
+  passes. Application-level browser switches, CSP, and a rejection proxy do not
+  satisfy that stronger gate by themselves.
 - Threat-model hostile CSV/XLSX/project archives, archive traversal and bombs,
   formula injection, unsafe HTML/SVG export, file paths, Tauri IPC, updater
   compromise, and release-key compromise.
@@ -166,30 +178,44 @@ lowercase 64-hex SHA-256 and its `{path, size, sha256}` descriptor is verified
 against the repository bytes. Signing, installer, updater, SBOM, and provenance
 gates additionally bind the same `candidate_id` and candidate-manifest
 descriptor. The strict manifest identifies exactly one desktop, CLI, installer,
-updater bundle, SBOM, and provenance artifact set, and the validator rehashes
-every listed file. `candidate_id` is the canonical SHA-256 identity of the
-target release plus the desktop, CLI, installer, and updater-bundle sizes and
-digests; the manifest has its own separately verified descriptor. Cross-
-candidate evidence is rejected.
+updater bundle, signed channel manifest, signed protected-build attestation,
+CycloneDX SBOM, and provenance set, and the validator rehashes every listed file.
+`payload_id` identifies the three signed PEs. `candidate_id` is the canonical
+SHA-256 identity of the target release plus the desktop, CLI, installer, updater
+bundle, channel-manifest, and channel-signature sizes and digests. Keeping the
+payload identity separate avoids circular self-reference while still binding
+the final update trust artifact. The candidate manifest and frozen signer record
+have their own separately verified descriptors. Paths under `target/` and
+`node_modules/` are rejected as non-durable. Cross-candidate evidence is rejected.
 
 Candidate semantics are also validated. Desktop, CLI, and installer files must
 be x64 PE32+ executables with bounded headers and a nonempty embedded
 WIN_CERTIFICATE table. For every distinct candidate PE referenced by passed
 candidate-scoped evidence, the production validator locates Windows SignTool
-and reruns `verify /pa /all /v /tw` at validation time. A missing tool, nonzero
-exit, untrusted result, warning, absent timestamp, absent publisher, file change,
-or mismatch between the normalized live output and its strict JSON report fails
-closed. The report binds the exact PE and candidate hashes, command, exit code,
-full normalized verification output and its SHA-256, publisher, and timestamp.
+and reruns `verify /pa /all /v /tw` at validation time. Windows tooling then
+reads the actual leaf subject/thumbprint and PE version metadata. A missing tool,
+nonzero exit, untrusted result, warning, absent timestamp, signer drift, product
+or version drift, file change, or mismatch between the normalized live output
+and its strict JSON report fails closed. The signed-candidate factory performs
+the same verification before and after copying each PE and requires identical
+hashes and results; caller-only publisher strings are not trusted.
 There is no contract field or command-line option that bypasses this live trust
 check. The all-pending baseline remains runnable without SignTool because it
 contains no passed candidate evidence and therefore makes no authenticity claim.
 
 The updater must be a bounded, traversal-safe ZIP containing only the exact
-signed installer payload. SBOM and provenance must be strict JSON bound to the
-release, candidate ID, distribution hashes, build identity/times, source commit,
-and SBOM digest. Release reports must be produced from the trusted signing
-service and the validation-time SignTool run, never hand-authored.
+signed installer, signed channel manifest, and its detached CMS signature. The
+manifest binds channel, version floor, no-downgrade policy, PE payload identity,
+installer hash, and offline recovery hash. Readiness live-verifies both detached
+CMS signatures against the approved QuickPLS leaf.
+
+The SBOM is an actual CycloneDX 1.6 document with package URLs, license entries,
+and a complete dependency graph. Provenance is an in-toto Statement v1 with a
+SLSA provenance v1 predicate, candidate artifact subjects, clean protected-
+workflow context, source/lockfile/toolchain identity, SBOM digest, and the
+descriptor of a detached-CMS signed build attestation. Release reports are
+produced from the protected signing workflow and reverified by readiness, never
+accepted as caller assertions.
 
 Expected records include:
 
@@ -297,10 +323,17 @@ python validation/quickpls_3_release_readiness.py --require-ready
 
 ## Safe Public Claim After The Gate
 
-> QuickPLS is an independently implemented, fully offline Windows competitor
-> to SmartPLS for the analytical workflows documented as supported. It does
+> QuickPLS is an independently implemented Windows competitor to SmartPLS for
+> the analytical workflows documented as supported. Its analyses and local
+> project workflows require no internet connection, account, or cloud service,
+> and the QuickPLS application/page makes no external requests. It does
 > not claim complete feature parity, identical undocumented behavior, or
 > SmartPLS project compatibility.
+
+A literal fully-offline, no-telemetry, or zero-egress process-tree claim
+additionally requires a separate OS-enforced fixed-WebView2 containment gate;
+the current candidate has not satisfied that stronger condition. Neither the
+commercial competitor gate nor the safe statement above authorizes it.
 
 Broader claims remain prohibited until the method compatibility ledger and the
 commercial-readiness contract both support them.

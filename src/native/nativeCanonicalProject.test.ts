@@ -244,6 +244,80 @@ describe("canonical native project reconciliation", () => {
     expect(nativeRunFromCanonicalResult(bootstrapEnvelope, bootstrapRecipe)?.method).toBe("PLS-SEM Bootstrapping");
   });
 
+  it("hydrates a bootstrap-only corporate-shaped result and rejects a mixed bootstrap-permutation payload", () => {
+    const baseEnvelope = envelope();
+    const basePayload = baseEnvelope.payload as Extract<AnalysisResultEnvelope["payload"], { kind: "pls_pm_v1" }>;
+    const bootstrapRecipe = recipe({
+      schema_version: 3,
+      settings: {
+        ...recipe().settings,
+        bootstrap_samples: 24,
+        permutation_samples: 0,
+      },
+      method_config: { kind: "pls_bootstrap" },
+      metadata: { demo: "quickpls_v04_demo" },
+    });
+    const bootstrap = {
+      method_version: "pls_bootstrap_v1",
+      plan: { replicates: 24, master_seed: 42, operation: "bootstrap" },
+      usable_replicates: 24,
+      failed_replicates: [],
+      percentile: { confidence_level: 0.95, parameters: [] },
+    };
+    const bootstrapEnvelope = envelope({
+      provenance: {
+        ...baseEnvelope.provenance,
+        settings: bootstrapRecipe.settings,
+      },
+      payload: {
+        kind: "pls_pm_v2",
+        estimation: basePayload.estimation,
+        assessment: basePayload.assessment,
+        bootstrap,
+      },
+    });
+
+    const hydrated = reconcileNativeCanonicalProject({
+      models: [model()],
+      recipes: [bootstrapRecipe],
+      results: [bootstrapEnvelope],
+      activeModelId: "model-1",
+      workspace: { nodes: [], edges: [], runs: [] },
+    });
+
+    expect(hydrated.runs).toHaveLength(1);
+    expect(hydrated.runs[0]).toMatchObject({
+      name: "PLS-SEM Bootstrapping run",
+      method: "PLS-SEM Bootstrapping",
+      bootstrap,
+    });
+
+    const mixedRecipe: NativeCanonicalAnalysisRecipe = {
+      ...bootstrapRecipe,
+      settings: { ...bootstrapRecipe.settings, permutation_samples: 99 },
+    };
+    const mixedEnvelope: AnalysisResultEnvelope = {
+      ...bootstrapEnvelope,
+      provenance: {
+        ...bootstrapEnvelope.provenance,
+        settings: mixedRecipe.settings,
+      },
+      payload: {
+        kind: "pls_pm_v3",
+        estimation: basePayload.estimation,
+        assessment: basePayload.assessment,
+        bootstrap,
+        permutation: {
+          method_version: "freedman_lane_permutation_v1",
+          plan: { permutations: 99, master_seed: 42, operation: "pls_pm_freedman_lane_v1" },
+          parameters: [],
+        },
+      },
+    };
+
+    expect(nativeRunFromCanonicalResult(mixedEnvelope, mixedRecipe)).toBeNull();
+  });
+
   it("reopens current and legacy logistic results as model-free versioned runs", () => {
     const baseEnvelope = envelope();
     const basePayload = baseEnvelope.payload as Extract<AnalysisResultEnvelope["payload"], { kind: "pls_pm_v1" }>;

@@ -1,0 +1,290 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "coverage": {
+      "includes_missing_rows": true,
+      "includes_near_tied_eigenvalues": true,
+      "includes_non_gaussian_data": true,
+      "retention_rules": [
+        "fixed",
+        "kaiser",
+        "variance_threshold"
+      ],
+      "sample_sizes": [
+        30,
+        45,
+        60,
+        90,
+        100,
+        140,
+        240
+      ],
+      "variable_counts": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        8
+      ]
+    },
+    "passed": true,
+    "scenario_count": 7,
+    "scenarios": [
+      {
+        "components": 2,
+        "expected_retained_components": 2,
+        "max_abs_errors": {
+          "cumulative_variance": 1.1102230246251565e-16,
+          "eigenvalue": 2.220446049250313e-16,
+          "explained_variance": 5.551115123125783e-17,
+          "loading": 3.3306690738754696e-16,
+          "score": 3.9968028886505635e-15,
+          "subspace": 2.6803154833089315e-16,
+          "weight": 3.3306690738754696e-16
+        },
+        "minimum_adjacent_eigenvalue_gap": 0.16000000000000025,
+        "missing": false,
+        "n": 30,
+        "name": "small_fixed",
+        "near_tie": false,
+        "non_gaussian": false,
+        "observations": 30,
+        "observed_retained_components": 2,
+        "output": "validation/results/method_factory/pca_v1/work/factory_simulation_small_fixed.quickpls.json",
+        "output_sha256": "b5c0acbd3c93f2c611f740d750ad3d2111a8e6faba07d4e2189c4f54873818ff",
+        "p": 2,
+        "passed": true,
+        "rule": "fixed",
+        "threshold": null
+      },
+      {
+        "components": null,
+        "expected_retained_components": 1,
+        "max_abs_errors": {
+          "cumulative_variance": 0.0,
+          "eigenvalue": 4.440892098500626e-16,
+          "explained_variance": 0.0,
+          "loading": 2.9243274468626623e-12,
+          "score": 7.66187113754313e-12,
+          "subspace": 3.2025046154555434e-12,
+          "weight": 2.652322805829499e-12
+        },
+        "minimum_adjacent_eigenvalue_gap": 0.05325989517809515,
+        "missing": false,
+        "n": 60,
+        "name": "medium_kaiser",
+        "near_tie": false,
+        "non_gaussian": false,
+        "observations": 60,
+        "observed_retained_components": 1,
+        "output": "validation/results/method_factory/pca_v1/work/factory_simulation_medium_kaiser.quickpls.json",
+        "output_sha256": "a17e350491f5bd0cc8da1089287245d60d933c53209f2e4215bccbd88b864dbe",
+        "p": 3,
+        "passed": true,
+        "rule": "kaiser",
+        "threshold": null
+      },
+      {
+        "components": 3,
+        "expected_retained_components": 3,
+        "max_abs_errors": {
+          "cumulative_variance": 2.220446049250313e-16,
+          "eigenvalue": 1.3322676295501878e-15,
+          "explained_variance": 2.220446049250313e-16,
+          "loading": 2.432143375585838e-11,
+          "score": 8.989475830389893e-11,
+          "subspace": 1.842415398456554e-12,
+          "weight": 2.456812531193009e-11
+        },
+        "minimum_adjacent_eigenvalue_gap": 0.04000000000000137,
+        "missing": false,
+        "n": 90,
+        "name": "near_tie_fixed",
+        "near_tie": true,
+        "non_gaussian": false,
+        "observations": 90,
+        "observed_retained_components": 3,
+        "output": "validation/results/method_factory/pca_v1/work/factory_simulation_near_tie_fixed.quickpls.json",
+        "output_sha256": "915e922514b50eb3566797ef2f19320441302387fdfa27ff93b284fb36c3936e",
+        "p": 4,
+        "passed": true,
+        "rule": "fixed",
+        "threshold": null
+      },
+      {
+        "components": null,
+        "expected_retained_components": 4,
+        "max_abs_errors": {
+          "cumulative_variance": 2.220446049250313e-16,
+          "eigenvalue": 7.771561172376096e-16,
+          "explained_variance": 1.6653345369377348e-16,
+          "loading": 2.5804390742234506e-11,
+          "score": 7.388112344131059e-11,
+          "subspace": 1.1327821346153228e-11,
+          "weight": 2.721902911395624e-11
+        },
+        "minimum_adjacent_eigenvalue_gap": 0.04260718548974973,
+        "missing": true,
+        "n": 100,
+        "name": "missing_threshold",
+        "near_tie": false,
+        "non_gaussian": false,
+        "observations": 91,
+        "observed_retained_components": 4,
+        "output": "validation/results/method_factory/pca_v1/work/factory_simulation_missing_threshold.quickpls.json",
+        "output_sha256": "7a4645d6f75f41c036582b86b8bd161ec4224af9a6e095a44a7b853638d34100",
+        "p": 5,
+        "passed": true,
+        "rule": "variance_threshold",
+        "threshold": 0.8
+      },
+      {
+        "components": 3,
+        "expected_retained_components": 3,
+        "max_abs_errors": {
+          "cumulative_variance": 2.220446049250313e-16,
+          "eigenvalue": 6.661338147750939e-16,
+          "explained_variance": 1.6653345369377348e-16,
+          "loading": 2.0999091354667598e-11,
+          "score": 8.353018277063029e-11,
+          "subspace": 1.819550653247634e-11,
+          "weight": 2.2455814985278266e-11
+        },
+        "minimum_adjacent_eigenvalue_gap": 0.04858048901963996,
+        "missing": false,
+        "n": 140,
+        "name": "nongaussian_fixed",
+        "near_tie": false,
+        "non_gaussian": true,
+        "observations": 140,
+        "observed_retained_components": 3,
+        "output": "validation/results/method_factory/pca_v1/work/factory_simulation_nongaussian_fixed.quickpls.json",
+        "output_sha256": "74a9884939f65115ebc0373137e21a44a6c5c0678ec6ab8353eff507bb69486e",
+        "p": 5,
+        "passed": true,
+        "rule": "fixed",
+        "threshold": null
+      },
+      {
+        "components": null,
+        "expected_retained_components": 8,
+        "max_abs_errors": {
+          "cumulative_variance": 2.220446049250313e-16,
+          "eigenvalue": 7.771561172376096e-16,
+          "explained_variance": 9.71445146547012e-17,
+          "loading": 1.6776940947593744e-11,
+          "score": 6.000022700902718e-11,
+          "subspace": 2.309991578592914e-12,
+          "weight": 1.7958967646336532e-11
+        },
+        "minimum_adjacent_eigenvalue_gap": 0.047543550312533434,
+        "missing": false,
+        "n": 45,
+        "name": "wide_threshold",
+        "near_tie": false,
+        "non_gaussian": false,
+        "observations": 45,
+        "observed_retained_components": 8,
+        "output": "validation/results/method_factory/pca_v1/work/factory_simulation_wide_threshold.quickpls.json",
+        "output_sha256": "e77499207252d8e6a7d2cf6e2c9e39ff08b70e11a7e4e1f7151ad6d27e3bb5fd",
+        "p": 8,
+        "passed": true,
+        "rule": "variance_threshold",
+        "threshold": 0.95
+      },
+      {
+        "components": null,
+        "expected_retained_components": 1,
+        "max_abs_errors": {
+          "cumulative_variance": 1.1102230246251565e-16,
+          "eigenvalue": 2.220446049250313e-15,
+          "explained_variance": 1.1102230246251565e-16,
+          "loading": 9.23428000731974e-13,
+          "score": 3.6708414086206176e-12,
+          "subspace": 7.005775498751183e-13,
+          "weight": 6.538658503529859e-13
+        },
+        "minimum_adjacent_eigenvalue_gap": 0.04396039185280198,
+        "missing": true,
+        "n": 240,
+        "name": "large_kaiser",
+        "near_tie": false,
+        "non_gaussian": true,
+        "observations": 218,
+        "observed_retained_components": 1,
+        "output": "validation/results/method_factory/pca_v1/work/factory_simulation_large_kaiser.quickpls.json",
+        "output_sha256": "0b8d1a4b789e1bad21df363b2d119cb858eb5a186084250c66060b32696dc88c",
+        "p": 6,
+        "passed": true,
+        "rule": "kaiser",
+        "threshold": null
+      }
+    ],
+    "tolerance": 1e-06
+  },
+  "feature_id": "qpls3.standalone.pca",
+  "generated_at_utc": "2026-08-13T19:35:36.882232Z",
+  "method_version": "pca_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "simulation_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-cli/src/main.rs",
+      "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
+      "size": 216983
+    },
+    {
+      "path": "crates/qpls-core/src/contract.rs",
+      "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
+      "size": 107095
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
+      "size": 639198
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
+      "size": 49349
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/pca_v1.manifest.json",
+      "sha256": "c190031338e9790dd64cf280a2e419585b254c5e3a109b81ecc4849f5cad7433",
+      "size": 14506
+    },
+    {
+      "path": "validation/pca_simulation.py",
+      "sha256": "a06ac65096621f5640b740f207c2dc733f0ca56cad380c13cf20d85c31a9ee49",
+      "size": 11787
+    },
+    {
+      "path": "validation/pca_v1_factory_common.py",
+      "sha256": "9a0ce1a0fb76f83ee124b5927e1990f354a70b0ed28fe7d038919dd9f1e11c61",
+      "size": 11599
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_pca_v1_factory_evidence.py",
+      "sha256": "45f58bcbd84e0e5b6adc9aadb334ad50085aa9c4e63c23ad9eedb53d15a6278f",
+      "size": 3537
+    }
+  ]
+}

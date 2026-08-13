@@ -1,6 +1,11 @@
-blank_issues_enabled: true
+blank_issues_enabled: false
 contact_links:
-  - name: QuickPLS v1.0 supported scope
-    url: https://github.com/traderbhai/QuickPLS/blob/main/docs/V1_SUPPORTED_SCOPE.md
-    about: Check whether a method or workflow is inside the stable v1.0 scope.
-
+  - name: Support policy and response targets
+    url: https://github.com/traderbhai/QuickPLS/blob/main/docs/SUPPORT_POLICY.md
+    about: Review support scope, privacy rules, severity, and escalation before reporting.
+  - name: Report a vulnerability privately
+    url: https://github.com/traderbhai/QuickPLS/security/advisories/new
+    about: Do not disclose suspected vulnerabilities or sensitive evidence in a public issue.
+  - name: Supported method scope
+    url: https://github.com/traderbhai/QuickPLS/blob/main/docs/METHOD_COMPATIBILITY.md
+    about: Check whether a method or workflow is validated, experimental, bounded, or unsupported.

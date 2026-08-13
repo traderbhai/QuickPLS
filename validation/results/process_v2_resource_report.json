@@ -3,19 +3,19 @@
     "target":  "process_v2_packaged_resource_report",
     "feature_id":  "qpls3.standalone.process",
     "method_version":  "regression_process_v2",
-    "generated_at_utc":  "2026-08-13T06:49:10.3347347Z",
-    "launched_pid":  51204,
+    "generated_at_utc":  "2026-08-13T16:11:58.0495000Z",
+    "launched_pid":  9284,
     "sample_interval_milliseconds":  250,
-    "sample_count":  244,
-    "raw_sample_count":  244,
+    "sample_count":  237,
+    "raw_sample_count":  237,
     "first_sample":  {
-                         "recorded_at_utc":  "2026-08-13T06:47:02.6153140Z",
+                         "recorded_at_utc":  "2026-08-13T16:09:53.8355303Z",
                          "root_present":  true,
-                         "root_pid":  51204,
-                         "total_working_set_bytes":  443486208,
-                         "total_private_memory_bytes":  277909504,
-                         "total_handle_count":  3214,
-                         "total_thread_count":  175,
+                         "root_pid":  9284,
+                         "total_working_set_bytes":  447164416,
+                         "total_private_memory_bytes":  278040576,
+                         "total_handle_count":  3377,
+                         "total_thread_count":  180,
                          "process_role_counts":  {
                                                      "desktop_root":  1,
                                                      "webview_browser":  1,
@@ -27,81 +27,102 @@
                                                  },
                          "processes":  [
                                            {
-                                               "pid":  12460,
-                                               "parent_pid":  56848,
-                                               "name":  "msedgewebview2.exe",
-                                               "role":  "webview_other",
-                                               "creation_date":  "08/13/2026 12:17:01",
-                                               "working_set_bytes":  11956224,
-                                               "private_memory_bytes":  4726784,
-                                               "handle_count":  170,
-                                               "thread_count":  12
-                                           },
-                                           {
-                                               "pid":  23528,
-                                               "parent_pid":  56848,
+                                               "pid":  5156,
+                                               "parent_pid":  53272,
                                                "name":  "msedgewebview2.exe",
                                                "role":  "webview_gpu",
-                                               "creation_date":  "08/13/2026 12:17:01",
-                                               "working_set_bytes":  133308416,
-                                               "private_memory_bytes":  142643200,
-                                               "handle_count":  674,
+                                               "creation_date":  "08/13/2026 21:39:52",
+                                               "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
+                                               "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --type=gpu-process --noerrdialogs --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --gpu-preferences=WAAAAAAAAADgAAAEAAAAAAAAAAAAAGAAQAAAAAAAAAADAAAAAAAAADgAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAKAAAAAAAAAAoAAAAAAAAAAgAAAAAAAAAEAAAAAIAAAABAAAAAAAAAAgAAAAAAAAACAAAAAAAAAA= --startup-read-main-dll --metrics-shmem-handle=1928,i,1305612131185437285,18230944084728707430,262144 --field-trial-handle=2004,i,1264796716988643039,5137976927054270324,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=1892,i,9844248806434469716,17617228298788261150,4 --trace-process-track-uuid=3190708988185955192 --mojo-platform-channel-handle=2044 /prefetch:2 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21",
+                                               "metrics_available":  true,
+                                               "working_set_bytes":  134729728,
+                                               "private_memory_bytes":  143818752,
+                                               "handle_count":  675,
                                                "thread_count":  33
                                            },
                                            {
-                                               "pid":  30424,
-                                               "parent_pid":  56848,
-                                               "name":  "msedgewebview2.exe",
-                                               "role":  "webview_renderer",
-                                               "creation_date":  "08/13/2026 12:17:01",
-                                               "working_set_bytes":  81141760,
-                                               "private_memory_bytes":  44118016,
-                                               "handle_count":  329,
-                                               "thread_count":  20
-                                           },
-                                           {
-                                               "pid":  51204,
-                                               "parent_pid":  56772,
+                                               "pid":  9284,
+                                               "parent_pid":  57040,
                                                "name":  "quickpls-desktop.exe",
                                                "role":  "desktop_root",
-                                               "creation_date":  "08/13/2026 12:17:00",
-                                               "working_set_bytes":  31252480,
-                                               "private_memory_bytes":  8441856,
-                                               "handle_count":  362,
+                                               "creation_date":  "08/13/2026 21:39:52",
+                                               "executable_path":  "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                                               "command_line":  "\"D:\\QuickPLS\\target\\release\\quickpls-desktop.exe\" ",
+                                               "metrics_available":  true,
+                                               "working_set_bytes":  31580160,
+                                               "private_memory_bytes":  8437760,
+                                               "handle_count":  374,
+                                               "thread_count":  24
+                                           },
+                                           {
+                                               "pid":  17588,
+                                               "parent_pid":  53272,
+                                               "name":  "msedgewebview2.exe",
+                                               "role":  "webview_utility",
+                                               "creation_date":  "08/13/2026 21:39:52",
+                                               "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
+                                               "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --disable-quic --noerrdialogs --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --startup-read-main-dll --metrics-shmem-handle=2312,i,167031962881466294,9901966334225416101,524288 --field-trial-handle=2004,i,1264796716988643039,5137976927054270324,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=1892,i,9844248806434469716,17617228298788261150,4 --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=2328 /prefetch:11 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21",
+                                               "metrics_available":  true,
+                                               "working_set_bytes":  37015552,
+                                               "private_memory_bytes":  18276352,
+                                               "handle_count":  348,
                                                "thread_count":  23
                                            },
                                            {
-                                               "pid":  52436,
-                                               "parent_pid":  56848,
+                                               "pid":  53272,
+                                               "parent_pid":  9284,
                                                "name":  "msedgewebview2.exe",
-                                               "role":  "webview_utility",
-                                               "creation_date":  "08/13/2026 12:17:01",
-                                               "working_set_bytes":  38940672,
-                                               "private_memory_bytes":  19599360,
-                                               "handle_count":  352,
-                                               "thread_count":  23
+                                               "role":  "webview_browser",
+                                               "creation_date":  "08/13/2026 21:39:52",
+                                               "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
+                                               "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --embedded-browser-webview=1 --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --noerrdialogs --embedded-browser-webview-dpi-awareness=2 --disable-background-networking --disable-component-update --disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --disable-quic --disable-sync --metrics-recording-only --proxy-server=http://127.0.0.1:17846 --remote-debugging-port=9222 --lang=en-US --mojo-named-platform-channel-pipe=9284.39724.2031440401814607262 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21",
+                                               "metrics_available":  true,
+                                               "working_set_bytes":  126738432,
+                                               "private_memory_bytes":  42106880,
+                                               "handle_count":  1286,
+                                               "thread_count":  56
                                            },
                                            {
-                                               "pid":  56488,
-                                               "parent_pid":  56848,
+                                               "pid":  60776,
+                                               "parent_pid":  53272,
                                                "name":  "msedgewebview2.exe",
                                                "role":  "webview_utility",
-                                               "creation_date":  "08/13/2026 12:17:01",
-                                               "working_set_bytes":  23707648,
-                                               "private_memory_bytes":  15835136,
+                                               "creation_date":  "08/13/2026 21:39:52",
+                                               "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
+                                               "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --type=utility --utility-sub-type=storage.mojom.StorageService --lang=en-US --service-sandbox-type=service --disable-quic --noerrdialogs --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --startup-read-main-dll --metrics-shmem-handle=2736,i,9173773982284953589,7412069235808815602,524288 --field-trial-handle=2004,i,1264796716988643039,5137976927054270324,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=1892,i,9844248806434469716,17617228298788261150,4 --trace-process-track-uuid=3190708990060038890 --mojo-platform-channel-handle=2752 /prefetch:13 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21",
+                                               "metrics_available":  true,
+                                               "working_set_bytes":  23703552,
+                                               "private_memory_bytes":  15912960,
                                                "handle_count":  196,
                                                "thread_count":  12
                                            },
                                            {
-                                               "pid":  56848,
-                                               "parent_pid":  51204,
+                                               "pid":  64524,
+                                               "parent_pid":  53272,
                                                "name":  "msedgewebview2.exe",
-                                               "role":  "webview_browser",
-                                               "creation_date":  "08/13/2026 12:17:01",
-                                               "working_set_bytes":  123179008,
-                                               "private_memory_bytes":  42545152,
-                                               "handle_count":  1131,
-                                               "thread_count":  52
+                                               "role":  "webview_renderer",
+                                               "creation_date":  "08/13/2026 21:39:52",
+                                               "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
+                                               "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --type=renderer --noerrdialogs --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --remote-debugging-port=9222 --video-capture-use-gpu-memory-buffer --lang=en-US --device-scale-factor=1.25 --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=5 --js-flags=\"--expose-gc --ms-user-locale=en_IN\" --time-ticks-at-unix-epoch=-1784358019967832 --launch-time-ticks=2279372929512 --ssd-no-pressure-read-main-dll --metrics-shmem-handle=4192,i,16819279150295121104,4213758247913098339,2097152 --field-trial-handle=2004,i,1264796716988643039,5137976927054270324,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=1892,i,9844248806434469716,17617228298788261150,4 --trace-process-track-uuid=3190708990997080739 --mojo-platform-channel-handle=3108 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21 /prefetch:1",
+                                               "metrics_available":  true,
+                                               "working_set_bytes":  81453056,
+                                               "private_memory_bytes":  44748800,
+                                               "handle_count":  328,
+                                               "thread_count":  20
+                                           },
+                                           {
+                                               "pid":  66040,
+                                               "parent_pid":  53272,
+                                               "name":  "msedgewebview2.exe",
+                                               "role":  "webview_other",
+                                               "creation_date":  "08/13/2026 21:39:52",
+                                               "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
+                                               "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --type=crashpad-handler --user-data-dir=C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView /prefetch:4 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21 --monitor-self-annotation=ptype=crashpad-handler --database=C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\\Crashpad --metrics-dir=C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView --annotation=IsOfficialBuild=1 --annotation=channel= --annotation=chromium-version=151.0.7922.109 \"--annotation=exe=C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --annotation=plat=Win64 \"--annotation=prod=Edge WebView2\" --annotation=ver=151.0.4129.78 --initial-client-data=0x1cc,0x1d0,0x1d4,0x1a8,0xcc,0x7ffa3a8f65f0,0x7ffa3a8f6600,0x7ffa3a8f6610",
+                                               "metrics_available":  true,
+                                               "working_set_bytes":  11943936,
+                                               "private_memory_bytes":  4739072,
+                                               "handle_count":  170,
+                                               "thread_count":  12
                                            }
                                        ]
                      },
@@ -110,68 +131,68 @@
     "sample_window_milliseconds":  5000,
     "raw_samples":  {
                         "path":  "validation/results/process_v2_resource_samples.jsonl",
-                        "size":  468181,
-                        "sha256":  "a13fefc074dc39711e290e766d53c103f8c3baacea1471c953c646695246312e"
+                        "size":  2094106,
+                        "sha256":  "7bf5e71e1bfa2d4b296411f9b8a8d652f9984a2696d4a5e8df27941b6d36be9f"
                     },
     "phase_document":  {
                            "path":  "validation/results/process_v2_resource_phases.json",
                            "size":  10811,
-                           "sha256":  "0630e4a06b96854dc9506d5e3d99647f11531de5cb2127ecf4b40549bb9bc81c"
+                           "sha256":  "097e210f90d5af56be33eb3af32f050dde6f41f45440cd12a6e0c1aeaf3f5868"
                        },
     "phase_snapshots":  [
                             {
-                                "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-initial_idle.qpls",
+                                "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-initial_idle.qpls",
                                 "size":  12709,
-                                "sha256":  "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557"
+                                "sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
                             },
                             {
-                                "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-post_cancellation_idle.qpls",
+                                "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-post_cancellation_idle.qpls",
                                 "size":  12709,
-                                "sha256":  "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557"
+                                "sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
                             },
                             {
-                                "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-post_completed_cycle_1_idle.qpls",
-                                "size":  2311361,
-                                "sha256":  "113c4961f02ae0398957fc863c110327a9acd40dc30473956fc49725d032405f"
+                                "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-post_completed_cycle_1_idle.qpls",
+                                "size":  2311374,
+                                "sha256":  "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6"
                             },
                             {
-                                "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-post_completed_history_2_idle.qpls",
-                                "size":  4613969,
-                                "sha256":  "d67c4de97df5b5f017e745518c7e6d180d40365618175fbaeb83d70f26922a69"
+                                "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-post_completed_history_2_idle.qpls",
+                                "size":  4613942,
+                                "sha256":  "141f11b3169c727d64a1c43a22fde3beabc49033d563651b52aa9b4e6117c1c4"
                             },
                             {
-                                "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-post_completed_cycle_2_idle.qpls",
-                                "size":  2311359,
-                                "sha256":  "5a4e7466c5caa9b34e0d159d4ec9b89aafe6bfcdd4f840f361638168aeb7c01b"
+                                "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-post_completed_cycle_2_idle.qpls",
+                                "size":  2311374,
+                                "sha256":  "aeeebeba631ef4be4bd5bdd7281a0d32b69822c5a3471771ed5fddbf99f1c3e5"
                             }
                         ],
     "idle_checkpoints":  [
                              {
                                  "name":  "initial_idle",
-                                 "phase_recorded_at_utc":  "2026-08-13T06:47:17.6090000Z",
-                                 "window_start_utc":  "2026-08-13T06:47:18.1090000Z",
-                                 "window_end_utc":  "2026-08-13T06:47:23.1090000Z",
+                                 "phase_recorded_at_utc":  "2026-08-13T16:10:04.1660000Z",
+                                 "window_start_utc":  "2026-08-13T16:10:04.6660000Z",
+                                 "window_end_utc":  "2026-08-13T16:10:09.6660000Z",
                                  "sample_recorded_at_utc":  [
-                                                                "2026-08-13T06:47:18.5053709Z",
-                                                                "2026-08-13T06:47:18.9990239Z",
-                                                                "2026-08-13T06:47:19.4883159Z",
-                                                                "2026-08-13T06:47:20.0163647Z",
-                                                                "2026-08-13T06:47:20.4841502Z",
-                                                                "2026-08-13T06:47:20.9230240Z",
-                                                                "2026-08-13T06:47:21.4270588Z",
-                                                                "2026-08-13T06:47:21.9055506Z",
-                                                                "2026-08-13T06:47:22.4100016Z",
-                                                                "2026-08-13T06:47:22.9216840Z"
+                                                                "2026-08-13T16:10:04.9928561Z",
+                                                                "2026-08-13T16:10:05.4902518Z",
+                                                                "2026-08-13T16:10:05.9192598Z",
+                                                                "2026-08-13T16:10:06.3785253Z",
+                                                                "2026-08-13T16:10:06.8495246Z",
+                                                                "2026-08-13T16:10:07.3342003Z",
+                                                                "2026-08-13T16:10:07.8091875Z",
+                                                                "2026-08-13T16:10:08.2909977Z",
+                                                                "2026-08-13T16:10:08.7337444Z",
+                                                                "2026-08-13T16:10:09.2698917Z"
                                                             ],
                                  "sample_count":  10,
-                                 "median_working_set_bytes":  493746176,
-                                 "p95_working_set_bytes":  493817856,
-                                 "median_private_memory_bytes":  307087360,
-                                 "p95_private_memory_bytes":  307146752,
-                                 "median_handle_count":  3423,
-                                 "p95_handle_count":  3423,
-                                 "median_thread_count":  187,
-                                 "p95_thread_count":  187,
+                                 "median_working_set_bytes":  493897728,
+                                 "p95_working_set_bytes":  493981696,
+                                 "median_private_memory_bytes":  300711936,
+                                 "p95_private_memory_bytes":  300793856,
+                                 "median_handle_count":  3576,
+                                 "p95_handle_count":  3576,
+                                 "median_thread_count":  191,
+                                 "p95_thread_count":  191,
                                  "median_process_count":  7,
                                  "p95_process_count":  7,
                                  "process_role_counts":  {
@@ -194,53 +215,53 @@
                                                              "unique_modal_identity":  true,
                                                              "modal_pid_role_identities":  [
                                                                                                {
-                                                                                                   "pid":  12460,
-                                                                                                   "parent_pid":  56848,
-                                                                                                   "name":  "msedgewebview2.exe",
-                                                                                                   "role":  "webview_other",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
-                                                                                               },
-                                                                                               {
-                                                                                                   "pid":  23528,
-                                                                                                   "parent_pid":  56848,
+                                                                                                   "pid":  5156,
+                                                                                                   "parent_pid":  53272,
                                                                                                    "name":  "msedgewebview2.exe",
                                                                                                    "role":  "webview_gpu",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
                                                                                                },
                                                                                                {
-                                                                                                   "pid":  30424,
-                                                                                                   "parent_pid":  56848,
-                                                                                                   "name":  "msedgewebview2.exe",
-                                                                                                   "role":  "webview_renderer",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
-                                                                                               },
-                                                                                               {
-                                                                                                   "pid":  51204,
-                                                                                                   "parent_pid":  56772,
+                                                                                                   "pid":  9284,
+                                                                                                   "parent_pid":  57040,
                                                                                                    "name":  "quickpls-desktop.exe",
                                                                                                    "role":  "desktop_root",
-                                                                                                   "creation_date":  "08/13/2026 12:17:00"
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
                                                                                                },
                                                                                                {
-                                                                                                   "pid":  52436,
-                                                                                                   "parent_pid":  56848,
+                                                                                                   "pid":  17588,
+                                                                                                   "parent_pid":  53272,
                                                                                                    "name":  "msedgewebview2.exe",
                                                                                                    "role":  "webview_utility",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
                                                                                                },
                                                                                                {
-                                                                                                   "pid":  56488,
-                                                                                                   "parent_pid":  56848,
-                                                                                                   "name":  "msedgewebview2.exe",
-                                                                                                   "role":  "webview_utility",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
-                                                                                               },
-                                                                                               {
-                                                                                                   "pid":  56848,
-                                                                                                   "parent_pid":  51204,
+                                                                                                   "pid":  53272,
+                                                                                                   "parent_pid":  9284,
                                                                                                    "name":  "msedgewebview2.exe",
                                                                                                    "role":  "webview_browser",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
+                                                                                               },
+                                                                                               {
+                                                                                                   "pid":  60776,
+                                                                                                   "parent_pid":  53272,
+                                                                                                   "name":  "msedgewebview2.exe",
+                                                                                                   "role":  "webview_utility",
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
+                                                                                               },
+                                                                                               {
+                                                                                                   "pid":  64524,
+                                                                                                   "parent_pid":  53272,
+                                                                                                   "name":  "msedgewebview2.exe",
+                                                                                                   "role":  "webview_renderer",
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
+                                                                                               },
+                                                                                               {
+                                                                                                   "pid":  66040,
+                                                                                                   "parent_pid":  53272,
+                                                                                                   "name":  "msedgewebview2.exe",
+                                                                                                   "role":  "webview_other",
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
                                                                                                }
                                                                                            ],
                                                              "modal_role_counts":  {
@@ -266,7 +287,7 @@
                                                              "other_descendant_zero_every_sample":  true,
                                                              "reported_role_counts_match_processes_every_sample":  true,
                                                              "baseline_identities_never_removed_or_replaced":  true,
-                                                             "persistent_browser_pid":  56848,
+                                                             "persistent_browser_pid":  53272,
                                                              "transient_identity_count":  0,
                                                              "allowed_transient_roles":  [
                                                                                              "webview_gpu",
@@ -290,19 +311,19 @@
                                                        "state_kind":  "model_free_fixture"
                                                    },
                                  "effective_archive":  {
-                                                           "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-initial_idle.qpls",
+                                                           "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-initial_idle.qpls",
                                                            "bytes":  12709,
-                                                           "sha256":  "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557",
-                                                           "source_path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls",
+                                                           "sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262",
+                                                           "source_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls",
                                                            "source_before":  {
                                                                                  "bytes":  12709,
-                                                                                 "sha256":  "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557",
-                                                                                 "mtime_ns":  "1786603631843088100"
+                                                                                 "sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262",
+                                                                                 "mtime_ns":  "1786637398496160300"
                                                                              },
                                                            "source_after":  {
                                                                                 "bytes":  12709,
-                                                                                "sha256":  "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557",
-                                                                                "mtime_ns":  "1786603631843088100"
+                                                                                "sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262",
+                                                                                "mtime_ns":  "1786637398496160300"
                                                                             },
                                                            "source_stable_during_copy":  true,
                                                            "exclusive_atomic_copy":  true,
@@ -330,30 +351,30 @@
                              },
                              {
                                  "name":  "post_cancellation_idle",
-                                 "phase_recorded_at_utc":  "2026-08-13T06:47:31.7810000Z",
-                                 "window_start_utc":  "2026-08-13T06:47:32.2810000Z",
-                                 "window_end_utc":  "2026-08-13T06:47:37.2810000Z",
+                                 "phase_recorded_at_utc":  "2026-08-13T16:10:18.4800000Z",
+                                 "window_start_utc":  "2026-08-13T16:10:18.9800000Z",
+                                 "window_end_utc":  "2026-08-13T16:10:23.9800000Z",
                                  "sample_recorded_at_utc":  [
-                                                                "2026-08-13T06:47:32.5328376Z",
-                                                                "2026-08-13T06:47:33.0372421Z",
-                                                                "2026-08-13T06:47:33.5554787Z",
-                                                                "2026-08-13T06:47:34.0032469Z",
-                                                                "2026-08-13T06:47:34.5245184Z",
-                                                                "2026-08-13T06:47:34.9843046Z",
-                                                                "2026-08-13T06:47:35.4333904Z",
-                                                                "2026-08-13T06:47:35.9187885Z",
-                                                                "2026-08-13T06:47:36.3847949Z",
-                                                                "2026-08-13T06:47:36.8459972Z"
+                                                                "2026-08-13T16:10:19.1330914Z",
+                                                                "2026-08-13T16:10:19.6956997Z",
+                                                                "2026-08-13T16:10:20.2241885Z",
+                                                                "2026-08-13T16:10:20.7443852Z",
+                                                                "2026-08-13T16:10:21.2848340Z",
+                                                                "2026-08-13T16:10:21.7730290Z",
+                                                                "2026-08-13T16:10:22.3622965Z",
+                                                                "2026-08-13T16:10:22.9017065Z",
+                                                                "2026-08-13T16:10:23.3913572Z",
+                                                                "2026-08-13T16:10:23.9347997Z"
                                                             ],
                                  "sample_count":  10,
-                                 "median_working_set_bytes":  561659904,
-                                 "p95_working_set_bytes":  599687168,
-                                 "median_private_memory_bytes":  402866176,
-                                 "p95_private_memory_bytes":  440926208,
-                                 "median_handle_count":  3507,
-                                 "p95_handle_count":  3507,
-                                 "median_thread_count":  194,
-                                 "p95_thread_count":  194,
+                                 "median_working_set_bytes":  578471936,
+                                 "p95_working_set_bytes":  589905920,
+                                 "median_private_memory_bytes":  413585408,
+                                 "p95_private_memory_bytes":  429162496,
+                                 "median_handle_count":  3614,
+                                 "p95_handle_count":  3676,
+                                 "median_thread_count":  196,
+                                 "p95_thread_count":  200,
                                  "median_process_count":  7,
                                  "p95_process_count":  7,
                                  "process_role_counts":  {
@@ -376,53 +397,53 @@
                                                              "unique_modal_identity":  true,
                                                              "modal_pid_role_identities":  [
                                                                                                {
-                                                                                                   "pid":  12460,
-                                                                                                   "parent_pid":  56848,
-                                                                                                   "name":  "msedgewebview2.exe",
-                                                                                                   "role":  "webview_other",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
-                                                                                               },
-                                                                                               {
-                                                                                                   "pid":  23528,
-                                                                                                   "parent_pid":  56848,
+                                                                                                   "pid":  5156,
+                                                                                                   "parent_pid":  53272,
                                                                                                    "name":  "msedgewebview2.exe",
                                                                                                    "role":  "webview_gpu",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
                                                                                                },
                                                                                                {
-                                                                                                   "pid":  30424,
-                                                                                                   "parent_pid":  56848,
-                                                                                                   "name":  "msedgewebview2.exe",
-                                                                                                   "role":  "webview_renderer",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
-                                                                                               },
-                                                                                               {
-                                                                                                   "pid":  51204,
-                                                                                                   "parent_pid":  56772,
+                                                                                                   "pid":  9284,
+                                                                                                   "parent_pid":  57040,
                                                                                                    "name":  "quickpls-desktop.exe",
                                                                                                    "role":  "desktop_root",
-                                                                                                   "creation_date":  "08/13/2026 12:17:00"
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
                                                                                                },
                                                                                                {
-                                                                                                   "pid":  52436,
-                                                                                                   "parent_pid":  56848,
+                                                                                                   "pid":  17588,
+                                                                                                   "parent_pid":  53272,
                                                                                                    "name":  "msedgewebview2.exe",
                                                                                                    "role":  "webview_utility",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
                                                                                                },
                                                                                                {
-                                                                                                   "pid":  56488,
-                                                                                                   "parent_pid":  56848,
-                                                                                                   "name":  "msedgewebview2.exe",
-                                                                                                   "role":  "webview_utility",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
-                                                                                               },
-                                                                                               {
-                                                                                                   "pid":  56848,
-                                                                                                   "parent_pid":  51204,
+                                                                                                   "pid":  53272,
+                                                                                                   "parent_pid":  9284,
                                                                                                    "name":  "msedgewebview2.exe",
                                                                                                    "role":  "webview_browser",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
+                                                                                               },
+                                                                                               {
+                                                                                                   "pid":  60776,
+                                                                                                   "parent_pid":  53272,
+                                                                                                   "name":  "msedgewebview2.exe",
+                                                                                                   "role":  "webview_utility",
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
+                                                                                               },
+                                                                                               {
+                                                                                                   "pid":  64524,
+                                                                                                   "parent_pid":  53272,
+                                                                                                   "name":  "msedgewebview2.exe",
+                                                                                                   "role":  "webview_renderer",
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
+                                                                                               },
+                                                                                               {
+                                                                                                   "pid":  66040,
+                                                                                                   "parent_pid":  53272,
+                                                                                                   "name":  "msedgewebview2.exe",
+                                                                                                   "role":  "webview_other",
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
                                                                                                }
                                                                                            ],
                                                              "modal_role_counts":  {
@@ -448,7 +469,7 @@
                                                              "other_descendant_zero_every_sample":  true,
                                                              "reported_role_counts_match_processes_every_sample":  true,
                                                              "baseline_identities_never_removed_or_replaced":  true,
-                                                             "persistent_browser_pid":  56848,
+                                                             "persistent_browser_pid":  53272,
                                                              "transient_identity_count":  0,
                                                              "allowed_transient_roles":  [
                                                                                              "webview_gpu",
@@ -472,19 +493,19 @@
                                                        "state_kind":  "cancelled_setup_no_result"
                                                    },
                                  "effective_archive":  {
-                                                           "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-post_cancellation_idle.qpls",
+                                                           "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-post_cancellation_idle.qpls",
                                                            "bytes":  12709,
-                                                           "sha256":  "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557",
-                                                           "source_path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls",
+                                                           "sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262",
+                                                           "source_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls",
                                                            "source_before":  {
                                                                                  "bytes":  12709,
-                                                                                 "sha256":  "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557",
-                                                                                 "mtime_ns":  "1786603631843088100"
+                                                                                 "sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262",
+                                                                                 "mtime_ns":  "1786637398496160300"
                                                                              },
                                                            "source_after":  {
                                                                                 "bytes":  12709,
-                                                                                "sha256":  "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557",
-                                                                                "mtime_ns":  "1786603631843088100"
+                                                                                "sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262",
+                                                                                "mtime_ns":  "1786637398496160300"
                                                                             },
                                                            "source_stable_during_copy":  true,
                                                            "exclusive_atomic_copy":  true,
@@ -512,213 +533,31 @@
                              },
                              {
                                  "name":  "post_completed_cycle_1_idle",
-                                 "phase_recorded_at_utc":  "2026-08-13T06:48:20.7500000Z",
-                                 "window_start_utc":  "2026-08-13T06:48:21.2500000Z",
-                                 "window_end_utc":  "2026-08-13T06:48:26.2500000Z",
+                                 "phase_recorded_at_utc":  "2026-08-13T16:11:08.1450000Z",
+                                 "window_start_utc":  "2026-08-13T16:11:08.6450000Z",
+                                 "window_end_utc":  "2026-08-13T16:11:13.6450000Z",
                                  "sample_recorded_at_utc":  [
-                                                                "2026-08-13T06:48:21.5362545Z",
-                                                                "2026-08-13T06:48:22.0542285Z",
-                                                                "2026-08-13T06:48:22.5284840Z",
-                                                                "2026-08-13T06:48:22.9810539Z",
-                                                                "2026-08-13T06:48:23.4856379Z",
-                                                                "2026-08-13T06:48:23.9622298Z",
-                                                                "2026-08-13T06:48:24.4559064Z",
-                                                                "2026-08-13T06:48:24.9644576Z",
-                                                                "2026-08-13T06:48:25.4197571Z",
-                                                                "2026-08-13T06:48:25.8533812Z"
-                                                            ],
-                                 "sample_count":  10,
-                                 "median_working_set_bytes":  726355968,
-                                 "p95_working_set_bytes":  726601728,
-                                 "median_private_memory_bytes":  499032064,
-                                 "p95_private_memory_bytes":  520146944,
-                                 "median_handle_count":  3859,
-                                 "p95_handle_count":  3859,
-                                 "median_thread_count":  205,
-                                 "p95_thread_count":  205,
-                                 "median_process_count":  7,
-                                 "p95_process_count":  7,
-                                 "process_role_counts":  {
-                                                             "desktop_root":  1,
-                                                             "webview_browser":  1,
-                                                             "webview_renderer":  1,
-                                                             "webview_gpu":  1,
-                                                             "webview_utility":  2,
-                                                             "webview_other":  1,
-                                                             "other_descendant":  0
-                                                         },
-                                 "process_roles_bounded_and_terminally_stable":  true,
-                                 "process_role_window":  {
-                                                             "policy":  "modal_pid_role_identity_with_bounded_webview_churn_v1",
-                                                             "passed":  true,
-                                                             "sample_count":  10,
-                                                             "modal_sample_count":  10,
-                                                             "minimum_modal_sample_count":  6,
-                                                             "minimum_modal_percent":  80,
-                                                             "unique_modal_identity":  true,
-                                                             "modal_pid_role_identities":  [
-                                                                                               {
-                                                                                                   "pid":  12460,
-                                                                                                   "parent_pid":  56848,
-                                                                                                   "name":  "msedgewebview2.exe",
-                                                                                                   "role":  "webview_other",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
-                                                                                               },
-                                                                                               {
-                                                                                                   "pid":  23528,
-                                                                                                   "parent_pid":  56848,
-                                                                                                   "name":  "msedgewebview2.exe",
-                                                                                                   "role":  "webview_gpu",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
-                                                                                               },
-                                                                                               {
-                                                                                                   "pid":  30424,
-                                                                                                   "parent_pid":  56848,
-                                                                                                   "name":  "msedgewebview2.exe",
-                                                                                                   "role":  "webview_renderer",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
-                                                                                               },
-                                                                                               {
-                                                                                                   "pid":  51204,
-                                                                                                   "parent_pid":  56772,
-                                                                                                   "name":  "quickpls-desktop.exe",
-                                                                                                   "role":  "desktop_root",
-                                                                                                   "creation_date":  "08/13/2026 12:17:00"
-                                                                                               },
-                                                                                               {
-                                                                                                   "pid":  52436,
-                                                                                                   "parent_pid":  56848,
-                                                                                                   "name":  "msedgewebview2.exe",
-                                                                                                   "role":  "webview_utility",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
-                                                                                               },
-                                                                                               {
-                                                                                                   "pid":  56488,
-                                                                                                   "parent_pid":  56848,
-                                                                                                   "name":  "msedgewebview2.exe",
-                                                                                                   "role":  "webview_utility",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
-                                                                                               },
-                                                                                               {
-                                                                                                   "pid":  56848,
-                                                                                                   "parent_pid":  51204,
-                                                                                                   "name":  "msedgewebview2.exe",
-                                                                                                   "role":  "webview_browser",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
-                                                                                               }
-                                                                                           ],
-                                                             "modal_role_counts":  {
-                                                                                       "desktop_root":  1,
-                                                                                       "webview_browser":  1,
-                                                                                       "webview_renderer":  1,
-                                                                                       "webview_gpu":  1,
-                                                                                       "webview_utility":  2,
-                                                                                       "webview_other":  1,
-                                                                                       "other_descendant":  0
-                                                                                   },
-                                                             "first_three_exact_modal":  true,
-                                                             "last_three_exact_modal":  true,
-                                                             "deviating_sample_indices":  [
-
-                                                                                          ],
-                                                             "deviating_sample_count":  0,
-                                                             "maximum_deviating_sample_count":  2,
-                                                             "maximum_deviating_percent":  20,
-                                                             "longest_deviation_streak":  0,
-                                                             "maximum_deviation_streak":  2,
-                                                             "root_identity_every_sample":  true,
-                                                             "other_descendant_zero_every_sample":  true,
-                                                             "reported_role_counts_match_processes_every_sample":  true,
-                                                             "baseline_identities_never_removed_or_replaced":  true,
-                                                             "persistent_browser_pid":  56848,
-                                                             "transient_identity_count":  0,
-                                                             "allowed_transient_roles":  [
-                                                                                             "webview_gpu",
-                                                                                             "webview_utility",
-                                                                                             "webview_other"
-                                                                                         ],
-                                                             "transient_processes":  [
-
-                                                                                     ],
-                                                             "transient_processes_allowed":  true,
-                                                             "transients_absent_terminal_three":  true
-                                                         },
-                                 "idle_settle_milliseconds":  5000,
-                                 "capture_delay_milliseconds":  500,
-                                 "sample_window_milliseconds":  5000,
-                                 "logical_state":  {
-                                                       "surface":  "results",
-                                                       "completed_result_count":  1,
-                                                       "witness_count":  1,
-                                                       "selected_run_id":  "99d61d09-b544-44a2-8f74-274abbfd0d8a",
-                                                       "state_kind":  "one_result_reopened_original"
-                                                   },
-                                 "effective_archive":  {
-                                                           "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-post_completed_cycle_1_idle.qpls",
-                                                           "bytes":  2311361,
-                                                           "sha256":  "113c4961f02ae0398957fc863c110327a9acd40dc30473956fc49725d032405f",
-                                                           "source_path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
-                                                           "source_before":  {
-                                                                                 "bytes":  2311361,
-                                                                                 "sha256":  "113c4961f02ae0398957fc863c110327a9acd40dc30473956fc49725d032405f",
-                                                                                 "mtime_ns":  "1786603696332841500"
-                                                                             },
-                                                           "source_after":  {
-                                                                                "bytes":  2311361,
-                                                                                "sha256":  "113c4961f02ae0398957fc863c110327a9acd40dc30473956fc49725d032405f",
-                                                                                "mtime_ns":  "1786603696332841500"
-                                                                            },
-                                                           "source_stable_during_copy":  true,
-                                                           "exclusive_atomic_copy":  true,
-                                                           "application_opened":  false,
-                                                           "logical_state":  {
-                                                                                 "manifestValid":  true,
-                                                                                 "completedResultCount":  1,
-                                                                                 "witnessCount":  1,
-                                                                                 "completedRunIds":  [
-                                                                                                         "99d61d09-b544-44a2-8f74-274abbfd0d8a"
-                                                                                                     ],
-                                                                                 "witnessRunIds":  [
-                                                                                                       "99d61d09-b544-44a2-8f74-274abbfd0d8a"
-                                                                                                   ],
-                                                                                 "recipeIds":  [
-                                                                                                   "7c013ecf-42cb-4dab-b31e-5b482ef9abf3"
-                                                                                               ],
-                                                                                 "recipeCount":  1,
-                                                                                 "workspaceRunIds":  [
-                                                                                                         "99d61d09-b544-44a2-8f74-274abbfd0d8a"
-                                                                                                     ],
-                                                                                 "selectedRunId":  "99d61d09-b544-44a2-8f74-274abbfd0d8a"
-                                                                             }
-                                                       }
-                             },
-                             {
-                                 "name":  "post_completed_history_2_idle",
-                                 "phase_recorded_at_utc":  "2026-08-13T06:48:47.0810000Z",
-                                 "window_start_utc":  "2026-08-13T06:48:47.5810000Z",
-                                 "window_end_utc":  "2026-08-13T06:48:52.5810000Z",
-                                 "sample_recorded_at_utc":  [
-                                                                "2026-08-13T06:48:47.5862965Z",
-                                                                "2026-08-13T06:48:48.0733365Z",
-                                                                "2026-08-13T06:48:48.6931219Z",
-                                                                "2026-08-13T06:48:49.1927361Z",
-                                                                "2026-08-13T06:48:49.6759948Z",
-                                                                "2026-08-13T06:48:50.1594758Z",
-                                                                "2026-08-13T06:48:50.6357604Z",
-                                                                "2026-08-13T06:48:51.1164957Z",
-                                                                "2026-08-13T06:48:51.6120974Z",
-                                                                "2026-08-13T06:48:52.0469336Z",
-                                                                "2026-08-13T06:48:52.4941909Z"
+                                                                "2026-08-13T16:11:08.8343678Z",
+                                                                "2026-08-13T16:11:09.2975092Z",
+                                                                "2026-08-13T16:11:09.7800191Z",
+                                                                "2026-08-13T16:11:10.2344577Z",
+                                                                "2026-08-13T16:11:10.7348297Z",
+                                                                "2026-08-13T16:11:11.2702571Z",
+                                                                "2026-08-13T16:11:11.7339865Z",
+                                                                "2026-08-13T16:11:12.2241816Z",
+                                                                "2026-08-13T16:11:12.7187126Z",
+                                                                "2026-08-13T16:11:13.1529883Z",
+                                                                "2026-08-13T16:11:13.6057849Z"
                                                             ],
                                  "sample_count":  11,
-                                 "median_working_set_bytes":  768352256,
-                                 "p95_working_set_bytes":  768352256,
-                                 "median_private_memory_bytes":  537440256,
-                                 "p95_private_memory_bytes":  573530112,
-                                 "median_handle_count":  3823,
-                                 "p95_handle_count":  3823,
-                                 "median_thread_count":  200,
-                                 "p95_thread_count":  200,
+                                 "median_working_set_bytes":  719376384,
+                                 "p95_working_set_bytes":  719740928,
+                                 "median_private_memory_bytes":  493649920,
+                                 "p95_private_memory_bytes":  516304896,
+                                 "median_handle_count":  4016,
+                                 "p95_handle_count":  4016,
+                                 "median_thread_count":  209,
+                                 "p95_thread_count":  209,
                                  "median_process_count":  7,
                                  "p95_process_count":  7,
                                  "process_role_counts":  {
@@ -741,53 +580,53 @@
                                                              "unique_modal_identity":  true,
                                                              "modal_pid_role_identities":  [
                                                                                                {
-                                                                                                   "pid":  12460,
-                                                                                                   "parent_pid":  56848,
-                                                                                                   "name":  "msedgewebview2.exe",
-                                                                                                   "role":  "webview_other",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
-                                                                                               },
-                                                                                               {
-                                                                                                   "pid":  23528,
-                                                                                                   "parent_pid":  56848,
+                                                                                                   "pid":  5156,
+                                                                                                   "parent_pid":  53272,
                                                                                                    "name":  "msedgewebview2.exe",
                                                                                                    "role":  "webview_gpu",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
                                                                                                },
                                                                                                {
-                                                                                                   "pid":  30424,
-                                                                                                   "parent_pid":  56848,
-                                                                                                   "name":  "msedgewebview2.exe",
-                                                                                                   "role":  "webview_renderer",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
-                                                                                               },
-                                                                                               {
-                                                                                                   "pid":  51204,
-                                                                                                   "parent_pid":  56772,
+                                                                                                   "pid":  9284,
+                                                                                                   "parent_pid":  57040,
                                                                                                    "name":  "quickpls-desktop.exe",
                                                                                                    "role":  "desktop_root",
-                                                                                                   "creation_date":  "08/13/2026 12:17:00"
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
                                                                                                },
                                                                                                {
-                                                                                                   "pid":  52436,
-                                                                                                   "parent_pid":  56848,
+                                                                                                   "pid":  17588,
+                                                                                                   "parent_pid":  53272,
                                                                                                    "name":  "msedgewebview2.exe",
                                                                                                    "role":  "webview_utility",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
                                                                                                },
                                                                                                {
-                                                                                                   "pid":  56488,
-                                                                                                   "parent_pid":  56848,
-                                                                                                   "name":  "msedgewebview2.exe",
-                                                                                                   "role":  "webview_utility",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
-                                                                                               },
-                                                                                               {
-                                                                                                   "pid":  56848,
-                                                                                                   "parent_pid":  51204,
+                                                                                                   "pid":  53272,
+                                                                                                   "parent_pid":  9284,
                                                                                                    "name":  "msedgewebview2.exe",
                                                                                                    "role":  "webview_browser",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
+                                                                                               },
+                                                                                               {
+                                                                                                   "pid":  60776,
+                                                                                                   "parent_pid":  53272,
+                                                                                                   "name":  "msedgewebview2.exe",
+                                                                                                   "role":  "webview_utility",
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
+                                                                                               },
+                                                                                               {
+                                                                                                   "pid":  64524,
+                                                                                                   "parent_pid":  53272,
+                                                                                                   "name":  "msedgewebview2.exe",
+                                                                                                   "role":  "webview_renderer",
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
+                                                                                               },
+                                                                                               {
+                                                                                                   "pid":  66040,
+                                                                                                   "parent_pid":  53272,
+                                                                                                   "name":  "msedgewebview2.exe",
+                                                                                                   "role":  "webview_other",
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
                                                                                                }
                                                                                            ],
                                                              "modal_role_counts":  {
@@ -813,7 +652,190 @@
                                                              "other_descendant_zero_every_sample":  true,
                                                              "reported_role_counts_match_processes_every_sample":  true,
                                                              "baseline_identities_never_removed_or_replaced":  true,
-                                                             "persistent_browser_pid":  56848,
+                                                             "persistent_browser_pid":  53272,
+                                                             "transient_identity_count":  0,
+                                                             "allowed_transient_roles":  [
+                                                                                             "webview_gpu",
+                                                                                             "webview_utility",
+                                                                                             "webview_other"
+                                                                                         ],
+                                                             "transient_processes":  [
+
+                                                                                     ],
+                                                             "transient_processes_allowed":  true,
+                                                             "transients_absent_terminal_three":  true
+                                                         },
+                                 "idle_settle_milliseconds":  5000,
+                                 "capture_delay_milliseconds":  500,
+                                 "sample_window_milliseconds":  5000,
+                                 "logical_state":  {
+                                                       "surface":  "results",
+                                                       "completed_result_count":  1,
+                                                       "witness_count":  1,
+                                                       "selected_run_id":  "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
+                                                       "state_kind":  "one_result_reopened_original"
+                                                   },
+                                 "effective_archive":  {
+                                                           "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-post_completed_cycle_1_idle.qpls",
+                                                           "bytes":  2311374,
+                                                           "sha256":  "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6",
+                                                           "source_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+                                                           "source_before":  {
+                                                                                 "bytes":  2311374,
+                                                                                 "sha256":  "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6",
+                                                                                 "mtime_ns":  "1786637463929176700"
+                                                                             },
+                                                           "source_after":  {
+                                                                                "bytes":  2311374,
+                                                                                "sha256":  "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6",
+                                                                                "mtime_ns":  "1786637463929176700"
+                                                                            },
+                                                           "source_stable_during_copy":  true,
+                                                           "exclusive_atomic_copy":  true,
+                                                           "application_opened":  false,
+                                                           "logical_state":  {
+                                                                                 "manifestValid":  true,
+                                                                                 "completedResultCount":  1,
+                                                                                 "witnessCount":  1,
+                                                                                 "completedRunIds":  [
+                                                                                                         "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+                                                                                                     ],
+                                                                                 "witnessRunIds":  [
+                                                                                                       "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+                                                                                                   ],
+                                                                                 "recipeIds":  [
+                                                                                                   "e1db2325-9a63-49f3-b580-d9b1b460bd26"
+                                                                                               ],
+                                                                                 "recipeCount":  1,
+                                                                                 "workspaceRunIds":  [
+                                                                                                         "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+                                                                                                     ],
+                                                                                 "selectedRunId":  "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
+                                                                             }
+                                                       }
+                             },
+                             {
+                                 "name":  "post_completed_history_2_idle",
+                                 "phase_recorded_at_utc":  "2026-08-13T16:11:34.8990000Z",
+                                 "window_start_utc":  "2026-08-13T16:11:35.3990000Z",
+                                 "window_end_utc":  "2026-08-13T16:11:40.3990000Z",
+                                 "sample_recorded_at_utc":  [
+                                                                "2026-08-13T16:11:35.4963071Z",
+                                                                "2026-08-13T16:11:36.0296678Z",
+                                                                "2026-08-13T16:11:36.5191723Z",
+                                                                "2026-08-13T16:11:36.9986977Z",
+                                                                "2026-08-13T16:11:37.4595648Z",
+                                                                "2026-08-13T16:11:37.9121626Z",
+                                                                "2026-08-13T16:11:38.3448012Z",
+                                                                "2026-08-13T16:11:38.8395894Z",
+                                                                "2026-08-13T16:11:39.3076982Z",
+                                                                "2026-08-13T16:11:39.7457898Z",
+                                                                "2026-08-13T16:11:40.2287122Z"
+                                                            ],
+                                 "sample_count":  11,
+                                 "median_working_set_bytes":  764424192,
+                                 "p95_working_set_bytes":  764694528,
+                                 "median_private_memory_bytes":  550723584,
+                                 "p95_private_memory_bytes":  574324736,
+                                 "median_handle_count":  3979,
+                                 "p95_handle_count":  3982,
+                                 "median_thread_count":  204,
+                                 "p95_thread_count":  205,
+                                 "median_process_count":  7,
+                                 "p95_process_count":  7,
+                                 "process_role_counts":  {
+                                                             "desktop_root":  1,
+                                                             "webview_browser":  1,
+                                                             "webview_renderer":  1,
+                                                             "webview_gpu":  1,
+                                                             "webview_utility":  2,
+                                                             "webview_other":  1,
+                                                             "other_descendant":  0
+                                                         },
+                                 "process_roles_bounded_and_terminally_stable":  true,
+                                 "process_role_window":  {
+                                                             "policy":  "modal_pid_role_identity_with_bounded_webview_churn_v1",
+                                                             "passed":  true,
+                                                             "sample_count":  11,
+                                                             "modal_sample_count":  11,
+                                                             "minimum_modal_sample_count":  6,
+                                                             "minimum_modal_percent":  80,
+                                                             "unique_modal_identity":  true,
+                                                             "modal_pid_role_identities":  [
+                                                                                               {
+                                                                                                   "pid":  5156,
+                                                                                                   "parent_pid":  53272,
+                                                                                                   "name":  "msedgewebview2.exe",
+                                                                                                   "role":  "webview_gpu",
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
+                                                                                               },
+                                                                                               {
+                                                                                                   "pid":  9284,
+                                                                                                   "parent_pid":  57040,
+                                                                                                   "name":  "quickpls-desktop.exe",
+                                                                                                   "role":  "desktop_root",
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
+                                                                                               },
+                                                                                               {
+                                                                                                   "pid":  17588,
+                                                                                                   "parent_pid":  53272,
+                                                                                                   "name":  "msedgewebview2.exe",
+                                                                                                   "role":  "webview_utility",
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
+                                                                                               },
+                                                                                               {
+                                                                                                   "pid":  53272,
+                                                                                                   "parent_pid":  9284,
+                                                                                                   "name":  "msedgewebview2.exe",
+                                                                                                   "role":  "webview_browser",
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
+                                                                                               },
+                                                                                               {
+                                                                                                   "pid":  60776,
+                                                                                                   "parent_pid":  53272,
+                                                                                                   "name":  "msedgewebview2.exe",
+                                                                                                   "role":  "webview_utility",
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
+                                                                                               },
+                                                                                               {
+                                                                                                   "pid":  64524,
+                                                                                                   "parent_pid":  53272,
+                                                                                                   "name":  "msedgewebview2.exe",
+                                                                                                   "role":  "webview_renderer",
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
+                                                                                               },
+                                                                                               {
+                                                                                                   "pid":  66040,
+                                                                                                   "parent_pid":  53272,
+                                                                                                   "name":  "msedgewebview2.exe",
+                                                                                                   "role":  "webview_other",
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
+                                                                                               }
+                                                                                           ],
+                                                             "modal_role_counts":  {
+                                                                                       "desktop_root":  1,
+                                                                                       "webview_browser":  1,
+                                                                                       "webview_renderer":  1,
+                                                                                       "webview_gpu":  1,
+                                                                                       "webview_utility":  2,
+                                                                                       "webview_other":  1,
+                                                                                       "other_descendant":  0
+                                                                                   },
+                                                             "first_three_exact_modal":  true,
+                                                             "last_three_exact_modal":  true,
+                                                             "deviating_sample_indices":  [
+
+                                                                                          ],
+                                                             "deviating_sample_count":  0,
+                                                             "maximum_deviating_sample_count":  2,
+                                                             "maximum_deviating_percent":  20,
+                                                             "longest_deviation_streak":  0,
+                                                             "maximum_deviation_streak":  2,
+                                                             "root_identity_every_sample":  true,
+                                                             "other_descendant_zero_every_sample":  true,
+                                                             "reported_role_counts_match_processes_every_sample":  true,
+                                                             "baseline_identities_never_removed_or_replaced":  true,
+                                                             "persistent_browser_pid":  53272,
                                                              "transient_identity_count":  0,
                                                              "allowed_transient_roles":  [
                                                                                              "webview_gpu",
@@ -833,23 +855,23 @@
                                                        "surface":  "results",
                                                        "completed_result_count":  2,
                                                        "witness_count":  2,
-                                                       "selected_run_id":  "e942774f-c56e-405e-a695-183076a3e61b",
+                                                       "selected_run_id":  "57414f8f-0a75-4572-aafe-775e58db3388",
                                                        "state_kind":  "two_results_retained_history"
                                                    },
                                  "effective_archive":  {
-                                                           "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-post_completed_history_2_idle.qpls",
-                                                           "bytes":  4613969,
-                                                           "sha256":  "d67c4de97df5b5f017e745518c7e6d180d40365618175fbaeb83d70f26922a69",
-                                                           "source_path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
+                                                           "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-post_completed_history_2_idle.qpls",
+                                                           "bytes":  4613942,
+                                                           "sha256":  "141f11b3169c727d64a1c43a22fde3beabc49033d563651b52aa9b4e6117c1c4",
+                                                           "source_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
                                                            "source_before":  {
-                                                                                 "bytes":  4613969,
-                                                                                 "sha256":  "d67c4de97df5b5f017e745518c7e6d180d40365618175fbaeb83d70f26922a69",
-                                                                                 "mtime_ns":  "1786603722477757000"
+                                                                                 "bytes":  4613942,
+                                                                                 "sha256":  "141f11b3169c727d64a1c43a22fde3beabc49033d563651b52aa9b4e6117c1c4",
+                                                                                 "mtime_ns":  "1786637490480437000"
                                                                              },
                                                            "source_after":  {
-                                                                                "bytes":  4613969,
-                                                                                "sha256":  "d67c4de97df5b5f017e745518c7e6d180d40365618175fbaeb83d70f26922a69",
-                                                                                "mtime_ns":  "1786603722477757000"
+                                                                                "bytes":  4613942,
+                                                                                "sha256":  "141f11b3169c727d64a1c43a22fde3beabc49033d563651b52aa9b4e6117c1c4",
+                                                                                "mtime_ns":  "1786637490480437000"
                                                                             },
                                                            "source_stable_during_copy":  true,
                                                            "exclusive_atomic_copy":  true,
@@ -859,53 +881,53 @@
                                                                                  "completedResultCount":  2,
                                                                                  "witnessCount":  2,
                                                                                  "completedRunIds":  [
-                                                                                                         "99d61d09-b544-44a2-8f74-274abbfd0d8a",
-                                                                                                         "e942774f-c56e-405e-a695-183076a3e61b"
+                                                                                                         "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
+                                                                                                         "57414f8f-0a75-4572-aafe-775e58db3388"
                                                                                                      ],
                                                                                  "witnessRunIds":  [
-                                                                                                       "99d61d09-b544-44a2-8f74-274abbfd0d8a",
-                                                                                                       "e942774f-c56e-405e-a695-183076a3e61b"
+                                                                                                       "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
+                                                                                                       "57414f8f-0a75-4572-aafe-775e58db3388"
                                                                                                    ],
                                                                                  "recipeIds":  [
-                                                                                                   "7c013ecf-42cb-4dab-b31e-5b482ef9abf3",
-                                                                                                   "bb3b40f4-f9b0-455d-adc5-2f1d0a76140c"
+                                                                                                   "e1db2325-9a63-49f3-b580-d9b1b460bd26",
+                                                                                                   "bfb97e0a-cf74-44cd-97c7-0b05ecdcab4e"
                                                                                                ],
                                                                                  "recipeCount":  2,
                                                                                  "workspaceRunIds":  [
-                                                                                                         "e942774f-c56e-405e-a695-183076a3e61b",
-                                                                                                         "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+                                                                                                         "57414f8f-0a75-4572-aafe-775e58db3388",
+                                                                                                         "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
                                                                                                      ],
-                                                                                 "selectedRunId":  "e942774f-c56e-405e-a695-183076a3e61b"
+                                                                                 "selectedRunId":  "57414f8f-0a75-4572-aafe-775e58db3388"
                                                                              }
                                                        }
                              },
                              {
                                  "name":  "post_completed_cycle_2_idle",
-                                 "phase_recorded_at_utc":  "2026-08-13T06:48:59.8140000Z",
-                                 "window_start_utc":  "2026-08-13T06:49:00.3140000Z",
-                                 "window_end_utc":  "2026-08-13T06:49:05.3140000Z",
+                                 "phase_recorded_at_utc":  "2026-08-13T16:11:47.6690000Z",
+                                 "window_start_utc":  "2026-08-13T16:11:48.1690000Z",
+                                 "window_end_utc":  "2026-08-13T16:11:53.1690000Z",
                                  "sample_recorded_at_utc":  [
-                                                                "2026-08-13T06:49:00.3906498Z",
-                                                                "2026-08-13T06:49:00.8325958Z",
-                                                                "2026-08-13T06:49:01.3087112Z",
-                                                                "2026-08-13T06:49:01.8127654Z",
-                                                                "2026-08-13T06:49:02.2943027Z",
-                                                                "2026-08-13T06:49:02.7953558Z",
-                                                                "2026-08-13T06:49:03.2415554Z",
-                                                                "2026-08-13T06:49:03.7203984Z",
-                                                                "2026-08-13T06:49:04.2371638Z",
-                                                                "2026-08-13T06:49:04.6835933Z",
-                                                                "2026-08-13T06:49:05.1479935Z"
+                                                                "2026-08-13T16:11:48.3728430Z",
+                                                                "2026-08-13T16:11:48.8558458Z",
+                                                                "2026-08-13T16:11:49.3204596Z",
+                                                                "2026-08-13T16:11:49.7885592Z",
+                                                                "2026-08-13T16:11:50.2725014Z",
+                                                                "2026-08-13T16:11:50.7315620Z",
+                                                                "2026-08-13T16:11:51.1685018Z",
+                                                                "2026-08-13T16:11:51.6148975Z",
+                                                                "2026-08-13T16:11:52.0861861Z",
+                                                                "2026-08-13T16:11:52.5384265Z",
+                                                                "2026-08-13T16:11:53.0535822Z"
                                                             ],
                                  "sample_count":  11,
-                                 "median_working_set_bytes":  752418816,
-                                 "p95_working_set_bytes":  796565504,
-                                 "median_private_memory_bytes":  517509120,
-                                 "p95_private_memory_bytes":  558149632,
-                                 "median_handle_count":  3824,
-                                 "p95_handle_count":  4152,
-                                 "median_thread_count":  200,
-                                 "p95_thread_count":  211,
+                                 "median_working_set_bytes":  749146112,
+                                 "p95_working_set_bytes":  802402304,
+                                 "median_private_memory_bytes":  517619712,
+                                 "p95_private_memory_bytes":  556552192,
+                                 "median_handle_count":  3977,
+                                 "p95_handle_count":  4439,
+                                 "median_thread_count":  204,
+                                 "p95_thread_count":  218,
                                  "median_process_count":  7,
                                  "p95_process_count":  8,
                                  "process_role_counts":  {
@@ -917,10 +939,10 @@
                                                              "webview_other":  1,
                                                              "other_descendant":  0
                                                          },
-                                 "process_roles_bounded_and_terminally_stable":  true,
+                                 "process_roles_bounded_and_terminally_stable":  false,
                                  "process_role_window":  {
                                                              "policy":  "modal_pid_role_identity_with_bounded_webview_churn_v1",
-                                                             "passed":  true,
+                                                             "passed":  false,
                                                              "sample_count":  11,
                                                              "modal_sample_count":  10,
                                                              "minimum_modal_sample_count":  6,
@@ -928,53 +950,53 @@
                                                              "unique_modal_identity":  true,
                                                              "modal_pid_role_identities":  [
                                                                                                {
-                                                                                                   "pid":  12460,
-                                                                                                   "parent_pid":  56848,
-                                                                                                   "name":  "msedgewebview2.exe",
-                                                                                                   "role":  "webview_other",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
-                                                                                               },
-                                                                                               {
-                                                                                                   "pid":  23528,
-                                                                                                   "parent_pid":  56848,
+                                                                                                   "pid":  5156,
+                                                                                                   "parent_pid":  53272,
                                                                                                    "name":  "msedgewebview2.exe",
                                                                                                    "role":  "webview_gpu",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
                                                                                                },
                                                                                                {
-                                                                                                   "pid":  30424,
-                                                                                                   "parent_pid":  56848,
-                                                                                                   "name":  "msedgewebview2.exe",
-                                                                                                   "role":  "webview_renderer",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
-                                                                                               },
-                                                                                               {
-                                                                                                   "pid":  51204,
-                                                                                                   "parent_pid":  56772,
+                                                                                                   "pid":  9284,
+                                                                                                   "parent_pid":  57040,
                                                                                                    "name":  "quickpls-desktop.exe",
                                                                                                    "role":  "desktop_root",
-                                                                                                   "creation_date":  "08/13/2026 12:17:00"
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
                                                                                                },
                                                                                                {
-                                                                                                   "pid":  52436,
-                                                                                                   "parent_pid":  56848,
+                                                                                                   "pid":  17588,
+                                                                                                   "parent_pid":  53272,
                                                                                                    "name":  "msedgewebview2.exe",
                                                                                                    "role":  "webview_utility",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
                                                                                                },
                                                                                                {
-                                                                                                   "pid":  56488,
-                                                                                                   "parent_pid":  56848,
-                                                                                                   "name":  "msedgewebview2.exe",
-                                                                                                   "role":  "webview_utility",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
-                                                                                               },
-                                                                                               {
-                                                                                                   "pid":  56848,
-                                                                                                   "parent_pid":  51204,
+                                                                                                   "pid":  53272,
+                                                                                                   "parent_pid":  9284,
                                                                                                    "name":  "msedgewebview2.exe",
                                                                                                    "role":  "webview_browser",
-                                                                                                   "creation_date":  "08/13/2026 12:17:01"
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
+                                                                                               },
+                                                                                               {
+                                                                                                   "pid":  60776,
+                                                                                                   "parent_pid":  53272,
+                                                                                                   "name":  "msedgewebview2.exe",
+                                                                                                   "role":  "webview_utility",
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
+                                                                                               },
+                                                                                               {
+                                                                                                   "pid":  64524,
+                                                                                                   "parent_pid":  53272,
+                                                                                                   "name":  "msedgewebview2.exe",
+                                                                                                   "role":  "webview_renderer",
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
+                                                                                               },
+                                                                                               {
+                                                                                                   "pid":  66040,
+                                                                                                   "parent_pid":  53272,
+                                                                                                   "name":  "msedgewebview2.exe",
+                                                                                                   "role":  "webview_other",
+                                                                                                   "creation_date":  "08/13/2026 21:39:52"
                                                                                                }
                                                                                            ],
                                                              "modal_role_counts":  {
@@ -987,9 +1009,9 @@
                                                                                        "other_descendant":  0
                                                                                    },
                                                              "first_three_exact_modal":  true,
-                                                             "last_three_exact_modal":  true,
+                                                             "last_three_exact_modal":  false,
                                                              "deviating_sample_indices":  [
-                                                                                              3
+                                                                                              10
                                                                                           ],
                                                              "deviating_sample_count":  1,
                                                              "maximum_deviating_sample_count":  2,
@@ -1000,7 +1022,7 @@
                                                              "other_descendant_zero_every_sample":  true,
                                                              "reported_role_counts_match_processes_every_sample":  true,
                                                              "baseline_identities_never_removed_or_replaced":  true,
-                                                             "persistent_browser_pid":  56848,
+                                                             "persistent_browser_pid":  53272,
                                                              "transient_identity_count":  1,
                                                              "allowed_transient_roles":  [
                                                                                              "webview_gpu",
@@ -1009,22 +1031,22 @@
                                                                                          ],
                                                              "transient_processes":  [
                                                                                          {
-                                                                                             "sample_index":  3,
-                                                                                             "recorded_at_utc":  "2026-08-13T06:49:01.8127654Z",
-                                                                                             "pid":  57616,
-                                                                                             "parent_pid":  56848,
+                                                                                             "sample_index":  10,
+                                                                                             "recorded_at_utc":  "2026-08-13T16:11:53.0535822Z",
+                                                                                             "pid":  2160,
+                                                                                             "parent_pid":  53272,
                                                                                              "name":  "msedgewebview2.exe",
                                                                                              "role":  "webview_gpu",
-                                                                                             "creation_date":  "08/13/2026 12:19:01",
-                                                                                             "working_set_bytes":  43839488,
-                                                                                             "private_memory_bytes":  29319168,
-                                                                                             "handle_count":  309,
-                                                                                             "thread_count":  12,
+                                                                                             "creation_date":  "08/13/2026 21:41:52",
+                                                                                             "working_set_bytes":  52609024,
+                                                                                             "private_memory_bytes":  38731776,
+                                                                                             "handle_count":  443,
+                                                                                             "thread_count":  14,
                                                                                              "descendant_of_persistent_browser":  true
                                                                                          }
                                                                                      ],
                                                              "transient_processes_allowed":  true,
-                                                             "transients_absent_terminal_three":  true
+                                                             "transients_absent_terminal_three":  false
                                                          },
                                  "idle_settle_milliseconds":  5000,
                                  "capture_delay_milliseconds":  500,
@@ -1033,23 +1055,23 @@
                                                        "surface":  "results",
                                                        "completed_result_count":  1,
                                                        "witness_count":  1,
-                                                       "selected_run_id":  "99d61d09-b544-44a2-8f74-274abbfd0d8a",
+                                                       "selected_run_id":  "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
                                                        "state_kind":  "one_result_reopened_reset_clone"
                                                    },
                                  "effective_archive":  {
-                                                           "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-post_completed_cycle_2_idle.qpls",
-                                                           "bytes":  2311359,
-                                                           "sha256":  "5a4e7466c5caa9b34e0d159d4ec9b89aafe6bfcdd4f840f361638168aeb7c01b",
-                                                           "source_path":  "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls.autosave",
+                                                           "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-post_completed_cycle_2_idle.qpls",
+                                                           "bytes":  2311374,
+                                                           "sha256":  "aeeebeba631ef4be4bd5bdd7281a0d32b69822c5a3471771ed5fddbf99f1c3e5",
+                                                           "source_path":  "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave",
                                                            "source_before":  {
-                                                                                 "bytes":  2311359,
-                                                                                 "sha256":  "5a4e7466c5caa9b34e0d159d4ec9b89aafe6bfcdd4f840f361638168aeb7c01b",
-                                                                                 "mtime_ns":  "1786603735635907000"
+                                                                                 "bytes":  2311374,
+                                                                                 "sha256":  "aeeebeba631ef4be4bd5bdd7281a0d32b69822c5a3471771ed5fddbf99f1c3e5",
+                                                                                 "mtime_ns":  "1786637503389242400"
                                                                              },
                                                            "source_after":  {
-                                                                                "bytes":  2311359,
-                                                                                "sha256":  "5a4e7466c5caa9b34e0d159d4ec9b89aafe6bfcdd4f840f361638168aeb7c01b",
-                                                                                "mtime_ns":  "1786603735635907000"
+                                                                                "bytes":  2311374,
+                                                                                "sha256":  "aeeebeba631ef4be4bd5bdd7281a0d32b69822c5a3471771ed5fddbf99f1c3e5",
+                                                                                "mtime_ns":  "1786637503389242400"
                                                                             },
                                                            "source_stable_during_copy":  true,
                                                            "exclusive_atomic_copy":  true,
@@ -1059,19 +1081,19 @@
                                                                                  "completedResultCount":  1,
                                                                                  "witnessCount":  1,
                                                                                  "completedRunIds":  [
-                                                                                                         "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+                                                                                                         "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
                                                                                                      ],
                                                                                  "witnessRunIds":  [
-                                                                                                       "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+                                                                                                       "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
                                                                                                    ],
                                                                                  "recipeIds":  [
-                                                                                                   "7c013ecf-42cb-4dab-b31e-5b482ef9abf3"
+                                                                                                   "e1db2325-9a63-49f3-b580-d9b1b460bd26"
                                                                                                ],
                                                                                  "recipeCount":  1,
                                                                                  "workspaceRunIds":  [
-                                                                                                         "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+                                                                                                         "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
                                                                                                      ],
-                                                                                 "selectedRunId":  "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+                                                                                 "selectedRunId":  "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
                                                                              }
                                                        }
                              }
@@ -1081,20 +1103,20 @@
                                        "name":  "initial_idle",
                                        "passed":  true,
                                        "phase_present":  true,
-                                       "phase_recorded_at_utc":  "2026-08-13T06:47:17.6090000Z",
-                                       "window_start_utc":  "2026-08-13T06:47:18.1090000Z",
-                                       "window_end_utc":  "2026-08-13T06:47:23.1090000Z",
+                                       "phase_recorded_at_utc":  "2026-08-13T16:10:04.1660000Z",
+                                       "window_start_utc":  "2026-08-13T16:10:04.6660000Z",
+                                       "window_end_utc":  "2026-08-13T16:10:09.6660000Z",
                                        "eligible_sample_recorded_at_utc":  [
-                                                                               "2026-08-13T06:47:18.5053709Z",
-                                                                               "2026-08-13T06:47:18.9990239Z",
-                                                                               "2026-08-13T06:47:19.4883159Z",
-                                                                               "2026-08-13T06:47:20.0163647Z",
-                                                                               "2026-08-13T06:47:20.4841502Z",
-                                                                               "2026-08-13T06:47:20.9230240Z",
-                                                                               "2026-08-13T06:47:21.4270588Z",
-                                                                               "2026-08-13T06:47:21.9055506Z",
-                                                                               "2026-08-13T06:47:22.4100016Z",
-                                                                               "2026-08-13T06:47:22.9216840Z"
+                                                                               "2026-08-13T16:10:04.9928561Z",
+                                                                               "2026-08-13T16:10:05.4902518Z",
+                                                                               "2026-08-13T16:10:05.9192598Z",
+                                                                               "2026-08-13T16:10:06.3785253Z",
+                                                                               "2026-08-13T16:10:06.8495246Z",
+                                                                               "2026-08-13T16:10:07.3342003Z",
+                                                                               "2026-08-13T16:10:07.8091875Z",
+                                                                               "2026-08-13T16:10:08.2909977Z",
+                                                                               "2026-08-13T16:10:08.7337444Z",
+                                                                               "2026-08-13T16:10:09.2698917Z"
                                                                            ],
                                        "eligible_sample_count":  10,
                                        "expected_idle_settle_milliseconds":  5000,
@@ -1112,20 +1134,20 @@
                                        "name":  "post_cancellation_idle",
                                        "passed":  true,
                                        "phase_present":  true,
-                                       "phase_recorded_at_utc":  "2026-08-13T06:47:31.7810000Z",
-                                       "window_start_utc":  "2026-08-13T06:47:32.2810000Z",
-                                       "window_end_utc":  "2026-08-13T06:47:37.2810000Z",
+                                       "phase_recorded_at_utc":  "2026-08-13T16:10:18.4800000Z",
+                                       "window_start_utc":  "2026-08-13T16:10:18.9800000Z",
+                                       "window_end_utc":  "2026-08-13T16:10:23.9800000Z",
                                        "eligible_sample_recorded_at_utc":  [
-                                                                               "2026-08-13T06:47:32.5328376Z",
-                                                                               "2026-08-13T06:47:33.0372421Z",
-                                                                               "2026-08-13T06:47:33.5554787Z",
-                                                                               "2026-08-13T06:47:34.0032469Z",
-                                                                               "2026-08-13T06:47:34.5245184Z",
-                                                                               "2026-08-13T06:47:34.9843046Z",
-                                                                               "2026-08-13T06:47:35.4333904Z",
-                                                                               "2026-08-13T06:47:35.9187885Z",
-                                                                               "2026-08-13T06:47:36.3847949Z",
-                                                                               "2026-08-13T06:47:36.8459972Z"
+                                                                               "2026-08-13T16:10:19.1330914Z",
+                                                                               "2026-08-13T16:10:19.6956997Z",
+                                                                               "2026-08-13T16:10:20.2241885Z",
+                                                                               "2026-08-13T16:10:20.7443852Z",
+                                                                               "2026-08-13T16:10:21.2848340Z",
+                                                                               "2026-08-13T16:10:21.7730290Z",
+                                                                               "2026-08-13T16:10:22.3622965Z",
+                                                                               "2026-08-13T16:10:22.9017065Z",
+                                                                               "2026-08-13T16:10:23.3913572Z",
+                                                                               "2026-08-13T16:10:23.9347997Z"
                                                                            ],
                                        "eligible_sample_count":  10,
                                        "expected_idle_settle_milliseconds":  5000,
@@ -1143,22 +1165,23 @@
                                        "name":  "post_completed_cycle_1_idle",
                                        "passed":  true,
                                        "phase_present":  true,
-                                       "phase_recorded_at_utc":  "2026-08-13T06:48:20.7500000Z",
-                                       "window_start_utc":  "2026-08-13T06:48:21.2500000Z",
-                                       "window_end_utc":  "2026-08-13T06:48:26.2500000Z",
+                                       "phase_recorded_at_utc":  "2026-08-13T16:11:08.1450000Z",
+                                       "window_start_utc":  "2026-08-13T16:11:08.6450000Z",
+                                       "window_end_utc":  "2026-08-13T16:11:13.6450000Z",
                                        "eligible_sample_recorded_at_utc":  [
-                                                                               "2026-08-13T06:48:21.5362545Z",
-                                                                               "2026-08-13T06:48:22.0542285Z",
-                                                                               "2026-08-13T06:48:22.5284840Z",
-                                                                               "2026-08-13T06:48:22.9810539Z",
-                                                                               "2026-08-13T06:48:23.4856379Z",
-                                                                               "2026-08-13T06:48:23.9622298Z",
-                                                                               "2026-08-13T06:48:24.4559064Z",
-                                                                               "2026-08-13T06:48:24.9644576Z",
-                                                                               "2026-08-13T06:48:25.4197571Z",
-                                                                               "2026-08-13T06:48:25.8533812Z"
+                                                                               "2026-08-13T16:11:08.8343678Z",
+                                                                               "2026-08-13T16:11:09.2975092Z",
+                                                                               "2026-08-13T16:11:09.7800191Z",
+                                                                               "2026-08-13T16:11:10.2344577Z",
+                                                                               "2026-08-13T16:11:10.7348297Z",
+                                                                               "2026-08-13T16:11:11.2702571Z",
+                                                                               "2026-08-13T16:11:11.7339865Z",
+                                                                               "2026-08-13T16:11:12.2241816Z",
+                                                                               "2026-08-13T16:11:12.7187126Z",
+                                                                               "2026-08-13T16:11:13.1529883Z",
+                                                                               "2026-08-13T16:11:13.6057849Z"
                                                                            ],
-                                       "eligible_sample_count":  10,
+                                       "eligible_sample_count":  11,
                                        "expected_idle_settle_milliseconds":  5000,
                                        "actual_idle_settle_milliseconds":  5000,
                                        "expected_capture_delay_milliseconds":  500,
@@ -1174,21 +1197,21 @@
                                        "name":  "post_completed_history_2_idle",
                                        "passed":  true,
                                        "phase_present":  true,
-                                       "phase_recorded_at_utc":  "2026-08-13T06:48:47.0810000Z",
-                                       "window_start_utc":  "2026-08-13T06:48:47.5810000Z",
-                                       "window_end_utc":  "2026-08-13T06:48:52.5810000Z",
+                                       "phase_recorded_at_utc":  "2026-08-13T16:11:34.8990000Z",
+                                       "window_start_utc":  "2026-08-13T16:11:35.3990000Z",
+                                       "window_end_utc":  "2026-08-13T16:11:40.3990000Z",
                                        "eligible_sample_recorded_at_utc":  [
-                                                                               "2026-08-13T06:48:47.5862965Z",
-                                                                               "2026-08-13T06:48:48.0733365Z",
-                                                                               "2026-08-13T06:48:48.6931219Z",
-                                                                               "2026-08-13T06:48:49.1927361Z",
-                                                                               "2026-08-13T06:48:49.6759948Z",
-                                                                               "2026-08-13T06:48:50.1594758Z",
-                                                                               "2026-08-13T06:48:50.6357604Z",
-                                                                               "2026-08-13T06:48:51.1164957Z",
-                                                                               "2026-08-13T06:48:51.6120974Z",
-                                                                               "2026-08-13T06:48:52.0469336Z",
-                                                                               "2026-08-13T06:48:52.4941909Z"
+                                                                               "2026-08-13T16:11:35.4963071Z",
+                                                                               "2026-08-13T16:11:36.0296678Z",
+                                                                               "2026-08-13T16:11:36.5191723Z",
+                                                                               "2026-08-13T16:11:36.9986977Z",
+                                                                               "2026-08-13T16:11:37.4595648Z",
+                                                                               "2026-08-13T16:11:37.9121626Z",
+                                                                               "2026-08-13T16:11:38.3448012Z",
+                                                                               "2026-08-13T16:11:38.8395894Z",
+                                                                               "2026-08-13T16:11:39.3076982Z",
+                                                                               "2026-08-13T16:11:39.7457898Z",
+                                                                               "2026-08-13T16:11:40.2287122Z"
                                                                            ],
                                        "eligible_sample_count":  11,
                                        "expected_idle_settle_milliseconds":  5000,
@@ -1204,23 +1227,23 @@
                                    },
                                    {
                                        "name":  "post_completed_cycle_2_idle",
-                                       "passed":  true,
+                                       "passed":  false,
                                        "phase_present":  true,
-                                       "phase_recorded_at_utc":  "2026-08-13T06:48:59.8140000Z",
-                                       "window_start_utc":  "2026-08-13T06:49:00.3140000Z",
-                                       "window_end_utc":  "2026-08-13T06:49:05.3140000Z",
+                                       "phase_recorded_at_utc":  "2026-08-13T16:11:47.6690000Z",
+                                       "window_start_utc":  "2026-08-13T16:11:48.1690000Z",
+                                       "window_end_utc":  "2026-08-13T16:11:53.1690000Z",
                                        "eligible_sample_recorded_at_utc":  [
-                                                                               "2026-08-13T06:49:00.3906498Z",
-                                                                               "2026-08-13T06:49:00.8325958Z",
-                                                                               "2026-08-13T06:49:01.3087112Z",
-                                                                               "2026-08-13T06:49:01.8127654Z",
-                                                                               "2026-08-13T06:49:02.2943027Z",
-                                                                               "2026-08-13T06:49:02.7953558Z",
-                                                                               "2026-08-13T06:49:03.2415554Z",
-                                                                               "2026-08-13T06:49:03.7203984Z",
-                                                                               "2026-08-13T06:49:04.2371638Z",
-                                                                               "2026-08-13T06:49:04.6835933Z",
-                                                                               "2026-08-13T06:49:05.1479935Z"
+                                                                               "2026-08-13T16:11:48.3728430Z",
+                                                                               "2026-08-13T16:11:48.8558458Z",
+                                                                               "2026-08-13T16:11:49.3204596Z",
+                                                                               "2026-08-13T16:11:49.7885592Z",
+                                                                               "2026-08-13T16:11:50.2725014Z",
+                                                                               "2026-08-13T16:11:50.7315620Z",
+                                                                               "2026-08-13T16:11:51.1685018Z",
+                                                                               "2026-08-13T16:11:51.6148975Z",
+                                                                               "2026-08-13T16:11:52.0861861Z",
+                                                                               "2026-08-13T16:11:52.5384265Z",
+                                                                               "2026-08-13T16:11:53.0535822Z"
                                                                            ],
                                        "eligible_sample_count":  11,
                                        "expected_idle_settle_milliseconds":  5000,
@@ -1231,19 +1254,19 @@
                                        "actual_sample_window_milliseconds":  5000,
                                        "minimum_samples":  6,
                                        "failure_reasons":  [
-
+                                                               "process_roles_not_bounded_or_terminally_stable"
                                                            ]
                                    }
                                ],
     "memory":  {
                    "policy":  "bounded_equal_logical_state_window_median_v2",
-                   "peak_working_set_bytes":  895926272,
-                   "peak_private_memory_bytes":  713338880,
+                   "peak_working_set_bytes":  939085824,
+                   "peak_private_memory_bytes":  761495552,
                    "peak_working_set_under_2_gib":  true,
-                   "cancellation_working_set_tolerance_bytes":  172811162,
+                   "cancellation_working_set_tolerance_bytes":  172864205,
                    "cancellation_private_memory_tolerance_bytes":  134217728,
                    "cancellation_within_baseline_tolerance":  true,
-                   "equal_state_working_set_tolerance_bytes":  72635597,
+                   "equal_state_working_set_tolerance_bytes":  71937639,
                    "equal_state_private_memory_tolerance_bytes":  67108864,
                    "equal_state_working_set_within_tolerance":  true,
                    "equal_state_private_memory_within_tolerance":  true,
@@ -1252,11 +1275,11 @@
                    "equal_state_handle_count_within_tolerance":  true,
                    "equal_state_thread_count_within_tolerance":  true,
                    "equal_state_process_roles_exact":  true,
-                   "process_roles_bounded_and_terminally_stable":  true,
+                   "process_roles_bounded_and_terminally_stable":  false,
                    "retained_history_disclosure":  {
                                                        "checkpoint":  "post_completed_history_2_idle",
-                                                       "median_working_set_bytes":  768352256,
-                                                       "median_private_memory_bytes":  537440256,
+                                                       "median_working_set_bytes":  764424192,
+                                                       "median_private_memory_bytes":  550723584,
                                                        "completed_result_count":  2,
                                                        "witness_count":  2,
                                                        "qualification_role":  "disclosure_only_not_a_threshold"
@@ -1268,25 +1291,25 @@
                    "completed_cycle_count":  2,
                    "idle_checkpoint_count":  5,
                    "idle_settle_milliseconds":  5000,
-                   "idle_checkpoints_ordered_and_distinct":  true,
+                   "idle_checkpoints_ordered_and_distinct":  false,
                    "capture_delay_milliseconds":  500,
                    "sample_window_milliseconds":  5000,
                    "minimum_samples_per_checkpoint":  6,
                    "checkpoint_diagnostic_count":  5,
-                   "checkpoint_diagnostics_all_passed":  true
+                   "checkpoint_diagnostics_all_passed":  false
                },
     "disk":  {
                  "project_archive":  {
-                                         "path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls",
+                                         "path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls",
                                          "initial_bytes":  12709,
-                                         "final_bytes":  2317833,
-                                         "delta_bytes":  2305124
+                                         "final_bytes":  2317816,
+                                         "delta_bytes":  2305107
                                      },
                  "xlsx_export":  {
-                                     "path":  "validation/results/v247-native-process-v2-20260813-121700878.xlsx",
+                                     "path":  "validation/results/v247-native-process-v2-20260813-213951987.xlsx",
                                      "initial_bytes":  0,
-                                     "final_bytes":  55319,
-                                     "delta_bytes":  55319
+                                     "final_bytes":  55317,
+                                     "delta_bytes":  55317
                                  }
              },
     "process_cleanup":  {
@@ -1306,5 +1329,5 @@
                             "resource_monitor_stderr":  "",
                             "resource_monitor_terminal_reason":  "stop_signal"
                         },
-    "passed":  true
+    "passed":  false
 }

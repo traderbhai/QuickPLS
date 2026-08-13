@@ -16,7 +16,6 @@
     "passed": true,
     "run_stderr": "Error: cta_pls.tetrad_block_required: CTA-PLS requires at least one construct with four or more indicators\n",
     "validation_codes": [
-      "method.experimental",
       "cta_pls.tetrad_block_required"
     ]
   },

@@ -144,9 +144,11 @@ export interface MethodSetupState {
   expandedSections: string[];
 }
 
+export type NativeSampleProjectId = "corporate_reputation" | "simple_pls" | "mediation";
+
 export interface OnboardingState {
   dismissed: boolean;
-  selectedDemo: "corporate_reputation" | "simple_pls" | "mediation" | "moderation" | "formative" | "plspredict" | "micom_mga" | "cbsem_cfa" | "regression" | "nca";
+  selectedDemo: NativeSampleProjectId;
   recentProjectCards: string[];
 }
 

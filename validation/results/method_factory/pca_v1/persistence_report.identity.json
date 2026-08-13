@@ -1,0 +1,105 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "checks": {
+      "archive_checksum_tamper_rejected": true,
+      "component_loading_score_tamper_rejected_atomically": true,
+      "exact_payload_values_survive_reopen": true,
+      "invalid_reopened_payload_cannot_be_resaved": true,
+      "method_version_tamper_rejected_atomically": true,
+      "recipe_result_mismatch_rejected_atomically": true,
+      "typed_pca_identity_round_trip": true
+    },
+    "executions": [
+      {
+        "execution": {
+          "command": [
+            "cargo",
+            "test",
+            "-p",
+            "qpls-project",
+            "tests::runner_generated_pca_v1_commits_saves_reopens_and_rejects_contract_tampering"
+          ],
+          "duration_seconds": 1.845,
+          "returncode": 0,
+          "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.66s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_project-97d8e1207ceb67c8.exe)\n",
+          "stdout_tail": "\nrunning 1 test\ntest tests::runner_generated_pca_v1_commits_saves_reopens_and_rejects_contract_tampering ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.04s\n\n"
+        },
+        "passed": true,
+        "test": "tests::runner_generated_pca_v1_commits_saves_reopens_and_rejects_contract_tampering"
+      },
+      {
+        "execution": {
+          "command": [
+            "cargo",
+            "test",
+            "-p",
+            "qpls-project",
+            "tests::changed_payload_is_rejected_by_its_manifest_checksum"
+          ],
+          "duration_seconds": 1.64,
+          "returncode": 0,
+          "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.42s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_project-97d8e1207ceb67c8.exe)\n",
+          "stdout_tail": "\nrunning 1 test\ntest tests::changed_payload_is_rejected_by_its_manifest_checksum ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.04s\n\n"
+        },
+        "passed": true,
+        "test": "tests::changed_payload_is_rejected_by_its_manifest_checksum"
+      }
+    ],
+    "passed": true
+  },
+  "feature_id": "qpls3.standalone.pca",
+  "generated_at_utc": "2026-08-13T19:35:44.509497Z",
+  "method_version": "pca_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "persistence_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-project/src/archive_integrity.rs",
+      "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+      "size": 31085
+    },
+    {
+      "path": "crates/qpls-project/src/lib.rs",
+      "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
+      "size": 660277
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/pca_v1.manifest.json",
+      "sha256": "c190031338e9790dd64cf280a2e419585b254c5e3a109b81ecc4849f5cad7433",
+      "size": 14506
+    },
+    {
+      "path": "validation/pca_persistence_gate.py",
+      "sha256": "825e14946d6e954706f85f500f22c08b9ef775a1769033e6286a84bd9b7662f3",
+      "size": 2202
+    },
+    {
+      "path": "validation/pca_v1_factory_common.py",
+      "sha256": "9a0ce1a0fb76f83ee124b5927e1990f354a70b0ed28fe7d038919dd9f1e11c61",
+      "size": 11599
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_pca_v1_factory_evidence.py",
+      "sha256": "45f58bcbd84e0e5b6adc9aadb334ad50085aa9c4e63c23ad9eedb53d15a6278f",
+      "size": 3537
+    }
+  ]
+}

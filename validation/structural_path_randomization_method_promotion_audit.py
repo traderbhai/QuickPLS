@@ -572,7 +572,7 @@ def packaged_cancellation_contract(
         if not isinstance(value, dict) or set(value) != setup_keys:
             return False
         return (
-            value.get("catalogCount") == 14
+            value.get("catalogCount") == 15
             and value.get("selectedMethod") == "Structural Path Randomization"
             and value.get("permutations") == {
                 "count": 1, "type": "number", "minimum": "99", "maximum": "10000",

@@ -1,0 +1,52 @@
+{
+  "schema_version":1,
+  "governance":{"contract_frozen_at_utc":"2026-08-13T10:26:17Z","manifest_path":"validation/methods/htmt_plus_v1.manifest.json","schema_path":"validation/methods/method_promotion_manifest.schema.json","validator_path":"validation/method_promotion_manifest.py","focused_test_path":"validation/test_method_promotion_manifest.py"},
+  "feature":{"id":"qpls3.assessment.htmt","label":"PLS HTMT and HTMT+ Discriminant Validity","method_version":"ringle_et_al_htmt_plus_v1","method_kind":"deterministic","catalogue_snapshot_date":"2026-08-12","catalogue_url":"https://smartpls.com/documentation/algorithms-and-techniques/"},
+  "claim":{
+    "supported_scope":"Deterministic pairwise original signed HTMT and HTMT+ for reflective constructs with at least two indicators, using Pearson correlations from the same model-wide complete cases and typed applicability states.",
+    "estimand":"Original signed HTMT under henseler_et_al_htmt_v1 and absolute-correlation HTMT+ under the primary ringle_et_al_htmt_plus_v1 identity for each supported construct pair.",
+    "assumptions":["Construct pairs are reflective, contain at least two indicators each, and use finite model-wide complete cases.","Pearson correlations and monotrait/heterotrait arithmetic means follow the frozen PLS_HTMT_V1 definition and deterministic recipe order.","The result persists both exact method versions, construct order, sign policy, symmetric typed cells, and unavailable reasons."],
+    "exclusions":["Formative and single-indicator pairs, geometric-mean HTMT2+, embedded universal .85/.90 decisions, and clamping HTMT+ at one are excluded.","HTMT does not establish reliability, convergent validity, causal validity, or overall model fit.","Legacy assessment v2-v5 matrices cannot be relabeled as either current exact method."],
+    "warnings":["Threshold choice is an interpretation decision and is not part of the numerical method.","A nonpositive original signed monotrait mean or zero HTMT+ monotrait denominator makes the affected cell explicitly unavailable." ]
+  },
+  "scientific_contract":{
+    "equations":[
+      {"id":"original_signed_htmt","expression":"HTMT_ij = mean(r_cross) / sqrt(mean(r_within_i) mean(r_within_j))","variables":["HTMT_ij","r_cross","r_within_i","r_within_j"],"source_reference_id":"henseler_2015"},
+      {"id":"htmt_plus","expression":"HTMTplus_ij = mean(abs(r_cross)) / sqrt(mean(abs(r_within_i)) mean(abs(r_within_j)))","variables":["HTMTplus_ij","r_cross","r_within_i","r_within_j"],"source_reference_id":"ringle_2023"}
+    ],
+    "references":[
+      {"id":"henseler_2015","kind":"primary_paper","citation":"Henseler, Ringle, and Sarstedt (2015), A New Criterion for Assessing Discriminant Validity in Variance-Based SEM, DOI 10.1007/s11747-014-0403-8","locator":"docs/methods/PLS_HTMT_V1.md","independence_group":"published_original_htmt","runtime_policy":"no_runtime_dependency"},
+      {"id":"ringle_2023","kind":"primary_paper","citation":"Ringle et al. (2023), A Perspective on Using Partial Least Squares Structural Equation Modelling in Data Articles, Appendix HTMT+, DOI 10.1016/j.dib.2023.109074","locator":"docs/methods/PLS_HTMT_RELEASE_V1.md","independence_group":"published_htmt_plus","runtime_policy":"no_runtime_dependency"},
+      {"id":"independent_python_htmt","kind":"independent_python","citation":"Independent Python original HTMT and HTMT+ reference","locator":"validation/htmt_reference.py","independence_group":"python_reference","runtime_policy":"development_validation_only"}
+    ],
+    "simulations":[
+      {"id":"htmt_definition_recovery","purpose":"recovery","design":"Reflective construct pairs across positive/mixed-sign correlations, two-item minima, near-zero denominators, discriminant-validity failure, and construct/indicator permutations.","seed_policy":"Frozen covariance scenarios and indexed data-generation seeds with deterministic calculation.","metrics":["original_htmt_error","htmt_plus_error","availability_classification_accuracy","sign_reversal_invariance"],"acceptance_rule":"Every available value must match the independent reference within 1e-6, all typed unavailable states must be exact, and HTMT+ sign-reversal invariance must hold."},
+      {"id":"htmt_boundary_behavior","purpose":"failure_behavior","design":"Formative blocks, single indicators, zero/nonpositive monotrait denominators, non-finite correlations, and values above one.","seed_policy":"Frozen deterministic fixtures.","metrics":["typed_status_accuracy","unclamped_value_accuracy","malformed_input_rejection"],"acceptance_rule":"Unsupported or invalid cells must have the exact reason, valid values above one must remain unclamped, and non-finite input must fail explicitly."}
+    ],
+    "boundaries":[
+      {"id":"invalid_monotrait_denominator","category":"data_pathology","case":"HTMT+ has a zero effective absolute monotrait mean or original HTMT has a nonpositive signed monotrait mean.","expected_behavior":"The affected cell is typed unavailable with the exact method-specific reason and no fabricated zero."},
+      {"id":"formative_or_single_indicator","category":"unsupported_scope","case":"Either construct is formative or contains fewer than two indicators.","expected_behavior":"The cell is explicitly not applicable and no HTMT value is emitted."},
+      {"id":"indicator_sign_reversal","category":"metamorphic","case":"One indicator is multiplied by negative one.","expected_behavior":"HTMT+ remains invariant; original signed HTMT changes or becomes unavailable according to its signed definition."},
+      {"id":"repeat_htmt","category":"determinism","case":"The same complete cases, recipe order, and definitions execute repeatedly.","expected_behavior":"Method identities, typed cells, values, reasons, and warnings are exactly equal."},
+      {"id":"htmt_archive_tamper","category":"tamper","case":"A method version, construct order, sign flag, cell value/status/reason, symmetry, or denominator state is changed.","expected_behavior":"Strict project validation rejects the archive."}
+    ],
+    "numerical_tolerance":0.000001
+  },
+  "product_contract":{
+    "persistence":{"recipe_schema_version":3,"result_schema_version":1,"payload_kind":"pls_pm_v1","tamper_tests":[
+      {"category":"feature_identity","expected_behavior":"Reject an archive whose identity differs from PLS HTMT/HTMT+ assessment."},
+      {"category":"method_version","expected_behavior":"Reject a payload with missing, swapped, or unknown original/plus method versions."},
+      {"category":"dataset_fingerprint","expected_behavior":"Reject matrices whose complete-case dataset fingerprint differs."},
+      {"category":"checksum","expected_behavior":"Reject an archive entry whose assessment or matrix checksum differs."},
+      {"category":"malformed_payload","expected_behavior":"Reject duplicate keys, unknown fields, non-finite values, asymmetric cells, invalid diagonals, or inconsistent status/reason pairs."},
+      {"category":"legacy_reinterpretation","expected_behavior":"Never reinterpret assessment v2-v5 absolute matrices as current signed HTMT or exact HTMT+ evidence."}
+    ],"legacy_policy":"Legacy v2-v5 matrices remain readable under their historical identity and cannot carry either current exact method version."},
+    "native":{"setup_controls":["Supported PLS result","Reflective construct selection","Original HTMT view","HTMT+ view","Optional interpretation threshold display"],"applicability_blockers":["No supported reflective pair","Insufficient complete cases","Non-finite correlations","Malformed measurement blocks"],"result_surfaces":["Original HTMT matrix","HTMT+ matrix","Typed applicability reasons","Threshold interpretation without mutation","Warnings and provenance"],"gui_cli_parity_rule":"GUI and CLI must produce the same exact method versions, construct order, typed cells, values, unavailable reasons, and warnings for identical inputs.","accessibility_rules":["Each heatmap has an equivalent accessible matrix table.","Values, threshold direction, unavailable reasons, and warnings are not conveyed by color alone."]},
+    "export":{"formats":["csv","xlsx"],"tables":["Original signed HTMT","HTMT+","Applicability reasons","Run provenance"],"same_run_required":true,"provenance_required":true},
+    "packaged":{"platforms":["windows"],"workflow_steps":["setup","invalid_setup_blocked","execute","inspect_results","export","save","close","reopen_same_run","cleanup"],"viewports":["1024x700","1280x720","1440x900"],"offline_required":true,"cancellation_required":false,"process_cleanup_required":true},
+    "audit":{"exact_identity_fields":["passed","feature_id","method_version","catalogue_snapshot_date"],"source_hashes_required":true,"freshness_required":true,"reports_must_pass":true}
+  },
+  "qualification":{"declared_state":"absent","target_state":"release_qualified","source_requirements":{
+    "method_spec":["docs/methods/PLS_HTMT_RELEASE_V1.md","docs/methods/PLS_HTMT_V1.md"],"independent_reference":["validation/htmt_reference.py"],"simulation_report":["validation/htmt_release_simulation.py"],"boundary_report":["validation/htmt_release_boundary_gate.py"],"persistence_report":["validation/htmt_release_persistence_gate.py"],"frontend_report":["src/native/nativeHtmt.test.ts"],"export_report":["src/native/nativeExportTables.test.ts"],"method_audit":["validation/htmt_method_promotion_audit.py"],"packaged_acceptance":["validation/run_v248_htmt_native_acceptance.ps1"]
+  },"evidence":{"engine_only":[],"archive_qualified":[],"native_qualified":[],"release_qualified":[]}}
+}

@@ -1,0 +1,1494 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "archive": {
+      "checks": {
+        "archive_checksums_exact": true,
+        "master_seed": true,
+        "method_version": true,
+        "payload_kind": true,
+        "provenance_version": true,
+        "recipe_kind": true,
+        "recipe_settings": true,
+        "replicates": true,
+        "run_completed": true,
+        "run_label": true,
+        "usable_failure_accounting": true
+      },
+      "passed": true,
+      "path": "validation/results/method_factory/pls_bootstrap_v4/pls_bootstrap_v4_packaged.qpls",
+      "schema_version": 5,
+      "sha256": "c067d27287ee9d8627ae91ba5d4dd05f879c07b577d67266a2f335767e29de34"
+    },
+    "cumulative_execution": {
+      "mode": "receipt_reuse",
+      "passed": true,
+      "receipt": {
+        "artifact_paths": [
+          "validation/results/v247_cumulative_native_acceptance_receipt.json",
+          "validation/results/v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx"
+        ],
+        "bootstrap_export": {
+          "mtime_ns": 1786647908256548700,
+          "path": "validation/results/v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx",
+          "sha256": "566577b9e9284fbbb161f3624812c756a291e209e0214613614f74423d5c6564",
+          "size": 22849
+        },
+        "checks": {
+          "bootstrap_export_bound_to_report": true,
+          "bootstrap_export_exact_bytes": true,
+          "completed_after_reuse_boundary": true,
+          "exact_177_checks": true,
+          "exact_report_bytes": true,
+          "exact_report_path": true,
+          "export_roles_unique": true,
+          "final_scope_regression_bootstrap": true,
+          "graceful_cleanup_verified": true,
+          "receipt_passed_cleanly": true,
+          "schema_and_kind": true,
+          "start_within_two_second_reuse_tolerance": true
+        },
+        "completed_at_utc": "2026-08-13T19:17:18.6025307Z",
+        "not_before_utc": "2026-08-13T19:02:56.997702Z",
+        "passed": true,
+        "receipt": {
+          "mtime_ns": 1786648638630928500,
+          "path": "validation/results/v247_cumulative_native_acceptance_receipt.json",
+          "sha256": "c17e0dec92106a8762b8cec4d608b96ac510c1cc3cd846073a1b62094c87ac9f",
+          "size": 6655
+        },
+        "report": {
+          "mtime_ns": 1786648629150276400,
+          "path": "validation/results/v247_tauri_native_acceptance.json",
+          "sha256": "6b56fa15b60e40def2959bb43a4514a654012c1a63724b8eea084743431cfbd7",
+          "size": 499999
+        },
+        "supervisor_started_at_utc": "2026-08-13T19:02:56.9977028Z"
+      }
+    },
+    "native": {
+      "checks": {
+        "cancel_retry_identity": true,
+        "clean_report": true,
+        "completed_bootstrap_result": true,
+        "exact_three_responsive_viewports": true,
+        "exact_valid_setup": true,
+        "fresh_cumulative_chain": true,
+        "functional_offline_without_zero_egress_overclaim": true,
+        "invalid_setup_blocked_without_run": true,
+        "packaged_tauri_runtime": true,
+        "same_run_reopened": true,
+        "selected_run_native_xlsx": true
+      },
+      "passed": true,
+      "raw": {
+        "cancel_retry": {
+          "cancelledPartialRunVisible": 0,
+          "cancelledSettings": {
+            "bootstrapSamples": "1000",
+            "confidenceLevel": "95",
+            "seed": "20260718",
+            "studentizedInnerSamples": "999",
+            "workers": "1"
+          },
+          "completedRetryRunId": "85ad94b7-05f9-48a1-93d9-20efdb85f475",
+          "exportedRunId": "85ad94b7-05f9-48a1-93d9-20efdb85f475",
+          "passed": true,
+          "reopenedRunId": "85ad94b7-05f9-48a1-93d9-20efdb85f475",
+          "retrySettings": {
+            "blockers": [],
+            "bootstrapSamples": "100",
+            "confidenceLevel": "95",
+            "seed": "20260718",
+            "selectedMethod": "PLS-SEM BootstrappingEstimate confidence intervals and significance with deterministic resampling.",
+            "startEnabled": true,
+            "studentizedInnerSamples": "0",
+            "workers": "1"
+          }
+        },
+        "export": {
+          "formats": 6,
+          "nativeXlsx": {
+            "appFeedback": "Saved v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx.",
+            "attempted": true,
+            "file": {
+              "isFile": true,
+              "path": "D:\\QuickPLS\\validation\\results\\v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx",
+              "size": 22849
+            },
+            "helper": {
+              "completion": {
+                "boundControls": {
+                  "filenameEditControlId": 1001,
+                  "saveButtonControlId": 1
+                },
+                "dialog": {
+                  "className": "#32770",
+                  "directOwner": 14747320,
+                  "handle": 23462774,
+                  "pid": 13184,
+                  "rootOwner": 14747320,
+                  "title": "Save As"
+                },
+                "event": "complete",
+                "mainWindow": {
+                  "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                  "handle": 14747320,
+                  "pid": 13184,
+                  "title": "QuickPLS"
+                },
+                "passed": true,
+                "phase": "xlsx_creation_and_readback",
+                "saveSubmission": {
+                  "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx",
+                  "filenameBefore": "quickpls-result-tables",
+                  "filenameVerified": true,
+                  "saveButtonEnabled": true,
+                  "saveButtonVisible": true,
+                  "setAttempts": [
+                    {
+                      "attempt": 1,
+                      "settledReads": [
+                        "D:\\QuickPLS\\validation\\results\\v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx",
+                        "D:\\QuickPLS\\validation\\results\\v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx"
+                      ]
+                    }
+                  ],
+                  "submissionMethod": "BM_CLICK",
+                  "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx"
+                },
+                "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx",
+                "transport": {
+                  "events": [
+                    {
+                      "event": "ready",
+                      "mainWindow": {
+                        "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                        "handle": 14747320,
+                        "pid": 13184,
+                        "title": "QuickPLS"
+                      },
+                      "passed": true,
+                      "phase": "main_window_binding",
+                      "resultsRoot": "D:\\QuickPLS\\validation\\results",
+                      "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx"
+                    },
+                    {
+                      "boundControls": {
+                        "filenameEditControlId": 1001,
+                        "saveButtonControlId": 1
+                      },
+                      "dialog": {
+                        "className": "#32770",
+                        "directOwner": 14747320,
+                        "handle": 23462774,
+                        "pid": 13184,
+                        "rootOwner": 14747320,
+                        "title": "Save As"
+                      },
+                      "event": "complete",
+                      "mainWindow": {
+                        "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                        "handle": 14747320,
+                        "pid": 13184,
+                        "title": "QuickPLS"
+                      },
+                      "passed": true,
+                      "phase": "xlsx_creation_and_readback",
+                      "saveSubmission": {
+                        "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx",
+                        "filenameBefore": "quickpls-result-tables",
+                        "filenameVerified": true,
+                        "saveButtonEnabled": true,
+                        "saveButtonVisible": true,
+                        "setAttempts": [
+                          {
+                            "attempt": 1,
+                            "settledReads": [
+                              "D:\\QuickPLS\\validation\\results\\v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx",
+                              "D:\\QuickPLS\\validation\\results\\v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx"
+                            ]
+                          }
+                        ],
+                        "submissionMethod": "BM_CLICK",
+                        "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx"
+                      },
+                      "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx",
+                      "workbook": {
+                        "path": "D:\\QuickPLS\\validation\\results\\v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx",
+                        "requiredSharedStrings": [
+                          "Aggregate mediation effects bootstrap inference",
+                          "Total indirect effect (aggregate)",
+                          "Run provenance"
+                        ],
+                        "requiredSheets": [
+                          "Aggregate mediation effects boo",
+                          "Bootstrapping",
+                          "Bias-corrected and accelerated",
+                          "Run provenance"
+                        ],
+                        "sha256": "566577b9e9284fbbb161f3624812c756a291e209e0214613614f74423d5c6564",
+                        "sheetNames": [
+                          "Direct effects",
+                          "Outer loadings",
+                          "Outer weights",
+                          "R-square",
+                          "Specific indirect effects",
+                          "Total indirect effects",
+                          "Total effects",
+                          "Construct reliability and valid",
+                          "Cross loadings",
+                          "Fornell-Larcker criterion",
+                          "HTMT+",
+                          "Original HTMT",
+                          "Structural model",
+                          "Inner VIF values",
+                          "f-square effect sizes",
+                          "Model fit",
+                          "Construct cross-validated redun",
+                          "Aggregate mediation effects boo",
+                          "Bootstrapping",
+                          "Bias-corrected and accelerated",
+                          "Run provenance"
+                        ],
+                        "size": 22849
+                      }
+                    }
+                  ],
+                  "exitCode": 0,
+                  "protocolErrors": [],
+                  "signal": null,
+                  "stderr": ""
+                },
+                "workbook": {
+                  "path": "D:\\QuickPLS\\validation\\results\\v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx",
+                  "requiredSharedStrings": [
+                    "Aggregate mediation effects bootstrap inference",
+                    "Total indirect effect (aggregate)",
+                    "Run provenance"
+                  ],
+                  "requiredSheets": [
+                    "Aggregate mediation effects boo",
+                    "Bootstrapping",
+                    "Bias-corrected and accelerated",
+                    "Run provenance"
+                  ],
+                  "sha256": "566577b9e9284fbbb161f3624812c756a291e209e0214613614f74423d5c6564",
+                  "sheetNames": [
+                    "Direct effects",
+                    "Outer loadings",
+                    "Outer weights",
+                    "R-square",
+                    "Specific indirect effects",
+                    "Total indirect effects",
+                    "Total effects",
+                    "Construct reliability and valid",
+                    "Cross loadings",
+                    "Fornell-Larcker criterion",
+                    "HTMT+",
+                    "Original HTMT",
+                    "Structural model",
+                    "Inner VIF values",
+                    "f-square effect sizes",
+                    "Model fit",
+                    "Construct cross-validated redun",
+                    "Aggregate mediation effects boo",
+                    "Bootstrapping",
+                    "Bias-corrected and accelerated",
+                    "Run provenance"
+                  ],
+                  "size": 22849
+                }
+              },
+              "ready": {
+                "event": "ready",
+                "mainWindow": {
+                  "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                  "handle": 14747320,
+                  "pid": 13184,
+                  "title": "QuickPLS"
+                },
+                "passed": true,
+                "phase": "main_window_binding",
+                "resultsRoot": "D:\\QuickPLS\\validation\\results",
+                "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx"
+              }
+            },
+            "selectedRunId": "85ad94b7-05f9-48a1-93d9-20efdb85f475",
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx"
+          },
+          "selectedResultTable": "Specific indirect effects",
+          "selectedRunId": "85ad94b7-05f9-48a1-93d9-20efdb85f475",
+          "xlsxEnabled": true
+        },
+        "invalid_setup": {
+          "archiveAfter": {
+            "recipeCount": 0,
+            "recipeIds": [],
+            "resultCount": 0,
+            "resultIds": [],
+            "runCount": 0,
+            "runIds": []
+          },
+          "archiveBefore": {
+            "recipeCount": 0,
+            "recipeIds": [],
+            "resultCount": 0,
+            "resultIds": [],
+            "runCount": 0,
+            "runIds": []
+          },
+          "attempted": true,
+          "blockers": [
+            "The model does not contain any constructs.",
+            "The model does not contain any assigned indicators.",
+            "Structural validity cannot be checked without constructs."
+          ],
+          "resultCreated": false,
+          "runStateUnchanged": true,
+          "selectedMethod": "PLS-SEM BootstrappingEstimate confidence intervals and significance with deterministic resampling.",
+          "startEnabled": false
+        },
+        "offline": {
+          "analyticalWorkflowRequiresInternet": false,
+          "externalRequestCount": 0,
+          "externalRequests": [],
+          "observedRequestCount": 200,
+          "origins": [
+            "http://ipc.localhost",
+            "http://tauri.localhost"
+          ],
+          "passed": true,
+          "platformBackgroundEgressOutsidePageRequestScope": true,
+          "strictZeroProcessEgressClaimed": false
+        },
+        "responsive": {
+          "passed": true,
+          "results": [
+            {
+              "height": 700,
+              "id": "1024x700",
+              "metrics": {
+                "appNoHorizontalOverflow": true,
+                "documentNoHorizontalOverflow": true,
+                "innerHeight": 700,
+                "innerWidth": 1024,
+                "rowCount": 6,
+                "treeVisible": true
+              },
+              "passed": true,
+              "width": 1024
+            },
+            {
+              "height": 720,
+              "id": "1280x720",
+              "metrics": {
+                "appNoHorizontalOverflow": true,
+                "documentNoHorizontalOverflow": true,
+                "innerHeight": 720,
+                "innerWidth": 1280,
+                "rowCount": 6,
+                "treeVisible": true
+              },
+              "passed": true,
+              "width": 1280
+            },
+            {
+              "height": 900,
+              "id": "1440x900",
+              "metrics": {
+                "appNoHorizontalOverflow": true,
+                "documentNoHorizontalOverflow": true,
+                "innerHeight": 900,
+                "innerWidth": 1440,
+                "rowCount": 6,
+                "treeVisible": true
+              },
+              "passed": true,
+              "width": 1440
+            }
+          ],
+          "setup": [
+            {
+              "height": 700,
+              "id": "1024x700",
+              "metrics": {
+                "dialogWithinViewport": true,
+                "documentNoHorizontalOverflow": true,
+                "innerHeight": 700,
+                "innerWidth": 1024,
+                "startVisible": true
+              },
+              "passed": true,
+              "width": 1024
+            },
+            {
+              "height": 720,
+              "id": "1280x720",
+              "metrics": {
+                "dialogWithinViewport": true,
+                "documentNoHorizontalOverflow": true,
+                "innerHeight": 720,
+                "innerWidth": 1280,
+                "startVisible": true
+              },
+              "passed": true,
+              "width": 1280
+            },
+            {
+              "height": 900,
+              "id": "1440x900",
+              "metrics": {
+                "dialogWithinViewport": true,
+                "documentNoHorizontalOverflow": true,
+                "innerHeight": 900,
+                "innerWidth": 1440,
+                "startVisible": true
+              },
+              "passed": true,
+              "width": 1440
+            }
+          ]
+        },
+        "result": {
+          "navigation": {
+            "bootstrapTreeItems": 1,
+            "groupTitle": "Mediation",
+            "requiredTitles": [
+              "Direct effects",
+              "Specific indirect effects",
+              "Total indirect effects",
+              "Total effects",
+              "Aggregate mediation effects bootstrap inference"
+            ],
+            "rowCounts": {
+              "Aggregate mediation effects bootstrap inference": 6,
+              "Direct effects": 2,
+              "Specific indirect effects": 1,
+              "Total effects": 3,
+              "Total indirect effects": 1
+            },
+            "selectedTable": "Specific indirect effects",
+            "tableText": {
+              "Aggregate mediation effects bootstrap inference": "Direct effectConstruct 1 \u2192 Construct 20.66100.66660.028723.032<0.00010.61330.7201Direct effectConstruct 2 \u2192 Construct 30.67510.67380.035718.920<0.00010.60350.7354Total indirect effect (aggregate)Construct 1 \u2192 Construct 30.44620.44960.037211.993<0.00010.37690.5154Total effectConstruct 1 \u2192 Construct 20.66100.66660.028723.032<0.00010.61330.7201Total effectConstruct 1 \u2192 Construct 30.44620.44960.037211.993<0.00010.37690.5154Total effectConstruct 2 \u2192 Construct 30.67510.67380.035718.920<0.00010.60350.7354",
+              "Direct effects": "Construct 1 \u2192 Construct 20.6610Construct 2 \u2192 Construct 30.6751",
+              "Specific indirect effects": "Construct 1 \u2192 Construct 2 \u2192 Construct 30.4462",
+              "Total effects": "Construct 1 \u2192 Construct 20.6610Construct 1 \u2192 Construct 30.4462Construct 2 \u2192 Construct 30.6751",
+              "Total indirect effects": "Construct 1 \u2192 Construct 30.4462"
+            },
+            "treeItems": [
+              "Graphical results",
+              "Model estimates",
+              "Final results",
+              "Outer loadings",
+              "Outer weights",
+              "R-square",
+              "Mediation",
+              "Direct effects",
+              "Specific indirect effects",
+              "Total indirect effects",
+              "Total effects",
+              "Aggregate mediation effects bootstrap inference",
+              "Quality criteria",
+              "Construct reliability and validity",
+              "Cross loadings",
+              "Fornell-Larcker criterion",
+              "HTMT+",
+              "Original HTMT",
+              "Structural model",
+              "Inner VIF values",
+              "f-square effect sizes",
+              "Model fit",
+              "Construct cross-validated redundancy",
+              "Inference",
+              "Bootstrapping",
+              "Bias-corrected and accelerated intervals"
+            ]
+          },
+          "runId": "85ad94b7-05f9-48a1-93d9-20efdb85f475",
+          "runLabel": "PLS-SEM Bootstrapping run"
+        },
+        "save_reopen": {
+          "attempted": true,
+          "expectedBootstrapRunId": "85ad94b7-05f9-48a1-93d9-20efdb85f475",
+          "expectedPlsRunId": "d432ce1e-b846-46f1-b726-3e9b90be036a",
+          "finalNavigation": {
+            "bootstrapTreeItems": 1,
+            "groupTitle": "Mediation",
+            "requiredTitles": [
+              "Direct effects",
+              "Specific indirect effects",
+              "Total indirect effects",
+              "Total effects",
+              "Aggregate mediation effects bootstrap inference"
+            ],
+            "rowCounts": {
+              "Aggregate mediation effects bootstrap inference": 6,
+              "Direct effects": 2,
+              "Specific indirect effects": 1,
+              "Total effects": 3,
+              "Total indirect effects": 1
+            },
+            "selectedTable": "Specific indirect effects",
+            "tableText": {
+              "Aggregate mediation effects bootstrap inference": "Direct effectConstruct 1 \u2192 Construct 20.66100.66660.028723.032<0.00010.61330.7201Direct effectConstruct 2 \u2192 Construct 30.67510.67380.035718.920<0.00010.60350.7354Total indirect effect (aggregate)Construct 1 \u2192 Construct 30.44620.44960.037211.993<0.00010.37690.5154Total effectConstruct 1 \u2192 Construct 20.66100.66660.028723.032<0.00010.61330.7201Total effectConstruct 1 \u2192 Construct 30.44620.44960.037211.993<0.00010.37690.5154Total effectConstruct 2 \u2192 Construct 30.67510.67380.035718.920<0.00010.60350.7354",
+              "Direct effects": "Construct 1 \u2192 Construct 20.6610Construct 2 \u2192 Construct 30.6751",
+              "Specific indirect effects": "Construct 1 \u2192 Construct 2 \u2192 Construct 30.4462",
+              "Total effects": "Construct 1 \u2192 Construct 20.6610Construct 1 \u2192 Construct 30.4462Construct 2 \u2192 Construct 30.6751",
+              "Total indirect effects": "Construct 1 \u2192 Construct 30.4462"
+            },
+            "treeItems": [
+              "Graphical results",
+              "Model estimates",
+              "Final results",
+              "Outer loadings",
+              "Outer weights",
+              "R-square",
+              "Mediation",
+              "Direct effects",
+              "Specific indirect effects",
+              "Total indirect effects",
+              "Total effects",
+              "Aggregate mediation effects bootstrap inference",
+              "Quality criteria",
+              "Construct reliability and validity",
+              "Cross loadings",
+              "Fornell-Larcker criterion",
+              "HTMT+",
+              "Original HTMT",
+              "Structural model",
+              "Inner VIF values",
+              "f-square effect sizes",
+              "Model fit",
+              "Construct cross-validated redundancy",
+              "Inference",
+              "Bootstrapping",
+              "Bias-corrected and accelerated intervals"
+            ]
+          },
+          "hasBootstrap": true,
+          "hasPlsAlgorithm": true,
+          "model": {
+            "assignedIndicators": 6,
+            "constructs": 3,
+            "structuralPaths": 2
+          },
+          "navigation": {
+            "bootstrapTreeItems": 1,
+            "groupTitle": "Mediation",
+            "requiredTitles": [
+              "Direct effects",
+              "Specific indirect effects",
+              "Total indirect effects",
+              "Total effects",
+              "Aggregate mediation effects bootstrap inference"
+            ],
+            "rowCounts": {
+              "Aggregate mediation effects bootstrap inference": 6,
+              "Direct effects": 2,
+              "Specific indirect effects": 1,
+              "Total effects": 3,
+              "Total indirect effects": 1
+            },
+            "selectedTable": "Specific indirect effects",
+            "tableText": {
+              "Aggregate mediation effects bootstrap inference": "Direct effectConstruct 1 \u2192 Construct 20.66100.66660.028723.032<0.00010.61330.7201Direct effectConstruct 2 \u2192 Construct 30.67510.67380.035718.920<0.00010.60350.7354Total indirect effect (aggregate)Construct 1 \u2192 Construct 30.44620.44960.037211.993<0.00010.37690.5154Total effectConstruct 1 \u2192 Construct 20.66100.66660.028723.032<0.00010.61330.7201Total effectConstruct 1 \u2192 Construct 30.44620.44960.037211.993<0.00010.37690.5154Total effectConstruct 2 \u2192 Construct 30.67510.67380.035718.920<0.00010.60350.7354",
+              "Direct effects": "Construct 1 \u2192 Construct 20.6610Construct 2 \u2192 Construct 30.6751",
+              "Specific indirect effects": "Construct 1 \u2192 Construct 2 \u2192 Construct 30.4462",
+              "Total effects": "Construct 1 \u2192 Construct 20.6610Construct 1 \u2192 Construct 30.4462Construct 2 \u2192 Construct 30.6751",
+              "Total indirect effects": "Construct 1 \u2192 Construct 30.4462"
+            },
+            "treeItems": [
+              "Graphical results",
+              "Model estimates",
+              "Final results",
+              "Outer loadings",
+              "Outer weights",
+              "R-square",
+              "Mediation",
+              "Direct effects",
+              "Specific indirect effects",
+              "Total indirect effects",
+              "Total effects",
+              "Aggregate mediation effects bootstrap inference",
+              "Quality criteria",
+              "Construct reliability and validity",
+              "Cross loadings",
+              "Fornell-Larcker criterion",
+              "HTMT+",
+              "Original HTMT",
+              "Structural model",
+              "Inner VIF values",
+              "f-square effect sizes",
+              "Model fit",
+              "Construct cross-validated redundancy",
+              "Inference",
+              "Bootstrapping",
+              "Bias-corrected and accelerated intervals"
+            ]
+          },
+          "plsFinalNavigation": {
+            "bootstrapTreeItems": 0,
+            "groupTitle": "Mediation",
+            "requiredTitles": [
+              "Direct effects",
+              "Specific indirect effects",
+              "Total indirect effects",
+              "Total effects"
+            ],
+            "rowCounts": {
+              "Direct effects": 2,
+              "Specific indirect effects": 1,
+              "Total effects": 3,
+              "Total indirect effects": 1
+            },
+            "selectedTable": "Specific indirect effects",
+            "tableText": {
+              "Direct effects": "Construct 1 \u2192 Construct 20.6610Construct 2 \u2192 Construct 30.6751",
+              "Specific indirect effects": "Construct 1 \u2192 Construct 2 \u2192 Construct 30.4462",
+              "Total effects": "Construct 1 \u2192 Construct 20.6610Construct 1 \u2192 Construct 30.4462Construct 2 \u2192 Construct 30.6751",
+              "Total indirect effects": "Construct 1 \u2192 Construct 30.4462"
+            },
+            "treeItems": [
+              "Graphical results",
+              "Model estimates",
+              "Final results",
+              "Outer loadings",
+              "Outer weights",
+              "R-square",
+              "Mediation",
+              "Direct effects",
+              "Specific indirect effects",
+              "Total indirect effects",
+              "Total effects",
+              "Quality criteria",
+              "Construct reliability and validity",
+              "Cross loadings",
+              "Fornell-Larcker criterion",
+              "HTMT+",
+              "Original HTMT",
+              "Structural model",
+              "Inner VIF values",
+              "f-square effect sizes",
+              "Model fit",
+              "Construct cross-validated redundancy"
+            ]
+          },
+          "plsNavigation": {
+            "bootstrapTreeItems": 0,
+            "groupTitle": "Mediation",
+            "requiredTitles": [
+              "Direct effects",
+              "Specific indirect effects",
+              "Total indirect effects",
+              "Total effects"
+            ],
+            "rowCounts": {
+              "Direct effects": 2,
+              "Specific indirect effects": 1,
+              "Total effects": 3,
+              "Total indirect effects": 1
+            },
+            "selectedTable": "Specific indirect effects",
+            "tableText": {
+              "Direct effects": "Construct 1 \u2192 Construct 20.6610Construct 2 \u2192 Construct 30.6751",
+              "Specific indirect effects": "Construct 1 \u2192 Construct 2 \u2192 Construct 30.4462",
+              "Total effects": "Construct 1 \u2192 Construct 20.6610Construct 1 \u2192 Construct 30.4462Construct 2 \u2192 Construct 30.6751",
+              "Total indirect effects": "Construct 1 \u2192 Construct 30.4462"
+            },
+            "treeItems": [
+              "Graphical results",
+              "Model estimates",
+              "Final results",
+              "Outer loadings",
+              "Outer weights",
+              "R-square",
+              "Mediation",
+              "Direct effects",
+              "Specific indirect effects",
+              "Total indirect effects",
+              "Total effects",
+              "Quality criteria",
+              "Construct reliability and validity",
+              "Cross loadings",
+              "Fornell-Larcker criterion",
+              "HTMT+",
+              "Original HTMT",
+              "Structural model",
+              "Inner VIF values",
+              "f-square effect sizes",
+              "Model fit",
+              "Construct cross-validated redundancy"
+            ]
+          },
+          "reopenedThroughRecentProjectRow": true,
+          "runOptions": [
+            "PLS-SEM Algorithm run",
+            "PLS-SEM Bootstrapping run"
+          ],
+          "selectedPlsRunId": "d432ce1e-b846-46f1-b726-3e9b90be036a",
+          "selectedRunId": "85ad94b7-05f9-48a1-93d9-20efdb85f475"
+        },
+        "setup": {
+          "blockers": [],
+          "bootstrapSamples": "100",
+          "confidenceLevel": "95",
+          "seed": "20260718",
+          "selectedMethod": "PLS-SEM BootstrappingEstimate confidence intervals and significance with deterministic resampling.",
+          "startEnabled": true,
+          "studentizedInnerSamples": "0",
+          "workers": "1"
+        }
+      },
+      "run_id": "85ad94b7-05f9-48a1-93d9-20efdb85f475"
+    },
+    "passed": true,
+    "prior_factory_stages": {
+      "artifacts": [
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/pls_bootstrap_v4/method_spec.identity.json",
+          "roles": [
+            "method_spec"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/pls_bootstrap_v4/independent_reference.identity.json",
+          "roles": [
+            "independent_reference"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/pls_bootstrap_v4/simulation_report.identity.json",
+          "roles": [
+            "simulation_report"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/pls_bootstrap_v4/boundary_report.identity.json",
+          "roles": [
+            "boundary_report"
+          ],
+          "stage": "engine_only"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/pls_bootstrap_v4/persistence_report.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "stage": "archive_qualified"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/pls_bootstrap_v4/frontend_report.identity.json",
+          "roles": [
+            "frontend_report"
+          ],
+          "stage": "native_qualified"
+        },
+        {
+          "errors": [],
+          "passed": true,
+          "path": "validation/results/method_factory/pls_bootstrap_v4/export_report.identity.json",
+          "roles": [
+            "export_report"
+          ],
+          "stage": "native_qualified"
+        }
+      ],
+      "passed": true
+    },
+    "responsive_screenshots": [
+      "validation/results/screens/v247-native-desktop-acceptance/43-tauri-native-mediation-bootstrap-dialog-1024x700.png",
+      "validation/results/screens/v247-native-desktop-acceptance/43-tauri-native-mediation-bootstrap-dialog-1280x720.png",
+      "validation/results/screens/v247-native-desktop-acceptance/43-tauri-native-mediation-bootstrap-dialog-1440x900.png",
+      "validation/results/screens/v247-native-desktop-acceptance/46-tauri-native-mediation-bootstrap-results-reopened-1024x700.png",
+      "validation/results/screens/v247-native-desktop-acceptance/46-tauri-native-mediation-bootstrap-results-reopened-1280x720.png",
+      "validation/results/screens/v247-native-desktop-acceptance/46-tauri-native-mediation-bootstrap-results-reopened-1440x900.png"
+    ],
+    "runner_cleanup_verified": true,
+    "source_freshness": {
+      "after": {
+        "build_receipt": {
+          "mtime_ns": 1786636747532798800,
+          "path": "validation/results/diagnostic_bundle_build_receipt.json",
+          "sha256": "c66c3f4a7df3933cc667f3387e6cb6e65103509b84799de8a7c06faeea83f4c4",
+          "size": 144210
+        },
+        "build_receipt_schema_version": "quickpls.diagnostic_bundle_build_receipt.v1",
+        "desktop": {
+          "mtime_ns": 1786636746102237000,
+          "path": "target/release/quickpls-desktop.exe",
+          "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
+          "size": 30507008
+        },
+        "desktop_receipt_exact": true,
+        "gate_sources_excluded_from_binary_freshness": [
+          {
+            "mtime_ns": 1786627059621599000,
+            "path": "validation/diagnostic_bundle_source_manifest.py",
+            "sha256": "77e21bfa7e2a87386c36a33ee2242f8cda61f85f440cedae35a222958f9d3a4e",
+            "size": 28025
+          },
+          {
+            "mtime_ns": 1786610514590924400,
+            "path": "validation/method_promotion_manifest.py",
+            "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+            "size": 34283
+          },
+          {
+            "mtime_ns": 1786610379730126700,
+            "path": "validation/methods/method_promotion_manifest.schema.json",
+            "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+            "size": 15836
+          },
+          {
+            "mtime_ns": 1786634742549013200,
+            "path": "validation/methods/pls_bootstrap_v4.manifest.json",
+            "sha256": "18e112bc509c06a29621851e6ffb09753028caef5c1dee344960af0df01163f5",
+            "size": 15803
+          },
+          {
+            "mtime_ns": 1786634707266062000,
+            "path": "validation/pls_bootstrap_v4_factory_audit.py",
+            "sha256": "fa71b05acf45ec706e565d3dff2841ff5d34438cb740924034a308b1c5f4834f",
+            "size": 4951
+          },
+          {
+            "mtime_ns": 1786626593498169300,
+            "path": "validation/pls_bootstrap_v4_factory_common.py",
+            "sha256": "10eadf6f1f7af06e51117645371cc447f82c7ecce873dcf53530d82cd27828fa",
+            "size": 12730
+          },
+          {
+            "mtime_ns": 1786635368625050300,
+            "path": "validation/pls_bootstrap_v4_packaged_acceptance.py",
+            "sha256": "d42189c6e4b91a87f1b6aa86818bccf2bce8e1244a968c4a3704d4db5738260e",
+            "size": 26006
+          },
+          {
+            "mtime_ns": 1786642486586263000,
+            "path": "validation/run_v247_cumulative_native_acceptance.ps1",
+            "sha256": "73694af3f595932abcd22b85d33e966aef368c3a5944279d6db2846465ba6784",
+            "size": 29684
+          },
+          {
+            "mtime_ns": 1786635368626898100,
+            "path": "validation/test_pls_bootstrap_v4_packaged_adapter.py",
+            "sha256": "5d5b3b66bd491ef4436c82ed8c08eef359f600c2821ae758d07dedfb71d5b63c",
+            "size": 14947
+          },
+          {
+            "mtime_ns": 1786642486588751200,
+            "path": "validation/test_v247_cumulative_native_acceptance_supervisor.py",
+            "sha256": "37521b7382fdab372b67775f1fe8c6d86de9f4113e34850cacf38c6c622f61ba",
+            "size": 15052
+          },
+          {
+            "mtime_ns": 1786638335159990200,
+            "path": "validation/v247_tauri_native_acceptance.mjs",
+            "sha256": "5b5060833eabaf38697118cf272ce2952a07f827aa23b68e35720bfe65d93563",
+            "size": 809598
+          }
+        ],
+        "passed": true,
+        "release_cli": {
+          "mtime_ns": 1786620631883365000,
+          "path": "target/release/qpls.exe",
+          "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+          "size": 20690432
+        },
+        "release_cli_build_sources": [
+          {
+            "mtime_ns": 1786618668433447400,
+            "path": "Cargo.lock",
+            "sha256": "8f185dea0cf7650e378d9b608270cd8e78b026d1bacae2ce0d521242055c74ee",
+            "size": 154279
+          },
+          {
+            "mtime_ns": 1786607995439584400,
+            "path": "Cargo.toml",
+            "sha256": "594290f8f0e731badc4cb85383cdd5cf2d09ad3c1cb24f86b270895d5e5172d2",
+            "size": 914
+          },
+          {
+            "mtime_ns": 1784372817481351800,
+            "path": "crates/qpls-assessment/Cargo.toml",
+            "sha256": "22a0cc3da4ada9be1f385495ef7af8354fbdf87baa8a5bac6f3dda891eecb01d",
+            "size": 456
+          },
+          {
+            "mtime_ns": 1786607995450741900,
+            "path": "crates/qpls-assessment/src/lib.rs",
+            "sha256": "6cffe850b3e8c1f90eeb570985f6a9ae4448622efa5370d7623ed283d948aafa",
+            "size": 144364
+          },
+          {
+            "mtime_ns": 1784436493165886700,
+            "path": "crates/qpls-cli/Cargo.toml",
+            "sha256": "ede9b7845e6439c9bff5bd05cb07933938a1ad8f82e859e0c3f5676de0119ba8",
+            "size": 678
+          },
+          {
+            "mtime_ns": 1786607995455877000,
+            "path": "crates/qpls-cli/src/main.rs",
+            "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
+            "size": 216983
+          },
+          {
+            "mtime_ns": 1784352071986106700,
+            "path": "crates/qpls-core/Cargo.toml",
+            "sha256": "86a7c44ae9511cb39f65d70fdfca581be24837462c8e4fa062513f9166d2634f",
+            "size": 363
+          },
+          {
+            "mtime_ns": 1786607995461617100,
+            "path": "crates/qpls-core/src/contract.rs",
+            "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
+            "size": 107095
+          },
+          {
+            "mtime_ns": 1784383048514318800,
+            "path": "crates/qpls-core/src/lib.rs",
+            "sha256": "9b534c12e343c4f518969e2f28195a5f733355d4fb1f338ec2447f81fd2bdf52",
+            "size": 180
+          },
+          {
+            "mtime_ns": 1786607995463756700,
+            "path": "crates/qpls-core/src/methods.rs",
+            "sha256": "18bed856d6dec2e7fe6fdc6d5478872b913f1a56c163fee73ee89c7ca53b7ac6",
+            "size": 3790
+          },
+          {
+            "mtime_ns": 1786607995466130100,
+            "path": "crates/qpls-core/src/roadmap.rs",
+            "sha256": "19cf8baad1d217636f3f7ef2d97081156692ed0050561e54bc0bf7b364106fe8",
+            "size": 12376
+          },
+          {
+            "mtime_ns": 1786607995469322800,
+            "path": "crates/qpls-core/src/statistics.rs",
+            "sha256": "dda4eb9df673b892be963933a3f32b32ade133b5c24c70aae76de3648b063769",
+            "size": 8527
+          },
+          {
+            "mtime_ns": 1786620129020320300,
+            "path": "crates/qpls-core/src/validation.rs",
+            "sha256": "ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573",
+            "size": 177352
+          },
+          {
+            "mtime_ns": 1784364586747181800,
+            "path": "crates/qpls-data/Cargo.toml",
+            "sha256": "a284129091841b5742e0ea5b6eeb5fff924cbc4f1eed059bfd075af5256ecb80",
+            "size": 437
+          },
+          {
+            "mtime_ns": 1786607995478642000,
+            "path": "crates/qpls-data/src/lib.rs",
+            "sha256": "a1cab41fc8c82a71dbf7ee674f037040009c0e8340976b98a9ebcfc99851a7e1",
+            "size": 44865
+          },
+          {
+            "mtime_ns": 1786607995481159200,
+            "path": "crates/qpls-estimation/Cargo.toml",
+            "sha256": "fb0d420f1c43919cb9e7a980cd9da270ce3a989e8729ba92e681dae509c60dd2",
+            "size": 503
+          },
+          {
+            "mtime_ns": 1784360087780652100,
+            "path": "crates/qpls-estimation/src/lib.rs",
+            "sha256": "901076baab7b745ef0d1b9cf48a7dc818a64631469cae26cced15a0a41b25890",
+            "size": 26
+          },
+          {
+            "mtime_ns": 1786617342744705100,
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
+            "size": 639198
+          },
+          {
+            "mtime_ns": 1786607995489944600,
+            "path": "crates/qpls-project/Cargo.toml",
+            "sha256": "ef1e3c8e1e5d9d723a43f4b567f6fe490d57d0458f73c8ae281673c0505756d5",
+            "size": 628
+          },
+          {
+            "mtime_ns": 1786607995492067200,
+            "path": "crates/qpls-project/src/archive_integrity.rs",
+            "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+            "size": 31085
+          },
+          {
+            "mtime_ns": 1786620129494578100,
+            "path": "crates/qpls-project/src/lib.rs",
+            "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
+            "size": 660277
+          },
+          {
+            "mtime_ns": 1784375063189640300,
+            "path": "crates/qpls-resampling/Cargo.toml",
+            "sha256": "a922a975499d4c211cfe96399a16ceeb2b248d29fc04cfd7a350c46d18f7ab4d",
+            "size": 589
+          },
+          {
+            "mtime_ns": 1786607995501017700,
+            "path": "crates/qpls-resampling/src/lib.rs",
+            "sha256": "edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0",
+            "size": 170900
+          },
+          {
+            "mtime_ns": 1784390064413583300,
+            "path": "crates/qpls-runner/Cargo.toml",
+            "sha256": "fea3cb8a82dae196097285ffe8c5763e39f1dfe0a485faff99b6cba601b16662",
+            "size": 428
+          },
+          {
+            "mtime_ns": 1786620129040430400,
+            "path": "crates/qpls-runner/src/lib.rs",
+            "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
+            "size": 49349
+          },
+          {
+            "mtime_ns": 1786607996206752100,
+            "path": "validation/development_slices.json",
+            "sha256": "5722f3b6b6d5c6cc19089a097bd1eaae294e55f4830bdae2423fc2861dd1ec10",
+            "size": 374221
+          }
+        ],
+        "release_cli_newer_build_sources": []
+      },
+      "before": {
+        "build_receipt": {
+          "mtime_ns": 1786636747532798800,
+          "path": "validation/results/diagnostic_bundle_build_receipt.json",
+          "sha256": "c66c3f4a7df3933cc667f3387e6cb6e65103509b84799de8a7c06faeea83f4c4",
+          "size": 144210
+        },
+        "build_receipt_schema_version": "quickpls.diagnostic_bundle_build_receipt.v1",
+        "desktop": {
+          "mtime_ns": 1786636746102237000,
+          "path": "target/release/quickpls-desktop.exe",
+          "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
+          "size": 30507008
+        },
+        "desktop_receipt_exact": true,
+        "gate_sources_excluded_from_binary_freshness": [
+          {
+            "mtime_ns": 1786627059621599000,
+            "path": "validation/diagnostic_bundle_source_manifest.py",
+            "sha256": "77e21bfa7e2a87386c36a33ee2242f8cda61f85f440cedae35a222958f9d3a4e",
+            "size": 28025
+          },
+          {
+            "mtime_ns": 1786610514590924400,
+            "path": "validation/method_promotion_manifest.py",
+            "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+            "size": 34283
+          },
+          {
+            "mtime_ns": 1786610379730126700,
+            "path": "validation/methods/method_promotion_manifest.schema.json",
+            "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+            "size": 15836
+          },
+          {
+            "mtime_ns": 1786634742549013200,
+            "path": "validation/methods/pls_bootstrap_v4.manifest.json",
+            "sha256": "18e112bc509c06a29621851e6ffb09753028caef5c1dee344960af0df01163f5",
+            "size": 15803
+          },
+          {
+            "mtime_ns": 1786634707266062000,
+            "path": "validation/pls_bootstrap_v4_factory_audit.py",
+            "sha256": "fa71b05acf45ec706e565d3dff2841ff5d34438cb740924034a308b1c5f4834f",
+            "size": 4951
+          },
+          {
+            "mtime_ns": 1786626593498169300,
+            "path": "validation/pls_bootstrap_v4_factory_common.py",
+            "sha256": "10eadf6f1f7af06e51117645371cc447f82c7ecce873dcf53530d82cd27828fa",
+            "size": 12730
+          },
+          {
+            "mtime_ns": 1786635368625050300,
+            "path": "validation/pls_bootstrap_v4_packaged_acceptance.py",
+            "sha256": "d42189c6e4b91a87f1b6aa86818bccf2bce8e1244a968c4a3704d4db5738260e",
+            "size": 26006
+          },
+          {
+            "mtime_ns": 1786642486586263000,
+            "path": "validation/run_v247_cumulative_native_acceptance.ps1",
+            "sha256": "73694af3f595932abcd22b85d33e966aef368c3a5944279d6db2846465ba6784",
+            "size": 29684
+          },
+          {
+            "mtime_ns": 1786635368626898100,
+            "path": "validation/test_pls_bootstrap_v4_packaged_adapter.py",
+            "sha256": "5d5b3b66bd491ef4436c82ed8c08eef359f600c2821ae758d07dedfb71d5b63c",
+            "size": 14947
+          },
+          {
+            "mtime_ns": 1786642486588751200,
+            "path": "validation/test_v247_cumulative_native_acceptance_supervisor.py",
+            "sha256": "37521b7382fdab372b67775f1fe8c6d86de9f4113e34850cacf38c6c622f61ba",
+            "size": 15052
+          },
+          {
+            "mtime_ns": 1786638335159990200,
+            "path": "validation/v247_tauri_native_acceptance.mjs",
+            "sha256": "5b5060833eabaf38697118cf272ce2952a07f827aa23b68e35720bfe65d93563",
+            "size": 809598
+          }
+        ],
+        "passed": true,
+        "release_cli": {
+          "mtime_ns": 1786620631883365000,
+          "path": "target/release/qpls.exe",
+          "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+          "size": 20690432
+        },
+        "release_cli_build_sources": [
+          {
+            "mtime_ns": 1786618668433447400,
+            "path": "Cargo.lock",
+            "sha256": "8f185dea0cf7650e378d9b608270cd8e78b026d1bacae2ce0d521242055c74ee",
+            "size": 154279
+          },
+          {
+            "mtime_ns": 1786607995439584400,
+            "path": "Cargo.toml",
+            "sha256": "594290f8f0e731badc4cb85383cdd5cf2d09ad3c1cb24f86b270895d5e5172d2",
+            "size": 914
+          },
+          {
+            "mtime_ns": 1784372817481351800,
+            "path": "crates/qpls-assessment/Cargo.toml",
+            "sha256": "22a0cc3da4ada9be1f385495ef7af8354fbdf87baa8a5bac6f3dda891eecb01d",
+            "size": 456
+          },
+          {
+            "mtime_ns": 1786607995450741900,
+            "path": "crates/qpls-assessment/src/lib.rs",
+            "sha256": "6cffe850b3e8c1f90eeb570985f6a9ae4448622efa5370d7623ed283d948aafa",
+            "size": 144364
+          },
+          {
+            "mtime_ns": 1784436493165886700,
+            "path": "crates/qpls-cli/Cargo.toml",
+            "sha256": "ede9b7845e6439c9bff5bd05cb07933938a1ad8f82e859e0c3f5676de0119ba8",
+            "size": 678
+          },
+          {
+            "mtime_ns": 1786607995455877000,
+            "path": "crates/qpls-cli/src/main.rs",
+            "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
+            "size": 216983
+          },
+          {
+            "mtime_ns": 1784352071986106700,
+            "path": "crates/qpls-core/Cargo.toml",
+            "sha256": "86a7c44ae9511cb39f65d70fdfca581be24837462c8e4fa062513f9166d2634f",
+            "size": 363
+          },
+          {
+            "mtime_ns": 1786607995461617100,
+            "path": "crates/qpls-core/src/contract.rs",
+            "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
+            "size": 107095
+          },
+          {
+            "mtime_ns": 1784383048514318800,
+            "path": "crates/qpls-core/src/lib.rs",
+            "sha256": "9b534c12e343c4f518969e2f28195a5f733355d4fb1f338ec2447f81fd2bdf52",
+            "size": 180
+          },
+          {
+            "mtime_ns": 1786607995463756700,
+            "path": "crates/qpls-core/src/methods.rs",
+            "sha256": "18bed856d6dec2e7fe6fdc6d5478872b913f1a56c163fee73ee89c7ca53b7ac6",
+            "size": 3790
+          },
+          {
+            "mtime_ns": 1786607995466130100,
+            "path": "crates/qpls-core/src/roadmap.rs",
+            "sha256": "19cf8baad1d217636f3f7ef2d97081156692ed0050561e54bc0bf7b364106fe8",
+            "size": 12376
+          },
+          {
+            "mtime_ns": 1786607995469322800,
+            "path": "crates/qpls-core/src/statistics.rs",
+            "sha256": "dda4eb9df673b892be963933a3f32b32ade133b5c24c70aae76de3648b063769",
+            "size": 8527
+          },
+          {
+            "mtime_ns": 1786620129020320300,
+            "path": "crates/qpls-core/src/validation.rs",
+            "sha256": "ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573",
+            "size": 177352
+          },
+          {
+            "mtime_ns": 1784364586747181800,
+            "path": "crates/qpls-data/Cargo.toml",
+            "sha256": "a284129091841b5742e0ea5b6eeb5fff924cbc4f1eed059bfd075af5256ecb80",
+            "size": 437
+          },
+          {
+            "mtime_ns": 1786607995478642000,
+            "path": "crates/qpls-data/src/lib.rs",
+            "sha256": "a1cab41fc8c82a71dbf7ee674f037040009c0e8340976b98a9ebcfc99851a7e1",
+            "size": 44865
+          },
+          {
+            "mtime_ns": 1786607995481159200,
+            "path": "crates/qpls-estimation/Cargo.toml",
+            "sha256": "fb0d420f1c43919cb9e7a980cd9da270ce3a989e8729ba92e681dae509c60dd2",
+            "size": 503
+          },
+          {
+            "mtime_ns": 1784360087780652100,
+            "path": "crates/qpls-estimation/src/lib.rs",
+            "sha256": "901076baab7b745ef0d1b9cf48a7dc818a64631469cae26cced15a0a41b25890",
+            "size": 26
+          },
+          {
+            "mtime_ns": 1786617342744705100,
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
+            "size": 639198
+          },
+          {
+            "mtime_ns": 1786607995489944600,
+            "path": "crates/qpls-project/Cargo.toml",
+            "sha256": "ef1e3c8e1e5d9d723a43f4b567f6fe490d57d0458f73c8ae281673c0505756d5",
+            "size": 628
+          },
+          {
+            "mtime_ns": 1786607995492067200,
+            "path": "crates/qpls-project/src/archive_integrity.rs",
+            "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+            "size": 31085
+          },
+          {
+            "mtime_ns": 1786620129494578100,
+            "path": "crates/qpls-project/src/lib.rs",
+            "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
+            "size": 660277
+          },
+          {
+            "mtime_ns": 1784375063189640300,
+            "path": "crates/qpls-resampling/Cargo.toml",
+            "sha256": "a922a975499d4c211cfe96399a16ceeb2b248d29fc04cfd7a350c46d18f7ab4d",
+            "size": 589
+          },
+          {
+            "mtime_ns": 1786607995501017700,
+            "path": "crates/qpls-resampling/src/lib.rs",
+            "sha256": "edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0",
+            "size": 170900
+          },
+          {
+            "mtime_ns": 1784390064413583300,
+            "path": "crates/qpls-runner/Cargo.toml",
+            "sha256": "fea3cb8a82dae196097285ffe8c5763e39f1dfe0a485faff99b6cba601b16662",
+            "size": 428
+          },
+          {
+            "mtime_ns": 1786620129040430400,
+            "path": "crates/qpls-runner/src/lib.rs",
+            "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
+            "size": 49349
+          },
+          {
+            "mtime_ns": 1786607996206752100,
+            "path": "validation/development_slices.json",
+            "sha256": "5722f3b6b6d5c6cc19089a097bd1eaae294e55f4830bdae2423fc2861dd1ec10",
+            "size": 374221
+          }
+        ],
+        "release_cli_newer_build_sources": []
+      },
+      "passed": true,
+      "source_stable_during_gate": true
+    },
+    "tested_binaries": {
+      "desktop": {
+        "mtime_ns": 1786636746102237000,
+        "path": "target/release/quickpls-desktop.exe",
+        "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
+        "size": 30507008
+      },
+      "release_cli": {
+        "mtime_ns": 1786620631883365000,
+        "path": "target/release/qpls.exe",
+        "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+        "size": 20690432
+      }
+    },
+    "xlsx": {
+      "path": "validation/results/method_factory/pls_bootstrap_v4/pls_bootstrap_v4_packaged.xlsx",
+      "sha256": "566577b9e9284fbbb161f3624812c756a291e209e0214613614f74423d5c6564",
+      "size": 22849
+    }
+  },
+  "execution": {
+    "commands": []
+  },
+  "feature_id": "qpls3.inference.bootstrap",
+  "generated_at_utc": "2026-08-13T19:26:31.912061Z",
+  "method_version": "indexed_resampling_v4",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "packaged_acceptance",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "target/release/qpls.exe",
+      "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+      "size": 20690432
+    },
+    {
+      "path": "target/release/quickpls-desktop.exe",
+      "sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
+      "size": 30507008
+    },
+    {
+      "path": "validation/diagnostic_bundle_source_manifest.py",
+      "sha256": "77e21bfa7e2a87386c36a33ee2242f8cda61f85f440cedae35a222958f9d3a4e",
+      "size": 28025
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/pls_bootstrap_v4.manifest.json",
+      "sha256": "18e112bc509c06a29621851e6ffb09753028caef5c1dee344960af0df01163f5",
+      "size": 15803
+    },
+    {
+      "path": "validation/pls_bootstrap_v4_factory_audit.py",
+      "sha256": "fa71b05acf45ec706e565d3dff2841ff5d34438cb740924034a308b1c5f4834f",
+      "size": 4951
+    },
+    {
+      "path": "validation/pls_bootstrap_v4_factory_common.py",
+      "sha256": "10eadf6f1f7af06e51117645371cc447f82c7ecce873dcf53530d82cd27828fa",
+      "size": 12730
+    },
+    {
+      "path": "validation/pls_bootstrap_v4_packaged_acceptance.py",
+      "sha256": "d42189c6e4b91a87f1b6aa86818bccf2bce8e1244a968c4a3704d4db5738260e",
+      "size": 26006
+    },
+    {
+      "path": "validation/results/diagnostic_bundle_build_receipt.json",
+      "sha256": "c66c3f4a7df3933cc667f3387e6cb6e65103509b84799de8a7c06faeea83f4c4",
+      "size": 144210
+    },
+    {
+      "path": "validation/results/method_factory/pls_bootstrap_v4/pls_bootstrap_v4_packaged.qpls",
+      "sha256": "c067d27287ee9d8627ae91ba5d4dd05f879c07b577d67266a2f335767e29de34",
+      "size": 45995
+    },
+    {
+      "path": "validation/results/method_factory/pls_bootstrap_v4/pls_bootstrap_v4_packaged.xlsx",
+      "sha256": "566577b9e9284fbbb161f3624812c756a291e209e0214613614f74423d5c6564",
+      "size": 22849
+    },
+    {
+      "path": "validation/results/method_factory/pls_bootstrap_v4/pls_bootstrap_v4_packaged_raw.json",
+      "sha256": "6b56fa15b60e40def2959bb43a4514a654012c1a63724b8eea084743431cfbd7",
+      "size": 499999
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/43-tauri-native-mediation-bootstrap-dialog-1024x700.png",
+      "sha256": "1b9a38b882f62bb268f31b49274db6da14e3c17c27e6469ee691abda0a12f60f",
+      "size": 103900
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/43-tauri-native-mediation-bootstrap-dialog-1280x720.png",
+      "sha256": "ef26e2f1b3d1eff9fbf12b39c99f855f4ab637dcb95afce346fada79ed436b9c",
+      "size": 114310
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/43-tauri-native-mediation-bootstrap-dialog-1440x900.png",
+      "sha256": "0b973ce53e2e03bb876466775b928cb1a11293bfa9a6246d9e5ffca2fc861a0b",
+      "size": 149313
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/46-tauri-native-mediation-bootstrap-results-reopened-1024x700.png",
+      "sha256": "feb2b980e534f3b3c70dac9bdcaa9ba8734f44d82f3c6bf5e1f5fbb39e93ec3b",
+      "size": 78230
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/46-tauri-native-mediation-bootstrap-results-reopened-1280x720.png",
+      "sha256": "6b48feb3bd132c4518076ab4bfad14f93b3d8f96917e921273e228cfbcf71c24",
+      "size": 86256
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-acceptance/46-tauri-native-mediation-bootstrap-results-reopened-1440x900.png",
+      "sha256": "031ff52e4226588e94c6565fc87b79cc30bd0be43630ce02e8f03ace3391d165",
+      "size": 99012
+    },
+    {
+      "path": "validation/results/v247-native-pls-bootstrap-v4-20260814-003257084-50236-6df5af42.xlsx",
+      "sha256": "566577b9e9284fbbb161f3624812c756a291e209e0214613614f74423d5c6564",
+      "size": 22849
+    },
+    {
+      "path": "validation/results/v247_cumulative_native_acceptance_receipt.json",
+      "sha256": "c17e0dec92106a8762b8cec4d608b96ac510c1cc3cd846073a1b62094c87ac9f",
+      "size": 6655
+    },
+    {
+      "path": "validation/run_v247_cumulative_native_acceptance.ps1",
+      "sha256": "73694af3f595932abcd22b85d33e966aef368c3a5944279d6db2846465ba6784",
+      "size": 29684
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_pls_bootstrap_v4_factory_evidence.py",
+      "sha256": "7b358cfd30cae76f208382b8bddfedc84199d495c92b7f65f500d1c18401f8b1",
+      "size": 6177
+    },
+    {
+      "path": "validation/test_pls_bootstrap_v4_packaged_adapter.py",
+      "sha256": "5d5b3b66bd491ef4436c82ed8c08eef359f600c2821ae758d07dedfb71d5b63c",
+      "size": 14947
+    },
+    {
+      "path": "validation/test_v247_cumulative_native_acceptance_supervisor.py",
+      "sha256": "37521b7382fdab372b67775f1fe8c6d86de9f4113e34850cacf38c6c622f61ba",
+      "size": 15052
+    },
+    {
+      "path": "validation/v247_tauri_native_acceptance.mjs",
+      "sha256": "5b5060833eabaf38697118cf272ce2952a07f827aa23b68e35720bfe65d93563",
+      "size": 809598
+    }
+  ]
+}

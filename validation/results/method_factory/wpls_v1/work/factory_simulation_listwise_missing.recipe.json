@@ -1,0 +1,62 @@
+{
+  "created_at": "2026-08-13T00:00:00Z",
+  "dataset_fingerprint": "v2:cdff43587e924064155312c1cea424fd13083f5632c4c1a20728c3c9d2c92912",
+  "id": "a7520a54-d6d1-5d54-9b80-94eabc0b480a",
+  "metadata": {
+    "status": "validated_wpls_case_weighted_v1_bounded_scope"
+  },
+  "method_config": {
+    "kind": "wpls"
+  },
+  "model": {
+    "constructs": [
+      {
+        "id": "x",
+        "indicators": [
+          "x1",
+          "x2"
+        ],
+        "mode": "reflective",
+        "name": "X",
+        "short_name": "X"
+      },
+      {
+        "id": "y",
+        "indicators": [
+          "y1",
+          "y2"
+        ],
+        "mode": "reflective",
+        "name": "Y",
+        "short_name": "Y"
+      }
+    ],
+    "controls": [],
+    "higher_order_constructs": [],
+    "id": "47ad818a-1510-5275-a7e0-3e9c6507d82a",
+    "interactions": [],
+    "name": "WPLS v1 factory fixture",
+    "paths": [
+      {
+        "source": "x",
+        "target": "y"
+      }
+    ]
+  },
+  "schema_version": 3,
+  "settings": {
+    "bootstrap_samples": 0,
+    "case_weight_column": "case_wt",
+    "confidence_level": 0.95,
+    "max_iterations": 3000,
+    "method": "wpls",
+    "missing_data": "listwise_deletion",
+    "permutation_samples": 0,
+    "preprocessing": "standardized",
+    "seed": 20260813,
+    "studentized_inner_samples": 0,
+    "tolerance": 1e-07,
+    "weighting_scheme": "path",
+    "workers": 1
+  }
+}

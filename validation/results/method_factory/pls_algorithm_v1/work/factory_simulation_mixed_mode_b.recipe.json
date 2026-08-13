@@ -1,0 +1,83 @@
+{
+  "created_at": "2026-08-13T00:00:00Z",
+  "dataset_fingerprint": "v2:50828d770cd0e695ebc8465b6d8086277a451d09e3b4df0d1274ac4332b1262c",
+  "id": "51cc6d55-7b41-5ee2-a50e-be52bfce3ac2",
+  "metadata": {
+    "status": "validated_v1_0_supported_pls_scope"
+  },
+  "method_config": {
+    "kind": "pls_algorithm"
+  },
+  "model": {
+    "constructs": [
+      {
+        "id": "x",
+        "indicators": [
+          "x1",
+          "x2",
+          "x3"
+        ],
+        "mode": "formative",
+        "name": "X",
+        "short_name": "X"
+      },
+      {
+        "id": "m",
+        "indicators": [
+          "m1",
+          "m2",
+          "m3"
+        ],
+        "mode": "reflective",
+        "name": "M",
+        "short_name": "M"
+      },
+      {
+        "id": "y",
+        "indicators": [
+          "y1",
+          "y2",
+          "y3"
+        ],
+        "mode": "reflective",
+        "name": "Y",
+        "short_name": "Y"
+      }
+    ],
+    "controls": [],
+    "higher_order_constructs": [],
+    "id": "80a9a5d8-550f-565b-9f7b-93e50d109b9c",
+    "interactions": [],
+    "name": "PLS Algorithm v1 factory fixture",
+    "paths": [
+      {
+        "source": "x",
+        "target": "m"
+      },
+      {
+        "source": "x",
+        "target": "y"
+      },
+      {
+        "source": "m",
+        "target": "y"
+      }
+    ]
+  },
+  "schema_version": 3,
+  "settings": {
+    "bootstrap_samples": 0,
+    "case_weight_column": null,
+    "confidence_level": 0.95,
+    "max_iterations": 10000,
+    "method": "pls_pm",
+    "missing_data": "listwise_deletion",
+    "permutation_samples": 0,
+    "preprocessing": "standardized",
+    "seed": 20260813,
+    "studentized_inner_samples": 0,
+    "tolerance": 1e-10,
+    "weighting_scheme": "path",
+    "workers": 1
+  }
+}

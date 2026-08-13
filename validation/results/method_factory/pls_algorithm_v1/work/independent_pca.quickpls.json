@@ -1,0 +1,396 @@
+{
+  "schema_version": 1,
+  "id": "c75987fd-4a32-437b-bd8a-83dfaab5854f",
+  "status": "completed",
+  "provenance": {
+    "recipe_id": "df37a310-dd3e-5e06-a4ae-8cb3fb5ede59",
+    "dataset_fingerprint": "v2:9b814a8a22eace42776bc479c637de36bc973dfd8a7b3d5b3e60baba98803373",
+    "method": "pls_pm",
+    "method_version": "pls_pm_v1+pls_mediation_v1+pls_assessment_v7",
+    "engine_version": "2.46.0",
+    "seed": 20260813,
+    "settings": {
+      "method": "pls_pm",
+      "weighting_scheme": "pca",
+      "tolerance": 1e-12,
+      "max_iterations": 10000,
+      "bootstrap_samples": 0,
+      "studentized_inner_samples": 0,
+      "permutation_samples": 0,
+      "seed": 20260813,
+      "workers": 1,
+      "confidence_level": 0.95,
+      "preprocessing": "standardized",
+      "missing_data": "listwise_deletion",
+      "case_weight_column": null
+    },
+    "started_at": "2026-08-13T19:17:48.958725300Z",
+    "completed_at": "2026-08-13T19:17:48.964492500Z"
+  },
+  "diagnostics": [],
+  "payload": {
+    "kind": "pls_pm_v1",
+    "estimation": {
+      "cbsem": null,
+      "cca": null,
+      "construct_scores": {
+        "x": [
+          -1.355815361366601,
+          -0.8134892168199607,
+          -3.700743415417188e-17,
+          -3.700743415417188e-17,
+          0.8134892168199607,
+          1.355815361366601
+        ],
+        "y": [
+          -1.2444226384535777,
+          -0.8707513323006058,
+          -0.31368951924013455,
+          0.25026258615831015,
+          0.8073243992187814,
+          1.3712765046172262
+        ]
+      },
+      "control_estimates": [],
+      "converged": true,
+      "cta_pls": null,
+      "effects": [
+        {
+          "direct": 0.982300318297428,
+          "indirect": 0.0,
+          "source": "x",
+          "target": "y",
+          "total": 0.982300318297428
+        }
+      ],
+      "endogeneity": null,
+      "fimix": null,
+      "gsca": null,
+      "ipma": null,
+      "iterations": 1,
+      "mediation": {
+        "estimates": [
+          {
+            "classification": "direct_only",
+            "direct": 0.982300318297428,
+            "indirect": 0.0,
+            "source": "x",
+            "target": "y",
+            "total": 0.982300318297428,
+            "variance_accounted_for": 0.0,
+            "warning": "direct-only structural effect; no mediated component exceeds tolerance"
+          }
+        ],
+        "method_version": "pls_mediation_v1",
+        "tolerance": 1e-12,
+        "warnings": [
+          "PLS mediation effect decomposition is validated for the documented QuickPLS v1.2.1 scope when paired with validated bootstrap or permutation intervals for the relevant indirect effect."
+        ]
+      },
+      "method_version": "pls_pm_v1",
+      "mga": null,
+      "mga_permutation": null,
+      "micom": null,
+      "moderated_mediation": null,
+      "nca": null,
+      "nonlinear_effects": null,
+      "omitted_observations": 0,
+      "outer_estimates": [
+        {
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9856107606091623,
+          "weight": 0.5072996561958923
+        },
+        {
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9856107606091623,
+          "weight": 0.5072996561958923
+        },
+        {
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9955487277601801,
+          "weight": 0.5022355873277216
+        },
+        {
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9955487277601802,
+          "weight": 0.5022355873277216
+        }
+      ],
+      "paths": [
+        {
+          "coefficient": 0.982300318297428,
+          "source": "x",
+          "target": "y"
+        }
+      ],
+      "pca": null,
+      "plsc": null,
+      "predict": null,
+      "r_squared": {
+        "y": 0.9649139153272281
+      },
+      "regression": null,
+      "segmentation": null,
+      "transforms": [
+        {
+          "indicator": "x1",
+          "mean": 3.5,
+          "scale": 1.8708286933869707
+        },
+        {
+          "indicator": "x2",
+          "mean": 4.5,
+          "scale": 1.8708286933869707
+        },
+        {
+          "indicator": "y1",
+          "mean": 5.166666666666667,
+          "scale": 2.6394443859772205
+        },
+        {
+          "indicator": "y2",
+          "mean": 4.5,
+          "scale": 2.7386127875258306
+        }
+      ],
+      "used_observations": 6,
+      "warnings": [],
+      "wpls": null
+    },
+    "assessment": {
+      "blindfolding": {
+        "constructs": [
+          {
+            "construct": "y",
+            "observation_sum_squares": 27.405339195335905,
+            "prediction_error_sum_squares": 9.545805187247089,
+            "q_squared": 0.6516808232436808
+          }
+        ],
+        "settings": {
+          "missing_value_treatment": "indicator_mean_replacement",
+          "omission_distance": 5,
+          "selection": "preferred_7_then_smallest_valid_5_to_12"
+        }
+      },
+      "construct_quality": [
+        {
+          "ave": 0.9714285714285714,
+          "construct": "x",
+          "cronbach_alpha": 0.9705882352941175,
+          "normalized_weight_norm_squared": null,
+          "off_diagonal_denominator": null,
+          "off_diagonal_numerator": null,
+          "rho_a": null,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": "rho_a.pca_weights_not_applicable",
+          "rho_a_status": "not_applicable",
+          "rho_a_warning_codes": [],
+          "rho_c": 0.9855072463768115,
+          "score_variance_before_normalization": null
+        },
+        {
+          "ave": 0.9911172693449133,
+          "construct": "y",
+          "cronbach_alpha": 0.9910376592863144,
+          "normalized_weight_norm_squared": null,
+          "off_diagonal_denominator": null,
+          "off_diagonal_numerator": null,
+          "rho_a": null,
+          "rho_a_indicator_count": 2,
+          "rho_a_reason": "rho_a.pca_weights_not_applicable",
+          "rho_a_status": "not_applicable",
+          "rho_a_warning_codes": [],
+          "rho_c": 0.9955388209464884,
+          "score_variance_before_normalization": null
+        }
+      ],
+      "cross_loadings": [
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x1",
+          "loading": 0.9856107606091622
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x1",
+          "loading": 0.998310271877333
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "x",
+          "indicator": "x2",
+          "loading": 0.9856107606091622
+        },
+        {
+          "assigned_construct": "x",
+          "construct": "y",
+          "indicator": "x2",
+          "loading": 0.9380212558501672
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y1",
+          "loading": 0.9657081213421742
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y1",
+          "loading": 0.9955487277601801
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "x",
+          "indicator": "y2",
+          "loading": 0.9901475429766743
+        },
+        {
+          "assigned_construct": "y",
+          "construct": "y",
+          "indicator": "y2",
+          "loading": 0.9955487277601799
+        }
+      ],
+      "f_squared": [
+        {
+          "excluded_r_squared": 0.0,
+          "f_squared": 27.501327786398413,
+          "included_r_squared": 0.9649139153272281,
+          "source_construct": "x",
+          "target_construct": "y"
+        }
+      ],
+      "formative_indicator_vif": [],
+      "fornell_larcker": {
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "values": [
+          [
+            0.9856107606091623,
+            0.9823003182974279
+          ],
+          [
+            0.9823003182974279,
+            0.9955487277601801
+          ]
+        ]
+      },
+      "htmt": null,
+      "htmt_original": {
+        "absolute_correlations": false,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0015708919044195
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0015708919044195
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_original_method_version": "henseler_et_al_htmt_v1",
+      "htmt_plus": {
+        "absolute_correlations": true,
+        "cells": [
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0015708919044195
+            }
+          ],
+          [
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0015708919044195
+            },
+            {
+              "reason": null,
+              "status": "available",
+              "value": 1.0
+            }
+          ]
+        ],
+        "constructs": [
+          "x",
+          "y"
+        ],
+        "correlation_type": "pearson"
+      },
+      "htmt_plus_method_version": "ringle_et_al_htmt_plus_v1",
+      "method_version": "pls_assessment_v7",
+      "model_fit": {
+        "estimated": {
+          "d_uls": 0.005518283827817793,
+          "srmr": 0.023491027708079936
+        },
+        "saturated": {
+          "d_uls": 0.005518283827817793,
+          "srmr": 0.023491027708079936
+        }
+      },
+      "r_squared": {
+        "y": 0.9649139153272281
+      },
+      "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
+      "structural_quality": [
+        {
+          "adjusted_r_squared": 0.9561423941590352,
+          "construct": "y",
+          "predictor_count": 1,
+          "r_squared": 0.9649139153272281
+        }
+      ],
+      "structural_vif": [
+        {
+          "predictor_construct": "x",
+          "target_construct": "y",
+          "vif": 1.0
+        }
+      ],
+      "warnings": [
+        "rho_a.pca_weights_not_applicable for construct 'x'",
+        "rho_a.pca_weights_not_applicable for construct 'y'"
+      ]
+    }
+  }
+}

@@ -1,7 +1,10 @@
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { completedSamplePlsRun } from "../data/smokeRun";
 import type { AnalysisRun } from "../types";
+import { Launcher, NATIVE_BUNDLED_SAMPLE_PROJECTS, openNativeSampleProject } from "./NativeDesktopApp";
 import { buildNativeResultNavigation, completedResultRuns, nativeResultTables } from "./nativeResults";
 import { completedStructuralPathRandomizationRun } from "./nativeStructuralPathRandomization.testFixture";
 
@@ -51,6 +54,49 @@ describe("native desktop result contracts", () => {
 });
 
 describe("native desktop multi-model shell contracts", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("mounts exactly the three genuine sample choices in the production launcher", () => {
+    const markup = renderToStaticMarkup(createElement(Launcher, {
+      projectName: "No project open",
+      projectPath: null,
+      datasetName: "No dataset",
+      runs: [],
+      recentProjects: [],
+      onNavigate: vi.fn(),
+      onOpenRecent: vi.fn(),
+      onOpenSample: vi.fn(),
+    }));
+
+    expect(NATIVE_BUNDLED_SAMPLE_PROJECTS.map((sample) => sample.id)).toEqual([
+      "corporate_reputation",
+      "simple_pls",
+      "mediation",
+    ]);
+    expect(markup.match(/data-sample-id=/g)).toHaveLength(3);
+    for (const sample of NATIVE_BUNDLED_SAMPLE_PROJECTS) {
+      expect(markup).toContain(`data-sample-id="${sample.id}"`);
+      expect(markup).toContain(sample.label);
+    }
+    expect(markup).not.toContain("PLSpredict");
+    expect(markup).not.toContain("CB-SEM CFA");
+  });
+
+  it("dispatches the exact selected sample identity while the File menu keeps its corporate default", () => {
+    const dispatchEvent = vi.fn();
+    vi.stubGlobal("window", { dispatchEvent });
+
+    openNativeSampleProject("mediation");
+
+    expect(dispatchEvent).toHaveBeenCalledTimes(1);
+    const event = dispatchEvent.mock.calls[0][0] as CustomEvent;
+    expect(event.type).toBe("quickpls:open-demo-project");
+    expect(event.detail).toEqual({ sampleId: "mediation" });
+    const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
+    expect(source).toContain('case "project.open-demo": commandEvent("open-demo-project"); return;');
+    expect(source).toContain("onOpenSample={openNativeSampleProject}");
+  });
+
   it("reapplies an asynchronously hydrated result default without requiring a run-id change", () => {
     const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
     expect(source).toContain('setSelectedTableId(resultNavigation.defaultItemId ?? "")');

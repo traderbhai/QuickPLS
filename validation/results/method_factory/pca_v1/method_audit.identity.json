@@ -1,0 +1,146 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "all_six_archive_mutations_fail_closed": true,
+    "archive_report_current": true,
+    "bounded_claim": "Standalone correlation-matrix PCA for 2 to 50 selected numeric raw-data variables using listwise deletion, deterministic component orientation, and fixed, Kaiser, or variance-threshold retention.",
+    "excluded_scope": [
+      "Rotations, pairwise deletion, covariance-only or correlation-only input, automatic categorical encoding, and nonnumeric conversion are excluded.",
+      "Loading uncertainty, component-score uncertainty, and inferential resampling are not supported.",
+      "This standalone workflow does not create or imply an editable SEM model."
+    ],
+    "frontend_and_export_reports_current": true,
+    "packaged_report_current": true,
+    "passed": true,
+    "same_run_archive_ui_xlsx_values_exact": true,
+    "scientific_and_boundary_reports_current": true,
+    "stage_artifacts": [
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/pca_v1/method_spec.identity.json",
+        "roles": [
+          "method_spec"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/pca_v1/independent_reference.identity.json",
+        "roles": [
+          "independent_reference"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/pca_v1/simulation_report.identity.json",
+        "roles": [
+          "simulation_report"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/pca_v1/boundary_report.identity.json",
+        "roles": [
+          "boundary_report"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/pca_v1/persistence_report.identity.json",
+        "roles": [
+          "persistence_report"
+        ],
+        "stage": "archive_qualified"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/pca_v1/frontend_report.identity.json",
+        "roles": [
+          "frontend_report"
+        ],
+        "stage": "native_qualified"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/pca_v1/export_report.identity.json",
+        "roles": [
+          "export_report"
+        ],
+        "stage": "native_qualified"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/pca_v1/packaged_acceptance.identity.json",
+        "roles": [
+          "packaged_acceptance"
+        ],
+        "stage": "release_qualified"
+      }
+    ]
+  },
+  "feature_id": "qpls3.standalone.pca",
+  "generated_at_utc": "2026-08-13T19:37:17.588674Z",
+  "method_version": "pca_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_audit",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/pca_v1.manifest.json",
+      "sha256": "c190031338e9790dd64cf280a2e419585b254c5e3a109b81ecc4849f5cad7433",
+      "size": 14506
+    },
+    {
+      "path": "validation/pca_method_promotion_audit.py",
+      "sha256": "36cbd0f14adb9b5925b1c2d777571aa9d463a39a2603f36cb1b59f2c9484513f",
+      "size": 20773
+    },
+    {
+      "path": "validation/pca_v1_factory_audit.py",
+      "sha256": "2c3fa66b6eb03cef5e9c16df1499d1d7d98d5e982df7b3a9ddf4a055f3b9389f",
+      "size": 3551
+    },
+    {
+      "path": "validation/pca_v1_factory_common.py",
+      "sha256": "9a0ce1a0fb76f83ee124b5927e1990f354a70b0ed28fe7d038919dd9f1e11c61",
+      "size": 11599
+    },
+    {
+      "path": "validation/results/method_factory/pca_v1/packaged_acceptance.identity.json",
+      "sha256": "d80574c8b3dd57990743c5795df37fd6b98bd5b1ddcbe3d37cd866f612aea994",
+      "size": 26111
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_pca_v1_factory_evidence.py",
+      "sha256": "45f58bcbd84e0e5b6adc9aadb334ad50085aa9c4e63c23ad9eedb53d15a6278f",
+      "size": 3537
+    }
+  ]
+}

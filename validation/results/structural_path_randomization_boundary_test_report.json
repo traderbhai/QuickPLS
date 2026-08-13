@@ -3,7 +3,7 @@
   "target": "structural_path_randomization_v1_focused_rust_boundary_tests",
   "feature_id": "qpls3.inference.structural_path_randomization",
   "method_version": "freedman_lane_permutation_v1",
-  "generated_at_utc": "2026-08-13T04:40:42.674049Z",
+  "generated_at_utc": "2026-08-13T18:08:37.486179Z",
   "environment": {
     "CARGO_BUILD_JOBS": "1",
     "test_threads": 1
@@ -76,7 +76,7 @@
       "full_name": "tests::permutation_pls_multi_path_appends_round_trips_and_rejects_manifest_tampering",
       "exit_code": 0,
       "passed": true,
-      "stdout_tail": "\nrunning 1 test\ntest tests::permutation_pls_multi_path_appends_round_trips_and_rejects_manifest_tampering ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.06s\n\n",
+      "stdout_tail": "\nrunning 1 test\ntest tests::permutation_pls_multi_path_appends_round_trips_and_rejects_manifest_tampering ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.06s\n\n",
       "stderr_tail": ""
     },
     "permutation_wire_contract_rejects_unknown_fields": {
@@ -107,30 +107,30 @@
   "test_executables": {
     "qpls_resampling": {
       "path": "target/release/deps/qpls_resampling-b5bff3e7363d410e.exe",
-      "size": 11158528,
-      "sha256": "114c617e99e9f748d839495b0a9fa83a33ed0edc8210060626fed36f260457df",
-      "modified_at_ns": 1786595301151861600
+      "size": 11164160,
+      "sha256": "fc0acc401cfa5af0a2797094cf237d5a6984a03280bca401d77873ffc488191f",
+      "modified_at_ns": 1786644220497779000
     },
     "qpls_project": {
       "path": "target/release/deps/qpls_project-f5d02c0d541c8f45.exe",
-      "size": 23628288,
-      "sha256": "bc4d033af028173075e3c26cff3b87eb00443cd66f9a2be16f23164d2aa4235a",
-      "modified_at_ns": 1786595608172909200
+      "size": 24059904,
+      "sha256": "9431ade8c71e64a83557c7d2c7d4f76dd3dec0c272c755359c8f7314352b8d90",
+      "modified_at_ns": 1786644516546224400
     }
   },
   "source_artifacts": {
     "qpls_resampling": [
       {
         "path": "Cargo.toml",
-        "size": 942,
-        "sha256": "0e86c8982daf61cdf31e9f622067fbf687df17bf12206b0e012df3b563d87ddb",
-        "modified_at_ns": 1786592968239100900
+        "size": 914,
+        "sha256": "594290f8f0e731badc4cb85383cdd5cf2d09ad3c1cb24f86b270895d5e5172d2",
+        "modified_at_ns": 1786607995439584400
       },
       {
         "path": "Cargo.lock",
-        "size": 154232,
-        "sha256": "e44964bdd11b35094616fcd9a7290c4b43a6a87559d462ed1fc27331b8c90f1f",
-        "modified_at_ns": 1786592968241762100
+        "size": 154279,
+        "sha256": "8f185dea0cf7650e378d9b608270cd8e78b026d1bacae2ce0d521242055c74ee",
+        "modified_at_ns": 1786618668433447400
       },
       {
         "path": "crates/qpls-core/Cargo.toml",
@@ -142,7 +142,7 @@
         "path": "crates/qpls-core/src/contract.rs",
         "size": 107095,
         "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
-        "modified_at_ns": 1786551669839568500
+        "modified_at_ns": 1786607995461617100
       },
       {
         "path": "crates/qpls-core/src/lib.rs",
@@ -154,25 +154,25 @@
         "path": "crates/qpls-core/src/methods.rs",
         "size": 3790,
         "sha256": "18bed856d6dec2e7fe6fdc6d5478872b913f1a56c163fee73ee89c7ca53b7ac6",
-        "modified_at_ns": 1786466552017765800
+        "modified_at_ns": 1786607995463756700
       },
       {
         "path": "crates/qpls-core/src/roadmap.rs",
         "size": 12376,
         "sha256": "19cf8baad1d217636f3f7ef2d97081156692ed0050561e54bc0bf7b364106fe8",
-        "modified_at_ns": 1786438344630756600
+        "modified_at_ns": 1786607995466130100
       },
       {
         "path": "crates/qpls-core/src/statistics.rs",
         "size": 8527,
         "sha256": "dda4eb9df673b892be963933a3f32b32ade133b5c24c70aae76de3648b063769",
-        "modified_at_ns": 1786384640980776200
+        "modified_at_ns": 1786607995469322800
       },
       {
         "path": "crates/qpls-core/src/validation.rs",
-        "size": 175127,
-        "sha256": "d2f02b5f07e4d8e40e64717dc7baf601192f83cca021a66c45410048410943a5",
-        "modified_at_ns": 1786553122798368400
+        "size": 177352,
+        "sha256": "ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573",
+        "modified_at_ns": 1786620129020320300
       },
       {
         "path": "crates/qpls-data/Cargo.toml",
@@ -184,13 +184,13 @@
         "path": "crates/qpls-data/src/lib.rs",
         "size": 44865,
         "sha256": "a1cab41fc8c82a71dbf7ee674f037040009c0e8340976b98a9ebcfc99851a7e1",
-        "modified_at_ns": 1786507185942836900
+        "modified_at_ns": 1786607995478642000
       },
       {
         "path": "crates/qpls-estimation/Cargo.toml",
         "size": 503,
         "sha256": "fb0d420f1c43919cb9e7a980cd9da270ce3a989e8729ba92e681dae509c60dd2",
-        "modified_at_ns": 1786434259036289200
+        "modified_at_ns": 1786607995481159200
       },
       {
         "path": "crates/qpls-estimation/src/lib.rs",
@@ -200,9 +200,9 @@
       },
       {
         "path": "crates/qpls-estimation/src/pls.rs",
-        "size": 637580,
-        "sha256": "24799834e5a7437af9e66e5ba7ef58af8eafe3435f6c574a550606cb2baddd85",
-        "modified_at_ns": 1786565807078122300
+        "size": 639198,
+        "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
+        "modified_at_ns": 1786617342744705100
       },
       {
         "path": "crates/qpls-resampling/Cargo.toml",
@@ -214,21 +214,21 @@
         "path": "crates/qpls-resampling/src/lib.rs",
         "size": 170900,
         "sha256": "edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0",
-        "modified_at_ns": 1786580916022741800
+        "modified_at_ns": 1786607995501017700
       }
     ],
     "qpls_project": [
       {
         "path": "Cargo.toml",
-        "size": 942,
-        "sha256": "0e86c8982daf61cdf31e9f622067fbf687df17bf12206b0e012df3b563d87ddb",
-        "modified_at_ns": 1786592968239100900
+        "size": 914,
+        "sha256": "594290f8f0e731badc4cb85383cdd5cf2d09ad3c1cb24f86b270895d5e5172d2",
+        "modified_at_ns": 1786607995439584400
       },
       {
         "path": "Cargo.lock",
-        "size": 154232,
-        "sha256": "e44964bdd11b35094616fcd9a7290c4b43a6a87559d462ed1fc27331b8c90f1f",
-        "modified_at_ns": 1786592968241762100
+        "size": 154279,
+        "sha256": "8f185dea0cf7650e378d9b608270cd8e78b026d1bacae2ce0d521242055c74ee",
+        "modified_at_ns": 1786618668433447400
       },
       {
         "path": "crates/qpls-core/Cargo.toml",
@@ -240,7 +240,7 @@
         "path": "crates/qpls-core/src/contract.rs",
         "size": 107095,
         "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
-        "modified_at_ns": 1786551669839568500
+        "modified_at_ns": 1786607995461617100
       },
       {
         "path": "crates/qpls-core/src/lib.rs",
@@ -252,25 +252,25 @@
         "path": "crates/qpls-core/src/methods.rs",
         "size": 3790,
         "sha256": "18bed856d6dec2e7fe6fdc6d5478872b913f1a56c163fee73ee89c7ca53b7ac6",
-        "modified_at_ns": 1786466552017765800
+        "modified_at_ns": 1786607995463756700
       },
       {
         "path": "crates/qpls-core/src/roadmap.rs",
         "size": 12376,
         "sha256": "19cf8baad1d217636f3f7ef2d97081156692ed0050561e54bc0bf7b364106fe8",
-        "modified_at_ns": 1786438344630756600
+        "modified_at_ns": 1786607995466130100
       },
       {
         "path": "crates/qpls-core/src/statistics.rs",
         "size": 8527,
         "sha256": "dda4eb9df673b892be963933a3f32b32ade133b5c24c70aae76de3648b063769",
-        "modified_at_ns": 1786384640980776200
+        "modified_at_ns": 1786607995469322800
       },
       {
         "path": "crates/qpls-core/src/validation.rs",
-        "size": 175127,
-        "sha256": "d2f02b5f07e4d8e40e64717dc7baf601192f83cca021a66c45410048410943a5",
-        "modified_at_ns": 1786553122798368400
+        "size": 177352,
+        "sha256": "ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573",
+        "modified_at_ns": 1786620129020320300
       },
       {
         "path": "crates/qpls-data/Cargo.toml",
@@ -282,13 +282,13 @@
         "path": "crates/qpls-data/src/lib.rs",
         "size": 44865,
         "sha256": "a1cab41fc8c82a71dbf7ee674f037040009c0e8340976b98a9ebcfc99851a7e1",
-        "modified_at_ns": 1786507185942836900
+        "modified_at_ns": 1786607995478642000
       },
       {
         "path": "crates/qpls-estimation/Cargo.toml",
         "size": 503,
         "sha256": "fb0d420f1c43919cb9e7a980cd9da270ce3a989e8729ba92e681dae509c60dd2",
-        "modified_at_ns": 1786434259036289200
+        "modified_at_ns": 1786607995481159200
       },
       {
         "path": "crates/qpls-estimation/src/lib.rs",
@@ -298,9 +298,9 @@
       },
       {
         "path": "crates/qpls-estimation/src/pls.rs",
-        "size": 637580,
-        "sha256": "24799834e5a7437af9e66e5ba7ef58af8eafe3435f6c574a550606cb2baddd85",
-        "modified_at_ns": 1786565807078122300
+        "size": 639198,
+        "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
+        "modified_at_ns": 1786617342744705100
       },
       {
         "path": "crates/qpls-assessment/Cargo.toml",
@@ -312,7 +312,7 @@
         "path": "crates/qpls-assessment/src/lib.rs",
         "size": 144364,
         "sha256": "6cffe850b3e8c1f90eeb570985f6a9ae4448622efa5370d7623ed283d948aafa",
-        "modified_at_ns": 1786519851492846300
+        "modified_at_ns": 1786607995450741900
       },
       {
         "path": "crates/qpls-resampling/Cargo.toml",
@@ -324,7 +324,7 @@
         "path": "crates/qpls-resampling/src/lib.rs",
         "size": 170900,
         "sha256": "edb94d5f95aec56376de33c10902941db8e62812b7248f22b7f4ca69af047ac0",
-        "modified_at_ns": 1786580916022741800
+        "modified_at_ns": 1786607995501017700
       },
       {
         "path": "crates/qpls-runner/Cargo.toml",
@@ -334,27 +334,27 @@
       },
       {
         "path": "crates/qpls-runner/src/lib.rs",
-        "size": 48886,
-        "sha256": "1d1911c1dfb5910ffe77a7ede7c404326f52dca77d760f41fafc1a62cb9293e3",
-        "modified_at_ns": 1786566014241983000
+        "size": 49349,
+        "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
+        "modified_at_ns": 1786620129040430400
       },
       {
         "path": "crates/qpls-project/Cargo.toml",
         "size": 628,
         "sha256": "ef1e3c8e1e5d9d723a43f4b567f6fe490d57d0458f73c8ae281673c0505756d5",
-        "modified_at_ns": 1786466561436210300
+        "modified_at_ns": 1786607995489944600
       },
       {
         "path": "crates/qpls-project/src/archive_integrity.rs",
         "size": 31085,
         "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
-        "modified_at_ns": 1786527034044803000
+        "modified_at_ns": 1786607995492067200
       },
       {
         "path": "crates/qpls-project/src/lib.rs",
-        "size": 647380,
-        "sha256": "1a107e7016d80db72116c352239aecb21a9a241b6c46859cdcd741b64b39084a",
-        "modified_at_ns": 1786594026306812000
+        "size": 660277,
+        "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
+        "modified_at_ns": 1786620129494578100
       }
     ]
   },

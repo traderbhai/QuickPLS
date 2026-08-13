@@ -66,6 +66,7 @@ import type {
   NativeProjectSnapshot,
   PublicationDiagramSettings,
   RunMonitorLogEntry,
+  NativeSampleProjectId,
 } from "../types";
 
 export type NativeControllerEvent =
@@ -437,10 +438,10 @@ export function NativeDesktopController() {
     loadNativeSnapshot(await (path ? openNativeProjectAt(path) : openNativeProject()));
   };
 
-  const openDemoProject = async () => {
+  const openDemoProject = async (sampleId: NativeSampleProjectId = "corporate_reputation") => {
     if (!isNativeDesktop()) return;
     if (!await confirmWorkspaceReplacement("opening the sample project")) return;
-    loadNativeSnapshot(await openNativeDemoProject());
+    loadNativeSnapshot(await openNativeDemoProject(sampleId));
   };
 
   const saveProject = async (saveAs: boolean): Promise<boolean> => {
@@ -1096,7 +1097,10 @@ export function NativeDesktopController() {
       const path = (event as CustomEvent<{ path?: string }>).detail?.path?.trim();
       if (path) void openProject(path).catch((error) => pushToast({ tone: "error", title: "Open failed", detail: errorMessage(error) }));
     };
-    const onOpenDemo = () => { void openDemoProject().catch((error) => pushToast({ tone: "error", title: "Demo failed", detail: errorMessage(error) })); };
+    const onOpenDemo = (event: Event) => {
+      const sampleId = (event as CustomEvent<{ sampleId?: NativeSampleProjectId }>).detail?.sampleId;
+      void openDemoProject(sampleId).catch((error) => pushToast({ tone: "error", title: "Demo failed", detail: errorMessage(error) }));
+    };
     const onSave = () => { void saveProject(false).catch((error) => pushToast({ tone: "error", title: "Save failed", detail: errorMessage(error) })); };
     const onSaveAs = () => { void saveProject(true).catch((error) => pushToast({ tone: "error", title: "Save failed", detail: errorMessage(error) })); };
     const onImport = (event: Event) => {

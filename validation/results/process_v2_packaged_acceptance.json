@@ -1,9 +1,9 @@
 {
     "schema_version":  "quickpls.packaged_acceptance.v1",
     "kind":  "quickpls3_scoped_tauri_process_v2_acceptance",
-    "passed":  true,
-    "generated_at_utc":  "2026-08-13T06:47:03.788Z",
-    "completed_at_utc":  "2026-08-13T06:49:05.569Z",
+    "passed":  false,
+    "generated_at_utc":  "2026-08-13T16:09:54.766Z",
+    "completed_at_utc":  "2026-08-13T16:11:53.386Z",
     "feature_id":  "qpls3.standalone.process",
     "method_version":  "regression_process_v2",
     "bootstrap_method_version":  "regression_process_bootstrap_v1",
@@ -15,54 +15,54 @@
     "tested_product":  {
                            "qpls_cli_exe":  {
                                                 "path":  "target/release/qpls.exe",
-                                                "size":  20648448,
-                                                "sha256":  "bd4e1780563055398729dc6d2c16cab655bbdb17af0b1c2133bd56283413879b"
+                                                "size":  20690432,
+                                                "sha256":  "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e"
                                             },
                            "quickpls_desktop_exe":  {
                                                         "path":  "target/release/quickpls-desktop.exe",
-                                                        "size":  28276736,
-                                                        "sha256":  "988a9006b9e63bd6a91c6d86b84a0449f9bc999e6b394c531320846d68efcaa1"
+                                                        "size":  30507008,
+                                                        "sha256":  "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277"
                                                     },
                            "dist_bundle":  {
                                                "path":  "dist",
-                                               "size":  1170615,
+                                               "size":  1191494,
                                                "file_count":  19,
-                                               "sha256":  "6df4c180f6d338dc7d4dd07db9f2862e40f9e17d3c7fe27762bcb966973eccfb",
+                                               "sha256":  "364eb8ee0a73bade09dfde958755fac09983ffd34f998b41755edee95f5a8e74",
                                                "manifest":  [
                                                                 {
-                                                                    "path":  "assets/NativeCalculationDialog-Bozvjmo2.js",
-                                                                    "size":  50628,
-                                                                    "sha256":  "b66c6bf6cd92a6ffd025bee490caaee81e968be017d55f8910f87745ad78c132"
+                                                                    "path":  "assets/NativeCalculationDialog-CekKsDqn.js",
+                                                                    "size":  51101,
+                                                                    "sha256":  "3b3a2fb6c5f03765fa77208b7f76ddabf083710ad5c6e38fdc62f6101ec6d694"
                                                                 },
                                                                 {
-                                                                    "path":  "assets/NativeExportDialog-DRkEBJgy.js",
-                                                                    "size":  6227,
-                                                                    "sha256":  "9b2ad9135d963146fa0792b052f9b0a8851b34db50c31c504c966a073f29eb4e"
+                                                                    "path":  "assets/NativeExportDialog-CTZOLsrg.js",
+                                                                    "size":  6432,
+                                                                    "sha256":  "523da583f3a66f89cb2d8f11d6b122ff2aa2c03640d1dabcad00cd4ef9bfc2f2"
                                                                 },
                                                                 {
-                                                                    "path":  "assets/NativeGroupSetupDialog-BBekaerZ.js",
+                                                                    "path":  "assets/NativeGroupSetupDialog-DncLahbL.js",
                                                                     "size":  6779,
-                                                                    "sha256":  "21a5df0bbf4e6402830eb82c38333ff22a4b987a1b6c1053cece32af5f08f02d"
+                                                                    "sha256":  "2f9eb02cfd1224c3a9b3a87c94b2006d10514184b995345adf7c7238ae901190"
                                                                 },
                                                                 {
-                                                                    "path":  "assets/NativeHigherOrderDialog-Crr0cFk9.js",
+                                                                    "path":  "assets/NativeHigherOrderDialog-Bn4cY5Gi.js",
                                                                     "size":  2948,
-                                                                    "sha256":  "2efa06bd7f77832abff54fa915b8f042812c0f456e9f35d631c1592781f0fe22"
+                                                                    "sha256":  "08dbb627b5b031b9bad9287e7017c43277efcfdb3b3358a811a753f66eb5e609"
                                                                 },
                                                                 {
-                                                                    "path":  "assets/NativeModerationDialog-DgnDSg5q.js",
+                                                                    "path":  "assets/NativeModerationDialog-D2IfblSQ.js",
                                                                     "size":  3081,
-                                                                    "sha256":  "7362c82ed1c5380a752b83b99a3759087dbb5bdf065638aed22b1dc9f7456d32"
+                                                                    "sha256":  "a7143c8cd4dfcaa4d58adffc392c4edfa4861e78970484d35b6c3683ee876840"
                                                                 },
                                                                 {
-                                                                    "path":  "assets/NativeResultsSurface-D5M3tPKK.js",
+                                                                    "path":  "assets/NativeResultsSurface-Bv7Fchdi.js",
                                                                     "size":  31251,
-                                                                    "sha256":  "5d789cf33e40d1c3b1c5fbf29aa6fd7fcae46699a7df68a6ec548474350fd1c8"
+                                                                    "sha256":  "2692880853872db149cfb86a7041a849e6cc114faf6dbfe571d85a54550ba79f"
                                                                 },
                                                                 {
-                                                                    "path":  "assets/NativeUtilityDialog-CyUdf7Td.js",
-                                                                    "size":  4346,
-                                                                    "sha256":  "af2f5dfce8681cd3bbd7601937242846743df9e16558359fbb6aec65aa679a91"
+                                                                    "path":  "assets/NativeUtilityDialog-B_BR7mw4.js",
+                                                                    "size":  12164,
+                                                                    "sha256":  "a4c73c06ffcf8b4dd5dca228a4895f7bbe7a4718ec34da32d9f568fbbf0e9f06"
                                                                 },
                                                                 {
                                                                     "path":  "assets/flow-BN-PNp2v.js",
@@ -75,19 +75,19 @@
                                                                     "sha256":  "1243b61a71923367ce620fb944427c80c9b03e863e18374fcf4f74d6d06f63fc"
                                                                 },
                                                                 {
-                                                                    "path":  "assets/icons-B3Zfv1lt.js",
-                                                                    "size":  20320,
-                                                                    "sha256":  "44c646ff3a637e2eeb2ce149868b7b46b7407809366f31c77cd3845c34ecfef9"
+                                                                    "path":  "assets/icons-CWW7Ihoi.js",
+                                                                    "size":  20835,
+                                                                    "sha256":  "11135cfa4b1cefe02205ec00e7f23204127146720a75ccbb5941632226a4a3c6"
                                                                 },
                                                                 {
-                                                                    "path":  "assets/index-CCeoAjeY.js",
-                                                                    "size":  517696,
-                                                                    "sha256":  "07bf64aa1f19765913686ccce679de99253173bfb4a36f4e1e5e887ebf8d62b6"
+                                                                    "path":  "assets/index-DBKNtbUu.js",
+                                                                    "size":  528769,
+                                                                    "sha256":  "d37b081cac27b076af6c5c288c0280ace77424912b173849ed9517381d9879f7"
                                                                 },
                                                                 {
-                                                                    "path":  "assets/index-CI3Uacl2.css",
-                                                                    "size":  73914,
-                                                                    "sha256":  "22799add8872c2513a8cb9e43b438a23d58a2ecda11863539c143a97ff105365"
+                                                                    "path":  "assets/index-DpTHova4.css",
+                                                                    "size":  74714,
+                                                                    "sha256":  "e756299a2d8d0620f5d62a8f60f0265b0059aa2599790474b940218826096182"
                                                                 },
                                                                 {
                                                                     "path":  "assets/largeModelSmoke-PEBccAlJ.js",
@@ -100,9 +100,9 @@
                                                                     "sha256":  "024828f88efaf03205588f9bc34ca763bd8f484b36f5172f92d4a83ac4aa12ff"
                                                                 },
                                                                 {
-                                                                    "path":  "assets/publicationDiagram-DBdD1Z-g.js",
-                                                                    "size":  8653,
-                                                                    "sha256":  "d6afa743d4c0b4202732a7cfed58a514d6ec3ed01be08559bee595df67bbed67"
+                                                                    "path":  "assets/publicationDiagram-BlkNs4Z4.js",
+                                                                    "size":  8648,
+                                                                    "sha256":  "19cd3e3c69779a47c603cc3be9269a62e4871492416c549b8938250eb9e6f8df"
                                                                 },
                                                                 {
                                                                     "path":  "assets/smokeRun-CMXwsrTO.js",
@@ -122,7 +122,7 @@
                                                                 {
                                                                     "path":  "index.html",
                                                                     "size":  821,
-                                                                    "sha256":  "2d9b0e87594f669c9a72d5b6c0f9a74be89b8c6f63cb557a588a3122b53b3fd6"
+                                                                    "sha256":  "ffa343bcc205c9541dcddd98ce187604001ef7fc3b279b6a460a25b5009b3b50"
                                                                 }
                                                             ]
                                            }
@@ -387,7 +387,7 @@
                                                                  "curve_warning_disclosure_exact":  true,
                                                                  "required_shared_strings_verified":  true
                                                              },
-                                  "artifact_sha256":  "bf773df169231365fcb534a33a1602a9cbbbb662e71682d53e0565c0490b0fdf",
+                                  "artifact_sha256":  "d2c0fac1a74efa13530885b4ae80cf8b3830b560123a5de277820fe718e9185a",
                                   "source_check":  "processV2Export"
                               },
                    "save_reopen":  {
@@ -396,48 +396,48 @@
                                        "initial_selected_table":  "process_model_summary",
                                        "project_checksum_matches":  true,
                                        "archive_witness_validated":  true,
-                                       "archive_sha256":  "416975b5f094e942f9e89295bb79f61a2aa69b77c337d28d52045a1fef082d57",
+                                       "archive_sha256":  "8efac394e9e9db115c7ce38d0731aabd3d03737af468ee147dead161e994bd9a",
                                        "cycle_1_settled_autosave":  {
-                                                                        "prefix":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls",
+                                                                        "prefix":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls",
                                                                         "coversEverySiblingPrefix":  true,
                                                                         "present":  [
-                                                                                        "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
-                                                                                        "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.identity.json",
-                                                                                        "validation/results/v247-native-process-v2-1786603623786-24804.qpls.bak",
-                                                                                        "validation/results/v247-native-process-v2-1786603623786-24804.qpls.identity.json"
+                                                                                        "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+                                                                                        "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
+                                                                                        "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
+                                                                                        "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json"
                                                                                     ],
                                                                         "artifacts":  [
                                                                                           {
-                                                                                              "path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
-                                                                                              "size":  2311361,
-                                                                                              "sha256":  "113c4961f02ae0398957fc863c110327a9acd40dc30473956fc49725d032405f"
+                                                                                              "path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+                                                                                              "size":  2311374,
+                                                                                              "sha256":  "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6"
                                                                                           },
                                                                                           {
-                                                                                              "path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.identity.json",
+                                                                                              "path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
                                                                                               "size":  108,
-                                                                                              "sha256":  "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177"
+                                                                                              "sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
                                                                                           },
                                                                                           {
-                                                                                              "path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.bak",
+                                                                                              "path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
                                                                                               "size":  12709,
-                                                                                              "sha256":  "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557"
+                                                                                              "sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
                                                                                           },
                                                                                           {
-                                                                                              "path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.identity.json",
+                                                                                              "path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json",
                                                                                               "size":  108,
-                                                                                              "sha256":  "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177"
+                                                                                              "sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
                                                                                           }
                                                                                       ],
                                                                         "required":  [
-                                                                                         "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
-                                                                                         "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.identity.json"
+                                                                                         "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+                                                                                         "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json"
                                                                                      ],
                                                                         "allowed":  [
-                                                                                        "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
-                                                                                        "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.bak",
-                                                                                        "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.identity.json",
-                                                                                        "validation/results/v247-native-process-v2-1786603623786-24804.qpls.bak",
-                                                                                        "validation/results/v247-native-process-v2-1786603623786-24804.qpls.identity.json"
+                                                                                        "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+                                                                                        "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.bak",
+                                                                                        "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
+                                                                                        "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
+                                                                                        "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json"
                                                                                     ],
                                                                         "missing":  [
 
@@ -446,110 +446,110 @@
 
                                                                                       ],
                                                                         "exactAllowedIdentity":  true,
-                                                                        "autosavePath":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
+                                                                        "autosavePath":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
                                                                         "logicalState":  {
                                                                                              "manifestValid":  true,
                                                                                              "completedResultCount":  1,
                                                                                              "witnessCount":  1,
                                                                                              "completedRunIds":  [
-                                                                                                                     "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+                                                                                                                     "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
                                                                                                                  ],
                                                                                              "witnessRunIds":  [
-                                                                                                                   "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+                                                                                                                   "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
                                                                                                                ],
                                                                                              "recipeIds":  [
-                                                                                                               "7c013ecf-42cb-4dab-b31e-5b482ef9abf3"
+                                                                                                               "e1db2325-9a63-49f3-b580-d9b1b460bd26"
                                                                                                            ],
                                                                                              "recipeCount":  1,
                                                                                              "workspaceRunIds":  [
-                                                                                                                     "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+                                                                                                                     "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
                                                                                                                  ],
-                                                                                             "selectedRunId":  "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+                                                                                             "selectedRunId":  "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
                                                                                          },
                                                                         "capturedArtifacts":  [
                                                                                                   {
-                                                                                                      "source_path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
-                                                                                                      "source_size":  2311361,
-                                                                                                      "source_sha256":  "113c4961f02ae0398957fc863c110327a9acd40dc30473956fc49725d032405f",
+                                                                                                      "source_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+                                                                                                      "source_size":  2311374,
+                                                                                                      "source_sha256":  "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6",
                                                                                                       "snapshot":  {
-                                                                                                                       "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-sidecar-cycle1-0.bin",
-                                                                                                                       "size":  2311361,
-                                                                                                                       "sha256":  "113c4961f02ae0398957fc863c110327a9acd40dc30473956fc49725d032405f"
+                                                                                                                       "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-0.bin",
+                                                                                                                       "size":  2311374,
+                                                                                                                       "sha256":  "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6"
                                                                                                                    }
                                                                                                   },
                                                                                                   {
-                                                                                                      "source_path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.identity.json",
+                                                                                                      "source_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
                                                                                                       "source_size":  108,
-                                                                                                      "source_sha256":  "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177",
+                                                                                                      "source_sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24",
                                                                                                       "snapshot":  {
-                                                                                                                       "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-sidecar-cycle1-1.bin",
+                                                                                                                       "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-1.bin",
                                                                                                                        "size":  108,
-                                                                                                                       "sha256":  "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177"
+                                                                                                                       "sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
                                                                                                                    }
                                                                                                   },
                                                                                                   {
-                                                                                                      "source_path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.bak",
+                                                                                                      "source_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
                                                                                                       "source_size":  12709,
-                                                                                                      "source_sha256":  "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557",
+                                                                                                      "source_sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262",
                                                                                                       "snapshot":  {
-                                                                                                                       "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-sidecar-cycle1-2.bin",
+                                                                                                                       "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-2.bin",
                                                                                                                        "size":  12709,
-                                                                                                                       "sha256":  "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557"
+                                                                                                                       "sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
                                                                                                                    }
                                                                                                   },
                                                                                                   {
-                                                                                                      "source_path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.identity.json",
+                                                                                                      "source_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json",
                                                                                                       "source_size":  108,
-                                                                                                      "source_sha256":  "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177",
+                                                                                                      "source_sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24",
                                                                                                       "snapshot":  {
-                                                                                                                       "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-sidecar-cycle1-3.bin",
+                                                                                                                       "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-3.bin",
                                                                                                                        "size":  108,
-                                                                                                                       "sha256":  "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177"
+                                                                                                                       "sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
                                                                                                                    }
                                                                                                   }
                                                                                               ]
                                                                     },
                                        "cycle_1_autosave_after_checkpoint":  {
-                                                                                 "prefix":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls",
+                                                                                 "prefix":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls",
                                                                                  "coversEverySiblingPrefix":  true,
                                                                                  "present":  [
-                                                                                                 "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
-                                                                                                 "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.identity.json",
-                                                                                                 "validation/results/v247-native-process-v2-1786603623786-24804.qpls.bak",
-                                                                                                 "validation/results/v247-native-process-v2-1786603623786-24804.qpls.identity.json"
+                                                                                                 "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+                                                                                                 "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
+                                                                                                 "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
+                                                                                                 "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json"
                                                                                              ],
                                                                                  "artifacts":  [
                                                                                                    {
-                                                                                                       "path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
-                                                                                                       "size":  2311361,
-                                                                                                       "sha256":  "113c4961f02ae0398957fc863c110327a9acd40dc30473956fc49725d032405f"
+                                                                                                       "path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+                                                                                                       "size":  2311374,
+                                                                                                       "sha256":  "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6"
                                                                                                    },
                                                                                                    {
-                                                                                                       "path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.identity.json",
+                                                                                                       "path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
                                                                                                        "size":  108,
-                                                                                                       "sha256":  "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177"
+                                                                                                       "sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
                                                                                                    },
                                                                                                    {
-                                                                                                       "path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.bak",
+                                                                                                       "path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
                                                                                                        "size":  12709,
-                                                                                                       "sha256":  "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557"
+                                                                                                       "sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
                                                                                                    },
                                                                                                    {
-                                                                                                       "path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.identity.json",
+                                                                                                       "path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json",
                                                                                                        "size":  108,
-                                                                                                       "sha256":  "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177"
+                                                                                                       "sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
                                                                                                    }
                                                                                                ],
                                                                                  "required":  [
-                                                                                                  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
-                                                                                                  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.identity.json"
+                                                                                                  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+                                                                                                  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json"
                                                                                               ],
                                                                                  "allowed":  [
-                                                                                                 "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
-                                                                                                 "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.bak",
-                                                                                                 "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.identity.json",
-                                                                                                 "validation/results/v247-native-process-v2-1786603623786-24804.qpls.bak",
-                                                                                                 "validation/results/v247-native-process-v2-1786603623786-24804.qpls.identity.json"
+                                                                                                 "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+                                                                                                 "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.bak",
+                                                                                                 "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
+                                                                                                 "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
+                                                                                                 "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json"
                                                                                              ],
                                                                                  "missing":  [
 
@@ -558,65 +558,65 @@
 
                                                                                                ],
                                                                                  "exactAllowedIdentity":  true,
-                                                                                 "autosavePath":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
+                                                                                 "autosavePath":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
                                                                                  "logicalState":  {
                                                                                                       "manifestValid":  true,
                                                                                                       "completedResultCount":  1,
                                                                                                       "witnessCount":  1,
                                                                                                       "completedRunIds":  [
-                                                                                                                              "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+                                                                                                                              "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
                                                                                                                           ],
                                                                                                       "witnessRunIds":  [
-                                                                                                                            "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+                                                                                                                            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
                                                                                                                         ],
                                                                                                       "recipeIds":  [
-                                                                                                                        "7c013ecf-42cb-4dab-b31e-5b482ef9abf3"
+                                                                                                                        "e1db2325-9a63-49f3-b580-d9b1b460bd26"
                                                                                                                     ],
                                                                                                       "recipeCount":  1,
                                                                                                       "workspaceRunIds":  [
-                                                                                                                              "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+                                                                                                                              "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
                                                                                                                           ],
-                                                                                                      "selectedRunId":  "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+                                                                                                      "selectedRunId":  "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
                                                                                                   },
                                                                                  "capturedArtifacts":  [
                                                                                                            {
-                                                                                                               "source_path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
-                                                                                                               "source_size":  2311361,
-                                                                                                               "source_sha256":  "113c4961f02ae0398957fc863c110327a9acd40dc30473956fc49725d032405f",
+                                                                                                               "source_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+                                                                                                               "source_size":  2311374,
+                                                                                                               "source_sha256":  "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6",
                                                                                                                "snapshot":  {
-                                                                                                                                "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-sidecar-cycle1-0.bin",
-                                                                                                                                "size":  2311361,
-                                                                                                                                "sha256":  "113c4961f02ae0398957fc863c110327a9acd40dc30473956fc49725d032405f"
+                                                                                                                                "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-0.bin",
+                                                                                                                                "size":  2311374,
+                                                                                                                                "sha256":  "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6"
                                                                                                                             }
                                                                                                            },
                                                                                                            {
-                                                                                                               "source_path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.identity.json",
+                                                                                                               "source_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
                                                                                                                "source_size":  108,
-                                                                                                               "source_sha256":  "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177",
+                                                                                                               "source_sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24",
                                                                                                                "snapshot":  {
-                                                                                                                                "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-sidecar-cycle1-1.bin",
+                                                                                                                                "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-1.bin",
                                                                                                                                 "size":  108,
-                                                                                                                                "sha256":  "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177"
+                                                                                                                                "sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
                                                                                                                             }
                                                                                                            },
                                                                                                            {
-                                                                                                               "source_path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.bak",
+                                                                                                               "source_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
                                                                                                                "source_size":  12709,
-                                                                                                               "source_sha256":  "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557",
+                                                                                                               "source_sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262",
                                                                                                                "snapshot":  {
-                                                                                                                                "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-sidecar-cycle1-2.bin",
+                                                                                                                                "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-2.bin",
                                                                                                                                 "size":  12709,
-                                                                                                                                "sha256":  "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557"
+                                                                                                                                "sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
                                                                                                                             }
                                                                                                            },
                                                                                                            {
-                                                                                                               "source_path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls.identity.json",
+                                                                                                               "source_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json",
                                                                                                                "source_size":  108,
-                                                                                                               "source_sha256":  "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177",
+                                                                                                               "source_sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24",
                                                                                                                "snapshot":  {
-                                                                                                                                "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-sidecar-cycle1-3.bin",
+                                                                                                                                "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-3.bin",
                                                                                                                                 "size":  108,
-                                                                                                                                "sha256":  "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177"
+                                                                                                                                "sha256":  "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
                                                                                                                             }
                                                                                                            }
                                                                                                        ]
@@ -634,7 +634,7 @@
                                                  "read_only":  true,
                                                  "exact_frozen_setup_match":  true,
                                                  "snapshot":  {
-                                                                  "catalogCount":  14,
+                                                                  "catalogCount":  15,
                                                                   "selectedMethod":  "Regression",
                                                                   "regressionType":  "process",
                                                                   "outcome":  "Y",
@@ -724,7 +724,7 @@
                                                                   "graphDefinedWithoutNumberedTemplates":  true
                                                               },
                                                  "frozen_setup":  {
-                                                                      "catalogCount":  14,
+                                                                      "catalogCount":  15,
                                                                       "selectedMethod":  "Regression",
                                                                       "regressionType":  "process",
                                                                       "outcome":  "Y",
@@ -828,22 +828,22 @@
                                         },
                    "resource_reset":  {
                                           "passed":  true,
-                                          "original_path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls",
-                                          "reset_path":  "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls",
+                                          "original_path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls",
+                                          "reset_path":  "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls",
                                           "distinct_path":  true,
                                           "original_archive":  {
-                                                                   "path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls",
-                                                                   "size":  2317833,
-                                                                   "sha256":  "416975b5f094e942f9e89295bb79f61a2aa69b77c337d28d52045a1fef082d57"
+                                                                   "path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls",
+                                                                   "size":  2317816,
+                                                                   "sha256":  "8efac394e9e9db115c7ce38d0731aabd3d03737af468ee147dead161e994bd9a"
                                                                },
                                           "reset_archive":  {
-                                                                "path":  "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls",
-                                                                "size":  2317833,
-                                                                "sha256":  "416975b5f094e942f9e89295bb79f61a2aa69b77c337d28d52045a1fef082d57"
+                                                                "path":  "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls",
+                                                                "size":  2317816,
+                                                                "sha256":  "8efac394e9e9db115c7ce38d0731aabd3d03737af468ee147dead161e994bd9a"
                                                             },
-                                          "result_id":  "99d61d09-b544-44a2-8f74-274abbfd0d8a",
-                                          "recipe_id":  "7c013ecf-42cb-4dab-b31e-5b482ef9abf3",
-                                          "run_id":  "99d61d09-b544-44a2-8f74-274abbfd0d8a",
+                                          "result_id":  "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
+                                          "recipe_id":  "e1db2325-9a63-49f3-b580-d9b1b460bd26",
+                                          "run_id":  "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
                                           "completed_result_count":  1,
                                           "witness_count":  1,
                                           "no_sidecars_before_copy":  true,
@@ -870,22 +870,22 @@
                                                             "process_bootstrap_bca",
                                                             "process_scope"
                                                         ],
-                                          "selected_run_id":  "99d61d09-b544-44a2-8f74-274abbfd0d8a",
+                                          "selected_run_id":  "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
                                           "selected_table_id":  "process_model_summary",
                                           "source_check":  "processV2ResourceResetClone"
                                       },
                    "resources":  {
-                                     "passed":  true,
-                                     "sample_count":  244,
-                                     "raw_sample_count":  244,
+                                     "passed":  false,
+                                     "sample_count":  237,
+                                     "raw_sample_count":  237,
                                      "first_sample":  {
-                                                          "recorded_at_utc":  "2026-08-13T06:47:02.6153140Z",
+                                                          "recorded_at_utc":  "2026-08-13T16:09:53.8355303Z",
                                                           "root_present":  true,
-                                                          "root_pid":  51204,
-                                                          "total_working_set_bytes":  443486208,
-                                                          "total_private_memory_bytes":  277909504,
-                                                          "total_handle_count":  3214,
-                                                          "total_thread_count":  175,
+                                                          "root_pid":  9284,
+                                                          "total_working_set_bytes":  447164416,
+                                                          "total_private_memory_bytes":  278040576,
+                                                          "total_handle_count":  3377,
+                                                          "total_thread_count":  180,
                                                           "process_role_counts":  {
                                                                                       "desktop_root":  1,
                                                                                       "webview_browser":  1,
@@ -897,87 +897,108 @@
                                                                                   },
                                                           "processes":  [
                                                                             {
-                                                                                "pid":  12460,
-                                                                                "parent_pid":  56848,
-                                                                                "name":  "msedgewebview2.exe",
-                                                                                "role":  "webview_other",
-                                                                                "creation_date":  "08/13/2026 12:17:01",
-                                                                                "working_set_bytes":  11956224,
-                                                                                "private_memory_bytes":  4726784,
-                                                                                "handle_count":  170,
-                                                                                "thread_count":  12
-                                                                            },
-                                                                            {
-                                                                                "pid":  23528,
-                                                                                "parent_pid":  56848,
+                                                                                "pid":  5156,
+                                                                                "parent_pid":  53272,
                                                                                 "name":  "msedgewebview2.exe",
                                                                                 "role":  "webview_gpu",
-                                                                                "creation_date":  "08/13/2026 12:17:01",
-                                                                                "working_set_bytes":  133308416,
-                                                                                "private_memory_bytes":  142643200,
-                                                                                "handle_count":  674,
+                                                                                "creation_date":  "08/13/2026 21:39:52",
+                                                                                "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
+                                                                                "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --type=gpu-process --noerrdialogs --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --gpu-preferences=WAAAAAAAAADgAAAEAAAAAAAAAAAAAGAAQAAAAAAAAAADAAAAAAAAADgAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAKAAAAAAAAAAoAAAAAAAAAAgAAAAAAAAAEAAAAAIAAAABAAAAAAAAAAgAAAAAAAAACAAAAAAAAAA= --startup-read-main-dll --metrics-shmem-handle=1928,i,1305612131185437285,18230944084728707430,262144 --field-trial-handle=2004,i,1264796716988643039,5137976927054270324,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=1892,i,9844248806434469716,17617228298788261150,4 --trace-process-track-uuid=3190708988185955192 --mojo-platform-channel-handle=2044 /prefetch:2 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21",
+                                                                                "metrics_available":  true,
+                                                                                "working_set_bytes":  134729728,
+                                                                                "private_memory_bytes":  143818752,
+                                                                                "handle_count":  675,
                                                                                 "thread_count":  33
                                                                             },
                                                                             {
-                                                                                "pid":  30424,
-                                                                                "parent_pid":  56848,
-                                                                                "name":  "msedgewebview2.exe",
-                                                                                "role":  "webview_renderer",
-                                                                                "creation_date":  "08/13/2026 12:17:01",
-                                                                                "working_set_bytes":  81141760,
-                                                                                "private_memory_bytes":  44118016,
-                                                                                "handle_count":  329,
-                                                                                "thread_count":  20
-                                                                            },
-                                                                            {
-                                                                                "pid":  51204,
-                                                                                "parent_pid":  56772,
+                                                                                "pid":  9284,
+                                                                                "parent_pid":  57040,
                                                                                 "name":  "quickpls-desktop.exe",
                                                                                 "role":  "desktop_root",
-                                                                                "creation_date":  "08/13/2026 12:17:00",
-                                                                                "working_set_bytes":  31252480,
-                                                                                "private_memory_bytes":  8441856,
-                                                                                "handle_count":  362,
+                                                                                "creation_date":  "08/13/2026 21:39:52",
+                                                                                "executable_path":  "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                                                                                "command_line":  "\"D:\\QuickPLS\\target\\release\\quickpls-desktop.exe\" ",
+                                                                                "metrics_available":  true,
+                                                                                "working_set_bytes":  31580160,
+                                                                                "private_memory_bytes":  8437760,
+                                                                                "handle_count":  374,
+                                                                                "thread_count":  24
+                                                                            },
+                                                                            {
+                                                                                "pid":  17588,
+                                                                                "parent_pid":  53272,
+                                                                                "name":  "msedgewebview2.exe",
+                                                                                "role":  "webview_utility",
+                                                                                "creation_date":  "08/13/2026 21:39:52",
+                                                                                "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
+                                                                                "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --disable-quic --noerrdialogs --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --startup-read-main-dll --metrics-shmem-handle=2312,i,167031962881466294,9901966334225416101,524288 --field-trial-handle=2004,i,1264796716988643039,5137976927054270324,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=1892,i,9844248806434469716,17617228298788261150,4 --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=2328 /prefetch:11 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21",
+                                                                                "metrics_available":  true,
+                                                                                "working_set_bytes":  37015552,
+                                                                                "private_memory_bytes":  18276352,
+                                                                                "handle_count":  348,
                                                                                 "thread_count":  23
                                                                             },
                                                                             {
-                                                                                "pid":  52436,
-                                                                                "parent_pid":  56848,
+                                                                                "pid":  53272,
+                                                                                "parent_pid":  9284,
                                                                                 "name":  "msedgewebview2.exe",
-                                                                                "role":  "webview_utility",
-                                                                                "creation_date":  "08/13/2026 12:17:01",
-                                                                                "working_set_bytes":  38940672,
-                                                                                "private_memory_bytes":  19599360,
-                                                                                "handle_count":  352,
-                                                                                "thread_count":  23
+                                                                                "role":  "webview_browser",
+                                                                                "creation_date":  "08/13/2026 21:39:52",
+                                                                                "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
+                                                                                "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --embedded-browser-webview=1 --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --noerrdialogs --embedded-browser-webview-dpi-awareness=2 --disable-background-networking --disable-component-update --disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --disable-quic --disable-sync --metrics-recording-only --proxy-server=http://127.0.0.1:17846 --remote-debugging-port=9222 --lang=en-US --mojo-named-platform-channel-pipe=9284.39724.2031440401814607262 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21",
+                                                                                "metrics_available":  true,
+                                                                                "working_set_bytes":  126738432,
+                                                                                "private_memory_bytes":  42106880,
+                                                                                "handle_count":  1286,
+                                                                                "thread_count":  56
                                                                             },
                                                                             {
-                                                                                "pid":  56488,
-                                                                                "parent_pid":  56848,
+                                                                                "pid":  60776,
+                                                                                "parent_pid":  53272,
                                                                                 "name":  "msedgewebview2.exe",
                                                                                 "role":  "webview_utility",
-                                                                                "creation_date":  "08/13/2026 12:17:01",
-                                                                                "working_set_bytes":  23707648,
-                                                                                "private_memory_bytes":  15835136,
+                                                                                "creation_date":  "08/13/2026 21:39:52",
+                                                                                "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
+                                                                                "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --type=utility --utility-sub-type=storage.mojom.StorageService --lang=en-US --service-sandbox-type=service --disable-quic --noerrdialogs --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --startup-read-main-dll --metrics-shmem-handle=2736,i,9173773982284953589,7412069235808815602,524288 --field-trial-handle=2004,i,1264796716988643039,5137976927054270324,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=1892,i,9844248806434469716,17617228298788261150,4 --trace-process-track-uuid=3190708990060038890 --mojo-platform-channel-handle=2752 /prefetch:13 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21",
+                                                                                "metrics_available":  true,
+                                                                                "working_set_bytes":  23703552,
+                                                                                "private_memory_bytes":  15912960,
                                                                                 "handle_count":  196,
                                                                                 "thread_count":  12
                                                                             },
                                                                             {
-                                                                                "pid":  56848,
-                                                                                "parent_pid":  51204,
+                                                                                "pid":  64524,
+                                                                                "parent_pid":  53272,
                                                                                 "name":  "msedgewebview2.exe",
-                                                                                "role":  "webview_browser",
-                                                                                "creation_date":  "08/13/2026 12:17:01",
-                                                                                "working_set_bytes":  123179008,
-                                                                                "private_memory_bytes":  42545152,
-                                                                                "handle_count":  1131,
-                                                                                "thread_count":  52
+                                                                                "role":  "webview_renderer",
+                                                                                "creation_date":  "08/13/2026 21:39:52",
+                                                                                "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
+                                                                                "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --type=renderer --noerrdialogs --user-data-dir=\"C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\" --webview-exe-name=quickpls-desktop.exe --webview-exe-version=2.46.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --remote-debugging-port=9222 --video-capture-use-gpu-memory-buffer --lang=en-US --device-scale-factor=1.25 --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=5 --js-flags=\"--expose-gc --ms-user-locale=en_IN\" --time-ticks-at-unix-epoch=-1784358019967832 --launch-time-ticks=2279372929512 --ssd-no-pressure-read-main-dll --metrics-shmem-handle=4192,i,16819279150295121104,4213758247913098339,2097152 --field-trial-handle=2004,i,1264796716988643039,5137976927054270324,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=1892,i,9844248806434469716,17617228298788261150,4 --trace-process-track-uuid=3190708990997080739 --mojo-platform-channel-handle=3108 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21 /prefetch:1",
+                                                                                "metrics_available":  true,
+                                                                                "working_set_bytes":  81453056,
+                                                                                "private_memory_bytes":  44748800,
+                                                                                "handle_count":  328,
+                                                                                "thread_count":  20
+                                                                            },
+                                                                            {
+                                                                                "pid":  66040,
+                                                                                "parent_pid":  53272,
+                                                                                "name":  "msedgewebview2.exe",
+                                                                                "role":  "webview_other",
+                                                                                "creation_date":  "08/13/2026 21:39:52",
+                                                                                "executable_path":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe",
+                                                                                "command_line":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --type=crashpad-handler --user-data-dir=C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView /prefetch:4 /pfhostedapp:1ed047503b0fc3c8ee170b07925ae210bb021d21 --monitor-self-annotation=ptype=crashpad-handler --database=C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView\\Crashpad --metrics-dir=C:\\Users\\mohd.naved\\AppData\\Local\\org.quickpls.desktop\\EBWebView --annotation=IsOfficialBuild=1 --annotation=channel= --annotation=chromium-version=151.0.7922.109 \"--annotation=exe=C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe\" --annotation=plat=Win64 \"--annotation=prod=Edge WebView2\" --annotation=ver=151.0.4129.78 --initial-client-data=0x1cc,0x1d0,0x1d4,0x1a8,0xcc,0x7ffa3a8f65f0,0x7ffa3a8f6600,0x7ffa3a8f6610",
+                                                                                "metrics_available":  true,
+                                                                                "working_set_bytes":  11943936,
+                                                                                "private_memory_bytes":  4739072,
+                                                                                "handle_count":  170,
+                                                                                "thread_count":  12
                                                                             }
                                                                         ]
                                                       },
                                      "monitor_terminal_reason":  "stop_signal",
-                                     "peak_working_set_bytes":  895926272,
-                                     "peak_private_memory_bytes":  713338880,
+                                     "peak_working_set_bytes":  939085824,
+                                     "peak_private_memory_bytes":  761495552,
                                      "peak_working_set_under_2_gib":  true,
                                      "policy":  "bounded_equal_logical_state_window_median_v2",
                                      "cancellation_within_baseline_tolerance":  true,
@@ -986,11 +1007,11 @@
                                      "equal_state_handle_count_within_tolerance":  true,
                                      "equal_state_thread_count_within_tolerance":  true,
                                      "equal_state_process_roles_exact":  true,
-                                     "process_roles_bounded_and_terminally_stable":  true,
+                                     "process_roles_bounded_and_terminally_stable":  false,
                                      "retained_history_disclosure":  {
                                                                          "checkpoint":  "post_completed_history_2_idle",
-                                                                         "median_working_set_bytes":  768352256,
-                                                                         "median_private_memory_bytes":  537440256,
+                                                                         "median_working_set_bytes":  764424192,
+                                                                         "median_private_memory_bytes":  550723584,
                                                                          "completed_result_count":  2,
                                                                          "witness_count":  2,
                                                                          "qualification_role":  "disclosure_only_not_a_threshold"
@@ -1002,12 +1023,12 @@
                                      "completed_cycle_count":  2,
                                      "idle_checkpoint_count":  5,
                                      "idle_settle_milliseconds":  5000,
-                                     "idle_checkpoints_ordered_and_distinct":  true,
+                                     "idle_checkpoints_ordered_and_distinct":  false,
                                      "capture_delay_milliseconds":  500,
                                      "sample_window_milliseconds":  5000,
                                      "minimum_samples_per_checkpoint":  6,
                                      "checkpoint_diagnostic_count":  5,
-                                     "checkpoint_diagnostics_all_passed":  true,
+                                     "checkpoint_diagnostics_all_passed":  false,
                                      "artifact_disk_deltas_recorded":  true,
                                      "zero_lingering_descendants":  true,
                                      "graceful_exit_confirmed":  true,
@@ -1022,14 +1043,14 @@
                },
     "artifacts":  {
                       "xlsx":  {
-                                   "path":  "validation/results/v247-native-process-v2-20260813-121700878.xlsx",
-                                   "size":  55319,
-                                   "sha256":  "bf773df169231365fcb534a33a1602a9cbbbb662e71682d53e0565c0490b0fdf"
+                                   "path":  "validation/results/v247-native-process-v2-20260813-213951987.xlsx",
+                                   "size":  55317,
+                                   "sha256":  "d2c0fac1a74efa13530885b4ae80cf8b3830b560123a5de277820fe718e9185a"
                                },
                       "project_archive":  {
-                                              "path":  "validation/results/v247-native-process-v2-1786603623786-24804.qpls",
-                                              "size":  2317833,
-                                              "sha256":  "416975b5f094e942f9e89295bb79f61a2aa69b77c337d28d52045a1fef082d57"
+                                              "path":  "validation/results/v247-native-process-v2-1786637394764-61924.qpls",
+                                              "size":  2317816,
+                                              "sha256":  "8efac394e9e9db115c7ce38d0731aabd3d03737af468ee147dead161e994bd9a"
                                           },
                       "screenshots":  [
                                           {
@@ -1039,90 +1060,90 @@
                                           },
                                           {
                                               "path":  "validation/results/screens/v247-native-desktop-acceptance/181-tauri-native-process-v2-cancellation-dialog-1536x794.png",
-                                              "size":  313286,
-                                              "sha256":  "ff40c6952ac0152885db43f1537cd3ddf2674deaaec408ee0ecdeb705508f91e"
+                                              "size":  313198,
+                                              "sha256":  "67b6df0d7137eca00185c5002ea44d875eb58c808843fca52b32d47a23c3e848"
                                           },
                                           {
                                               "path":  "validation/results/screens/v247-native-desktop-acceptance/182-tauri-native-process-v2-cancellation-running-1536x794.png",
-                                              "size":  232738,
-                                              "sha256":  "498e6aee59000a03a2750e6a86d56e2a44d5f0073d64529badca57c4a93ad152"
+                                              "size":  232730,
+                                              "sha256":  "60fcbd7b48aca18cdb519ab678ee0fbae2684b4f395164042ba94bdc44f95b43"
                                           },
                                           {
                                               "path":  "validation/results/screens/v247-native-desktop-acceptance/183-tauri-native-process-v2-cancelled-1536x794.png",
-                                              "size":  288779,
-                                              "sha256":  "c9b7f409ef048d29ab3b15cbf9fa4ae8b51479418d7ccbc15bfad0f6e8d7f403"
+                                              "size":  288422,
+                                              "sha256":  "3356231e789dea6d8b4d3efa6bba5a2500e1d3dd3389f707582ba22edde0b10d"
                                           },
                                           {
                                               "path":  "validation/results/screens/v247-native-desktop-acceptance/184-tauri-native-process-v2-dialog-1536x794.png",
-                                              "size":  288779,
-                                              "sha256":  "c9b7f409ef048d29ab3b15cbf9fa4ae8b51479418d7ccbc15bfad0f6e8d7f403"
+                                              "size":  288422,
+                                              "sha256":  "3356231e789dea6d8b4d3efa6bba5a2500e1d3dd3389f707582ba22edde0b10d"
                                           },
                                           {
                                               "path":  "validation/results/screens/v247-native-desktop-acceptance/185-tauri-native-process-v2-running-1536x794.png",
-                                              "size":  232687,
-                                              "sha256":  "ccd4ebd19898b8579158b914482079674f6db768395be54c9fc31b9664b77d58"
+                                              "size":  232801,
+                                              "sha256":  "963f0d664d539d683265e3d14d2ea3e2144f38c467327fbfee1100448b09e327"
                                           },
                                           {
                                               "path":  "validation/results/screens/v247-native-desktop-acceptance/186-tauri-native-process-v2-results-1536x794.png",
-                                              "size":  210137,
-                                              "sha256":  "159f787c24bd8bc25869d6815ae4b7afcdb9836512ef62ccf66e9a56a0fe342e"
+                                              "size":  209984,
+                                              "sha256":  "f30ab908426eb56343c6efbc8490d662f31128e4fed2cfaca29bfd11543c0fe4"
                                           },
                                           {
                                               "path":  "validation/results/screens/v247-native-desktop-acceptance/187-tauri-native-process-v2-export-1536x794.png",
-                                              "size":  217887,
-                                              "sha256":  "d3957f30d8d4d3c18c97d9000e0be7262a465af7adad40397b6bc86745c7d1df"
+                                              "size":  218269,
+                                              "sha256":  "d3d0324e2efe443ce8d0488318d4271172d329b98766d404f241c6ab2e6122c2"
                                           },
                                           {
                                               "path":  "validation/results/screens/v247-native-desktop-acceptance/188-tauri-native-process-v2-reopened-1536x794.png",
-                                              "size":  208841,
-                                              "sha256":  "e6d74b5d9f1d4e417a95b0c489eb8726af6c4111b2fd89bbfd972c529fc5bf57"
+                                              "size":  208687,
+                                              "sha256":  "af91159ca3c12cbe8ffc4475ea99dae68d43899a1475aef92ce1c3f99ea740ff"
                                           },
                                           {
                                               "path":  "validation/results/screens/v247-native-desktop-acceptance/189-tauri-native-process-v2-repeated-running-1536x794.png",
-                                              "size":  232738,
-                                              "sha256":  "498e6aee59000a03a2750e6a86d56e2a44d5f0073d64529badca57c4a93ad152"
+                                              "size":  232730,
+                                              "sha256":  "60fcbd7b48aca18cdb519ab678ee0fbae2684b4f395164042ba94bdc44f95b43"
                                           }
                                       ],
                       "resource_report":  {
                                               "path":  "validation/results/process_v2_resource_report.json",
-                                              "size":  118673,
-                                              "sha256":  "366d590f3ddd524d2546b3a2826b2154676f66d693ad17e0ac8d32e07a559fef"
+                                              "size":  126970,
+                                              "sha256":  "b8b2f42f15dcf44e022fd48f1c046e92244d317e5cc76f09b7add76273e6c323"
                                           },
                       "resource_samples":  {
                                                "path":  "validation/results/process_v2_resource_samples.jsonl",
-                                               "size":  468181,
-                                               "sha256":  "a13fefc074dc39711e290e766d53c103f8c3baacea1471c953c646695246312e"
+                                               "size":  2094106,
+                                               "sha256":  "7bf5e71e1bfa2d4b296411f9b8a8d652f9984a2696d4a5e8df27941b6d36be9f"
                                            },
                       "resource_phases":  {
                                               "path":  "validation/results/process_v2_resource_phases.json",
                                               "size":  10811,
-                                              "sha256":  "0630e4a06b96854dc9506d5e3d99647f11531de5cb2127ecf4b40549bb9bc81c"
+                                              "sha256":  "097e210f90d5af56be33eb3af32f050dde6f41f45440cd12a6e0c1aeaf3f5868"
                                           },
                       "resource_phase_snapshots":  [
                                                        {
-                                                           "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-initial_idle.qpls",
+                                                           "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-initial_idle.qpls",
                                                            "size":  12709,
-                                                           "sha256":  "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557"
+                                                           "sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
                                                        },
                                                        {
-                                                           "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-post_cancellation_idle.qpls",
+                                                           "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-post_cancellation_idle.qpls",
                                                            "size":  12709,
-                                                           "sha256":  "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557"
+                                                           "sha256":  "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
                                                        },
                                                        {
-                                                           "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-post_completed_cycle_1_idle.qpls",
-                                                           "size":  2311361,
-                                                           "sha256":  "113c4961f02ae0398957fc863c110327a9acd40dc30473956fc49725d032405f"
+                                                           "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-post_completed_cycle_1_idle.qpls",
+                                                           "size":  2311374,
+                                                           "sha256":  "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6"
                                                        },
                                                        {
-                                                           "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-post_completed_history_2_idle.qpls",
-                                                           "size":  4613969,
-                                                           "sha256":  "d67c4de97df5b5f017e745518c7e6d180d40365618175fbaeb83d70f26922a69"
+                                                           "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-post_completed_history_2_idle.qpls",
+                                                           "size":  4613942,
+                                                           "sha256":  "141f11b3169c727d64a1c43a22fde3beabc49033d563651b52aa9b4e6117c1c4"
                                                        },
                                                        {
-                                                           "path":  "validation/results/process-v2-resource-snapshot-1786603623786-24804-post_completed_cycle_2_idle.qpls",
-                                                           "size":  2311359,
-                                                           "sha256":  "5a4e7466c5caa9b34e0d159d4ec9b89aafe6bfcdd4f840f361638168aeb7c01b"
+                                                           "path":  "validation/results/process-v2-resource-snapshot-1786637394764-61924-post_completed_cycle_2_idle.qpls",
+                                                           "size":  2311374,
+                                                           "sha256":  "aeeebeba631ef4be4bd5bdd7281a0d32b69822c5a3471771ed5fddbf99f1c3e5"
                                                        }
                                                    ]
                   },

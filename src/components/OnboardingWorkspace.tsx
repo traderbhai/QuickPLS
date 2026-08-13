@@ -3,15 +3,9 @@ import { useWorkspace } from "../store";
 import { Card, InlineNotice, MetricCard, PageHeader, Panel, WorkspacePage } from "./Ui";
 
 const sampleProjects = [
+  ["corporate_reputation", "Corporate reputation", "Four-construct PLS-SEM model with a completed bootstrap-backed run."],
   ["simple_pls", "Simple reflective PLS-SEM", "Dataset, reflective constructs, paths, run, and report."],
-  ["mediation", "Mediation", "Indirect effects, total effects, and bootstrap-ready setup."],
-  ["moderation", "Moderation", "Two-stage interaction workflow and simple-slope review."],
-  ["formative", "Formative measurement", "Weights, formative VIF, and indicator placement."],
-  ["plspredict", "PLSpredict", "Holdout / k-fold prediction and benchmark review."],
-  ["micom_mga", "MICOM / MGA", "Two-group invariance and permutation group comparison."],
-  ["cbsem_cfa", "CB-SEM CFA", "Reflective CFA/SEM ML validated bounded workflow."],
-  ["regression", "Regression", "OLS/logistic/bounded PROCESS result workflow."],
-  ["nca", "NCA", "CE-FDH/CR-FDH necessity analysis and bottleneck tables."],
+  ["mediation", "Mediation", "Direct, indirect, and total effects from a completed three-construct run."],
 ] as const;
 
 export function OnboardingWorkspace() {
@@ -124,7 +118,7 @@ export function OnboardingWorkspace() {
       <li className={runs.length ? "active" : ""}><CheckCircle2 size={15} /><div><strong>Report</strong><span>{runs.length ? "Diagram and tables are ready for report setup" : "Run a method to unlock exports"}</span></div><button className="secondary-button" onClick={() => start("reports")}>Prepare</button></li>
     </ol>
     <section className="sample-project-gallery home-v2-samples" aria-label="Sample project gallery">
-      <header><div><strong>Sample project gallery</strong><span>Open a familiar research workflow, then inspect Data, Model, Results, and Report.</span></div><button className="secondary-button" onClick={() => window.dispatchEvent(new CustomEvent("quickpls:open-demo-project"))}><FlaskConical size={15} />Open selected sample</button></header>
+      <header><div><strong>Sample project gallery</strong><span>Open one of three complete bundled workflows, then inspect Data, Model, Results, and Report.</span></div><button className="secondary-button" onClick={() => window.dispatchEvent(new CustomEvent("quickpls:open-demo-project", { detail: { sampleId: onboarding.selectedDemo } }))}><FlaskConical size={15} />Open selected sample</button></header>
       <div className="sample-project-grid">
         {sampleProjects.map(([id, label, detail]) => <button key={id} type="button" className={onboarding.selectedDemo === id ? "sample-project-card active" : "sample-project-card"} onClick={() => setOnboardingState({ selectedDemo: id })}>
           <strong>{label}</strong>

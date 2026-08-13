@@ -218,6 +218,7 @@ export function buildNativeAnalysisRecipe(input: NativeAnalysisRecipeBuildInput)
   const metadata = buildMetadata(descriptor.scopeMetadata, methodConfig);
   const model = buildNativeRecipeModel(input.modelId, input.projectName, input.nodes, input.edges);
   if (kind === "cca") validateCcaModel(model);
+  if (kind === "cta_pls") validateCtaPlsModel(model);
   if (kind === "ipma" && methodConfig.kind === "ipma") validateIpmaModel(model, methodConfig.targets[0], input.nodes, input.edges);
   if (kind === "cbsem" && methodConfig.kind === "cbsem") validateCbsemModel(model, methodConfig.model_type);
   if (kind === "gsca") validateGscaModel(model, input.edges);
@@ -372,7 +373,11 @@ function buildMetadata(
   scopeMetadata: string,
   methodConfig: NativeAnalysisMethodConfig,
 ): Record<string, string> {
-  const status = methodConfig.kind !== "regression"
+  const status = methodConfig.kind === "predict" && methodConfig.fimix
+    ? "preview_fimix_pls_v1_bounded_score_space_diagnostic"
+    : methodConfig.kind === "predict" && methodConfig.pls_pos
+      ? "preview_pls_pos_v1_bounded_score_space_diagnostic"
+      : methodConfig.kind !== "regression"
     ? scopeMetadata
     : methodConfig.model.type === "process"
       ? methodConfig.bootstrap
@@ -779,6 +784,18 @@ function validateCcaModel(model: NativeRecipeModel) {
   }
   if (model.interactions.length > 0 || model.higher_order_constructs.length > 0) {
     fail("model", "CCA composite residual diagnostics do not support interaction or higher-order constructs in the validated scope.");
+  }
+}
+
+function validateCtaPlsModel(model: NativeRecipeModel) {
+  if (!model.constructs.some((construct) => construct.indicators.length >= 4)) {
+    fail("model", "CTA-PLS requires at least one ordinary construct with four or more indicators.");
+  }
+  if (model.controls.length > 0) {
+    fail("model", "CTA-PLS does not support control paths in the bounded native descriptive scope.");
+  }
+  if (model.interactions.length > 0 || model.higher_order_constructs.length > 0) {
+    fail("model", "CTA-PLS does not support interaction or higher-order constructs in the bounded native descriptive scope.");
   }
 }
 

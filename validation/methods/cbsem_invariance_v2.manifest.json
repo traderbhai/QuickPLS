@@ -1,0 +1,52 @@
+{
+  "schema_version":1,
+  "governance":{"contract_frozen_at_utc":"2026-08-13T10:26:17Z","manifest_path":"validation/methods/cbsem_invariance_v2.manifest.json","schema_path":"validation/methods/method_promotion_manifest.schema.json","validator_path":"validation/method_promotion_manifest.py","focused_test_path":"validation/test_method_promotion_manifest.py"},
+  "feature":{"id":"qpls3.cbsem.measurement_invariance","label":"CB-SEM Two-Group Measurement Invariance","method_version":"cbsem_invariance_v2","method_kind":"deterministic","catalogue_snapshot_date":"2026-08-12","catalogue_url":"https://smartpls.com/documentation/algorithms-and-techniques/"},
+  "claim":{
+    "supported_scope":"Simultaneous ordinary-ML two-group CFA hierarchy for continuous reflective models: configural, metric loading equality, and scalar intercept equality with an identified mean structure; named partial releases are manual and fully recorded.",
+    "estimand":"Adjacent restricted-minus-less-restricted chi-square and degrees-of-freedom differences, with delta CFI and delta RMSEA diagnostics for the frozen configural, metric, and scalar hierarchy.",
+    "assumptions":["Exactly two independent observed groups share the same indicator-factor pattern, observed variables, row policy, ML estimator, and identification convention.","Every hierarchy step is a valid nested constrained refit and converges to a finite admissible solution.","Scalar testing uses an explicitly identified mean structure with corresponding observed intercepts and latent means."],
+    "exclusions":["More than two groups, dependent/longitudinal groups, ordinal thresholds, robust/WLSMV estimation, strict residual invariance, alignment, and approximate/Bayesian invariance are excluded.","Automatic modification-index constraint release is excluded; partial releases must be explicitly named by the user.","The synthetic cbsem_invariance_v1 preview cannot be promoted or relabeled as v2."],
+    "warnings":["A failed earlier hierarchy step blocks all later steps.","Delta-CFI and delta-RMSEA heuristics are diagnostics, not universal truth or substitutes for model identification and substantive judgment."]
+  },
+  "scientific_contract":{
+    "equations":[
+      {"id":"invariance_difference_test","expression":"Delta_chi2_s = chi2_restricted_s - chi2_previous_s; Delta_df_s = df_restricted_s - df_previous_s","variables":["Delta_chi2_s","chi2_restricted_s","chi2_previous_s","Delta_df_s","df_restricted_s","df_previous_s"],"source_reference_id":"meredith_1993"},
+      {"id":"scalar_measurement_model","expression":"x_g = nu_g + Lambda_g eta_g + epsilon_g; scalar imposes nu_1 = nu_2 and Lambda_1 = Lambda_2","variables":["x_g","nu_g","Lambda_g","eta_g","epsilon_g","nu_1","nu_2","Lambda_1","Lambda_2"],"source_reference_id":"meredith_1993"}
+    ],
+    "references":[
+      {"id":"meredith_1993","kind":"primary_paper","citation":"Meredith (1993), Measurement Invariance, Factor Analysis and Factorial Invariance, DOI 10.1007/BF02294825","locator":"docs/methods/CBSEM_MEASUREMENT_INVARIANCE_V2.md","independence_group":"published_measurement_invariance","runtime_policy":"no_runtime_dependency"},
+      {"id":"joreskog_1971","kind":"primary_paper","citation":"Joreskog (1971), Simultaneous Factor Analysis in Several Populations, DOI 10.1007/BF02291466","locator":"docs/methods/CBSEM_MEASUREMENT_INVARIANCE_V2.md","independence_group":"published_multigroup_sem","runtime_policy":"no_runtime_dependency"},
+      {"id":"independent_python_cbsem_invariance","kind":"independent_python","citation":"Independent Python simultaneous constrained-ML configural/metric/scalar reference","locator":"validation/cbsem_invariance_v2_reference.py","independence_group":"python_reference","runtime_policy":"development_validation_only"}
+    ],
+    "simulations":[
+      {"id":"invariance_hierarchy_recovery","purpose":"type_i_error","design":"Two-group CFA models with exact configural, metric, scalar, loading-noninvariant, and intercept-noninvariant conditions across group balance, size, loading, and intercept magnitude.","seed_policy":"Frozen group-specific scenario and replicate seeds with deterministic optimizer settings.","metrics":["step_type_i_error","step_power","constraint_estimate_error","delta_fit_error","hierarchy_block_accuracy"],"acceptance_rule":"Null rejection intervals must contain nominal alpha, power and numerical agreement must meet preregistered limits, and later steps must never run after an earlier failure."},
+      {"id":"partial_release_behavior","purpose":"failure_behavior","design":"Named valid and invalid loading/intercept releases, automatic-search attempts, and mean-structure omissions.","seed_policy":"Frozen deterministic fixtures.","metrics":["release_validation_accuracy","automatic_search_block_count","scalar_mean_structure_block_accuracy"],"acceptance_rule":"Only explicit valid named releases may run, every release must persist, and scalar testing without an identified mean structure must be blocked."}
+    ],
+    "boundaries":[
+      {"id":"inadmissible_group_step","category":"data_pathology","case":"A group or hierarchy step is singular, unidentified, nonconverged, non-finite, or has an inadmissible variance.","expected_behavior":"That step fails explicitly and every later step is blocked."},
+      {"id":"unsupported_invariance_design","category":"unsupported_scope","case":"The design has other than two groups, different indicator patterns, ordinal data, no scalar mean structure, or automatic constraint search.","expected_behavior":"Setup or the affected step is blocked before an inferential result is emitted."},
+      {"id":"group_label_permutation","category":"metamorphic","case":"The two group labels are swapped while observations and equality constraints are unchanged.","expected_behavior":"Fit statistics, difference tests, and invariance decisions remain equal within tolerance after remapping group-specific estimates."},
+      {"id":"repeat_invariance_refits","category":"determinism","case":"The same data, groups, hierarchy, releases, and optimizer settings execute repeatedly.","expected_behavior":"Constraints, fits, diagnostics, failures, and summaries are exactly equal."},
+      {"id":"invariance_archive_tamper","category":"tamper","case":"A group, constraint, release, fit, delta, hierarchy status, mean-structure flag, or method identity is changed.","expected_behavior":"Strict project validation rejects the archive."}
+    ],
+    "numerical_tolerance":0.000001
+  },
+  "product_contract":{
+    "persistence":{"recipe_schema_version":3,"result_schema_version":1,"payload_kind":"pls_pm_v1","tamper_tests":[
+      {"category":"feature_identity","expected_behavior":"Reject an archive whose identity differs from CB-SEM measurement invariance v2."},
+      {"category":"method_version","expected_behavior":"Reject output relabeled from cbsem_invariance_v1 or another method."},
+      {"category":"dataset_fingerprint","expected_behavior":"Reject either group or hierarchy step when the dataset fingerprint differs."},
+      {"category":"checksum","expected_behavior":"Reject an archive entry whose group model, constraints, releases, or result checksum differs."},
+      {"category":"malformed_payload","expected_behavior":"Reject duplicate keys, unknown fields, invalid hierarchy, inconsistent constraints, non-finite deltas, or scalar results without mean structure."},
+      {"category":"legacy_reinterpretation","expected_behavior":"Never reinterpret arithmetically synthesized cbsem_invariance_v1 diagnostics as constrained-refit v2 evidence."}
+    ],"legacy_policy":"The cbsem_invariance_v1 preview remains experimental and is permanently ineligible for v2 evidence or migration."},
+    "native":{"setup_controls":["Group column and two levels","Configural model","Metric loading constraints","Scalar intercept and mean structure","Optional named partial releases"],"applicability_blockers":["Group count other than two","Different measurement forms","Unsupported estimator or data type","Unidentified or inadmissible step","Scalar step without mean structure"],"result_surfaces":["Group definitions and counts","Hierarchy and constraint ledger","Step fit and difference tests","Delta CFI and RMSEA diagnostics","Partial releases, warnings, and provenance"],"gui_cli_parity_rule":"GUI and CLI must produce identical group rows, constraints, refits, hierarchy blocking, fit deltas, and diagnostics for the same recipe.","accessibility_rules":["Hierarchy and fit visuals have equivalent accessible tables.","Passed, failed, blocked, partially released, and warning states are conveyed without color alone."]},
+    "export":{"formats":["csv","xlsx"],"tables":["Group definitions","Constraint hierarchy","Invariance fit comparison","Partial releases","Diagnostics","Run provenance"],"same_run_required":true,"provenance_required":true},
+    "packaged":{"platforms":["windows"],"workflow_steps":["setup","invalid_setup_blocked","execute","inspect_results","export","save","close","reopen_same_run","cleanup"],"viewports":["1024x700","1280x720","1440x900"],"offline_required":true,"cancellation_required":false,"process_cleanup_required":true},
+    "audit":{"exact_identity_fields":["passed","feature_id","method_version","catalogue_snapshot_date"],"source_hashes_required":true,"freshness_required":true,"reports_must_pass":true}
+  },
+  "qualification":{"declared_state":"absent","target_state":"release_qualified","source_requirements":{
+    "method_spec":["docs/methods/CBSEM_MEASUREMENT_INVARIANCE_V2.md"],"independent_reference":["validation/cbsem_invariance_v2_reference.py"],"simulation_report":["validation/cbsem_invariance_v2_release_simulation.py"],"boundary_report":["validation/cbsem_invariance_v2_release_boundary_gate.py"],"persistence_report":["validation/cbsem_invariance_v2_release_persistence_gate.py"],"frontend_report":["src/native/nativeCbsemInvariance.test.ts"],"export_report":["src/native/nativeExportTables.test.ts"],"method_audit":["validation/cbsem_invariance_v2_method_promotion_audit.py"],"packaged_acceptance":["validation/run_v252_cbsem_invariance_v2_native_acceptance.ps1"]
+  },"evidence":{"engine_only":[],"archive_qualified":[],"native_qualified":[],"release_qualified":[]}}
+}

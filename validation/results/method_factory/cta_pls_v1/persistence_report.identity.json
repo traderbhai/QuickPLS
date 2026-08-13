@@ -1,0 +1,132 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "checks": {
+      "archive_checksum_tamper_rejected": true,
+      "exact_tetrads_and_maxima_survive_reopen": true,
+      "legacy_method_version_not_reinterpreted_as_current": true,
+      "method_version_tamper_rejected_atomically": true,
+      "resampling_identity_tamper_rejected_atomically": true,
+      "shared_dataset_fingerprint_mutation_guard_exercised": true,
+      "signed_absolute_and_maximum_tamper_rejected_atomically": true,
+      "typed_cta_identity_round_trip": true,
+      "unknown_and_duplicate_pairings_rejected_atomically": true
+    },
+    "executions": [
+      {
+        "execution": {
+          "command": [
+            "cargo",
+            "test",
+            "-p",
+            "qpls-project",
+            "tests::runner_generated_cta_pls_appends_round_trips_and_rejects_contract_tampering"
+          ],
+          "duration_seconds": 2.435,
+          "returncode": 0,
+          "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.18s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_project-97d8e1207ceb67c8.exe)\n",
+          "stdout_tail": "\nrunning 1 test\ntest tests::runner_generated_cta_pls_appends_round_trips_and_rejects_contract_tampering ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.08s\n\n"
+        },
+        "passed": true,
+        "test": "tests::runner_generated_cta_pls_appends_round_trips_and_rejects_contract_tampering"
+      },
+      {
+        "execution": {
+          "command": [
+            "cargo",
+            "test",
+            "-p",
+            "qpls-project",
+            "tests::plsc_and_wpls_payloads_round_trip_and_reject_contract_tampering"
+          ],
+          "duration_seconds": 1.602,
+          "returncode": 0,
+          "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.31s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_project-97d8e1207ceb67c8.exe)\n",
+          "stdout_tail": "\nrunning 1 test\ntest tests::plsc_and_wpls_payloads_round_trip_and_reject_contract_tampering ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.14s\n\n"
+        },
+        "passed": true,
+        "test": "tests::plsc_and_wpls_payloads_round_trip_and_reject_contract_tampering"
+      },
+      {
+        "execution": {
+          "command": [
+            "cargo",
+            "test",
+            "-p",
+            "qpls-project",
+            "tests::changed_payload_is_rejected_by_its_manifest_checksum"
+          ],
+          "duration_seconds": 1.603,
+          "returncode": 0,
+          "stderr_tail": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.41s\n     Running unittests src\\lib.rs (target\\debug\\deps\\qpls_project-97d8e1207ceb67c8.exe)\n",
+          "stdout_tail": "\nrunning 1 test\ntest tests::changed_payload_is_rejected_by_its_manifest_checksum ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.04s\n\n"
+        },
+        "passed": true,
+        "test": "tests::changed_payload_is_rejected_by_its_manifest_checksum"
+      }
+    ],
+    "passed": true,
+    "tamper_categories": {
+      "checksum": true,
+      "dataset_fingerprint": true,
+      "feature_identity": true,
+      "legacy_reinterpretation": true,
+      "malformed_payload": true,
+      "method_version": true
+    }
+  },
+  "feature_id": "qpls3.assessment.cta_pls",
+  "generated_at_utc": "2026-08-13T18:54:29.055347Z",
+  "method_version": "cta_pls_tetrad_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "persistence_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-project/src/archive_integrity.rs",
+      "sha256": "f4eeb463e56b01937f4a77eed863cd3c90a142f973a8f378d5ddd591fac79b5a",
+      "size": 31085
+    },
+    {
+      "path": "crates/qpls-project/src/lib.rs",
+      "sha256": "d17f063c803d7e930d5d9840e1359c30beb3412b5f7efaab206c60f18624065d",
+      "size": 660277
+    },
+    {
+      "path": "validation/cta_pls_persistence_gate.py",
+      "sha256": "a754e45a8adfa825300b3c4a6dd413734f41fc4184dbd16a1a7a6c1982772093",
+      "size": 2832
+    },
+    {
+      "path": "validation/cta_pls_v1_factory_common.py",
+      "sha256": "726ee52650510f685e5ebdf1f90c06800e46dd021cef9d720c38a8bf5cf64294",
+      "size": 12502
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/cta_pls_v1.manifest.json",
+      "sha256": "9c185db215ed40fd30d77557a9e8448d109f6e3f1acf015d25e47fd4bc62257e",
+      "size": 14741
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_cta_pls_v1_factory_evidence.py",
+      "sha256": "a7455099f23dd1f38ee9db7a856dd0f9cacf2070941a95502c39e92a189e969c",
+      "size": 3720
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-13T10:12:27Z",
+    "manifest_path": "validation/methods/consistent_permutation_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.inference.consistent_permutation",
+    "label": "PLSc Consistent Permutation",
+    "method_version": "plsc_permutation_v1",
+    "method_kind": "stochastic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/consistent-permutation/"
+  },
+  "claim": {
+    "supported_scope": "A planned two-group fixed-size label-permutation procedure using 5,000 through 10,000 usable full plsc_v2 re-estimations per group, attenuation-corrected parameter differences, and a paired PLSc-aware measurement-invariance hierarchy.",
+    "estimand": "The conditional randomization distribution of Group A minus Group B attenuation-corrected PLSc paths and loadings, plus configural, compositional, mean, and variance invariance diagnostics, under exchangeable labels and the frozen two-group design.",
+    "assumptions": [
+      "Exactly two selected groups share the same reflective model, indicators, preprocessing, missing-data policy, estimator settings, and canonical orientation.",
+      "Group labels are exchangeable under the tested null and group sizes remain fixed in every permutation.",
+      "Every usable permutation independently re-estimates complete PLSc v2 solutions for both groups."
+    ],
+    "exclusions": [
+      "More than two groups, case weights, interactions, higher-order constructs, PCA weighting, matrix-only input, parametric MGA, and bootstrap MGA are excluded.",
+      "Standard-PLS MICOM or permutation-MGA output cannot be relabeled or reused as PLSc consistent-permutation evidence.",
+      "A significant difference is not evidence of causality, practical importance, semantic group equivalence, or measurement invariance."
+    ],
+    "warnings": [
+      "Structural comparisons require at least partial invariance for the involved constructs under the paired PLSc-aware invariance result.",
+      "Failed or inadmissible PLSc permutation fits must be disclosed and may not silently change the requested usable distribution."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {"id": "fixed_size_label_permutation", "expression": "(D*_A,b, D*_B,b) = permute_labels_without_replacement(D_A union D_B, n_A, n_B, seed_b)", "variables": ["D*_A,b", "D*_B,b", "D_A", "D_B", "n_A", "n_B", "seed_b"], "source_reference_id": "chin_dibbern_2010"},
+      {"id": "consistent_parameter_difference", "expression": "d*_bj = PLSc_v2(D*_A,b)_j - PLSc_v2(D*_B,b)_j", "variables": ["d*_bj", "D*_A,b", "D*_B,b", "j"], "source_reference_id": "consistent_permutation_independent_reference"},
+      {"id": "two_sided_add_one_probability", "expression": "p_j = (1 + count_b(abs(d*_bj) >= abs(d_j))) / (B + 1)", "variables": ["p_j", "d*_bj", "d_j", "B"], "source_reference_id": "chin_dibbern_2010"}
+    ],
+    "references": [
+      {"id": "dijkstra_henseler_2015", "kind": "primary_paper", "citation": "Dijkstra and Henseler (2015), Consistent Partial Least Squares Path Modeling", "locator": "https://doi.org/10.25300/MISQ/2015/39.2.02", "independence_group": "primary_plsc_method", "runtime_policy": "no_runtime_dependency"},
+      {"id": "chin_dibbern_2010", "kind": "primary_paper", "citation": "Chin and Dibbern (2010), An Introduction to a Permutation Based Procedure for Multi-Group PLS Analysis", "locator": "https://doi.org/10.1007/978-3-540-32827-8_8", "independence_group": "primary_permutation_method", "runtime_policy": "no_runtime_dependency"},
+      {"id": "henseler_ringle_sarstedt_2016", "kind": "primary_paper", "citation": "Henseler, Ringle, and Sarstedt (2016), Testing Measurement Invariance of Composites Using Partial Least Squares", "locator": "https://doi.org/10.1108/IMR-09-2014-0304", "independence_group": "primary_invariance_method", "runtime_policy": "no_runtime_dependency"},
+      {"id": "consistent_permutation_independent_reference", "kind": "independent_python", "citation": "Planned independent Python PLSc label-permutation and measurement-invariance implementation", "locator": "validation/consistent_permutation_reference.py", "independence_group": "python_reference", "runtime_policy": "development_validation_only"}
+    ],
+    "simulations": [
+      {"id": "equal_group_null_calibration", "purpose": "type_i_error", "design": "Equal-parameter reflective two-group models spanning sample size, imbalance, reliability, collinearity, nonnormality, and group-label prevalence.", "seed_policy": "Scenario and permutation indexed streams independent of worker count; QuickPLS and the independent reference receive identical assignments.", "metrics": ["path_type_i_error", "loading_type_i_error", "invariance_false_rejection_rate", "usable_permutation_rate"], "acceptance_rule": "At each preregistered supported cell, empirical rejection rates must lie within their binomial calibration bands and the pooled false-rejection upper envelope must not exceed the independently reviewed threshold."},
+      {"id": "group_difference_power", "purpose": "power", "design": "Known path, loading, composition, mean, and variance differences across balanced and imbalanced reflective two-group designs.", "seed_policy": "Frozen scenario-indexed data streams and domain-separated permutation streams.", "metrics": ["path_power", "loading_power", "difference_bias", "invariance_detection_rate", "direction_recovery"], "acceptance_rule": "Preregistered identifiable effects must meet the frozen power and direction-recovery thresholds while null parameters remain calibrated."},
+      {"id": "inadmissible_permutation_accounting", "purpose": "failure_behavior", "design": "Weak-reliability and small-group cells that yield improper rho_A, inadmissible corrected correlations, nonconvergence, singularity, or an exhausted attempt cap.", "seed_policy": "Every attempted assignment has a stable index and is never replaced by a new stream identity.", "metrics": ["requested_count", "usable_count", "attempted_count", "failed_count", "reason_count_identity", "attempt_cap_failures"], "acceptance_rule": "QuickPLS and the independent reference must agree on every assignment and failure category, and no inference may be emitted after the usable target fails within the frozen cap."}
+    ],
+    "boundaries": [
+      {"id": "inadmissible_group_fit", "category": "data_pathology", "case": "An original or permuted group produces improper rho_A, an inadmissible corrected correlation, nonconvergence, singularity, or nonfinite estimates.", "expected_behavior": "Original-fit failure blocks the run; a permutation-fit failure is explicitly counted and the run fails if the usable target cannot be reached within the fixed cap."},
+      {"id": "unsupported_group_design", "category": "unsupported_scope", "case": "The request has other than two groups, too few complete cases, mismatched configural models, weights, interactions, higher-order constructs, PCA weighting, matrix-only input, or an out-of-range permutation count.", "expected_behavior": "Typed setup validation blocks execution with the exact condition identified."},
+      {"id": "group_swap_and_reorder", "category": "metamorphic", "case": "Group A and B are swapped or rows and constructs are consistently reordered.", "expected_behavior": "Mapped differences reverse sign on group swap, two-sided probabilities remain equal, and reordered results agree within tolerance."},
+      {"id": "worker_schedule_invariance", "category": "determinism", "case": "The same recipe and seed execute under all supported worker counts and schedules.", "expected_behavior": "Assignments, failures, usable ordering, distributions, probabilities, and invariance payloads are exactly equal."},
+      {"id": "permutation_archive_tamper", "category": "tamper", "case": "Group identity, assignment plan, counts, parameter difference, probability, invariance row, dataset fingerprint, or method identity is changed.", "expected_behavior": "Strict project validation rejects the archive rather than displaying or exporting the changed result."}
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 3,
+      "result_schema_version": 1,
+      "payload_kind": "pls_pm_v3",
+      "tamper_tests": [
+        {"category": "feature_identity", "expected_behavior": "Reject a result whose consistent-permutation identity differs from the typed PLSc group recipe."},
+        {"category": "method_version", "expected_behavior": "Reject a plsc_permutation_v1 artifact paired with ordinary PLS or incompatible PLSc/invariance versions."},
+        {"category": "dataset_fingerprint", "expected_behavior": "Reject a result whose pooled/group complete-case manifests or dataset fingerprint no longer match."},
+        {"category": "checksum", "expected_behavior": "Reject any changed archive member whose checksum differs."},
+        {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, nonfinite values, bad counts, assignments, differences, probabilities, invariance hierarchy, or reasons."},
+        {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret pls_mga_permutation_v1/v2 or micom_v1/v2 output as PLSc consistent-permutation evidence."}
+      ],
+      "legacy_policy": "Only a typed plsc_permutation_v1 artifact with matching PLSc-aware invariance identity may satisfy this contract."
+    },
+    "native": {
+      "setup_controls": ["Group column and exact Group A/B values", "Configural invariance confirmation", "Usable permutations from 5000 through 10000", "Fixed seed", "Confidence level", "Worker count"],
+      "applicability_blockers": ["Other than two groups", "Too few complete cases", "Configural model mismatch", "Unsupported PLSc shape or resampling count", "Original group PLSc inadmissibility"],
+      "result_surfaces": ["Measurement-invariance hierarchy", "Group-specific PLSc estimates", "A-minus-B differences", "Two-sided empirical probabilities", "Permutation and failure accounting", "Warnings and provenance"],
+      "gui_cli_parity_rule": "For the same recipe, seed, method versions, group selection, and dataset fingerprint, GUI and CLI assignments and analytical payloads must be exactly equal apart from operational timestamps.",
+      "accessibility_rules": ["Invariance state and parameter tables are keyboard and screen-reader accessible.", "Significance, invariance failures, warnings, and unavailable states never rely only on color or pointer interaction."]
+    },
+    "export": {"formats": ["csv", "xlsx", "html", "pdf"], "tables": ["Consistent permutation differences", "PLSc-aware measurement invariance", "Group estimates", "Permutation accounting", "Failure reasons", "Method scope", "Run provenance"], "same_run_required": true, "provenance_required": true},
+    "packaged": {"platforms": ["windows"], "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"], "viewports": ["1024x700", "1280x720", "1440x900"], "offline_required": true, "cancellation_required": true, "process_cleanup_required": true},
+    "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
+  },
+  "qualification": {
+    "declared_state": "absent",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": ["docs/methods/CONSISTENT_PERMUTATION_V1.md"],
+      "independent_reference": ["validation/consistent_permutation_reference.py", "validation/consistent_permutation_reference.R"],
+      "simulation_report": ["validation/consistent_permutation_simulation.py"],
+      "boundary_report": ["validation/consistent_permutation_boundary_gate.py"],
+      "persistence_report": ["validation/consistent_permutation_persistence_gate.py"],
+      "frontend_report": ["src/native/nativeConsistentPermutation.test.ts"],
+      "export_report": ["validation/consistent_permutation_export_gate.py"],
+      "method_audit": ["validation/consistent_permutation_method_promotion_audit.py"],
+      "packaged_acceptance": ["validation/run_consistent_permutation_native_acceptance.ps1"]
+    },
+    "evidence": {"engine_only": [], "archive_qualified": [], "native_qualified": [], "release_qualified": []}
+  }
+}

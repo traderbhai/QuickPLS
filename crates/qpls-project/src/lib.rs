@@ -24,23 +24,24 @@ use qpls_core::{
 use qpls_data::{Dataset, DatasetDescriptor, dataset_from_descriptor, write_arrow};
 use qpls_estimation::{
     CBSEM_FIT_METHOD_VERSION, CBSEM_ML_METHOD_VERSION, CBSEM_MODIFICATION_INDICES_METHOD_VERSION,
-    CCA_METHOD_VERSION, CFA_ML_METHOD_VERSION, CVPAT_INDICATOR_BENCHMARK_METHOD_VERSION,
-    CbsemMatrixCell, GSCA_ALGORITHM_VERSION, GSCA_METHOD_VERSION, GSCA_METHOD_VERSION_V1,
-    IPMA_METHOD_VERSION, IPMA_PERFORMANCE_SCALE, MICOM_METHOD_VERSION, MICOM_METHOD_VERSION_V1,
-    MediationAnalysis, NCA_METHOD_VERSION, NCA_METHOD_VERSION_V1, NcaAnalysis, PCA_METHOD_VERSION,
-    PLS_MEDIATION_METHOD_VERSION, PLS_METHOD_VERSION, PLS_MGA_METHOD_VERSION,
-    PLS_MGA_METHOD_VERSION_V1, PLS_MGA_PERMUTATION_METHOD_VERSION,
-    PLS_MGA_PERMUTATION_METHOD_VERSION_V1, PLS_PREDICT_METHOD_VERSION,
-    PLS_PREDICT_METHOD_VERSION_V1, PLS_PREDICT_REPEATED_KFOLD_METHOD_VERSION,
-    PLS_TWO_STAGE_MODERATION_METHOD_VERSION, PLSC_METHOD_VERSION, PLSC_METHOD_VERSION_V1,
-    PcaAnalysis, PlsPredictAnalysis, PlsPredictCvpatBenchmarkAssessment, PlsPredictErrorMetrics,
-    PlsPredictIndicatorTarget, PlsResult, ProcessBootstrapAnalysis, ProcessGraphAnalysis,
-    REGRESSION_LOGISTIC_METHOD_VERSION, REGRESSION_LOGISTIC_METHOD_VERSION_V1,
-    REGRESSION_OLS_METHOD_VERSION, REGRESSION_PROCESS_METHOD_VERSION,
-    REGRESSION_PROCESS_METHOD_VERSION_V1, RegressionAnalysis, RegressionBootstrapAnalysis,
-    RegressionBootstrapBcaInterval, RegressionBootstrapCoefficient, RegressionBootstrapOddsRatio,
-    RegressionBootstrapTest, WPLS_METHOD_VERSION, analyze_mediation_effects_with_tolerance,
-    analyze_moderation, nca_analysis_matches_v2_contract, process_bootstrap_estimands,
+    CCA_METHOD_VERSION, CFA_ML_METHOD_VERSION, CTA_PLS_METHOD_VERSION,
+    CVPAT_INDICATOR_BENCHMARK_METHOD_VERSION, CbsemMatrixCell, GSCA_ALGORITHM_VERSION,
+    GSCA_METHOD_VERSION, GSCA_METHOD_VERSION_V1, IPMA_METHOD_VERSION, IPMA_PERFORMANCE_SCALE,
+    MICOM_METHOD_VERSION, MICOM_METHOD_VERSION_V1, MediationAnalysis, NCA_METHOD_VERSION,
+    NCA_METHOD_VERSION_V1, NcaAnalysis, PCA_METHOD_VERSION, PLS_MEDIATION_METHOD_VERSION,
+    PLS_METHOD_VERSION, PLS_MGA_METHOD_VERSION, PLS_MGA_METHOD_VERSION_V1,
+    PLS_MGA_PERMUTATION_METHOD_VERSION, PLS_MGA_PERMUTATION_METHOD_VERSION_V1,
+    PLS_PREDICT_METHOD_VERSION, PLS_PREDICT_METHOD_VERSION_V1,
+    PLS_PREDICT_REPEATED_KFOLD_METHOD_VERSION, PLS_TWO_STAGE_MODERATION_METHOD_VERSION,
+    PLSC_METHOD_VERSION, PLSC_METHOD_VERSION_V1, PcaAnalysis, PlsPredictAnalysis,
+    PlsPredictCvpatBenchmarkAssessment, PlsPredictErrorMetrics, PlsPredictIndicatorTarget,
+    PlsResult, ProcessBootstrapAnalysis, ProcessGraphAnalysis, REGRESSION_LOGISTIC_METHOD_VERSION,
+    REGRESSION_LOGISTIC_METHOD_VERSION_V1, REGRESSION_OLS_METHOD_VERSION,
+    REGRESSION_PROCESS_METHOD_VERSION, REGRESSION_PROCESS_METHOD_VERSION_V1, RegressionAnalysis,
+    RegressionBootstrapAnalysis, RegressionBootstrapBcaInterval, RegressionBootstrapCoefficient,
+    RegressionBootstrapOddsRatio, RegressionBootstrapTest, WPLS_METHOD_VERSION,
+    analyze_mediation_effects_with_tolerance, analyze_moderation, nca_analysis_matches_v2_contract,
+    process_bootstrap_estimands,
 };
 use qpls_resampling::{
     PERMUTATION_METHOD_VERSION, PROCESS_BOOTSTRAP_ALGORITHM, PROCESS_BOOTSTRAP_INTERVAL_POLICY,
@@ -900,6 +901,7 @@ fn executable_pls_payload_method_version(method: AnalysisMethod) -> Option<&'sta
         AnalysisMethod::Plsc => Some(PLSC_METHOD_VERSION),
         AnalysisMethod::Wpls => Some(WPLS_METHOD_VERSION),
         AnalysisMethod::Cca => Some(CCA_METHOD_VERSION),
+        AnalysisMethod::CtaPls => Some(CTA_PLS_METHOD_VERSION),
         AnalysisMethod::Predict => Some(PLS_PREDICT_METHOD_VERSION),
         AnalysisMethod::Mga => Some(PLS_MGA_METHOD_VERSION),
         AnalysisMethod::Ipma => Some(IPMA_METHOD_VERSION),
@@ -1110,6 +1112,236 @@ fn validate_cca_payload_contract(
     }
 
     actual_pairs == expected_pairs && close_enough(cca.max_absolute_residual, computed_max)
+}
+
+fn validate_cta_pls_payload_contract(
+    result: &AnalysisResult,
+    estimation: &PlsResult,
+    recipe: Option<&AnalysisRecipe>,
+    assessment_method_version: &str,
+) -> bool {
+    const COVARIANCE_VERSION: &str = "sample_covariance_of_preprocessed_indicators_v1";
+    const RESULT_WARNING: &str = "CTA-PLS tetrad bootstrap/permutation inference is outside the validated QuickPLS v1.2.3 descriptive scope.";
+    const ESTIMATION_WARNING: &str = "CTA-PLS tetrad diagnostics are validated for the documented QuickPLS v1.2.3 descriptive tetrad scope; bootstrap/permutation tetrad decision rules remain unsupported.";
+    const PAIRINGS: [&str; 3] = [
+        "ab_cd_minus_ac_bd",
+        "ac_bd_minus_ad_bc",
+        "ad_bc_minus_ab_cd",
+    ];
+
+    let Some(recipe) = recipe else {
+        return false;
+    };
+    let eligible_constructs = recipe
+        .model
+        .constructs
+        .iter()
+        .filter(|construct| construct.indicators.len() >= 4)
+        .collect::<Vec<_>>();
+    if recipe.settings.method != AnalysisMethod::CtaPls
+        || !matches!(
+            &recipe.settings.weighting_scheme,
+            WeightingScheme::Path | WeightingScheme::Factor
+        )
+        || recipe.settings.missing_data != MissingDataPolicy::ListwiseDeletion
+        || recipe.settings.case_weight_column.is_some()
+        || recipe.settings.bootstrap_samples > 0
+        || recipe.settings.studentized_inner_samples > 0
+        || recipe.settings.permutation_samples > 0
+        || recipe.settings.workers != 1
+        || eligible_constructs.is_empty()
+        || !recipe.model.controls.is_empty()
+        || !recipe.model.interactions.is_empty()
+        || !recipe.model.higher_order_constructs.is_empty()
+    {
+        return false;
+    }
+
+    let construct_ids = recipe
+        .model
+        .constructs
+        .iter()
+        .map(|construct| construct.id.as_str())
+        .collect::<BTreeSet<_>>();
+    let indicator_ids = recipe
+        .model
+        .constructs
+        .iter()
+        .flat_map(|construct| construct.indicators.iter().map(String::as_str))
+        .collect::<BTreeSet<_>>();
+    let indicator_count = recipe
+        .model
+        .constructs
+        .iter()
+        .map(|construct| construct.indicators.len())
+        .sum::<usize>();
+    if construct_ids.len() != recipe.model.constructs.len()
+        || indicator_ids.len() != indicator_count
+        || recipe.model.constructs.iter().any(|construct| {
+            construct.id.trim().is_empty()
+                || construct.indicators.is_empty()
+                || construct
+                    .indicators
+                    .iter()
+                    .any(|indicator| indicator.trim().is_empty())
+        })
+    {
+        return false;
+    }
+
+    let recipe_paths = recipe
+        .model
+        .paths
+        .iter()
+        .map(|path| (path.source.as_str(), path.target.as_str()))
+        .collect::<BTreeSet<_>>();
+    let estimation_paths = estimation
+        .paths
+        .iter()
+        .filter(|path| path.coefficient.is_finite())
+        .map(|path| (path.source.as_str(), path.target.as_str()))
+        .collect::<BTreeSet<_>>();
+    if recipe_paths.len() != recipe.model.paths.len()
+        || estimation_paths.len() != estimation.paths.len()
+        || recipe_paths != estimation_paths
+    {
+        return false;
+    }
+
+    let expected_provenance_version = format!(
+        "{PLS_METHOD_VERSION}+{CTA_PLS_METHOD_VERSION}+{PLS_MEDIATION_METHOD_VERSION}+{assessment_method_version}"
+    );
+    if result.provenance.method_version != expected_provenance_version
+        || estimation.method_version != CTA_PLS_METHOD_VERSION
+        || !estimation.control_estimates.is_empty()
+        || estimation.plsc.is_some()
+        || estimation.endogeneity.is_some()
+        || estimation.nonlinear_effects.is_some()
+        || estimation.moderated_mediation.is_some()
+        || estimation.wpls.is_some()
+        || estimation.cca.is_some()
+        || estimation.predict.is_some()
+        || estimation.segmentation.is_some()
+        || estimation.mga.is_some()
+        || estimation.micom.is_some()
+        || estimation.mga_permutation.is_some()
+        || estimation.fimix.is_some()
+        || estimation.ipma.is_some()
+        || estimation.cbsem.is_some()
+        || estimation.pca.is_some()
+        || estimation.regression.is_some()
+        || estimation.nca.is_some()
+        || estimation.gsca.is_some()
+        || estimation.mediation.method_version != PLS_MEDIATION_METHOD_VERSION
+        || estimation.moderation.method_version != PLS_TWO_STAGE_MODERATION_METHOD_VERSION
+        || !estimation.moderation.estimates.is_empty()
+        || !estimation.moderation.warnings.is_empty()
+        || !estimation
+            .warnings
+            .iter()
+            .any(|warning| warning == ESTIMATION_WARNING)
+    {
+        return false;
+    }
+
+    let Some(cta) = estimation.cta_pls.as_ref() else {
+        return false;
+    };
+    if cta.method_version != CTA_PLS_METHOD_VERSION
+        || cta.covariance != COVARIANCE_VERSION
+        || cta.warnings.len() != 1
+        || cta.warnings[0] != RESULT_WARNING
+    {
+        return false;
+    }
+
+    let mut expected = BTreeSet::new();
+    for construct in &eligible_constructs {
+        let indicators = &construct.indicators;
+        for a in 0..indicators.len() - 3 {
+            for b in a + 1..indicators.len() - 2 {
+                for c in b + 1..indicators.len() - 1 {
+                    for d in c + 1..indicators.len() {
+                        for pairing in PAIRINGS {
+                            expected.insert((
+                                construct.id.clone(),
+                                indicators[a].clone(),
+                                indicators[b].clone(),
+                                indicators[c].clone(),
+                                indicators[d].clone(),
+                                pairing.to_string(),
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    let mut actual = BTreeSet::new();
+    let mut values_by_quadruple =
+        BTreeMap::<(String, String, String, String, String), BTreeMap<String, f64>>::new();
+    let mut maxima = BTreeMap::<String, f64>::new();
+    for row in &cta.estimates {
+        if !row.tetrad.is_finite()
+            || !row.absolute_tetrad.is_finite()
+            || row.absolute_tetrad < 0.0
+            || !close_enough(row.absolute_tetrad, row.tetrad.abs())
+            || !PAIRINGS.contains(&row.pairing.as_str())
+        {
+            return false;
+        }
+        let identity = (
+            row.construct.clone(),
+            row.indicator_a.clone(),
+            row.indicator_b.clone(),
+            row.indicator_c.clone(),
+            row.indicator_d.clone(),
+            row.pairing.clone(),
+        );
+        if !actual.insert(identity) {
+            return false;
+        }
+        let quadruple = (
+            row.construct.clone(),
+            row.indicator_a.clone(),
+            row.indicator_b.clone(),
+            row.indicator_c.clone(),
+            row.indicator_d.clone(),
+        );
+        if values_by_quadruple
+            .entry(quadruple)
+            .or_default()
+            .insert(row.pairing.clone(), row.tetrad)
+            .is_some()
+        {
+            return false;
+        }
+        maxima
+            .entry(row.construct.clone())
+            .and_modify(|maximum| *maximum = maximum.max(row.absolute_tetrad))
+            .or_insert(row.absolute_tetrad);
+    }
+    if actual != expected {
+        return false;
+    }
+    for values in values_by_quadruple.values() {
+        if values.len() != PAIRINGS.len()
+            || !close_enough(values.values().copied().sum::<f64>(), 0.0)
+        {
+            return false;
+        }
+    }
+    if cta.max_absolute_tetrad_by_construct.len() != eligible_constructs.len() {
+        return false;
+    }
+    eligible_constructs.iter().all(|construct| {
+        let actual = cta.max_absolute_tetrad_by_construct.get(&construct.id);
+        let expected = maxima.get(&construct.id);
+        actual
+            .zip(expected)
+            .is_some_and(|(actual, expected)| close_enough(*actual, *expected))
+    })
 }
 
 fn cbsem_matrix_from_cells(
@@ -7896,6 +8128,12 @@ fn validate_result_contracts_internal(
                 recipe,
                 &assessment.method_version,
             ),
+            AnalysisMethod::CtaPls => validate_cta_pls_payload_contract(
+                result,
+                &estimation,
+                recipe,
+                &assessment.method_version,
+            ),
             AnalysisMethod::Predict => {
                 estimation.predict.as_ref().is_some_and(|predict| {
                     validate_prediction_payload_contract(result, &estimation, predict, recipe)
@@ -7947,6 +8185,7 @@ fn validate_result_contracts_internal(
             AnalysisMethod::Plsc
                 | AnalysisMethod::Wpls
                 | AnalysisMethod::Cca
+                | AnalysisMethod::CtaPls
                 | AnalysisMethod::Predict
                 | AnalysisMethod::Mga
                 | AnalysisMethod::Ipma
@@ -9985,6 +10224,23 @@ mod tests {
         (dataset, recipe, result)
     }
 
+    fn runner_generated_cta_pls() -> (Dataset, AnalysisRecipe, AnalysisResult) {
+        let dataset = import_delimited_bytes(
+            include_bytes!("../../../validation/results/cta_pls_reference.csv"),
+            "cta_pls_reference.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe = migrated_execution_recipe(include_bytes!(
+            "../../../validation/results/cta_pls_reference.recipe.json"
+        ));
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        recipe.settings.workers = 1;
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+        (dataset, recipe, result)
+    }
+
     fn runner_generated_gsca() -> (Dataset, AnalysisRecipe, AnalysisResult) {
         let dataset = import_delimited_bytes(
             include_bytes!("../../../validation/fixtures/simple_reflective.csv"),
@@ -11727,6 +11983,84 @@ mod tests {
         resampled.provenance.settings.bootstrap_samples = 999;
         let mut resampled_recipe = recipe;
         resampled_recipe.settings.bootstrap_samples = 999;
+        assert_rejected_atomically(resampled, resampled_recipe);
+    }
+
+    #[test]
+    fn runner_generated_cta_pls_appends_round_trips_and_rejects_contract_tampering() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("cta-pls.qpls");
+        let (dataset, recipe, result) = runner_generated_cta_pls();
+        assert_eq!(result.provenance.method, AnalysisMethod::CtaPls);
+        assert_eq!(
+            result.provenance.method_version,
+            format!(
+                "{PLS_METHOD_VERSION}+{CTA_PLS_METHOD_VERSION}+{PLS_MEDIATION_METHOD_VERSION}+{ASSESSMENT_METHOD_VERSION}"
+            )
+        );
+
+        let mut project = Project::new("Runner CTA-PLS persistence");
+        project.datasets.push(dataset);
+        project
+            .append_validated_result(recipe.clone(), result.clone())
+            .unwrap();
+        save_project(&path, &project).unwrap();
+        let reopened = load_project(&path).unwrap();
+        let estimation = match &reopened.results[0].payload {
+            AnalysisPayload::PlsPmV1 { estimation, .. } => estimation,
+            other => panic!("runner returned unexpected CTA-PLS payload: {other:?}"),
+        };
+        assert_eq!(estimation["method_version"], CTA_PLS_METHOD_VERSION);
+        assert_eq!(
+            estimation["cta_pls"]["method_version"],
+            CTA_PLS_METHOD_VERSION
+        );
+        assert!(estimation["cta_pls"]["estimates"].as_array().unwrap().len() >= 3);
+
+        let assert_rejected_atomically =
+            |tampered: AnalysisResult, tampered_recipe: AnalysisRecipe| {
+                let mut rejected = Project::new("Rejected CTA-PLS");
+                assert!(matches!(
+                    rejected.append_validated_result(tampered_recipe, tampered),
+                    Err(ProjectError::Invalid(_))
+                ));
+                assert!(rejected.recipes.is_empty());
+                assert!(rejected.results.is_empty());
+            };
+
+        let mut version = result.clone();
+        estimation_payload_mut(&mut version)["cta_pls"]["method_version"] =
+            serde_json::json!("cta_pls_tetrad_v0");
+        assert_rejected_atomically(version, recipe.clone());
+
+        let mut pairing = result.clone();
+        estimation_payload_mut(&mut pairing)["cta_pls"]["estimates"][0]["pairing"] =
+            serde_json::json!("unknown_pairing");
+        assert_rejected_atomically(pairing, recipe.clone());
+
+        let mut duplicate = result.clone();
+        let first = estimation_payload_mut(&mut duplicate)["cta_pls"]["estimates"][0].clone();
+        estimation_payload_mut(&mut duplicate)["cta_pls"]["estimates"][1] = first;
+        assert_rejected_atomically(duplicate, recipe.clone());
+
+        let mut absolute = result.clone();
+        estimation_payload_mut(&mut absolute)["cta_pls"]["estimates"][0]["absolute_tetrad"] =
+            serde_json::json!(999.0);
+        assert_rejected_atomically(absolute, recipe.clone());
+
+        let mut maximum = result.clone();
+        estimation_payload_mut(&mut maximum)["cta_pls"]["max_absolute_tetrad_by_construct"]["x"] =
+            serde_json::json!(999.0);
+        assert_rejected_atomically(maximum, recipe.clone());
+
+        let mut warning = result.clone();
+        estimation_payload_mut(&mut warning)["cta_pls"]["warnings"] = serde_json::json!([]);
+        assert_rejected_atomically(warning, recipe.clone());
+
+        let mut resampled = result;
+        resampled.provenance.settings.permutation_samples = 999;
+        let mut resampled_recipe = recipe;
+        resampled_recipe.settings.permutation_samples = 999;
         assert_rejected_atomically(resampled, resampled_recipe);
     }
 

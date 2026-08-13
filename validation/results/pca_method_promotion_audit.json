@@ -15,9 +15,9 @@
   },
   "checks": {
     "integrated_v08_numpy_reference": {
-      "path": "validation/results/v08_extended_methods_reference_report.json",
+      "path": "validation/results/v08_pca_reference_report.json",
       "passed": true,
-      "max_abs_difference": 6.661338147750939e-16,
+      "max_abs_difference": 4.440892098500626e-16,
       "retained_components": 3
     },
     "hand_two_variable_fixture": {
@@ -33,20 +33,20 @@
     },
     "high_dimensional_numpy_reference": {
       "passed": true,
-      "max_abs_difference": 2.2969265378591786e-10,
+      "max_abs_difference": 2.2909274477456165e-10,
       "component_max_abs_difference": 1.7763568394002505e-15,
-      "loading_max_abs_difference": 1.6530193880370803e-10,
-      "weight_max_abs_difference": 2.2969265378591786e-10,
+      "loading_max_abs_difference": 1.648701730694313e-10,
+      "weight_max_abs_difference": 2.2909274477456165e-10,
       "variables": 20,
       "observations": 30,
       "output": "validation\\results\\pca_promotion_high_dimensional_quickpls.json"
     },
     "missing_data_listwise_fixture": {
       "passed": true,
-      "max_abs_difference": 1.795230630818878e-13,
+      "max_abs_difference": 1.688649220454863e-13,
       "component_max_abs_difference": 8.881784197001252e-16,
-      "loading_max_abs_difference": 4.2577052994374753e-14,
-      "weight_max_abs_difference": 1.795230630818878e-13,
+      "loading_max_abs_difference": 4.005129561335252e-14,
+      "weight_max_abs_difference": 1.688649220454863e-13,
       "observations": 5,
       "output": "validation\\results\\pca_promotion_missing_quickpls.json"
     },
@@ -91,13 +91,13 @@
         "1440x900"
       ],
       "catalog_counts": [
-        11,
-        11,
-        11
+        15,
+        15,
+        15
       ]
     },
     "genuine_packaged_native_workflow": {
-      "path": "validation\\results\\v247_tauri_native_acceptance.json",
+      "path": "validation\\results\\method_factory\\pca_v1\\pca_v1_packaged_raw.json",
       "passed": true,
       "result_rows": {
         "components": 4,
@@ -105,20 +105,20 @@
       },
       "export": {
         "attempted": true,
-        "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-pca-20260812-015318423.xlsx",
+        "targetPath": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx",
         "helper": {
           "ready": {
             "event": "ready",
             "mainWindow": {
               "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
-              "handle": 6029878,
-              "pid": 30552,
+              "handle": 20317980,
+              "pid": 41144,
               "title": "QuickPLS"
             },
             "passed": true,
             "phase": "main_window_binding",
             "resultsRoot": "D:\\QuickPLS\\validation\\results",
-            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-pca-20260812-015318423.xlsx"
+            "targetPath": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx"
           },
           "completion": {
             "boundControls": {
@@ -127,23 +127,23 @@
             },
             "dialog": {
               "className": "#32770",
-              "directOwner": 6029878,
-              "handle": 2951678,
-              "pid": 30552,
-              "rootOwner": 6029878,
+              "directOwner": 20317980,
+              "handle": 30869474,
+              "pid": 41144,
+              "rootOwner": 20317980,
               "title": "Save As"
             },
             "event": "complete",
             "mainWindow": {
               "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
-              "handle": 6029878,
-              "pid": 30552,
+              "handle": 20317980,
+              "pid": 41144,
               "title": "QuickPLS"
             },
             "passed": true,
             "phase": "xlsx_creation_and_readback",
             "saveSubmission": {
-              "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-pca-20260812-015318423.xlsx",
+              "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx",
               "filenameBefore": "quickpls-result-tables",
               "filenameVerified": true,
               "saveButtonEnabled": true,
@@ -152,17 +152,17 @@
                 {
                   "attempt": 1,
                   "settledReads": [
-                    "D:\\QuickPLS\\validation\\results\\v247-native-pca-20260812-015318423.xlsx",
-                    "D:\\QuickPLS\\validation\\results\\v247-native-pca-20260812-015318423.xlsx"
+                    "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx",
+                    "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx"
                   ]
                 }
               ],
               "submissionMethod": "BM_CLICK",
-              "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-pca-20260812-015318423.xlsx"
+              "targetText": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx"
             },
-            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-pca-20260812-015318423.xlsx",
+            "targetPath": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx",
             "workbook": {
-              "path": "D:\\QuickPLS\\validation\\results\\v247-native-pca-20260812-015318423.xlsx",
+              "path": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx",
               "requiredSharedStrings": [
                 "Component summary",
                 "Component loadings and weights",
@@ -179,7 +179,7 @@
                 "Component scores",
                 "Run provenance"
               ],
-              "sha256": "9cb5d47fb9daf767ec8111e37087f7e7545582cd5d41b4e24e32ec06007907eb",
+              "sha256": "26113533f1b431828c7bcee5ce127cce12f8a3bba48d1a003cdd7d504681364a",
               "sheetNames": [
                 "Component summary",
                 "Component loadings and weights",
@@ -187,7 +187,7 @@
                 "Component scores",
                 "Run provenance"
               ],
-              "size": 15748
+              "size": 15754
             },
             "transport": {
               "exitCode": 0,
@@ -198,14 +198,14 @@
                   "event": "ready",
                   "mainWindow": {
                     "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
-                    "handle": 6029878,
-                    "pid": 30552,
+                    "handle": 20317980,
+                    "pid": 41144,
                     "title": "QuickPLS"
                   },
                   "passed": true,
                   "phase": "main_window_binding",
                   "resultsRoot": "D:\\QuickPLS\\validation\\results",
-                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-pca-20260812-015318423.xlsx"
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx"
                 },
                 {
                   "boundControls": {
@@ -214,23 +214,23 @@
                   },
                   "dialog": {
                     "className": "#32770",
-                    "directOwner": 6029878,
-                    "handle": 2951678,
-                    "pid": 30552,
-                    "rootOwner": 6029878,
+                    "directOwner": 20317980,
+                    "handle": 30869474,
+                    "pid": 41144,
+                    "rootOwner": 20317980,
                     "title": "Save As"
                   },
                   "event": "complete",
                   "mainWindow": {
                     "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
-                    "handle": 6029878,
-                    "pid": 30552,
+                    "handle": 20317980,
+                    "pid": 41144,
                     "title": "QuickPLS"
                   },
                   "passed": true,
                   "phase": "xlsx_creation_and_readback",
                   "saveSubmission": {
-                    "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-pca-20260812-015318423.xlsx",
+                    "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx",
                     "filenameBefore": "quickpls-result-tables",
                     "filenameVerified": true,
                     "saveButtonEnabled": true,
@@ -239,17 +239,17 @@
                       {
                         "attempt": 1,
                         "settledReads": [
-                          "D:\\QuickPLS\\validation\\results\\v247-native-pca-20260812-015318423.xlsx",
-                          "D:\\QuickPLS\\validation\\results\\v247-native-pca-20260812-015318423.xlsx"
+                          "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx",
+                          "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx"
                         ]
                       }
                     ],
                     "submissionMethod": "BM_CLICK",
-                    "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-pca-20260812-015318423.xlsx"
+                    "targetText": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx"
                   },
-                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-pca-20260812-015318423.xlsx",
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx",
                   "workbook": {
-                    "path": "D:\\QuickPLS\\validation\\results\\v247-native-pca-20260812-015318423.xlsx",
+                    "path": "D:\\QuickPLS\\validation\\results\\method_factory\\pca_v1\\pca_v1_packaged.xlsx",
                     "requiredSharedStrings": [
                       "Component summary",
                       "Component loadings and weights",
@@ -266,7 +266,7 @@
                       "Component scores",
                       "Run provenance"
                     ],
-                    "sha256": "9cb5d47fb9daf767ec8111e37087f7e7545582cd5d41b4e24e32ec06007907eb",
+                    "sha256": "26113533f1b431828c7bcee5ce127cce12f8a3bba48d1a003cdd7d504681364a",
                     "sheetNames": [
                       "Component summary",
                       "Component loadings and weights",
@@ -274,7 +274,7 @@
                       "Component scores",
                       "Run provenance"
                     ],
-                    "size": 15748
+                    "size": 15754
                   }
                 }
               ],
@@ -282,9 +282,9 @@
             }
           }
         },
-        "appFeedback": "Saved v247-native-pca-20260812-015318423.xlsx.",
+        "appFeedback": "Saved pca_v1_packaged.xlsx.",
         "file": {
-          "size": 15748,
+          "size": 15754,
           "isFile": true
         },
         "workbookSheets": [
@@ -308,7 +308,7 @@
     "method_spec": true,
     "known_differences": true,
     "method_compatibility_updated": true,
-    "native_workbench_lists_eleven_workflows": true,
+    "native_workbench_lists_fifteen_workflows": true,
     "native_backlog_no_longer_lists_pca": true
   }
 }

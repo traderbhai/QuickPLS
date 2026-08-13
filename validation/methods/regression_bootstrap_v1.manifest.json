@@ -1,0 +1,263 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-13T00:00:00Z",
+    "manifest_path": "validation/methods/regression_bootstrap_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.standalone.regression_bootstrap",
+    "label": "Regression Bootstrapping",
+    "method_version": "regression_bootstrap_v1",
+    "method_kind": "stochastic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/regression-bootstrapping/"
+  },
+  "claim": {
+    "supported_scope": "Deterministic indexed case resampling for supported OLS and binary logistic coefficients with fixed two-sided 95 percent standard-normal bootstrap-ratio tests, percentile-primary intervals, conditional BCa intervals, failure accounting, progress, cancellation, persistence, and native export.",
+    "estimand": "Sampling uncertainty for supported OLS and binary-logistic coefficient and odds-ratio point estimates under case resampling.",
+    "assumptions": [
+      "Complete cases are exchangeable sampling units for the requested regression model.",
+      "At least 90 percent of requested resamples produce usable fits under the documented failure policy.",
+      "BCa inference is available only when every required delete-one fit is usable and its acceleration is estimable."
+    ],
+    "exclusions": [
+      "Generic PLS-PM bootstrapping, PROCESS bootstrapping, studentized intervals, custom alpha or tails, and permutation inference are excluded.",
+      "Case weights, clustered sampling, categorical auto-encoding, and multinomial or ordinal logistic regression are excluded.",
+      "QuickPLS does not claim numerical identity with SmartPLS random-number streams."
+    ],
+    "warnings": [
+      "Failed bootstrap and jackknife fits remain visible and are never silently discarded from qualification accounting.",
+      "A BCa interval may be unavailable even when the primary percentile interval is available."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {
+        "id": "bootstrap_standard_error",
+        "expression": "se_boot = sqrt(sum_r((beta_r - mean_beta)^2) / (B - 1))",
+        "variables": ["se_boot", "beta_r", "mean_beta", "B"],
+        "source_reference_id": "efron_1979"
+      },
+      {
+        "id": "bootstrap_ratio",
+        "expression": "z_boot = beta_original / se_boot",
+        "variables": ["z_boot", "beta_original", "se_boot"],
+        "source_reference_id": "efron_1979"
+      },
+      {
+        "id": "percentile_interval",
+        "expression": "ci_percentile = [type7_quantile(beta_star, 0.025), type7_quantile(beta_star, 0.975)]",
+        "variables": ["ci_percentile", "beta_star"],
+        "source_reference_id": "hyndman_fan_1996"
+      }
+    ],
+    "references": [
+      {
+        "id": "efron_1979",
+        "kind": "primary_paper",
+        "citation": "Efron (1979), Bootstrap Methods: Another Look at the Jackknife",
+        "locator": "https://doi.org/10.1214/aos/1176344552",
+        "independence_group": "bootstrap_equations",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "hyndman_fan_1996",
+        "kind": "primary_paper",
+        "citation": "Hyndman and Fan (1996), Sample Quantiles in Statistical Packages",
+        "locator": "https://doi.org/10.1080/00031305.1996.10473566",
+        "independence_group": "quantile_equations",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "regression_bootstrap_python_r_reference",
+        "kind": "independent_python",
+        "citation": "Independent Python and R reconstruction of the frozen indexed regression-bootstrap summaries",
+        "locator": "validation/regression_bootstrap_v1_reference.py",
+        "independence_group": "independent_reference",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "simulations": [
+      {
+        "id": "ols_and_logistic_coverage",
+        "purpose": "coverage",
+        "design": "Preregistered supported OLS and binary-logistic designs spanning bounded sample size, effect, prevalence, and conditioning grids.",
+        "seed_policy": "Fixed master seeds with operation- and replicate-index-addressed streams, reduced in replicate order.",
+        "metrics": ["percentile_coverage", "bca_coverage", "usable_fraction", "worker_invariance"],
+        "acceptance_rule": "The simulation report must meet its frozen coverage and usable-fit intervals and show exact scientific-payload equality across supported worker counts."
+      },
+      {
+        "id": "failure_envelope",
+        "purpose": "failure_behavior",
+        "design": "Single-class resamples, rank-deficient resamples, incomplete jackknife sets, degenerate standard errors, and below-90-percent usable cases.",
+        "seed_policy": "Deterministic named fixtures plus frozen indexed resampling streams.",
+        "metrics": ["failure_accounting", "bca_unavailability_accuracy", "partial_result_count"],
+        "acceptance_rule": "Every failed fit is accounted for, BCa unavailability is tagged exactly, and a below-threshold or cancelled run commits no partial result."
+      }
+    ],
+    "boundaries": [
+      {
+        "id": "insufficient_usable_resamples",
+        "category": "data_pathology",
+        "case": "Fewer than 90 percent of requested bootstrap fits are usable or the bootstrap standard error is degenerate.",
+        "expected_behavior": "The run fails or the affected inference row is tagged unavailable according to the frozen policy; no NaN or fabricated statistic is emitted."
+      },
+      {
+        "id": "unsupported_regression_family",
+        "category": "unsupported_scope",
+        "case": "The recipe requests a regression family or inference option outside supported OLS and binary logistic v1 scope.",
+        "expected_behavior": "Setup is blocked before resampling with the unsupported option identified."
+      },
+      {
+        "id": "row_reorder",
+        "category": "metamorphic",
+        "case": "Dataset rows are consistently reordered while semantic observations remain the same.",
+        "expected_behavior": "Point estimates remain mapped correctly and distributional checks remain within the frozen tolerance; deterministic equality is required only for the same row order and seed."
+      },
+      {
+        "id": "worker_invariance",
+        "category": "determinism",
+        "case": "The same data, recipe, and seed are executed with different supported worker counts.",
+        "expected_behavior": "Replicate identities, failures, summaries, intervals, and analytical payloads are exactly equal."
+      },
+      {
+        "id": "bootstrap_archive_tamper",
+        "category": "tamper",
+        "case": "A replicate index, coefficient, failure, interval, witness, seed, method identity, or dataset fingerprint is altered after execution.",
+        "expected_behavior": "Strict archive validation rejects the complete changed result."
+      }
+    ],
+    "numerical_tolerance": 1e-6
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 3,
+      "result_schema_version": 1,
+      "payload_kind": "regression_bootstrap_v1",
+      "tamper_tests": [
+        {"category": "feature_identity", "expected_behavior": "Reject a result whose capability identity differs from its recipe."},
+        {"category": "method_version", "expected_behavior": "Reject a result relabeled as another regression-bootstrap method version."},
+        {"category": "dataset_fingerprint", "expected_behavior": "Reject a result whose saved dataset fingerprint no longer matches."},
+        {"category": "checksum", "expected_behavior": "Reject any modified archive entry whose checksum no longer matches."},
+        {"category": "malformed_payload", "expected_behavior": "Reject duplicated keys, unknown fields, non-finite values, invalid indices, incomplete partitions, or inconsistent summaries."},
+        {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret point-only, PLS-bootstrap, PROCESS-bootstrap, or legacy regression output as regression_bootstrap_v1."}
+      ],
+      "legacy_policy": "Point-only and unrelated resampling payloads remain readable under their original identities and cannot be promoted as regression-bootstrap evidence."
+    },
+    "native": {
+      "setup_controls": ["Supported regression model", "Replicates", "Seed", "Workers", "Percentile and conditional BCa intervals"],
+      "applicability_blockers": ["Unsupported regression family", "Invalid replicate count", "Unsupported confidence level or tail", "Insufficient complete cases"],
+      "result_surfaces": ["Bootstrap coefficient summaries", "Percentile and conditional BCa intervals", "Failed-fit accounting", "Run provenance"],
+      "gui_cli_parity_rule": "For the same dataset, recipe, seed, and worker count, GUI and CLI analytical payloads must be exactly equal apart from operational timestamps; scientific output must also be worker-invariant.",
+      "accessibility_rules": ["Bootstrap distributions have equivalent accessible summary tables.", "Failure counts, unavailable intervals, warnings, and provenance are available without color or pointer interaction."]
+    },
+    "export": {
+      "formats": ["csv", "xlsx"],
+      "tables": ["Bootstrap coefficients", "Percentile intervals", "Conditional BCa intervals", "Failed resamples", "Run provenance"],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": ["windows"],
+      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
+      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "offline_required": true,
+      "cancellation_required": true,
+      "process_cleanup_required": true
+    },
+    "audit": {
+      "exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
+  },
+  "qualification": {
+    "declared_state": "release_qualified",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": ["docs/methods/REGRESSION_BOOTSTRAP_V1.md"],
+      "independent_reference": ["validation/regression_bootstrap_v1_reference.py", "validation/regression_bootstrap_v1_reference.R"],
+      "simulation_report": ["validation/regression_bootstrap_v1_reference.py", "validation/test_regression_bootstrap_v1_reference.py"],
+      "boundary_report": ["validation/regression_bootstrap_failure_boundary_gate.py"],
+      "persistence_report": ["validation/test_regression_bootstrap_method_promotion_audit.py", "crates/qpls-project/src/lib.rs"],
+      "frontend_report": ["src/native/nativeRegressionBootstrapWitness.test.ts", "src/native/nativeResults.test.ts"],
+      "export_report": ["src/native/nativeExportTables.test.ts"],
+      "method_audit": ["validation/regression_bootstrap_method_promotion_audit.py", "validation/test_regression_bootstrap_method_promotion_audit.py", "validation/regression_bootstrap_v1_factory_audit.py", "validation/legacy_release_adapter_common.py", "validation/test_legacy_release_adapters.py"],
+      "packaged_acceptance": ["validation/run_v247_regression_bootstrap_native_acceptance.ps1", "validation/run_v247_cumulative_native_acceptance.ps1", "validation/v247_tauri_native_acceptance.mjs", "validation/v247_native_desktop_visual_acceptance.mjs", "validation/regression_bootstrap_v1_packaged_acceptance.py", "validation/legacy_release_adapter_common.py", "validation/test_legacy_release_adapters.py"]
+    },
+    "evidence": {
+      "engine_only": [
+        {
+          "path": "validation/results/method_factory/regression_bootstrap_v1/engine_stage.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "simulation_report",
+            "boundary_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "archive_qualified": [
+        {
+          "path": "validation/results/method_factory/regression_bootstrap_v1/persistence_report.identity.json",
+          "roles": ["persistence_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "native_qualified": [
+        {
+          "path": "validation/results/method_factory/regression_bootstrap_v1/native_stage.identity.json",
+          "roles": ["frontend_report", "export_report"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "release_qualified": [
+        {
+          "path": "validation/results/method_factory/regression_bootstrap_v1/method_audit.identity.json",
+          "roles": ["method_audit"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        },
+        {
+          "path": "validation/results/method_factory/regression_bootstrap_v1/packaged_acceptance.identity.json",
+          "roles": ["packaged_acceptance"],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"},
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ]
+    }
+  }
+}

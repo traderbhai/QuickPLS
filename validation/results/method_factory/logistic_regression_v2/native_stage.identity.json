@@ -1,0 +1,78 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "export_projection_present": true,
+    "focused_current_source_tests": {
+      "command": [
+        "npx.cmd",
+        "vitest",
+        "run",
+        "src/native/nativeLogistic.test.ts",
+        "src/native/nativeResults.test.ts",
+        "src/native/nativeExportTables.test.ts",
+        "--reporter=verbose"
+      ],
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout_tail": "ative/nativeResults.test.ts > native result navigation > opens finite-only CCA residual diagnostics by default using immutable model labels 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > does not fall back to uncorrected or placeholder method output when PLSc/WPLS payload rows are unavailable 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > keeps v1 prediction archives visibly legacy instead of relabeling them as current CVPAT 3ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > renders exact v2 indicator prediction, null MAPE, CVPAT benchmark status, and assignment provenance 3ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > keeps empty and unavailable assessment capabilities out of the tree 0ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > projects disjoint two-stage HOC evidence without leaking generated score indicators 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > classifies moderation and control inference once and hides generated product indicators 7ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > returns no navigation for failed or payload-free runs 0ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > projects only exact GSCA ALS v2 output into dedicated, non-inferential tables 3ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > rejects stale, internally inconsistent, or inference-bearing GSCA payloads 1ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > projects only exact current CB-SEM/CFA payloads into method-specific tables and standardized diagrams 2ms\n \u00e2\u0153\u201c src/native/nativeResults.test.ts > native result navigation > resolves table items without treating the diagram as a table 1ms\n\n Test Files  3 passed (3)\n      Tests  58 passed (58)\n   Start at  01:24:27\n   Duration  1.48s (transform 956ms, setup 0ms, import 1.75s, tests 186ms, environment 0ms)\n\n"
+    },
+    "method_specific_frontend_present": true,
+    "packaged_desktop_execution_claimed": false,
+    "passed": true,
+    "test_files": [
+      "src/native/nativeLogistic.test.ts",
+      "src/native/nativeResults.test.ts",
+      "src/native/nativeExportTables.test.ts"
+    ],
+    "typed_results_projection_present": true
+  },
+  "feature_id": "qpls3.standalone.logistic",
+  "generated_at_utc": "2026-08-13T19:54:28.938133Z",
+  "method_version": "regression_logistic_v2",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "native_stage",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "src/native/nativeExportTables.test.ts",
+      "sha256": "ab22330e2e6ed7752f748034adaa2c8e653bb4a149a0e91bef21943e2c6964fd",
+      "size": 19426
+    },
+    {
+      "path": "src/native/nativeLogistic.test.ts",
+      "sha256": "402448113819fbc9df0fe894f103d419ac2532ecacc6da4fde23dc294e01c736",
+      "size": 6352
+    },
+    {
+      "path": "validation/legacy_release_factory_migration.py",
+      "sha256": "5c2c131f972d70746ceed70377f8673d4b67ece6ece07c73d45bb2ac65fa4c5f",
+      "size": 23709
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/logistic_regression_v2.manifest.json",
+      "sha256": "d37e0fa1b6e67a91ec3b885163114e07c7da08de88d54385f960a77abcc73c7f",
+      "size": 13621
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_legacy_release_factory_migration.py",
+      "sha256": "d4ce1d582d77f6a861b20c5ee95f7a01446880270e038429712a240194cb23c1",
+      "size": 2519
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    }
+  ]
+}

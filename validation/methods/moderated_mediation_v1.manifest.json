@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-13T10:10:45Z",
+    "manifest_path": "validation/methods/moderated_mediation_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.pls.moderated_mediation",
+    "label": "PLS Moderated-Mediation Diagnostic",
+    "method_version": "pls_moderated_mediation_v1",
+    "method_kind": "deterministic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/"
+  },
+  "claim": {
+    "supported_scope": "A bounded fixed-score conditional indirect-effect diagnostic for one supported two-stage product-score interaction on either the first or second stage of a single mediated PLS path, reporting conditional indirect effects at standardized moderator scores -1, 0, and +1 and the linear index of moderated mediation.",
+    "estimand": "For first-stage moderation, (a1 + a3*w)*b and index a3*b; for second-stage moderation, a*(b1 + b3*w) and index a*b3, at the three frozen standardized moderator levels.",
+    "assumptions": [
+      "The recipe contains exactly one supported two-stage interaction that maps unambiguously to the first or second stage of one directed mediated path.",
+      "All component paths and the interaction coefficient come from the same complete-case fixed-score PLS result.",
+      "The moderator is standardized and probed only at -1, 0, and +1 under the frozen score convention."
+    ],
+    "exclusions": [
+      "Multiple moderated stages on one indirect path, multiple interactions, parallel or serial moderated systems, and three-way moderation are excluded.",
+      "Confidence intervals, significance tests, causal mediation claims, arbitrary probe values, and Johnson-Neyman regions are excluded.",
+      "The numbered Hayes PROCESS catalogue and observed-variable PROCESS implementation are separate and are not claimed here."
+    ],
+    "warnings": [
+      "Conditional indirect effects and the index are fixed-score point diagnostics without propagated score or resampling uncertainty.",
+      "A nonzero index is not a significance decision or causal proof."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {
+        "id": "first_stage_conditional_indirect",
+        "expression": "indirect(w) = (a1 + a3*w) * b; index = a3*b",
+        "variables": ["indirect", "w", "a1", "a3", "b", "index"],
+        "source_reference_id": "hayes_2015"
+      },
+      {
+        "id": "second_stage_conditional_indirect",
+        "expression": "indirect(w) = a * (b1 + b3*w); index = a*b3",
+        "variables": ["indirect", "w", "a", "b1", "b3", "index"],
+        "source_reference_id": "hayes_2015"
+      }
+    ],
+    "references": [
+      {
+        "id": "hayes_2015",
+        "kind": "primary_paper",
+        "citation": "Hayes (2015), An Index and Test of Linear Moderated Mediation, Multivariate Behavioral Research 50(1), 1-22",
+        "locator": "https://doi.org/10.1080/00273171.2014.962683",
+        "independence_group": "primary_moderated_mediation_method",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "independent_python_moderated_mediation",
+        "kind": "independent_python",
+        "citation": "Independent standardized OLS two-stage product-score conditional indirect-effect implementation",
+        "locator": "validation/moderated_mediation_reference.py",
+        "independence_group": "python_reference",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "simulations": [
+      {
+        "id": "conditional_indirect_recovery",
+        "purpose": "recovery",
+        "design": "First-stage and second-stage moderated mediation signal and broken-path cases over bounded main, interaction, mediation, reliability, and sample-size grids.",
+        "seed_policy": "Frozen scenario-indexed generators; QuickPLS and the independent reference receive identical rows, path mapping, and moderator levels.",
+        "metrics": ["conditional_indirect_error", "index_error", "stage_classification_error", "broken_path_degradation", "invalid_mapping_rejection"],
+        "acceptance_rule": "Every conditional effect and index must agree with the independent reference within 1e-6, the moderated stage must be classified exactly, and unsupported mappings must never emit completed estimates."
+      }
+    ],
+    "boundaries": [
+      {"id": "degenerate_mediated_stage", "category": "data_pathology", "case": "A predictor, moderator, mediator, target, or generated product score is constant, nonfinite, or creates a singular equation.", "expected_behavior": "Execution fails with the affected stage identified and emits no completed moderated-mediation result."},
+      {"id": "unsupported_moderated_path", "category": "unsupported_scope", "case": "No interaction exists, the interaction does not map uniquely to one mediated path, or the recipe contains multiple interactions or moderated stages.", "expected_behavior": "Setup or execution is blocked with a moderated-mediation-specific scope message."},
+      {"id": "positive_affine_and_reorder", "category": "metamorphic", "case": "Indicators are positively affine transformed or rows and constructs are consistently reordered.", "expected_behavior": "Mapped conditional effects, stage identity, and index remain equal within tolerance."},
+      {"id": "repeatability", "category": "determinism", "case": "The same data fingerprint and recipe are executed repeatedly.", "expected_behavior": "The analytical moderated-mediation payload is exactly equal apart from operational identifiers and timestamps."},
+      {"id": "moderated_mediation_archive_tamper", "category": "tamper", "case": "A stage identity, path mapping, probe level, conditional effect, index, warning, or method version is altered.", "expected_behavior": "Strict project validation rejects the archive rather than displaying the changed diagnostic."}
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 3,
+      "result_schema_version": 1,
+      "payload_kind": "pls_pm_v1",
+      "tamper_tests": [
+        {"category": "feature_identity", "expected_behavior": "Reject a result whose moderated-mediation capability identity differs from its recipe."},
+        {"category": "method_version", "expected_behavior": "Reject a moderated-mediation payload relabeled with another method version."},
+        {"category": "dataset_fingerprint", "expected_behavior": "Reject a moderated-mediation result whose saved dataset fingerprint no longer matches."},
+        {"category": "checksum", "expected_behavior": "Reject any modified archive member whose checksum differs."},
+        {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, non-finite effects, invalid probe levels, or stage and path identities inconsistent with the recipe."},
+        {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret ordinary moderation, mediation, PROCESS, or unversioned output as current bounded moderated-mediation evidence."}
+      ],
+      "legacy_policy": "Only a typed pls_moderated_mediation_v1 nested result with one supported interaction-path mapping may satisfy current evidence."
+    },
+    "native": {
+      "setup_controls": ["Supported mediated path", "First-stage or second-stage interaction", "Predictor and moderator", "Path or factor weighting", "Standardized preprocessing"],
+      "applicability_blockers": ["Missing interaction", "Ambiguous mediated path", "Multiple interactions", "PCA weighting", "Case weights", "Requested uncertainty inference"],
+      "result_surfaces": ["Moderated stage and path", "Conditional indirect effects at -1, 0, and +1", "Index of moderated mediation", "Scope warnings", "Run provenance"],
+      "gui_cli_parity_rule": "For the same typed recipe, data fingerprint, and method versions, GUI and CLI conditional effects, stage identity, and index must be exactly equal apart from operational identifiers and timestamps.",
+      "accessibility_rules": ["Conditional effects, stage identity, index, and warnings are available in accessible tables.", "Setup failures and point-estimate-only scope are understandable without color or diagram interaction."]
+    },
+    "export": {
+      "formats": ["csv", "xlsx", "html"],
+      "tables": ["Moderated-mediation conditional effects", "Moderated-mediation index", "Method scope", "Run provenance"],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": ["windows"],
+      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
+      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "offline_required": true,
+      "cancellation_required": false,
+      "process_cleanup_required": true
+    },
+    "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
+  },
+  "qualification": {
+    "declared_state": "absent",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": ["docs/methods/PLS_MODERATED_MEDIATION_V1.md"],
+      "independent_reference": ["validation/moderated_mediation_reference.py"],
+      "simulation_report": ["validation/moderated_mediation_simulation.py"],
+      "boundary_report": ["validation/moderated_mediation_boundary_gate.py"],
+      "persistence_report": ["validation/moderated_mediation_persistence_gate.py"],
+      "frontend_report": ["src/native/NativeModerationDialog.test.tsx", "src/native/nativeResults.test.ts", "src/domain/methodApplicability.test.ts"],
+      "export_report": ["src/domain/resultTables.test.ts", "src/native/nativeExportTables.test.ts"],
+      "method_audit": ["validation/moderated_mediation_method_promotion_audit.py"],
+      "packaged_acceptance": ["validation/run_moderated_mediation_native_acceptance.ps1"]
+    },
+    "evidence": {"engine_only": [], "archive_qualified": [], "native_qualified": [], "release_qualified": []}
+  }
+}

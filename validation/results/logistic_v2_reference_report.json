@@ -73,7 +73,7 @@
       "passed": true,
       "exit_code": 1,
       "expected_text": "worker",
-      "stderr_tail": "Error: regression.single_worker_required: Standalone regression uses deterministic single-worker estimation\n"
+      "stderr_tail": "Error: regression.single_worker_required: Standalone regression point estimation uses one worker; multiple workers are accepted only by the deterministic indexed bootstrap plan\n"
     }
   },
   "artifacts": {

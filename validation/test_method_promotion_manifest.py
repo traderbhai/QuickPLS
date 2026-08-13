@@ -32,6 +32,49 @@ from method_promotion_manifest import (  # noqa: E402
 STRUCTURAL_MANIFEST = MANIFEST_DIR / "structural_path_randomization_v1.manifest.json"
 PLANNED_MANIFEST = MANIFEST_DIR / "pls_sample_size_power_v1.manifest.json"
 
+LEGACY_RELEASE_MIGRATIONS = {
+    "qpls3.inference.structural_path_randomization": {
+        "manifest": STRUCTURAL_MANIFEST,
+        "reports": (
+            "validation/results/structural_path_randomization_method_promotion_audit.json",
+            "validation/results/structural_path_randomization_v1_packaged_acceptance.json",
+        ),
+    },
+    "qpls3.standalone.logistic": {
+        "manifest": MANIFEST_DIR / "logistic_regression_v2.manifest.json",
+        "reports": (
+            "validation/results/logistic_method_promotion_audit.json",
+            "validation/results/logistic_v2_packaged_acceptance.json",
+        ),
+    },
+    "qpls3.standalone.regression_bootstrap": {
+        "manifest": MANIFEST_DIR / "regression_bootstrap_v1.manifest.json",
+        "reports": (
+            "validation/results/regression_bootstrap_method_promotion_audit.json",
+            "validation/results/regression_bootstrap_v1_packaged_acceptance.json",
+        ),
+    },
+    "qpls3.standalone.process": {
+        "manifest": MANIFEST_DIR / "process_v2.manifest.json",
+        "reports": (
+            "validation/results/process_v2_method_promotion_audit.json",
+            "validation/results/process_v2_packaged_acceptance.json",
+        ),
+    },
+}
+
+IDENTITY_VERIFICATION = {
+    "kind": "identity_report",
+    "identity_pointers": {
+        "passed": "/passed",
+        "feature_id": "/feature_id",
+        "method_version": "/method_version",
+        "catalogue_snapshot_date": "/catalogue_snapshot_date",
+    },
+    "source_artifacts_pointer": "/source_artifacts",
+    "generated_at_pointer": "/generated_at_utc",
+}
+
 
 def _write(root: Path, relative: str, content: bytes) -> Path:
     path = root / Path(relative)
@@ -142,23 +185,74 @@ class MethodPromotionManifestTests(unittest.TestCase):
         )
         return manifest_path, report_path, document
 
-    def test_all_factory_manifests_are_truthful_and_unattested(self) -> None:
+    def test_all_factory_manifests_are_truthful_and_migrations_do_not_overclaim(self) -> None:
         report = validate_all(repository_root=REPOSITORY_ROOT)
 
         self.assertTrue(report["passed"], report)
-        self.assertEqual(report["manifest_count"], 2)
         states = {
             row["feature_id"]: (row["declared_state"], row["derived_state"])
             for row in report["manifests"]
         }
-        self.assertEqual(
-            states["qpls3.inference.structural_path_randomization"],
-            ("absent", "absent"),
-        )
+        self.assertGreaterEqual(report["manifest_count"], len(LEGACY_RELEASE_MIGRATIONS) + 1)
+        for feature_id, migration in LEGACY_RELEASE_MIGRATIONS.items():
+            with self.subTest(feature_id=feature_id):
+                manifest = strict_load_json(migration["manifest"])
+                self.assertEqual(
+                    states[feature_id],
+                    (
+                        manifest["qualification"]["declared_state"],
+                        manifest["qualification"]["declared_state"],
+                    ),
+                )
         self.assertEqual(
             states["qpls3.pls.sample_size_power"],
             ("absent", "absent"),
         )
+
+    def test_legacy_release_reports_cannot_bypass_factory_source_binding(self) -> None:
+        """Passing pre-factory reports remain historical, not factory attestations."""
+
+        for feature_id, migration in LEGACY_RELEASE_MIGRATIONS.items():
+            for legacy_report in migration["reports"]:
+                with self.subTest(feature_id=feature_id, legacy_report=legacy_report):
+                    document = strict_load_json(migration["manifest"])
+                    document["qualification"]["evidence"]["engine_only"] = [
+                        {
+                            "path": legacy_report,
+                            "roles": [
+                                "method_spec",
+                                "independent_reference",
+                                "simulation_report",
+                                "boundary_report",
+                            ],
+                            "verification": deepcopy(IDENTITY_VERIFICATION),
+                        }
+                    ]
+
+                    result = validate_manifest_document(document, REPOSITORY_ROOT)
+
+                    self.assertFalse(result["passed"], result)
+                    self.assertEqual(result["derived_state"], "absent")
+                    self.assertTrue(
+                        any("source_artifacts" in error for error in result["errors"]),
+                        result,
+                    )
+
+    def test_legacy_release_migration_scaffolds_name_real_sources(self) -> None:
+        for feature_id, migration in LEGACY_RELEASE_MIGRATIONS.items():
+            document = strict_load_json(migration["manifest"])
+            source_requirements = document["qualification"]["source_requirements"]
+            for role, paths in source_requirements.items():
+                for relative in paths:
+                    with self.subTest(
+                        feature_id=feature_id,
+                        role=role,
+                        source=relative,
+                    ):
+                        self.assertTrue(
+                            (REPOSITORY_ROOT / relative).is_file(),
+                            f"missing {role} scaffold source: {relative}",
+                        )
 
     def test_stdlib_validator_accepts_exact_engine_attestation(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:

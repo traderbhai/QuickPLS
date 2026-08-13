@@ -1,0 +1,269 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "coverage": {
+      "includes_missing_rows": true,
+      "includes_multiple_eligible_blocks": true,
+      "includes_non_gaussian_data": true,
+      "indicator_counts": [
+        4,
+        5,
+        6
+      ],
+      "population_shapes": [
+        "bounded_nongaussian_single_factor",
+        "correlated_residual_nonvanishing",
+        "mixed_block_tetrads",
+        "single_factor_vanishing"
+      ],
+      "preprocessing_modes": [
+        "mean_centered",
+        "standardized"
+      ],
+      "sample_sizes": [
+        40,
+        80,
+        100,
+        120,
+        140,
+        180
+      ]
+    },
+    "passed": true,
+    "scenario_count": 6,
+    "scenarios": [
+      {
+        "complete_case_counts_match": true,
+        "correlated_error": false,
+        "exact_pairing_membership": true,
+        "expected_omitted_observations": 0,
+        "expected_pairing_count": 3,
+        "expected_used_observations": 40,
+        "max_abs_absolute_value_error": 0.0,
+        "max_abs_construct_summary_error": 2.220446049250313e-16,
+        "max_abs_tetrad_error": 6.661338147750939e-16,
+        "missing": false,
+        "missing_from_quickpls": [],
+        "name": "four_vanishing_small",
+        "non_gaussian": false,
+        "observed_omitted_observations": 0,
+        "observed_pairing_count": 3,
+        "observed_used_observations": 40,
+        "output": "validation/results/method_factory/cta_pls_v1/work/factory_simulation_four_vanishing_small.quickpls.json",
+        "output_sha256": "166ec7eafe5d25ae71fe9a035eac1bfceea823a18069858669b2d9442d60c8b2",
+        "passed": true,
+        "population_shape": "single_factor_vanishing",
+        "preprocessing": "standardized",
+        "sample_size": 40,
+        "unexpected_from_quickpls": [],
+        "x_count": 4,
+        "y_count": 2
+      },
+      {
+        "complete_case_counts_match": true,
+        "correlated_error": true,
+        "exact_pairing_membership": true,
+        "expected_omitted_observations": 0,
+        "expected_pairing_count": 3,
+        "expected_used_observations": 80,
+        "max_abs_absolute_value_error": 0.0,
+        "max_abs_construct_summary_error": 5.551115123125783e-16,
+        "max_abs_tetrad_error": 5.551115123125783e-16,
+        "missing": false,
+        "missing_from_quickpls": [],
+        "name": "four_nonvanishing",
+        "non_gaussian": false,
+        "observed_omitted_observations": 0,
+        "observed_pairing_count": 3,
+        "observed_used_observations": 80,
+        "output": "validation/results/method_factory/cta_pls_v1/work/factory_simulation_four_nonvanishing.quickpls.json",
+        "output_sha256": "f6723cc76d764262a339733cb36525efc2d8f3260b44878ef8f7c17e5f847ec2",
+        "passed": true,
+        "population_shape": "correlated_residual_nonvanishing",
+        "preprocessing": "standardized",
+        "sample_size": 80,
+        "unexpected_from_quickpls": [],
+        "x_count": 4,
+        "y_count": 2
+      },
+      {
+        "complete_case_counts_match": true,
+        "correlated_error": false,
+        "exact_pairing_membership": true,
+        "expected_omitted_observations": 0,
+        "expected_pairing_count": 15,
+        "expected_used_observations": 120,
+        "max_abs_absolute_value_error": 0.0,
+        "max_abs_construct_summary_error": 3.3306690738754696e-16,
+        "max_abs_tetrad_error": 3.3306690738754696e-16,
+        "missing": false,
+        "missing_from_quickpls": [],
+        "name": "five_mean_centered",
+        "non_gaussian": false,
+        "observed_omitted_observations": 0,
+        "observed_pairing_count": 15,
+        "observed_used_observations": 120,
+        "output": "validation/results/method_factory/cta_pls_v1/work/factory_simulation_five_mean_centered.quickpls.json",
+        "output_sha256": "c5a14ea5b96577dd9fa44ec2e69083c4dde7ccb4102a2faa7ad979003c549d25",
+        "passed": true,
+        "population_shape": "single_factor_vanishing",
+        "preprocessing": "mean_centered",
+        "sample_size": 120,
+        "unexpected_from_quickpls": [],
+        "x_count": 5,
+        "y_count": 2
+      },
+      {
+        "complete_case_counts_match": true,
+        "correlated_error": false,
+        "exact_pairing_membership": true,
+        "expected_omitted_observations": 0,
+        "expected_pairing_count": 45,
+        "expected_used_observations": 180,
+        "max_abs_absolute_value_error": 0.0,
+        "max_abs_construct_summary_error": 2.220446049250313e-16,
+        "max_abs_tetrad_error": 1.5543122344752192e-15,
+        "missing": false,
+        "missing_from_quickpls": [],
+        "name": "six_nongaussian",
+        "non_gaussian": true,
+        "observed_omitted_observations": 0,
+        "observed_pairing_count": 45,
+        "observed_used_observations": 180,
+        "output": "validation/results/method_factory/cta_pls_v1/work/factory_simulation_six_nongaussian.quickpls.json",
+        "output_sha256": "3f4caa282327490f7dc17a1dc91e5603b0611441f0f6688abb7395a5e912719d",
+        "passed": true,
+        "population_shape": "bounded_nongaussian_single_factor",
+        "preprocessing": "standardized",
+        "sample_size": 180,
+        "unexpected_from_quickpls": [],
+        "x_count": 6,
+        "y_count": 2
+      },
+      {
+        "complete_case_counts_match": true,
+        "correlated_error": false,
+        "exact_pairing_membership": true,
+        "expected_omitted_observations": 8,
+        "expected_pairing_count": 15,
+        "expected_used_observations": 92,
+        "max_abs_absolute_value_error": 0.0,
+        "max_abs_construct_summary_error": 5.551115123125783e-16,
+        "max_abs_tetrad_error": 1.7763568394002505e-15,
+        "missing": true,
+        "missing_from_quickpls": [],
+        "name": "five_listwise_missing",
+        "non_gaussian": false,
+        "observed_omitted_observations": 8,
+        "observed_pairing_count": 15,
+        "observed_used_observations": 92,
+        "output": "validation/results/method_factory/cta_pls_v1/work/factory_simulation_five_listwise_missing.quickpls.json",
+        "output_sha256": "ee6ece03b12c585fcc76614c91412084c6384a367b151e93bf95244196121873",
+        "passed": true,
+        "population_shape": "single_factor_vanishing",
+        "preprocessing": "standardized",
+        "sample_size": 100,
+        "unexpected_from_quickpls": [],
+        "x_count": 5,
+        "y_count": 2
+      },
+      {
+        "complete_case_counts_match": true,
+        "correlated_error": true,
+        "exact_pairing_membership": true,
+        "expected_omitted_observations": 0,
+        "expected_pairing_count": 6,
+        "expected_used_observations": 140,
+        "max_abs_absolute_value_error": 0.0,
+        "max_abs_construct_summary_error": 3.3306690738754696e-16,
+        "max_abs_tetrad_error": 5.551115123125783e-16,
+        "missing": false,
+        "missing_from_quickpls": [],
+        "name": "two_eligible_blocks",
+        "non_gaussian": true,
+        "observed_omitted_observations": 0,
+        "observed_pairing_count": 6,
+        "observed_used_observations": 140,
+        "output": "validation/results/method_factory/cta_pls_v1/work/factory_simulation_two_eligible_blocks.quickpls.json",
+        "output_sha256": "b25cb557eb616aacd1aacbf088b2547fc2466f086d8fa73781f1d66ffdb6c221",
+        "passed": true,
+        "population_shape": "mixed_block_tetrads",
+        "preprocessing": "mean_centered",
+        "sample_size": 140,
+        "unexpected_from_quickpls": [],
+        "x_count": 4,
+        "y_count": 4
+      }
+    ],
+    "tolerance": 1e-06
+  },
+  "feature_id": "qpls3.assessment.cta_pls",
+  "generated_at_utc": "2026-08-13T18:53:52.275476Z",
+  "method_version": "cta_pls_tetrad_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "simulation_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-cli/src/main.rs",
+      "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
+      "size": 216983
+    },
+    {
+      "path": "crates/qpls-core/src/contract.rs",
+      "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
+      "size": 107095
+    },
+    {
+      "path": "crates/qpls-core/src/validation.rs",
+      "sha256": "ab3c3d35bc49eea4167ffc304495063b0a2e168448e9a160914638b30eb13573",
+      "size": 177352
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
+      "size": 639198
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
+      "size": 49349
+    },
+    {
+      "path": "validation/cta_pls_simulation.py",
+      "sha256": "463ca90177dadb6b842651019d0b5a82230525cffecd7d058116117d109d15ca",
+      "size": 12485
+    },
+    {
+      "path": "validation/cta_pls_v1_factory_common.py",
+      "sha256": "726ee52650510f685e5ebdf1f90c06800e46dd021cef9d720c38a8bf5cf64294",
+      "size": 12502
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/cta_pls_v1.manifest.json",
+      "sha256": "9c185db215ed40fd30d77557a9e8448d109f6e3f1acf015d25e47fd4bc62257e",
+      "size": 14741
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_cta_pls_v1_factory_evidence.py",
+      "sha256": "a7455099f23dd1f38ee9db7a856dd0f9cacf2070941a95502c39e92a189e969c",
+      "size": 3720
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    }
+  ]
+}

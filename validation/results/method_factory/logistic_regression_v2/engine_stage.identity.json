@@ -1,0 +1,121 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "archive_native_release_evidence_borrowed": false,
+    "bounded_state": "engine_only",
+    "current_cli_binding": {
+      "current_cli": {
+        "path": "target/release/qpls.exe",
+        "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+        "size": 20690432
+      },
+      "execution_binding": "reference script executed in this evidence run with QUICKPLS_CLI_PATH set to current_cli",
+      "explicit_report_binding": null,
+      "passed": true,
+      "reference_report_cli": null
+    },
+    "current_reference_execution": {
+      "command": [
+        "not_rerun"
+      ],
+      "returncode": null,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    "expected_checks": [
+      "complete_separation_rejected",
+      "external_r_glm_full_arithmetic",
+      "independent_python_full_arithmetic",
+      "non_binary_outcome_rejected",
+      "nondefault_worker_count_rejected",
+      "quickpls_v2_exact_contract",
+      "rank_deficiency_rejected",
+      "seed_invariant_deterministic_result",
+      "single_class_outcome_rejected"
+    ],
+    "focused_fail_closed_tests": {
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "validation.test_logistic_method_promotion_audit"
+      ],
+      "returncode": 0,
+      "stderr_tail": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.632s\n\nOK\n",
+      "stdout_tail": ""
+    },
+    "observed_passed_checks": [
+      "complete_separation_rejected",
+      "external_r_glm_full_arithmetic",
+      "independent_python_full_arithmetic",
+      "non_binary_outcome_rejected",
+      "nondefault_worker_count_rejected",
+      "quickpls_v2_exact_contract",
+      "rank_deficiency_rejected",
+      "seed_invariant_deterministic_result",
+      "single_class_outcome_rejected"
+    ],
+    "passed": true,
+    "reference_identity_exact": true,
+    "reference_report": {
+      "path": "validation/results/logistic_v2_reference_report.json",
+      "sha256": "37e5d51ee904057d16d76bb26aeaf417a8b8aeeb1058885b24cedf6ae555c13c",
+      "size": 3361
+    },
+    "required_check_set_exact": true
+  },
+  "feature_id": "qpls3.standalone.logistic",
+  "generated_at_utc": "2026-08-13T19:54:23.036762Z",
+  "method_version": "regression_logistic_v2",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "engine_stage",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "docs/methods/REGRESSION_LOGISTIC_V2.md",
+      "sha256": "19c354958b4645c3e0dae25d1afce026300eeaed4b3389fd487c945b903ce6eb",
+      "size": 2613
+    },
+    {
+      "path": "validation/legacy_release_factory_migration.py",
+      "sha256": "5c2c131f972d70746ceed70377f8673d4b67ece6ece07c73d45bb2ac65fa4c5f",
+      "size": 23709
+    },
+    {
+      "path": "validation/logistic_v2_reference.py",
+      "sha256": "cc40cf82ce4633a4ad503b0e0e848bc1c22d00c3e7acb38900b8b3769c01fd4e",
+      "size": 25692
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/logistic_regression_v2.manifest.json",
+      "sha256": "d37e0fa1b6e67a91ec3b885163114e07c7da08de88d54385f960a77abcc73c7f",
+      "size": 13621
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_legacy_release_factory_migration.py",
+      "sha256": "d4ce1d582d77f6a861b20c5ee95f7a01446880270e038429712a240194cb23c1",
+      "size": 2519
+    },
+    {
+      "path": "validation/test_logistic_method_promotion_audit.py",
+      "sha256": "40e2926b4ad0d276f8a1658630de7aa3853362380be0607c3d73791c93214a3c",
+      "size": 10634
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    }
+  ]
+}

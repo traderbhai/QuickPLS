@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "integrity_contract": "exact_current_reference_and_packaged_identity_v1",
-  "generated_at_utc": "2026-08-12T11:45:42.155296Z",
+  "generated_at_utc": "2026-08-13T19:27:19.200119Z",
   "target": "quickpls3_standalone_logistic_v2_promotion",
   "feature_id": "qpls3.standalone.logistic",
   "method_version": "regression_logistic_v2",
@@ -12,8 +12,8 @@
   "reference_report": {
     "path": "validation\\results\\logistic_v2_reference_report.json",
     "present": true,
-    "bytes": 3292,
-    "sha256": "a99f9103126c46a84e0db9aae0afac80e914d4a19fcc8766e85bbbc095e09a24",
+    "bytes": 3361,
+    "sha256": "37e5d51ee904057d16d76bb26aeaf417a8b8aeeb1058885b24cedf6ae555c13c",
     "readable": true,
     "explicit_pass_state": {
       "present": true,
@@ -247,8 +247,8 @@
       {
         "path": "validation/results/logistic_v2_reference_quickpls.json",
         "present": true,
-        "bytes": 42149,
-        "sha256": "ae397870ad7a0d308f3f237ff9545dc197c406393bc10a7a6a96b2857f1ffe3b",
+        "bytes": 41750,
+        "sha256": "b66896eee8292427945050bc8cb0efd5d2abbd2370d742dd9be1363285b94a82",
         "readable": true,
         "checks": [
           {
@@ -319,39 +319,39 @@
     "freshness": {
       "checked": true,
       "passed": true,
-      "report_modified_at_utc": "2026-08-12T10:26:36.370464Z",
-      "age_days": 0.054928,
+      "report_modified_at_utc": "2026-08-13T15:31:32.516248Z",
+      "age_days": 0.163735,
       "max_age_days": null,
       "sources": [
         {
           "path": "validation\\logistic_v2_reference.py",
           "present": true,
-          "modified_at_utc": "2026-08-12T10:26:21.248378Z"
+          "modified_at_utc": "2026-08-13T07:59:56.246208Z"
         },
         {
           "path": "crates\\qpls-core\\src\\contract.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T06:00:41.703255Z"
+          "modified_at_utc": "2026-08-13T07:59:55.461617Z"
         },
         {
           "path": "crates\\qpls-core\\src\\validation.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T10:03:14.493058Z"
+          "modified_at_utc": "2026-08-13T11:22:09.020320Z"
         },
         {
           "path": "crates\\qpls-estimation\\src\\pls.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T09:59:34.317976Z"
+          "modified_at_utc": "2026-08-13T10:35:42.744705Z"
         },
         {
           "path": "crates\\qpls-project\\src\\lib.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T10:12:17.725308Z"
+          "modified_at_utc": "2026-08-13T11:22:09.494578Z"
         },
         {
           "path": "crates\\qpls-runner\\src\\lib.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T09:57:15.486099Z"
+          "modified_at_utc": "2026-08-13T11:22:09.040430Z"
         }
       ]
     },
@@ -360,8 +360,8 @@
   "packaged_acceptance": {
     "path": "validation\\results\\logistic_v2_packaged_acceptance.json",
     "present": true,
-    "bytes": 4375,
-    "sha256": "5dc4b06c07147f3c179b979bc6eb85ca47a811670595e37623237ea9695247ce",
+    "bytes": 4390,
+    "sha256": "79749a731cb402c58558c5962ccf10c6abc140ff71153c5e4beb6863b8cab80a",
     "readable": true,
     "explicit_pass_state": {
       "present": true,
@@ -483,8 +483,8 @@
       {
         "path": "validation/results/v247_tauri_native_acceptance_logistic.json",
         "present": true,
-        "bytes": 391100,
-        "sha256": "5dfb656dc86b23ec5a68b247fa228983cd80443c8b7ccc38a8bd6c1e861dfcfd",
+        "bytes": 444724,
+        "sha256": "aa7cffe2cbe57a9be187a8c586166c0846b4187b7a68b568652f87fba4d09c22",
         "readable": true,
         "checks": [
           {
@@ -591,28 +591,28 @@
     "freshness": {
       "checked": true,
       "passed": true,
-      "report_modified_at_utc": "2026-08-12T11:34:27.259093Z",
-      "age_days": 0.007811,
+      "report_modified_at_utc": "2026-08-13T19:15:15.189186Z",
+      "age_days": 0.00838,
       "max_age_days": null,
       "sources": [
         {
           "path": "validation\\v247_tauri_native_acceptance.mjs",
           "present": true,
-          "modified_at_utc": "2026-08-12T11:31:09.279237Z"
+          "modified_at_utc": "2026-08-13T16:25:35.159990Z"
         },
         {
           "path": "validation\\logistic_v2_packaged_acceptance.schema.json",
           "present": true,
-          "modified_at_utc": "2026-08-12T10:28:53.119265Z"
+          "modified_at_utc": "2026-08-13T07:59:56.246208Z"
         },
         {
           "path": "validation\\run_v247_logistic_native_acceptance.ps1",
           "present": true,
-          "modified_at_utc": "2026-08-12T10:28:53.114969Z"
+          "modified_at_utc": "2026-08-13T07:59:56.792705Z"
         }
       ]
     },
-    "generated_at": "2026-08-12T11:31:20.078Z"
+    "generated_at": "2026-08-13T19:11:38.144Z"
   },
   "exact_check_sets": {
     "reference": {
@@ -680,23 +680,23 @@
     },
     "artifacts": {
       "xlsx": {
-        "path": "validation/results/v247-native-logistic-20260812-170118164.xlsx",
-        "reported_size": 16134,
-        "reported_sha256": "91f712e442fa9b7214ab881c0597d6c89dbbbfc2b7e5fafe8c6cfacd91e47fdb",
+        "path": "validation/results/v247-native-logistic-20260814-003257084-50236-6df5af42.xlsx",
+        "reported_size": 16133,
+        "reported_sha256": "08061192e164f7ab4308794a19384718a7d3d9e4db4a5155971584088b15bb4a",
         "present": true,
         "inside_repository": true,
-        "actual_size": 16134,
-        "actual_sha256": "91f712e442fa9b7214ab881c0597d6c89dbbbfc2b7e5fafe8c6cfacd91e47fdb",
+        "actual_size": 16133,
+        "actual_sha256": "08061192e164f7ab4308794a19384718a7d3d9e4db4a5155971584088b15bb4a",
         "passed": true
       },
       "project_archive": {
-        "path": "validation/results/v247-native-logistic-1786534280072-60296.qpls",
-        "reported_size": 20226,
-        "reported_sha256": "80940815a1024a8760b61ecdbc28b69fc96466e719cdde38eb32c257268e4ef0",
+        "path": "validation/results/v247-native-logistic-1786648298136-35352.qpls",
+        "reported_size": 20157,
+        "reported_sha256": "57b7497daedce39d64bff0ca7451033c87255e1a303e116137b1709af31ebaa8",
         "present": true,
         "inside_repository": true,
-        "actual_size": 20226,
-        "actual_sha256": "80940815a1024a8760b61ecdbc28b69fc96466e719cdde38eb32c257268e4ef0",
+        "actual_size": 20157,
+        "actual_sha256": "57b7497daedce39d64bff0ca7451033c87255e1a303e116137b1709af31ebaa8",
         "passed": true
       },
       "screenshots": [
@@ -712,52 +712,52 @@
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/151-tauri-native-logistic-dialog-1536x794.png",
-          "reported_size": 284712,
-          "reported_sha256": "2c0bd4a2d78b931214e18218112d96460a05294c038081462860f821a56b3a60",
+          "reported_size": 284477,
+          "reported_sha256": "164046f3fff839f75b0cd97a84d09b584892ab855a7e5a22f66050b7dac3b94e",
           "present": true,
           "inside_repository": true,
-          "actual_size": 284712,
-          "actual_sha256": "2c0bd4a2d78b931214e18218112d96460a05294c038081462860f821a56b3a60",
+          "actual_size": 284477,
+          "actual_sha256": "164046f3fff839f75b0cd97a84d09b584892ab855a7e5a22f66050b7dac3b94e",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/152-tauri-native-logistic-running-1536x794.png",
-          "reported_size": 229199,
-          "reported_sha256": "68578e95310b629f1ff52e6a85fec421e1de215b3abf8e8c08953c6db9f9e3da",
+          "reported_size": 230670,
+          "reported_sha256": "412b6a5216d536a10a489d3dc38897b26325a0bdabccdf4898237eb4aa2a9c4a",
           "present": true,
           "inside_repository": true,
-          "actual_size": 229199,
-          "actual_sha256": "68578e95310b629f1ff52e6a85fec421e1de215b3abf8e8c08953c6db9f9e3da",
+          "actual_size": 230670,
+          "actual_sha256": "412b6a5216d536a10a489d3dc38897b26325a0bdabccdf4898237eb4aa2a9c4a",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/153-tauri-native-logistic-results-1536x794.png",
-          "reported_size": 90649,
-          "reported_sha256": "3d982ca36ce4770b9a43472b23ccbe840a693bc7ee508b8768877e4eebfcfd1c",
+          "reported_size": 90868,
+          "reported_sha256": "669ef9172fa9834f71f2855e2b90db6655e6d6fbf2629a71ce0890ebb391ae8f",
           "present": true,
           "inside_repository": true,
-          "actual_size": 90649,
-          "actual_sha256": "3d982ca36ce4770b9a43472b23ccbe840a693bc7ee508b8768877e4eebfcfd1c",
+          "actual_size": 90868,
+          "actual_sha256": "669ef9172fa9834f71f2855e2b90db6655e6d6fbf2629a71ce0890ebb391ae8f",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/154-tauri-native-logistic-export-1536x794.png",
-          "reported_size": 116167,
-          "reported_sha256": "24da548f3c6d50ba8a0eefa970c33e4f0cfc529ab90e35cf4eff0ead877b1e22",
+          "reported_size": 117075,
+          "reported_sha256": "18c18417199acbadf439d13236bad3edc111d519061be44a4a27b9d38bd7b31d",
           "present": true,
           "inside_repository": true,
-          "actual_size": 116167,
-          "actual_sha256": "24da548f3c6d50ba8a0eefa970c33e4f0cfc529ab90e35cf4eff0ead877b1e22",
+          "actual_size": 117075,
+          "actual_sha256": "18c18417199acbadf439d13236bad3edc111d519061be44a4a27b9d38bd7b31d",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/155-tauri-native-logistic-reopened-1536x794.png",
-          "reported_size": 97916,
-          "reported_sha256": "221d795533bba8f9e633cc1a446387e5cd492c959d7f00ed1d14f5553ff55635",
+          "reported_size": 98134,
+          "reported_sha256": "b504fc1c7da2861b4701c156e86d862012c32520c46850faaf3ccf56c10a0d43",
           "present": true,
           "inside_repository": true,
-          "actual_size": 97916,
-          "actual_sha256": "221d795533bba8f9e633cc1a446387e5cd492c959d7f00ed1d14f5553ff55635",
+          "actual_size": 98134,
+          "actual_sha256": "b504fc1c7da2861b4701c156e86d862012c32520c46850faaf3ccf56c10a0d43",
           "passed": true
         }
       ]

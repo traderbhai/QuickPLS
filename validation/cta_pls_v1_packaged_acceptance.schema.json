@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/cta-pls-v1-packaged-acceptance.schema.json",
+  "title": "QuickPLS CTA-PLS v1 packaged acceptance identity report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "report_kind", "role", "passed", "feature_id", "method_version",
+    "catalogue_snapshot_date", "generated_at_utc", "source_artifacts", "checks", "execution"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "report_kind": { "const": "quickpls_method_factory_identity_report" },
+    "role": { "const": "packaged_acceptance" },
+    "passed": { "const": true },
+    "feature_id": { "const": "qpls3.assessment.cta_pls" },
+    "method_version": { "const": "cta_pls_tetrad_v1" },
+    "catalogue_snapshot_date": { "const": "2026-08-12" },
+    "generated_at_utc": { "type": "string", "format": "date-time" },
+    "source_artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/artifact" }
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "passed", "prior_factory_stages", "focused_report", "tested_binary", "source_freshness",
+        "invalid_setup", "same_run", "exact_archive", "exact_xlsx", "responsive_viewports",
+        "method_functional_offline", "platform_background_egress_observation", "cleanup",
+        "fail_closed_mutations"
+      ],
+      "properties": {
+        "passed": { "const": true },
+        "prior_factory_stages": { "$ref": "#/$defs/passedObject" },
+        "focused_report": { "$ref": "#/$defs/passedObject" },
+        "tested_binary": { "$ref": "#/$defs/passedObject" },
+        "source_freshness": { "$ref": "#/$defs/passedObject" },
+        "invalid_setup": { "$ref": "#/$defs/passedObject" },
+        "same_run": { "$ref": "#/$defs/passedObject" },
+        "exact_archive": { "$ref": "#/$defs/passedObject" },
+        "exact_xlsx": { "$ref": "#/$defs/passedObject" },
+        "responsive_viewports": { "$ref": "#/$defs/passedObject" },
+        "method_functional_offline": { "$ref": "#/$defs/methodFunctionalOffline" },
+        "platform_background_egress_observation": { "$ref": "#/$defs/platformBackgroundEgressObservation" },
+        "cleanup": { "$ref": "#/$defs/passedObject" },
+        "fail_closed_mutations": { "$ref": "#/$defs/passedObject" }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "returncode", "duration_seconds", "stdout_tail", "stderr_tail", "clean_after_wrapper", "cleanup_probe"],
+      "properties": {
+        "command": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "returncode": { "const": 0 },
+        "duration_seconds": { "type": "number", "minimum": 0 },
+        "stdout_tail": { "type": "string" },
+        "stderr_tail": { "type": "string" },
+        "clean_after_wrapper": { "const": true },
+        "cleanup_probe": { "type": "object" }
+      }
+    }
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "size", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1, "pattern": "^(?![A-Za-z]:)(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$" },
+        "size": { "type": "integer", "minimum": 0 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "passedObject": {
+      "type": "object",
+      "required": ["passed"],
+      "properties": { "passed": { "const": true } }
+    },
+    "methodFunctionalOffline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "passed", "analysis_export_save_reopen_succeeded", "no_external_app_requests",
+        "runtime_network_dependency", "allowed_origins", "observed_origins",
+        "observed_request_count", "external_request_count", "external_requests", "browser"
+      ],
+      "properties": {
+        "passed": { "const": true },
+        "analysis_export_save_reopen_succeeded": { "const": true },
+        "no_external_app_requests": { "const": true },
+        "runtime_network_dependency": { "const": false },
+        "allowed_origins": {
+          "const": ["http://ipc.localhost", "http://tauri.localhost"]
+        },
+        "observed_origins": {
+          "const": ["http://ipc.localhost", "http://tauri.localhost"]
+        },
+        "observed_request_count": { "type": "integer", "minimum": 1 },
+        "external_request_count": { "const": 0 },
+        "external_requests": { "type": "array", "maxItems": 0 },
+        "browser": { "$ref": "#/$defs/passedObject" }
+      }
+    },
+    "platformBackgroundEgressObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "passed", "observation_kind", "sample_count", "root_present_every_sample",
+        "platform_background_egress_observed", "commercial_zero_egress_passed",
+        "remote_connections"
+      ],
+      "properties": {
+        "passed": { "const": true },
+        "observation_kind": { "const": "sampled_exact_process_tree_tcp_v1" },
+        "sample_count": { "type": "integer", "minimum": 1 },
+        "root_present_every_sample": { "const": true },
+        "platform_background_egress_observed": { "type": "boolean" },
+        "commercial_zero_egress_passed": { "type": "boolean" },
+        "remote_connections": { "type": "array" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "platform_background_egress_observed": { "const": true } },
+            "required": ["platform_background_egress_observed"]
+          },
+          "then": {
+            "properties": {
+              "commercial_zero_egress_passed": { "const": false },
+              "remote_connections": { "minItems": 1 }
+            }
+          },
+          "else": {
+            "properties": {
+              "commercial_zero_egress_passed": { "const": true },
+              "remote_connections": { "maxItems": 0 }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-13T10:12:27Z",
+    "manifest_path": "validation/methods/pls_pos_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.segmentation.pls_pos",
+    "label": "Bounded PLS Prediction-oriented Segmentation",
+    "method_version": "pls_pos_v1",
+    "method_kind": "deterministic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/pos/"
+  },
+  "claim": {
+    "supported_scope": "A deterministic QuickPLS score-space segmentation workflow for a user-selected two through five segment solution, complete-case PLS construct scores, at least one recursive structural path, one through fifty deterministic starts, and a five through forty percent minimum-segment-share guard.",
+    "estimand": "The minimum observed within-segment structural residual sum of squares found by the frozen deterministic score/path-product feature partition, together with its memberships, segment-specific paths, R-squared values, and descriptive separation diagnostics.",
+    "assumptions": [
+      "The ordinary PLS model converges and all segmentation features and segment regressions are finite.",
+      "At least forty complete observations remain and every requested segment can contain at least max(8, ceil(n times minimum_segment_share)) observations.",
+      "The requested segment count is fixed before execution; the workflow does not infer a population class count."
+    ],
+    "exclusions": [
+      "Automatic segment-count selection, inferential proof of heterogeneity, random-start searches, case weights, generated interactions, higher-order constructs, and matrix-only data are excluded.",
+      "The frozen QuickPLS centroid and score-product routine is not claimed to reproduce every reassignment or objective detail of unrestricted published PLS-POS implementations.",
+      "Segment labels have no intrinsic order or substantive meaning and must not be treated as observed classes without external validation."
+    ],
+    "warnings": [
+      "An improved in-sample objective does not establish stable or generalizable population heterogeneity.",
+      "The method must be advertised as the bounded QuickPLS deterministic score-space contract, not blanket PLS-POS parity."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {
+        "id": "segmentation_feature_vector",
+        "expression": "f_i = z({eta_ji for every construct j} union {eta_si eta_ti for every structural path s to t})",
+        "variables": ["f_i", "eta_ji", "eta_si", "eta_ti", "z"],
+        "source_reference_id": "quickpls_pos_independent_reference"
+      },
+      {
+        "id": "segment_structural_objective",
+        "expression": "J(G) = sum_g sum_t sum_{i in G_g} (eta_ti - mean_g(eta_t) - sum_{s to t} beta_gst (eta_si - mean_g(eta_s)))^2",
+        "variables": ["J", "G", "G_g", "eta_ti", "eta_si", "beta_gst"],
+        "source_reference_id": "quickpls_pos_hand_fixture"
+      },
+      {
+        "id": "descriptive_objective_improvement",
+        "expression": "improvement = (J_pooled - J_selected) / J_pooled",
+        "variables": ["improvement", "J_pooled", "J_selected"],
+        "source_reference_id": "quickpls_pos_hand_fixture"
+      }
+    ],
+    "references": [
+      {
+        "id": "becker_rai_ringle_volckner_2013",
+        "kind": "primary_paper",
+        "citation": "Becker, Rai, Ringle, and Volckner (2013), Discovering Unobserved Heterogeneity in Structural Equation Models to Avert Validity Threats",
+        "locator": "https://aisel.aisnet.org/misq/vol37/iss3/3/",
+        "independence_group": "published_pls_pos_method",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "quickpls_pos_independent_reference",
+        "kind": "independent_python",
+        "citation": "Planned independent Python implementation of the frozen QuickPLS score-space partition and segment-regression contract",
+        "locator": "validation/pls_pos_reference.py",
+        "independence_group": "python_reference",
+        "runtime_policy": "development_validation_only"
+      },
+      {
+        "id": "quickpls_pos_hand_fixture",
+        "kind": "hand_calculation",
+        "citation": "Planned hand-worked feature, assignment, segment-regression, and objective fixture for the bounded QuickPLS contract",
+        "locator": "docs/methods/PLS_POS_V1.md",
+        "independence_group": "hand_reference",
+        "runtime_policy": "no_runtime_dependency"
+      }
+    ],
+    "simulations": [
+      {
+        "id": "structural_segment_recovery",
+        "purpose": "class_recovery",
+        "design": "Frozen two through five segment designs spanning structural separation, measurement reliability, sample size, segment imbalance, nonnormal indicators, and local-objective challenges.",
+        "seed_policy": "Scenario-indexed data-generation seeds; the estimator itself is deterministic and results must not depend on worker count.",
+        "metrics": ["adjusted_rand_index", "membership_stability", "path_recovery_error", "objective_improvement", "convergence_rate"],
+        "acceptance_rule": "For preregistered identifiable strong-separation scenarios, median adjusted Rand index must be at least 0.80, median mapped path error must meet the frozen tolerance envelope, and every supported run must produce finite complete membership and objective histories."
+      },
+      {
+        "id": "homogeneous_null_containment",
+        "purpose": "false_positive_containment",
+        "design": "Homogeneous data across the same model and sample-size grid, including weak paths and correlated predictors.",
+        "seed_policy": "Frozen scenario-indexed seeds independent of execution order.",
+        "metrics": ["objective_improvement", "max_path_separation", "stability_warning_rate", "unsupported_heterogeneity_claim_count"],
+        "acceptance_rule": "The product must make zero inferential heterogeneity claims, retain the descriptive-only warning in every run/export, and satisfy the preregistered null diagnostic envelope after independent review."
+      }
+    ],
+    "boundaries": [
+      {"id": "constant_or_singular_features", "category": "data_pathology", "case": "All score/path-product features are constant, a segment regression is singular, or the pooled objective is nonfinite.", "expected_behavior": "Execution fails with a typed diagnostic and emits no partial segmentation payload."},
+      {"id": "unsupported_segment_design", "category": "unsupported_scope", "case": "The request uses fewer than two or more than five segments, too few complete rows, weights, interactions, higher-order constructs, or matrix-only input.", "expected_behavior": "Setup or engine validation blocks execution and identifies the exact unsupported condition."},
+      {"id": "row_construct_and_label_mapping", "category": "metamorphic", "case": "Rows and construct declarations are consistently reordered and the resulting arbitrary segment labels are optimally remapped.", "expected_behavior": "The remapped partition, objective, paths, and R-squared values agree within the frozen tolerance."},
+      {"id": "repeat_and_worker_invariance", "category": "determinism", "case": "The same recipe is run repeatedly with every supported worker count.", "expected_behavior": "Assignments, label ordering, histories, diagnostics, and analytical payloads are exactly equal."},
+      {"id": "segmentation_archive_tamper", "category": "tamper", "case": "A saved segment count, start count, minimum share, membership, objective, path, warning, or method identity is modified.", "expected_behavior": "Strict project validation rejects the archive rather than displaying or exporting the changed result."}
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 3,
+      "result_schema_version": 1,
+      "payload_kind": "pls_pm_v1",
+      "tamper_tests": [
+        {"category": "feature_identity", "expected_behavior": "Reject a result whose segmentation capability identity differs from its typed Predict recipe."},
+        {"category": "method_version", "expected_behavior": "Reject a pls_pos_v1 result relabeled as the legacy bounded preview or another method."},
+        {"category": "dataset_fingerprint", "expected_behavior": "Reject a result whose persisted dataset fingerprint no longer matches the executed complete-case data."},
+        {"category": "checksum", "expected_behavior": "Reject any changed archive member whose checksum differs."},
+        {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, nonfinite objectives, incomplete memberships, invalid segment sizes, or inconsistent histories."},
+        {"category": "legacy_reinterpretation", "expected_behavior": "Keep pls_pos_bounded_v1 readable only under its original scope and never reinterpret it as current pls_pos_v1 evidence."}
+      ],
+      "legacy_policy": "Historical pls_pos_bounded_v1 results remain readable but cannot satisfy the current method identity or promotion evidence."
+    },
+    "native": {
+      "setup_controls": ["Segment count from 2 through 5", "Deterministic starts from 1 through 50", "Minimum segment share from 0.05 through 0.40"],
+      "applicability_blockers": ["No structural path", "Fewer than 40 complete observations", "Requested segments cannot meet the minimum size", "Unsupported weights, interactions, higher-order constructs, or matrix-only data"],
+      "result_surfaces": ["Objective and pooled comparison", "Segment sizes and diagnostics", "Stable membership table", "Segment-specific paths and R-squared", "Objective history", "Scope warnings and provenance"],
+      "gui_cli_parity_rule": "For the same typed recipe and dataset fingerprint, GUI and CLI memberships, histories, paths, diagnostics, warnings, and provenance must be exactly equal apart from operational timestamps.",
+      "accessibility_rules": ["Every segmentation graphic has an equivalent accessible data table.", "Segment labels, sizes, diagnostics, warnings, and provenance are available without color or pointer interaction."]
+    },
+    "export": {
+      "formats": ["csv", "xlsx", "html", "pdf"],
+      "tables": ["Segmentation summary", "Memberships", "Segment paths", "Segment R-squared", "Objective history", "Warnings and provenance"],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": ["windows"],
+      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
+      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "offline_required": true,
+      "cancellation_required": true,
+      "process_cleanup_required": true
+    },
+    "audit": {
+      "exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
+  },
+  "qualification": {
+    "declared_state": "absent",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": ["docs/methods/PLS_POS_V1.md"],
+      "independent_reference": ["validation/pls_pos_reference.py"],
+      "simulation_report": ["validation/pls_pos_simulation.py"],
+      "boundary_report": ["validation/pls_pos_boundary_gate.py"],
+      "persistence_report": ["validation/pls_pos_persistence_gate.py"],
+      "frontend_report": ["src/native/nativePlsPos.test.ts"],
+      "export_report": ["validation/pls_pos_export_gate.py"],
+      "method_audit": ["validation/pls_pos_method_promotion_audit.py"],
+      "packaged_acceptance": ["validation/run_pls_pos_native_acceptance.ps1"]
+    },
+    "evidence": {"engine_only": [], "archive_qualified": [], "native_qualified": [], "release_qualified": []}
+  }
+}

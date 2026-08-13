@@ -27,6 +27,17 @@ def passing_check(method: str) -> dict:
 
 
 class ScopedReferenceReportTests(unittest.TestCase):
+    def test_generated_recipes_use_the_executable_typed_schema(self) -> None:
+        source = (VALIDATION / "v08_extended_methods_reference.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('"schema_version": 3', source)
+        self.assertIn('"method_config": (', source)
+        self.assertIn('"kind": "pca"', source)
+        self.assertIn('"retention": {', source)
+        self.assertIn('"metadata": {"fixture": "v08_extended_methods_reference"}', source)
+        self.assertNotIn('"metadata": {"fixture": "v08_extended_methods_reference", **metadata}', source)
+
     def test_single_section_writes_only_its_method_report(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             results = Path(temp)

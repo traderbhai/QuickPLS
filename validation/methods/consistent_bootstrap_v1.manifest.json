@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-13T10:12:27Z",
+    "manifest_path": "validation/methods/consistent_bootstrap_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.inference.consistent_bootstrap",
+    "label": "PLSc Consistent Bootstrap",
+    "method_version": "plsc_bootstrap_v1",
+    "method_kind": "stochastic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/consistent-bootstrapping/"
+  },
+  "claim": {
+    "supported_scope": "A planned indexed nonparametric case bootstrap that fully re-estimates plsc_v2 for 1,000 through 10,000 replicates within the qualified reflective PLSc model scope and reports bounded percentile and BCa inference.",
+    "estimand": "The finite-sample resampling distribution, standard error, bias, and confidence interval of each canonically identified attenuation-corrected PLSc path and loading under empirical case resampling.",
+    "assumptions": [
+      "The point model satisfies and successfully estimates the exact plsc_v2 reflective path-or-factor-weighting contract.",
+      "Complete cases are exchangeable sampling units and resampling rows with replacement represents the intended sampling design.",
+      "Every accepted replicate re-estimates weights, rho_A, corrected correlations, corrected loadings, structural paths, and R-squared rather than reusing the original correction."
+    ],
+    "exclusions": [
+      "Studentized PLSc intervals, clustered or stratified resampling, case weights, interactions, higher-order constructs, PCA weighting, multigroup inference, and matrix-only data are excluded.",
+      "Ordinary PLS bootstrap estimates cannot substitute for full replicate-level PLSc re-estimation.",
+      "Confidence intervals do not repair misspecification, nonexchangeable observations, inadmissible PLSc solutions, or weak measurement."
+    ],
+    "warnings": [
+      "Bootstrap validity remains conditional on the frozen model, sampling unit, complete-case policy, and usable-replicate threshold.",
+      "Inadmissible rho_A or corrected-correlation replicates must remain explicit failures and may not be clamped or silently replaced."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {"id": "indexed_plsc_resample", "expression": "D*_b = {D[i_br] for r=1..n}; theta*_bj = PLSc_v2(D*_b)_j", "variables": ["D*_b", "D", "i_br", "n", "theta*_bj", "j"], "source_reference_id": "plsc_bootstrap_independent_reference"},
+      {"id": "bootstrap_standard_error", "expression": "se_boot_j = sqrt(sum_b(theta*_bj - mean_b(theta*_bj))^2 / (B_success_j - 1))", "variables": ["se_boot_j", "theta*_bj", "B_success_j"], "source_reference_id": "efron_1979"},
+      {"id": "percentile_interval", "expression": "CI_j = [Q_type7(alpha/2, theta*_j), Q_type7(1-alpha/2, theta*_j)]", "variables": ["CI_j", "Q_type7", "alpha", "theta*_j"], "source_reference_id": "efron_1979"}
+    ],
+    "references": [
+      {"id": "dijkstra_henseler_2015", "kind": "primary_paper", "citation": "Dijkstra and Henseler (2015), Consistent Partial Least Squares Path Modeling", "locator": "https://doi.org/10.25300/MISQ/2015/39.2.02", "independence_group": "primary_plsc_method", "runtime_policy": "no_runtime_dependency"},
+      {"id": "efron_1979", "kind": "primary_paper", "citation": "Efron (1979), Bootstrap Methods: Another Look at the Jackknife", "locator": "https://doi.org/10.1214/aos/1176344552", "independence_group": "primary_bootstrap_method", "runtime_policy": "no_runtime_dependency"},
+      {"id": "plsc_bootstrap_independent_reference", "kind": "independent_python", "citation": "Planned independent Python full-reestimation PLSc bootstrap, percentile, and BCa implementation", "locator": "validation/consistent_bootstrap_reference.py", "independence_group": "python_reference", "runtime_policy": "development_validation_only"},
+      {"id": "plsc_bootstrap_hand_fixture", "kind": "hand_calculation", "citation": "Planned hand-worked indexed resample, standard-error, quantile, and identity fixture", "locator": "docs/methods/CONSISTENT_BOOTSTRAP_V1.md", "independence_group": "hand_reference", "runtime_policy": "no_runtime_dependency"}
+    ],
+    "simulations": [
+      {"id": "plsc_bias_and_coverage", "purpose": "coverage", "design": "Reflective common-factor models spanning path size, loading reliability, indicator count, sample size, collinearity, nonnormality, and near-inadmissible attenuation correction.", "seed_policy": "Scenario and replicate indexed streams independent of worker count; QuickPLS and the independent reference receive identical resample indices.", "metrics": ["path_bias", "loading_bias", "standard_error_ratio", "percentile_coverage", "bca_coverage", "usable_replicate_rate"], "acceptance_rule": "For every preregistered supported cell, empirical interval coverage must lie inside its binomial acceptance band, median bias and standard-error ratios must meet the frozen method-specific envelope, and usable replicate rate must meet the independently reviewed threshold."},
+      {"id": "inadmissible_replicate_accounting", "purpose": "failure_behavior", "design": "Small-sample and weak-reliability cells that generate improper rho_A, inadmissible corrected correlations, nonconvergence, singular equations, and delete-one failures.", "seed_policy": "Frozen scenario-indexed streams with no retry or replacement stream.", "metrics": ["requested_count", "attempted_count", "successful_count", "failed_count", "reason_count_identity", "bca_unavailable_rate"], "acceptance_rule": "Every attempt must be accounted for exactly, failure reasons must agree with the independent implementation, and no interval may be published when its frozen usable or jackknife requirements fail."}
+    ],
+    "boundaries": [
+      {"id": "inadmissible_plsc_replicate", "category": "data_pathology", "case": "A resample yields materially improper rho_A, a corrected correlation outside its admissible bound, nonconvergence, singularity, or nonfinite parameters.", "expected_behavior": "The replicate is recorded as failed under a stable reason without clamping, retrying, or entering any parameter distribution."},
+      {"id": "unsupported_plsc_resampling_shape", "category": "unsupported_scope", "case": "The recipe requests a nonreflective, interaction, higher-order, PCA-weighted, weighted, grouped, matrix-only, studentized, or out-of-range bootstrap design.", "expected_behavior": "Typed validation blocks execution before creating a replicate plan."},
+      {"id": "row_and_construct_reorder", "category": "metamorphic", "case": "Rows and construct declarations are consistently reordered while canonical identities and seed are preserved.", "expected_behavior": "Mapped resample plans and analytical summaries agree within the frozen tolerance."},
+      {"id": "worker_and_schedule_invariance", "category": "determinism", "case": "The same run executes under every supported worker count and scheduling order.", "expected_behavior": "Resample indices, failures, ordering, summaries, and interval payloads are exactly equal."},
+      {"id": "bootstrap_archive_tamper", "category": "tamper", "case": "The seed, resample count, failure accounting, parameter identity, interval, PLSc version, dataset identity, or method identity is changed.", "expected_behavior": "Strict project validation rejects the archive rather than displaying or exporting the changed inference."}
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 3,
+      "result_schema_version": 1,
+      "payload_kind": "pls_pm_v3",
+      "tamper_tests": [
+        {"category": "feature_identity", "expected_behavior": "Reject an inference artifact whose consistent-bootstrap capability differs from the PLSc recipe."},
+        {"category": "method_version", "expected_behavior": "Reject a plsc_bootstrap_v1 artifact paired with the wrong PLSc or resampling version."},
+        {"category": "dataset_fingerprint", "expected_behavior": "Reject a result whose complete-case dataset fingerprint or row manifest no longer matches."},
+        {"category": "checksum", "expected_behavior": "Reject any changed archive member whose checksum differs."},
+        {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, nonfinite summaries, bad counts, identities, quantiles, intervals, or failure reasons."},
+        {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret ordinary indexed_resampling_v1 through v4 output as consistent bootstrap evidence."}
+      ],
+      "legacy_policy": "Only a typed plsc_bootstrap_v1 artifact paired with exact plsc_v2 provenance may satisfy this contract."
+    },
+    "native": {
+      "setup_controls": ["Bootstrap replicates from 1000 through 10000", "Fixed seed", "Confidence level", "Percentile or BCa interval", "Worker count"],
+      "applicability_blockers": ["Point PLSc model is unsupported or inadmissible", "Unsupported studentized clustered weighted grouped or matrix-only request", "Replicate count outside the bounded range"],
+      "result_surfaces": ["PLSc point estimates", "Bootstrap standard errors and bias", "Percentile or BCa intervals", "Requested successful and failed counts", "Failure reasons", "Scope warnings and provenance"],
+      "gui_cli_parity_rule": "For the same recipe, seed, method versions, and dataset fingerprint, GUI and CLI resample plans and analytical payloads must be exactly equal apart from operational timestamps.",
+      "accessibility_rules": ["All confidence-interval graphics have equivalent accessible tables.", "Failure accounting, unavailable reasons, method identity, and warnings are available without color or pointer interaction."]
+    },
+    "export": {"formats": ["csv", "xlsx", "html", "pdf"], "tables": ["PLSc bootstrap estimates", "Confidence intervals", "Replicate accounting", "Failure reasons", "Method scope", "Run provenance"], "same_run_required": true, "provenance_required": true},
+    "packaged": {"platforms": ["windows"], "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "cancel_retry", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"], "viewports": ["1024x700", "1280x720", "1440x900"], "offline_required": true, "cancellation_required": true, "process_cleanup_required": true},
+    "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
+  },
+  "qualification": {
+    "declared_state": "absent",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": ["docs/methods/CONSISTENT_BOOTSTRAP_V1.md"],
+      "independent_reference": ["validation/consistent_bootstrap_reference.py", "validation/consistent_bootstrap_reference.R"],
+      "simulation_report": ["validation/consistent_bootstrap_simulation.py"],
+      "boundary_report": ["validation/consistent_bootstrap_boundary_gate.py"],
+      "persistence_report": ["validation/consistent_bootstrap_persistence_gate.py"],
+      "frontend_report": ["src/native/nativeConsistentBootstrap.test.ts"],
+      "export_report": ["validation/consistent_bootstrap_export_gate.py"],
+      "method_audit": ["validation/consistent_bootstrap_method_promotion_audit.py"],
+      "packaged_acceptance": ["validation/run_consistent_bootstrap_native_acceptance.ps1"]
+    },
+    "evidence": {"engine_only": [], "archive_qualified": [], "native_qualified": [], "release_qualified": []}
+  }
+}

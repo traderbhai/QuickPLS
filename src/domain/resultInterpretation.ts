@@ -612,8 +612,8 @@ function methodPayloadFindings(result: PlsResult): InterpretationFinding[] {
   const findings: InterpretationFinding[] = [];
   if (result.micom) findings.push(genericPayloadFinding("micom", "MICOM", "groups", "Review configural, compositional, mean, and variance invariance before group comparisons."));
   if (result.mga || result.mga_permutation) findings.push(genericPayloadFinding("mga", "MGA", "groups", "Interpret group path differences only after checking MICOM and permutation settings."));
-  if (result.fimix) findings.push(genericPayloadFinding("fimix", "FIMIX-PLS", "groups", "Treat class memberships as segmentation evidence within the documented deterministic bounded scope."));
-  if (result.segmentation) findings.push(genericPayloadFinding("pls_pos", "PLS-POS", "groups", "Review objective history, segment size, and segment path stability."));
+  if (result.fimix) findings.push(genericPayloadFinding("fimix", "FIMIX-style diagnostic preview", "groups", "Treat inverse-distance memberships and pseudo-likelihood criteria as bounded diagnostics, not posterior probabilities or full finite-mixture EM/FIMIX-PLS evidence."));
+  if (result.segmentation) findings.push(genericPayloadFinding("pls_pos", "PLS-POS-style diagnostic preview", "groups", "Review objective history, segment size, and path stability only within the frozen deterministic score-space routine; unrestricted published PLS-POS equivalence is not claimed."));
   if (result.ipma) findings.push(genericPayloadFinding("ipma", "IPMA", "groups", "Prioritize high-importance, lower-performance constructs or indicators for managerial interpretation."));
   if (result.regression) findings.push(genericPayloadFinding("regression", result.regression.regression_type === "logistic" ? "Logistic regression" : "Regression", "diagnostics", "Report coefficients with standard errors, intervals, fit metrics, and scope status."));
   if (result.nca) findings.push(genericPayloadFinding("nca", "NCA", "diagnostics", "Interpret necessity effect sizes and bottleneck rows only for the documented numeric X/Y scope."));

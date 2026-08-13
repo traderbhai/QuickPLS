@@ -1,0 +1,484 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "build_performed": false,
+    "fresh_current_engine_scenarios": [
+      {
+        "absolute_recovery_error": 0.09728027712139709,
+        "bca_contains_truth": true,
+        "bca_interval": [
+          0.33499806078012917,
+          0.5606810135411007
+        ],
+        "dataset": "validation/results/method_factory/pls_bootstrap_v4/work/simulation_normal_alternative.csv",
+        "dataset_sha256": "e416164129fc1c78ef7cfe5f67ab485293fcc6d5819446659b19ae80a332dac8",
+        "execution": {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "run",
+            "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_alternative.recipe.json",
+            "--data",
+            "validation/results/method_factory/pls_bootstrap_v4/work/simulation_normal_alternative.csv",
+            "--output",
+            "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_alternative.quickpls.json",
+            "--allow-experimental"
+          ],
+          "duration_seconds": 1.283,
+          "returncode": 0,
+          "stderr_tail": "",
+          "stdout_tail": "wrote analysis result validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_alternative.quickpls.json\n"
+        },
+        "failed_replicates": 0,
+        "name": "normal_alternative",
+        "observed_path": 0.44728027712139706,
+        "passed": true,
+        "percentile_contains_truth": true,
+        "percentile_interval": [
+          0.3247043733336714,
+          0.5558566930605854
+        ],
+        "recipe": "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_alternative.recipe.json",
+        "requested_replicates": 399,
+        "result": "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_alternative.quickpls.json",
+        "result_sha256": "aed297f655181a443f9840b892431d332a4cb58dd6eebc597ede1d58c922827b",
+        "true_path": 0.35,
+        "usable_replicates": 399
+      },
+      {
+        "absolute_recovery_error": 0.04783029242477821,
+        "bca_contains_truth": true,
+        "bca_interval": [
+          -0.17212452119482413,
+          0.09194359538244326
+        ],
+        "dataset": "validation/results/method_factory/pls_bootstrap_v4/work/simulation_normal_null.csv",
+        "dataset_sha256": "83135663e02b7ac19d889cc4f47d07fa6f060967a03a70e2816939237bc8af6c",
+        "execution": {
+          "command": [
+            "D:\\QuickPLS\\target\\debug\\qpls.exe",
+            "run",
+            "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_null.recipe.json",
+            "--data",
+            "validation/results/method_factory/pls_bootstrap_v4/work/simulation_normal_null.csv",
+            "--output",
+            "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_null.quickpls.json",
+            "--allow-experimental"
+          ],
+          "duration_seconds": 1.543,
+          "returncode": 0,
+          "stderr_tail": "",
+          "stdout_tail": "wrote analysis result validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_null.quickpls.json\n"
+        },
+        "failed_replicates": 0,
+        "name": "normal_null",
+        "observed_path": -0.04783029242477821,
+        "passed": true,
+        "percentile_contains_truth": true,
+        "percentile_interval": [
+          -0.18594365945794336,
+          0.08025010925673148
+        ],
+        "recipe": "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_null.recipe.json",
+        "requested_replicates": 399,
+        "result": "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_null.quickpls.json",
+        "result_sha256": "5ffa1f10a052863caf82d5a7d0e5b5b0b1c671672e6b54850fb56f42512c05bf",
+        "true_path": 0.0,
+        "usable_replicates": 399
+      }
+    ],
+    "fresh_scenario_scope": "Two source-bound current-engine recovery probes supplement, but do not replace, the 4,000 completed preregistered normal/heavy-tail simulations.",
+    "frozen_preregistered_study_recomputed": {
+      "exact_scientific_payload_replay": true,
+      "execution": {
+        "command": [
+          "C:\\Python313\\python.exe",
+          "validation/aggregate_studentized_qualification.py",
+          "--input",
+          "validation/results/studentized_qualification_shards",
+          "--output",
+          "validation/results/method_factory/pls_bootstrap_v4/work/recomputed_studentized_qualification.json"
+        ],
+        "duration_seconds": 0.172,
+        "returncode": 0,
+        "stderr_tail": "",
+        "stdout_tail": "wrote validation\\results\\method_factory\\pls_bootstrap_v4\\work\\recomputed_studentized_qualification.json | evaluated=True | passed=True\n"
+      },
+      "frozen_report": "validation/results/monte_carlo_studentized_qualification.json",
+      "frozen_sha256": "ba76ea0c1fd74416d4444c8c6441e24653e637c0e3a726a3d7941c8d131c56ff",
+      "passed": true,
+      "qualification_checks": [
+        {
+          "metric": "percentile_coverage",
+          "observed": 0.956,
+          "passed": true
+        },
+        {
+          "metric": "bca_coverage",
+          "observed": 0.953,
+          "passed": true
+        },
+        {
+          "metric": "percentile_type_i",
+          "observed": 0.038,
+          "passed": true
+        },
+        {
+          "metric": "bca_type_i",
+          "observed": 0.039,
+          "passed": true
+        },
+        {
+          "metric": "studentized_coverage",
+          "observed": 0.964,
+          "passed": true
+        },
+        {
+          "metric": "studentized_type_i",
+          "observed": 0.03,
+          "passed": true
+        },
+        {
+          "metric": "absolute_bias",
+          "observed": 0.0054482725799746,
+          "passed": true
+        },
+        {
+          "metric": "alternative_studentized_availability",
+          "observed": 1.0,
+          "passed": true
+        },
+        {
+          "metric": "null_studentized_availability",
+          "observed": 1.0,
+          "passed": true
+        },
+        {
+          "metric": "heavy_tail_studentized_coverage",
+          "observed": 0.941,
+          "passed": true
+        },
+        {
+          "metric": "heavy_tail_studentized_type_i",
+          "observed": 0.054,
+          "passed": true
+        },
+        {
+          "metric": "heavy_tail_alternative_studentized_availability",
+          "observed": 1.0,
+          "passed": true
+        },
+        {
+          "metric": "heavy_tail_null_studentized_availability",
+          "observed": 1.0,
+          "passed": true
+        }
+      ],
+      "recomputed_report": "validation/results/method_factory/pls_bootstrap_v4/work/recomputed_studentized_qualification.json",
+      "recomputed_sha256": "ba76ea0c1fd74416d4444c8c6441e24653e637c0e3a726a3d7941c8d131c56ff",
+      "scenario_names": [
+        "coverage_beta_0_35",
+        "heavy_tail_coverage_beta_0_35",
+        "heavy_tail_null_beta_0",
+        "null_beta_0"
+      ],
+      "simulations_per_scenario": [
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "source_shard_count": 40
+    },
+    "gui_runtime_claimed": false,
+    "passed": true
+  },
+  "feature_id": "qpls3.inference.bootstrap",
+  "generated_at_utc": "2026-08-13T19:00:20.336000Z",
+  "method_version": "indexed_resampling_v4",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "simulation_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/aggregate_studentized_qualification.py",
+      "sha256": "56241b25fd7840687636c70f3d5b80fab26d65f04f5bfd75f17160000ca4edc3",
+      "size": 17763
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/pls_bootstrap_v4.manifest.json",
+      "sha256": "18e112bc509c06a29621851e6ffb09753028caef5c1dee344960af0df01163f5",
+      "size": 15803
+    },
+    {
+      "path": "validation/pls_bootstrap_v4_factory_common.py",
+      "sha256": "10eadf6f1f7af06e51117645371cc447f82c7ecce873dcf53530d82cd27828fa",
+      "size": 12730
+    },
+    {
+      "path": "validation/pls_bootstrap_v4_simulation.py",
+      "sha256": "1f2be4d24837f436d22dbefa552279fb65807da775af6d3a510de4c2333f5f9f",
+      "size": 7715
+    },
+    {
+      "path": "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_alternative.quickpls.json",
+      "sha256": "aed297f655181a443f9840b892431d332a4cb58dd6eebc597ede1d58c922827b",
+      "size": 36501
+    },
+    {
+      "path": "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_alternative.recipe.json",
+      "sha256": "8ea5b3196e5fccb8722ccc7973ef4638c9b3c010718467db789faf7eb558845e",
+      "size": 1497
+    },
+    {
+      "path": "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_null.quickpls.json",
+      "sha256": "5ffa1f10a052863caf82d5a7d0e5b5b0b1c671672e6b54850fb56f42512c05bf",
+      "size": 36869
+    },
+    {
+      "path": "validation/results/method_factory/pls_bootstrap_v4/work/factory_simulation_normal_null.recipe.json",
+      "sha256": "27c03a4c33381a1c38ce74689e2fac1e0c15f33235d44a884f0eb9d35da1a1eb",
+      "size": 1497
+    },
+    {
+      "path": "validation/results/method_factory/pls_bootstrap_v4/work/recomputed_studentized_qualification.json",
+      "sha256": "ba76ea0c1fd74416d4444c8c6441e24653e637c0e3a726a3d7941c8d131c56ff",
+      "size": 19676
+    },
+    {
+      "path": "validation/results/method_factory/pls_bootstrap_v4/work/simulation_normal_alternative.csv",
+      "sha256": "e416164129fc1c78ef7cfe5f67ab485293fcc6d5819446659b19ae80a332dac8",
+      "size": 19755
+    },
+    {
+      "path": "validation/results/method_factory/pls_bootstrap_v4/work/simulation_normal_null.csv",
+      "sha256": "83135663e02b7ac19d889cc4f47d07fa6f060967a03a70e2816939237bc8af6c",
+      "size": 19829
+    },
+    {
+      "path": "validation/results/monte_carlo_studentized_qualification.json",
+      "sha256": "ba76ea0c1fd74416d4444c8c6441e24653e637c0e3a726a3d7941c8d131c56ff",
+      "size": 19676
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/coverage_beta_0_35_0000_0099.json",
+      "sha256": "672e9170d5ba2d87b7eec27d2fdb62381c138fcaa7a83d19170ff1ffdecb9f21",
+      "size": 2398
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/coverage_beta_0_35_0100_0199.json",
+      "sha256": "6623541d7c847a1cabb2519ff4d70b7c7f54986dcfef8eeef072c088161568c3",
+      "size": 2400
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/coverage_beta_0_35_0200_0299.json",
+      "sha256": "2e645fdd0f1497c8801fef48779e337924b08485a1767ac46c1c9a366aa8cd95",
+      "size": 2401
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/coverage_beta_0_35_0300_0399.json",
+      "sha256": "a386fd1ef3bd2223df002c63c234bfdf0ca580b5298e0465b992edde0022221f",
+      "size": 2400
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/coverage_beta_0_35_0400_0499.json",
+      "sha256": "bb320374b6d7d68390e45ce241ad7f933f5f5b33d0536df1a1eba3f341999cf9",
+      "size": 2401
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/coverage_beta_0_35_0500_0599.json",
+      "sha256": "29596146dc6ad9a14c51d98705f790a0f94a1449dccd29476c8f45a3eb259ac1",
+      "size": 2400
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/coverage_beta_0_35_0600_0699.json",
+      "sha256": "e52d23f1df4fab52f8eeb70aa94f52c825f2a3bd9fab02335a62bb3d575d30ba",
+      "size": 2398
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/coverage_beta_0_35_0700_0799.json",
+      "sha256": "13c4186faec4d42319c299007e5018aa861e9acc25f21ed80eec379c954b1fe5",
+      "size": 2399
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/coverage_beta_0_35_0800_0899.json",
+      "sha256": "35119c801dbdb5fb8af4d18bfdb15877eddd23055553ba10d714c1e59a84fe5b",
+      "size": 2399
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/coverage_beta_0_35_0900_0999.json",
+      "sha256": "d57ce07e69a88473c22d59ed7ccbedc54256dc8f7a2edb0dcdc4e50aa8c98e91",
+      "size": 2399
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/heavy_tail_coverage_beta_0_35_0000_0099.json",
+      "sha256": "8e99c7554f4ece6dafe35c0ad894714fe74018ad4099f2c89d9b55b530e26f0b",
+      "size": 2425
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/heavy_tail_coverage_beta_0_35_0100_0199.json",
+      "sha256": "c21c65b3d1c8fbe48b4846dbd043416e763b0e3e2416bd92aace7c8e45a2d0dd",
+      "size": 2425
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/heavy_tail_coverage_beta_0_35_0200_0299.json",
+      "sha256": "b47c7de663208666c29632dce40b3797bc2dd7fa79529e9c08f601e48d23e54a",
+      "size": 2425
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/heavy_tail_coverage_beta_0_35_0300_0399.json",
+      "sha256": "a7c0e8bd85ff79fe02d842cf44e94c0877f281c43f07f0078b10a2079a80be84",
+      "size": 2427
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/heavy_tail_coverage_beta_0_35_0400_0499.json",
+      "sha256": "58169cf7c059b58c0f285314f87f645044ff7e935857b334593c1a0460a70730",
+      "size": 2423
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/heavy_tail_coverage_beta_0_35_0500_0599.json",
+      "sha256": "11a941056d67f6fce995b018c04a3e19ebe413a301a78d1eaa511e12dec4f7d6",
+      "size": 2427
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/heavy_tail_coverage_beta_0_35_0600_0699.json",
+      "sha256": "0b7cd8f63cf42543d52b8891b499dcef1dbbbe6a08b04ffef34c85a72b8b503b",
+      "size": 2425
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/heavy_tail_coverage_beta_0_35_0700_0799.json",
+      "sha256": "87c8e72d0ba32785e40e4ae190654f037c955ae232cc75429ef2b60b1436859c",
+      "size": 2424
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/heavy_tail_coverage_beta_0_35_0800_0899.json",
+      "sha256": "0eefe3e9577f97bafc87c39bf51b4fba6c8c3b370bbd1acdd0e1622789bd1a76",
+      "size": 2427
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/heavy_tail_coverage_beta_0_35_0900_0999.json",
+      "sha256": "36ad40c9f78ec3b0f65018391f17b7336957de3107718cdc4be1ec473ca9c0b9",
+      "size": 2425
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/heavy_tail_null_beta_0_0000_0099.json",
+      "sha256": "8c34c1cc5645990cfe8792c61157cd3dd84229497af15e6db5e3109d1d5d1fe1",
+      "size": 2420
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/heavy_tail_null_beta_0_0100_0199.json",
+      "sha256": "aa8129a947572cb1a9f81c359fda1935028b722e7936cd913a02893338f36d58",
+      "size": 2422
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/heavy_tail_null_beta_0_0200_0299.json",
+      "sha256": "9e5292c0bce4cfad193bd0e56a65b5d24e5ebc12c165afd278bbb382ac7fb7fa",
+      "size": 2419
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/heavy_tail_null_beta_0_0300_0399.json",
+      "sha256": "41f38bdf0b86e30c779baa49e094ec933316432963ffbcea65dd959a7ae55515",
+      "size": 2422
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/heavy_tail_null_beta_0_0400_0499.json",
+      "sha256": "1973ce98c2fa6c1db973ab6e398c16e6668136082dbd052cd99fea078909e2e5",
+      "size": 2419
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/heavy_tail_null_beta_0_0500_0599.json",
+      "sha256": "dce023b5f83899f79e1d50b0bacf86eb85cfc83faeff0ed87d198417f1bb89f0",
+      "size": 2420
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/heavy_tail_null_beta_0_0600_0699.json",
+      "sha256": "6dd184dadc07ab9ac01e0fb60ac8bcbde223d25d9eb8fbf6d1e433bf807e14f4",
+      "size": 2424
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/heavy_tail_null_beta_0_0700_0799.json",
+      "sha256": "a8723be575fd718d2526b3c714e5a065db21d063515434abedc2d3065fd93cbc",
+      "size": 2420
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/heavy_tail_null_beta_0_0800_0899.json",
+      "sha256": "e5bdd4fd636c55aa626590bee5033215d46bfa3f4718f097af6879652b916c74",
+      "size": 2422
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/heavy_tail_null_beta_0_0900_0999.json",
+      "sha256": "42f2b62faaaeded721b82b61ba7378943dd17669d8f9271d76bb51452fc5297f",
+      "size": 2422
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/null_beta_0_0000_0099.json",
+      "sha256": "d85f9b94bb2848803280ccc09b97fbad293001ded722e799e8f99a316e0d0663",
+      "size": 2404
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/null_beta_0_0100_0199.json",
+      "sha256": "36fe00508b17af2b0153fa868f0308fb98e13288e792fe6ecb9b4993c86c8216",
+      "size": 2402
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/null_beta_0_0200_0299.json",
+      "sha256": "6e376b149c71a8721f6bc3f97cb78a06a756f2b1d55af4ceed0021ffa10aec4c",
+      "size": 2402
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/null_beta_0_0300_0399.json",
+      "sha256": "4c00491f4accc19bb43664c24694c55d62cddae10bde93d3297f634a9c72c47d",
+      "size": 2402
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/null_beta_0_0400_0499.json",
+      "sha256": "e4d6efe0571902651403e46bba1d0e510b43d6e2c2585338612395825217c962",
+      "size": 2400
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/null_beta_0_0500_0599.json",
+      "sha256": "205af72bc62896a77bb54a9edfc34ce6e7d3a86cf78d8acac5fa2f78beeab26a",
+      "size": 2402
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/null_beta_0_0600_0699.json",
+      "sha256": "5518bda6b6f97cc3a623d30277cde33d8586c764af7dc441be323e2ec9e6bb22",
+      "size": 2402
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/null_beta_0_0700_0799.json",
+      "sha256": "19517569fec90f6540f30f9d00ff59b39e529bd66fb5816f73033a433f8c192d",
+      "size": 2400
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/null_beta_0_0800_0899.json",
+      "sha256": "bcdbd861b3ac8f33186652dad9c128a71047a1a60f3553dd7c04ca740846414c",
+      "size": 2404
+    },
+    {
+      "path": "validation/results/studentized_qualification_shards/null_beta_0_0900_0999.json",
+      "sha256": "c62560a84ee30a2340eca1e5b44818d9b7656d2ab06466ce4af7518fd1804e4a",
+      "size": 2402
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_pls_bootstrap_v4_factory_evidence.py",
+      "sha256": "7b358cfd30cae76f208382b8bddfedc84199d495c92b7f65f500d1c18401f8b1",
+      "size": 6177
+    }
+  ]
+}

@@ -16,9 +16,15 @@ VALIDATION_DIR = Path(__file__).resolve().parent
 REPOSITORY_ROOT = VALIDATION_DIR.parent
 sys.path.insert(0, str(REPOSITORY_ROOT))
 
-from validation import method_promotion_manifest, parity_ledger, quickpls_3_release_readiness  # noqa: E402
+from validation import (  # noqa: E402
+    method_promotion_manifest,
+    parity_ledger,
+    quickpls_3_release_readiness,
+    quickpls_external_beta,
+)
 from validation.quickpls_3_competitor_program import (  # noqa: E402
     APPROVAL_BINDING_IDS,
+    EXPECTED_FACTORY_AUXILIARY_CAPABILITY_IDS,
     build_aggregate_approval_bindings,
     load_json,
     validate_aggregate_approval,
@@ -30,6 +36,7 @@ from validation.quickpls_3_competitor_program import (  # noqa: E402
 MANIFEST = VALIDATION_DIR / "quickpls_3_competitor_catalogue.json"
 LEDGER = VALIDATION_DIR / "quickpls_3_parity_ledger.json"
 READINESS = VALIDATION_DIR / "quickpls_3_release_readiness.json"
+BETA = VALIDATION_DIR / "quickpls_external_beta.json"
 
 
 class QuickPls3CompetitorProgramTests(unittest.TestCase):
@@ -41,6 +48,9 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
             READINESS,
             repository_root=REPOSITORY_ROOT,
         )
+        self.beta_report = quickpls_external_beta.validate_contract(
+            quickpls_external_beta.strict_json(BETA)
+        )
         self.factory_report = method_promotion_manifest.validate_all(
             repository_root=REPOSITORY_ROOT
         )
@@ -51,6 +61,7 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
         manifest=None,
         parity_report=None,
         commercial_report=None,
+        beta_report=None,
         factory_report=None,
     ):
         return validate_program_document(
@@ -59,6 +70,9 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
             REPOSITORY_ROOT,
             commercial_readiness_report=(
                 self.commercial_report if commercial_report is None else commercial_report
+            ),
+            external_beta_report=(
+                self.beta_report if beta_report is None else beta_report
             ),
             manifest_factory_report=(
                 self.factory_report if factory_report is None else factory_report
@@ -78,24 +92,40 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
         self.assertFalse(report["competitor_ready"])
         self.assertTrue(report["parity_evidence_passed"])
         self.assertFalse(report["commercial_release_ready"])
+        self.assertFalse(report["external_beta_ready"])
         self.assertTrue(report["method_manifest_factory_passed"])
         self.assertFalse(report["aggregate_approval_present"])
         self.assertFalse(report["aggregate_approval_passed"])
         self.assertEqual(report["catalogue_snapshot_date"], "2026-08-12")
         self.assertEqual(report["method_count"], 45)
-        self.assertEqual(report["competitor_scope_count"], 44)
+        self.assertEqual(report["competitor_scope_count"], 43)
         self.assertEqual(
             report["status_counts"],
             {
-                "absent": 8,
-                "deferred": 1,
-                "engine-preview": 14,
-                "native-qualified": 18,
-                "release-qualified": 4,
+                "absent": 20,
+                "deferred": 2,
+                "native-qualified": 20,
+                "release-qualified": 3,
             },
         )
         self.assertEqual(len(report["pending_non_method_gates"]), 18)
-        self.assertGreater(len(report["missing_method_manifests"]), 0)
+        self.assertEqual(report["method_manifest_count"], 40)
+        self.assertEqual(report["missing_method_manifests"], [])
+        self.assertTrue(
+            all(
+                method["quickpls_capability_ids"]
+                for method in self.manifest["methods"]
+                if method["competitor_scope"]
+            )
+        )
+        self.assertEqual(
+            {
+                method["id"]
+                for method in self.manifest["methods"]
+                if not method["competitor_scope"]
+            },
+            {"smartpls.blindfolding", "smartpls.gof"},
+        )
 
     def test_frozen_catalogue_name_or_order_change_is_rejected(self) -> None:
         manifest = deepcopy(self.manifest)
@@ -105,6 +135,21 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
 
         self.assertFalse(report["passed"])
         self.assertTrue(any("frozen catalogue" in error for error in report["errors"]))
+
+    def test_legacy_deferrals_cannot_silently_reenter_competitor_scope(self) -> None:
+        manifest = deepcopy(self.manifest)
+        blindfolding = next(
+            item for item in manifest["methods"] if item["id"] == "smartpls.blindfolding"
+        )
+        blindfolding["status"] = "absent"
+        blindfolding["target_release"] = "2.48.0"
+        blindfolding["competitor_scope"] = True
+
+        report = self.validate(manifest=manifest)
+
+        self.assertFalse(report["passed"])
+        self.assertTrue(any("frozen legacy decision" in error for error in report["errors"]))
+        self.assertTrue(any("requires a frozen capability ID" in error for error in report["errors"]))
 
     def test_duplicate_method_id_and_unknown_status_are_rejected(self) -> None:
         manifest = deepcopy(self.manifest)
@@ -142,7 +187,8 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
 
         self.assertTrue(demoted_report["passed"], demoted_report["errors"])
         self.assertFalse(demoted_report["competitor_ready"])
-        self.assertEqual(demoted_report["status_counts"]["native-qualified"], 18)
+        self.assertEqual(demoted_report["status_counts"]["native-qualified"], 20)
+        self.assertEqual(demoted_report["status_counts"]["release-qualified"], 3)
         self.assertFalse(promoted_report["passed"])
         self.assertFalse(promoted_report["competitor_ready"])
         self.assertTrue(
@@ -160,6 +206,23 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
         self.assertFalse(report["passed"])
         self.assertTrue(
             any("contradicts evidence-derived native-qualified" in error for error in report["errors"])
+        )
+
+    def test_future_capability_raw_status_cannot_promote_manifest_state(self) -> None:
+        manifest = deepcopy(self.manifest)
+        method = next(
+            item for item in manifest["methods"]
+            if item["id"] == "smartpls.pls_power_analysis"
+        )
+        method["status"] = "release-qualified"
+        method["target_release"] = "current"
+
+        report = self.validate(manifest=manifest)
+
+        self.assertFalse(report["passed"])
+        self.assertFalse(report["competitor_ready"])
+        self.assertTrue(
+            any("contradicts evidence-derived absent" in error for error in report["errors"])
         )
 
     def test_borrowed_capability_is_rejected_by_exact_crosswalk(self) -> None:
@@ -187,15 +250,31 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
         self.assertFalse(report["passed"])
         self.assertTrue(any("capability mapping differs from frozen crosswalk" in error for error in report["errors"]))
 
-    def test_engine_preview_requires_existing_repository_evidence(self) -> None:
+    def test_duplicate_capability_mapping_is_rejected(self) -> None:
         manifest = deepcopy(self.manifest)
-        method = next(item for item in manifest["methods"] if item["id"] == "smartpls.cta_pls")
-        method["implementation_evidence"] = ["validation/results/does-not-exist.json"]
+        method = next(
+            item for item in manifest["methods"]
+            if item["id"] == "smartpls.pls_power_analysis"
+        )
+        method["quickpls_capability_ids"] = [
+            "qpls3.pls.sample_size_power",
+            "qpls3.pls.sample_size_power",
+        ]
 
         report = self.validate(manifest=manifest)
 
         self.assertFalse(report["passed"])
-        self.assertTrue(any("implementation evidence is missing" in error for error in report["errors"]))
+        self.assertTrue(any("contains duplicates" in error for error in report["errors"]))
+
+    def test_mapped_status_rejects_editable_implementation_paths(self) -> None:
+        manifest = deepcopy(self.manifest)
+        method = next(item for item in manifest["methods"] if item["id"] == "smartpls.cta_pls")
+        method["implementation_evidence"] = ["crates/qpls-estimation/src/pls.rs"]
+
+        report = self.validate(manifest=manifest)
+
+        self.assertFalse(report["passed"])
+        self.assertTrue(any("not editable implementation paths" in error for error in report["errors"]))
 
     def test_absent_method_cannot_claim_preview_evidence(self) -> None:
         manifest = deepcopy(self.manifest)
@@ -208,7 +287,36 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
         report = self.validate(manifest=manifest)
 
         self.assertFalse(report["passed"])
-        self.assertTrue(any("absent must not declare" in error for error in report["errors"]))
+        self.assertTrue(any("not editable implementation paths" in error for error in report["errors"]))
+
+    def test_missing_exact_method_manifest_is_rejected(self) -> None:
+        factory_report = deepcopy(self.factory_report)
+        factory_report["manifests"] = [
+            result for result in factory_report["manifests"]
+            if result.get("feature_id") != "qpls3.pls.sample_size_power"
+        ]
+        factory_report["manifest_count"] = len(factory_report["manifests"])
+        factory_report["passed"] = True
+
+        report = self.validate(factory_report=factory_report)
+
+        self.assertFalse(report["passed"])
+        self.assertFalse(report["competitor_ready"])
+        self.assertTrue(any("missing frozen capabilities" in error for error in report["errors"]))
+        self.assertTrue(any("missing from method-manifest factory" in error for error in report["errors"]))
+
+    def test_unmapped_or_duplicate_factory_capability_is_rejected(self) -> None:
+        factory_report = deepcopy(self.factory_report)
+        duplicate = deepcopy(factory_report["manifests"][0])
+        duplicate["path"] = "validation/methods/duplicate.manifest.json"
+        factory_report["manifests"].append(duplicate)
+        factory_report["manifest_count"] = len(factory_report["manifests"])
+        factory_report["passed"] = True
+
+        report = self.validate(factory_report=factory_report)
+
+        self.assertFalse(report["passed"])
+        self.assertTrue(any("duplicate feature IDs" in error for error in report["errors"]))
 
     def test_unknown_dependency_and_dependency_cycle_are_rejected(self) -> None:
         manifest = deepcopy(self.manifest)
@@ -225,7 +333,7 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
 
     def test_dependency_cannot_target_a_later_release(self) -> None:
         manifest = deepcopy(self.manifest)
-        method = next(item for item in manifest["methods"] if item["id"] == "smartpls.cta_pls")
+        method = next(item for item in manifest["methods"] if item["id"] == "smartpls.mediation")
         method["dependencies"].append("smartpls.cbsem_model_comparison")
 
         report = self.validate(manifest=manifest)
@@ -260,6 +368,21 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
         self.assertFalse(report["competitor_ready"])
         self.assertTrue(any("commercial-readiness validation did not pass" in error for error in report["errors"]))
 
+    def test_missing_external_beta_contract_cannot_produce_ready(self) -> None:
+        missing = REPOSITORY_ROOT / "validation" / "missing_external_beta.json"
+
+        report = validate_program(
+            MANIFEST,
+            LEDGER,
+            REPOSITORY_ROOT,
+            beta_contract_path=missing,
+        )
+
+        self.assertFalse(report["passed"])
+        self.assertFalse(report["competitor_ready"])
+        self.assertFalse(report["external_beta_ready"])
+        self.assertTrue(any("external-beta validation did not pass" in error for error in report["errors"]))
+
     def test_missing_method_manifest_cannot_produce_ready(self) -> None:
         missing = REPOSITORY_ROOT / "validation" / "methods" / "missing.manifest.json"
 
@@ -280,6 +403,7 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
             self.parity_report,
             REPOSITORY_ROOT,
             commercial_readiness_report=None,
+            external_beta_report=self.beta_report,
             manifest_factory_report=self.factory_report,
         )
         missing_factory = validate_program_document(
@@ -287,13 +411,24 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
             self.parity_report,
             REPOSITORY_ROOT,
             commercial_readiness_report=self.commercial_report,
+            external_beta_report=self.beta_report,
             manifest_factory_report=None,
+        )
+        missing_beta = validate_program_document(
+            self.manifest,
+            self.parity_report,
+            REPOSITORY_ROOT,
+            commercial_readiness_report=self.commercial_report,
+            external_beta_report=None,
+            manifest_factory_report=self.factory_report,
         )
 
         self.assertFalse(missing_commercial["competitor_ready"])
         self.assertTrue(any("commercial-readiness report is required" in error for error in missing_commercial["errors"]))
         self.assertFalse(missing_factory["competitor_ready"])
         self.assertTrue(any("method-manifest factory report is required" in error for error in missing_factory["errors"]))
+        self.assertFalse(missing_beta["competitor_ready"])
+        self.assertTrue(any("external-beta report is required" in error for error in missing_beta["errors"]))
 
     def _write_finalizable_inputs(self, directory: Path):
         root = directory / "repo"
@@ -308,6 +443,7 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
         for relative in (
             "validation/parity_ledger.py",
             "validation/quickpls_3_release_readiness.py",
+            "validation/quickpls_external_beta.py",
             "validation/method_promotion_manifest.py",
             "validation/methods/method_promotion_manifest.schema.json",
         ):
@@ -325,12 +461,23 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
         }
         readiness_path = root / "validation" / "quickpls_3_release_readiness.json"
         readiness_path.write_text(json.dumps(readiness), encoding="utf-8")
+        beta = load_json(BETA)
+        beta["status"] = "completed"
+        beta["decision"] = {
+            "status": "approved",
+            "approved_by": "external-beta-board",
+            "approved_at": "2026-08-13T23:30:00+00:00",
+            "record_id": "approval:external-beta:final",
+        }
+        beta_path = root / "validation" / "quickpls_external_beta.json"
+        beta_path.write_text(json.dumps(beta), encoding="utf-8")
         manifest_paths = []
-        for index, feature_id in enumerate(sorted({
+        final_factory_ids = {
             capability
             for method in self.manifest["methods"]
             for capability in method["quickpls_capability_ids"]
-        })):
+        } | set(EXPECTED_FACTORY_AUXILIARY_CAPABILITY_IDS)
+        for index, feature_id in enumerate(sorted(final_factory_ids)):
             path = root / "validation" / "methods" / f"method_{index:02}.manifest.json"
             path.write_text(
                 json.dumps(
@@ -351,6 +498,16 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
             "pending": [],
             "failed": [],
             "release_decision": "approved",
+        }
+        self.final_beta_report = {
+            "passed": True,
+            "program_id": "quickpls_3_external_beta_v1",
+            "target_release": "3.0.0-beta",
+            "program_status": "completed",
+            "beta_ready": True,
+            "counts": {"participants": 15, "institutions": 5, "workflows": 30},
+            "unassisted_journey_completion_rate": 1.0,
+            "thresholds": {"all": True},
         }
         factory_report = {
             "passed": True,
@@ -387,8 +544,10 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
                 catalogue_path=root / "validation" / "quickpls_3_competitor_catalogue.json",
                 ledger_path=root / "validation" / "quickpls_3_parity_ledger.json",
                 readiness_contract_path=root / "validation" / "quickpls_3_release_readiness.json",
+                beta_contract_path=root / "validation" / "quickpls_external_beta.json",
                 parity_report=parity_report,
                 commercial_readiness_report=commercial_report,
+                external_beta_report=self.final_beta_report,
                 manifest_factory_report=factory_report,
             )
         envelope = {
@@ -421,8 +580,10 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
             catalogue_path=root / "validation" / "quickpls_3_competitor_catalogue.json",
             ledger_path=root / "validation" / "quickpls_3_parity_ledger.json",
             readiness_contract_path=root / "validation" / "quickpls_3_release_readiness.json",
+            beta_contract_path=root / "validation" / "quickpls_external_beta.json",
             parity_report=parity_report,
             commercial_readiness_report=commercial_report,
+            external_beta_report=self.final_beta_report,
             manifest_factory_report=factory_report,
             now=datetime(2026, 8, 15, tzinfo=timezone.utc),
         )
@@ -507,8 +668,10 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
                 catalogue_path=root / "validation" / "quickpls_3_competitor_catalogue.json",
                 ledger_path=root / "validation" / "quickpls_3_parity_ledger.json",
                 readiness_contract_path=root / "validation" / "quickpls_3_release_readiness.json",
+                beta_contract_path=root / "validation" / "quickpls_external_beta.json",
                 parity_report=parity_report,
                 commercial_readiness_report=commercial_report,
+                external_beta_report=self.final_beta_report,
                 manifest_factory_report=factory_report,
             )
             del bindings["method_manifest_report"]
@@ -526,6 +689,89 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
 
         self.assertFalse(report["passed"])
         self.assertTrue(any("binding IDs differ" in error for error in report["errors"]))
+
+    def test_missing_external_beta_binding_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root, parity_report, commercial_report, factory_report = self._write_finalizable_inputs(
+                Path(temporary_directory)
+            )
+            bindings = build_aggregate_approval_bindings(
+                repository_root=root,
+                catalogue_path=root / "validation" / "quickpls_3_competitor_catalogue.json",
+                ledger_path=root / "validation" / "quickpls_3_parity_ledger.json",
+                readiness_contract_path=root / "validation" / "quickpls_3_release_readiness.json",
+                beta_contract_path=root / "validation" / "quickpls_external_beta.json",
+                parity_report=parity_report,
+                commercial_readiness_report=commercial_report,
+                external_beta_report=self.final_beta_report,
+                manifest_factory_report=factory_report,
+            )
+            del bindings["external_beta_report"]
+            envelope = self._write_aggregate_envelope(
+                root, parity_report, commercial_report, factory_report, bindings=bindings
+            )
+
+            report = self._validate_test_envelope(
+                root, envelope, parity_report, commercial_report, factory_report
+            )
+
+        self.assertFalse(report["passed"])
+        self.assertTrue(any("external_beta_report" in error for error in report["errors"]))
+
+    def test_external_beta_contract_or_report_drift_invalidates_approval(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root, parity_report, commercial_report, factory_report = self._write_finalizable_inputs(
+                Path(temporary_directory)
+            )
+            envelope = self._write_aggregate_envelope(
+                root, parity_report, commercial_report, factory_report
+            )
+            beta_contract = root / "validation" / "quickpls_external_beta.json"
+            original_contract = beta_contract.read_bytes()
+            beta_contract.write_text(
+                beta_contract.read_text(encoding="utf-8") + "\n", encoding="utf-8"
+            )
+            contract_drift = self._validate_test_envelope(
+                root, envelope, parity_report, commercial_report, factory_report
+            )
+
+            beta_contract.write_bytes(original_contract)
+            mutated_report = deepcopy(self.final_beta_report)
+            mutated_report["counts"]["workflows"] = 31
+            original_report = self.final_beta_report
+            self.final_beta_report = mutated_report
+            try:
+                report_drift = self._validate_test_envelope(
+                    root, envelope, parity_report, commercial_report, factory_report
+                )
+            finally:
+                self.final_beta_report = original_report
+
+        self.assertFalse(contract_drift["passed"])
+        self.assertTrue(any("external_beta_contract" in error for error in contract_drift["errors"]))
+        self.assertFalse(report_drift["passed"])
+        self.assertTrue(any("external_beta_report" in error for error in report_drift["errors"]))
+
+    def test_aggregate_rejects_beta_report_that_is_not_ready(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root, parity_report, commercial_report, factory_report = self._write_finalizable_inputs(
+                Path(temporary_directory)
+            )
+            envelope = self._write_aggregate_envelope(
+                root, parity_report, commercial_report, factory_report
+            )
+            original_report = self.final_beta_report
+            self.final_beta_report = deepcopy(original_report)
+            self.final_beta_report["beta_ready"] = False
+            try:
+                report = self._validate_test_envelope(
+                    root, envelope, parity_report, commercial_report, factory_report
+                )
+            finally:
+                self.final_beta_report = original_report
+
+        self.assertFalse(report["passed"])
+        self.assertTrue(any("before beta_ready" in error for error in report["errors"]))
 
     def test_added_method_manifest_after_approval_invalidates_exact_file_set(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:

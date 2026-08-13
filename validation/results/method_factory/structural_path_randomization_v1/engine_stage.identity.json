@@ -1,0 +1,137 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "archive_native_release_evidence_borrowed": false,
+    "bounded_state": "engine_only",
+    "current_cli_binding": {
+      "current_cli": {
+        "path": "target/release/qpls.exe",
+        "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+        "size": 20690432
+      },
+      "execution_binding": "reference script executed in this evidence run with QUICKPLS_CLI_PATH set to current_cli",
+      "explicit_report_binding": true,
+      "passed": true,
+      "reference_report_cli": {
+        "modified_utc": "2026-08-13T11:30:31.883365+00:00",
+        "path": "target/release/qpls.exe",
+        "sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
+        "size": 20690432
+      }
+    },
+    "current_reference_execution": {
+      "command": [
+        "not_rerun"
+      ],
+      "returncode": null,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    "expected_checks": [
+      "calibrated_null_boundary",
+      "calibrated_power_boundary",
+      "exact_ordered_three_path_manifest",
+      "exact_permutation_plan_and_method_version",
+      "frozen_deterministic_indices_0_and_98",
+      "python_exact_exceedances_and_plus_one_probabilities",
+      "python_fixed_score_freedman_lane_coefficients",
+      "r_exact_exceedances_and_plus_one_probabilities",
+      "r_full_coefficient_recomputation",
+      "release_cli_exact_path_and_freshness",
+      "schema_v2_to_v3_recipe_migration",
+      "workers_1_and_4_exact_payload_equality"
+    ],
+    "focused_fail_closed_tests": {
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "validation.test_structural_path_randomization_reference"
+      ],
+      "returncode": 0,
+      "stderr_tail": "..........\n----------------------------------------------------------------------\nRan 10 tests in 0.035s\n\nOK\n",
+      "stdout_tail": ""
+    },
+    "observed_passed_checks": [
+      "calibrated_null_boundary",
+      "calibrated_power_boundary",
+      "exact_ordered_three_path_manifest",
+      "exact_permutation_plan_and_method_version",
+      "frozen_deterministic_indices_0_and_98",
+      "python_exact_exceedances_and_plus_one_probabilities",
+      "python_fixed_score_freedman_lane_coefficients",
+      "r_exact_exceedances_and_plus_one_probabilities",
+      "r_full_coefficient_recomputation",
+      "release_cli_exact_path_and_freshness",
+      "schema_v2_to_v3_recipe_migration",
+      "workers_1_and_4_exact_payload_equality"
+    ],
+    "passed": true,
+    "reference_identity_exact": true,
+    "reference_report": {
+      "path": "validation/results/structural_path_randomization_reference_report.json",
+      "sha256": "2b999b90aead450236d88c54e6f85d5d00846e459fb5e2975e9656cc7933cf0a",
+      "size": 17703
+    },
+    "required_check_set_exact": true
+  },
+  "feature_id": "qpls3.inference.structural_path_randomization",
+  "generated_at_utc": "2026-08-13T19:54:09.143734Z",
+  "method_version": "freedman_lane_permutation_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "engine_stage",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "docs/methods/PERMUTATION_ENGINE_V1.md",
+      "sha256": "a8628b524857bdb459755b8c026bb9d62e83ac21c08c25d004753129dc69ad98",
+      "size": 3765
+    },
+    {
+      "path": "validation/legacy_release_factory_migration.py",
+      "sha256": "5c2c131f972d70746ceed70377f8673d4b67ece6ece07c73d45bb2ac65fa4c5f",
+      "size": 23709
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/structural_path_randomization_v1.manifest.json",
+      "sha256": "c4af70fa296449446e4f987c346b82be6c03c82fdaf73e6e2f66e738d8450b2a",
+      "size": 14560
+    },
+    {
+      "path": "validation/structural_path_randomization_boundary_gate.py",
+      "sha256": "93074fe54942cd3211e17a79989ca535c073c11014ab111d67fa3ee4ea8a7a7a",
+      "size": 9991
+    },
+    {
+      "path": "validation/structural_path_randomization_reference.R",
+      "sha256": "28dcc4d5ba8e823c6b9ce6fc7660f7035428c924a1e8c0563f13272062c1fd42",
+      "size": 5811
+    },
+    {
+      "path": "validation/structural_path_randomization_reference.py",
+      "sha256": "8946d5525cb1c51012e3788dc0f34ace825e96282b33580622cd10d4960eeb7d",
+      "size": 48644
+    },
+    {
+      "path": "validation/test_legacy_release_factory_migration.py",
+      "sha256": "d4ce1d582d77f6a861b20c5ee95f7a01446880270e038429712a240194cb23c1",
+      "size": 2519
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    }
+  ]
+}

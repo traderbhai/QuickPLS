@@ -11,6 +11,7 @@ import re
 import shutil
 import struct
 import subprocess
+import uuid
 import zipfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path, PurePosixPath
@@ -80,6 +81,7 @@ EXPECTED_IDENTITY = {
     "governance.claims_channels": "reviewer_identity",
 }
 CANDIDATE_SCOPED_IDS = {
+    "signing.identity",
     "signing.artifacts",
     "installer.clean_offline",
     "installer.upgrade_recovery",
@@ -90,6 +92,10 @@ CANDIDATE_SCOPED_IDS = {
     "supply_chain.provenance",
 }
 REQUIRED_CANDIDATE_ROLES = {
+    "build_attestation",
+    "build_attestation_signature",
+    "channel_manifest",
+    "channel_manifest_signature",
     "desktop",
     "cli",
     "installer",
@@ -97,12 +103,47 @@ REQUIRED_CANDIDATE_ROLES = {
     "sbom",
     "provenance",
 }
-DISTRIBUTION_CANDIDATE_ROLES = {"desktop", "cli", "installer", "updater_bundle"}
+DISTRIBUTION_CANDIDATE_ROLES = {
+    "desktop",
+    "cli",
+    "installer",
+    "updater_bundle",
+    "channel_manifest",
+    "channel_manifest_signature",
+}
+PAYLOAD_IDENTITY_ROLES = {"desktop", "cli", "installer"}
 SIGNED_PE_ROLES = {"desktop", "cli", "installer"}
+CMS_SIGNED_ROLES = {
+    "build_attestation": "build_attestation_signature",
+    "channel_manifest": "channel_manifest_signature",
+}
 MAX_UPDATER_ENTRIES = 8
 MAX_UPDATER_UNCOMPRESSED_BYTES = 512 * 1024 * 1024
 MAX_UPDATER_COMPRESSION_RATIO = 100
 SIGNTOOL_ARGUMENTS = ["verify", "/pa", "/all", "/v", "/tw"]
+SHA1 = re.compile(r"^[0-9A-F]{40}$")
+APPROVED_SIGNER_STATE = "approved"
+SIGNING_IDENTITY_RECORD = "validation/quickpls_signing_identity.json"
+EXPECTED_PROHIBITED_CLAIMS = [
+    "complete_smartpls_parity",
+    "identical_undocumented_behavior",
+    "smartpls_project_compatibility",
+    "smartpls_affiliation",
+    "fully_offline_without_os_enforced_fixed_webview2_containment",
+    "no_telemetry_without_os_enforced_fixed_webview2_containment",
+    "zero_egress_without_os_enforced_fixed_webview2_containment",
+]
+EXPECTED_STRICT_ZERO_EGRESS_GATE = {
+    "status": "pending",
+    "required_control": "os_enforced_fixed_webview2_runtime_containment",
+    "application_level_containment_sufficient": False,
+    "evidence": [],
+}
+PE_IDENTITY_BY_ROLE = {
+    "desktop": {"product_name": "QuickPLS", "original_filename": "quickpls-desktop.exe"},
+    "cli": {"product_name": "QuickPLS", "original_filename": "qpls.exe"},
+    "installer": {"product_name": "QuickPLS", "original_filename": None},
+}
 
 
 class ContractError(ValueError):
@@ -183,6 +224,109 @@ def _sha256_path(path: Path) -> str:
 def _canonical_sha256(value: object) -> str:
     encoded = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
+
+
+def _approved_signer_identity_id(leaf_subject: str, leaf_sha1_thumbprint: str) -> str:
+    return _canonical_sha256(
+        {
+            "identity_type": "authenticode_leaf_v1",
+            "leaf_subject": leaf_subject,
+            "leaf_sha1_thumbprint": leaf_sha1_thumbprint,
+        }
+    )
+
+
+def _validate_signing_identity_record(
+    path: Path,
+    *,
+    label: str,
+    require_approved: bool,
+) -> dict[str, object]:
+    record = _strict_json_file(path, label)
+    _require(isinstance(record, dict), f"{label} must be a JSON object")
+    expected = {
+        "schema_version",
+        "document_type",
+        "status",
+        "identity_id",
+        "leaf_subject",
+        "leaf_sha1_thumbprint",
+        "approved_by",
+        "approved_at",
+        "key_protection",
+        "notes",
+    }
+    _require(set(record) == expected, f"{label} keys are invalid")
+    _require(record["schema_version"] == 1, f"{label}.schema_version must be 1")
+    _require(record["document_type"] == "quickpls_authenticode_signing_identity", f"{label}.document_type is invalid")
+    status = record["status"]
+    _require(status in {"pending", APPROVED_SIGNER_STATE}, f"{label}.status is invalid")
+    _nonempty_string(record["notes"], f"{label}.notes")
+    if status == "pending":
+        _require(
+            all(record[key] is None for key in (
+                "identity_id", "leaf_subject", "leaf_sha1_thumbprint", "approved_by", "approved_at", "key_protection"
+            )),
+            f"{label} pending identity fields must be null",
+        )
+        _require(not require_approved, f"{label} is not yet approved")
+        return {"status": "pending", "path": path}
+
+    subject = _nonempty_string(record["leaf_subject"], f"{label}.leaf_subject")
+    thumbprint = _nonempty_string(record["leaf_sha1_thumbprint"], f"{label}.leaf_sha1_thumbprint").upper()
+    _require(bool(SHA1.fullmatch(thumbprint)), f"{label}.leaf_sha1_thumbprint must be uppercase 40-hex SHA-1")
+    identity_id = _nonempty_string(record["identity_id"], f"{label}.identity_id")
+    _require(bool(SHA256.fullmatch(identity_id)), f"{label}.identity_id must be lowercase SHA-256")
+    _require(
+        identity_id == _approved_signer_identity_id(subject, thumbprint),
+        f"{label}.identity_id does not match the frozen leaf subject and thumbprint",
+    )
+    _nonempty_string(record["approved_by"], f"{label}.approved_by")
+    _validate_timestamp(record["approved_at"], f"{label}.approved_at")
+    _require(
+        record["key_protection"] in {"hardware_backed", "managed_signing_service"},
+        f"{label}.key_protection must be hardware_backed or managed_signing_service",
+    )
+    return {
+        "status": APPROVED_SIGNER_STATE,
+        "identity_id": identity_id,
+        "leaf_subject": subject,
+        "leaf_sha1_thumbprint": thumbprint,
+        "path": path,
+    }
+
+
+def _validate_signing_identity_policy(
+    value: object,
+    *,
+    repository_root: Path,
+    require_approved: bool,
+) -> dict[str, object]:
+    _require(isinstance(value, dict), "signing_identity_policy must be an object")
+    _require(
+        value
+        == {
+            "record": SIGNING_IDENTITY_RECORD,
+            "candidate_binding": "exact_record_sha256_and_identity_id",
+            "leaf_verification": "windows_authenticode_subject_and_sha1_thumbprint",
+            "caller_supplied_patterns": "prohibited",
+        },
+        "signing_identity_policy does not match the frozen leaf-identity policy",
+    )
+    relative = _safe_relative_file(value["record"], "signing_identity_policy.record")
+    path = (repository_root / Path(*relative.parts)).resolve()
+    _require(path.is_file(), f"signing identity record does not exist: {relative.as_posix()}")
+    identity = _validate_signing_identity_record(
+        path,
+        label="approved QuickPLS signing identity",
+        require_approved=require_approved,
+    )
+    identity["descriptor"] = {
+        "path": relative.as_posix(),
+        "size": path.stat().st_size,
+        "sha256": _sha256_path(path),
+    }
+    return identity
 
 
 def _validate_artifact_descriptor(
@@ -290,9 +434,12 @@ def _normalize_signtool_output(stdout: str, stderr: str, path: Path) -> str:
 
 
 def _parse_signtool_identity(output: str, label: str) -> tuple[str, str]:
-    _require(re.search(r"(?im)^\s*Successfully verified:\s*.+$", output) is not None, f"{label} has no successful verification result")
+    successes = re.findall(r"(?im)^\s*Successfully verified:\s*.+$", output)
+    _require(len(successes) == 1, f"{label} must have exactly one successful verification result")
     _require(re.search(r"(?im)^\s*(?:SignTool Error:|Number of errors:\s*[1-9])", output) is None, f"{label} reports an untrusted signature")
     _require("warning" not in output.casefold(), f"{label} reports a verification warning")
+    _require(len(re.findall(r"(?im)^\s*Signing Certificate Chain:\s*$", output)) == 1, f"{label} must have exactly one signing certificate chain")
+    _require(len(re.findall(r"(?im)^\s*The signature is timestamped:\s*.+$", output)) == 1, f"{label} must have exactly one trusted timestamp")
     chain = re.search(r"(?is)Signing Certificate Chain:\s*(.*?)(?:Timestamp Verified by:|The signature is timestamped:)", output)
     _require(chain is not None, f"{label} has no signing certificate chain")
     publisher_match = re.search(r"(?im)^\s*Issued to:\s*(.+?)\s*$", chain.group(1))
@@ -306,7 +453,115 @@ def _parse_signtool_identity(output: str, label: str) -> tuple[str, str]:
     return publisher, timestamp
 
 
-def _verify_authenticode(path: Path, expected_sha256: str, label: str) -> dict[str, object]:
+def _locate_powershell() -> Path | None:
+    for command in ("powershell.exe", "pwsh.exe", "pwsh"):
+        located = shutil.which(command)
+        if located:
+            return Path(located).resolve()
+    return None
+
+
+def _run_windows_file_identity(path: Path) -> dict[str, object]:
+    tool = _locate_powershell()
+    _require(tool is not None, "Windows PowerShell was not found; leaf certificate and PE identity cannot be verified")
+    script = r"""
+$ErrorActionPreference = 'Stop'
+[Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
+$file = (Resolve-Path -LiteralPath $env:QPLS_VERIFY_FILE).Path
+$signature = Get-AuthenticodeSignature -LiteralPath $file
+$certificate = $signature.SignerCertificate
+if ($null -eq $certificate) { throw 'No Authenticode leaf certificate' }
+$version = (Get-Item -LiteralPath $file).VersionInfo
+[ordered]@{
+  signature_status = [string]$signature.Status
+  leaf_subject = [string]$certificate.Subject
+  leaf_sha1_thumbprint = ([string]$certificate.Thumbprint).Replace(' ', '').ToUpperInvariant()
+  product_name = [string]$version.ProductName
+  product_version = [string]$version.ProductVersion
+  file_version = [string]$version.FileVersion
+  original_filename = [string]$version.OriginalFilename
+} | ConvertTo-Json -Compress
+""".strip()
+    environment = os.environ.copy()
+    environment["QPLS_VERIFY_FILE"] = str(path.resolve())
+    try:
+        completed = subprocess.run(
+            [str(tool), "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=120,
+            check=False,
+            shell=False,
+            env=environment,
+        )
+    except (OSError, subprocess.SubprocessError) as error:
+        raise ContractError(f"Windows file-identity inspection failed for {path}: {error}") from error
+    _require(completed.returncode == 0, f"Windows file-identity inspection failed for {path}: {completed.stderr.strip()}")
+    value = _strict_json(completed.stdout.strip(), f"Windows file identity for {path}")
+    _require(isinstance(value, dict), f"Windows file identity for {path} must be an object")
+    expected = {
+        "signature_status", "leaf_subject", "leaf_sha1_thumbprint", "product_name",
+        "product_version", "file_version", "original_filename",
+    }
+    _require(set(value) == expected, f"Windows file identity for {path} keys are invalid")
+    return value
+
+
+def _validate_live_leaf_and_pe_identity(
+    value: object,
+    *,
+    approved_signer: dict[str, object],
+    role: str | None,
+    target_release: str,
+    label: str,
+) -> dict[str, str]:
+    _require(isinstance(value, dict), f"{label} Windows identity must be an object")
+    _require(value.get("signature_status") == "Valid", f"{label} Windows Authenticode status is not Valid")
+    subject = _nonempty_string(value.get("leaf_subject"), f"{label}.leaf_subject")
+    thumbprint = _nonempty_string(value.get("leaf_sha1_thumbprint"), f"{label}.leaf_sha1_thumbprint").upper()
+    _require(bool(SHA1.fullmatch(thumbprint)), f"{label}.leaf_sha1_thumbprint is invalid")
+    _require(subject == approved_signer.get("leaf_subject"), f"{label} leaf subject does not match the approved QuickPLS signer")
+    _require(
+        thumbprint == approved_signer.get("leaf_sha1_thumbprint"),
+        f"{label} leaf thumbprint does not match the approved QuickPLS signer",
+    )
+    _require(role in PE_IDENTITY_BY_ROLE, f"{label}.role is not a recognized QuickPLS PE role")
+    expected = PE_IDENTITY_BY_ROLE[role]
+    product_name = _nonempty_string(value.get("product_name"), f"{label}.product_name")
+    _require(product_name == expected["product_name"], f"{label}.product_name is not QuickPLS")
+    product_version = _nonempty_string(value.get("product_version"), f"{label}.product_version")
+    file_version = _nonempty_string(value.get("file_version"), f"{label}.file_version")
+    release_core = target_release.split("-", 1)[0]
+    for field, version in (("product_version", product_version), ("file_version", file_version)):
+        numbers = re.findall(r"[0-9]+", version)
+        _require(len(numbers) >= 3 and ".".join(numbers[:3]) == release_core, f"{label}.{field} does not match {target_release}")
+    original = _nonempty_string(value.get("original_filename"), f"{label}.original_filename")
+    expected_original = expected["original_filename"]
+    if expected_original is not None:
+        _require(original.casefold() == str(expected_original).casefold(), f"{label}.original_filename is invalid for {role}")
+    elif role == "installer":
+        _require(original.casefold().endswith(".exe") and "quickpls" in original.casefold(), f"{label}.original_filename is invalid for installer")
+    return {
+        "leaf_subject": subject,
+        "leaf_sha1_thumbprint": thumbprint,
+        "product_name": product_name,
+        "product_version": product_version,
+        "file_version": file_version,
+        "original_filename": original,
+    }
+
+
+def _verify_authenticode(
+    path: Path,
+    expected_sha256: str,
+    label: str,
+    *,
+    role: str,
+    target_release: str,
+    approved_signer: dict[str, object],
+) -> dict[str, object]:
     _require(_sha256_path(path) == expected_sha256, f"{label} file hash changed before SignTool verification")
     execution = _run_signtool(path)
     returncode = execution.get("returncode")
@@ -316,20 +571,112 @@ def _verify_authenticode(path: Path, expected_sha256: str, label: str) -> dict[s
     _require(isinstance(stdout, str) and isinstance(stderr, str), f"{label} SignTool output is invalid")
     normalized = _normalize_signtool_output(stdout, stderr, path)
     _require(returncode == 0, f"{label} SignTool trust verification failed with exit code {returncode}")
-    publisher, timestamp = _parse_signtool_identity(normalized, label)
+    _publisher_hint, timestamp = _parse_signtool_identity(normalized, label)
+    live_identity = _validate_live_leaf_and_pe_identity(
+        _run_windows_file_identity(path),
+        approved_signer=approved_signer,
+        role=role,
+        target_release=target_release,
+        label=label,
+    )
     _require(_sha256_path(path) == expected_sha256, f"{label} file hash changed during SignTool verification")
     return {
         "command": SIGNTOOL_ARGUMENTS,
         "exit_code": returncode,
         "verification_output": normalized,
         "verification_output_sha256": hashlib.sha256(normalized.encode("utf-8")).hexdigest(),
-        "publisher": publisher,
+        "signer_identity_id": approved_signer["identity_id"],
+        **live_identity,
         "timestamp": timestamp,
         "verified_file_sha256": expected_sha256,
     }
 
 
-def _validate_updater_zip(path: Path, installer: dict[str, object], target_release: str, label: str) -> None:
+def _run_windows_cms_verification(payload: Path, signature: Path) -> dict[str, object]:
+    tool = _locate_powershell()
+    _require(tool is not None, "Windows PowerShell was not found; detached CMS trust cannot be verified")
+    script = r"""
+$ErrorActionPreference = 'Stop'
+[Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
+try { Add-Type -AssemblyName System.Security.Cryptography.Pkcs } catch { Add-Type -AssemblyName System.Security }
+$payload = [IO.File]::ReadAllBytes((Resolve-Path -LiteralPath $env:QPLS_CMS_PAYLOAD).Path)
+$signature = [IO.File]::ReadAllBytes((Resolve-Path -LiteralPath $env:QPLS_CMS_SIGNATURE).Path)
+$content = [Security.Cryptography.Pkcs.ContentInfo]::new($payload)
+$cms = [Security.Cryptography.Pkcs.SignedCms]::new($content, $true)
+$cms.Decode($signature)
+$cms.CheckSignature($false)
+if ($cms.SignerInfos.Count -ne 1) { throw 'Detached CMS must have exactly one signer' }
+$certificate = $cms.SignerInfos[0].Certificate
+[ordered]@{
+  leaf_subject = [string]$certificate.Subject
+  leaf_sha1_thumbprint = ([string]$certificate.Thumbprint).Replace(' ', '').ToUpperInvariant()
+} | ConvertTo-Json -Compress
+""".strip()
+    environment = os.environ.copy()
+    environment["QPLS_CMS_PAYLOAD"] = str(payload.resolve())
+    environment["QPLS_CMS_SIGNATURE"] = str(signature.resolve())
+    try:
+        completed = subprocess.run(
+            [
+                str(tool), "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script,
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=120,
+            check=False,
+            shell=False,
+            env=environment,
+        )
+    except (OSError, subprocess.SubprocessError) as error:
+        raise ContractError(f"Detached CMS verification failed: {error}") from error
+    normalized = f"{completed.stdout.rstrip()}\n{completed.stderr.rstrip()}".strip().replace("\r\n", "\n").replace("\r", "\n")
+    _require(completed.returncode == 0, f"Detached CMS verification failed: {normalized}")
+    value = _strict_json(completed.stdout.strip(), "detached CMS signer identity")
+    _require(isinstance(value, dict) and set(value) == {"leaf_subject", "leaf_sha1_thumbprint"}, "detached CMS signer identity is invalid")
+    return {"exit_code": 0, "verification_output": normalized, **value}
+
+
+def _verify_detached_cms(
+    payload: Path,
+    signature: Path,
+    *,
+    approved_signer: dict[str, object],
+    label: str,
+) -> dict[str, object]:
+    payload_before = _sha256_path(payload)
+    signature_before = _sha256_path(signature)
+    actual = _run_windows_cms_verification(payload, signature)
+    subject = _nonempty_string(actual.get("leaf_subject"), f"{label}.leaf_subject")
+    thumbprint = _nonempty_string(actual.get("leaf_sha1_thumbprint"), f"{label}.leaf_sha1_thumbprint").upper()
+    _require(subject == approved_signer.get("leaf_subject"), f"{label} leaf subject does not match the approved signer")
+    _require(thumbprint == approved_signer.get("leaf_sha1_thumbprint"), f"{label} leaf thumbprint does not match the approved signer")
+    _require(_sha256_path(payload) == payload_before, f"{label} payload changed during CMS verification")
+    _require(_sha256_path(signature) == signature_before, f"{label} signature changed during CMS verification")
+    output = _nonempty_string(actual.get("verification_output"), f"{label}.verification_output")
+    _require(actual.get("exit_code") == 0, f"{label}.exit_code must be zero")
+    return {
+        "verification_tool": "windows_signed_cms",
+        "exit_code": 0,
+        "verification_output": output,
+        "verification_output_sha256": hashlib.sha256(output.encode("utf-8")).hexdigest(),
+        "signer_identity_id": approved_signer["identity_id"],
+        "leaf_subject": subject,
+        "leaf_sha1_thumbprint": thumbprint,
+        "payload_sha256": payload_before,
+        "signature_sha256": signature_before,
+    }
+
+
+def _validate_updater_zip(
+    path: Path,
+    installer: dict[str, object],
+    channel_manifest: dict[str, object],
+    channel_manifest_signature: dict[str, object],
+    target_release: str,
+    label: str,
+) -> None:
     try:
         with zipfile.ZipFile(path) as archive:
             entries = archive.infolist()
@@ -355,12 +702,19 @@ def _validate_updater_zip(path: Path, installer: dict[str, object], target_relea
                     )
                 names.append(name)
             expected_name = f"QuickPLS_{target_release}_x64-setup.exe"
-            _require(names == [expected_name], f"{label} must contain only {expected_name}")
+            expected_names = [expected_name, "quickpls-channel-manifest.json", "quickpls-channel-manifest.p7s"]
+            _require(names == expected_names, f"{label} must contain the installer plus the signed channel manifest")
             payload = archive.read(expected_name)
+            manifest_payload = archive.read("quickpls-channel-manifest.json")
+            signature_payload = archive.read("quickpls-channel-manifest.p7s")
     except (OSError, zipfile.BadZipFile, RuntimeError) as error:
         raise ContractError(f"{label} is not a valid updater ZIP: {error}") from error
     _require(len(payload) == installer["size"], f"{label} installer payload size does not match the candidate")
     _require(hashlib.sha256(payload).hexdigest() == installer["sha256"], f"{label} installer payload hash does not match the candidate")
+    _require(len(manifest_payload) == channel_manifest["size"], f"{label} channel-manifest size does not match")
+    _require(hashlib.sha256(manifest_payload).hexdigest() == channel_manifest["sha256"], f"{label} channel-manifest hash does not match")
+    _require(len(signature_payload) == channel_manifest_signature["size"], f"{label} channel signature size does not match")
+    _require(hashlib.sha256(signature_payload).hexdigest() == channel_manifest_signature["sha256"], f"{label} channel signature hash does not match")
 
 
 def _validate_structured_result(value: object, label: str) -> None:
@@ -422,8 +776,112 @@ def _candidate_distribution_identity(target_release: str, artifacts: dict[str, d
     )
 
 
+def _candidate_payload_identity(target_release: str, artifacts: dict[str, dict[str, object]]) -> str:
+    return _canonical_sha256(
+        {
+            "target_release": target_release,
+            "artifacts": [
+                {"role": role, "size": artifacts[role]["size"], "sha256": artifacts[role]["sha256"]}
+                for role in sorted(PAYLOAD_IDENTITY_ROLES)
+            ],
+        }
+    )
+
+
 def _candidate_digest_map(artifacts: dict[str, dict[str, object]]) -> dict[str, str]:
     return {role: str(artifacts[role]["sha256"]) for role in sorted(DISTRIBUTION_CANDIDATE_ROLES)}
+
+
+def _validate_channel_manifest(
+    path: Path,
+    *,
+    target_release: str,
+    payload_id: str,
+    artifact_map: dict[str, dict[str, object]],
+    signing_identity_id: str,
+    label: str,
+) -> None:
+    value = _strict_json_file(path, label)
+    _require(isinstance(value, dict), f"{label} must be a JSON object")
+    expected = {
+        "schema_version", "document_type", "channel", "target_release", "payload_id",
+        "signing_identity_id", "minimum_installed_version", "allow_downgrade",
+        "manual_check_default", "installer", "recovery",
+    }
+    _require(set(value) == expected, f"{label} keys are invalid")
+    _require(value["schema_version"] == 1 and value["document_type"] == "quickpls_signed_channel_manifest", f"{label} identity is invalid")
+    _require(value["channel"] in {"beta", "stable"}, f"{label}.channel is invalid")
+    _require(value["target_release"] == target_release and value["payload_id"] == payload_id, f"{label} payload binding is invalid")
+    _require(value["signing_identity_id"] == signing_identity_id, f"{label} signer binding is invalid")
+    minimum = _nonempty_string(value["minimum_installed_version"], f"{label}.minimum_installed_version")
+    _require(bool(SEMVER.fullmatch(minimum)), f"{label}.minimum_installed_version is invalid")
+    minimum_core = tuple(int(item) for item in minimum.split("-", 1)[0].split("."))
+    target_core = tuple(int(item) for item in target_release.split("-", 1)[0].split("."))
+    _require(minimum_core <= target_core, f"{label}.minimum_installed_version exceeds the target release")
+    _require(value["allow_downgrade"] is False and value["manual_check_default"] is True, f"{label} channel safety policy is invalid")
+    _require(value["installer"] == artifact_map["installer"], f"{label}.installer descriptor does not match")
+    recovery = value["recovery"]
+    _require(isinstance(recovery, dict) and set(recovery) == {"mode", "full_installer_sha256"}, f"{label}.recovery is invalid")
+    _require(recovery["mode"] == "offline_full_installer", f"{label}.recovery.mode is invalid")
+    _require(recovery["full_installer_sha256"] == artifact_map["installer"]["sha256"], f"{label}.recovery hash does not match")
+
+
+def _validate_build_attestation(
+    path: Path,
+    *,
+    target_release: str,
+    candidate_id: str,
+    artifact_digests: dict[str, str],
+    signing_identity_id: str,
+    sbom_sha256: str,
+    label: str,
+) -> dict[str, object]:
+    value = _strict_json_file(path, label)
+    _require(isinstance(value, dict), f"{label} must be a JSON object")
+    expected = {
+        "schema_version", "document_type", "target_release", "candidate_id",
+        "candidate_artifact_digests", "signing_identity_id", "source_commit",
+        "source_tree_clean", "protected_build", "build_id", "builder_identity",
+        "build_started_at", "build_finished_at", "toolchain", "lockfiles",
+        "sbom_sha256",
+    }
+    _require(set(value) == expected, f"{label} keys are invalid")
+    _require(value["schema_version"] == 1 and value["document_type"] == "quickpls_protected_build_attestation", f"{label} identity is invalid")
+    _require(value["target_release"] == target_release and value["candidate_id"] == candidate_id, f"{label} candidate binding is invalid")
+    _require(value["candidate_artifact_digests"] == artifact_digests, f"{label} artifact binding is invalid")
+    _require(value["signing_identity_id"] == signing_identity_id, f"{label} signer binding is invalid")
+    _require(value["sbom_sha256"] == sbom_sha256, f"{label}.sbom_sha256 does not match the candidate SBOM")
+    commit = _nonempty_string(value["source_commit"], f"{label}.source_commit")
+    _require(bool(re.fullmatch(r"[0-9a-f]{40}", commit)), f"{label}.source_commit must be lowercase 40-hex")
+    _require(value["source_tree_clean"] is True, f"{label}.source_tree_clean must be true")
+    protected = value["protected_build"]
+    _require(isinstance(protected, dict) and set(protected) == {"workflow_id", "workflow_run_id", "workflow_ref", "repository", "runner_environment", "oidc_subject"}, f"{label}.protected_build is invalid")
+    for key in protected:
+        _nonempty_string(protected[key], f"{label}.protected_build.{key}")
+    workflow_ref = str(protected["workflow_ref"])
+    workflow_id = str(protected["workflow_id"])
+    repository = str(protected["repository"])
+    run_id = str(protected["workflow_run_id"])
+    runner = str(protected["runner_environment"])
+    _require(workflow_ref == f"{workflow_id}@refs/heads/main", f"{label}.protected_build workflow binding is invalid")
+    _require(workflow_id == f"{repository}/.github/workflows/release.yml", f"{label}.protected_build workflow is not the frozen release workflow")
+    _require(run_id.isdigit(), f"{label}.protected_build.workflow_run_id must be numeric")
+    _require(protected["oidc_subject"] == f"repo:{repository}:ref:refs/heads/main", f"{label}.protected_build.oidc_subject is invalid")
+    _require(value["build_id"] == f"github-actions:{repository}:{run_id}", f"{label}.build_id is not derived from protected workflow identity")
+    _require(value["builder_identity"] == f"github-actions:{workflow_ref}:{runner}", f"{label}.builder_identity is not derived from protected workflow identity")
+    started = _validate_timestamp(value["build_started_at"], f"{label}.build_started_at")
+    finished = _validate_timestamp(value["build_finished_at"], f"{label}.build_finished_at")
+    _require(finished >= started, f"{label}.build_finished_at precedes build_started_at")
+    toolchain = value["toolchain"]
+    _require(isinstance(toolchain, dict) and set(toolchain) == {"rustc", "cargo", "node", "npm", "tauri_cli"}, f"{label}.toolchain is invalid")
+    for key in toolchain:
+        tool = _nonempty_string(toolchain[key], f"{label}.toolchain.{key}")
+        _require(tool.casefold() != "unavailable", f"{label}.toolchain.{key} is unavailable")
+    lockfiles = value["lockfiles"]
+    _require(isinstance(lockfiles, dict) and set(lockfiles) == {"Cargo.lock", "package-lock.json"}, f"{label}.lockfiles is invalid")
+    for key in lockfiles:
+        _require(isinstance(lockfiles[key], str) and bool(SHA256.fullmatch(lockfiles[key])), f"{label}.lockfiles.{key} is invalid")
+    return value
 
 
 def _validate_signature_report(
@@ -436,6 +894,7 @@ def _validate_signature_report(
     candidate_id: str,
     repository_root: Path,
     verify_trust: bool,
+    approved_signer: dict[str, object],
     authenticode_cache: dict[str, dict[str, object]],
     label: str,
 ) -> None:
@@ -449,7 +908,6 @@ def _validate_signature_report(
         "role",
         "artifact_sha256",
         "authenticode_valid",
-        "publisher",
         "timestamp",
         "verification_tool",
         "command",
@@ -457,6 +915,13 @@ def _validate_signature_report(
         "verification_output",
         "verification_output_sha256",
         "verified_file_sha256",
+        "signer_identity_id",
+        "leaf_subject",
+        "leaf_sha1_thumbprint",
+        "product_name",
+        "product_version",
+        "file_version",
+        "original_filename",
         "warnings",
     }
     _require(set(report) == expected, f"{label} keys are invalid")
@@ -466,9 +931,14 @@ def _validate_signature_report(
     _require(report["role"] == role, f"{label}.role does not match")
     _require(report["artifact_sha256"] == artifact_sha256, f"{label}.artifact_sha256 does not match")
     _require(report["authenticode_valid"] is True, f"{label}.authenticode_valid must be true")
-    _nonempty_string(report["publisher"], f"{label}.publisher")
+    _require(report["signer_identity_id"] == approved_signer.get("identity_id"), f"{label}.signer_identity_id does not match")
+    _require(report["leaf_subject"] == approved_signer.get("leaf_subject"), f"{label}.leaf_subject does not match")
+    _require(report["leaf_sha1_thumbprint"] == approved_signer.get("leaf_sha1_thumbprint"), f"{label}.leaf_sha1_thumbprint does not match")
     _nonempty_string(report["timestamp"], f"{label}.timestamp")
-    _require(report["verification_tool"] == "signtool", f"{label}.verification_tool must be signtool")
+    _require(
+        report["verification_tool"] == "signtool_and_windows_authenticode",
+        f"{label}.verification_tool must combine SignTool and Windows leaf/PE identity inspection",
+    )
     _require(report["command"] == SIGNTOOL_ARGUMENTS, f"{label}.command does not use the required SignTool policy")
     _require(report["exit_code"] == 0, f"{label}.exit_code must be zero")
     verification_output = _nonempty_string(report["verification_output"], f"{label}.verification_output")
@@ -489,14 +959,27 @@ def _validate_signature_report(
         cache_key = f"{artifact_path.resolve()}:{artifact_sha256}"
         actual = authenticode_cache.get(cache_key)
         if actual is None:
-            actual = _verify_authenticode(artifact_path, artifact_sha256, label)
+            actual = _verify_authenticode(
+                artifact_path,
+                artifact_sha256,
+                label,
+                role=role,
+                target_release=target_release,
+                approved_signer=approved_signer,
+            )
             authenticode_cache[cache_key] = actual
         for field in (
             "command",
             "exit_code",
             "verification_output",
             "verification_output_sha256",
-            "publisher",
+            "signer_identity_id",
+            "leaf_subject",
+            "leaf_sha1_thumbprint",
+            "product_name",
+            "product_version",
+            "file_version",
+            "original_filename",
             "timestamp",
             "verified_file_sha256",
         ):
@@ -513,37 +996,96 @@ def _validate_sbom(
 ) -> None:
     sbom = _strict_json_file(path, label)
     _require(isinstance(sbom, dict), f"{label} must be a JSON object")
-    expected = {
-        "schema_version",
-        "document_type",
-        "target_release",
-        "candidate_id",
-        "candidate_artifact_digests",
-        "format",
-        "spec_version",
-        "components",
-    }
+    expected = {"bomFormat", "specVersion", "serialNumber", "version", "metadata", "components", "dependencies"}
     _require(set(sbom) == expected, f"{label} keys are invalid")
-    _require(sbom["schema_version"] == 1, f"{label}.schema_version must be 1")
-    _require(sbom["document_type"] == "quickpls_sbom", f"{label}.document_type is invalid")
-    _require(sbom["target_release"] == target_release, f"{label}.target_release does not match")
-    _require(sbom["candidate_id"] == candidate_id, f"{label}.candidate_id does not match")
-    _require(sbom["candidate_artifact_digests"] == artifact_digests, f"{label} artifact digests do not match")
-    _require(sbom["format"] == "CycloneDX", f"{label}.format must be CycloneDX")
-    _require(sbom["spec_version"] == "1.6", f"{label}.spec_version must be 1.6")
+    _require(sbom["bomFormat"] == "CycloneDX", f"{label}.bomFormat must be CycloneDX")
+    _require(sbom["specVersion"] == "1.6", f"{label}.specVersion must be 1.6")
+    _require(sbom["version"] == 1, f"{label}.version must be 1")
+    serial = _nonempty_string(sbom["serialNumber"], f"{label}.serialNumber")
+    _require(serial.startswith("urn:uuid:"), f"{label}.serialNumber is invalid")
+    try:
+        uuid.UUID(serial.removeprefix("urn:uuid:"))
+    except ValueError as error:
+        raise ContractError(f"{label}.serialNumber is not a UUID URN") from error
+    metadata = sbom["metadata"]
+    _require(isinstance(metadata, dict) and set(metadata) == {"timestamp", "tools", "component"}, f"{label}.metadata keys are invalid")
+    _validate_timestamp(metadata["timestamp"], f"{label}.metadata.timestamp")
+    tools = metadata["tools"]
+    _require(isinstance(tools, dict) and set(tools) == {"components"}, f"{label}.metadata.tools is invalid")
+    _require(isinstance(tools["components"], list) and tools["components"], f"{label}.metadata.tools.components is empty")
+    application = metadata["component"]
+    _require(isinstance(application, dict), f"{label}.metadata.component must be an object")
+    _require(set(application) == {"type", "bom-ref", "name", "version", "purl", "licenses", "properties"}, f"{label}.metadata.component keys are invalid")
+    _require(application["type"] == "application" and application["name"] == "QuickPLS", f"{label} root component is not QuickPLS")
+    _require(application["version"] == target_release, f"{label} root version does not match")
+    _require(isinstance(application["purl"], str) and application["purl"].startswith("pkg:generic/quickpls@"), f"{label} root purl is invalid")
+    properties = application["properties"]
+    application_licenses = application["licenses"]
+    _require(isinstance(application_licenses, list) and application_licenses, f"{label} root licenses are empty")
+    for index, choice in enumerate(application_licenses):
+        _require(isinstance(choice, dict) and set(choice) in ({"expression"}, {"license"}), f"{label} root license {index} is invalid")
+        if "expression" in choice:
+            _nonempty_string(choice["expression"], f"{label} root license {index} expression")
+        else:
+            license_value = choice["license"]
+            _require(isinstance(license_value, dict) and set(license_value) in ({"id"}, {"name"}), f"{label} root license {index} identity is invalid")
+            _nonempty_string(next(iter(license_value.values())), f"{label} root license {index} identity")
+    _require(isinstance(properties, list), f"{label} root properties must be a list")
+    property_map = {
+        row.get("name"): row.get("value")
+        for row in properties
+        if isinstance(row, dict) and set(row) == {"name", "value"}
+    }
+    _require(len(property_map) == len(properties), f"{label} root properties are invalid or duplicated")
+    _require(property_map.get("quickpls:candidate_id") == candidate_id, f"{label} candidate binding is invalid")
+    _require(property_map.get("quickpls:target_release") == target_release, f"{label} release binding is invalid")
+    _require(
+        property_map.get("quickpls:candidate_artifact_digests")
+        == json.dumps(artifact_digests, sort_keys=True, separators=(",", ":")),
+        f"{label} artifact digest binding is invalid",
+    )
     components = sbom["components"]
     _require(isinstance(components, list) and components, f"{label}.components must be non-empty")
+    component_refs: set[str] = {str(application["bom-ref"])}
     for index, component in enumerate(components):
         component_label = f"{label}.components[{index}]"
         _require(isinstance(component, dict), f"{component_label} must be an object")
-        _require(set(component) == {"type", "name", "version", "licenses"}, f"{component_label} keys are invalid")
+        _require(
+            set(component) == {"type", "bom-ref", "name", "version", "purl", "licenses", "properties"},
+            f"{component_label} keys are invalid",
+        )
         _require(component["type"] in {"application", "library"}, f"{component_label}.type is invalid")
+        reference = _nonempty_string(component["bom-ref"], f"{component_label}.bom-ref")
+        _require(reference not in component_refs, f"{component_label}.bom-ref is duplicated")
+        component_refs.add(reference)
         _nonempty_string(component["name"], f"{component_label}.name")
         _nonempty_string(component["version"], f"{component_label}.version")
+        purl = _nonempty_string(component["purl"], f"{component_label}.purl")
+        _require(purl.startswith("pkg:"), f"{component_label}.purl is not a package URL")
         licenses = component["licenses"]
         _require(isinstance(licenses, list) and licenses, f"{component_label}.licenses must be non-empty")
-        for license_index, license_name in enumerate(licenses):
-            _nonempty_string(license_name, f"{component_label}.licenses[{license_index}]")
+        for license_index, license_choice in enumerate(licenses):
+            _require(isinstance(license_choice, dict), f"{component_label}.licenses[{license_index}] must be an object")
+            _require(set(license_choice) in ({"expression"}, {"license"}), f"{component_label}.licenses[{license_index}] is invalid")
+            if "expression" in license_choice:
+                _nonempty_string(license_choice["expression"], f"{component_label}.licenses[{license_index}].expression")
+            else:
+                license_value = license_choice["license"]
+                _require(isinstance(license_value, dict) and set(license_value) in ({"id"}, {"name"}), f"{component_label}.licenses[{license_index}].license is invalid")
+                _nonempty_string(next(iter(license_value.values())), f"{component_label}.licenses[{license_index}].license identity")
+        _require(isinstance(component["properties"], list), f"{component_label}.properties must be a list")
+    dependencies = sbom["dependencies"]
+    _require(isinstance(dependencies, list) and dependencies, f"{label}.dependencies must be a non-empty graph")
+    graph_refs: list[str] = []
+    for index, row in enumerate(dependencies):
+        _require(isinstance(row, dict) and set(row) == {"ref", "dependsOn"}, f"{label}.dependencies[{index}] is invalid")
+        reference = _nonempty_string(row["ref"], f"{label}.dependencies[{index}].ref")
+        _require(reference in component_refs, f"{label}.dependencies[{index}].ref is unknown")
+        targets = row["dependsOn"]
+        _require(isinstance(targets, list) and len(targets) == len(set(targets)), f"{label}.dependencies[{index}].dependsOn is invalid")
+        _require(all(isinstance(item, str) and item in component_refs for item in targets), f"{label}.dependencies[{index}] references unknown components")
+        graph_refs.append(reference)
+    _require(len(graph_refs) == len(set(graph_refs)) and set(graph_refs) == component_refs, f"{label} dependency graph is incomplete")
 
 
 def _validate_provenance(
@@ -553,37 +1095,87 @@ def _validate_provenance(
     candidate_id: str,
     artifact_digests: dict[str, str],
     sbom_sha256: str,
+    signing_identity_id: str,
+    build_attestation: dict[str, object],
+    build_attestation_signature: dict[str, object],
+    build_attestation_document: dict[str, object],
     label: str,
 ) -> None:
     provenance = _strict_json_file(path, label)
     _require(isinstance(provenance, dict), f"{label} must be a JSON object")
-    expected = {
-        "schema_version",
-        "document_type",
-        "target_release",
-        "candidate_id",
-        "candidate_artifact_digests",
-        "source_commit",
-        "build_id",
-        "builder_identity",
-        "build_started_at",
-        "build_finished_at",
-        "sbom_sha256",
-    }
+    expected = {"_type", "subject", "predicateType", "predicate"}
     _require(set(provenance) == expected, f"{label} keys are invalid")
-    _require(provenance["schema_version"] == 1, f"{label}.schema_version must be 1")
-    _require(provenance["document_type"] == "quickpls_release_provenance", f"{label}.document_type is invalid")
-    _require(provenance["target_release"] == target_release, f"{label}.target_release does not match")
-    _require(provenance["candidate_id"] == candidate_id, f"{label}.candidate_id does not match")
-    _require(provenance["candidate_artifact_digests"] == artifact_digests, f"{label} artifact digests do not match")
-    commit = _nonempty_string(provenance["source_commit"], f"{label}.source_commit")
-    _require(bool(re.fullmatch(r"[0-9a-f]{40}", commit)), f"{label}.source_commit must be lowercase 40-hex")
-    _nonempty_string(provenance["build_id"], f"{label}.build_id")
-    _nonempty_string(provenance["builder_identity"], f"{label}.builder_identity")
-    started = _validate_timestamp(provenance["build_started_at"], f"{label}.build_started_at")
-    finished = _validate_timestamp(provenance["build_finished_at"], f"{label}.build_finished_at")
+    _require(provenance["_type"] == "https://in-toto.io/Statement/v1", f"{label} is not an in-toto Statement v1")
+    _require(provenance["predicateType"] == "https://slsa.dev/provenance/v1", f"{label} is not SLSA provenance v1")
+    subject = provenance["subject"]
+    _require(isinstance(subject, list) and len(subject) == len(artifact_digests), f"{label}.subject is incomplete")
+    subject_map: dict[str, str] = {}
+    for index, row in enumerate(subject):
+        _require(isinstance(row, dict) and set(row) == {"name", "digest"}, f"{label}.subject[{index}] is invalid")
+        name = _nonempty_string(row["name"], f"{label}.subject[{index}].name")
+        digest = row["digest"]
+        _require(isinstance(digest, dict) and set(digest) == {"sha256"}, f"{label}.subject[{index}].digest is invalid")
+        subject_map[name] = digest["sha256"]
+    _require(subject_map == artifact_digests, f"{label}.subject does not bind the candidate artifacts")
+    predicate = provenance["predicate"]
+    _require(isinstance(predicate, dict) and set(predicate) == {"buildDefinition", "runDetails"}, f"{label}.predicate keys are invalid")
+    definition = predicate["buildDefinition"]
+    _require(isinstance(definition, dict) and set(definition) == {"buildType", "externalParameters", "internalParameters", "resolvedDependencies"}, f"{label}.buildDefinition is invalid")
+    _require(definition["buildType"] == "https://quickpls.org/build-types/windows-protected-release/v1", f"{label}.buildType is invalid")
+    external = definition["externalParameters"]
+    _require(
+        external == {"target_release": target_release, "channel": "signed", "candidate_id": candidate_id},
+        f"{label}.externalParameters do not bind the signed candidate",
+    )
+    _require(definition["internalParameters"] == {"signing_identity_id": signing_identity_id}, f"{label}.internalParameters do not bind the signer")
+    resolved = definition["resolvedDependencies"]
+    _require(isinstance(resolved, list) and len(resolved) == 3, f"{label}.resolvedDependencies is incomplete")
+    resolved_map: dict[str, dict[str, object]] = {}
+    for index, row in enumerate(resolved):
+        _require(isinstance(row, dict) and set(row) == {"uri", "digest"}, f"{label}.resolvedDependencies[{index}] is invalid")
+        uri = _nonempty_string(row["uri"], f"{label}.resolvedDependencies[{index}].uri")
+        _require(uri not in resolved_map and isinstance(row["digest"], dict), f"{label}.resolvedDependencies[{index}] is duplicated or invalid")
+        resolved_map[uri] = row["digest"]
+    _require(set(resolved_map) == {"git+repository", "file:Cargo.lock", "file:package-lock.json"}, f"{label}.resolvedDependencies identities are invalid")
+    _require(set(resolved_map["git+repository"]) == {"gitCommit"}, f"{label} Git dependency digest is invalid")
+    _require(bool(re.fullmatch(r"[0-9a-f]{40}", str(resolved_map["git+repository"]["gitCommit"]))), f"{label} Git commit is invalid")
+    _require(resolved_map["git+repository"]["gitCommit"] == build_attestation_document["source_commit"], f"{label} Git commit differs from the signed build attestation")
+    for uri in ("file:Cargo.lock", "file:package-lock.json"):
+        _require(set(resolved_map[uri]) == {"sha256"} and bool(SHA256.fullmatch(str(resolved_map[uri]["sha256"]))), f"{label} {uri} digest is invalid")
+        _require(resolved_map[uri]["sha256"] == build_attestation_document["lockfiles"][uri.removeprefix("file:")], f"{label} {uri} digest differs from the signed build attestation")
+    run = predicate["runDetails"]
+    _require(isinstance(run, dict) and set(run) == {"builder", "metadata", "byproducts"}, f"{label}.runDetails is invalid")
+    _require(isinstance(run["builder"], dict) and set(run["builder"]) == {"id"}, f"{label}.builder is invalid")
+    _nonempty_string(run["builder"]["id"], f"{label}.builder.id")
+    metadata = run["metadata"]
+    _require(isinstance(metadata, dict) and set(metadata) == {"invocationId", "startedOn", "finishedOn"}, f"{label}.runDetails.metadata is invalid")
+    _nonempty_string(metadata["invocationId"], f"{label}.invocationId")
+    started = _validate_timestamp(metadata["startedOn"], f"{label}.startedOn")
+    finished = _validate_timestamp(metadata["finishedOn"], f"{label}.finishedOn")
     _require(finished >= started, f"{label}.build_finished_at precedes build_started_at")
-    _require(provenance["sbom_sha256"] == sbom_sha256, f"{label}.sbom_sha256 does not match the candidate SBOM")
+    protected = build_attestation_document["protected_build"]
+    _require(run["builder"]["id"] == f"github-actions:{protected['workflow_ref']}", f"{label}.builder.id differs from the signed build attestation")
+    _require(metadata["invocationId"] == build_attestation_document["build_id"], f"{label}.invocationId differs from the signed build attestation")
+    _require(metadata["startedOn"] == build_attestation_document["build_started_at"], f"{label}.startedOn differs from the signed build attestation")
+    _require(metadata["finishedOn"] == build_attestation_document["build_finished_at"], f"{label}.finishedOn differs from the signed build attestation")
+    byproducts = run["byproducts"]
+    _require(isinstance(byproducts, list) and len(byproducts) == 3, f"{label}.byproducts is incomplete")
+    byproduct_map: dict[str, str] = {}
+    for index, row in enumerate(byproducts):
+        _require(isinstance(row, dict) and set(row) == {"name", "digest"}, f"{label}.byproducts[{index}] is invalid")
+        name = _nonempty_string(row["name"], f"{label}.byproducts[{index}].name")
+        digest = row["digest"]
+        _require(isinstance(digest, dict) and set(digest) == {"sha256"} and bool(SHA256.fullmatch(str(digest["sha256"]))), f"{label}.byproducts[{index}].digest is invalid")
+        byproduct_map[name] = str(digest["sha256"])
+    _require(
+        byproduct_map
+        == {
+            "cyclonedx-sbom": sbom_sha256,
+            "protected-build-attestation": str(build_attestation["sha256"]),
+            "protected-build-attestation-signature": str(build_attestation_signature["sha256"]),
+        },
+        f"{label}.byproducts do not bind the candidate evidence",
+    )
 
 
 def _validate_candidate_manifest(
@@ -593,9 +1185,11 @@ def _validate_candidate_manifest(
     target_release: str,
     repository_root: Path,
     verify_authenticode: bool,
+    approved_signer: dict[str, object],
     authenticode_cache: dict[str, dict[str, object]],
     label: str,
 ) -> dict[str, object]:
+    _require(approved_signer.get("status") == APPROVED_SIGNER_STATE, f"{label} requires the frozen approved QuickPLS signing identity")
     candidate = _nonempty_string(candidate_id, f"{label}.candidate_id")
     _require(bool(SHA256.fullmatch(candidate)), f"{label}.candidate_id must be lowercase 64-hex SHA-256")
     manifest_descriptor = _validate_artifact_descriptor(
@@ -607,12 +1201,18 @@ def _validate_candidate_manifest(
     manifest = _strict_json_file(manifest_path, f"{label}.candidate_manifest document")
     _require(isinstance(manifest, dict), f"{label}.candidate_manifest document must be an object")
     _require(
-        set(manifest) == {"schema_version", "target_release", "candidate_id", "artifacts", "signature_evidence"},
+        set(manifest)
+        == {
+            "schema_version", "target_release", "candidate_id", "payload_id", "signing_identity_id",
+            "signing_identity", "artifacts", "signature_evidence", "detached_signature_evidence",
+        },
         f"{label}.candidate_manifest document keys are invalid",
     )
     _require(manifest["schema_version"] == 1, f"{label}.candidate_manifest schema_version must be 1")
     _require(manifest["target_release"] == target_release, f"{label}.candidate_manifest target_release does not match")
     _require(manifest["candidate_id"] == candidate, f"{label}.candidate_manifest candidate_id does not match")
+    _require(manifest["signing_identity_id"] == approved_signer.get("identity_id"), f"{label}.candidate_manifest signer identity does not match")
+    _require(manifest["signing_identity"] == approved_signer.get("descriptor"), f"{label}.candidate_manifest signer record does not match")
     artifacts = manifest["artifacts"]
     _require(isinstance(artifacts, list) and artifacts, f"{label}.candidate_manifest artifacts must be non-empty")
     roles: list[str] = []
@@ -637,14 +1237,27 @@ def _validate_candidate_manifest(
     artifact_map = {str(item["role"]): {key: value for key, value in item.items() if key != "role"} for item in validated_artifacts}
     expected_candidate = _candidate_distribution_identity(target_release, artifact_map)
     _require(candidate == expected_candidate, f"{label}.candidate_id does not match the distribution artifact set")
+    payload_id = _candidate_payload_identity(target_release, artifact_map)
+    _require(manifest["payload_id"] == payload_id, f"{label}.candidate_manifest payload_id does not match the signed PE set")
 
     for role in sorted(SIGNED_PE_ROLES):
         _validate_windows_pe(_descriptor_path(artifact_map[role], repository_root), f"{label}.{role}")
     _validate_updater_zip(
         _descriptor_path(artifact_map["updater_bundle"], repository_root),
         artifact_map["installer"],
+        artifact_map["channel_manifest"],
+        artifact_map["channel_manifest_signature"],
         target_release,
         f"{label}.updater_bundle",
+    )
+
+    _validate_channel_manifest(
+        _descriptor_path(artifact_map["channel_manifest"], repository_root),
+        target_release=target_release,
+        payload_id=payload_id,
+        artifact_map=artifact_map,
+        signing_identity_id=str(approved_signer["identity_id"]),
+        label=f"{label}.channel_manifest",
     )
 
     signature_evidence = manifest["signature_evidence"]
@@ -675,6 +1288,7 @@ def _validate_candidate_manifest(
             candidate_id=candidate,
             repository_root=repository_root,
             verify_trust=verify_authenticode,
+            approved_signer=approved_signer,
             authenticode_cache=authenticode_cache,
             label=f"{signature_label}.report document",
         )
@@ -687,7 +1301,52 @@ def _validate_candidate_manifest(
     _require(set(signature_roles) == SIGNED_PE_ROLES, f"{label}.candidate_manifest signature roles are incomplete")
     _require(len(signature_paths) == len(set(signature_paths)), f"{label}.candidate_manifest signature report paths must be unique")
 
+    detached = manifest["detached_signature_evidence"]
+    _require(isinstance(detached, list) and len(detached) == len(CMS_SIGNED_ROLES), f"{label}.candidate_manifest detached signature evidence is incomplete")
+    detached_roles: set[str] = set()
+    for index, item in enumerate(detached):
+        item_label = f"{label}.candidate_manifest.detached_signature_evidence[{index}]"
+        _require(isinstance(item, dict) and set(item) == {"role", "signature_role", "verification"}, f"{item_label} keys are invalid")
+        role = _nonempty_string(item["role"], f"{item_label}.role")
+        _require(role in CMS_SIGNED_ROLES, f"{item_label}.role is invalid")
+        signature_role = _nonempty_string(item["signature_role"], f"{item_label}.signature_role")
+        _require(signature_role == CMS_SIGNED_ROLES[role], f"{item_label}.signature_role does not match")
+        verification = item["verification"]
+        _require(
+            isinstance(verification, dict)
+            and set(verification)
+            == {
+                "verification_tool", "exit_code", "verification_output", "verification_output_sha256",
+                "signer_identity_id", "leaf_subject", "leaf_sha1_thumbprint", "payload_sha256", "signature_sha256",
+            },
+            f"{item_label}.verification keys are invalid",
+        )
+        _require(verification["signer_identity_id"] == approved_signer["identity_id"], f"{item_label} signer identity does not match")
+        _require(verification["payload_sha256"] == artifact_map[role]["sha256"], f"{item_label} payload hash does not match")
+        _require(verification["signature_sha256"] == artifact_map[signature_role]["sha256"], f"{item_label} signature hash does not match")
+        output = _nonempty_string(verification["verification_output"], f"{item_label}.verification_output")
+        _require(hashlib.sha256(output.encode("utf-8")).hexdigest() == verification["verification_output_sha256"], f"{item_label} verification-output hash does not match")
+        if verify_authenticode:
+            actual = _verify_detached_cms(
+                _descriptor_path(artifact_map[role], repository_root),
+                _descriptor_path(artifact_map[signature_role], repository_root),
+                approved_signer=approved_signer,
+                label=item_label,
+            )
+            _require(actual == verification, f"{item_label} does not match validation-time CMS verification")
+        detached_roles.add(role)
+    _require(detached_roles == set(CMS_SIGNED_ROLES), f"{label}.candidate_manifest detached signature roles are incomplete")
+
     distribution_digests = _candidate_digest_map(artifact_map)
+    build_attestation_document = _validate_build_attestation(
+        _descriptor_path(artifact_map["build_attestation"], repository_root),
+        target_release=target_release,
+        candidate_id=candidate,
+        artifact_digests=distribution_digests,
+        signing_identity_id=str(approved_signer["identity_id"]),
+        sbom_sha256=str(artifact_map["sbom"]["sha256"]),
+        label=f"{label}.build_attestation",
+    )
     _validate_sbom(
         _descriptor_path(artifact_map["sbom"], repository_root),
         target_release=target_release,
@@ -701,6 +1360,10 @@ def _validate_candidate_manifest(
         candidate_id=candidate,
         artifact_digests=distribution_digests,
         sbom_sha256=str(artifact_map["sbom"]["sha256"]),
+        signing_identity_id=str(approved_signer["identity_id"]),
+        build_attestation=artifact_map["build_attestation"],
+        build_attestation_signature=artifact_map["build_attestation_signature"],
+        build_attestation_document=build_attestation_document,
         label=f"{label}.provenance",
     )
     return {
@@ -770,6 +1433,7 @@ def _validate_evidence(
     candidate_state: dict[str, object],
     evidence_bindings: list[dict[str, str]],
     verify_authenticode: bool,
+    approved_signer: dict[str, object],
     authenticode_cache: dict[str, dict[str, object]],
     now: datetime,
 ) -> datetime | None:
@@ -806,6 +1470,7 @@ def _validate_evidence(
                 expected_identity=EXPECTED_IDENTITY[requirement_id],
                 repository_root=repository_root,
                 verify_authenticode=verify_authenticode,
+                approved_signer=approved_signer,
                 authenticode_cache=authenticode_cache,
                 now=now,
                 label=f"evidence record {relative.as_posix()}",
@@ -840,6 +1505,7 @@ def _validate_evidence_record(
     expected_identity: str,
     repository_root: Path,
     verify_authenticode: bool,
+    approved_signer: dict[str, object],
     authenticode_cache: dict[str, dict[str, object]],
     now: datetime,
     label: str,
@@ -907,6 +1573,7 @@ def _validate_evidence_record(
             target_release=target_release,
             repository_root=repository_root,
             verify_authenticode=verify_authenticode,
+            approved_signer=approved_signer,
             authenticode_cache=authenticode_cache,
             label=label,
         )
@@ -935,6 +1602,7 @@ def validate_contract(
         "target_channel",
         "product_policy",
         "release_channels",
+        "signing_identity_policy",
         "evidence_policy",
         "overall_status",
         "release_decision",
@@ -949,9 +1617,30 @@ def validate_contract(
     _require(contract["overall_status"] in ALLOWED_STATUSES, "overall_status is invalid")
     validation_time = now or datetime.now(timezone.utc)
     _require(validation_time.tzinfo is not None, "validation time must include a timezone")
+    approved_signer = _validate_signing_identity_policy(
+        contract["signing_identity_policy"],
+        repository_root=repository_root,
+        require_approved=False,
+    )
 
     policy = contract["product_policy"]
     _require(isinstance(policy, dict), "product_policy must be an object")
+    _require(
+        set(policy)
+        == {
+            "platform",
+            "offline_default",
+            "telemetry_default",
+            "update_check_default",
+            "positioning",
+            "functional_offline_scope",
+            "application_network_behavior",
+            "webview2_runtime_boundary",
+            "strict_zero_egress_claim_gate",
+            "prohibited_claims",
+        },
+        "product_policy keys do not match the frozen bounded-claims contract",
+    )
     _require(policy.get("platform") == "windows_x64", "platform must be windows_x64")
     _require(policy.get("offline_default") is True, "offline_default must remain true")
     _require(policy.get("telemetry_default") == "disabled", "telemetry_default must remain disabled")
@@ -960,9 +1649,30 @@ def validate_contract(
         policy.get("positioning") == "competitor_for_documented_supported_workflows",
         "positioning must remain bounded to documented supported workflows",
     )
+    _require(
+        policy.get("functional_offline_scope")
+        == "analytical_workflows_require_no_internet_account_or_cloud",
+        "functional_offline_scope must remain bounded to analytical workflow requirements",
+    )
+    _require(
+        policy.get("application_network_behavior")
+        == "quickpls_application_and_page_make_no_external_requests",
+        "application_network_behavior must retain the QuickPLS app/page boundary",
+    )
+    _require(
+        policy.get("webview2_runtime_boundary")
+        == "microsoft_managed_background_service_connections_may_occur",
+        "webview2_runtime_boundary must disclose the platform-runtime limitation",
+    )
+    _require(
+        policy.get("strict_zero_egress_claim_gate") == EXPECTED_STRICT_ZERO_EGRESS_GATE,
+        "strict_zero_egress_claim_gate must remain pending until OS-enforced fixed-WebView2 containment passes",
+    )
     prohibited = policy.get("prohibited_claims")
-    _require(isinstance(prohibited, list) and len(prohibited) >= 4, "prohibited_claims must retain all claim guards")
-    _require(len(prohibited) == len(set(prohibited)), "prohibited_claims must be unique")
+    _require(
+        prohibited == EXPECTED_PROHIBITED_CLAIMS,
+        "prohibited_claims must retain the frozen parity and strict-offline claim guards",
+    )
 
     channels = contract["release_channels"]
     _require(
@@ -992,6 +1702,10 @@ def validate_contract(
             "updater_zip_safety": True,
             "sbom_provenance_binding": True,
             "candidate_manifest_binding": True,
+            "durable_candidate_storage": True,
+            "approved_leaf_signer_binding": True,
+            "protected_build_attestation_binding": True,
+            "signed_channel_manifest_binding": True,
             "criterion_result_binding": "structured_json",
             "approval_after_evidence": True,
             "reuse_across_requirements": "prohibited",
@@ -1071,6 +1785,7 @@ def validate_contract(
             candidate_state=candidate_state,
             evidence_bindings=evidence_bindings,
             verify_authenticode=status == "passed" and requirement_id in CANDIDATE_SCOPED_IDS,
+            approved_signer=approved_signer,
             authenticode_cache=authenticode_cache,
             now=validation_time,
         )
@@ -1104,6 +1819,7 @@ def validate_contract(
         "target_channel": contract["target_channel"],
         "product_policy": policy,
         "release_channels": channels,
+        "signing_identity_policy": contract["signing_identity_policy"],
         "evidence_policy": evidence_policy,
         "requirements": [
             {
@@ -1198,7 +1914,14 @@ def validate_contract(
         "counts": {"passed": len(passed), "pending": len(pending), "failed": len(failed)},
         "pending": pending,
         "failed": failed,
+        "candidate_id": candidate_id,
         "release_decision": decision["status"],
+        "offline_claims": {
+            "functional_offline": True,
+            "quickpls_app_page_external_requests": False,
+            "strict_process_tree_zero_egress": False,
+            "strict_gate_status": EXPECTED_STRICT_ZERO_EGRESS_GATE["status"],
+        },
     }
 
 

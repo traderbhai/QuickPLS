@@ -1,0 +1,318 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "coverage": {
+      "includes_listwise_missingness": true,
+      "includes_mode_b": true,
+      "includes_nongaussian_data": true,
+      "includes_single_item_blocks": true,
+      "scenario_count": 7,
+      "weighting_schemes": [
+        "factor",
+        "path",
+        "pca"
+      ]
+    },
+    "independent_parity_tolerance": 1e-06,
+    "loading_recovery_max_abs_bias": 0.15,
+    "passed": true,
+    "path_recovery_max_abs_bias": 0.14,
+    "scenarios": [
+      {
+        "indicator_counts": [
+          3,
+          3,
+          3
+        ],
+        "max_abs_errors": {
+          "loading_bias": 0.08423122469671529,
+          "loading_parity": 7.771561172376096e-16,
+          "path_bias": 0.03853465740833584,
+          "path_parity": 8.881784197001252e-16,
+          "r_squared_parity": 1.1102230246251565e-16,
+          "score_parity": 5.329070518200751e-15,
+          "weight_error": 4.440892098500626e-16
+        },
+        "missing": false,
+        "modes": [
+          "reflective",
+          "reflective",
+          "reflective"
+        ],
+        "name": "path_reflective",
+        "non_gaussian": false,
+        "observations": 360,
+        "omitted_observations": 0,
+        "output": "validation/results/method_factory/pls_algorithm_v1/work/factory_simulation_path_reflective.quickpls.json",
+        "output_sha256": "d24300f9373161b0a9524ade8ca8052c7b77cdde7203dc6d3c4934e0c9831204",
+        "passed": true,
+        "quickpls_iterations": 10,
+        "reference_iterations": 10,
+        "used_observations": 360,
+        "weighting_scheme": "path"
+      },
+      {
+        "indicator_counts": [
+          2,
+          3,
+          2
+        ],
+        "max_abs_errors": {
+          "loading_bias": 0.09082841066298464,
+          "loading_parity": 7.771561172376096e-16,
+          "path_bias": 0.07806597761694767,
+          "path_parity": 6.661338147750939e-16,
+          "r_squared_parity": 4.440892098500626e-16,
+          "score_parity": 4.884981308350689e-15,
+          "weight_error": 4.440892098500626e-16
+        },
+        "missing": false,
+        "modes": [
+          "reflective",
+          "reflective",
+          "reflective"
+        ],
+        "name": "factor_reflective",
+        "non_gaussian": false,
+        "observations": 420,
+        "omitted_observations": 0,
+        "output": "validation/results/method_factory/pls_algorithm_v1/work/factory_simulation_factor_reflective.quickpls.json",
+        "output_sha256": "0e5679b0be00cad34cae0f682240e0f20962583a39c078ed91a400d765ba8ed6",
+        "passed": true,
+        "quickpls_iterations": 6,
+        "reference_iterations": 6,
+        "used_observations": 420,
+        "weighting_scheme": "factor"
+      },
+      {
+        "indicator_counts": [
+          3,
+          2,
+          3
+        ],
+        "max_abs_errors": {
+          "loading_bias": 0.08438051604262764,
+          "loading_parity": 1.6172618799714655e-12,
+          "path_bias": 0.11720975353464919,
+          "path_parity": 2.8466118351389014e-13,
+          "r_squared_parity": 2.5068835896036035e-13,
+          "score_parity": 1.2013390282561431e-11,
+          "weight_error": 5.305145212020079e-12
+        },
+        "missing": false,
+        "modes": [
+          "reflective",
+          "reflective",
+          "reflective"
+        ],
+        "name": "pca_reflective",
+        "non_gaussian": false,
+        "observations": 380,
+        "omitted_observations": 0,
+        "output": "validation/results/method_factory/pls_algorithm_v1/work/factory_simulation_pca_reflective.quickpls.json",
+        "output_sha256": "2e8acc56d834f05e833d1fc7eeaee7060b4a18ae4d73c3026ca319b6b07c7cf4",
+        "passed": true,
+        "quickpls_iterations": 10,
+        "reference_iterations": 1,
+        "used_observations": 380,
+        "weighting_scheme": "pca"
+      },
+      {
+        "indicator_counts": [
+          3,
+          3,
+          3
+        ],
+        "max_abs_errors": {
+          "loading_bias": 0.08691150797587066,
+          "loading_parity": 8.326672684688674e-16,
+          "path_bias": 0.033337691889150256,
+          "path_parity": 9.992007221626409e-16,
+          "r_squared_parity": 1.1102230246251565e-16,
+          "score_parity": 7.716050021144838e-15,
+          "weight_error": 1.0547118733938987e-15
+        },
+        "missing": false,
+        "modes": [
+          "formative",
+          "reflective",
+          "reflective"
+        ],
+        "name": "mixed_mode_b",
+        "non_gaussian": false,
+        "observations": 520,
+        "omitted_observations": 0,
+        "output": "validation/results/method_factory/pls_algorithm_v1/work/factory_simulation_mixed_mode_b.quickpls.json",
+        "output_sha256": "c43ab5a820e6ec4e1f9fabed3790240d0a71bb3e75860129a47467cbf320fa4c",
+        "passed": true,
+        "quickpls_iterations": 7,
+        "reference_iterations": 7,
+        "used_observations": 520,
+        "weighting_scheme": "path"
+      },
+      {
+        "indicator_counts": [
+          1,
+          1,
+          1
+        ],
+        "max_abs_errors": {
+          "loading_bias": 5.551115123125783e-16,
+          "loading_parity": 7.771561172376096e-16,
+          "path_bias": 4.440892098500626e-16,
+          "path_parity": 6.661338147750939e-16,
+          "r_squared_parity": 4.440892098500626e-16,
+          "score_parity": 5.773159728050814e-15,
+          "weight_error": 6.661338147750939e-16
+        },
+        "missing": false,
+        "modes": [
+          "reflective",
+          "reflective",
+          "reflective"
+        ],
+        "name": "single_item_blocks",
+        "non_gaussian": false,
+        "observations": 300,
+        "omitted_observations": 0,
+        "output": "validation/results/method_factory/pls_algorithm_v1/work/factory_simulation_single_item_blocks.quickpls.json",
+        "output_sha256": "e3229247ebf545eeb19ddcb27408f46882b1fb9151e4d4019c78522e7bba2836",
+        "passed": true,
+        "quickpls_iterations": 1,
+        "reference_iterations": 1,
+        "used_observations": 300,
+        "weighting_scheme": "path"
+      },
+      {
+        "indicator_counts": [
+          3,
+          3,
+          3
+        ],
+        "max_abs_errors": {
+          "loading_bias": 0.0851139850350725,
+          "loading_parity": 5.551115123125783e-16,
+          "path_bias": 0.06066869467877489,
+          "path_parity": 8.881784197001252e-16,
+          "r_squared_parity": 7.771561172376096e-16,
+          "score_parity": 4.884981308350689e-15,
+          "weight_error": 3.3306690738754696e-16
+        },
+        "missing": true,
+        "modes": [
+          "reflective",
+          "reflective",
+          "reflective"
+        ],
+        "name": "listwise_missing",
+        "non_gaussian": false,
+        "observations": 460,
+        "omitted_observations": 13,
+        "output": "validation/results/method_factory/pls_algorithm_v1/work/factory_simulation_listwise_missing.quickpls.json",
+        "output_sha256": "ee55de3c95f924255d2ec3f92bda441eee39fc6a9f5b2d4d36b9e7480517484e",
+        "passed": true,
+        "quickpls_iterations": 9,
+        "reference_iterations": 9,
+        "used_observations": 447,
+        "weighting_scheme": "path"
+      },
+      {
+        "indicator_counts": [
+          3,
+          3,
+          3
+        ],
+        "max_abs_errors": {
+          "loading_bias": 0.09112293889198342,
+          "loading_parity": 9.992007221626409e-16,
+          "path_bias": 0.08159915189425998,
+          "path_parity": 2.220446049250313e-16,
+          "r_squared_parity": 4.440892098500626e-16,
+          "score_parity": 7.549516567451064e-15,
+          "weight_error": 3.3306690738754696e-16
+        },
+        "missing": false,
+        "modes": [
+          "reflective",
+          "reflective",
+          "reflective"
+        ],
+        "name": "nongaussian_factor",
+        "non_gaussian": true,
+        "observations": 640,
+        "omitted_observations": 0,
+        "output": "validation/results/method_factory/pls_algorithm_v1/work/factory_simulation_nongaussian_factor.quickpls.json",
+        "output_sha256": "8382f7f8bde17785c1a589d995a8f3f184a5113693680b582987b120c2353860",
+        "passed": true,
+        "quickpls_iterations": 8,
+        "reference_iterations": 8,
+        "used_observations": 640,
+        "weighting_scheme": "factor"
+      }
+    ]
+  },
+  "feature_id": "qpls3.pls.algorithm",
+  "generated_at_utc": "2026-08-13T19:17:57.897074Z",
+  "method_version": "pls_pm_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "simulation_report",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-cli/src/main.rs",
+      "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
+      "size": 216983
+    },
+    {
+      "path": "crates/qpls-core/src/contract.rs",
+      "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
+      "size": 107095
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
+      "size": 639198
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
+      "size": 49349
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/pls_algorithm_v1.manifest.json",
+      "sha256": "ec18270309bd1dce2b5064e2f727893d03a44eaa04376efcd99a6dee57dc1ead",
+      "size": 15592
+    },
+    {
+      "path": "validation/pls_algorithm_v1_factory_common.py",
+      "sha256": "2047408b08f5a7d0f0955ffc5902d063820551d0a37c6c3e595c9441591df3d7",
+      "size": 12465
+    },
+    {
+      "path": "validation/pls_core_simulation.py",
+      "sha256": "0dcda3a234f8e105aea48e2445e363e1ca9141e227caaf04620789e5598ce9c5",
+      "size": 19895
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_pls_algorithm_v1_factory_evidence.py",
+      "sha256": "3296d72e15da0d8bf6c7c87d7e1a74c7db3cdb40d49d807374953cdf1c98499f",
+      "size": 12583
+    }
+  ]
+}

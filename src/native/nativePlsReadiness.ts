@@ -15,6 +15,7 @@ import { nativeLogisticReadiness } from "./nativeLogistic";
 import { nativeProcessReadiness } from "./nativeProcess";
 import { NATIVE_HIGHER_ORDER_SCOPE_LABEL, nativeHigherOrderScopeProblems } from "./nativeHigherOrder";
 import { NATIVE_ANALYSIS_RECIPE_BOUNDS } from "./nativeAnalysisRecipe";
+import { nativeCtaPlsSetupAssessment } from "./nativeCtaPls";
 
 export type NativePlsReadinessStatus = "ready" | "warning" | "blocked";
 
@@ -347,6 +348,17 @@ function calculationItem(
   nodes: Array<Node<ConstructData>>,
   edges: Edge[],
 ): NativePlsReadinessItem {
+  if (settings.method === "cta_pls") {
+    const assessment = nativeCtaPlsSetupAssessment(dataset, nodes, settings, edges);
+    return {
+      id: "calculation",
+      label: "CTA-PLS tetrad diagnostics",
+      detail: assessment.canRun
+        ? `${assessment.detail} Values are descriptive; no block classification or inferential decision is calculated.`
+        : assessment.detail,
+      status: assessment.canRun ? "ready" : "blocked",
+    };
+  }
   if (settings.method === "mga") {
     const groupColumn = settings.groupColumn?.trim() ?? "";
     const groupA = settings.groupAValue?.trim() ?? "";

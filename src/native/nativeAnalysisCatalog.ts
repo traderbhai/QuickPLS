@@ -16,6 +16,7 @@ export type NativeWorkbenchAnalysisKind =
   | "wpls"
   | "gsca"
   | "cca"
+  | "cta_pls"
   | "ipma"
   | "cbsem"
   | "pls_bootstrap"
@@ -34,6 +35,7 @@ export type NativeAnalysisCapabilityId =
   | "qpls3.pls.weighted"
   | "qpls3.gsca.als"
   | "qpls3.assessment.cca_residuals"
+  | "qpls3.assessment.cta_pls"
   | "qpls3.assessment.ipma"
   | "qpls3.cbsem.ml"
   | "qpls3.inference.bootstrap"
@@ -102,6 +104,14 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     description: "Inspect descriptive residuals between observed and model-reproduced composite correlations.",
     keywords: ["cca", "composite residual", "residual diagnostics", "confirmatory composite analysis", "assessment"],
     capabilityIds: ["qpls3.assessment.cca_residuals"],
+  },
+  {
+    kind: "cta_pls",
+    categoryId: "assessment",
+    categoryLabel: "Assessment",
+    description: "Inspect every descriptive sample-covariance tetrad for eligible four-or-more-indicator PLS blocks without inferential classification.",
+    keywords: ["cta-pls", "cta pls", "confirmatory tetrad", "tetrad", "measurement model", "assessment"],
+    capabilityIds: ["qpls3.assessment.cta_pls"],
   },
   {
     kind: "ipma",
@@ -513,6 +523,7 @@ export function nativeAnalysisStartLabel(
   if (kind === "plsc") return `${verb} consistent PLS`;
   if (kind === "wpls") return `${verb} weighted PLS`;
   if (kind === "cca") return `${verb} composite diagnostics`;
+  if (kind === "cta_pls") return `${verb} tetrad diagnostics`;
   if (kind === "ipma") return `${verb} importance-performance analysis`;
   if (kind === "cbsem") return `${verb} CB-SEM / CFA`;
   if (kind === "gsca") return `${verb} GSCA`;

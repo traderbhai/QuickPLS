@@ -4,8 +4,8 @@
 The catalogue is a planning crosswalk, not promotion evidence.  This validator
 therefore exits successfully when the document is internally valid even while
 ``competitor_ready`` is false.  It fails when catalogue coverage, dependencies,
-priorities, release targets, repository evidence, or the accepted parity ledger
-contradict the declared plan.
+priorities, release targets, method-factory evidence, or the accepted parity
+ledger contradict the declared plan.
 """
 
 from __future__ import annotations
@@ -25,12 +25,18 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from validation import method_promotion_manifest, parity_ledger, quickpls_3_release_readiness  # noqa: E402
+from validation import (  # noqa: E402
+    method_promotion_manifest,
+    parity_ledger,
+    quickpls_3_release_readiness,
+    quickpls_external_beta,
+)
 
 
 DEFAULT_MANIFEST = ROOT / "validation" / "quickpls_3_competitor_catalogue.json"
 DEFAULT_LEDGER = ROOT / "validation" / "quickpls_3_parity_ledger.json"
 DEFAULT_READINESS_CONTRACT = ROOT / "validation" / "quickpls_3_release_readiness.json"
+DEFAULT_BETA_CONTRACT = ROOT / "validation" / "quickpls_external_beta.json"
 DEFAULT_APPROVAL_ENVELOPE = ROOT / "validation" / "results" / "quickpls_3_competitor_approval.json"
 
 CATALOGUE_DATE = "2026-08-12"
@@ -38,10 +44,12 @@ CATALOGUE_URL = "https://smartpls.com/documentation/algorithms-and-techniques/"
 CATALOGUE_RELATIVE_PATH = "validation/quickpls_3_competitor_catalogue.json"
 LEDGER_RELATIVE_PATH = "validation/quickpls_3_parity_ledger.json"
 READINESS_RELATIVE_PATH = "validation/quickpls_3_release_readiness.json"
+BETA_RELATIVE_PATH = "validation/quickpls_external_beta.json"
 APPROVAL_RELATIVE_PATH = "validation/results/quickpls_3_competitor_approval.json"
 MANIFEST_DIRECTORY = "validation/methods"
 PARITY_VALIDATOR_PATH = "validation/parity_ledger.py"
 COMMERCIAL_VALIDATOR_PATH = "validation/quickpls_3_release_readiness.py"
+BETA_VALIDATOR_PATH = "validation/quickpls_external_beta.py"
 METHOD_MANIFEST_VALIDATOR_PATH = "validation/method_promotion_manifest.py"
 METHOD_MANIFEST_SCHEMA_PATH = "validation/methods/method_promotion_manifest.schema.json"
 APPROVAL_BINDING_IDS = (
@@ -50,6 +58,8 @@ APPROVAL_BINDING_IDS = (
     "parity_report",
     "commercial_readiness_contract",
     "commercial_readiness_report",
+    "external_beta_contract",
+    "external_beta_report",
     "method_manifest_set",
     "method_manifest_report",
 )
@@ -146,12 +156,12 @@ EXPECTED_CATALOGUE = (
 # manifest change.
 EXPECTED_CAPABILITY_MAPPING = {
     "smartpls.pls_algorithm": frozenset({"qpls3.pls.algorithm"}),
-    "smartpls.pls_power_analysis": frozenset(),
+    "smartpls.pls_power_analysis": frozenset({"qpls3.pls.sample_size_power"}),
     "smartpls.wpls": frozenset({"qpls3.pls.weighted"}),
     "smartpls.plsc": frozenset({"qpls3.pls.consistent"}),
     "smartpls.pca_core": frozenset({"qpls3.standalone.pca"}),
     "smartpls.pls_bootstrapping": frozenset({"qpls3.inference.bootstrap"}),
-    "smartpls.consistent_bootstrapping": frozenset(),
+    "smartpls.consistent_bootstrapping": frozenset({"qpls3.inference.consistent_bootstrap"}),
     "smartpls.blindfolding": frozenset(),
     "smartpls.permutation": frozenset(
         {
@@ -159,27 +169,27 @@ EXPECTED_CAPABILITY_MAPPING = {
             "qpls3.inference.structural_path_randomization",
         }
     ),
-    "smartpls.consistent_permutation": frozenset(),
+    "smartpls.consistent_permutation": frozenset({"qpls3.inference.consistent_permutation"}),
     "smartpls.cvpat": frozenset({"qpls3.prediction.plspredict_cvpat"}),
     "smartpls.cca": frozenset({"qpls3.assessment.cca_residuals"}),
-    "smartpls.cta_pls": frozenset(),
-    "smartpls.htmt": frozenset(),
+    "smartpls.cta_pls": frozenset({"qpls3.assessment.cta_pls"}),
+    "smartpls.htmt": frozenset({"qpls3.assessment.htmt"}),
     "smartpls.gof": frozenset(),
-    "smartpls.model_fit": frozenset(),
-    "smartpls.pls_model_comparison": frozenset(),
-    "smartpls.prediction_oriented_model_selection": frozenset(),
+    "smartpls.model_fit": frozenset({"qpls3.assessment.model_fit"}),
+    "smartpls.pls_model_comparison": frozenset({"qpls3.comparison.pls_models"}),
+    "smartpls.prediction_oriented_model_selection": frozenset({"qpls3.selection.prediction_oriented"}),
     "smartpls.micom": frozenset({"qpls3.groups.micom_permutation_mga"}),
     "smartpls.mga": frozenset({"qpls3.groups.micom_permutation_mga"}),
-    "smartpls.consistent_mga": frozenset(),
+    "smartpls.consistent_mga": frozenset({"qpls3.groups.consistent_mga"}),
     "smartpls.plspredict": frozenset({"qpls3.prediction.plspredict_cvpat"}),
-    "smartpls.pls_pos": frozenset(),
-    "smartpls.fimix_pls": frozenset(),
+    "smartpls.pls_pos": frozenset({"qpls3.segmentation.pls_pos"}),
+    "smartpls.fimix_pls": frozenset({"qpls3.segmentation.fimix_pls"}),
     "smartpls.ipma": frozenset({"qpls3.assessment.ipma"}),
-    "smartpls.moderation": frozenset(),
-    "smartpls.mediation": frozenset(),
-    "smartpls.nonlinear_relationships": frozenset(),
-    "smartpls.higher_order_models": frozenset(),
-    "smartpls.endogeneity_gaussian_copulas": frozenset(),
+    "smartpls.moderation": frozenset({"qpls3.pls.moderation"}),
+    "smartpls.mediation": frozenset({"qpls3.pls.mediation"}),
+    "smartpls.nonlinear_relationships": frozenset({"qpls3.pls.nonlinear_quadratic"}),
+    "smartpls.higher_order_models": frozenset({"qpls3.pls.higher_order_two_stage"}),
+    "smartpls.endogeneity_gaussian_copulas": frozenset({"qpls3.pls.gaussian_copula_endogeneity"}),
     "smartpls.gsca": frozenset({"qpls3.gsca.als"}),
     "smartpls.logistic_regression": frozenset({"qpls3.standalone.logistic"}),
     "smartpls.nca": frozenset({"qpls3.standalone.nca"}),
@@ -190,14 +200,69 @@ EXPECTED_CAPABILITY_MAPPING = {
         {"qpls3.standalone.regression_bootstrap"}
     ),
     "smartpls.cbsem": frozenset({"qpls3.cbsem.ml"}),
-    "smartpls.cbsem_bootstrapping": frozenset(),
-    "smartpls.cbsem_model_comparison": frozenset(),
-    "smartpls.cbsem_mga": frozenset(),
-    "smartpls.cbsem_measurement_invariance": frozenset(),
-    "smartpls.cbsem_moderator": frozenset(),
+    "smartpls.cbsem_bootstrapping": frozenset({"qpls3.cbsem.bootstrap"}),
+    "smartpls.cbsem_model_comparison": frozenset({"qpls3.cbsem.model_comparison"}),
+    "smartpls.cbsem_mga": frozenset({"qpls3.cbsem.multigroup"}),
+    "smartpls.cbsem_measurement_invariance": frozenset({"qpls3.cbsem.measurement_invariance"}),
+    "smartpls.cbsem_moderator": frozenset({"qpls3.cbsem.moderator"}),
     "smartpls.cfa": frozenset({"qpls3.cbsem.ml"}),
     "smartpls.pca_cbsem": frozenset({"qpls3.standalone.pca"}),
 }
+
+# These are the only capability identities whose current accepted state remains
+# governed by the parity ledger.  Every other catalogue capability is promoted
+# solely by its exact method-factory manifest.
+EXPECTED_PARITY_CAPABILITY_IDS = frozenset(
+    {
+        "qpls3.assessment.cca_residuals",
+        "qpls3.assessment.ipma",
+        "qpls3.cbsem.ml",
+        "qpls3.groups.micom_permutation_mga",
+        "qpls3.gsca.als",
+        "qpls3.inference.bootstrap",
+        "qpls3.inference.structural_path_randomization",
+        "qpls3.pls.algorithm",
+        "qpls3.pls.consistent",
+        "qpls3.pls.weighted",
+        "qpls3.prediction.plspredict_cvpat",
+        "qpls3.standalone.logistic",
+        "qpls3.standalone.nca",
+        "qpls3.standalone.ols",
+        "qpls3.standalone.pca",
+        "qpls3.standalone.process",
+        "qpls3.standalone.regression_bootstrap",
+    }
+)
+
+# Two factory contracts are intentionally retained outside the closed 3.0
+# vendor crosswalk: Blindfolding is a disclosed legacy deferral, and moderated
+# mediation is a QuickPLS extension rather than a separate official row.
+EXPECTED_FACTORY_AUXILIARY_CAPABILITY_IDS = frozenset(
+    {
+        "qpls3.assessment.blindfolding_legacy",
+        "qpls3.pls.moderated_mediation",
+    }
+)
+
+# Cross-row reuse is forbidden except for these reviewed shared contexts.
+ALLOWED_SHARED_CAPABILITY_CONTEXTS = {
+    "qpls3.cbsem.ml": frozenset({"smartpls.cbsem", "smartpls.cfa"}),
+    "qpls3.groups.micom_permutation_mga": frozenset(
+        {"smartpls.permutation", "smartpls.micom", "smartpls.mga"}
+    ),
+    "qpls3.prediction.plspredict_cvpat": frozenset(
+        {"smartpls.cvpat", "smartpls.plspredict"}
+    ),
+    "qpls3.standalone.pca": frozenset(
+        {"smartpls.pca_core", "smartpls.pca_cbsem"}
+    ),
+    "qpls3.standalone.process": frozenset(
+        {"smartpls.process", "smartpls.process_bootstrapping"}
+    ),
+}
+EXPECTED_DEFERRED_METHOD_IDS = frozenset(
+    {"smartpls.blindfolding", "smartpls.gof"}
+)
 
 
 def _reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -296,8 +361,10 @@ def build_aggregate_approval_bindings(
     catalogue_path: Path,
     ledger_path: Path,
     readiness_contract_path: Path,
+    beta_contract_path: Path,
     parity_report: dict[str, Any],
     commercial_readiness_report: dict[str, Any],
+    external_beta_report: dict[str, Any],
     manifest_factory_report: dict[str, Any],
 ) -> dict[str, Any]:
     """Build the exact non-circular digest set a final approval must bind."""
@@ -308,16 +375,22 @@ def build_aggregate_approval_bindings(
     readiness_relative = _repository_relative_file(
         readiness_contract_path, root, "commercial-readiness contract"
     )
+    beta_relative = _repository_relative_file(
+        beta_contract_path, root, "external-beta contract"
+    )
     if catalogue_relative != CATALOGUE_RELATIVE_PATH:
         raise ValueError(f"competitor catalogue path must be {CATALOGUE_RELATIVE_PATH}")
     if ledger_relative != LEDGER_RELATIVE_PATH:
         raise ValueError(f"parity ledger path must be {LEDGER_RELATIVE_PATH}")
     if readiness_relative != READINESS_RELATIVE_PATH:
         raise ValueError(f"commercial-readiness contract path must be {READINESS_RELATIVE_PATH}")
+    if beta_relative != BETA_RELATIVE_PATH:
+        raise ValueError(f"external-beta contract path must be {BETA_RELATIVE_PATH}")
 
     generator_paths = {
         "parity": root / PARITY_VALIDATOR_PATH,
         "commercial": root / COMMERCIAL_VALIDATOR_PATH,
+        "beta": root / BETA_VALIDATOR_PATH,
         "method_manifest": root / METHOD_MANIFEST_VALIDATOR_PATH,
         "method_manifest_schema": root / METHOD_MANIFEST_SCHEMA_PATH,
     }
@@ -366,6 +439,18 @@ def build_aggregate_approval_bindings(
             "generator_sha256": _sha256_file(generator_paths["commercial"]),
             "sha256": _derived_report_sha256(commercial_readiness_report, root),
         },
+        "external_beta_contract": {
+            "kind": "file",
+            "path": beta_relative,
+            "sha256": _sha256_file(beta_contract_path),
+        },
+        "external_beta_report": {
+            "kind": "derived_report",
+            "source": BETA_RELATIVE_PATH,
+            "generator": BETA_VALIDATOR_PATH,
+            "generator_sha256": _sha256_file(generator_paths["beta"]),
+            "sha256": _derived_report_sha256(external_beta_report, root),
+        },
         "method_manifest_set": {
             "kind": "file_set",
             "directory": MANIFEST_DIRECTORY,
@@ -391,8 +476,10 @@ def validate_aggregate_approval(
     catalogue_path: Path,
     ledger_path: Path,
     readiness_contract_path: Path,
+    beta_contract_path: Path,
     parity_report: dict[str, Any],
     commercial_readiness_report: dict[str, Any],
+    external_beta_report: dict[str, Any],
     manifest_factory_report: dict[str, Any],
     now: datetime | None = None,
 ) -> dict[str, Any]:
@@ -476,6 +563,8 @@ def validate_aggregate_approval(
         errors.append("aggregate approval cannot bind a failed parity report")
     if commercial_readiness_report.get("release_ready") is not True:
         errors.append("aggregate approval cannot bind commercial readiness before release_ready")
+    if external_beta_report.get("beta_ready") is not True:
+        errors.append("aggregate approval cannot bind external beta before beta_ready")
     if manifest_factory_report.get("passed") is not True:
         errors.append("aggregate approval cannot bind a failed method-manifest report")
 
@@ -501,6 +590,17 @@ def validate_aggregate_approval(
             if assembled_at is not None and assembled_at < commercial_approved_at:
                 errors.append("aggregate assembly must not predate commercial release approval")
 
+        beta_contract = load_json(beta_contract_path)
+        beta_decision = beta_contract.get("decision", {})
+        if beta_decision.get("status") != "approved":
+            errors.append("aggregate approval requires an approved external-beta decision")
+        else:
+            beta_approved_at = datetime.fromisoformat(
+                str(beta_decision.get("approved_at")).replace("Z", "+00:00")
+            ).astimezone(timezone.utc)
+            if assembled_at is not None and assembled_at < beta_approved_at:
+                errors.append("aggregate assembly must not predate external-beta approval")
+
         if assembled_at is not None:
             for manifest_path in sorted(
                 (repository_root.resolve() / MANIFEST_DIRECTORY).glob("*.manifest.json")
@@ -523,8 +623,10 @@ def validate_aggregate_approval(
             catalogue_path=catalogue_path,
             ledger_path=ledger_path,
             readiness_contract_path=readiness_contract_path,
+            beta_contract_path=beta_contract_path,
             parity_report=parity_report,
             commercial_readiness_report=commercial_readiness_report,
+            external_beta_report=external_beta_report,
             manifest_factory_report=manifest_factory_report,
         )
         bindings = envelope.get("bindings")
@@ -637,8 +739,10 @@ def validate_program_document(
     repository_root: Path,
     *,
     commercial_readiness_report: Any = None,
+    external_beta_report: Any = None,
     manifest_factory_report: Any = None,
     aggregate_approval_report: Any = None,
+    _contract_only: bool = False,
 ) -> dict[str, Any]:
     errors: list[str] = []
     if not isinstance(document, dict):
@@ -714,6 +818,79 @@ def validate_program_document(
         if isinstance(feature, dict) and _nonempty_string(feature.get("id"))
     }
 
+    factory_valid = isinstance(manifest_factory_report, dict)
+    factory_results: list[dict[str, Any]] = []
+    factory_by_feature: dict[str, dict[str, Any]] = {}
+    if not factory_valid:
+        errors.append("validated method-manifest factory report is required")
+    else:
+        if not _contract_only and (
+            manifest_factory_report.get("claim_authorized") is False
+            or manifest_factory_report.get("evidence_verified") is False
+        ):
+            errors.append(
+                "non-claiming method contracts cannot be used as promotion evidence"
+            )
+        if manifest_factory_report.get("passed") is not True:
+            errors.append("method-manifest factory validation did not pass")
+            for error in manifest_factory_report.get("errors", []):
+                if isinstance(error, str):
+                    errors.append(f"method manifest: {error}")
+        candidate_results = manifest_factory_report.get("manifests")
+        if not isinstance(candidate_results, list) or not candidate_results:
+            errors.append("method-manifest factory report must contain validated manifests")
+        else:
+            factory_results = [result for result in candidate_results if isinstance(result, dict)]
+            if len(factory_results) != len(candidate_results):
+                errors.append("method-manifest factory results must be objects")
+            if manifest_factory_report.get("manifest_count") != len(factory_results):
+                errors.append("method-manifest factory count does not match validated manifests")
+            factory_feature_ids = [
+                result.get("feature_id")
+                for result in factory_results
+                if _nonempty_string(result.get("feature_id"))
+            ]
+            duplicate_factory_ids = sorted(
+                feature_id
+                for feature_id, count in Counter(factory_feature_ids).items()
+                if count > 1
+            )
+            if duplicate_factory_ids:
+                errors.append(
+                    "method-manifest factory contains duplicate feature IDs: "
+                    f"{duplicate_factory_ids}"
+                )
+            factory_by_feature = {
+                result["feature_id"]: result
+                for result in factory_results
+                if _nonempty_string(result.get("feature_id"))
+            }
+            for result in factory_results:
+                if result.get("passed") is not True:
+                    errors.append(
+                        f"method manifest {result.get('feature_id', result.get('path'))!r} "
+                        "did not pass validation"
+                    )
+                if result.get("catalogue_snapshot_date") != CATALOGUE_DATE:
+                    errors.append(
+                        f"method manifest {result.get('feature_id', result.get('path'))!r} "
+                        "catalogue snapshot date differs from the competitor catalogue"
+                    )
+
+    expected_factory_ids = linked_capabilities | EXPECTED_FACTORY_AUXILIARY_CAPABILITY_IDS
+    actual_factory_ids = set(factory_by_feature)
+    missing_factory_contracts = sorted(expected_factory_ids - actual_factory_ids)
+    unexpected_factory_contracts = sorted(actual_factory_ids - expected_factory_ids)
+    if missing_factory_contracts:
+        errors.append(
+            f"method-manifest factory is missing frozen capabilities: {missing_factory_contracts}"
+        )
+    if unexpected_factory_contracts:
+        errors.append(
+            f"method-manifest factory contains capabilities outside the frozen set: "
+            f"{unexpected_factory_contracts}"
+        )
+
     for index, method in enumerate(methods):
         context = f"methods[{index}]"
         if not isinstance(method, dict):
@@ -745,6 +922,8 @@ def validate_program_document(
             errors.append(f"{method_id}: deferred methods must target post-3.0 and leave competitor_scope")
         elif status != "deferred" and method.get("competitor_scope") is not True:
             errors.append(f"{method_id}: non-deferred methods must remain in competitor_scope")
+        if (method_id in EXPECTED_DEFERRED_METHOD_IDS) != (status == "deferred"):
+            errors.append(f"{method_id}: deferred status differs from the frozen legacy decision")
 
         for field in ("official_family", "official_method", "quickpls_scope", "remaining_gap"):
             if not _nonempty_string(method.get(field)):
@@ -769,22 +948,45 @@ def validate_program_document(
                 f"(expected={sorted(expected_capabilities)}, actual={sorted(actual_capabilities)})"
             )
 
+        if method.get("competitor_scope") is True and not expected_capabilities:
+            errors.append(f"{method_id}: competitor-scope method requires a frozen capability ID")
+
         if expected_capabilities:
             if evidence:
-                errors.append(f"{method_id}: mapped statuses must rely on parity evidence, not preview evidence")
+                errors.append(
+                    f"{method_id}: mapped status must rely on validated capability evidence, "
+                    "not editable implementation paths"
+                )
             mapped_statuses: list[str] = []
             for capability in sorted(expected_capabilities):
-                feature = parity_by_id.get(capability)
-                if feature is None:
-                    errors.append(f"{method_id}: capability is missing from evidence-backed parity report: {capability}")
+                factory_result = factory_by_feature.get(capability)
+                if factory_result is None:
+                    errors.append(
+                        f"{method_id}: capability is missing from method-manifest factory: {capability}"
+                    )
                     continue
-                # Never consult declared_state here.  The parity evaluator derives
-                # this value from current engine/archive/native/release evidence.
-                mapped = LEDGER_TO_PROGRAM_STATUS.get(feature.get("derived_state"))
+                if capability in EXPECTED_PARITY_CAPABILITY_IDS:
+                    feature = parity_by_id.get(capability)
+                    if feature is None:
+                        errors.append(
+                            f"{method_id}: capability is missing from evidence-backed parity report: "
+                            f"{capability}"
+                        )
+                        continue
+                    # Never consult declared_state.  The parity evaluator derives
+                    # the accepted state from current scoped evidence.
+                    derived_state = feature.get("derived_state")
+                    source = "parity ledger"
+                else:
+                    # Future capabilities are promoted only through the exact
+                    # evidence-derived method-factory result.
+                    derived_state = factory_result.get("derived_state")
+                    source = "method manifest"
+                mapped = LEDGER_TO_PROGRAM_STATUS.get(derived_state)
                 if mapped is None:
                     errors.append(
                         f"{method_id}: capability has invalid evidence-derived state: "
-                        f"{capability}={feature.get('derived_state')!r}"
+                        f"{capability}={derived_state!r} from {source}"
                     )
                 else:
                     mapped_statuses.append(mapped)
@@ -794,29 +996,44 @@ def validate_program_document(
                     errors.append(
                         f"{method_id}: declared {status} contradicts evidence-derived {derived}"
                     )
-        elif status == "engine-preview":
-            if not evidence:
-                errors.append(f"{method_id}: engine-preview requires implementation evidence")
-            for evidence_index, value in enumerate(evidence):
-                _validate_repository_path(value, repository_root, f"{method_id}.implementation_evidence[{evidence_index}]", errors)
         elif status in {"absent", "deferred"}:
             if evidence:
                 errors.append(f"{method_id}: {status} must not declare implementation evidence")
-        elif status in {"native-qualified", "release-qualified"} and not expected_capabilities:
-            errors.append(f"{method_id}: {status} requires a frozen parity-capability mapping")
+        else:
+            errors.append(f"{method_id}: non-deferred method requires a frozen capability mapping")
 
     if len(method_ids) != len(set(method_ids)):
         errors.append("method IDs must be unique")
     if tuple(actual_catalogue) != EXPECTED_CATALOGUE:
         errors.append("method order, identifiers, families, or official names differ from the frozen catalogue")
 
+    capability_contexts: dict[str, set[str]] = {}
+    for method in methods:
+        if not isinstance(method, dict) or not isinstance(method.get("id"), str):
+            continue
+        for capability in method.get("quickpls_capability_ids", []):
+            if isinstance(capability, str):
+                capability_contexts.setdefault(capability, set()).add(method["id"])
+    for capability, contexts in sorted(capability_contexts.items()):
+        if len(contexts) > 1:
+            allowed = ALLOWED_SHARED_CAPABILITY_CONTEXTS.get(capability)
+            if allowed != frozenset(contexts):
+                errors.append(
+                    f"capability {capability} is reused outside its frozen shared contexts: "
+                    f"{sorted(contexts)}"
+                )
+
     parity_ids = set(parity_by_id)
-    missing_ledger_links = sorted(parity_ids - linked_capabilities)
-    unknown_ledger_links = sorted(linked_capabilities - parity_ids)
-    if missing_ledger_links:
-        errors.append(f"parity-ledger capabilities missing from crosswalk: {missing_ledger_links}")
-    if unknown_ledger_links:
-        errors.append(f"crosswalk capabilities missing from parity ledger: {unknown_ledger_links}")
+    missing_parity_capabilities = sorted(EXPECTED_PARITY_CAPABILITY_IDS - parity_ids)
+    unexpected_parity_capabilities = sorted(parity_ids - EXPECTED_PARITY_CAPABILITY_IDS)
+    if missing_parity_capabilities:
+        errors.append(
+            f"parity-ledger capabilities missing from frozen set: {missing_parity_capabilities}"
+        )
+    if unexpected_parity_capabilities:
+        errors.append(
+            f"parity-ledger capabilities outside frozen set: {unexpected_parity_capabilities}"
+        )
 
     errors.extend(_dependency_errors([method for method in methods if isinstance(method, dict)]))
 
@@ -828,6 +1045,7 @@ def validate_program_document(
             "required_method_status",
             "applies_to",
             "commercial_readiness_contract",
+            "external_beta_contract",
             "method_manifest_directory",
             "aggregate_approval_envelope",
             "aggregate_hash_algorithm",
@@ -840,6 +1058,8 @@ def validate_program_document(
             errors.append("competitor_claim_gate.required_method_status must equal release-qualified")
         if claim_gate.get("commercial_readiness_contract") != "validation/quickpls_3_release_readiness.json":
             errors.append("competitor_claim_gate must reference the canonical commercial-readiness contract")
+        if claim_gate.get("external_beta_contract") != BETA_RELATIVE_PATH:
+            errors.append("competitor_claim_gate must reference the canonical external-beta contract")
         if claim_gate.get("method_manifest_directory") != "validation/methods":
             errors.append("competitor_claim_gate must reference the canonical method-manifest directory")
         if claim_gate.get("aggregate_approval_envelope") != APPROVAL_RELATIVE_PATH:
@@ -872,35 +1092,22 @@ def validate_program_document(
             if isinstance(value, str)
         ]
 
-    factory_valid = isinstance(manifest_factory_report, dict)
-    factory_results: list[dict[str, Any]] = []
-    if not factory_valid:
-        errors.append("validated method-manifest factory report is required")
+    beta_valid = isinstance(external_beta_report, dict)
+    beta_ready = False
+    if not beta_valid:
+        errors.append("validated external-beta report is required")
     else:
-        if manifest_factory_report.get("passed") is not True:
-            errors.append("method-manifest factory validation did not pass")
-            for error in manifest_factory_report.get("errors", []):
+        if external_beta_report.get("passed") is not True:
+            errors.append("external-beta validation did not pass")
+            for error in external_beta_report.get("errors", []):
                 if isinstance(error, str):
-                    errors.append(f"method manifest: {error}")
-        candidate_results = manifest_factory_report.get("manifests")
-        if not isinstance(candidate_results, list) or not candidate_results:
-            errors.append("method-manifest factory report must contain validated manifests")
-        else:
-            factory_results = [result for result in candidate_results if isinstance(result, dict)]
-            if len(factory_results) != len(candidate_results):
-                errors.append("method-manifest factory results must be objects")
-            for result in factory_results:
-                if result.get("catalogue_snapshot_date") != CATALOGUE_DATE:
-                    errors.append(
-                        f"method manifest {result.get('feature_id', result.get('path'))!r} "
-                        "catalogue snapshot date differs from the competitor catalogue"
-                    )
+                    errors.append(f"external beta: {error}")
+        if external_beta_report.get("program_id") != "quickpls_3_external_beta_v1":
+            errors.append("external-beta program_id is invalid")
+        if external_beta_report.get("target_release") != "3.0.0-beta":
+            errors.append("external-beta target_release must equal 3.0.0-beta")
+        beta_ready = external_beta_report.get("beta_ready") is True
 
-    factory_by_feature = {
-        result.get("feature_id"): result
-        for result in factory_results
-        if _nonempty_string(result.get("feature_id"))
-    }
     missing_method_manifests = sorted(linked_capabilities - set(factory_by_feature))
     non_release_method_manifests = sorted(
         feature_id
@@ -942,9 +1149,11 @@ def validate_program_document(
     ]
     competitor_ready = (
         not errors
+        and not _contract_only
         and bool(competitor_methods)
         and all(method.get("status") == "release-qualified" for method in competitor_methods)
         and commercial_release_ready
+        and beta_ready
         and not missing_method_manifests
         and not non_release_method_manifests
         and aggregate_passed
@@ -962,6 +1171,7 @@ def validate_program_document(
         },
         "parity_evidence_passed": parity_report.get("passed") is True,
         "commercial_release_ready": commercial_release_ready,
+        "external_beta_ready": beta_ready,
         "pending_non_method_gates": commercial_pending,
         "failed_non_method_gates": commercial_failed,
         "method_manifest_factory_passed": (
@@ -978,12 +1188,43 @@ def validate_program_document(
     }
 
 
+def validate_program_contract_document(
+    document: Any,
+    parity_report: Any,
+    repository_root: Path,
+    *,
+    commercial_readiness_report: Any = None,
+    external_beta_report: Any = None,
+    manifest_factory_report: Any = None,
+) -> dict[str, Any]:
+    """Validate the frozen programme structure without authorizing a claim."""
+
+    report = validate_program_document(
+        document,
+        parity_report,
+        repository_root,
+        commercial_readiness_report=commercial_readiness_report,
+        external_beta_report=external_beta_report,
+        manifest_factory_report=manifest_factory_report,
+        aggregate_approval_report={
+            "present": False,
+            "passed": False,
+            "pending": True,
+            "errors": [],
+        },
+        _contract_only=True,
+    )
+    report["claim_authorized"] = False
+    return report
+
+
 def validate_program(
     manifest_path: Path,
     ledger_path: Path,
     repository_root: Path,
     *,
     readiness_contract_path: Path = DEFAULT_READINESS_CONTRACT,
+    beta_contract_path: Path = DEFAULT_BETA_CONTRACT,
     method_manifest_paths: list[Path] | None = None,
     approval_envelope_path: Path = DEFAULT_APPROVAL_ENVELOPE,
 ) -> dict[str, Any]:
@@ -1013,6 +1254,18 @@ def validate_program(
             "failed": [],
             "errors": [f"{type(exc).__name__}: {exc}"],
         }
+    try:
+        beta_report = quickpls_external_beta.validate_contract(
+            quickpls_external_beta.strict_json(beta_contract_path)
+        )
+    except (OSError, quickpls_external_beta.BetaContractError) as exc:
+        beta_report = {
+            "passed": False,
+            "program_id": None,
+            "target_release": None,
+            "beta_ready": False,
+            "errors": [f"{type(exc).__name__}: {exc}"],
+        }
     factory_report = method_promotion_manifest.validate_all(
         method_manifest_paths,
         repository_root,
@@ -1023,8 +1276,10 @@ def validate_program(
         catalogue_path=manifest_path,
         ledger_path=ledger_path,
         readiness_contract_path=readiness_contract_path,
+        beta_contract_path=beta_contract_path,
         parity_report=parity_report,
         commercial_readiness_report=commercial_report,
+        external_beta_report=beta_report,
         manifest_factory_report=factory_report,
     )
     return validate_program_document(
@@ -1032,6 +1287,7 @@ def validate_program(
         parity_report,
         repository_root,
         commercial_readiness_report=commercial_report,
+        external_beta_report=beta_report,
         manifest_factory_report=factory_report,
         aggregate_approval_report=aggregate_report,
     )
@@ -1042,6 +1298,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
     parser.add_argument("--ledger", type=Path, default=DEFAULT_LEDGER)
     parser.add_argument("--readiness-contract", type=Path, default=DEFAULT_READINESS_CONTRACT)
+    parser.add_argument("--beta-contract", type=Path, default=DEFAULT_BETA_CONTRACT)
     parser.add_argument("--approval-envelope", type=Path, default=DEFAULT_APPROVAL_ENVELOPE)
     parser.add_argument("--repository-root", type=Path, default=ROOT)
     args = parser.parse_args(argv)
@@ -1050,6 +1307,7 @@ def main(argv: list[str] | None = None) -> int:
         args.ledger,
         args.repository_root,
         readiness_contract_path=args.readiness_contract,
+        beta_contract_path=args.beta_contract,
         approval_envelope_path=args.approval_envelope,
     )
     print(json.dumps(report, indent=2))

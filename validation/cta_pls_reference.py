@@ -90,7 +90,7 @@ def dataset_fingerprint():
 
 def recipe_payload(fingerprint):
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "id": "00000000-0000-0000-0000-000000000013",
         "created_at": "2026-07-19T00:00:00Z",
         "dataset_fingerprint": fingerprint,
@@ -114,6 +114,9 @@ def recipe_payload(fingerprint):
                 },
             ],
             "paths": [{"source": "x", "target": "y"}],
+            "controls": [],
+            "higher_order_constructs": [],
+            "interactions": [],
         },
         "settings": {
             "method": "cta_pls",
@@ -121,10 +124,16 @@ def recipe_payload(fingerprint):
             "tolerance": 1e-7,
             "max_iterations": 3000,
             "bootstrap_samples": 0,
+            "studentized_inner_samples": 0,
+            "permutation_samples": 0,
             "seed": 20260719,
+            "workers": 1,
+            "confidence_level": 0.95,
             "preprocessing": "standardized",
             "missing_data": "listwise_deletion",
+            "case_weight_column": None,
         },
+        "method_config": {"kind": "cta_pls"},
         "metadata": {"fixture": "independent_cta_pls_tetrad_reference"},
     }
 

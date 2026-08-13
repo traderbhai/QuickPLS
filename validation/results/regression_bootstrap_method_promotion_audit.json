@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "integrity_contract": "exact_current_reference_packaged_identity_and_artifact_binding_v1",
-  "generated_at_utc": "2026-08-12T14:44:26.633161Z",
+  "generated_at_utc": "2026-08-13T19:27:19.413499Z",
   "target": "quickpls3_regression_bootstrap_v1_promotion",
   "feature_id": "qpls3.standalone.regression_bootstrap",
   "method_version": "regression_bootstrap_v1",
@@ -11,7 +11,7 @@
     "path": "validation\\results\\regression_bootstrap_v1_reference_report.json",
     "present": true,
     "bytes": 28934,
-    "sha256": "2c8eb53f18591738df7383bc6e92517597b94a12fa4a3f2d2aa49b320d726c8b",
+    "sha256": "f50c3a2e2a80b4e5a21f215f69e2df908c073cc2a8a5b6ecabdab209d7f21e6c",
     "readable": true,
     "explicit_pass_state": {
       "present": true,
@@ -549,8 +549,8 @@
       {
         "path": "validation/results/regression_bootstrap_v1_ols_quickpls.json",
         "present": true,
-        "bytes": 364692,
-        "sha256": "2020b5b0c7710ddb0f6ba2c7a6d1e120f3bbe8b8985103a3a87c9fdee047cf54",
+        "bytes": 364296,
+        "sha256": "194a7af06982bf525ebac84160ca0f673b1c0ef025932ce3b6020fd0f77bee44",
         "readable": true,
         "checks": [
           {
@@ -655,8 +655,8 @@
       {
         "path": "validation/results/regression_bootstrap_v1_logistic_quickpls.json",
         "present": true,
-        "bytes": 370576,
-        "sha256": "091726d35fb5393f8609d5fe1bd7f0acc0d8324d3b403e86cd1d5f8aff8466ac",
+        "bytes": 370177,
+        "sha256": "2fc64ab4766d2137f3b448fcd073919e0953395ad3e80cdc55fb72a63083c77e",
         "readable": true,
         "checks": [
           {
@@ -763,49 +763,49 @@
     "freshness": {
       "checked": true,
       "passed": true,
-      "report_modified_at_utc": "2026-08-12T13:12:39.857658Z",
-      "age_days": 0.063736,
+      "report_modified_at_utc": "2026-08-13T15:31:56.172097Z",
+      "age_days": 0.163463,
       "max_age_days": null,
       "sources": [
         {
           "path": "validation\\regression_bootstrap_v1_reference.py",
           "present": true,
-          "modified_at_utc": "2026-08-12T13:02:03.578864Z"
+          "modified_at_utc": "2026-08-13T07:59:56.341570Z"
         },
         {
           "path": "validation\\regression_bootstrap_v1_reference.R",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:22:48.445567Z"
+          "modified_at_utc": "2026-08-13T07:59:56.341570Z"
         },
         {
           "path": "crates\\qpls-core\\src\\contract.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:24:19.879121Z"
+          "modified_at_utc": "2026-08-13T07:59:55.461617Z"
         },
         {
           "path": "crates\\qpls-core\\src\\validation.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:13:31.460172Z"
+          "modified_at_utc": "2026-08-13T11:22:09.020320Z"
         },
         {
           "path": "crates\\qpls-estimation\\src\\pls.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:55:52.911176Z"
+          "modified_at_utc": "2026-08-13T10:35:42.744705Z"
         },
         {
           "path": "crates\\qpls-resampling\\src\\lib.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T13:00:54.273888Z"
+          "modified_at_utc": "2026-08-13T07:59:55.501018Z"
         },
         {
           "path": "crates\\qpls-project\\src\\lib.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T13:00:54.200718Z"
+          "modified_at_utc": "2026-08-13T11:22:09.494578Z"
         },
         {
           "path": "crates\\qpls-runner\\src\\lib.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:04:51.944949Z"
+          "modified_at_utc": "2026-08-13T11:22:09.040430Z"
         }
       ]
     },
@@ -814,8 +814,8 @@
   "packaged_acceptance": {
     "path": "validation\\results\\regression_bootstrap_v1_packaged_acceptance.json",
     "present": true,
-    "bytes": 15506,
-    "sha256": "6fbc7a07d42739f748ce42bf11f533bb9f5c088f1310786ad3bcf1b3ed44af24",
+    "bytes": 15537,
+    "sha256": "bee972d7a0d35c9e8714ef09f82d8a50867bd31f8a85e81c2ea63fdc2ac6cde5",
     "readable": true,
     "explicit_pass_state": {
       "present": true,
@@ -967,8 +967,8 @@
       {
         "path": "validation/results/v247_tauri_native_acceptance_regression_bootstrap.json",
         "present": true,
-        "bytes": 446399,
-        "sha256": "d39a39bb59012e12b65cdfe76bbc8c2c948df74fbf9004868bad88ba0603e19e",
+        "bytes": 499999,
+        "sha256": "6b56fa15b60e40def2959bb43a4514a654012c1a63724b8eea084743431cfbd7",
         "readable": true,
         "checks": [
           {
@@ -1123,124 +1123,124 @@
     "freshness": {
       "checked": true,
       "passed": true,
-      "report_modified_at_utc": "2026-08-12T14:34:56.363588Z",
-      "age_days": 0.0066,
+      "report_modified_at_utc": "2026-08-13T19:17:09.223552Z",
+      "age_days": 0.007062,
       "max_age_days": null,
       "sources": [
         {
           "path": "validation\\v247_tauri_native_acceptance.mjs",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:32:56.822843Z"
+          "modified_at_utc": "2026-08-13T16:25:35.159990Z"
         },
         {
           "path": "validation\\regression_bootstrap_v1_packaged_acceptance.schema.json",
           "present": true,
-          "modified_at_utc": "2026-08-12T13:41:54.820248Z"
+          "modified_at_utc": "2026-08-13T07:59:56.341570Z"
         },
         {
           "path": "validation\\run_v247_regression_bootstrap_native_acceptance.ps1",
           "present": true,
-          "modified_at_utc": "2026-08-12T13:05:16.582059Z"
+          "modified_at_utc": "2026-08-13T07:59:56.811262Z"
         },
         {
           "path": "src\\native\\NativeCalculationDialog.tsx",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:15:49.066542Z"
+          "modified_at_utc": "2026-08-13T11:12:18.532142Z"
         },
         {
           "path": "src\\native\\nativeAnalysisCatalog.ts",
           "present": true,
-          "modified_at_utc": "2026-08-12T11:55:44.695770Z"
+          "modified_at_utc": "2026-08-13T11:11:46.140020Z"
         },
         {
           "path": "src\\native\\nativeAnalysisRecipe.ts",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:17:07.266566Z"
+          "modified_at_utc": "2026-08-13T11:13:59.316697Z"
         },
         {
           "path": "src\\native\\nativeCalculationRequest.ts",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:17:07.267766Z"
+          "modified_at_utc": "2026-08-13T07:59:56.006302Z"
         },
         {
           "path": "src\\native\\nativeRegressionBootstrapWitness.ts",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:22:34.012752Z"
+          "modified_at_utc": "2026-08-13T07:59:56.129875Z"
         },
         {
           "path": "src\\native\\nativeOls.ts",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:15:30.663723Z"
+          "modified_at_utc": "2026-08-13T07:59:56.089183Z"
         },
         {
           "path": "src\\native\\nativeLogistic.ts",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:15:30.664949Z"
+          "modified_at_utc": "2026-08-13T07:59:56.064323Z"
         },
         {
           "path": "src\\native\\nativeResults.ts",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:21:56.720184Z"
+          "modified_at_utc": "2026-08-13T11:17:28.915374Z"
         },
         {
           "path": "src\\native\\nativeExportTables.ts",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:04:19.966110Z"
+          "modified_at_utc": "2026-08-13T11:17:46.583920Z"
         },
         {
           "path": "src\\native\\NativeDesktopController.tsx",
           "present": true,
-          "modified_at_utc": "2026-08-12T11:54:18.523347Z"
+          "modified_at_utc": "2026-08-13T11:56:51.083690Z"
         },
         {
           "path": "src\\services\\projectService.ts",
           "present": true,
-          "modified_at_utc": "2026-08-12T08:45:14.057321Z"
+          "modified_at_utc": "2026-08-13T11:57:10.901825Z"
         },
         {
           "path": "src-tauri\\src\\lib.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T11:23:58.792103Z"
+          "modified_at_utc": "2026-08-13T15:48:19.326273Z"
         },
         {
           "path": "crates\\qpls-core\\src\\contract.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:24:19.879121Z"
+          "modified_at_utc": "2026-08-13T07:59:55.461617Z"
         },
         {
           "path": "crates\\qpls-core\\src\\validation.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:13:31.460172Z"
+          "modified_at_utc": "2026-08-13T11:22:09.020320Z"
         },
         {
           "path": "crates\\qpls-estimation\\src\\pls.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:55:52.911176Z"
+          "modified_at_utc": "2026-08-13T10:35:42.744705Z"
         },
         {
           "path": "crates\\qpls-resampling\\src\\lib.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T13:00:54.273888Z"
+          "modified_at_utc": "2026-08-13T07:59:55.501018Z"
         },
         {
           "path": "crates\\qpls-project\\src\\lib.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T13:00:54.200718Z"
+          "modified_at_utc": "2026-08-13T11:22:09.494578Z"
         },
         {
           "path": "crates\\qpls-runner\\src\\lib.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:04:51.944949Z"
+          "modified_at_utc": "2026-08-13T11:22:09.040430Z"
         }
       ]
     },
-    "generated_at": "2026-08-12T14:33:12.601Z"
+    "generated_at": "2026-08-13T19:15:24.423Z"
   },
   "browser_visual_acceptance": {
     "path": "validation\\results\\v247_native_desktop_visual_acceptance.json",
     "present": true,
-    "bytes": 370391,
-    "sha256": "590cea3ce20340e7311106d1cf68624d544c5c0e2971cf19eb10d2c4b557965b",
+    "bytes": 464629,
+    "sha256": "3fca6d38de201f6309bfec13d20c5136f82789fb450fe9a4617c710cc33793c1",
     "readable": true,
     "explicit_pass_state": {
       "present": true,
@@ -1279,154 +1279,154 @@
     "freshness": {
       "checked": true,
       "passed": true,
-      "report_modified_at_utc": "2026-08-12T14:28:26.537917Z",
-      "age_days": 0.011112,
+      "report_modified_at_utc": "2026-08-13T19:19:47.226932Z",
+      "age_days": 0.005234,
       "max_age_days": 2,
       "sources": [
         {
           "path": "validation\\v247_native_desktop_visual_acceptance.mjs",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:51:20.492143Z"
+          "modified_at_utc": "2026-08-13T16:45:43.726298Z"
         },
         {
           "path": "src\\native\\NativeCalculationDialog.tsx",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:15:49.066542Z"
+          "modified_at_utc": "2026-08-13T11:12:18.532142Z"
         },
         {
           "path": "src\\native\\nativeAnalysisCatalog.ts",
           "present": true,
-          "modified_at_utc": "2026-08-12T11:55:44.695770Z"
+          "modified_at_utc": "2026-08-13T11:11:46.140020Z"
         },
         {
           "path": "src\\native\\nativeAnalysisRecipe.ts",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:17:07.266566Z"
+          "modified_at_utc": "2026-08-13T11:13:59.316697Z"
         },
         {
           "path": "src\\native\\nativeOls.ts",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:15:30.663723Z"
+          "modified_at_utc": "2026-08-13T07:59:56.089183Z"
         },
         {
           "path": "src\\native\\nativeLogistic.ts",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:15:30.664949Z"
+          "modified_at_utc": "2026-08-13T07:59:56.064323Z"
         },
         {
           "path": "src\\native\\nativeResults.ts",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:21:56.720184Z"
+          "modified_at_utc": "2026-08-13T11:17:28.915374Z"
         },
         {
           "path": "src\\native\\nativeDesktop.css",
           "present": true,
-          "modified_at_utc": "2026-08-12T04:31:32.285474Z"
+          "modified_at_utc": "2026-08-13T12:20:30.679065Z"
         },
         {
-          "path": "dist\\assets\\NativeCalculationDialog-BhIuuZFR.js",
+          "path": "dist\\assets\\NativeCalculationDialog-CekKsDqn.js",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
         },
         {
-          "path": "dist\\assets\\NativeExportDialog-yHRFag4W.js",
+          "path": "dist\\assets\\NativeExportDialog-CTZOLsrg.js",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
         },
         {
-          "path": "dist\\assets\\NativeGroupSetupDialog-BsscX1GD.js",
+          "path": "dist\\assets\\NativeGroupSetupDialog-DncLahbL.js",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
         },
         {
-          "path": "dist\\assets\\NativeHigherOrderDialog-BxP4Tc6q.js",
+          "path": "dist\\assets\\NativeHigherOrderDialog-Bn4cY5Gi.js",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
         },
         {
-          "path": "dist\\assets\\NativeModerationDialog-DrmW4n3g.js",
+          "path": "dist\\assets\\NativeModerationDialog-D2IfblSQ.js",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
         },
         {
-          "path": "dist\\assets\\NativeResultsSurface-Bu2R3ocQ.js",
+          "path": "dist\\assets\\NativeResultsSurface-Bv7Fchdi.js",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
         },
         {
-          "path": "dist\\assets\\NativeUtilityDialog-qcy-hRG0.js",
+          "path": "dist\\assets\\NativeUtilityDialog-B_BR7mw4.js",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
         },
         {
           "path": "dist\\assets\\flow-BN-PNp2v.js",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:26:09.875348Z"
+          "modified_at_utc": "2026-08-13T15:53:46.497097Z"
         },
         {
           "path": "dist\\assets\\flow-BnuhLJ6X.css",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:26:09.875348Z"
+          "modified_at_utc": "2026-08-13T15:53:46.497097Z"
         },
         {
-          "path": "dist\\assets\\icons-B3Zfv1lt.js",
+          "path": "dist\\assets\\icons-CWW7Ihoi.js",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:26:09.875348Z"
+          "modified_at_utc": "2026-08-13T15:53:46.497097Z"
         },
         {
-          "path": "dist\\assets\\index-BR81HxYg.js",
+          "path": "dist\\assets\\index-DBKNtbUu.js",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:26:09.875348Z"
+          "modified_at_utc": "2026-08-13T15:53:46.499172Z"
         },
         {
-          "path": "dist\\assets\\index-Cv2jalPW.css",
+          "path": "dist\\assets\\index-DpTHova4.css",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:26:09.875348Z"
+          "modified_at_utc": "2026-08-13T15:53:46.497097Z"
         },
         {
           "path": "dist\\assets\\largeModelSmoke-PEBccAlJ.js",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+          "modified_at_utc": "2026-08-13T15:53:46.502627Z"
         },
         {
           "path": "dist\\assets\\nativeMga-DgYeq6DN.js",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
         },
         {
-          "path": "dist\\assets\\publicationDiagram-BEPWhId7.js",
+          "path": "dist\\assets\\publicationDiagram-BlkNs4Z4.js",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
         },
         {
           "path": "dist\\assets\\smokeRun-CMXwsrTO.js",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+          "modified_at_utc": "2026-08-13T15:53:46.499172Z"
         },
         {
           "path": "dist\\assets\\tauri-CZBL8huA.js",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:26:09.876827Z"
+          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
         },
         {
           "path": "dist\\assets\\vendor-3AznE2Td.js",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:26:09.875348Z"
+          "modified_at_utc": "2026-08-13T15:53:46.498175Z"
         },
         {
           "path": "dist\\index.html",
           "present": true,
-          "modified_at_utc": "2026-08-12T14:26:09.877977Z"
+          "modified_at_utc": "2026-08-13T15:53:46.499172Z"
         }
       ]
     },
-    "generated_at": null
+    "generated_at": "2026-08-13T19:18:52.475Z"
   },
   "failure_boundary_report": {
     "path": "validation\\results\\regression_bootstrap_failure_boundary_test_report.json",
     "present": true,
     "bytes": 5010,
-    "sha256": "2b834acedee85551e4a45f0a21edd2d671f3d224629c3082006c858d95e833e4",
+    "sha256": "676e3b8fb9b59c6a1c9ae94f7e5dea4a440efc56f9bd9b9371929bbb89a8b5b2",
     "readable": true,
     "explicit_pass_state": {
       "present": true,
@@ -1585,43 +1585,43 @@
     "freshness": {
       "checked": true,
       "passed": true,
-      "report_modified_at_utc": "2026-08-12T13:26:49.635370Z",
-      "age_days": 0.0539,
+      "report_modified_at_utc": "2026-08-13T18:11:08.894307Z",
+      "age_days": 0.0529,
       "max_age_days": 2,
       "sources": [
         {
           "path": "validation\\regression_bootstrap_failure_boundary_gate.py",
           "present": true,
-          "modified_at_utc": "2026-08-12T13:11:41.121053Z"
+          "modified_at_utc": "2026-08-13T07:59:56.336988Z"
         },
         {
           "path": "crates\\qpls-resampling\\src\\lib.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T13:00:54.273888Z"
+          "modified_at_utc": "2026-08-13T07:59:55.501018Z"
         },
         {
           "path": "crates\\qpls-estimation\\src\\pls.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:55:52.911176Z"
+          "modified_at_utc": "2026-08-13T10:35:42.744705Z"
         },
         {
           "path": "crates\\qpls-core\\src\\contract.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:24:19.879121Z"
+          "modified_at_utc": "2026-08-13T07:59:55.461617Z"
         },
         {
           "path": "crates\\qpls-project\\src\\lib.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T13:00:54.200718Z"
+          "modified_at_utc": "2026-08-13T11:22:09.494578Z"
         },
         {
           "path": "crates\\qpls-core\\src\\contract.rs",
           "present": true,
-          "modified_at_utc": "2026-08-12T12:24:19.879121Z"
+          "modified_at_utc": "2026-08-13T07:59:55.461617Z"
         }
       ]
     },
-    "generated_at": "2026-08-12T13:26:49.603766Z"
+    "generated_at": "2026-08-13T18:11:08.859236Z"
   },
   "exact_check_sets": {
     "reference": {
@@ -1694,12 +1694,12 @@
     "tested_cli": {
       "artifact": {
         "path": "target/release/qpls.exe",
-        "reported_size": 19183104,
-        "reported_sha256": "4fe8265708dd5b1bcb65c0397490fa430b1afa225a6ed2d45e4f99bde57193b8",
+        "reported_size": 20690432,
+        "reported_sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
         "present": true,
         "inside_repository": true,
-        "actual_size": 19183104,
-        "actual_sha256": "4fe8265708dd5b1bcb65c0397490fa430b1afa225a6ed2d45e4f99bde57193b8",
+        "actual_size": 20690432,
+        "actual_sha256": "0fd87af8c589cd1c5ede1ac67aa76cde42822546d3ce0d42a5f4c1db0ef8080e",
         "passed": true
       },
       "source_freshness": [
@@ -1764,33 +1764,33 @@
     },
     "artifacts": {
       "ols_xlsx": {
-        "path": "validation/results/v247-native-regression-bootstrap-ols-20260812-200311090.xlsx",
-        "reported_size": 18280,
-        "reported_sha256": "13c92eac86933bcb186af474ef0d330004f79b7b2bf66064764a3aad2b04419d",
+        "path": "validation/results/v247-native-regression-bootstrap-ols-20260814-003257084-50236-6df5af42.xlsx",
+        "reported_size": 18281,
+        "reported_sha256": "27969c7184d31e8d37d4a54d1b29251b4fb3560eea30c8738666d9345dbfb367",
         "present": true,
         "inside_repository": true,
-        "actual_size": 18280,
-        "actual_sha256": "13c92eac86933bcb186af474ef0d330004f79b7b2bf66064764a3aad2b04419d",
+        "actual_size": 18281,
+        "actual_sha256": "27969c7184d31e8d37d4a54d1b29251b4fb3560eea30c8738666d9345dbfb367",
         "passed": true
       },
       "logistic_xlsx": {
-        "path": "validation/results/v247-native-regression-bootstrap-logistic-20260812-200311090.xlsx",
-        "reported_size": 21908,
-        "reported_sha256": "53b6fc52f226b9d9c88d734bf1d31b41f1a5b9a415a381c730b3715dde44322a",
+        "path": "validation/results/v247-native-regression-bootstrap-logistic-20260814-003257084-50236-6df5af42.xlsx",
+        "reported_size": 21909,
+        "reported_sha256": "5f30f3e17ab02495000ab8138197653ab0fb85396291bbd2518a674d6c786dfa",
         "present": true,
         "inside_repository": true,
-        "actual_size": 21908,
-        "actual_sha256": "53b6fc52f226b9d9c88d734bf1d31b41f1a5b9a415a381c730b3715dde44322a",
+        "actual_size": 21909,
+        "actual_sha256": "5f30f3e17ab02495000ab8138197653ab0fb85396291bbd2518a674d6c786dfa",
         "passed": true
       },
       "project_archive": {
-        "path": "validation/results/v247-native-regression-bootstrap-1786545192594-50396.qpls",
-        "reported_size": 944490,
-        "reported_sha256": "4db5df2bb3cf131950906bf3ab90f4ef9e24e8376b923b27f11db51c2263bb64",
+        "path": "validation/results/v247-native-regression-bootstrap-1786648524414-57288.qpls",
+        "reported_size": 944352,
+        "reported_sha256": "238aa6217f22e5eb911c01958a27afb3a4081b28a5ec250793e0b622a45c093d",
         "present": true,
         "inside_repository": true,
-        "actual_size": 944490,
-        "actual_sha256": "4db5df2bb3cf131950906bf3ab90f4ef9e24e8376b923b27f11db51c2263bb64",
+        "actual_size": 944352,
+        "actual_sha256": "238aa6217f22e5eb911c01958a27afb3a4081b28a5ec250793e0b622a45c093d",
         "passed": true
       },
       "screenshots": [
@@ -1806,112 +1806,112 @@
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/161-tauri-native-regression-bootstrap-cancellation-running-1536x794.png",
-          "reported_size": 230450,
-          "reported_sha256": "d719fc1726728d4e33a8dfee23b2294718d27ac5a4ead79342947efd5089d2db",
+          "reported_size": 232032,
+          "reported_sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a",
           "present": true,
           "inside_repository": true,
-          "actual_size": 230450,
-          "actual_sha256": "d719fc1726728d4e33a8dfee23b2294718d27ac5a4ead79342947efd5089d2db",
+          "actual_size": 232032,
+          "actual_sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/162-tauri-native-regression-bootstrap-cancelled-1536x794.png",
-          "reported_size": 282067,
-          "reported_sha256": "f1210ea52ce4eaa2d8562c11d3a4706b1242dd5aa18ba4cf8f3aff2806faf970",
+          "reported_size": 284306,
+          "reported_sha256": "dd6ec983a2df778dd3cdab4a1c845f559090cd4f145b389f91f7969ac4a7c036",
           "present": true,
           "inside_repository": true,
-          "actual_size": 282067,
-          "actual_sha256": "f1210ea52ce4eaa2d8562c11d3a4706b1242dd5aa18ba4cf8f3aff2806faf970",
+          "actual_size": 284306,
+          "actual_sha256": "dd6ec983a2df778dd3cdab4a1c845f559090cd4f145b389f91f7969ac4a7c036",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/163-tauri-native-regression-bootstrap-ols-dialog-1536x794.png",
-          "reported_size": 298509,
-          "reported_sha256": "2d947e8f53a6171df4e9a7dc469086d6e0cb728c64cb7ec0773848f32b168955",
+          "reported_size": 299690,
+          "reported_sha256": "7ecf52821dc59f125aaeef326835046bbae7eba9ca4c4f081e3fad8fa4223aa7",
           "present": true,
           "inside_repository": true,
-          "actual_size": 298509,
-          "actual_sha256": "2d947e8f53a6171df4e9a7dc469086d6e0cb728c64cb7ec0773848f32b168955",
+          "actual_size": 299690,
+          "actual_sha256": "7ecf52821dc59f125aaeef326835046bbae7eba9ca4c4f081e3fad8fa4223aa7",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/164-tauri-native-regression-bootstrap-ols-running-1536x794.png",
-          "reported_size": 230450,
-          "reported_sha256": "d719fc1726728d4e33a8dfee23b2294718d27ac5a4ead79342947efd5089d2db",
+          "reported_size": 232032,
+          "reported_sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a",
           "present": true,
           "inside_repository": true,
-          "actual_size": 230450,
-          "actual_sha256": "d719fc1726728d4e33a8dfee23b2294718d27ac5a4ead79342947efd5089d2db",
+          "actual_size": 232032,
+          "actual_sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/165-tauri-native-regression-bootstrap-ols-results-1536x794.png",
-          "reported_size": 111686,
-          "reported_sha256": "118de97ada407dadf48ce06dc07b8e26bed47b09a7370dea0501dae49ca1318b",
+          "reported_size": 111851,
+          "reported_sha256": "25030f530f3b00c6bc19997818f5f2fc6401eab7df057eed88f1bba4e9ba3907",
           "present": true,
           "inside_repository": true,
-          "actual_size": 111686,
-          "actual_sha256": "118de97ada407dadf48ce06dc07b8e26bed47b09a7370dea0501dae49ca1318b",
+          "actual_size": 111851,
+          "actual_sha256": "25030f530f3b00c6bc19997818f5f2fc6401eab7df057eed88f1bba4e9ba3907",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/166-tauri-native-regression-bootstrap-ols-export-1536x794.png",
-          "reported_size": 111686,
-          "reported_sha256": "118de97ada407dadf48ce06dc07b8e26bed47b09a7370dea0501dae49ca1318b",
+          "reported_size": 111851,
+          "reported_sha256": "25030f530f3b00c6bc19997818f5f2fc6401eab7df057eed88f1bba4e9ba3907",
           "present": true,
           "inside_repository": true,
-          "actual_size": 111686,
-          "actual_sha256": "118de97ada407dadf48ce06dc07b8e26bed47b09a7370dea0501dae49ca1318b",
+          "actual_size": 111851,
+          "actual_sha256": "25030f530f3b00c6bc19997818f5f2fc6401eab7df057eed88f1bba4e9ba3907",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/167-tauri-native-regression-bootstrap-logistic-dialog-1536x794.png",
-          "reported_size": 305319,
-          "reported_sha256": "a208b4ee476745b9d94b39c7481be634b8fe438cfd6009eb5a3fce15ae703a52",
+          "reported_size": 306791,
+          "reported_sha256": "efe800431cf09999a0d4c5ea10442b4f598f4429e1e6306444c2b46a9ffac377",
           "present": true,
           "inside_repository": true,
-          "actual_size": 305319,
-          "actual_sha256": "a208b4ee476745b9d94b39c7481be634b8fe438cfd6009eb5a3fce15ae703a52",
+          "actual_size": 306791,
+          "actual_sha256": "efe800431cf09999a0d4c5ea10442b4f598f4429e1e6306444c2b46a9ffac377",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/168-tauri-native-regression-bootstrap-logistic-running-1536x794.png",
-          "reported_size": 230450,
-          "reported_sha256": "d719fc1726728d4e33a8dfee23b2294718d27ac5a4ead79342947efd5089d2db",
+          "reported_size": 232032,
+          "reported_sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a",
           "present": true,
           "inside_repository": true,
-          "actual_size": 230450,
-          "actual_sha256": "d719fc1726728d4e33a8dfee23b2294718d27ac5a4ead79342947efd5089d2db",
+          "actual_size": 232032,
+          "actual_sha256": "6769cc2861646cf1df9dbcecc135e4c7264f888e75e062f58b2830d38beb0e0a",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/169-tauri-native-regression-bootstrap-logistic-results-1536x794.png",
-          "reported_size": 117460,
-          "reported_sha256": "e09160cf83fc9cf91ff937bee07765dd71cb5189426206604ab22b5f45f48233",
+          "reported_size": 117547,
+          "reported_sha256": "0d0a6cfd7c3096b17857972cd58ba555110e502c80f634b293409676b41b9b46",
           "present": true,
           "inside_repository": true,
-          "actual_size": 117460,
-          "actual_sha256": "e09160cf83fc9cf91ff937bee07765dd71cb5189426206604ab22b5f45f48233",
+          "actual_size": 117547,
+          "actual_sha256": "0d0a6cfd7c3096b17857972cd58ba555110e502c80f634b293409676b41b9b46",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/170-tauri-native-regression-bootstrap-logistic-export-1536x794.png",
-          "reported_size": 117460,
-          "reported_sha256": "e09160cf83fc9cf91ff937bee07765dd71cb5189426206604ab22b5f45f48233",
+          "reported_size": 117547,
+          "reported_sha256": "0d0a6cfd7c3096b17857972cd58ba555110e502c80f634b293409676b41b9b46",
           "present": true,
           "inside_repository": true,
-          "actual_size": 117460,
-          "actual_sha256": "e09160cf83fc9cf91ff937bee07765dd71cb5189426206604ab22b5f45f48233",
+          "actual_size": 117547,
+          "actual_sha256": "0d0a6cfd7c3096b17857972cd58ba555110e502c80f634b293409676b41b9b46",
           "passed": true
         },
         {
           "path": "validation/results/screens/v247-native-desktop-acceptance/171-tauri-native-regression-bootstrap-reopened-1536x794.png",
-          "reported_size": 115751,
-          "reported_sha256": "731954cbc7e2628fa0377340d6389da5d3afc005e82e99b498002dec21e94b9e",
+          "reported_size": 115831,
+          "reported_sha256": "1ae3e6877243898b2df2e7accc9e3b103d3e179d3f63ea32e857c53c156cad09",
           "present": true,
           "inside_repository": true,
-          "actual_size": 115751,
-          "actual_sha256": "731954cbc7e2628fa0377340d6389da5d3afc005e82e99b498002dec21e94b9e",
+          "actual_size": 115831,
+          "actual_sha256": "1ae3e6877243898b2df2e7accc9e3b103d3e179d3f63ea32e857c53c156cad09",
           "passed": true
         }
       ]
@@ -1920,12 +1920,12 @@
       "quickpls_desktop_exe": {
         "artifact": {
           "path": "target/release/quickpls-desktop.exe",
-          "reported_size": 26658304,
-          "reported_sha256": "0d59263690d8b3d81ae055dae4b928da1080c6326e95ece4e5607abde15d59b6",
+          "reported_size": 30507008,
+          "reported_sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
           "present": true,
           "inside_repository": true,
-          "actual_size": 26658304,
-          "actual_sha256": "0d59263690d8b3d81ae055dae4b928da1080c6326e95ece4e5607abde15d59b6",
+          "actual_size": 30507008,
+          "actual_sha256": "5b226f1c0492fa54198bc21754fe6473181a1b63bc703bb0d49f8f15d9371277",
           "passed": true
         },
         "source_freshness": [
@@ -2020,37 +2020,37 @@
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/NativeCalculationDialog-BhIuuZFR.js",
+            "path": "dist/assets/NativeCalculationDialog-CekKsDqn.js",
             "present": true,
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/NativeExportDialog-yHRFag4W.js",
+            "path": "dist/assets/NativeExportDialog-CTZOLsrg.js",
             "present": true,
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/NativeGroupSetupDialog-BsscX1GD.js",
+            "path": "dist/assets/NativeGroupSetupDialog-DncLahbL.js",
             "present": true,
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/NativeHigherOrderDialog-BxP4Tc6q.js",
+            "path": "dist/assets/NativeHigherOrderDialog-Bn4cY5Gi.js",
             "present": true,
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/NativeModerationDialog-DrmW4n3g.js",
+            "path": "dist/assets/NativeModerationDialog-D2IfblSQ.js",
             "present": true,
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/NativeResultsSurface-Bu2R3ocQ.js",
+            "path": "dist/assets/NativeResultsSurface-Bv7Fchdi.js",
             "present": true,
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/NativeUtilityDialog-qcy-hRG0.js",
+            "path": "dist/assets/NativeUtilityDialog-B_BR7mw4.js",
             "present": true,
             "binary_not_older": true
           },
@@ -2065,17 +2065,17 @@
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/icons-B3Zfv1lt.js",
+            "path": "dist/assets/icons-CWW7Ihoi.js",
             "present": true,
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/index-BR81HxYg.js",
+            "path": "dist/assets/index-DBKNtbUu.js",
             "present": true,
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/index-Cv2jalPW.css",
+            "path": "dist/assets/index-DpTHova4.css",
             "present": true,
             "binary_not_older": true
           },
@@ -2090,7 +2090,7 @@
             "binary_not_older": true
           },
           {
-            "path": "dist/assets/publicationDiagram-BEPWhId7.js",
+            "path": "dist/assets/publicationDiagram-BlkNs4Z4.js",
             "present": true,
             "binary_not_older": true
           },
@@ -2125,44 +2125,44 @@
       "dist_bundle": {
         "reported": {
           "path": "dist",
-          "size": 1077429,
+          "size": 1191494,
           "file_count": 19,
-          "sha256": "a2a1dc51ea5302c104e421f6ff68dcba74e1b96bb2361a4ede9986e9d0fb526c",
+          "sha256": "364eb8ee0a73bade09dfde958755fac09983ffd34f998b41755edee95f5a8e74",
           "manifest": [
             {
-              "path": "assets/NativeCalculationDialog-BhIuuZFR.js",
-              "size": 32940,
-              "sha256": "99f2780a766bc89aa5a8db774db75a083014781bcf9b767bf1b9dc51c189423d"
+              "path": "assets/NativeCalculationDialog-CekKsDqn.js",
+              "size": 51101,
+              "sha256": "3b3a2fb6c5f03765fa77208b7f76ddabf083710ad5c6e38fdc62f6101ec6d694"
             },
             {
-              "path": "assets/NativeExportDialog-yHRFag4W.js",
-              "size": 6105,
-              "sha256": "850233ec063f1c3693f9eb684aa723dc2d38793cdbe84716a9974f6f6c561736"
+              "path": "assets/NativeExportDialog-CTZOLsrg.js",
+              "size": 6432,
+              "sha256": "523da583f3a66f89cb2d8f11d6b122ff2aa2c03640d1dabcad00cd4ef9bfc2f2"
             },
             {
-              "path": "assets/NativeGroupSetupDialog-BsscX1GD.js",
+              "path": "assets/NativeGroupSetupDialog-DncLahbL.js",
               "size": 6779,
-              "sha256": "5399e036bf35b74f009000f4a2413d0ef306a9942f2c4ab6ae1a866aca58f7e8"
+              "sha256": "2f9eb02cfd1224c3a9b3a87c94b2006d10514184b995345adf7c7238ae901190"
             },
             {
-              "path": "assets/NativeHigherOrderDialog-BxP4Tc6q.js",
-              "size": 2944,
-              "sha256": "43ae9529f3e888c702c79e52b05b0b3a9f56cf362acf41efb653381a1fb52192"
+              "path": "assets/NativeHigherOrderDialog-Bn4cY5Gi.js",
+              "size": 2948,
+              "sha256": "08dbb627b5b031b9bad9287e7017c43277efcfdb3b3358a811a753f66eb5e609"
             },
             {
-              "path": "assets/NativeModerationDialog-DrmW4n3g.js",
-              "size": 3079,
-              "sha256": "640d5f862b4a5d9a76bf0b529e9ccb5497ea0ea964343b8d6c3e08dd8ae5ab9f"
+              "path": "assets/NativeModerationDialog-D2IfblSQ.js",
+              "size": 3081,
+              "sha256": "a7143c8cd4dfcaa4d58adffc392c4edfa4861e78970484d35b6c3683ee876840"
             },
             {
-              "path": "assets/NativeResultsSurface-Bu2R3ocQ.js",
-              "size": 21509,
-              "sha256": "760bc38b483cba88845049ee5e91bb269298fce46e4d67dbdb7a3ee53d4557d8"
+              "path": "assets/NativeResultsSurface-Bv7Fchdi.js",
+              "size": 31251,
+              "sha256": "2692880853872db149cfb86a7041a849e6cc114faf6dbfe571d85a54550ba79f"
             },
             {
-              "path": "assets/NativeUtilityDialog-qcy-hRG0.js",
-              "size": 4181,
-              "sha256": "ecadb8d38a7e9d442c0606a0afbe0d4f0da51b4d2f2c8cd659025db2a3873561"
+              "path": "assets/NativeUtilityDialog-B_BR7mw4.js",
+              "size": 12164,
+              "sha256": "a4c73c06ffcf8b4dd5dca228a4895f7bbe7a4718ec34da32d9f568fbbf0e9f06"
             },
             {
               "path": "assets/flow-BN-PNp2v.js",
@@ -2175,19 +2175,19 @@
               "sha256": "1243b61a71923367ce620fb944427c80c9b03e863e18374fcf4f74d6d06f63fc"
             },
             {
-              "path": "assets/icons-B3Zfv1lt.js",
-              "size": 20320,
-              "sha256": "44c646ff3a637e2eeb2ce149868b7b46b7407809366f31c77cd3845c34ecfef9"
+              "path": "assets/icons-CWW7Ihoi.js",
+              "size": 20835,
+              "sha256": "11135cfa4b1cefe02205ec00e7f23204127146720a75ccbb5941632226a4a3c6"
             },
             {
-              "path": "assets/index-BR81HxYg.js",
-              "size": 455975,
-              "sha256": "0c10e8d91fdbf3a01ec3570ecde4782e12cf1e5a9574b7cec1e8bde2458ae574"
+              "path": "assets/index-DBKNtbUu.js",
+              "size": 528769,
+              "sha256": "d37b081cac27b076af6c5c288c0280ace77424912b173849ed9517381d9879f7"
             },
             {
-              "path": "assets/index-Cv2jalPW.css",
-              "size": 70202,
-              "sha256": "314f0336553173cb32809fea2bb24da191a39e27d0888a09512f3d8dc4db8b97"
+              "path": "assets/index-DpTHova4.css",
+              "size": 74714,
+              "sha256": "e756299a2d8d0620f5d62a8f60f0265b0059aa2599790474b940218826096182"
             },
             {
               "path": "assets/largeModelSmoke-PEBccAlJ.js",
@@ -2200,9 +2200,9 @@
               "sha256": "024828f88efaf03205588f9bc34ca763bd8f484b36f5172f92d4a83ac4aa12ff"
             },
             {
-              "path": "assets/publicationDiagram-BEPWhId7.js",
-              "size": 8623,
-              "sha256": "6f5666870734aa92b58d381b8c5d1a9f1a6e80495c79c8a36c27d04f4a1b1678"
+              "path": "assets/publicationDiagram-BlkNs4Z4.js",
+              "size": 8648,
+              "sha256": "19cd3e3c69779a47c603cc3be9269a62e4871492416c549b8938250eb9e6f8df"
             },
             {
               "path": "assets/smokeRun-CMXwsrTO.js",
@@ -2222,50 +2222,50 @@
             {
               "path": "index.html",
               "size": 821,
-              "sha256": "4587f53cb53e8589f283ba113dd647c869def5ebc224ef2566eecda9457c894f"
+              "sha256": "ffa343bcc205c9541dcddd98ce187604001ef7fc3b279b6a460a25b5009b3b50"
             }
           ]
         },
         "actual": {
           "path": "dist",
-          "size": 1077429,
+          "size": 1191494,
           "file_count": 19,
-          "sha256": "a2a1dc51ea5302c104e421f6ff68dcba74e1b96bb2361a4ede9986e9d0fb526c",
+          "sha256": "364eb8ee0a73bade09dfde958755fac09983ffd34f998b41755edee95f5a8e74",
           "manifest": [
             {
-              "path": "assets/NativeCalculationDialog-BhIuuZFR.js",
-              "size": 32940,
-              "sha256": "99f2780a766bc89aa5a8db774db75a083014781bcf9b767bf1b9dc51c189423d"
+              "path": "assets/NativeCalculationDialog-CekKsDqn.js",
+              "size": 51101,
+              "sha256": "3b3a2fb6c5f03765fa77208b7f76ddabf083710ad5c6e38fdc62f6101ec6d694"
             },
             {
-              "path": "assets/NativeExportDialog-yHRFag4W.js",
-              "size": 6105,
-              "sha256": "850233ec063f1c3693f9eb684aa723dc2d38793cdbe84716a9974f6f6c561736"
+              "path": "assets/NativeExportDialog-CTZOLsrg.js",
+              "size": 6432,
+              "sha256": "523da583f3a66f89cb2d8f11d6b122ff2aa2c03640d1dabcad00cd4ef9bfc2f2"
             },
             {
-              "path": "assets/NativeGroupSetupDialog-BsscX1GD.js",
+              "path": "assets/NativeGroupSetupDialog-DncLahbL.js",
               "size": 6779,
-              "sha256": "5399e036bf35b74f009000f4a2413d0ef306a9942f2c4ab6ae1a866aca58f7e8"
+              "sha256": "2f9eb02cfd1224c3a9b3a87c94b2006d10514184b995345adf7c7238ae901190"
             },
             {
-              "path": "assets/NativeHigherOrderDialog-BxP4Tc6q.js",
-              "size": 2944,
-              "sha256": "43ae9529f3e888c702c79e52b05b0b3a9f56cf362acf41efb653381a1fb52192"
+              "path": "assets/NativeHigherOrderDialog-Bn4cY5Gi.js",
+              "size": 2948,
+              "sha256": "08dbb627b5b031b9bad9287e7017c43277efcfdb3b3358a811a753f66eb5e609"
             },
             {
-              "path": "assets/NativeModerationDialog-DrmW4n3g.js",
-              "size": 3079,
-              "sha256": "640d5f862b4a5d9a76bf0b529e9ccb5497ea0ea964343b8d6c3e08dd8ae5ab9f"
+              "path": "assets/NativeModerationDialog-D2IfblSQ.js",
+              "size": 3081,
+              "sha256": "a7143c8cd4dfcaa4d58adffc392c4edfa4861e78970484d35b6c3683ee876840"
             },
             {
-              "path": "assets/NativeResultsSurface-Bu2R3ocQ.js",
-              "size": 21509,
-              "sha256": "760bc38b483cba88845049ee5e91bb269298fce46e4d67dbdb7a3ee53d4557d8"
+              "path": "assets/NativeResultsSurface-Bv7Fchdi.js",
+              "size": 31251,
+              "sha256": "2692880853872db149cfb86a7041a849e6cc114faf6dbfe571d85a54550ba79f"
             },
             {
-              "path": "assets/NativeUtilityDialog-qcy-hRG0.js",
-              "size": 4181,
-              "sha256": "ecadb8d38a7e9d442c0606a0afbe0d4f0da51b4d2f2c8cd659025db2a3873561"
+              "path": "assets/NativeUtilityDialog-B_BR7mw4.js",
+              "size": 12164,
+              "sha256": "a4c73c06ffcf8b4dd5dca228a4895f7bbe7a4718ec34da32d9f568fbbf0e9f06"
             },
             {
               "path": "assets/flow-BN-PNp2v.js",
@@ -2278,19 +2278,19 @@
               "sha256": "1243b61a71923367ce620fb944427c80c9b03e863e18374fcf4f74d6d06f63fc"
             },
             {
-              "path": "assets/icons-B3Zfv1lt.js",
-              "size": 20320,
-              "sha256": "44c646ff3a637e2eeb2ce149868b7b46b7407809366f31c77cd3845c34ecfef9"
+              "path": "assets/icons-CWW7Ihoi.js",
+              "size": 20835,
+              "sha256": "11135cfa4b1cefe02205ec00e7f23204127146720a75ccbb5941632226a4a3c6"
             },
             {
-              "path": "assets/index-BR81HxYg.js",
-              "size": 455975,
-              "sha256": "0c10e8d91fdbf3a01ec3570ecde4782e12cf1e5a9574b7cec1e8bde2458ae574"
+              "path": "assets/index-DBKNtbUu.js",
+              "size": 528769,
+              "sha256": "d37b081cac27b076af6c5c288c0280ace77424912b173849ed9517381d9879f7"
             },
             {
-              "path": "assets/index-Cv2jalPW.css",
-              "size": 70202,
-              "sha256": "314f0336553173cb32809fea2bb24da191a39e27d0888a09512f3d8dc4db8b97"
+              "path": "assets/index-DpTHova4.css",
+              "size": 74714,
+              "sha256": "e756299a2d8d0620f5d62a8f60f0265b0059aa2599790474b940218826096182"
             },
             {
               "path": "assets/largeModelSmoke-PEBccAlJ.js",
@@ -2303,9 +2303,9 @@
               "sha256": "024828f88efaf03205588f9bc34ca763bd8f484b36f5172f92d4a83ac4aa12ff"
             },
             {
-              "path": "assets/publicationDiagram-BEPWhId7.js",
-              "size": 8623,
-              "sha256": "6f5666870734aa92b58d381b8c5d1a9f1a6e80495c79c8a36c27d04f4a1b1678"
+              "path": "assets/publicationDiagram-BlkNs4Z4.js",
+              "size": 8648,
+              "sha256": "19cd3e3c69779a47c603cc3be9269a62e4871492416c549b8938250eb9e6f8df"
             },
             {
               "path": "assets/smokeRun-CMXwsrTO.js",
@@ -2325,7 +2325,7 @@
             {
               "path": "index.html",
               "size": 821,
-              "sha256": "4587f53cb53e8589f283ba113dd647c869def5ebc224ef2566eecda9457c894f"
+              "sha256": "ffa343bcc205c9541dcddd98ce187604001ef7fc3b279b6a460a25b5009b3b50"
             }
           ]
         },
@@ -2343,7 +2343,7 @@
     "process_cleanup": {
       "path": "validation\\results\\v247_regression_bootstrap_process_cleanup.json",
       "fresh_after_packaged_report": true,
-      "launched_pid": 44000,
+      "launched_pid": 22532,
       "parent_exit_confirmed": true,
       "lingering_descendant_pids": [],
       "passed": true
@@ -2372,7 +2372,7 @@
         "visibleModelNodes": 0,
         "analyzeCommandCount": 1,
         "dialogOpened": true,
-        "catalogCount": 14,
+        "catalogCount": 15,
         "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
@@ -2397,6 +2397,10 @@
           {
             "value": "logistic",
             "label": "Binary logistic (outcome coded 0/1)"
+          },
+          {
+            "value": "process",
+            "label": "Graph-defined Path Analysis / PROCESS"
           }
         ],
         "outcome": "outcome",
@@ -2780,7 +2784,7 @@
         "visibleModelNodes": 0,
         "analyzeCommandCount": 1,
         "dialogOpened": true,
-        "catalogCount": 14,
+        "catalogCount": 15,
         "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
@@ -2805,6 +2809,10 @@
           {
             "value": "logistic",
             "label": "Binary logistic (outcome coded 0/1)"
+          },
+          {
+            "value": "process",
+            "label": "Graph-defined Path Analysis / PROCESS"
           }
         ],
         "outcome": "outcome",
@@ -3188,7 +3196,7 @@
         "visibleModelNodes": 0,
         "analyzeCommandCount": 1,
         "dialogOpened": true,
-        "catalogCount": 14,
+        "catalogCount": 15,
         "selectedMethod": "Regression",
         "linkage": {
           "expectedKind": "regression",
@@ -3213,6 +3221,10 @@
           {
             "value": "logistic",
             "label": "Binary logistic (outcome coded 0/1)"
+          },
+          {
+            "value": "process",
+            "label": "Graph-defined Path Analysis / PROCESS"
           }
         ],
         "outcome": "outcome",
@@ -3588,40 +3600,46 @@
     ],
     "screenshots": [
       {
-        "state": "regression-bootstrap-ols-dialog",
+        "path": "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1024x700.png",
+        "size": 117254,
+        "sha256": "0ee6c866739c9bbcbd14cd52fdd0107c2ce76028f3a69c200e8e1936c7883b68",
         "viewport": "1024x700",
-        "runtime": "chromium-preview",
-        "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\19-regression-bootstrap-ols-dialog-1024x700.png"
+        "state": "regression-bootstrap-ols-dialog"
       },
       {
-        "state": "regression-bootstrap-logistic-dialog",
+        "path": "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1024x700.png",
+        "size": 113627,
+        "sha256": "b0fd22eb52193701a28faf33b6a109e2dc01f457db6c69cb8cd7d5019342b398",
         "viewport": "1024x700",
-        "runtime": "chromium-preview",
-        "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\20-regression-bootstrap-logistic-dialog-1024x700.png"
+        "state": "regression-bootstrap-logistic-dialog"
       },
       {
-        "state": "regression-bootstrap-ols-dialog",
+        "path": "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1280x720.png",
+        "size": 136681,
+        "sha256": "98e2fc62a6ee4afefa0da7e08a96971a5f78c61eca82b2f2993c908f34f9af2a",
         "viewport": "1280x720",
-        "runtime": "chromium-preview",
-        "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\19-regression-bootstrap-ols-dialog-1280x720.png"
+        "state": "regression-bootstrap-ols-dialog"
       },
       {
-        "state": "regression-bootstrap-logistic-dialog",
+        "path": "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1280x720.png",
+        "size": 133296,
+        "sha256": "f68e354c8a9446d3046bdb16f1be85e963ab36fbac0570caff41e0766d4f5748",
         "viewport": "1280x720",
-        "runtime": "chromium-preview",
-        "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\20-regression-bootstrap-logistic-dialog-1280x720.png"
+        "state": "regression-bootstrap-logistic-dialog"
       },
       {
-        "state": "regression-bootstrap-ols-dialog",
+        "path": "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1440x900.png",
+        "size": 179356,
+        "sha256": "80bb996503f253d42c1d1f32d61aa9ec1d5e920cda70f344015257f5b5778280",
         "viewport": "1440x900",
-        "runtime": "chromium-preview",
-        "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\19-regression-bootstrap-ols-dialog-1440x900.png"
+        "state": "regression-bootstrap-ols-dialog"
       },
       {
-        "state": "regression-bootstrap-logistic-dialog",
+        "path": "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1440x900.png",
+        "size": 177878,
+        "sha256": "a411647a3a63857219a31cdd5ed222f356ca43bc98ee18ae1e24f5c7d9158665",
         "viewport": "1440x900",
-        "runtime": "chromium-preview",
-        "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\20-regression-bootstrap-logistic-dialog-1440x900.png"
+        "state": "regression-bootstrap-logistic-dialog"
       }
     ],
     "passed": true
@@ -3636,13 +3654,13 @@
     "test_executables": {
       "qpls_resampling": {
         "artifact": {
-          "path": "target/release/deps/qpls_resampling-c4e49d418770bebc.exe",
-          "reported_size": 10044416,
-          "reported_sha256": "45553e2e71628620bfef1c6dc1bef588544361edd9f01780c975c6629161f476",
+          "path": "target/release/deps/qpls_resampling-b5bff3e7363d410e.exe",
+          "reported_size": 11164160,
+          "reported_sha256": "fc0acc401cfa5af0a2797094cf237d5a6984a03280bca401d77873ffc488191f",
           "present": true,
           "inside_repository": true,
-          "actual_size": 10044416,
-          "actual_sha256": "45553e2e71628620bfef1c6dc1bef588544361edd9f01780c975c6629161f476",
+          "actual_size": 11164160,
+          "actual_sha256": "fc0acc401cfa5af0a2797094cf237d5a6984a03280bca401d77873ffc488191f",
           "passed": true
         },
         "path_pattern_ok": true,
@@ -3667,13 +3685,13 @@
       },
       "qpls_project": {
         "artifact": {
-          "path": "target/release/deps/qpls_project-f307b35747183d92.exe",
-          "reported_size": 19873280,
-          "reported_sha256": "dda98f2966311e42d4e1e1740e95828f4e395581354836441844211b53f7f02d",
+          "path": "target/release/deps/qpls_project-f5d02c0d541c8f45.exe",
+          "reported_size": 24059904,
+          "reported_sha256": "9431ade8c71e64a83557c7d2c7d4f76dd3dec0c272c755359c8f7314352b8d90",
           "present": true,
           "inside_repository": true,
-          "actual_size": 19873280,
-          "actual_sha256": "dda98f2966311e42d4e1e1740e95828f4e395581354836441844211b53f7f02d",
+          "actual_size": 24059904,
+          "actual_sha256": "9431ade8c71e64a83557c7d2c7d4f76dd3dec0c272c755359c8f7314352b8d90",
           "passed": true
         },
         "path_pattern_ok": true,
@@ -3774,8 +3792,8 @@
     {
       "path": "docs\\METHOD_COMPATIBILITY.md",
       "present": true,
-      "bytes": 12962,
-      "sha256": "232f396a42951ad7e12300cd46f769a0507671336f322f3ba2328c560e890ab8",
+      "bytes": 14642,
+      "sha256": "151c15caecd5d81732e957257fe0d5e83817e10db3c01b7710415d9b71b1f77e",
       "required_phrases": [
         {
           "phrase": "Regression | OLS and binary-logistic bootstrapping",

@@ -10,6 +10,7 @@ import {
   nativeStructuralPathRandomizationProjection,
   nativeStructuralPathRandomizationTable,
 } from "../native/nativeStructuralPathRandomization";
+import { spreadsheetSafeCsvCell } from "./spreadsheetSafety";
 
 export interface ResultTable {
   id: string;
@@ -22,6 +23,8 @@ export interface ResultTable {
 
 const SCOPE_WARNING = "Validated for the documented QuickPLS supported scope. Unsupported shapes remain blocked or explicitly marked.";
 const EXPERIMENTAL_WARNING = "Experimental output. Use only with explicit method-status warnings and watermarked exports.";
+const PLS_POS_PREVIEW_WARNING = "Bounded deterministic PLS-POS-style score-space diagnostic preview. It is not QuickPLS 3 release-qualified and does not claim unrestricted published PLS-POS equivalence.";
+const FIMIX_PREVIEW_WARNING = "Bounded deterministic FIMIX-style score-space diagnostic preview. Membership scores are inverse-distance scores, not finite-mixture posterior probabilities; its pseudo-likelihood criteria are not full FIMIX-PLS equivalents.";
 
 export function methodResultTables(result: PlsResult): ResultTable[] {
   const tables: ResultTable[] = [];
@@ -337,12 +340,12 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
   }
 
   if (result.segmentation) {
-    const segmentationStatus = result.segmentation.method_version === "pls_pos_v1" ? "validated" : "experimental";
+    const segmentationStatus = "experimental" as const;
     tables.push({
       id: "segmentation_summary",
       title: "PLS-POS bounded segmentation summary",
       status: segmentationStatus,
-      warning: segmentationStatus === "validated" ? scopeWarnings(result.segmentation.warnings) : warnings(result.segmentation.warnings),
+      warning: previewWarnings(PLS_POS_PREVIEW_WARNING, result.segmentation.warnings),
       columns: ["Algorithm", "Requested", "Selected", "Observations", "Objective", "Pooled objective", "Improvement", "Min share", "Imbalance", "Max path separation", "Assignment"],
       rows: [[
         formatLabel(result.segmentation.algorithm),
@@ -362,7 +365,7 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
       id: "segmentation_segments",
       title: "PLS-POS bounded segment paths",
       status: segmentationStatus,
-      warning: segmentationStatus === "validated" ? scopeWarnings(result.segmentation.warnings) : warnings(result.segmentation.warnings),
+      warning: previewWarnings(PLS_POS_PREVIEW_WARNING, result.segmentation.warnings),
       columns: ["Segment", "Observations", "Share", "Source", "Target", "Path coefficient", "R2"],
       rows: result.segmentation.segments.flatMap((segment) => segment.paths.map((path) => [
         formatLabel(segment.segment),
@@ -379,7 +382,7 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
         id: "segmentation_memberships",
         title: "PLS-POS bounded segment memberships",
         status: segmentationStatus,
-        warning: segmentationStatus === "validated" ? scopeWarnings(result.segmentation.warnings) : warnings(result.segmentation.warnings),
+        warning: previewWarnings(PLS_POS_PREVIEW_WARNING, result.segmentation.warnings),
         columns: ["Observation", "Segment"],
         rows: result.segmentation.memberships.map((membership) => [
           String(membership.observation),
@@ -483,8 +486,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "fimix_summary",
       title: "FIMIX-PLS class summary",
-      status: "validated",
-      warning: scopeWarnings(result.fimix.warnings),
+      status: "experimental",
+      warning: previewWarnings(FIMIX_PREVIEW_WARNING, result.fimix.warnings),
       columns: ["Classes", "Starts", "Iterations", "Log likelihood", "AIC", "BIC", "CAIC", "Entropy"],
       rows: [[
         String(result.fimix.classes),
@@ -500,8 +503,8 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
     tables.push({
       id: "fimix_paths",
       title: "FIMIX-PLS class paths",
-      status: "validated",
-      warning: scopeWarnings(result.fimix.warnings),
+      status: "experimental",
+      warning: previewWarnings(FIMIX_PREVIEW_WARNING, result.fimix.warnings),
       columns: ["Class", "Observations", "Share", "Source", "Target", "Path coefficient", "R2"],
       rows: result.fimix.classes_summary.flatMap((item) => item.paths.map((path) => [
         item.class,
@@ -732,7 +735,7 @@ export function tablesToCsv(tables: ResultTable[]): string {
     table.columns,
     ...table.rows,
     [],
-  ]).map((row) => row.map(csvCell).join(",")).join("\r\n");
+  ]).map((row) => row.map(spreadsheetSafeCsvCell).join(",")).join("\r\n");
 }
 
 export function tablesToHtml(tables: ResultTable[]): string {
@@ -759,6 +762,11 @@ function experimentalWarnings(values: string[]) {
   return values.length ? `${EXPERIMENTAL_WARNING} ${values.join(" ")}` : EXPERIMENTAL_WARNING;
 }
 
+function previewWarnings(boundary: string, values: string[]) {
+  const prefix = `${EXPERIMENTAL_WARNING} ${boundary}`;
+  return values.length ? `${prefix} ${values.join(" ")}` : prefix;
+}
+
 function regressionScopeStatus(
   regression: NonNullable<PlsResult["regression"]>,
   resultMethodVersion: string,
@@ -782,14 +790,15 @@ function regressionScopeStatus(
 
 export function resultScopeStatus(result: PlsResult): ResultTable["status"] {
   if (
-    (result.segmentation && result.segmentation.method_version !== "pls_pos_v1") ||
+    result.segmentation ||
+    result.fimix ||
     (result.cbsem && (result.cbsem.bootstrap || result.cbsem.multigroup)) ||
     (result.regression && regressionScopeStatus(result.regression, result.method_version) !== "validated")
   ) {
     return "experimental";
   }
   if (result.method_version.startsWith("pls_pm_v1") || result.method_version === "pca_v1" || result.method_version === "plsc_v2" || result.method_version === "wpls_case_weighted_v1" || result.method_version === "plspredict_holdout_v1" || result.method_version === "ipma_v1" || result.method_version === "nca_v2" || result.method_version === "regression_logistic_v2" || result.method_version === "cca_composite_residual_v1" || result.method_version === "cta_pls_tetrad_v1" || result.method_version === "gaussian_copula_endogeneity_v1" || result.method_version === "pls_quadratic_nonlinear_effects_v1" || result.method_version === "pls_moderated_mediation_v1" || result.method_version === "cbsem_ml_v1" || result.method_version === "cfa_ml_v1" || result.method_version === "gsca_v1") return "validated";
-  if (result.mga || result.micom || result.mga_permutation || result.fimix || result.segmentation) return "validated";
+  if (result.mga || result.micom || result.mga_permutation) return "validated";
   if (result.regression && regressionScopeStatus(result.regression, result.method_version) === "validated") return "validated";
   return "experimental";
 }
@@ -812,10 +821,6 @@ function formatModeratorLevel(value: number) {
   if (value === 0) return "Mean";
   if (value === 1) return "+1 SD";
   return value.toFixed(2);
-}
-
-function csvCell(value: string) {
-  return /[",\r\n]/.test(value) ? `"${value.replaceAll("\"", "\"\"")}"` : value;
 }
 
 function escapeHtml(value: string) {

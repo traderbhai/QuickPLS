@@ -1,0 +1,143 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "all_six_archive_mutations_fail_closed": true,
+    "bounded_claim": "Descriptive sample-covariance tetrad diagnostics for supported PLS indicator blocks containing at least four indicators, using the exact complete-case preprocessing of the associated PLS run.",
+    "commercial_zero_egress_passed": false,
+    "excluded_scope": [
+      "Bootstrap, permutation, or asymptotic tetrad inference and vanishing-tetrad decisions are excluded.",
+      "PCA weighting and indicator blocks with fewer than four indicators are excluded.",
+      "The diagnostic does not classify a measurement model as reflective or formative."
+    ],
+    "method_functional_offline_and_cleanup_pass": true,
+    "packaged_report_current": true,
+    "passed": true,
+    "platform_background_egress_recorded_truthfully": true,
+    "release_scope_remains_descriptive_only": true,
+    "same_run_archive_ui_xlsx_exact": true,
+    "stage_artifacts": [
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/cta_pls_v1/method_spec.identity.json",
+        "roles": [
+          "method_spec"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/cta_pls_v1/independent_reference.identity.json",
+        "roles": [
+          "independent_reference"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/cta_pls_v1/simulation_report.identity.json",
+        "roles": [
+          "simulation_report"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/cta_pls_v1/boundary_report.identity.json",
+        "roles": [
+          "boundary_report"
+        ],
+        "stage": "engine_only"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/cta_pls_v1/persistence_report.identity.json",
+        "roles": [
+          "persistence_report"
+        ],
+        "stage": "archive_qualified"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/cta_pls_v1/frontend_report.identity.json",
+        "roles": [
+          "frontend_report"
+        ],
+        "stage": "native_qualified"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/cta_pls_v1/export_report.identity.json",
+        "roles": [
+          "export_report"
+        ],
+        "stage": "native_qualified"
+      },
+      {
+        "errors": [],
+        "passed": true,
+        "path": "validation/results/method_factory/cta_pls_v1/packaged_acceptance.identity.json",
+        "roles": [
+          "packaged_acceptance"
+        ],
+        "stage": "release_qualified"
+      }
+    ],
+    "three_required_viewports_pass": true
+  },
+  "feature_id": "qpls3.assessment.cta_pls",
+  "generated_at_utc": "2026-08-13T18:55:50.386022Z",
+  "method_version": "cta_pls_tetrad_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_audit",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "validation/cta_pls_v1_factory_audit.py",
+      "sha256": "3c4d1331d790ad3c343ead5c0e23ad65719f69a28658e5940ce5dc28d04e3a1a",
+      "size": 4795
+    },
+    {
+      "path": "validation/cta_pls_v1_factory_common.py",
+      "sha256": "726ee52650510f685e5ebdf1f90c06800e46dd021cef9d720c38a8bf5cf64294",
+      "size": 12502
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/cta_pls_v1.manifest.json",
+      "sha256": "9c185db215ed40fd30d77557a9e8448d109f6e3f1acf015d25e47fd4bc62257e",
+      "size": 14741
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/results/method_factory/cta_pls_v1/packaged_acceptance.identity.json",
+      "sha256": "5a8742af5f8c0d153725efa2d5b78c3495191eb05b8dff5c7cf4ac11d39ba9c7",
+      "size": 137041
+    },
+    {
+      "path": "validation/test_cta_pls_v1_factory_evidence.py",
+      "sha256": "a7455099f23dd1f38ee9db7a856dd0f9cacf2070941a95502c39e92a189e969c",
+      "size": 3720
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    }
+  ]
+}

@@ -21,12 +21,17 @@ qpls-estimation = { path = "../crates/qpls-estimation" }
 qpls-project = { path = "../crates/qpls-project" }
 qpls-resampling = { path = "../crates/qpls-resampling" }
 qpls-runner = { path = "../crates/qpls-runner" }
+regex = "1.13"
 rust_xlsxwriter.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tauri = { version = "2", features = [] }
 tauri-plugin-dialog = "2"
 uuid.workspace = true
+zip.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Storage_FileSystem"] }
 
 [dev-dependencies]
 calamine.workspace = true

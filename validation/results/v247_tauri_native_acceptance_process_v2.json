@@ -5,13 +5,13 @@
   "bootstrap_method_version": "regression_process_bootstrap_v1",
   "catalogue_snapshot_date": "2026-08-12",
   "passed": true,
-  "generatedAt": "2026-08-13T06:47:03.788Z",
+  "generatedAt": "2026-08-13T16:09:54.766Z",
   "endpoint": "http://127.0.0.1:9222",
   "runtime": "tauri-webview2-cdp",
   "focusedRun": {
     "scope": "process_v2",
     "priorGeneratedAt": null,
-    "completedAt": "2026-08-13T06:49:05.569Z"
+    "completedAt": "2026-08-13T16:11:53.386Z"
   },
   "checks": {
     "runtimePreflight": {
@@ -107,10 +107,10 @@
     },
     "processV2FixtureProvisioning": {
       "sourceCsv": "D:\\QuickPLS\\validation\\results\\process_v2_native_reference.csv",
-      "project": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-1786603623786-24804.qpls",
+      "project": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-1786637394764-61924.qpls",
       "projectName": "Native Graph-Defined PROCESS v2 Acceptance",
       "cli": "D:\\QuickPLS\\target\\release\\qpls.exe",
-      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-process-v2-1786603623786-24804.qpls",
+      "stdout": "created D:\\QuickPLS\\validation\\results\\v247-native-process-v2-1786637394764-61924.qpls",
       "stderr": ""
     },
     "runtime": {
@@ -184,14 +184,14 @@
           "terminalTransitionAllowed": false
         }
       },
-      "cancelledMessage": "Cancelled0%0%Calculation cancelled.Calculation log (5)12:17:26 pmCalculation cancelled.12:17:26 pmCancellation requested.12:17:25 pmNative calculation job started.12:17:25 pmFrontend readiness checks passed.12:17:25 pmGraph-Defined Path Analysis with Bootstrap requested."
+      "cancelledMessage": "Cancelled0%0%Calculation cancelled.Calculation log (5)9:40:13 pmCalculation cancelled.9:40:12 pmCancellation requested.9:40:12 pmNative calculation job started.9:40:12 pmFrontend readiness checks passed.9:40:12 pmGraph-Defined Path Analysis with Bootstrap requested."
     },
     "processV2CancelledRetrySetup": {
       "passed": true,
       "readOnly": true,
       "exactFrozenSetupMatch": true,
       "snapshot": {
-        "catalogCount": 14,
+        "catalogCount": 15,
         "selectedMethod": "Regression",
         "regressionType": "process",
         "outcome": "Y",
@@ -279,7 +279,7 @@
         "graphDefinedWithoutNumberedTemplates": true
       },
       "frozenSetup": {
-        "catalogCount": 14,
+        "catalogCount": 15,
         "selectedMethod": "Regression",
         "regressionType": "process",
         "outcome": "Y",
@@ -383,7 +383,7 @@
       "workers": 2,
       "seed": 20260812,
       "contract": {
-        "catalogCount": 14,
+        "catalogCount": 15,
         "selectedMethod": "Regression",
         "regressionType": "process",
         "outcome": "Y",
@@ -8531,20 +8531,20 @@
       "passed": true,
       "nativeXlsx": {
         "attempted": true,
-        "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-121700878.xlsx",
+        "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx",
         "helper": {
           "ready": {
             "event": "ready",
             "mainWindow": {
               "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
-              "handle": 4982498,
-              "pid": 51204,
+              "handle": 13240468,
+              "pid": 9284,
               "title": "QuickPLS"
             },
             "passed": true,
             "phase": "main_window_binding",
             "resultsRoot": "D:\\QuickPLS\\validation\\results",
-            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-121700878.xlsx"
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx"
           },
           "completion": {
             "boundControls": {
@@ -8553,23 +8553,23 @@
             },
             "dialog": {
               "className": "#32770",
-              "directOwner": 4982498,
-              "handle": 7866414,
-              "pid": 51204,
-              "rootOwner": 4982498,
+              "directOwner": 13240468,
+              "handle": 18942166,
+              "pid": 9284,
+              "rootOwner": 13240468,
               "title": "Save As"
             },
             "event": "complete",
             "mainWindow": {
               "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
-              "handle": 4982498,
-              "pid": 51204,
+              "handle": 13240468,
+              "pid": 9284,
               "title": "QuickPLS"
             },
             "passed": true,
             "phase": "xlsx_creation_and_readback",
             "saveSubmission": {
-              "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-121700878.xlsx",
+              "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx",
               "filenameBefore": "quickpls-result-tables",
               "filenameVerified": true,
               "saveButtonEnabled": true,
@@ -8578,17 +8578,17 @@
                 {
                   "attempt": 1,
                   "settledReads": [
-                    "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-121700878.xlsx",
-                    "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-121700878.xlsx"
+                    "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx",
+                    "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx"
                   ]
                 }
               ],
               "submissionMethod": "BM_CLICK",
-              "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-121700878.xlsx"
+              "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx"
             },
-            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-121700878.xlsx",
+            "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx",
             "workbook": {
-              "path": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-121700878.xlsx",
+              "path": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx",
               "requiredSharedStrings": [
                 "Graph-Defined Path Analysis with Bootstrap",
                 "regression_process_v2",
@@ -8624,7 +8624,7 @@
                 "Scope and provenance",
                 "Run provenance"
               ],
-              "sha256": "bf773df169231365fcb534a33a1602a9cbbbb662e71682d53e0565c0490b0fdf",
+              "sha256": "d2c0fac1a74efa13530885b4ae80cf8b3830b560123a5de277820fe718e9185a",
               "sheetNames": [
                 "Model summary",
                 "Directed paths",
@@ -8644,7 +8644,7 @@
                 "Scope and provenance",
                 "Run provenance"
               ],
-              "size": 55319
+              "size": 55317
             },
             "transport": {
               "exitCode": 0,
@@ -8655,14 +8655,14 @@
                   "event": "ready",
                   "mainWindow": {
                     "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
-                    "handle": 4982498,
-                    "pid": 51204,
+                    "handle": 13240468,
+                    "pid": 9284,
                     "title": "QuickPLS"
                   },
                   "passed": true,
                   "phase": "main_window_binding",
                   "resultsRoot": "D:\\QuickPLS\\validation\\results",
-                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-121700878.xlsx"
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx"
                 },
                 {
                   "boundControls": {
@@ -8671,23 +8671,23 @@
                   },
                   "dialog": {
                     "className": "#32770",
-                    "directOwner": 4982498,
-                    "handle": 7866414,
-                    "pid": 51204,
-                    "rootOwner": 4982498,
+                    "directOwner": 13240468,
+                    "handle": 18942166,
+                    "pid": 9284,
+                    "rootOwner": 13240468,
                     "title": "Save As"
                   },
                   "event": "complete",
                   "mainWindow": {
                     "executable": "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
-                    "handle": 4982498,
-                    "pid": 51204,
+                    "handle": 13240468,
+                    "pid": 9284,
                     "title": "QuickPLS"
                   },
                   "passed": true,
                   "phase": "xlsx_creation_and_readback",
                   "saveSubmission": {
-                    "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-121700878.xlsx",
+                    "filenameAfterSet": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx",
                     "filenameBefore": "quickpls-result-tables",
                     "filenameVerified": true,
                     "saveButtonEnabled": true,
@@ -8696,17 +8696,17 @@
                       {
                         "attempt": 1,
                         "settledReads": [
-                          "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-121700878.xlsx",
-                          "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-121700878.xlsx"
+                          "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx",
+                          "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx"
                         ]
                       }
                     ],
                     "submissionMethod": "BM_CLICK",
-                    "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-121700878.xlsx"
+                    "targetText": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx"
                   },
-                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-121700878.xlsx",
+                  "targetPath": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx",
                   "workbook": {
-                    "path": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-121700878.xlsx",
+                    "path": "D:\\QuickPLS\\validation\\results\\v247-native-process-v2-20260813-213951987.xlsx",
                     "requiredSharedStrings": [
                       "Graph-Defined Path Analysis with Bootstrap",
                       "regression_process_v2",
@@ -8742,7 +8742,7 @@
                       "Scope and provenance",
                       "Run provenance"
                     ],
-                    "sha256": "bf773df169231365fcb534a33a1602a9cbbbb662e71682d53e0565c0490b0fdf",
+                    "sha256": "d2c0fac1a74efa13530885b4ae80cf8b3830b560123a5de277820fe718e9185a",
                     "sheetNames": [
                       "Model summary",
                       "Directed paths",
@@ -8762,7 +8762,7 @@
                       "Scope and provenance",
                       "Run provenance"
                     ],
-                    "size": 55319
+                    "size": 55317
                   }
                 }
               ],
@@ -8770,9 +8770,9 @@
             }
           }
         },
-        "appFeedback": "Saved v247-native-process-v2-20260813-121700878.xlsx.",
+        "appFeedback": "Saved v247-native-process-v2-20260813-213951987.xlsx.",
         "file": {
-          "size": 55319,
+          "size": 55317,
           "isFile": true
         },
         "workbookSheets": [
@@ -8908,23 +8908,23 @@
     },
     "processV2ResourceResetClone": {
       "passed": true,
-      "originalPath": "validation/results/v247-native-process-v2-1786603623786-24804.qpls",
-      "resetPath": "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls",
+      "originalPath": "validation/results/v247-native-process-v2-1786637394764-61924.qpls",
+      "resetPath": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls",
       "distinctPath": true,
       "originalArchive": {
-        "path": "validation/results/v247-native-process-v2-1786603623786-24804.qpls",
-        "size": 2317833,
-        "sha256": "416975b5f094e942f9e89295bb79f61a2aa69b77c337d28d52045a1fef082d57"
+        "path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls",
+        "size": 2317816,
+        "sha256": "8efac394e9e9db115c7ce38d0731aabd3d03737af468ee147dead161e994bd9a"
       },
       "resetArchive": {
-        "path": "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls",
-        "size": 2317833,
-        "sha256": "416975b5f094e942f9e89295bb79f61a2aa69b77c337d28d52045a1fef082d57"
+        "path": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls",
+        "size": 2317816,
+        "sha256": "8efac394e9e9db115c7ce38d0731aabd3d03737af468ee147dead161e994bd9a"
       },
       "identity": {
-        "resultId": "99d61d09-b544-44a2-8f74-274abbfd0d8a",
-        "recipeId": "7c013ecf-42cb-4dab-b31e-5b482ef9abf3",
-        "runId": "99d61d09-b544-44a2-8f74-274abbfd0d8a",
+        "resultId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
+        "recipeId": "e1db2325-9a63-49f3-b580-d9b1b460bd26",
+        "runId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
         "resultCount": 1,
         "recipeCount": 1,
         "witnessCount": 1
@@ -8934,140 +8934,140 @@
         "completedResultCount": 1,
         "witnessCount": 1,
         "completedRunIds": [
-          "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+          "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
         ],
         "witnessRunIds": [
-          "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+          "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
         ],
         "recipeIds": [
-          "7c013ecf-42cb-4dab-b31e-5b482ef9abf3"
+          "e1db2325-9a63-49f3-b580-d9b1b460bd26"
         ],
         "recipeCount": 1,
         "workspaceRunIds": [
-          "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+          "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
         ],
-        "selectedRunId": "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+        "selectedRunId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
       },
       "sidecarsBeforeCopy": {
-        "prefix": "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls",
+        "prefix": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls",
         "coversEverySiblingPrefix": true,
         "present": [],
         "artifacts": []
       },
       "sidecarsAfterCopy": {
-        "prefix": "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls",
+        "prefix": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls",
         "coversEverySiblingPrefix": true,
         "present": [],
         "artifacts": []
       },
       "sidecarsBeforeOpen": {
-        "prefix": "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls",
+        "prefix": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls",
         "coversEverySiblingPrefix": true,
         "present": [],
         "artifacts": []
       },
       "settledAutosave": {
-        "prefix": "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls",
+        "prefix": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls",
         "coversEverySiblingPrefix": true,
         "present": [
-          "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls.autosave",
-          "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls.autosave.identity.json"
+          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave",
+          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave.identity.json"
         ],
         "artifacts": [
           {
-            "path": "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls.autosave",
-            "size": 2311359,
-            "sha256": "5a4e7466c5caa9b34e0d159d4ec9b89aafe6bfcdd4f840f361638168aeb7c01b"
+            "path": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave",
+            "size": 2311374,
+            "sha256": "aeeebeba631ef4be4bd5bdd7281a0d32b69822c5a3471771ed5fddbf99f1c3e5"
           },
           {
-            "path": "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls.autosave.identity.json",
+            "path": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave.identity.json",
             "size": 108,
-            "sha256": "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177"
+            "sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
           }
         ],
         "required": [
-          "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls.autosave",
-          "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls.autosave.identity.json"
+          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave",
+          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave.identity.json"
         ],
         "allowed": [
-          "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls.autosave",
-          "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls.autosave.bak",
-          "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls.autosave.identity.json"
+          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave",
+          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave.bak",
+          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave.identity.json"
         ],
         "missing": [],
         "forbidden": [],
         "exactAllowedIdentity": true,
-        "autosavePath": "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls.autosave",
+        "autosavePath": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave",
         "logicalState": {
           "manifestValid": true,
           "completedResultCount": 1,
           "witnessCount": 1,
           "completedRunIds": [
-            "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
           ],
           "witnessRunIds": [
-            "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
           ],
           "recipeIds": [
-            "7c013ecf-42cb-4dab-b31e-5b482ef9abf3"
+            "e1db2325-9a63-49f3-b580-d9b1b460bd26"
           ],
           "recipeCount": 1,
           "workspaceRunIds": [
-            "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
           ],
-          "selectedRunId": "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+          "selectedRunId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
         }
       },
       "autosaveAfterCheckpoint": {
-        "prefix": "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls",
+        "prefix": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls",
         "coversEverySiblingPrefix": true,
         "present": [
-          "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls.autosave",
-          "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls.autosave.identity.json"
+          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave",
+          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave.identity.json"
         ],
         "artifacts": [
           {
-            "path": "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls.autosave",
-            "size": 2311359,
-            "sha256": "5a4e7466c5caa9b34e0d159d4ec9b89aafe6bfcdd4f840f361638168aeb7c01b"
+            "path": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave",
+            "size": 2311374,
+            "sha256": "aeeebeba631ef4be4bd5bdd7281a0d32b69822c5a3471771ed5fddbf99f1c3e5"
           },
           {
-            "path": "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls.autosave.identity.json",
+            "path": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave.identity.json",
             "size": 108,
-            "sha256": "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177"
+            "sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
           }
         ],
         "required": [
-          "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls.autosave",
-          "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls.autosave.identity.json"
+          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave",
+          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave.identity.json"
         ],
         "allowed": [
-          "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls.autosave",
-          "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls.autosave.bak",
-          "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls.autosave.identity.json"
+          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave",
+          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave.bak",
+          "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave.identity.json"
         ],
         "missing": [],
         "forbidden": [],
         "exactAllowedIdentity": true,
-        "autosavePath": "validation/results/v247-native-process-v2-reset-1786603623786-24804.qpls.autosave",
+        "autosavePath": "validation/results/v247-native-process-v2-reset-1786637394764-61924.qpls.autosave",
         "logicalState": {
           "manifestValid": true,
           "completedResultCount": 1,
           "witnessCount": 1,
           "completedRunIds": [
-            "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
           ],
           "witnessRunIds": [
-            "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
           ],
           "recipeIds": [
-            "7c013ecf-42cb-4dab-b31e-5b482ef9abf3"
+            "e1db2325-9a63-49f3-b580-d9b1b460bd26"
           ],
           "recipeCount": 1,
           "workspaceRunIds": [
-            "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
           ],
-          "selectedRunId": "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+          "selectedRunId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
         }
       },
       "recoveryDisclosureAbsent": true,
@@ -9089,7 +9089,7 @@
         "process_bootstrap_bca",
         "process_scope"
       ],
-      "selectedRunId": "99d61d09-b544-44a2-8f74-274abbfd0d8a",
+      "selectedRunId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
       "selectedTableId": "process_model_summary"
     },
     "processV2WitnessBoundary": {
@@ -9130,217 +9130,217 @@
         "bootstrapInference": 24
       },
       "settledAutosave": {
-        "prefix": "validation/results/v247-native-process-v2-1786603623786-24804.qpls",
+        "prefix": "validation/results/v247-native-process-v2-1786637394764-61924.qpls",
         "coversEverySiblingPrefix": true,
         "present": [
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.identity.json",
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.bak",
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.identity.json"
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json"
         ],
         "artifacts": [
           {
-            "path": "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
-            "size": 2311361,
-            "sha256": "113c4961f02ae0398957fc863c110327a9acd40dc30473956fc49725d032405f"
+            "path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+            "size": 2311374,
+            "sha256": "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6"
           },
           {
-            "path": "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.identity.json",
+            "path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
             "size": 108,
-            "sha256": "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177"
+            "sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
           },
           {
-            "path": "validation/results/v247-native-process-v2-1786603623786-24804.qpls.bak",
+            "path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
             "size": 12709,
-            "sha256": "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557"
+            "sha256": "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
           },
           {
-            "path": "validation/results/v247-native-process-v2-1786603623786-24804.qpls.identity.json",
+            "path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json",
             "size": 108,
-            "sha256": "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177"
+            "sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
           }
         ],
         "required": [
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.identity.json"
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json"
         ],
         "allowed": [
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.bak",
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.identity.json",
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.bak",
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.identity.json"
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.bak",
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json"
         ],
         "missing": [],
         "forbidden": [],
         "exactAllowedIdentity": true,
-        "autosavePath": "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
+        "autosavePath": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
         "logicalState": {
           "manifestValid": true,
           "completedResultCount": 1,
           "witnessCount": 1,
           "completedRunIds": [
-            "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
           ],
           "witnessRunIds": [
-            "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
           ],
           "recipeIds": [
-            "7c013ecf-42cb-4dab-b31e-5b482ef9abf3"
+            "e1db2325-9a63-49f3-b580-d9b1b460bd26"
           ],
           "recipeCount": 1,
           "workspaceRunIds": [
-            "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
           ],
-          "selectedRunId": "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+          "selectedRunId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
         },
         "capturedArtifacts": [
           {
-            "source_path": "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
-            "source_size": 2311361,
-            "source_sha256": "113c4961f02ae0398957fc863c110327a9acd40dc30473956fc49725d032405f",
+            "source_path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+            "source_size": 2311374,
+            "source_sha256": "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6",
             "snapshot": {
-              "path": "validation/results/process-v2-resource-snapshot-1786603623786-24804-sidecar-cycle1-0.bin",
-              "size": 2311361,
-              "sha256": "113c4961f02ae0398957fc863c110327a9acd40dc30473956fc49725d032405f"
+              "path": "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-0.bin",
+              "size": 2311374,
+              "sha256": "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6"
             }
           },
           {
-            "source_path": "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.identity.json",
+            "source_path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
             "source_size": 108,
-            "source_sha256": "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177",
+            "source_sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24",
             "snapshot": {
-              "path": "validation/results/process-v2-resource-snapshot-1786603623786-24804-sidecar-cycle1-1.bin",
+              "path": "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-1.bin",
               "size": 108,
-              "sha256": "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177"
+              "sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
             }
           },
           {
-            "source_path": "validation/results/v247-native-process-v2-1786603623786-24804.qpls.bak",
+            "source_path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
             "source_size": 12709,
-            "source_sha256": "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557",
+            "source_sha256": "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262",
             "snapshot": {
-              "path": "validation/results/process-v2-resource-snapshot-1786603623786-24804-sidecar-cycle1-2.bin",
+              "path": "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-2.bin",
               "size": 12709,
-              "sha256": "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557"
+              "sha256": "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
             }
           },
           {
-            "source_path": "validation/results/v247-native-process-v2-1786603623786-24804.qpls.identity.json",
+            "source_path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json",
             "source_size": 108,
-            "source_sha256": "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177",
+            "source_sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24",
             "snapshot": {
-              "path": "validation/results/process-v2-resource-snapshot-1786603623786-24804-sidecar-cycle1-3.bin",
+              "path": "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-3.bin",
               "size": 108,
-              "sha256": "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177"
+              "sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
             }
           }
         ]
       },
       "autosaveAfterCheckpoint": {
-        "prefix": "validation/results/v247-native-process-v2-1786603623786-24804.qpls",
+        "prefix": "validation/results/v247-native-process-v2-1786637394764-61924.qpls",
         "coversEverySiblingPrefix": true,
         "present": [
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.identity.json",
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.bak",
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.identity.json"
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json"
         ],
         "artifacts": [
           {
-            "path": "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
-            "size": 2311361,
-            "sha256": "113c4961f02ae0398957fc863c110327a9acd40dc30473956fc49725d032405f"
+            "path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+            "size": 2311374,
+            "sha256": "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6"
           },
           {
-            "path": "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.identity.json",
+            "path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
             "size": 108,
-            "sha256": "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177"
+            "sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
           },
           {
-            "path": "validation/results/v247-native-process-v2-1786603623786-24804.qpls.bak",
+            "path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
             "size": 12709,
-            "sha256": "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557"
+            "sha256": "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
           },
           {
-            "path": "validation/results/v247-native-process-v2-1786603623786-24804.qpls.identity.json",
+            "path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json",
             "size": 108,
-            "sha256": "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177"
+            "sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
           }
         ],
         "required": [
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.identity.json"
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json"
         ],
         "allowed": [
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.bak",
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.identity.json",
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.bak",
-          "validation/results/v247-native-process-v2-1786603623786-24804.qpls.identity.json"
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.bak",
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
+          "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json"
         ],
         "missing": [],
         "forbidden": [],
         "exactAllowedIdentity": true,
-        "autosavePath": "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
+        "autosavePath": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
         "logicalState": {
           "manifestValid": true,
           "completedResultCount": 1,
           "witnessCount": 1,
           "completedRunIds": [
-            "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
           ],
           "witnessRunIds": [
-            "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
           ],
           "recipeIds": [
-            "7c013ecf-42cb-4dab-b31e-5b482ef9abf3"
+            "e1db2325-9a63-49f3-b580-d9b1b460bd26"
           ],
           "recipeCount": 1,
           "workspaceRunIds": [
-            "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+            "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
           ],
-          "selectedRunId": "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+          "selectedRunId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
         },
         "capturedArtifacts": [
           {
-            "source_path": "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave",
-            "source_size": 2311361,
-            "source_sha256": "113c4961f02ae0398957fc863c110327a9acd40dc30473956fc49725d032405f",
+            "source_path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave",
+            "source_size": 2311374,
+            "source_sha256": "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6",
             "snapshot": {
-              "path": "validation/results/process-v2-resource-snapshot-1786603623786-24804-sidecar-cycle1-0.bin",
-              "size": 2311361,
-              "sha256": "113c4961f02ae0398957fc863c110327a9acd40dc30473956fc49725d032405f"
+              "path": "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-0.bin",
+              "size": 2311374,
+              "sha256": "e19c4704844e8b546371ee2c091fd80ebabe9da34f2a3020d3e8f750ec19a5c6"
             }
           },
           {
-            "source_path": "validation/results/v247-native-process-v2-1786603623786-24804.qpls.autosave.identity.json",
+            "source_path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.autosave.identity.json",
             "source_size": 108,
-            "source_sha256": "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177",
+            "source_sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24",
             "snapshot": {
-              "path": "validation/results/process-v2-resource-snapshot-1786603623786-24804-sidecar-cycle1-1.bin",
+              "path": "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-1.bin",
               "size": 108,
-              "sha256": "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177"
+              "sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
             }
           },
           {
-            "source_path": "validation/results/v247-native-process-v2-1786603623786-24804.qpls.bak",
+            "source_path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.bak",
             "source_size": 12709,
-            "source_sha256": "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557",
+            "source_sha256": "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262",
             "snapshot": {
-              "path": "validation/results/process-v2-resource-snapshot-1786603623786-24804-sidecar-cycle1-2.bin",
+              "path": "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-2.bin",
               "size": 12709,
-              "sha256": "517af3ce1e75be5f62037575bf64bc8e20ad9fc6e95674f16496b6685c031557"
+              "sha256": "184ce1de7433b357ad724f816ee5b682e4d8081d14c92c8862ad673b20278262"
             }
           },
           {
-            "source_path": "validation/results/v247-native-process-v2-1786603623786-24804.qpls.identity.json",
+            "source_path": "validation/results/v247-native-process-v2-1786637394764-61924.qpls.identity.json",
             "source_size": 108,
-            "source_sha256": "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177",
+            "source_sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24",
             "snapshot": {
-              "path": "validation/results/process-v2-resource-snapshot-1786603623786-24804-sidecar-cycle1-3.bin",
+              "path": "validation/results/process-v2-resource-snapshot-1786637394764-61924-sidecar-cycle1-3.bin",
               "size": 108,
-              "sha256": "e7931e0b4f8be6759406a706a8f8bcbf46bdc7b5a71f6538c122b063c488b177"
+              "sha256": "ee7edaa627954b693515e39b0a60abc8909bb90a1bddff1e05257b3a75bbbc24"
             }
           }
         ]
@@ -9350,8 +9350,8 @@
           "schemaVersion": 5,
           "engineVersion": "2.46.0",
           "checksumAlgorithm": "sha256",
-          "declaredProjectChecksum": "c50c2de1611cb227183c9104bb266353503b342c2456a326ce996573deb4fee4",
-          "calculatedProjectChecksum": "c50c2de1611cb227183c9104bb266353503b342c2456a326ce996573deb4fee4",
+          "declaredProjectChecksum": "30c961ac4f100440032efd148f29477bab0d1ece8484d6bcd9b86c2a60635d30",
+          "calculatedProjectChecksum": "30c961ac4f100440032efd148f29477bab0d1ece8484d6bcd9b86c2a60635d30",
           "projectChecksumMatches": true
         },
         "resultStatus": "completed",
@@ -9447,9 +9447,9 @@
           "jackknifeIndexPartitionExact": true
         },
         "identity": {
-          "resultId": "99d61d09-b544-44a2-8f74-274abbfd0d8a",
-          "recipeId": "7c013ecf-42cb-4dab-b31e-5b482ef9abf3",
-          "runId": "99d61d09-b544-44a2-8f74-274abbfd0d8a",
+          "resultId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
+          "recipeId": "e1db2325-9a63-49f3-b580-d9b1b460bd26",
+          "runId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
           "resultCount": 1,
           "recipeCount": 1,
           "witnessCount": 1
@@ -9572,23 +9572,23 @@
     "processV2RepeatedCompletion": {
       "passed": true,
       "activeLifecycleCaptured": true,
-      "priorRunId": "99d61d09-b544-44a2-8f74-274abbfd0d8a",
-      "repeatedRunId": "e942774f-c56e-405e-a695-183076a3e61b",
+      "priorRunId": "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0",
+      "repeatedRunId": "57414f8f-0a75-4572-aafe-775e58db3388",
       "completedRunIdsBefore": [
-        "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+        "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
       ],
       "completedRunIdsAfter": [
-        "e942774f-c56e-405e-a695-183076a3e61b",
-        "99d61d09-b544-44a2-8f74-274abbfd0d8a"
+        "57414f8f-0a75-4572-aafe-775e58db3388",
+        "c7edfa87-5fca-41f0-a17e-5ed3c5bcafc0"
       ],
       "addedRunIds": [
-        "e942774f-c56e-405e-a695-183076a3e61b"
+        "57414f8f-0a75-4572-aafe-775e58db3388"
       ],
       "completedRunCountBefore": 1,
       "completedRunCount": 2,
       "uniqueCompletedRunCount": 2,
-      "autoSelectedRunId": "e942774f-c56e-405e-a695-183076a3e61b",
-      "explicitlySelectedRunId": "e942774f-c56e-405e-a695-183076a3e61b",
+      "autoSelectedRunId": "57414f8f-0a75-4572-aafe-775e58db3388",
+      "explicitlySelectedRunId": "57414f8f-0a75-4572-aafe-775e58db3388",
       "initialSelectedTable": "process_model_summary"
     },
     "recentProjectsRestored": true

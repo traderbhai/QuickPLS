@@ -1,5 +1,7 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
+  "integrity_contract": "explicit_pass_state_and_bound_evidence_v1",
+  "generated_at_utc": "2026-08-13T19:27:22.433904Z",
   "target": "v1_2_1_second_batch_method_promotion",
   "method_id": "wpls",
   "promoted_scope": "Positive case-weighted reflective WPLS with standardized preprocessing and path/factor weighting.",
@@ -8,21 +10,77 @@
     {
       "path": "validation\\results\\wpls_reference_report.json",
       "present": true,
-      "passed": true
+      "bytes": 1156,
+      "sha256": "a28818c163a287c50262c103a7c07b80e94232da347496f665f8009983370187",
+      "readable": true,
+      "explicit_pass_state": {
+        "present": true,
+        "passed": true,
+        "states": [
+          {
+            "path": "passed",
+            "present": true,
+            "value": true,
+            "passed": true
+          }
+        ]
+      },
+      "requirement_checks": [],
+      "companions": [],
+      "passed": true,
+      "freshness": {
+        "checked": false,
+        "passed": true,
+        "report_modified_at_utc": "2026-07-19T04:20:53.938184Z",
+        "age_days": 25.629496,
+        "max_age_days": null,
+        "sources": []
+      },
+      "generated_at": null
     },
     {
       "path": "validation\\results\\extended_pls_publication_audit.json",
       "present": true,
-      "passed": true
+      "bytes": 8877,
+      "sha256": "9a67ee477e3c0b064605796bb19f7444b5a15bf64cfdb32594a39078a9022826",
+      "readable": true,
+      "explicit_pass_state": {
+        "present": true,
+        "passed": true,
+        "states": [
+          {
+            "path": "passed",
+            "present": true,
+            "value": true,
+            "passed": true
+          }
+        ]
+      },
+      "requirement_checks": [],
+      "companions": [],
+      "passed": true,
+      "freshness": {
+        "checked": false,
+        "passed": true,
+        "report_modified_at_utc": "2026-07-19T14:33:53.379908Z",
+        "age_days": 25.203808,
+        "max_age_days": null,
+        "sources": []
+      },
+      "generated_at": null
     }
   ],
   "docs": [
     {
       "path": "docs\\methods\\PLS_WPLS_V1.md",
       "present": true,
-      "bytes": 2118
+      "bytes": 2372,
+      "sha256": "d124a53ca38912a72b913f6595473e3d7b00c20f44eb378d132c608aa2658491",
+      "required_phrases": [],
+      "forbidden_phrases": [],
+      "passed": true
     }
   ],
   "checks": [],
-  "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."
+  "note": "Promotion is limited to this documented scope; missing, stale, contradictory, or unbound evidence fails closed."
 }

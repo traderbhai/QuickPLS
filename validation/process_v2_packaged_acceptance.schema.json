@@ -415,7 +415,7 @@
         "capacity", "graphDefinedWithoutNumberedTemplates"
       ],
       "properties": {
-        "catalogCount": { "const": 14 }, "selectedMethod": { "const": "Regression" },
+        "catalogCount": { "const": 15 }, "selectedMethod": { "const": "Regression" },
         "regressionType": { "const": "process" }, "outcome": { "const": "Y" },
         "focalPredictor": { "const": "X" },
         "paths": { "const": [

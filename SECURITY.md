@@ -8,11 +8,26 @@
 | 2.45.x | Transition support while 2.46.x is the current stable line |
 | Earlier releases and preview builds | No public security support |
 
+The lifecycle and transition rules are defined in
+[`docs/VERSION_SUPPORT_POLICY.md`](docs/VERSION_SUPPORT_POLICY.md). A QuickPLS 3
+preview does not become a supported stable release until its signed commercial
+gate passes.
+
 ## Reporting A Vulnerability
 
-Please report suspected vulnerabilities privately by opening a GitHub security advisory if available, or by contacting the project owner directly.
+Please report suspected vulnerabilities through a private
+[GitHub security advisory](https://github.com/traderbhai/QuickPLS/security/advisories/new).
+If private reporting is unavailable, do not open a public issue containing exploit
+details or sensitive evidence; contact the project owner without attaching that
+material until a private route is confirmed.
 
 Do not publish exploit details before the issue has been reviewed.
+
+Severity, acknowledgement targets, escalation, and coordinated disclosure are
+defined in [`docs/SUPPORT_POLICY.md`](docs/SUPPORT_POLICY.md). The product threat
+model and required release evidence are documented in
+[`docs/SECURITY_MODEL.md`](docs/SECURITY_MODEL.md). These policies do not replace
+the independent security and legal reviews required for QuickPLS 3.
 
 ## Runtime Security Model
 

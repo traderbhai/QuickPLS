@@ -76,7 +76,7 @@ const outputMap: Record<AnalysisMethodId, string[]> = {
   endogeneity: ["Gaussian-copula diagnostic coefficients", "diagnostic warnings"],
   nonlinear_effects: ["quadratic effect diagnostics", "delta R²"],
   moderated_mediation: ["conditional indirect effects", "index of moderated mediation"],
-  predict: ["PLSpredict", "CVPAT", "segmentation diagnostics where configured"],
+  predict: ["PLSpredict", "CVPAT", "bounded preview-only segmentation diagnostics where configured"],
   mga: ["MICOM", "permutation MGA", "group path differences"],
   ipma: ["importance-performance tables", "target construct diagnostics"],
   cbsem: ["ML CFA/SEM estimates", "fit indices", "standardized solution"],
@@ -203,7 +203,7 @@ function evaluateOne(method: MethodDefinition & { id: AnalysisMethodId }, input:
     case "predict":
       checks = [base.runtime, raw, ...sem, numericIndicators, endogenousCheck(shape)];
       status = failed(checks) ? "needs_setup" : "recommended";
-      reason = failed(checks) ? firstFailure(checks).detail : "Recommended when prediction or segmentation is part of the research objective.";
+      reason = failed(checks) ? firstFailure(checks).detail : "Recommended for prediction. Optional segmentation diagnostics remain bounded previews and are not full PLS-POS/FIMIX equivalents.";
       nextActionLabel = failed(checks) ? firstFailure(checks).actionLabel ?? "Review Setup" : "Setup prediction";
       break;
     case "ipma":

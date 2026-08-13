@@ -77,6 +77,7 @@ import {
 } from "./nativeLogistic";
 import { NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS } from "./nativeRegressionBootstrapWitness";
 import { NATIVE_GSCA_SCOPE_NOTE } from "./nativeGsca";
+import { NATIVE_CTA_PLS_SCOPE_NOTE, nativeCtaPlsEligibleBlocks } from "./nativeCtaPls";
 import NativeProcessSetup from "./NativeProcessSetup";
 import {
   nativeProcessReadiness,
@@ -132,6 +133,7 @@ const METHOD_ICONS: Record<NativeWorkbenchAnalysisKind, LucideIcon> = {
   wpls: Scale,
   gsca: Calculator,
   cca: Search,
+  cta_pls: Search,
   ipma: Target,
   cbsem: Calculator,
   pls_bootstrap: RotateCcw,
@@ -777,6 +779,7 @@ function MethodSettings({
   const selectedOlsControls = nativeOlsCsvValues(settings.regressionControls);
   const selectedOlsPredictorSet = new Set(selectedOlsPredictors);
   const selectedOlsControlSet = new Set(selectedOlsControls);
+  const ctaPlsBlocks = useMemo(() => nativeCtaPlsEligibleBlocks(nodes), [nodes]);
   const logisticRegression = settings.regressionType === "logistic";
   const processRegression = settings.regressionType === "process";
   const regressionTermLimit = regressionBootstrap
@@ -853,7 +856,7 @@ function MethodSettings({
           >
             <option value="path">Path weighting</option>
             <option value="factor">Factor weighting</option>
-            <option value="pca" disabled={kind === "plsc" || kind === "wpls" || kind === "cca"}>PCA weighting</option>
+            <option value="pca" disabled={kind === "plsc" || kind === "wpls" || kind === "cca" || kind === "cta_pls"}>PCA weighting</option>
           </select>
         </label>}
 
@@ -1495,6 +1498,16 @@ function MethodSettings({
           <div className="nd-setting-note wide">
             <span>Validated scope</span>
             <strong>Reflective composite path model; descriptive residual diagnostics only</strong>
+          </div>
+        ) : null}
+
+        {kind === "cta_pls" ? (
+          <div className="nd-setting-note wide" id="nd-calculation-cta-pls-scope">
+            <span>Eligible indicator blocks</span>
+            <strong>{ctaPlsBlocks.length
+              ? ctaPlsBlocks.map((block) => `${block.constructLabel}: ${block.indicators.length} indicators, ${block.tetrads} tetrads`).join("; ")
+              : "None - assign at least four indicators to one ordinary construct"}</strong>
+            <small>{NATIVE_CTA_PLS_SCOPE_NOTE}</small>
           </div>
         ) : null}
 

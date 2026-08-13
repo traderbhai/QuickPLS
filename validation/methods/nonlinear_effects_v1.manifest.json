@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-13T10:10:45Z",
+    "manifest_path": "validation/methods/nonlinear_effects_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.pls.nonlinear_quadratic",
+    "label": "PLS Fixed-Score Quadratic Diagnostics",
+    "method_version": "pls_quadratic_nonlinear_effects_v1",
+    "method_kind": "deterministic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/"
+  },
+  "claim": {
+    "supported_scope": "A fixed-score quadratic diagnostic for every structural predecessor in supported path- or factor-weighted PLS equations, augmenting all linear predecessors with centered squared construct-score terms and reporting classical OLS coefficient diagnostics and R-squared change.",
+    "estimand": "The partial coefficient of each centered squared fixed construct score, its classical standard error, t statistic, two-sided p value, and the equation-level change from linear to augmented fixed-score R-squared.",
+    "assumptions": [
+      "Construct scores are treated as fixed regressors after convergence of the same supported PLS recipe.",
+      "Every augmented target equation includes all original linear predecessors and one centered squared term for each predecessor.",
+      "Classical OLS standard-error assumptions apply to the diagnostic regression."
+    ],
+    "exclusions": [
+      "Spline, logarithmic, exponential, threshold, custom-basis, and interaction terms are excluded.",
+      "PCA weighting, bootstrap or permutation inference, and term-specific model authoring are excluded.",
+      "The diagnostic is not a consistent latent nonlinear SEM estimator and does not establish causal functional form."
+    ],
+    "warnings": [
+      "Inference is conditional on estimated construct scores and does not account for score uncertainty.",
+      "A quadratic signal is a bounded functional-form diagnostic, not evidence that all nonlinear alternatives have been considered."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {
+        "id": "centered_square",
+        "expression": "q_xi = eta_xi^2 - mean(eta_x^2)",
+        "variables": ["q_xi", "eta_xi", "eta_x"],
+        "source_reference_id": "dijkstra_schermelleh_engel_2014"
+      },
+      {
+        "id": "augmented_score_regression",
+        "expression": "eta_y = sum_j beta_j eta_j + sum_j gamma_j q_j + epsilon; delta_R2 = max(0, R2_augmented - R2_linear)",
+        "variables": ["eta_y", "beta_j", "eta_j", "gamma_j", "q_j", "epsilon", "delta_R2", "R2_augmented", "R2_linear"],
+        "source_reference_id": "dijkstra_schermelleh_engel_2014"
+      }
+    ],
+    "references": [
+      {
+        "id": "dijkstra_schermelleh_engel_2014",
+        "kind": "primary_paper",
+        "citation": "Dijkstra and Schermelleh-Engel (2014), Consistent Partial Least Squares for Nonlinear Structural Equation Models, Psychometrika 79(4), 585-604",
+        "locator": "https://doi.org/10.1007/s11336-013-9370-0",
+        "independence_group": "primary_nonlinear_sem_method",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "independent_python_quadratic",
+        "kind": "independent_python",
+        "citation": "Independent Python PLS-score and augmented quadratic-regression implementation",
+        "locator": "validation/nonlinear_effects_reference.py",
+        "independence_group": "python_reference",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "simulations": [
+      {
+        "id": "quadratic_recovery",
+        "purpose": "recovery",
+        "design": "Linear-null and positive or negative quadratic score relationships over bounded loadings, path correlations, sample sizes, reliability, and score distributions.",
+        "seed_policy": "Frozen scenario-indexed generators; QuickPLS and the independent reference receive identical rows and model order.",
+        "metrics": ["quadratic_coefficient_error", "standard_error_error", "r_squared_error", "delta_r_squared_error", "null_false_signal_rate"],
+        "acceptance_rule": "All mapped diagnostics must agree with the independent fixed-score regression within 1e-6 and preregistered signal-recovery and null-containment rules must pass."
+      }
+    ],
+    "boundaries": [
+      {"id": "singular_augmented_equation", "category": "data_pathology", "case": "A score or centered squared term is constant, nonfinite, or makes the augmented equation singular.", "expected_behavior": "The method fails with an equation-specific diagnostic and emits no completed nonlinear payload."},
+      {"id": "unsupported_basis_or_weighting", "category": "unsupported_scope", "case": "The recipe requests PCA weighting, a custom nonlinear basis, interactions, or inference for quadratic terms.", "expected_behavior": "The request is blocked or the unsupported addition is excluded before execution."},
+      {"id": "positive_affine_and_reorder", "category": "metamorphic", "case": "Indicators are positively affine transformed or rows, constructs, and independent predecessor declarations are consistently reordered.", "expected_behavior": "Mapped quadratic diagnostics remain equal within the frozen tolerance."},
+      {"id": "repeatability", "category": "determinism", "case": "The same data fingerprint and recipe are executed repeatedly.", "expected_behavior": "The analytical nonlinear payload is exactly equal apart from operational identifiers and timestamps."},
+      {"id": "nonlinear_archive_tamper", "category": "tamper", "case": "A term identity, coefficient, standard error, R-squared value, warning, or method version is altered.", "expected_behavior": "Strict project validation rejects the archive rather than displaying the changed diagnostic."}
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 3,
+      "result_schema_version": 1,
+      "payload_kind": "pls_pm_v1",
+      "tamper_tests": [
+        {"category": "feature_identity", "expected_behavior": "Reject a result whose nonlinear capability identity differs from its recipe."},
+        {"category": "method_version", "expected_behavior": "Reject a nonlinear payload relabeled with another method version."},
+        {"category": "dataset_fingerprint", "expected_behavior": "Reject a nonlinear result whose saved dataset fingerprint no longer matches."},
+        {"category": "checksum", "expected_behavior": "Reject any modified archive member whose checksum differs."},
+        {"category": "malformed_payload", "expected_behavior": "Reject duplicate keys, unknown fields, non-finite diagnostics, missing predecessor rows, or incoherent R-squared values."},
+        {"category": "legacy_reinterpretation", "expected_behavior": "Never reinterpret an unversioned or broader nonlinear preview as current fixed-score quadratic evidence."}
+      ],
+      "legacy_policy": "Only a typed pls_quadratic_nonlinear_effects_v1 nested result can satisfy current bounded diagnostic evidence."
+    },
+    "native": {
+      "setup_controls": ["Nonlinear-effects calculation selection", "Path or factor weighting", "Supported PLS preprocessing", "Equation and term scope preview"],
+      "applicability_blockers": ["PCA weighting", "Singular score equation", "No structural predecessor", "Unsupported nonlinear basis", "Requested resampling inference"],
+      "result_surfaces": ["Quadratic coefficients and uncertainty", "Linear and augmented R-square", "Delta R-square", "Scope warnings", "Run provenance"],
+      "gui_cli_parity_rule": "For the same recipe, data fingerprint, and method version, GUI and CLI fixed-score quadratic payloads must be exactly equal apart from operational identifiers and timestamps.",
+      "accessibility_rules": ["Every quadratic diagnostic and unavailable reason is available in an accessible table.", "R-squared change and scope warnings do not rely on color or chart shape."]
+    },
+    "export": {
+      "formats": ["csv", "xlsx", "html"],
+      "tables": ["Nonlinear quadratic diagnostics", "Equation fit comparison", "Method scope", "Run provenance"],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": ["windows"],
+      "workflow_steps": ["setup", "invalid_setup_blocked", "execute", "inspect_results", "export", "save", "close", "reopen_same_run", "cleanup"],
+      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "offline_required": true,
+      "cancellation_required": false,
+      "process_cleanup_required": true
+    },
+    "audit": {"exact_identity_fields": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"], "source_hashes_required": true, "freshness_required": true, "reports_must_pass": true}
+  },
+  "qualification": {
+    "declared_state": "absent",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": ["docs/methods/PLS_NONLINEAR_EFFECTS_V1.md"],
+      "independent_reference": ["validation/nonlinear_effects_reference.py"],
+      "simulation_report": ["validation/nonlinear_effects_simulation.py"],
+      "boundary_report": ["validation/nonlinear_effects_boundary_gate.py"],
+      "persistence_report": ["validation/nonlinear_effects_persistence_gate.py"],
+      "frontend_report": ["src/domain/methodApplicability.test.ts", "src/native/nativeResults.test.ts"],
+      "export_report": ["src/domain/resultTables.test.ts", "src/native/nativeExportTables.test.ts"],
+      "method_audit": ["validation/nonlinear_effects_method_promotion_audit.py"],
+      "packaged_acceptance": ["validation/run_nonlinear_effects_native_acceptance.ps1"]
+    },
+    "evidence": {"engine_only": [], "archive_qualified": [], "native_qualified": [], "release_qualified": []}
+  }
+}

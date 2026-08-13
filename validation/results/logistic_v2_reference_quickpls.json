@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "id": "e790db7d-806e-42b4-b77f-0a6b8210c5d4",
+  "id": "6a30dcb4-5eca-4f78-8961-3acac9e79a64",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000030102",
     "dataset_fingerprint": "v2:21f326d3450c46d82cc7610acc1d908c4c86abb7d116a84d6b21869410884c21",
     "method": "regression",
     "method_version": "regression_logistic_v2",
-    "engine_version": "2.45.0",
+    "engine_version": "2.46.0",
     "seed": 20260812,
     "settings": {
       "method": "regression",
@@ -24,8 +24,8 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-08-12T10:26:34.611625300Z",
-    "completed_at": "2026-08-12T10:26:34.614035500Z"
+    "started_at": "2026-08-13T15:31:29.683389Z",
+    "completed_at": "2026-08-13T15:31:29.684153400Z"
   },
   "diagnostics": [
     {
@@ -54,27 +54,11 @@
       "gsca": null,
       "ipma": null,
       "iterations": 0,
-      "mediation": {
-        "estimates": [],
-        "method_version": "pls_mediation_v1",
-        "tolerance": 1e-12,
-        "warnings": []
-      },
       "method_version": "regression_logistic_v2",
       "mga": null,
       "mga_permutation": null,
       "micom": null,
       "moderated_mediation": null,
-      "moderation": {
-        "estimates": [],
-        "method_version": "pls_two_stage_moderation_v1",
-        "moderator_score_levels": [
-          -1.0,
-          0.0,
-          1.0
-        ],
-        "warnings": []
-      },
       "nca": null,
       "nonlinear_effects": null,
       "omitted_observations": 5,

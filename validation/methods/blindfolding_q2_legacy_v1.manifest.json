@@ -1,0 +1,52 @@
+{
+  "schema_version":1,
+  "governance":{"contract_frozen_at_utc":"2026-08-13T10:26:17Z","manifest_path":"validation/methods/blindfolding_q2_legacy_v1.manifest.json","schema_path":"validation/methods/method_promotion_manifest.schema.json","validator_path":"validation/method_promotion_manifest.py","focused_test_path":"validation/test_method_promotion_manifest.py"},
+  "feature":{"id":"qpls3.assessment.blindfolding_legacy","label":"PLS Blindfolding Q-squared (Legacy and Deprecated)","method_version":"blindfolding_q2_v1","method_kind":"deterministic","catalogue_snapshot_date":"2026-08-12","catalogue_url":"https://smartpls.com/documentation/algorithms-and-techniques/"},
+  "claim":{
+    "supported_scope":"Legacy, deprecated, bounded Stone-Geisser cross-validated redundancy Q-squared for endogenous reflective constructs using deterministic omission distance selection, mean replacement, and nested PLS refits.",
+    "estimand":"Q2_redundancy equals one minus PRESS divided by SSO for each supported endogenous reflective construct under the frozen within-sample omission scheme.",
+    "assumptions":["The input is a supported deterministic PLS model with finite complete cases, stable row/indicator order, and at least one endogenous reflective construct.","Omission distance is 7 when valid, otherwise the first valid value in 5, 6, 8, 9, 10, 11, 12 that is smaller than n and does not divide n.","Every omitted-cell round uses the frozen retained-mean replacement, complete nested PLS refit, prediction reconstruction, and explicit failure policy."],
+    "exclusions":["Exogenous or formative constructs, configurable omission patterns, external holdouts, temporal/group leakage control, Q2_predict, PLSpredict, CVPAT, and predictive model comparison are excluded.","This legacy method must not be described as modern out-of-sample predictive assessment or external validation.","The current unversioned assessment blindfolding block cannot satisfy this stable identity until exact versioning and validation exist."],
+    "warnings":["This capability is intentionally legacy and deprecated; new predictive assessment should use qualified PLSpredict/CVPAT.","Q2_redundancy is conditional on the within-sample omission algorithm and does not demonstrate generalizable predictive performance." ]
+  },
+  "scientific_contract":{
+    "equations":[
+      {"id":"stone_geisser_redundancy","expression":"Q2_redundancy = 1 - PRESS / SSO","variables":["Q2_redundancy","PRESS","SSO"],"source_reference_id":"stone_1974"},
+      {"id":"press","expression":"PRESS = sum_omitted (y_standardized - yhat_standardized)^2","variables":["PRESS","y_standardized","yhat_standardized"],"source_reference_id":"geisser_1974"}
+    ],
+    "references":[
+      {"id":"stone_1974","kind":"primary_paper","citation":"Stone (1974), Cross-Validatory Choice and Assessment of Statistical Predictions, DOI 10.1111/j.2517-6161.1974.tb00994.x","locator":"docs/methods/PLS_BLINDFOLDING_LEGACY_V1.md","independence_group":"published_cross_validation","runtime_policy":"no_runtime_dependency"},
+      {"id":"geisser_1974","kind":"primary_paper","citation":"Geisser (1974), A Predictive Approach to the Random Effect Model, DOI 10.1093/biomet/61.1.101","locator":"docs/methods/PLS_BLINDFOLDING_LEGACY_V1.md","independence_group":"published_predictive_sample_reuse","runtime_policy":"no_runtime_dependency"},
+      {"id":"independent_python_blindfolding","kind":"independent_python","citation":"Independent Python frozen omission, nested-refit, PRESS/SSO, and Q2 redundancy reference","locator":"validation/blindfolding_q2_reference.py","independence_group":"python_reference","runtime_policy":"development_validation_only"}
+    ],
+    "simulations":[
+      {"id":"legacy_q2_recovery","purpose":"recovery","design":"Supported endogenous reflective PLS models across sample sizes, valid omission distances, signal, loading strength, row/indicator permutations, zero and positive predictive relevance.","seed_policy":"Frozen indexed data-generation scenarios; omission and nested estimation are deterministic.","metrics":["press_error","sso_error","q2_redundancy_error","distance_selection_accuracy"],"acceptance_rule":"PRESS, SSO, and Q2 must match the independent reference within 1e-6 and every selected distance must follow the frozen preference order."},
+      {"id":"legacy_failure_behavior","purpose":"failure_behavior","design":"No valid distance, zero SSO, formative targets, nested-fit failures, constant blinded indicators, cancellation, and non-finite data.","seed_policy":"Frozen deterministic adversarial fixtures.","metrics":["unavailable_reason_accuracy","nested_failure_accounting","cancellation_no_result","no_predictive_relabel_count"],"acceptance_rule":"Every invalid construct/run must be explicit, cancellation must emit no completed result, and no output may be labeled Q2_predict or out-of-sample prediction."}
+    ],
+    "boundaries":[
+      {"id":"zero_sso_or_failed_round","category":"data_pathology","case":"SSO is zero, a blinded indicator is constant, or a nested PLS round fails/non-finite.","expected_behavior":"The affected construct is explicitly unavailable with PRESS/SSO and reason retained where defined; no zero is fabricated."},
+      {"id":"unsupported_or_predictive_relabel","category":"unsupported_scope","case":"The target is formative/exogenous, no valid distance exists, configurable folds are requested, or the result is requested as Q2_predict/external prediction.","expected_behavior":"The construct/run is unavailable or blocked and the legacy label cannot be removed."},
+      {"id":"consistent_row_indicator_permutation","category":"metamorphic","case":"Rows and indicators are consistently permuted with stable identities and omission mapping preserved.","expected_behavior":"Mapped omissions, PRESS, SSO, Q2, failures, and selected distance remain invariant."},
+      {"id":"repeat_blindfolding","category":"determinism","case":"The same data, row/indicator identities, recipe, and cancellation-free execution repeat.","expected_behavior":"Omissions, nested results, PRESS, SSO, Q2, unavailable reasons, and warnings are exactly equal."},
+      {"id":"blindfolding_archive_tamper","category":"tamper","case":"The legacy flag, method identity, omission distance/order, replacement rule, PRESS, SSO, Q2, nested failure, or label is changed.","expected_behavior":"Strict project validation rejects the archive."}
+    ],
+    "numerical_tolerance":0.000001
+  },
+  "product_contract":{
+    "persistence":{"recipe_schema_version":3,"result_schema_version":1,"payload_kind":"pls_pm_v1","tamper_tests":[
+      {"category":"feature_identity","expected_behavior":"Reject an archive whose identity differs from legacy/deprecated blindfolding Q2."},
+      {"category":"method_version","expected_behavior":"Reject a blindfolding block with missing, unknown, substituted, or predictive method version."},
+      {"category":"dataset_fingerprint","expected_behavior":"Reject omissions or nested refits whose data fingerprint differs."},
+      {"category":"checksum","expected_behavior":"Reject an archive entry whose omission ledger, nested result, or assessment checksum differs."},
+      {"category":"malformed_payload","expected_behavior":"Reject duplicate keys, unknown fields, invalid distances, non-finite values, inconsistent PRESS/SSO/Q2, or missing legacy flag."},
+      {"category":"legacy_reinterpretation","expected_behavior":"Reject any migration or display that relabels blindfolding as Q2_predict, PLSpredict, CVPAT, or modern out-of-sample validation."}
+    ],"legacy_policy":"The stable capability remains permanently marked legacy and deprecated. Historical unversioned values stay under their original assessment identity and cannot satisfy v1 evidence."},
+    "native":{"setup_controls":["Supported PLS result","Legacy blindfolding acknowledgement","Endogenous reflective constructs","Frozen omission-distance policy","Method-definition information"],"applicability_blockers":["No supported endogenous reflective construct","No valid omission distance","Non-finite complete cases","Unsupported predictive interpretation request"],"result_surfaces":["Persistent legacy/deprecated notice","Omission settings","PRESS, SSO, and Q2 redundancy table","Unavailable and nested-failure reasons","Provenance and PLSpredict/CVPAT guidance"],"gui_cli_parity_rule":"GUI and CLI must produce the same legacy identity, omissions, nested failures, PRESS, SSO, Q2 values, unavailable reasons, and warnings for identical inputs.","accessibility_rules":["Every Q2 visual has an equivalent accessible table.","The legacy/deprecated status, unavailable reasons, sign, values, and warnings are communicated without color alone."]},
+    "export":{"formats":["csv","xlsx"],"tables":["Legacy blindfolding settings","Cross-validated redundancy Q2","Unavailable and failure reasons","Run provenance"],"same_run_required":true,"provenance_required":true},
+    "packaged":{"platforms":["windows"],"workflow_steps":["setup","invalid_setup_blocked","execute","cancel_retry","inspect_results","export","save","close","reopen_same_run","cleanup"],"viewports":["1024x700","1280x720","1440x900"],"offline_required":true,"cancellation_required":true,"process_cleanup_required":true},
+    "audit":{"exact_identity_fields":["passed","feature_id","method_version","catalogue_snapshot_date"],"source_hashes_required":true,"freshness_required":true,"reports_must_pass":true}
+  },
+  "qualification":{"declared_state":"absent","target_state":"release_qualified","source_requirements":{
+    "method_spec":["docs/methods/PLS_BLINDFOLDING_LEGACY_V1.md"],"independent_reference":["validation/blindfolding_q2_reference.py"],"simulation_report":["validation/blindfolding_q2_release_simulation.py"],"boundary_report":["validation/blindfolding_q2_release_boundary_gate.py"],"persistence_report":["validation/blindfolding_q2_release_persistence_gate.py"],"frontend_report":["src/native/nativeBlindfoldingLegacy.test.ts"],"export_report":["src/native/nativeExportTables.test.ts"],"method_audit":["validation/blindfolding_q2_method_promotion_audit.py"],"packaged_acceptance":["validation/run_v248_blindfolding_legacy_native_acceptance.ps1"]
+  },"evidence":{"engine_only":[],"archive_qualified":[],"native_qualified":[],"release_qualified":[]}}
+}

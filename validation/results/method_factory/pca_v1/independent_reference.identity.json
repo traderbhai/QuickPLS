@@ -1,0 +1,137 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "independent_pca_eigensystem_sanity": {
+      "execution": {
+        "command": [
+          "python",
+          "validation/pls_pca_reference.py"
+        ],
+        "duration_seconds": 1.635,
+        "returncode": 0,
+        "stderr_tail": "",
+        "stdout_tail": ""
+      },
+      "finite_numeric_values": 9,
+      "passed": true,
+      "report": "validation/results/pls_pca_numpy_reference.json"
+    },
+    "passed": true,
+    "standalone_hand_and_numpy_comparison": {
+      "expected_eigenvalues": [
+        1.5,
+        0.5
+      ],
+      "full_payload_comparison": {
+        "expected_retained_components": 2,
+        "max_abs_errors": {
+          "cumulative_variance": 4.440892098500626e-16,
+          "eigenvalue": 8.881784197001252e-16,
+          "explained_variance": 4.440892098500626e-16,
+          "loading": 4.440892098500626e-16,
+          "score": 3.4416913763379853e-15,
+          "subspace": 2.220446049250313e-16,
+          "weight": 2.220446049250313e-16
+        },
+        "minimum_adjacent_eigenvalue_gap": 0.9999999999999999,
+        "observations": 8,
+        "observed_retained_components": 2,
+        "output": "validation/results/method_factory/pca_v1/work/factory_independent_hand_reference.quickpls.json",
+        "output_sha256": "f21dc37006a6e2c953bc02b0d69df452e155bb5f723988debe7a641f4335c639",
+        "passed": true
+      },
+      "hand_max_abs_error": 8.881784197001252e-16,
+      "observed_eigenvalues": [
+        1.5000000000000009,
+        0.49999999999999967
+      ],
+      "output": "validation/results/method_factory/pca_v1/work/factory_independent_hand_reference.quickpls.json",
+      "output_sha256": "f21dc37006a6e2c953bc02b0d69df452e155bb5f723988debe7a641f4335c639",
+      "passed": true
+    }
+  },
+  "feature_id": "qpls3.standalone.pca",
+  "generated_at_utc": "2026-08-13T19:35:34.835013Z",
+  "method_version": "pca_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "independent_reference",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "crates/qpls-cli/src/main.rs",
+      "sha256": "9cd82cf969e9f63b66e96b78b3b0663091027a2f00dcc9dc6e0799e53295371d",
+      "size": 216983
+    },
+    {
+      "path": "crates/qpls-core/src/contract.rs",
+      "sha256": "6e8a41eb187932a67cff83012ea11becc9ee109a4220ffba1638f61f15570fb9",
+      "size": 107095
+    },
+    {
+      "path": "crates/qpls-estimation/src/pls.rs",
+      "sha256": "fc0fbc2a28ba107b43b78c86405eec68da2127261a48a119918278bb652606bc",
+      "size": 639198
+    },
+    {
+      "path": "crates/qpls-runner/src/lib.rs",
+      "sha256": "f008402d452b86d3d89b3af3e9c0a019913b653a8312ead62917207572f718fe",
+      "size": 49349
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/methods/pca_v1.manifest.json",
+      "sha256": "c190031338e9790dd64cf280a2e419585b254c5e3a109b81ecc4849f5cad7433",
+      "size": 14506
+    },
+    {
+      "path": "validation/pca_method_promotion_audit.py",
+      "sha256": "36cbd0f14adb9b5925b1c2d777571aa9d463a39a2603f36cb1b59f2c9484513f",
+      "size": 20773
+    },
+    {
+      "path": "validation/pca_simulation.py",
+      "sha256": "a06ac65096621f5640b740f207c2dc733f0ca56cad380c13cf20d85c31a9ee49",
+      "size": 11787
+    },
+    {
+      "path": "validation/pca_v1_factory_common.py",
+      "sha256": "9a0ce1a0fb76f83ee124b5927e1990f354a70b0ed28fe7d038919dd9f1e11c61",
+      "size": 11599
+    },
+    {
+      "path": "validation/pca_v1_factory_evidence.py",
+      "sha256": "5889a32132a2ade9e6a8cb612dfedee76ede84682213adbc1ba43088ff5156b7",
+      "size": 10692
+    },
+    {
+      "path": "validation/pls_pca_reference.py",
+      "sha256": "203e919d88aee1db58aeb84ca95edcbadec7664af0a7193a925bdebfd3885c82",
+      "size": 2733
+    },
+    {
+      "path": "validation/results/pls_pca_numpy_reference.json",
+      "sha256": "c698982b452622708e259b23922489154f2e2b7a739cb856776b967f2002d79f",
+      "size": 802
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    },
+    {
+      "path": "validation/test_pca_v1_factory_evidence.py",
+      "sha256": "45f58bcbd84e0e5b6adc9aadb334ad50085aa9c4e63c23ad9eedb53d15a6278f",
+      "size": 3537
+    }
+  ]
+}

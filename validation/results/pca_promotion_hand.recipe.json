@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "id": "00000000-0000-0000-0000-000000121908",
   "created_at": "2026-07-21T00:00:00Z",
   "dataset_fingerprint": "v2:8008ad68a98051f7b76d97eada5b787d7c70edc09f5c6c590b2b70fe24d882fe",
@@ -19,10 +19,18 @@
     "preprocessing": "standardized",
     "missing_data": "listwise_deletion"
   },
+  "method_config": {
+    "kind": "pca",
+    "variables": [
+      "x",
+      "y"
+    ],
+    "retention": {
+      "rule": "fixed",
+      "components": 1
+    }
+  },
   "metadata": {
-    "fixture": "pca_method_promotion_audit",
-    "pca_variables": "x,y",
-    "pca_component_rule": "fixed",
-    "pca_components": "1"
+    "fixture": "pca_method_promotion_audit"
   }
 }

@@ -1263,7 +1263,26 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
             issues.push(issue(
                 "cta_pls.pca_unsupported",
                 Severity::Error,
-                "CTA-PLS requires path or factor weighting in this experimental release",
+                "CTA-PLS requires path or factor weighting in the bounded descriptive scope",
+                None,
+            ));
+        }
+        if recipe.settings.case_weight_column.is_some() {
+            issues.push(issue(
+                "cta_pls.case_weights_unsupported",
+                Severity::Error,
+                "CTA-PLS does not support case weights in the bounded descriptive scope",
+                None,
+            ));
+        }
+        if recipe.settings.bootstrap_samples > 0
+            || recipe.settings.studentized_inner_samples > 0
+            || recipe.settings.permutation_samples > 0
+        {
+            issues.push(issue(
+                "cta_pls.resampling_unsupported",
+                Severity::Error,
+                "CTA-PLS v1 reports descriptive tetrads only; bootstrap, studentized bootstrap, and permutation inference are unsupported",
                 None,
             ));
         }
@@ -2826,7 +2845,7 @@ mod tests {
         InteractionTerm, ModelSpec, StructuralPath,
     };
     use chrono::Utc;
-    use std::collections::BTreeMap;
+    use std::collections::{BTreeMap, BTreeSet};
     use uuid::Uuid;
 
     fn valid_recipe() -> AnalysisRecipe {
@@ -4588,5 +4607,41 @@ mod tests {
             item.code == "interaction.product_indicator.generated"
                 && item.severity == Severity::Warning
         }));
+    }
+
+    #[test]
+    fn cta_pls_bounded_recipe_rejects_ineligible_weighting_case_weights_and_resampling() {
+        let mut recipe = valid_recipe();
+        recipe.settings.method = crate::AnalysisMethod::CtaPls;
+        recipe.model.constructs[0].mode = MeasurementMode::Formative;
+        recipe.model.constructs[0]
+            .indicators
+            .extend(["x3".into(), "x4".into()]);
+        let valid = validate_recipe(&recipe);
+        assert!(!valid.iter().any(|item| item.code.starts_with("cta_pls.")));
+
+        recipe.settings.weighting_scheme = crate::WeightingScheme::Pca;
+        recipe.settings.case_weight_column = Some("weight".into());
+        recipe.settings.bootstrap_samples = 999;
+        recipe.settings.studentized_inner_samples = 99;
+        recipe.settings.permutation_samples = 999;
+        let codes = validate_recipe(&recipe)
+            .into_iter()
+            .map(|item| item.code)
+            .collect::<BTreeSet<_>>();
+        for code in [
+            "cta_pls.pca_unsupported",
+            "cta_pls.case_weights_unsupported",
+            "cta_pls.resampling_unsupported",
+        ] {
+            assert!(codes.contains(code), "expected {code}");
+        }
+
+        recipe.model.constructs[0].indicators.truncate(3);
+        assert!(
+            validate_recipe(&recipe)
+                .iter()
+                .any(|item| item.code == "cta_pls.tetrad_block_required")
+        );
     }
 }

@@ -1,5 +1,7 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
+  "integrity_contract": "explicit_pass_state_and_bound_evidence_v1",
+  "generated_at_utc": "2026-08-13T19:27:22.579635Z",
   "target": "v1_2_1_second_batch_method_promotion",
   "method_id": "plsc",
   "promoted_scope": "Reflective-only PLSc with path/factor weighting, corrected construct correlations, paths, loadings, R2, and rho_A attenuation correction.",
@@ -8,41 +10,157 @@
     {
       "path": "validation\\results\\plsc_reference_report.json",
       "present": true,
-      "passed": true
+      "bytes": 834,
+      "sha256": "70e081e49dfa418b4063ffe8d8a8347b78be2fdc5190fa41073aa31e8e84f373",
+      "readable": true,
+      "explicit_pass_state": {
+        "present": true,
+        "passed": true,
+        "states": [
+          {
+            "path": "passed",
+            "present": true,
+            "value": true,
+            "passed": true
+          }
+        ]
+      },
+      "requirement_checks": [],
+      "companions": [],
+      "passed": true,
+      "freshness": {
+        "checked": false,
+        "passed": true,
+        "report_modified_at_utc": "2026-08-13T07:59:56.524936Z",
+        "age_days": 0.477385,
+        "max_age_days": null,
+        "sources": []
+      },
+      "generated_at": null
     },
     {
       "path": "validation\\results\\plsc_unsupported_guard_report.json",
       "present": true,
-      "passed": true
+      "bytes": 624,
+      "sha256": "5db1a0bc28f40eefa5e805f8008b70dabfc3b72a67e7f39de6493c7e2cf12579",
+      "readable": true,
+      "explicit_pass_state": {
+        "present": true,
+        "passed": true,
+        "states": [
+          {
+            "path": "passed",
+            "present": true,
+            "value": true,
+            "passed": true
+          }
+        ]
+      },
+      "requirement_checks": [],
+      "companions": [],
+      "passed": true,
+      "freshness": {
+        "checked": false,
+        "passed": true,
+        "report_modified_at_utc": "2026-08-13T07:59:56.528424Z",
+        "age_days": 0.477385,
+        "max_age_days": null,
+        "sources": []
+      },
+      "generated_at": null
     },
     {
       "path": "validation\\results\\extended_pls_publication_audit.json",
       "present": true,
-      "passed": true
+      "bytes": 8877,
+      "sha256": "9a67ee477e3c0b064605796bb19f7444b5a15bf64cfdb32594a39078a9022826",
+      "readable": true,
+      "explicit_pass_state": {
+        "present": true,
+        "passed": true,
+        "states": [
+          {
+            "path": "passed",
+            "present": true,
+            "value": true,
+            "passed": true
+          }
+        ]
+      },
+      "requirement_checks": [],
+      "companions": [],
+      "passed": true,
+      "freshness": {
+        "checked": false,
+        "passed": true,
+        "report_modified_at_utc": "2026-07-19T14:33:53.379908Z",
+        "age_days": 25.20381,
+        "max_age_days": null,
+        "sources": []
+      },
+      "generated_at": null
     },
     {
       "path": "validation\\results\\rho_a_csem_comparison.json",
       "present": true,
-      "passed": true
+      "bytes": 966,
+      "sha256": "13bb5380b4d7eb768ee98fec49871e9e640c0e3dd9027cb38d6019f3c9478bf7",
+      "readable": true,
+      "explicit_pass_state": {
+        "present": true,
+        "passed": true,
+        "states": [
+          {
+            "path": "status",
+            "present": true,
+            "value": "passed",
+            "passed": true
+          }
+        ]
+      },
+      "requirement_checks": [],
+      "companions": [],
+      "passed": true,
+      "freshness": {
+        "checked": false,
+        "passed": true,
+        "report_modified_at_utc": "2026-07-19T01:37:15.726873Z",
+        "age_days": 25.743135,
+        "max_age_days": null,
+        "sources": []
+      },
+      "generated_at": null
     }
   ],
   "docs": [
     {
       "path": "docs\\methods\\PLSC_V2.md",
       "present": true,
-      "bytes": 3482
+      "bytes": 3867,
+      "sha256": "3cc7fb0fdc42f7dfee26b659af79796ea06c6d982007e026b0b3a090630fbcc1",
+      "required_phrases": [],
+      "forbidden_phrases": [],
+      "passed": true
     },
     {
       "path": "docs\\methods\\PLSC_V1.md",
       "present": true,
-      "bytes": 1261
+      "bytes": 1261,
+      "sha256": "616355f619e56494f7ef574b55e75c41217df08c6a3a8770a65a0c69746774ad",
+      "required_phrases": [],
+      "forbidden_phrases": [],
+      "passed": true
     },
     {
       "path": "docs\\methods\\PLS_RHO_A_V1.md",
       "present": true,
-      "bytes": 10218
+      "bytes": 10218,
+      "sha256": "1359a5bc69b180836ae2d346f90bd44c869ca5b89dcba0dfef6d4b51761bbfef",
+      "required_phrases": [],
+      "forbidden_phrases": [],
+      "passed": true
     }
   ],
   "checks": [],
-  "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."
+  "note": "Promotion is limited to this documented scope; missing, stale, contradictory, or unbound evidence fails closed."
 }

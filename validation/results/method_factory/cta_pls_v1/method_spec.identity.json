@@ -1,0 +1,66 @@
+{
+  "catalogue_snapshot_date": "2026-08-12",
+  "checks": {
+    "bounded_descriptive_scope": true,
+    "document": "docs/methods/PLS_CTA_PLS_V1.md",
+    "passed": true,
+    "required_contract_fragments": {
+      "bootstrap, permutation, or asymptotic tetrad inference": true,
+      "cta_pls_tetrad_v1": true,
+      "each indicator quadruple emits three tetrad pairings": true,
+      "reflective and formative blocks are both reportable": true,
+      "remain unsupported": true,
+      "same-run CSV/HTML/XLSX provenance export": true,
+      "sample covariances of the preprocessed indicator columns": true
+    }
+  },
+  "feature_id": "qpls3.assessment.cta_pls",
+  "generated_at_utc": "2026-08-13T18:53:42.030725Z",
+  "method_version": "cta_pls_tetrad_v1",
+  "passed": true,
+  "report_kind": "quickpls_method_factory_identity_report",
+  "role": "method_spec",
+  "schema_version": 1,
+  "source_artifacts": [
+    {
+      "path": "docs/methods/PLS_CTA_PLS_V1.md",
+      "sha256": "a29a834ac47267796c9c74d4baa3ecfc7f398408b7a5549dbb781c7f649aeaa2",
+      "size": 4898
+    },
+    {
+      "path": "validation/cta_pls_v1_factory_common.py",
+      "sha256": "726ee52650510f685e5ebdf1f90c06800e46dd021cef9d720c38a8bf5cf64294",
+      "size": 12502
+    },
+    {
+      "path": "validation/cta_pls_v1_factory_evidence.py",
+      "sha256": "d1f1a517a9e833740cf1379ac01d7c1288f39fe4a4a8dead78053c7401e44365",
+      "size": 11104
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865",
+      "size": 34283
+    },
+    {
+      "path": "validation/methods/cta_pls_v1.manifest.json",
+      "sha256": "9c185db215ed40fd30d77557a9e8448d109f6e3f1acf015d25e47fd4bc62257e",
+      "size": 14741
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743",
+      "size": 15836
+    },
+    {
+      "path": "validation/test_cta_pls_v1_factory_evidence.py",
+      "sha256": "a7455099f23dd1f38ee9db7a856dd0f9cacf2070941a95502c39e92a189e969c",
+      "size": 3720
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "sha256": "69f61a9eaca218f3f7069f2d0bf68a617918247d80bf0368141ceec917dc07a2",
+      "size": 21222
+    }
+  ]
+}

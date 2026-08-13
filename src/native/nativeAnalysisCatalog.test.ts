@@ -40,6 +40,7 @@ describe("native analysis catalog", () => {
       "wpls",
       "gsca",
       "cca",
+      "cta_pls",
       "ipma",
       "cbsem",
       "pls_bootstrap",
@@ -54,7 +55,7 @@ describe("native analysis catalog", () => {
     for (const item of NATIVE_ANALYSIS_CATALOG) {
       expect(item.label).toBe(item.kind === "regression" ? "Regression" : nativeAnalysisRecipeDescriptor(item.kind).label);
     }
-    expect(NATIVE_ANALYSIS_CATALOG).toHaveLength(14);
+    expect(NATIVE_ANALYSIS_CATALOG).toHaveLength(15);
   });
 
   it("links each catalog kind to an exact ordered tuple of unique parity capabilities", () => {
@@ -64,6 +65,7 @@ describe("native analysis catalog", () => {
       ["wpls", ["qpls3.pls.weighted"]],
       ["gsca", ["qpls3.gsca.als"]],
       ["cca", ["qpls3.assessment.cca_residuals"]],
+      ["cta_pls", ["qpls3.assessment.cta_pls"]],
       ["ipma", ["qpls3.assessment.ipma"]],
       ["cbsem", ["qpls3.cbsem.ml"]],
       ["pls_bootstrap", ["qpls3.inference.bootstrap"]],
@@ -75,7 +77,7 @@ describe("native analysis catalog", () => {
       ["regression", ["qpls3.standalone.ols", "qpls3.standalone.logistic", "qpls3.standalone.regression_bootstrap", "qpls3.standalone.process"]],
     ]);
     const capabilityIds = NATIVE_ANALYSIS_CATALOG.flatMap((item) => item.capabilityIds);
-    expect(capabilityIds).toHaveLength(17);
+    expect(capabilityIds).toHaveLength(18);
     expect(new Set(capabilityIds).size).toBe(capabilityIds.length);
   });
 
@@ -84,7 +86,8 @@ describe("native analysis catalog", () => {
     expect(filterNativeAnalysisCatalog("case weights").map((item) => item.kind)).toEqual(["wpls"]);
     expect(filterNativeAnalysisCatalog("generalized structured component").map((item) => item.kind)).toEqual(["gsca"]);
     expect(filterNativeAnalysisCatalog("composite residual").map((item) => item.kind)).toEqual(["cca"]);
-    expect(filterNativeAnalysisCatalog("assessment").map((item) => item.kind)).toEqual(["cca", "ipma"]);
+    expect(filterNativeAnalysisCatalog("assessment").map((item) => item.kind)).toEqual(["cca", "cta_pls", "ipma"]);
+    expect(filterNativeAnalysisCatalog("confirmatory tetrad").map((item) => item.kind)).toEqual(["cta_pls"]);
     expect(filterNativeAnalysisCatalog("importance performance").map((item) => item.kind)).toEqual(["ipma"]);
     expect(filterNativeAnalysisCatalog("confirmatory factor maximum likelihood").map((item) => item.kind)).toEqual(["cbsem"]);
     expect(filterNativeAnalysisCatalog("inference").map((item) => item.kind)).toEqual(["pls_bootstrap", "pls_permutation", "mga", "regression"]);
@@ -142,6 +145,9 @@ describe("native analysis catalog", () => {
 
     const cca = nativeAnalysisSettingsForWorkbenchKind(settings, "cca");
     expect(cca).toMatchObject({ method: "cca", weightingScheme: "path", preprocessing: "standardized", bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 0, workers: 1, caseWeightColumn: null });
+
+    const ctaPls = nativeAnalysisSettingsForWorkbenchKind(settings, "cta_pls");
+    expect(ctaPls).toMatchObject({ method: "cta_pls", weightingScheme: "path", preprocessing: "mean_centered", bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 0, workers: 1, caseWeightColumn: null });
 
     const gsca = nativeAnalysisSettingsForWorkbenchKind(settings, "gsca");
     expect(gsca).toMatchObject({ method: "gsca", weightingScheme: "path", preprocessing: "standardized", tolerance: 1e-7, maxIterations: 3_000, bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 0, workers: 1, caseWeightColumn: null });
@@ -359,7 +365,7 @@ describe("native analysis catalog", () => {
     expect(nativeWorkbenchAnalysisKindForSettings({ ...settings, method: "cbsem" })).toBe("cbsem");
     expect(nativeWorkbenchAnalysisKindForSettings({ ...settings, method: "nca" })).toBe("nca");
     expect(nativeWorkbenchAnalysisKindForSettings({ ...settings, method: "pca" })).toBe("pca");
-    expect(nativeWorkbenchAnalysisKindForSettings({ ...settings, method: "cta_pls" })).toBe("pls_algorithm");
+    expect(nativeWorkbenchAnalysisKindForSettings({ ...settings, method: "cta_pls" })).toBe("cta_pls");
   });
 
   it("uses action-specific labels for initial and retry runs", () => {
@@ -367,6 +373,7 @@ describe("native analysis catalog", () => {
     expect(nativeAnalysisStartLabel("wpls", true)).toBe("Retry weighted PLS");
     expect(nativeAnalysisStartLabel("gsca", false)).toBe("Start GSCA");
     expect(nativeAnalysisStartLabel("cca", false)).toBe("Start composite diagnostics");
+    expect(nativeAnalysisStartLabel("cta_pls", false)).toBe("Start tetrad diagnostics");
     expect(nativeAnalysisStartLabel("ipma", false)).toBe("Start importance-performance analysis");
     expect(nativeAnalysisStartLabel("cbsem", false)).toBe("Start CB-SEM / CFA");
     expect(nativeAnalysisStartLabel("pls_bootstrap", false)).toBe("Start bootstrapping");

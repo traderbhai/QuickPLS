@@ -3,7 +3,7 @@
   "target": "structural_path_randomization_v1_focused_frontend_gate",
   "feature_id": "qpls3.inference.structural_path_randomization",
   "method_version": "freedman_lane_permutation_v1",
-  "generated_at_utc": "2026-08-13T04:41:19.936818Z",
+  "generated_at_utc": "2026-08-13T18:09:09.971716Z",
   "commands": {
     "vitest": [
       "npx",
@@ -100,15 +100,15 @@
       {
         "path": "src/native/nativeAnalysisRecipe.test.ts",
         "status": "passed",
-        "assertions": 45,
-        "passed_assertions": 45,
+        "assertions": 46,
+        "passed_assertions": 46,
         "failed_assertions": 0
       },
       {
         "path": "src/native/NativeCalculationDialog.test.ts",
         "status": "passed",
-        "assertions": 18,
-        "passed_assertions": 18,
+        "assertions": 19,
+        "passed_assertions": 19,
         "failed_assertions": 0
       },
       {
@@ -121,8 +121,8 @@
       {
         "path": "src/native/nativeCanonicalProject.test.ts",
         "status": "passed",
-        "assertions": 13,
-        "passed_assertions": 13,
+        "assertions": 14,
+        "passed_assertions": 14,
         "failed_assertions": 0
       },
       {
@@ -161,11 +161,11 @@
         "failed_assertions": 0
       }
     ],
-    "total_tests": 234,
-    "passed_tests": 234,
+    "total_tests": 237,
+    "passed_tests": 237,
     "failed_tests": 0,
     "pending_tests": 0,
-    "stdout_tail": "title\":\"projects the exact method, plan, manifest, and plus-one arithmetic into candidate rows\",\"duration\":11.015599999999722,\"failureMessages\":[],\"meta\":{},\"tags\":[]},{\"ancestorTitles\":[\"current structural path randomization frontend contract\"],\"fullName\":\"current structural path randomization frontend contract fails the entire projection closed for every current-contract inconsistency\",\"status\":\"passed\",\"title\":\"fails the entire projection closed for every current-contract inconsistency\",\"duration\":16.16939999999977,\"failureMessages\":[],\"meta\":{},\"tags\":[]},{\"ancestorTitles\":[\"current structural path randomization frontend contract\"],\"fullName\":\"current structural path randomization frontend contract uses only the strict projection in native results, reports, and exports\",\"status\":\"passed\",\"title\":\"uses only the strict projection in native results, reports, and exports\",\"duration\":21.5938000000001,\"failureMessages\":[],\"meta\":{},\"tags\":[]},{\"ancestorTitles\":[\"current structural path randomization frontend contract\"],\"fullName\":\"current structural path randomization frontend contract interprets valid randomization as candidate fixed-score, unadjusted pathwise inference\",\"status\":\"passed\",\"title\":\"interprets valid randomization as candidate fixed-score, unadjusted pathwise inference\",\"duration\":30.234699999999975,\"failureMessages\":[],\"meta\":{},\"tags\":[]},{\"ancestorTitles\":[\"current structural path randomization frontend contract\"],\"fullName\":\"current structural path randomization frontend contract hydrates only a schema-v3 recipe and genuine schema-v1 result envelope bound to the exact current contract\",\"status\":\"passed\",\"title\":\"hydrates only a schema-v3 recipe and genuine schema-v1 result envelope bound to the exact current contract\",\"duration\":14.11160000000018,\"failureMessages\":[],\"meta\":{},\"tags\":[]}],\"startTime\":1786596061359,\"endTime\":1786596061452.1116,\"status\":\"passed\",\"message\":\"\",\"name\":\"D:/QuickPLS/src/native/nativeStructuralPathRandomization.test.ts\"}]}\n",
+    "stdout_tail": "le\":\"projects the exact method, plan, manifest, and plus-one arithmetic into candidate rows\",\"duration\":7.041900000000169,\"failureMessages\":[],\"meta\":{},\"tags\":[]},{\"ancestorTitles\":[\"current structural path randomization frontend contract\"],\"fullName\":\"current structural path randomization frontend contract fails the entire projection closed for every current-contract inconsistency\",\"status\":\"passed\",\"title\":\"fails the entire projection closed for every current-contract inconsistency\",\"duration\":12.538299999999708,\"failureMessages\":[],\"meta\":{},\"tags\":[]},{\"ancestorTitles\":[\"current structural path randomization frontend contract\"],\"fullName\":\"current structural path randomization frontend contract uses only the strict projection in native results, reports, and exports\",\"status\":\"passed\",\"title\":\"uses only the strict projection in native results, reports, and exports\",\"duration\":15.296699999999873,\"failureMessages\":[],\"meta\":{},\"tags\":[]},{\"ancestorTitles\":[\"current structural path randomization frontend contract\"],\"fullName\":\"current structural path randomization frontend contract interprets valid randomization as candidate fixed-score, unadjusted pathwise inference\",\"status\":\"passed\",\"title\":\"interprets valid randomization as candidate fixed-score, unadjusted pathwise inference\",\"duration\":27.687199999999848,\"failureMessages\":[],\"meta\":{},\"tags\":[]},{\"ancestorTitles\":[\"current structural path randomization frontend contract\"],\"fullName\":\"current structural path randomization frontend contract hydrates only a schema-v3 recipe and genuine schema-v1 result envelope bound to the exact current contract\",\"status\":\"passed\",\"title\":\"hydrates only a schema-v3 recipe and genuine schema-v1 result envelope bound to the exact current contract\",\"duration\":16.772500000000036,\"failureMessages\":[],\"meta\":{},\"tags\":[]}],\"startTime\":1786644530243,\"endTime\":1786644530322.7725,\"status\":\"passed\",\"message\":\"\",\"name\":\"D:/QuickPLS/src/native/nativeStructuralPathRandomization.test.ts\"}]}\n",
     "stderr_tail": ""
   },
   "tsc": {
@@ -177,15 +177,15 @@
   "source_artifacts": [
     {
       "path": "package.json",
-      "size": 64820,
-      "sha256": "edd50cf18097e2fa4872d494d0fe167a0846b80763c52564301fadc02ac619fb",
-      "modified_at_ns": 1786592968235380600
+      "size": 65788,
+      "sha256": "5338e2c69f2d15a2a1d39d60178b6e774707a95c0228c68b8975fb10db345702",
+      "modified_at_ns": 1786619612747561200
     },
     {
       "path": "package-lock.json",
       "size": 94576,
       "sha256": "950ad806828fcc72af996f571f32b0bf837072664a31aea61dbceeaa79a2eed1",
-      "modified_at_ns": 1786592968238088100
+      "modified_at_ns": 1786607995821326700
     },
     {
       "path": "index.html",
@@ -219,87 +219,99 @@
     },
     {
       "path": "src/App.tsx",
-      "size": 125,
-      "sha256": "1f250cfe117253ae3a97d59f562c60e30c96ac588f99819c518d75d16b82f7dd",
-      "modified_at_ns": 1786302676448466400
+      "size": 120,
+      "sha256": "73bb7e585093ecfbc0d8996bb92294af1117b31a1fe65b631c31bf13696e5583",
+      "modified_at_ns": 1786607995833822400
     },
     {
       "path": "src/components/AnalysisCatalog.tsx",
-      "size": 36274,
-      "sha256": "9e08b273f8a3192a39016c1147dd78812aa666716427c7c7b70e1a2e024f885a",
-      "modified_at_ns": 1786581434040550800
+      "size": 36426,
+      "sha256": "8776a59726af4c68be0014271da23216ad62aa9269fbd6503a174f5c84d3bed9",
+      "modified_at_ns": 1786618211833009200
     },
     {
       "path": "src/components/ConstructNode.tsx",
       "size": 3233,
       "sha256": "28d0c52b636c6dae0ea023e0c444ba17835e02965799957132796401656da623",
-      "modified_at_ns": 1786426211740401800
+      "modified_at_ns": 1786607995840637800
     },
     {
       "path": "src/components/DataWorkspace.tsx",
       "size": 36437,
       "sha256": "7b8d4fa77d5fa9f0d0b44cbb8db81250daa43f39e51915a0057ec8c095558bce",
-      "modified_at_ns": 1785478782228786300
+      "modified_at_ns": 1786607995840637800
     },
     {
       "path": "src/components/Explorer.tsx",
-      "size": 25551,
-      "sha256": "3472115bf70efcd734c119ffbcc0548d2bfa97a105a5f00af0fe24635bdd4f66",
-      "modified_at_ns": 1785399726798017600
+      "size": 25218,
+      "sha256": "6a4c235e75076d3788afecd45d8f30ae7b72841fdf6c45a76bf296092c69bcab",
+      "modified_at_ns": 1786607995840637800
+    },
+    {
+      "path": "src/components/GroupsWorkspace.test.tsx",
+      "size": 3308,
+      "sha256": "3e10cf4c6e51a91ca8cc08430d14f5308b80c86b7b4528688ccfb2629ace3b79",
+      "modified_at_ns": 1786618030282091600
     },
     {
       "path": "src/components/GroupsWorkspace.tsx",
-      "size": 10807,
-      "sha256": "ded4a7c4f1d5738355687a51cc6b47980fff432fba532d083ee62f2be3f9161b",
-      "modified_at_ns": 1784616434386410700
+      "size": 11490,
+      "sha256": "a9cc9405808e9a4ce1809b0ace92a2b752ca9b71af6e8091ed445e7d9ebfe83e",
+      "modified_at_ns": 1786618019771178100
     },
     {
       "path": "src/components/IndicatorNode.tsx",
-      "size": 2290,
-      "sha256": "d13626ef5f8bab0697d809df0dbc289fcdbef560823906444a40e210b45666d0",
-      "modified_at_ns": 1786305649462125900
+      "size": 2289,
+      "sha256": "800f67ce7f965fa6476e6fb5446f392149fa4f18b5594fc2e534088ad560cac4",
+      "modified_at_ns": 1786607995848599600
     },
     {
       "path": "src/components/Inspector.tsx",
-      "size": 17675,
-      "sha256": "d637d0dab2074eef646692637839df74a12e2a6ddf0179391e5e0e0e3c14e157",
-      "modified_at_ns": 1785399744508774300
+      "size": 17524,
+      "sha256": "dc9468a5f0b2ceb7500c807795823c11f4e4a69fc060b8141dfb7cfbea5eae4e",
+      "modified_at_ns": 1786607995850086000
     },
     {
       "path": "src/components/LatentNode.tsx",
-      "size": 7688,
-      "sha256": "ef0084833321c405e4e06a9fd47baf79b5e31e9531222cbee90c07f1f97a1bcb",
-      "modified_at_ns": 1786426213139063000
+      "size": 7687,
+      "sha256": "5394f840ed303984c7d4319f498fd3812ea0672929327362f90f97d894c4d989",
+      "modified_at_ns": 1786607995852499700
     },
     {
       "path": "src/components/ModelCanvas.tsx",
       "size": 27995,
       "sha256": "f94eb9c60e9096a863fb7c82a28be158db327a2ace91b1e101f1864bd0e30371",
-      "modified_at_ns": 1786420345935285000
+      "modified_at_ns": 1786607995852499700
     },
     {
       "path": "src/components/ModelIssuesPane.tsx",
       "size": 6733,
       "sha256": "3fdbe9d7da14ce0f70c0a4b95025e8fd7a9c71e8f3521b89c06504b7c522324c",
-      "modified_at_ns": 1785399694282862200
+      "modified_at_ns": 1786607995856455800
     },
     {
       "path": "src/components/NavRail.tsx",
       "size": 2652,
       "sha256": "7815308a3945a7628cb66203bfc8a0331e7d4c360a6e32f6f8b2fda9d44b8220",
-      "modified_at_ns": 1785371413827372900
+      "modified_at_ns": 1786607995860518000
+    },
+    {
+      "path": "src/components/OnboardingWorkspace.test.tsx",
+      "size": 1292,
+      "sha256": "10c5634c0a932a9000c38904c691f9fa585e495dcc65100577ed68f41a05cd46",
+      "modified_at_ns": 1786622313811648700
     },
     {
       "path": "src/components/OnboardingWorkspace.tsx",
-      "size": 12574,
-      "sha256": "ccf6a9473e7a0ba6f5f0db49d2d8a1ca68bfd1000067b9e1c4ca8e3a689bc476",
-      "modified_at_ns": 1785398542156959300
+      "size": 12171,
+      "sha256": "7dd6170b7c7a481db3ee04c0d1d7c7fa1a6ce57485f9e7c5e28c644837a83b68",
+      "modified_at_ns": 1786622211081841900
     },
     {
       "path": "src/components/ProductivityOverlays.tsx",
       "size": 8146,
       "sha256": "0c33bee8738481cbd53bfdc0a08f6aa2ab25ea9230ea90e96716e2aec69845a1",
-      "modified_at_ns": 1785335903695179300
+      "modified_at_ns": 1786607995866429800
     },
     {
       "path": "src/components/ReadinessPanel.tsx",
@@ -311,25 +323,25 @@
       "path": "src/components/ReportsWorkspace.test.ts",
       "size": 5804,
       "sha256": "f979c5a01e323823e57f12783e9fafa899d2b9912bf89defe35e82d1deb1d534",
-      "modified_at_ns": 1786584120204040000
+      "modified_at_ns": 1786607995869483300
     },
     {
       "path": "src/components/ReportsWorkspace.tsx",
-      "size": 38089,
-      "sha256": "22a0e578ffb5f5a2fb664027a40b7652532cc49f54f29b99ea5446e45fdd660c",
-      "modified_at_ns": 1786584120200776500
+      "size": 38059,
+      "sha256": "0dd4481ed1b65214d9df8460a3d4220dd026af3836a052f6271d4e3077fcd963",
+      "modified_at_ns": 1786615659054434200
     },
     {
       "path": "src/components/RunHistory.tsx",
-      "size": 140220,
-      "sha256": "2c97afd93b9d1e757ca77e62b9a4193174a750aba3285deaac1c1947c952cb82",
-      "modified_at_ns": 1786581378521369900
+      "size": 140072,
+      "sha256": "d20c2e1ccd5e556ff01d0217621a3a8788bacc5d46583d5994b9f524c4511aa3",
+      "modified_at_ns": 1786615665397816900
     },
     {
       "path": "src/components/RunWorkspace.tsx",
       "size": 13778,
       "sha256": "6028c0725324d277f0af57d1492b21ef61bb9fdea406f5cb28800c007ebf57b8",
-      "modified_at_ns": 1785403880288910100
+      "modified_at_ns": 1786607995873970900
     },
     {
       "path": "src/components/SemEdge.tsx",
@@ -338,82 +350,88 @@
       "modified_at_ns": 1784777801428088000
     },
     {
+      "path": "src/components/SettingsWorkspace.test.tsx",
+      "size": 3575,
+      "sha256": "0b90f75728af80f4a4e0605727d224dec375bcca69e28576cef7c4f1d100b076",
+      "modified_at_ns": 1786624196991753600
+    },
+    {
       "path": "src/components/SettingsWorkspace.tsx",
-      "size": 11107,
-      "sha256": "119277eb1abcb47734e0925505181e726bbd5e0a07d2bb7c39b4ad7f7800ae4c",
-      "modified_at_ns": 1785475504003317000
+      "size": 20639,
+      "sha256": "5174872ce03ff2992ad48157eaaaf792b19f6202a1a853e46a663073f62665c1",
+      "modified_at_ns": 1786624162830223700
     },
     {
       "path": "src/components/StatusBar.tsx",
-      "size": 2367,
-      "sha256": "cc614430f91e7a5b70b78c3b4d617a0a9b2a1046369ed6ad762b5510cb1f1eec",
-      "modified_at_ns": 1785396283131790600
+      "size": 2347,
+      "sha256": "3284dd64424949c8ad0699a4cb939f296312b26a66d54ff6d4374b810b01fcf6",
+      "modified_at_ns": 1786607995877439100
     },
     {
       "path": "src/components/TopBar.tsx",
-      "size": 50057,
-      "sha256": "4f15ac8a9f2fb5a737a3f465f53c96739f9e0d0021932bcf904c75728c9429b1",
-      "modified_at_ns": 1786377737343623000
+      "size": 49798,
+      "sha256": "f2cdac2099e571aea6966b6777525f27b30f90adbe77280353b0f1aec53a3afb",
+      "modified_at_ns": 1786622211088530700
     },
     {
       "path": "src/components/TrustCenterWorkspace.test.tsx",
       "size": 995,
       "sha256": "a04250d362ce744153a343e581de61eec43438b2c3fc2a3ac8e42aaecc8c9736",
-      "modified_at_ns": 1786584476407192600
+      "modified_at_ns": 1786607995884341100
     },
     {
       "path": "src/components/TrustCenterWorkspace.tsx",
       "size": 13449,
       "sha256": "68c8cc130f5092b59e01ca51aeda1c501cc514ddad54539c4bb443ecf89d68ce",
-      "modified_at_ns": 1786584476404193900
+      "modified_at_ns": 1786607995885790000
     },
     {
       "path": "src/components/Ui.tsx",
       "size": 9631,
       "sha256": "700323df22fc0aec0e627b4648a5dd1423bacaac4f65067ca648ddb7981f52ac",
-      "modified_at_ns": 1786556102325068700
+      "modified_at_ns": 1786607995889914500
     },
     {
       "path": "src/components/WorkflowStrip.tsx",
-      "size": 2778,
-      "sha256": "f5bb946b6b22ea70cfcb9413059abdd2ea6e47bd4021ea3eb6ad702cf00f73d8",
-      "modified_at_ns": 1785372614195938400
+      "size": 2775,
+      "sha256": "65be4f490474f1676c648cfb41acef5796746c7cff5a46d93d7ce24e0644fa52",
+      "modified_at_ns": 1786607995889914500
     },
     {
       "path": "src/components/WorkspaceCoach.tsx",
       "size": 7328,
       "sha256": "c83c5d629a51f17aab3a42dfebb8b997ac24d80289327206f8f55751f96b6f4f",
-      "modified_at_ns": 1785364721566817700
+      "modified_at_ns": 1786607995889914500
     },
     {
       "path": "src/components/accessibilityContracts.test.ts",
-      "size": 5602,
-      "sha256": "038a32454f36e7aa1b0fa1985c169f5a643bca9b84ae8dc465355e2af02404e8",
-      "modified_at_ns": 1786581277017551000
+      "size": 5497,
+      "sha256": "34b11d0f67042c196a7fddd9a8e0fa1e4277591730463756801211baceb99d6b",
+      "modified_at_ns": 1786607995889914500
     },
     {
       "path": "src/data/largeModelSmoke.ts",
-      "size": 1923,
-      "sha256": "3587b136548829f35e428e5bf49cf14c0a1d8bb20f558347f2bdc15d4f1926d0",
-      "modified_at_ns": 1786304864742068000
+      "size": 1922,
+      "sha256": "9ca14efe5847152fb7fd4d151f90a584f24066f976821ba360e9be66ae7bbbe5",
+      "modified_at_ns": 1786607995889914500
     },
     {
       "path": "src/data/sample.ts",
-      "size": 4031,
-      "sha256": "014e7a64f65fe640b05c315a8f64bcb4a12770bc6d25ad5cd1d653d4c4a14a0c",
-      "modified_at_ns": 1786582646725664400
+      "size": 4001,
+      "sha256": "e0571908b1032ad1075931189475d92ca329d972ec6223e2d3926bda009602c0",
+      "modified_at_ns": 1786607995897787700
     },
     {
       "path": "src/data/smokeRun.test.ts",
       "size": 629,
       "sha256": "271c886c299705475f10c76c92d7b03a24db043fb10b20fe2d52f4f4d2e452d0",
-      "modified_at_ns": 1786392032163537700
+      "modified_at_ns": 1786607995901838400
     },
     {
       "path": "src/data/smokeRun.ts",
-      "size": 9414,
-      "sha256": "060203afb620b1fd536cda839456d56ef0c54812125dff50c146b7bce6592116",
-      "modified_at_ns": 1786392031376358700
+      "size": 9383,
+      "sha256": "8bc50af154f1b73d83f22da22001710257ae66d07948cf75b90838e200a17a4b",
+      "modified_at_ns": 1786607995904196600
     },
     {
       "path": "src/domain/analysisReadiness.test.ts",
@@ -443,19 +461,19 @@
       "path": "src/domain/desktopCommands.ts",
       "size": 5273,
       "sha256": "75840a09486f10dbf17403c0bbfa5a78fed837ec7ae4609addbc06e7b33d0a57",
-      "modified_at_ns": 1785398054819683800
+      "modified_at_ns": 1786607995904196600
     },
     {
       "path": "src/domain/diagramGraph.test.ts",
-      "size": 14720,
-      "sha256": "c30c940d7135e51540c0982290ed1c25046724a8d63c14a0b9a20e27d0370fb3",
-      "modified_at_ns": 1786384166983257900
+      "size": 14566,
+      "sha256": "ae650406b9ca1fa682dbdf3a9cc6b8c5f68ca27658c902861ee46a0a68f1762a",
+      "modified_at_ns": 1786607995904196600
     },
     {
       "path": "src/domain/diagramGraph.ts",
-      "size": 24930,
-      "sha256": "2c5ff431309b15da38a2dc12b1fc5e53636a5fc6964420fb0a6ca63c7cc94cde",
-      "modified_at_ns": 1786381470619239000
+      "size": 24553,
+      "sha256": "11ab254700d93df62d3cc4d19465ed6ee8eb04885eedd89503190c654556195a",
+      "modified_at_ns": 1786607995904196600
     },
     {
       "path": "src/domain/inference.test.ts",
@@ -473,19 +491,19 @@
       "path": "src/domain/methodApplicability.test.ts",
       "size": 8276,
       "sha256": "4bcac23cd46d6de2dce37eeb23e6cbe144c13ff0f8b2e7099e7de84795fa6618",
-      "modified_at_ns": 1786582832096282900
+      "modified_at_ns": 1786607995912481100
     },
     {
       "path": "src/domain/methodApplicability.ts",
-      "size": 31548,
-      "sha256": "293df190c5cef490c896f1214b0ac16a2555cb0e6a11ca495c974f29281035d3",
-      "modified_at_ns": 1786582832090250000
+      "size": 31619,
+      "sha256": "7d9900b311499ed038afe9f5b82fa0ba2c8a95cb830ec781c081adacfa200474",
+      "modified_at_ns": 1786618211835009900
     },
     {
       "path": "src/domain/methodStatus.ts",
-      "size": 3951,
-      "sha256": "3cec07fad82a53a84c1c57702f460be122a31dada6139470cb60cef30ddcb4ae",
-      "modified_at_ns": 1786584476397192500
+      "size": 3928,
+      "sha256": "d35e821581979d925635d2ab28b09f9f6425fa96280b62d30783ae52951ef9cd",
+      "modified_at_ns": 1786607995918523800
     },
     {
       "path": "src/domain/modelLayout.test.ts",
@@ -503,49 +521,49 @@
       "path": "src/domain/modelValidation.test.ts",
       "size": 5312,
       "sha256": "545021298cb0bf8e8b6a1b5a42c4d0dec9844e7974a0974f0b64dc7e8c4edc32",
-      "modified_at_ns": 1786426207919814500
+      "modified_at_ns": 1786607995920273700
     },
     {
       "path": "src/domain/modelValidation.ts",
       "size": 5329,
       "sha256": "ae08adbcf269f79896df22bc284c06115ad59d5ae2fa0cad28644c6e99853ef6",
-      "modified_at_ns": 1786426206629784900
+      "modified_at_ns": 1786607995924290200
     },
     {
       "path": "src/domain/publicationDiagram.test.ts",
-      "size": 4908,
-      "sha256": "29a20fb009bf28de6955ddaac53ac21daee44afea8a26290ba05243d121463cc",
-      "modified_at_ns": 1786583887008408200
+      "size": 4820,
+      "sha256": "bcd87b4e2cd027cb4855105eaa0dec2153c0d559513e123054ca414f4813bf6f",
+      "modified_at_ns": 1786607995926844400
     },
     {
       "path": "src/domain/publicationDiagram.ts",
-      "size": 14345,
-      "sha256": "06636f1124d5d4feb98f15269fc2ada02a7a4b568d6a93baa6c4a2e64abcd5fd",
-      "modified_at_ns": 1786583887008408200
+      "size": 14205,
+      "sha256": "aba20f9bdc11d36ae7b2ccd4d5212a4c5327aa5213bdc2a70e4dd1f950987a23",
+      "modified_at_ns": 1786607995926844400
     },
     {
       "path": "src/domain/resultInterpretation.test.ts",
       "size": 10590,
       "sha256": "af03f8774fff17cae4370abf5669bd939aac6aa108a81a55e8b730bd5155bff1",
-      "modified_at_ns": 1786558125370638500
+      "modified_at_ns": 1786607995930697400
     },
     {
       "path": "src/domain/resultInterpretation.ts",
-      "size": 59904,
-      "sha256": "8b2af29eaa448f770ccd78635f4715d5ef37f15a81320c5a1a9001577b9b9678",
-      "modified_at_ns": 1786583494013333600
+      "size": 60122,
+      "sha256": "76afef3af8cd2f1e16e98e8496d85801970db9173fc4be823c7ae795a3d4fc64",
+      "modified_at_ns": 1786617736098039900
     },
     {
       "path": "src/domain/resultTables.test.ts",
-      "size": 20599,
-      "sha256": "0732678f074979d2f64ea265e554e6bdf5c87f6ff8091d8625ef6961584eed59",
-      "modified_at_ns": 1786557816579059200
+      "size": 22203,
+      "sha256": "de58261b6650a9916e360eddb7d86f8423d9a87d022c9131c46b6fae5e6516e7",
+      "modified_at_ns": 1786617995104121000
     },
     {
       "path": "src/domain/resultTables.ts",
-      "size": 38038,
-      "sha256": "c2f0d94defe7a1a660d68d33f59de0cf07fc3419a160e959added2ec3d7c99c8",
-      "modified_at_ns": 1786583290404474000
+      "size": 38416,
+      "sha256": "09e5f3cc8deba90aadde182750c28177242e68356693a91bc63347ead3d75591",
+      "modified_at_ns": 1786617720204775600
     },
     {
       "path": "src/domain/runComparison.test.ts",
@@ -572,760 +590,808 @@
       "modified_at_ns": 1784626812199777300
     },
     {
+      "path": "src/domain/spreadsheetSafety.test.ts",
+      "size": 1399,
+      "sha256": "f6bb864ba323a5d679e178c3082e3893d12b17f65479f81ad031ec7788fc5716",
+      "modified_at_ns": 1786615619767899200
+    },
+    {
+      "path": "src/domain/spreadsheetSafety.ts",
+      "size": 804,
+      "sha256": "c605aa0d510d761002887f03a7bb5c21820ce632a7ffa9b0248e604d2f34d61f",
+      "modified_at_ns": 1786615619764201600
+    },
+    {
       "path": "src/domain/workflowCoach.ts",
       "size": 9922,
       "sha256": "57af48fad4595dbc390fee2a6fe6ff5a328f98e58ae814d6dc5ee9c7995d850c",
-      "modified_at_ns": 1785361469229057600
+      "modified_at_ns": 1786607995936383300
     },
     {
       "path": "src/domain/workflowProgress.ts",
       "size": 5125,
       "sha256": "1f4805c01ff1da891d69d94f3c062054ed89bc8701697d6ba1f76678feebe6e0",
-      "modified_at_ns": 1785358648926156100
+      "modified_at_ns": 1786607995936383300
     },
     {
       "path": "src/domain/workspaceCommands.ts",
       "size": 513,
       "sha256": "70f9ac7226b8241e98676c22a78d660ff49a1a3680a7a7e5676fc4d3c013f68d",
-      "modified_at_ns": 1785357608227589300
+      "modified_at_ns": 1786607995936383300
     },
     {
       "path": "src/main.tsx",
-      "size": 264,
-      "sha256": "20c57fc6744bf138aaadacc56e113c492665ad75b2d6fbcc84cbf4e1a2128df7",
-      "modified_at_ns": 1786302930046238100
+      "size": 253,
+      "sha256": "45beaea621cb5951ea8d77ee3b8b5b6bc8d3569dedf574e9f710fce90c621525",
+      "modified_at_ns": 1786607995946093500
     },
     {
       "path": "src/native/NativeCalculationDialog.test.ts",
-      "size": 28715,
-      "sha256": "22094d6bcbf6d78517112c45c230b256c30e0f0689db2cb1dd7e6e0722d982b2",
-      "modified_at_ns": 1786581114811095900
+      "size": 29849,
+      "sha256": "d0933d36ac7b6966ab8fc2b20a9c36b51481ed8b77831bd0dc3828ce7ffb434e",
+      "modified_at_ns": 1786620002433454100
     },
     {
       "path": "src/native/NativeCalculationDialog.tsx",
-      "size": 70980,
-      "sha256": "f775cf34a09b0baafabda9cca56c44b349d6d739156a42e0cc803b2479121aeb",
-      "modified_at_ns": 1786580933773684500
+      "size": 71729,
+      "sha256": "e99af834fda46a5c0197b26ab504d67b5f4e2fc1ca5874d939013b1e3f54f098",
+      "modified_at_ns": 1786619538532142200
     },
     {
       "path": "src/native/NativeDataImportDialog.tsx",
       "size": 3220,
       "sha256": "524ffbf937266bb877e21420f236930e2c4c174cf3af7147b6a885b3a01eee8a",
-      "modified_at_ns": 1786420066937337400
+      "modified_at_ns": 1786607995948217900
     },
     {
       "path": "src/native/NativeDataSurface.test.tsx",
       "size": 4294,
       "sha256": "15f2b552312024b7594abda5b417948b3a2586090003e60c5823d41bdb3fc5a7",
-      "modified_at_ns": 1786508964900312800
+      "modified_at_ns": 1786607995952062600
     },
     {
       "path": "src/native/NativeDataSurface.tsx",
       "size": 30402,
       "sha256": "d3742ec828cb11981ad115f5bfbc8fa48e98f890e9a7e61cf45f6c06befece4a",
-      "modified_at_ns": 1786508964887293200
+      "modified_at_ns": 1786607995954289100
     },
     {
       "path": "src/native/NativeDesktopApp.test.ts",
-      "size": 6775,
-      "sha256": "8109da890741602f3a86560a665273eab9847bd4dba02bb774d47329b9be4e88",
-      "modified_at_ns": 1786581595297744100
+      "size": 8652,
+      "sha256": "b55d570ecc380aa002bc9e7e844734d39deb2fcdf1d0b6f5ded012ca945c1158",
+      "modified_at_ns": 1786623630679065000
     },
     {
       "path": "src/native/NativeDesktopApp.tsx",
-      "size": 92369,
-      "sha256": "4546afb050fef9ba2dc0916ae3dd39bb99f0620ed27b9b32f70940449d42938a",
-      "modified_at_ns": 1786561446096698500
+      "size": 93979,
+      "sha256": "8f8d0c3cf52ba85128d4bd6fa8854dc18291ca2de1142b12f44f1c73f8cd1940",
+      "modified_at_ns": 1786623630679065000
     },
     {
       "path": "src/native/NativeDesktopController.tsx",
-      "size": 54236,
-      "sha256": "14b8ecfd418ee9d2bd97e4214da5bea4b7b2d3d5075c28e75ce1b7407f900152",
-      "modified_at_ns": 1786581810770021600
+      "size": 53902,
+      "sha256": "9cb6466b30ff1eebf11c780900d18afa567464885b48a6979272e1372cc89372",
+      "modified_at_ns": 1786622211083690000
     },
     {
       "path": "src/native/NativeExportDialog.test.ts",
       "size": 8119,
       "sha256": "7fe0ac9ca5fef80b51e7897ffd6d5c25241e7cff7763faebc944ac035ccad380",
-      "modified_at_ns": 1786584016958886300
+      "modified_at_ns": 1786607995960347200
     },
     {
       "path": "src/native/NativeExportDialog.tsx",
-      "size": 9604,
-      "sha256": "93136d9a2919b316fd2d67b1b86df9a8e204fe6c6f04694ff204445dba7d34f8",
-      "modified_at_ns": 1786584016956825700
+      "size": 9603,
+      "sha256": "51944e6ef72be0cafb2db9ab6b7be77e9aa648d8dc4f45f344acb63d9d14ff0c",
+      "modified_at_ns": 1786607995960347200
     },
     {
       "path": "src/native/NativeGroupSetupDialog.test.tsx",
       "size": 3536,
       "sha256": "3238e674bf0831ac9f32c2823a40e7f77d38fada584f9f6c5c550442e14d02e3",
-      "modified_at_ns": 1786458623799790900
+      "modified_at_ns": 1786607995960347200
     },
     {
       "path": "src/native/NativeGroupSetupDialog.tsx",
       "size": 11881,
       "sha256": "aa1164c983a3ee903c9fb64fa6e1c1d11850b7f8ce075d39eed3457656678ff7",
-      "modified_at_ns": 1786458623799790900
+      "modified_at_ns": 1786607995960347200
     },
     {
       "path": "src/native/NativeHigherOrderDialog.test.tsx",
       "size": 1481,
       "sha256": "2990109fcd30330cbc00fd3adf5c1a162da006d6914ace401d529aa30d6df2b8",
-      "modified_at_ns": 1786472960525712600
+      "modified_at_ns": 1786607995967835400
     },
     {
       "path": "src/native/NativeHigherOrderDialog.tsx",
       "size": 4477,
       "sha256": "efb6373c8449a80e505e5f05991c4fb7aeadd5b0059bcb5c184c89bdfb362576",
-      "modified_at_ns": 1786472032579698500
+      "modified_at_ns": 1786607995967835400
     },
     {
       "path": "src/native/NativeModerationDialog.test.tsx",
       "size": 1871,
       "sha256": "fffb174012a4a5573affd1d1727b7e615d3fa0d82a4b2ceb10da7c230a532551",
-      "modified_at_ns": 1786399328656756400
+      "modified_at_ns": 1786607995970034600
     },
     {
       "path": "src/native/NativeModerationDialog.tsx",
       "size": 5086,
       "sha256": "e384a24273f43b959e77b47c0b2c15a03bdfdbae99ccd7c346318c73cf96526c",
-      "modified_at_ns": 1786399109595707900
+      "modified_at_ns": 1786607995972042200
     },
     {
       "path": "src/native/NativeProcessSetup.tsx",
       "size": 23493,
       "sha256": "ced31780e36e3b9d9520a9fe2acdf48fb20b8ba732cc4157bfc8800cdf77710b",
-      "modified_at_ns": 1786556716096633600
+      "modified_at_ns": 1786607995972042200
     },
     {
       "path": "src/native/NativeProcessSurface.test.tsx",
       "size": 5877,
       "sha256": "3f4ec128f91dd9e221ad7069ec34683974690ef64b438f33ea515483f344b9d1",
-      "modified_at_ns": 1786556771327732500
+      "modified_at_ns": 1786607995974438900
     },
     {
       "path": "src/native/NativeRecodeDialog.test.ts",
       "size": 771,
       "sha256": "f4513b97b73192deb7da3bd41c50bd493619c21b966f5178982c4027bdb2a3e0",
-      "modified_at_ns": 1786376823683701500
+      "modified_at_ns": 1786607995974438900
     },
     {
       "path": "src/native/NativeRecodeDialog.tsx",
       "size": 10820,
       "sha256": "09a4133232bec3d3876f6c8151ae00dea1366bf92e89ba7871a9c5d871c6a751",
-      "modified_at_ns": 1786379015580535300
+      "modified_at_ns": 1786607995978779800
     },
     {
       "path": "src/native/NativeResultsSurface.test.tsx",
       "size": 10157,
       "sha256": "545630216d5270304f7040a25be47c31d1d99558eb2c1817c6ec6947244a70b7",
-      "modified_at_ns": 1786595039043019200
+      "modified_at_ns": 1786607995980051300
     },
     {
       "path": "src/native/NativeResultsSurface.tsx",
       "size": 44070,
       "sha256": "061b2f8dec7f88b78900937e382c89451c719ae434c6bd158b5f8785b0831e46",
-      "modified_at_ns": 1786556771329905900
+      "modified_at_ns": 1786607995980051300
     },
     {
       "path": "src/native/NativeUtilityDialog.test.tsx",
-      "size": 2434,
-      "sha256": "5face9933d4bd247359886b646a41033a1afbf6d08e79a927cd18b867975381b",
-      "modified_at_ns": 1786584476401192700
+      "size": 3274,
+      "sha256": "fbb1ea49cca80aa2b954abf605c708b932ecca442734bdc81da3f28c539ce591",
+      "modified_at_ns": 1786624192421107800
     },
     {
       "path": "src/native/NativeUtilityDialog.tsx",
-      "size": 4560,
-      "sha256": "84fe383bf7f629ba1b6b055e5731dd85cc319d32e8da6a7960d786d1f116bd58",
-      "modified_at_ns": 1786584476399191900
+      "size": 4758,
+      "sha256": "80c7c67bd0f6993ab65cd0a0a25a004763a9160f51f4f4da02b23d32eb0c612a",
+      "modified_at_ns": 1786624173676717600
     },
     {
       "path": "src/native/NativeWorkspaceExplorer.test.tsx",
       "size": 5206,
       "sha256": "5d191b190ae06155a9f8336de19b9917d937fa184d2e09e8e7ca43d3cfaab618",
-      "modified_at_ns": 1786405817145213000
+      "modified_at_ns": 1786607995983688000
     },
     {
       "path": "src/native/NativeWorkspaceExplorer.tsx",
       "size": 29567,
       "sha256": "28f2881dcd49f98348ceabe53698b51b1940912ec48a19bce2000ba778430afb",
-      "modified_at_ns": 1786471157835420900
+      "modified_at_ns": 1786607995988814900
     },
     {
       "path": "src/native/nativeAnalysisCatalog.test.ts",
-      "size": 17915,
-      "sha256": "a5ada72c919db6fe5e14f452e06d33fd5d2f9f2c81ffe788f1b0450dbdd5a74f",
-      "modified_at_ns": 1786547148861334800
+      "size": 18488,
+      "sha256": "47b525b7c3ac28a66ac730c6741d9f2eeec43263234819049122bc4500d03ba0",
+      "modified_at_ns": 1786619957240919400
     },
     {
       "path": "src/native/nativeAnalysisCatalog.ts",
-      "size": 19183,
-      "sha256": "57a983ca48ebb44bb8ee8e856c798820bdae00a4707643b1c1207260cb78a891",
-      "modified_at_ns": 1786580922917345100
+      "size": 19693,
+      "sha256": "b80ee2f04d704a89c42f05d9a99005efb7faf0251c4467e4e2b96d9f802d130b",
+      "modified_at_ns": 1786619506140020400
     },
     {
       "path": "src/native/nativeAnalysisRecipe.test.ts",
-      "size": 36546,
-      "sha256": "669e71cdb522c8a4cfd18667af82e66d2a3a5aff37dd21cd65a954783fb7c408",
-      "modified_at_ns": 1786583409844532700
+      "size": 37911,
+      "sha256": "f09b36ffbeabe578cc75dd93567dcbab830e6c87bc48ee3fcc388a8e96d664c7",
+      "modified_at_ns": 1786619976568207000
     },
     {
       "path": "src/native/nativeAnalysisRecipe.ts",
-      "size": 41524,
-      "sha256": "c1ce63eeffc2e6cf4275e13b6f61980ca43831d915b0740492f05652bf12dd7f",
-      "modified_at_ns": 1786582943357704600
+      "size": 42423,
+      "sha256": "eaf427095305c578a3634da1c50d3afacc9a73a604607d5d75a0bf4d6ae3e61d",
+      "modified_at_ns": 1786619639316696600
     },
     {
       "path": "src/native/nativeCalculationLifecycle.test.ts",
       "size": 4105,
       "sha256": "d51d887ed539589e65c552fc49f3ff4bbe88105fb8c4c15544c8d0364512bd10",
-      "modified_at_ns": 1786419060619676400
+      "modified_at_ns": 1786607995991419800
     },
     {
       "path": "src/native/nativeCalculationLifecycle.ts",
       "size": 2457,
       "sha256": "ef2cacbd1a71506cea5889931f80bf18142e9f00581b985eee47090788322f88",
-      "modified_at_ns": 1786419057821421700
+      "modified_at_ns": 1786607996000946000
     },
     {
       "path": "src/native/nativeCalculationMode.test.ts",
       "size": 3759,
       "sha256": "7f58bab5ee8e5cb1736d8eb24b90a2dca8035f6c2aa81a0ce460247bce2c2dd5",
-      "modified_at_ns": 1786467250725221600
+      "modified_at_ns": 1786607996000946000
     },
     {
       "path": "src/native/nativeCalculationMode.ts",
       "size": 4061,
       "sha256": "5833be20f115696f4e0d835ee82c62f1aa15d423d2b5294afd61fe39131b78e7",
-      "modified_at_ns": 1786582943361165400
+      "modified_at_ns": 1786607996000946000
     },
     {
       "path": "src/native/nativeCalculationRequest.test.ts",
-      "size": 8534,
-      "sha256": "60dfe9ddf0dd2c6be6e9207dbc9614c27897396feaa8251a8b9c65e96443462e",
-      "modified_at_ns": 1786583887008408200
+      "size": 8627,
+      "sha256": "5bb0aba66cb4f5731de44eff29dca24a9f21b60441e777fff7694f312c4bac1d",
+      "modified_at_ns": 1786619957254816700
     },
     {
       "path": "src/native/nativeCalculationRequest.ts",
       "size": 4984,
       "sha256": "e9771f3883c4101a36cf96cdbc5e22d0ddad7a0d20e99c6be82933d864dc1de0",
-      "modified_at_ns": 1786583887004794500
+      "modified_at_ns": 1786607996006302200
     },
     {
       "path": "src/native/nativeCanonicalProject.test.ts",
-      "size": 25095,
-      "sha256": "4b855298e7b201663dcd2b3ce37c42057e30ed56145ec85e1d916dd8e6927a4c",
-      "modified_at_ns": 1786587764978728300
+      "size": 27492,
+      "sha256": "8444ddfd7b96223edf88b9dbf0ff5c91ec4db439f250000e1ebd0ca428c86e21",
+      "modified_at_ns": 1786636050346506500
     },
     {
       "path": "src/native/nativeCanonicalProject.ts",
       "size": 29255,
       "sha256": "0f7eb360f5769da512b4e9cbb39a3ba9f20d2619a52a51cbb62ffbb1647edcb8",
-      "modified_at_ns": 1786580529194641100
+      "modified_at_ns": 1786607996009573500
     },
     {
       "path": "src/native/nativeCbsem.testFixture.ts",
       "size": 5903,
       "sha256": "272f47b29b9a89d166574e5f5834e5403ca9ecfc4821692efb292b7e62d3a11e",
-      "modified_at_ns": 1786487186302293700
+      "modified_at_ns": 1786607996012387300
     },
     {
       "path": "src/native/nativeCcaCanonicalIntegration.test.ts",
       "size": 10197,
       "sha256": "d359109eb4a6e4d222544681ee00b92057e9c0480f5898676d66451634847afc",
-      "modified_at_ns": 1786422260742411400
+      "modified_at_ns": 1786607996015311300
     },
     {
       "path": "src/native/nativeCommandAccessibilityContracts.test.ts",
       "size": 4475,
       "sha256": "076540ecb20ca96c1b809f139bfe062126d9cda67b81594f1b96c0e6764288b9",
-      "modified_at_ns": 1786508050451102900
+      "modified_at_ns": 1786607996015311300
     },
     {
       "path": "src/native/nativeCommands.test.ts",
-      "size": 17505,
-      "sha256": "14cba680dbdcac9ab9aa5d92f811cf2b0a0a7022fd07924b1199cd57cb6e5cdc",
-      "modified_at_ns": 1786471157828417200
+      "size": 17504,
+      "sha256": "16ad41b2d736de9f827b29c5b64b8ca3a9f0c8e6c4d238f66e845e6bfe77ce2b",
+      "modified_at_ns": 1786607996015311300
     },
     {
       "path": "src/native/nativeCommands.ts",
       "size": 24786,
       "sha256": "0286cef69461f0df6d19dd9ed98fd0848bebf37a95fc7f4e21230bb0ba0749ab",
-      "modified_at_ns": 1786508964892467800
+      "modified_at_ns": 1786607996019262200
     },
     {
       "path": "src/native/nativeContextCommands.test.ts",
       "size": 1543,
       "sha256": "483014670f6d65fcc53f6f142a6b74182e9d9bc1e30ddfe496cdd635e3188cb7",
-      "modified_at_ns": 1786471157831416200
+      "modified_at_ns": 1786607996019262200
     },
     {
       "path": "src/native/nativeControllerContracts.test.ts",
       "size": 17276,
       "sha256": "88681af6fe6571f60ebb50797a1f7f1a8b48135980f51ef0dcb36d46062740ef",
-      "modified_at_ns": 1786581920430429600
+      "modified_at_ns": 1786607996022098300
+    },
+    {
+      "path": "src/native/nativeCtaPls.test.ts",
+      "size": 4800,
+      "sha256": "328d7f021c9557736184fe1053b88376ecaffd0b49944c81f7676626cd199002",
+      "modified_at_ns": 1786619496040249200
+    },
+    {
+      "path": "src/native/nativeCtaPls.testFixture.ts",
+      "size": 3183,
+      "sha256": "9b8bd47c3ccfb007aa54938c0613f43df1107bd05216e318006ca85ac2044bc1",
+      "modified_at_ns": 1786619790815013400
+    },
+    {
+      "path": "src/native/nativeCtaPls.ts",
+      "size": 7107,
+      "sha256": "8f90b064cdd6c097d6cbf3949d03f472b11780df82fbd59d6ad30c53a079d726",
+      "modified_at_ns": 1786619790815013400
+    },
+    {
+      "path": "src/native/nativeCtaPlsExport.test.ts",
+      "size": 1419,
+      "sha256": "3849c9578aaff513cc193019caa09a0661a11023a7202606725293533fce0cdf",
+      "modified_at_ns": 1786619918260963100
+    },
+    {
+      "path": "src/native/nativeCtaPlsResults.test.ts",
+      "size": 3047,
+      "sha256": "1a53552146fabdd904b1d35f45bc05f52c8cc63adfd57f5c9fc35898506cf45a",
+      "modified_at_ns": 1786619918260963100
     },
     {
       "path": "src/native/nativeDataContext.test.ts",
       "size": 839,
       "sha256": "51a405a6fd25ecbf5360dc18172098008a83505af8337992d9ee03e4867d9917",
-      "modified_at_ns": 1786376461051654200
+      "modified_at_ns": 1786607996024107000
     },
     {
       "path": "src/native/nativeDataContext.ts",
       "size": 746,
       "sha256": "d8590bed1b5b15dca11549765fb24adb799591fa586702e5d49ff0be1f01f958",
-      "modified_at_ns": 1786376460260010000
+      "modified_at_ns": 1786607996026099800
     },
     {
       "path": "src/native/nativeDataGrid.test.ts",
-      "size": 3201,
-      "sha256": "91d63c9f0514d113afa6eeca412813f18989946d3b454f294181df1b00f9409d",
-      "modified_at_ns": 1786401821985916500
+      "size": 3200,
+      "sha256": "92d7fbefdfb8aacd3f389f9ef6855cc0db16ad258036c8385c96c4fa13137af5",
+      "modified_at_ns": 1786607996028574100
     },
     {
       "path": "src/native/nativeDataGrid.ts",
-      "size": 1738,
-      "sha256": "ec34e1a1f38c96d2291fe2d54b7c56176b66f1f18d95cc4dcd6e25f675c67ad3",
-      "modified_at_ns": 1786305851861250100
+      "size": 1683,
+      "sha256": "d67575f53f543e1b6c0346314e566fce4e2e2605af834d25ed4b30d49b314cbd",
+      "modified_at_ns": 1786607996031080300
     },
     {
       "path": "src/native/nativeDataImport.test.ts",
       "size": 1432,
       "sha256": "548a2155b79986b74e9b85c51c1102bf74c132b39de828ddfc8510b3d3956be1",
-      "modified_at_ns": 1786346078888296600
+      "modified_at_ns": 1786607996032306200
     },
     {
       "path": "src/native/nativeDataImport.ts",
       "size": 2597,
       "sha256": "740a3be7363ee4d523644166bf6c9cb9ce73ada49944643b2c86d4c2add0e5fd",
-      "modified_at_ns": 1786346078884296300
+      "modified_at_ns": 1786607996034536800
     },
     {
       "path": "src/native/nativeDatasetStore.test.ts",
       "size": 2766,
       "sha256": "4ed3572766545f58ec2e717efc3853088f419a98dbd3e0178ca7b6d0f85bd622",
-      "modified_at_ns": 1786375374534506000
+      "modified_at_ns": 1786607996035983500
     },
     {
       "path": "src/native/nativeDatasetVersions.test.ts",
       "size": 2001,
       "sha256": "dee09ad2e71a866197e2733e2780bb8f10a685ba568ebcd92498208673b0a737",
-      "modified_at_ns": 1786375284620132400
+      "modified_at_ns": 1786607996038223600
     },
     {
       "path": "src/native/nativeDatasetVersions.ts",
       "size": 2030,
       "sha256": "a479175404aa139959638fc4b9c86aee449f704be21c127853edfd9a36543f2c",
-      "modified_at_ns": 1786374904348824000
+      "modified_at_ns": 1786607996039490100
     },
     {
       "path": "src/native/nativeExportTables.test.ts",
       "size": 19426,
       "sha256": "ab22330e2e6ed7752f748034adaa2c8e653bb4a149a0e91bef21943e2c6964fd",
-      "modified_at_ns": 1786495270604412600
+      "modified_at_ns": 1786607996044094800
     },
     {
       "path": "src/native/nativeExportTables.ts",
-      "size": 19685,
-      "sha256": "360e1c9af2a8d543508bfd65f9ad0e5d6d5f36321d96ce6a6bd30b683182a70e",
-      "modified_at_ns": 1786583290406996400
+      "size": 20407,
+      "sha256": "ca8ebea6a2607152bd539a56ca73a7178f2e4270b7b3284ff62bd88c20562c88",
+      "modified_at_ns": 1786619866583919700
     },
     {
       "path": "src/native/nativeGsca.testFixture.ts",
       "size": 4785,
       "sha256": "36021db2edadb0a182ad7d8c20766e941df5b83f183688e0d4ded737399d4151",
-      "modified_at_ns": 1786495031112117200
+      "modified_at_ns": 1786607996049004000
     },
     {
       "path": "src/native/nativeGsca.ts",
       "size": 942,
       "sha256": "612fbeaa432578b6c27125ab2be3eadac416ac5270efbbdb766984940465a29f",
-      "modified_at_ns": 1786505057494603300
+      "modified_at_ns": 1786607996050208500
     },
     {
       "path": "src/native/nativeGscaCanonicalIntegration.test.ts",
       "size": 3484,
       "sha256": "b21a723bb907aef91397b579bc241b102b0fc1e6fd9944bf20bd92600a177a1a",
-      "modified_at_ns": 1786495201651394600
+      "modified_at_ns": 1786607996053791200
     },
     {
       "path": "src/native/nativeHigherOrder.test.ts",
       "size": 3635,
       "sha256": "90cc5a07fd81dade7136112b2169768b55025d3c73b455a6b71956d611ac28a9",
-      "modified_at_ns": 1786470991660935200
+      "modified_at_ns": 1786607996055005400
     },
     {
       "path": "src/native/nativeHigherOrder.ts",
       "size": 8927,
       "sha256": "7e560da4f4f027962c4b1b93e4d23aa99490663dc53611ba85c8e0fda1d479c1",
-      "modified_at_ns": 1786472016486340100
+      "modified_at_ns": 1786607996056469100
     },
     {
       "path": "src/native/nativeIpma.test.ts",
       "size": 2052,
       "sha256": "ecc84e4d740fcf406c6402eec50657ed6648a340ea1a705343bdf54958ae266b",
-      "modified_at_ns": 1786427772375888300
+      "modified_at_ns": 1786607996058391500
     },
     {
       "path": "src/native/nativeIpma.ts",
       "size": 1912,
       "sha256": "7f5bd5190f8813a07f875dd0c6001520f0af686108f64bd344678b5cc4b46e4c",
-      "modified_at_ns": 1786426954726376800
+      "modified_at_ns": 1786607996059992800
     },
     {
       "path": "src/native/nativeIpmaCanonicalIntegration.test.ts",
       "size": 8422,
       "sha256": "f5248f6ec64c4250b9ac1f0e376363ab8f5ea8a02ff098e266418907c6780536",
-      "modified_at_ns": 1786594981951040200
+      "modified_at_ns": 1786607996062524700
     },
     {
       "path": "src/native/nativeLogistic.test.ts",
       "size": 6352,
       "sha256": "402448113819fbc9df0fe894f103d419ac2532ecacc6da4fde23dc294e01c736",
-      "modified_at_ns": 1786528691035397300
+      "modified_at_ns": 1786607996062524700
     },
     {
       "path": "src/native/nativeLogistic.ts",
       "size": 14368,
       "sha256": "b9fb844a4a73d0148759f911e655123632f52078ad3462c76a735e3578020f1a",
-      "modified_at_ns": 1786536930664948600
+      "modified_at_ns": 1786607996064322600
     },
     {
       "path": "src/native/nativeMenuNavigation.test.ts",
       "size": 1313,
       "sha256": "073ae7dbc177ebba433dade5532d98dcbe9bc9d10979c47066b73904cfb2f788",
-      "modified_at_ns": 1786307672398260500
+      "modified_at_ns": 1786607996064322600
     },
     {
       "path": "src/native/nativeMenuNavigation.ts",
       "size": 1418,
       "sha256": "c5d25731e4fe6484fb83b261ede769049f3f78427be80d6c4859cce47a557e9b",
-      "modified_at_ns": 1786307648582955000
+      "modified_at_ns": 1786607996068228200
     },
     {
       "path": "src/native/nativeMga.test.ts",
       "size": 4303,
       "sha256": "5a7cd8cfb7a437b66c4f96ce6edff3ff63933da501e2a122de864a44dd9596e0",
-      "modified_at_ns": 1786456921780294100
+      "modified_at_ns": 1786607996074426500
     },
     {
       "path": "src/native/nativeMga.ts",
       "size": 6098,
       "sha256": "45ddf151a6df548b58af9b8f2d8c095779fb72b8140e5bd55e6c00d060172bcf",
-      "modified_at_ns": 1786456672743915200
+      "modified_at_ns": 1786607996074426500
     },
     {
       "path": "src/native/nativeModeration.test.ts",
       "size": 2625,
       "sha256": "1bf11a14510321139845eca7f8fb2748d014625a6a6c539f6661979c3da8df49",
-      "modified_at_ns": 1786399177041644100
+      "modified_at_ns": 1786607996074426500
     },
     {
       "path": "src/native/nativeModeration.ts",
       "size": 3790,
       "sha256": "87b65adeedeb39699afaf69898fec06d9097daa8749175661f625928ad4c6695",
-      "modified_at_ns": 1786399108741326600
+      "modified_at_ns": 1786607996079083800
     },
     {
       "path": "src/native/nativeNca.test.ts",
       "size": 3111,
       "sha256": "ee9dab8845e5a575eb84f27e1ce0478b7090f1cf6ffd1b40acbbb49c5db198f4",
-      "modified_at_ns": 1786436402228808900
+      "modified_at_ns": 1786607996081263000
     },
     {
       "path": "src/native/nativeNca.ts",
       "size": 5308,
       "sha256": "67f81e861ac50727ad5fdc3dbdbcb2debd2ca066de3f43eee1e69d0211503003",
-      "modified_at_ns": 1786437209340551400
+      "modified_at_ns": 1786607996081263000
     },
     {
       "path": "src/native/nativeOls.test.ts",
       "size": 2668,
       "sha256": "5c79d0272542a9b626873054a2820c9b092fff5d4f7d7c536ebd8a5cc2f5ec33",
-      "modified_at_ns": 1786481910564414200
+      "modified_at_ns": 1786607996086496500
     },
     {
       "path": "src/native/nativeOls.ts",
       "size": 4934,
       "sha256": "133c080850bc81ca334e57fc10f5371874e5d8731d56c81a6551ece232b6c83c",
-      "modified_at_ns": 1786536930663723300
+      "modified_at_ns": 1786607996089182800
     },
     {
       "path": "src/native/nativePathProperties.test.ts",
       "size": 1363,
       "sha256": "0ecee13fc5901a55c59e159d5dcdee2ac0eaf88cfabf9a7975363acf8ad742b1",
-      "modified_at_ns": 1786397569613259800
+      "modified_at_ns": 1786607996089182800
     },
     {
       "path": "src/native/nativePathProperties.ts",
       "size": 2094,
       "sha256": "cf0989828ed2464581d1fb638ee270b28ee4ce04e7e195b447ffc3a44aac05e2",
-      "modified_at_ns": 1786398052756566100
+      "modified_at_ns": 1786607996089182800
     },
     {
       "path": "src/native/nativePca.test.ts",
       "size": 3217,
       "sha256": "9ebb47bd7ed62efb1193860eaeadeca696abc4d48853a41f3c56cc9f986f9257",
-      "modified_at_ns": 1786476417314265700
+      "modified_at_ns": 1786607996094928900
     },
     {
       "path": "src/native/nativePca.ts",
       "size": 4989,
       "sha256": "80ad64ebe070350c3e148374a7243ec3458fef6a77805f12b6137dab0e506ef0",
-      "modified_at_ns": 1786476575592583600
+      "modified_at_ns": 1786607996094928900
     },
     {
       "path": "src/native/nativePlsReadiness.test.ts",
-      "size": 37402,
-      "sha256": "2fae0a87082db190fc61e1a8adf99d875a226a4c943b00260624430d279ae605",
-      "modified_at_ns": 1786581453579428700
+      "size": 37401,
+      "sha256": "d17ebb1e4337c4964ef6e9a6ee43a4a40dfa4cd46a2d52013a23724e5ccb52ff",
+      "modified_at_ns": 1786607996100458300
     },
     {
       "path": "src/native/nativePlsReadiness.ts",
-      "size": 44880,
-      "sha256": "997fa4b696b4f8c18a976e6fdb4dfd3636444c28c5f805d3212c41635ce5780a",
-      "modified_at_ns": 1786581445573159900
+      "size": 45393,
+      "sha256": "c5d799f1ac2cff9c7c6ee004bf7446095a3f8656eac57b28156552383bb73c44",
+      "modified_at_ns": 1786619639316696600
     },
     {
       "path": "src/native/nativeProcess.test.ts",
       "size": 11945,
       "sha256": "8b28b8538cc35ac33cc6cba9158b29ee5b92dbd33b5ce8297bf3538998fbd418",
-      "modified_at_ns": 1786557557898926800
+      "modified_at_ns": 1786607996104520300
     },
     {
       "path": "src/native/nativeProcess.ts",
       "size": 33789,
       "sha256": "5bff51d4c7c773930e108bc36de9938d79db5da207c2ce6a206d52aa21afd2d5",
-      "modified_at_ns": 1786556716096633600
+      "modified_at_ns": 1786607996104520300
     },
     {
       "path": "src/native/nativeProcessAuthoring.test.tsx",
       "size": 5041,
       "sha256": "1eaa8e1b8eaf64f9166d45595c2b199bd06e4f8ff1b23314988b718d52103fe4",
-      "modified_at_ns": 1786556993219915600
+      "modified_at_ns": 1786607996107872900
     },
     {
       "path": "src/native/nativeProcessResults.test.ts",
       "size": 15330,
       "sha256": "e920663254753a80b458c846c77c66d0c97df33adc5f3f7effb2999d285036d8",
-      "modified_at_ns": 1786557562928012000
+      "modified_at_ns": 1786607996109333600
     },
     {
       "path": "src/native/nativeProcessResults.ts",
       "size": 49345,
       "sha256": "63688fd949a5b293cbecdc3b2758c6483ac4ff6f82d1cb10d5a36ca24d2f1652",
-      "modified_at_ns": 1786557676562127100
+      "modified_at_ns": 1786607996110703500
     },
     {
       "path": "src/native/nativeProcessTestFixture.ts",
       "size": 14622,
       "sha256": "8f08d7ca13a5f4669aac87ca7023ac249476b70a75cec3ee60dcb8ad99d9079f",
-      "modified_at_ns": 1786554229113232700
+      "modified_at_ns": 1786607996110703500
     },
     {
       "path": "src/native/nativeProjectLifecycle.test.ts",
       "size": 11967,
       "sha256": "63ec0dad3e4009239e9eb48f8eda4f929908207df22f5a8d5b28f0ed6dc85bc3",
-      "modified_at_ns": 1786405452622172300
+      "modified_at_ns": 1786607996116381500
     },
     {
       "path": "src/native/nativeProjectLifecycle.ts",
       "size": 6962,
       "sha256": "29deac19db4d90b03fe8588491b8ea2218ee3344531dd83379328ff06fd48e43",
-      "modified_at_ns": 1786405832495096000
+      "modified_at_ns": 1786607996116381500
     },
     {
       "path": "src/native/nativeRecentProjects.test.ts",
-      "size": 1620,
-      "sha256": "60f076b9dd9eb4af74a4eb9fe0740feb10b7093f0bf2ef81b378b5bb8428294c",
-      "modified_at_ns": 1786305347920636300
+      "size": 1619,
+      "sha256": "6c92b5e49b2e3fc46517617f2086c970593d2faf1f6ce757f32e401a50f43edb",
+      "modified_at_ns": 1786607996120251600
     },
     {
       "path": "src/native/nativeRecentProjects.ts",
-      "size": 1775,
-      "sha256": "ab57d42a4608224202750cbef8917701ef1a0cb14371da302907fee522613055",
-      "modified_at_ns": 1786306113080463000
+      "size": 1774,
+      "sha256": "da3f71ea8f4c73f20a579e67f8086ad61d09edd8b9ea69e08eb00fb272fb7c78",
+      "modified_at_ns": 1786607996123058600
     },
     {
       "path": "src/native/nativeRecode.test.ts",
       "size": 11647,
       "sha256": "0d0daf5a8d7cd5f85bf25fcedf3b4765d52dd9b5b74e370a21e3fd065cd74b6b",
-      "modified_at_ns": 1786375051592823500
+      "modified_at_ns": 1786607996125460300
     },
     {
       "path": "src/native/nativeRecode.ts",
       "size": 10048,
       "sha256": "fde0458ab013d873a8236258180377c9ace9ba46a2b8d44049513128a5298652",
-      "modified_at_ns": 1786375146608393300
+      "modified_at_ns": 1786607996127028700
     },
     {
       "path": "src/native/nativeRegressionBootstrapWitness.test.ts",
       "size": 4291,
       "sha256": "c9fffe98967e6267bf96ffa69ec4af8e969550c5ef595bf5f9c3248ca76fb04f",
-      "modified_at_ns": 1786537354012752300
+      "modified_at_ns": 1786607996128621600
     },
     {
       "path": "src/native/nativeRegressionBootstrapWitness.ts",
       "size": 5160,
       "sha256": "534fd1cb368da2dc78d5543d595a4b6d23486396304b3be26eb8dc1e88823322",
-      "modified_at_ns": 1786537354012752300
+      "modified_at_ns": 1786607996129875300
     },
     {
       "path": "src/native/nativeResults.test.ts",
       "size": 120937,
       "sha256": "de86e071dd0948df07b15b9a5c0505bef3c29440fe2ef58679b7e0d5794eeade",
-      "modified_at_ns": 1786587764980727200
+      "modified_at_ns": 1786607996129875300
     },
     {
       "path": "src/native/nativeResults.ts",
-      "size": 206466,
-      "sha256": "38bdd78212a3dfe2eb1f44abf10b79cf3468ae3753d6af5a48f7a7173a7d1f77",
-      "modified_at_ns": 1786580550648951100
+      "size": 214672,
+      "sha256": "e81f4563ca317d7ce56cb8f8fa29daa4b3674c472bf75eea0fa8d2149eaf6f39",
+      "modified_at_ns": 1786619848915373800
     },
     {
       "path": "src/native/nativeRunModelSnapshot.test.ts",
-      "size": 3029,
-      "sha256": "f56fc8698351087c2c3308f1adf62bcaec32ac22d8d651719118486b3ba72771",
-      "modified_at_ns": 1786306676642735000
+      "size": 3028,
+      "sha256": "3d0f5119969dc06df162d6c16b1d05cf0ef50e1dd4e02f5af79c76753718e1cd",
+      "modified_at_ns": 1786607996129875300
     },
     {
       "path": "src/native/nativeRunModelSnapshot.ts",
-      "size": 1254,
-      "sha256": "b0cf7a39a32c6f74eac73797268e37d0cf31b10d04c5a3127126f650cc6357ae",
-      "modified_at_ns": 1786306356969759300
+      "size": 1253,
+      "sha256": "95cfa87771125e855f52735f01bf8820884cb6ab511b9ff3239eb3edd4fde68f",
+      "modified_at_ns": 1786607996138708500
     },
     {
       "path": "src/native/nativeScientificGrid.test.ts",
       "size": 3431,
       "sha256": "6b311e460365d1ae8c135576b2f9b0594c961b6b447e7b40ff64ec63176b2dfa",
-      "modified_at_ns": 1786402141049796800
+      "modified_at_ns": 1786607996138708500
     },
     {
       "path": "src/native/nativeScientificGrid.tsx",
       "size": 7439,
       "sha256": "388d452d0d2fcbe0334daf157fab3f799f8089c23538d8d7443658b403148c6d",
-      "modified_at_ns": 1786403566795672000
+      "modified_at_ns": 1786607996143041600
     },
     {
       "path": "src/native/nativeScopedSubmission.test.ts",
       "size": 2311,
       "sha256": "f1e62885e7ce3f0cb5d7cad8dfb5768e43f47e98bb8f19c86cfec6103d574b6e",
-      "modified_at_ns": 1786376462704892800
+      "modified_at_ns": 1786607996145040600
     },
     {
       "path": "src/native/nativeScopedSubmission.ts",
       "size": 719,
       "sha256": "a7f68fb0e168c48759df370961c8b4e95dfdeb09af3162fb53681c7d5abae323",
-      "modified_at_ns": 1786376461852136800
+      "modified_at_ns": 1786607996148067400
     },
     {
       "path": "src/native/nativeStandaloneAnalysis.test.ts",
       "size": 649,
       "sha256": "360d4bbe7e67f4e8c9eb6922b0c2a34ec6eb354db1bd507e4b550b7d90f42c7d",
-      "modified_at_ns": 1786482131875207200
+      "modified_at_ns": 1786607996149350600
     },
     {
       "path": "src/native/nativeStandaloneAnalysis.ts",
       "size": 542,
       "sha256": "495879a31eca2cc01e9a283ee86b06a9793d3ebb8e434d39ae5a8ba51c6104ed",
-      "modified_at_ns": 1786481361688910600
+      "modified_at_ns": 1786607996150354500
     },
     {
       "path": "src/native/nativeStructuralPathRandomization.test.ts",
       "size": 10350,
       "sha256": "819fb9d23678d8e850af45c9e06085492798bf3f71f0fa60e384105f1dca0e2c",
-      "modified_at_ns": 1786587764981783200
+      "modified_at_ns": 1786607996153712500
     },
     {
       "path": "src/native/nativeStructuralPathRandomization.testFixture.ts",
       "size": 3995,
       "sha256": "0743ba6d40f52ffbd7172a109ebedbe875defa2e3d0f6567e90354ddf53b76e3",
-      "modified_at_ns": 1786587764976608700
+      "modified_at_ns": 1786607996155759300
     },
     {
       "path": "src/native/nativeStructuralPathRandomization.ts",
       "size": 11637,
       "sha256": "0f5df977209295c3fa00c0c8f7f69b9c492135c6353188c0f16e116fa0b206b1",
-      "modified_at_ns": 1786587764974610000
+      "modified_at_ns": 1786607996156755800
     },
     {
       "path": "src/native/nativeSurfaceContracts.test.ts",
-      "size": 9300,
-      "sha256": "e52e64fd5c3129aa0c902b4c79ce5972c4805a21cdab6787c42594b007eee139",
-      "modified_at_ns": 1786508964903096000
+      "size": 9271,
+      "sha256": "cc199064ab7ea299103b310e121042ede7bd3fbc099ebe35c7fe71cc50418f4a",
+      "modified_at_ns": 1786607996158132300
     },
     {
       "path": "src/native/nativeVariableMetadata.test.ts",
       "size": 1879,
       "sha256": "f85573c77c38b64d36fba798031e5410454c55225bfed1925a06d4eb3f61bf02",
-      "modified_at_ns": 1786346350057440200
+      "modified_at_ns": 1786607996160153800
     },
     {
       "path": "src/native/nativeVariableMetadata.ts",
       "size": 2611,
       "sha256": "22cb4f04b06be80be47873e7a80e2ec31b0685f0be9ef39273c3589d1418874a",
-      "modified_at_ns": 1786346350053440100
+      "modified_at_ns": 1786607996162307300
     },
     {
       "path": "src/native/nativeWorkspaceTree.test.ts",
       "size": 4424,
       "sha256": "f315431b053766d5782ae98ddf994d1f18bf9a7791aaae147d2b52279563b749",
-      "modified_at_ns": 1786408593621501300
+      "modified_at_ns": 1786607996164358900
     },
     {
       "path": "src/native/nativeWorkspaceTree.ts",
       "size": 6302,
       "sha256": "2a47a112ca78d1cbf708468b9ca62d3fa05569b2508f7a85a81777efb1dbcbfa",
-      "modified_at_ns": 1786408591871716600
+      "modified_at_ns": 1786607996165352900
+    },
+    {
+      "path": "src/native/plsAlgorithmFactory.test.ts",
+      "size": 5651,
+      "sha256": "f2c30de1aa3879e766575982a4fe1de104f21596709992275fac16a66af54b8b",
+      "modified_at_ns": 1786619877661319600
     },
     {
       "path": "src/services/projectService.test.ts",
-      "size": 10725,
-      "sha256": "51872a797c97ced899cb34567549ca193540e86bf06876605c47e2fd37df9003",
-      "modified_at_ns": 1786524324688911600
+      "size": 15807,
+      "sha256": "bed1b9f9d5a2311c606e128d2a34431c536062dc062a631c94aa3d8dca596c3f",
+      "modified_at_ns": 1786622211092241500
     },
     {
       "path": "src/services/projectService.ts",
-      "size": 7755,
-      "sha256": "7a690840b40ecc245605e9b6844a85ba9e021d1ae00ce755280ac7d5d11055ef",
-      "modified_at_ns": 1786524314057321000
+      "size": 10454,
+      "sha256": "0734f764020f5bd90ccf1b63f40dddfdaee80afe4f13938ce29b88ebf9601530",
+      "modified_at_ns": 1786622230901824900
     },
     {
       "path": "src/store.test.ts",
-      "size": 37885,
-      "sha256": "9a9272c17801d0b0f2faa76a231eb69fdc81bae39a733ecdcc7bdeeaa5b9987d",
-      "modified_at_ns": 1786583887002110300
+      "size": 37550,
+      "sha256": "a23acb20d5156d09bc0bc347ada9480e912b0ffefe322ac9890f858c9391663d",
+      "modified_at_ns": 1786607996171016700
     },
     {
       "path": "src/store.ts",
-      "size": 79120,
-      "sha256": "cd9d7cb63184323a1339da4d39bc507d9be26fb9d5f377878c4b096c3b9118e3",
-      "modified_at_ns": 1786583887002110300
+      "size": 79119,
+      "sha256": "1520d381a2f0f8b527bd8bb4747543293a1eb5ed19bba2377af87ee23cf3f29e",
+      "modified_at_ns": 1786607996174856300
     },
     {
       "path": "src/types.ts",
-      "size": 54137,
-      "sha256": "e021f369b5ccb0e469bafb1c1915d8ec68276bfdba4f656247144d1271774be8",
-      "modified_at_ns": 1786582832087237200
+      "size": 54102,
+      "sha256": "92e30c76761a5bfeeb9eb264e5550b83ab4504b62ffba60a5769fdc2d4125b01",
+      "modified_at_ns": 1786622211073890500
     },
     {
       "path": "src/v2/NativePrototypeApp.tsx",
-      "size": 154159,
-      "sha256": "1b171caf95921b7037e5a697dc6469f0d39e068e24f382a2b4e187ff569e46f4",
-      "modified_at_ns": 1786592968246820700
+      "size": 153776,
+      "sha256": "24d89856c3cf309aabfd699083ec23e8effeab208669b876759879dd40a9cb0f",
+      "modified_at_ns": 1786607996185302100
     },
     {
       "path": "src/v2/nativePrototypeAdapters.ts",
       "size": 24171,
       "sha256": "96c16643ad899333c6c67b872b9f14bd600099b86d5b6db5d11018a54543b160",
-      "modified_at_ns": 1786582943363171200
+      "modified_at_ns": 1786607996188886600
     },
     {
       "path": "src/v2/nativePrototypeData.ts",
       "size": 14163,
       "sha256": "65fb8e95e53ea1e2e12f08cc6c36e0d60bc980a7840c6b1dfbaf247ac9edbceb",
-      "modified_at_ns": 1785482853984195200
+      "modified_at_ns": 1786607996190638700
     },
     {
       "path": "src/vite-env.d.ts",
@@ -1335,33 +1401,33 @@
     },
     {
       "path": "src/native/nativeCanvas.css",
-      "size": 20494,
-      "sha256": "35653ebe3ca709987630c9677be06e262649c9f02da7e1c63dfb9bab3880fda0",
-      "modified_at_ns": 1786344534522020600
+      "size": 20470,
+      "sha256": "6d45f8d41de4691cec22fcc0afc4343de7e832bc9d2c737ce157eecfeb721a11",
+      "modified_at_ns": 1786607996009573500
     },
     {
       "path": "src/native/nativeDesktop.css",
-      "size": 62604,
-      "sha256": "887b5d8e390b11a632f3ae222710d8db5e22f41458dedc2c64b67ae0acb25736",
-      "modified_at_ns": 1786550517440593500
+      "size": 63498,
+      "sha256": "601733825aacf84930aae4bd451f362071c8aa0f76ed075e6f4200947be26ae1",
+      "modified_at_ns": 1786623630679065000
     },
     {
       "path": "src/styles.css",
-      "size": 226997,
-      "sha256": "632a9ceac784ea1fc899b851c0ae4655ca712ca8a235fb8f34495f3f9f121818",
-      "modified_at_ns": 1785437391488178500
+      "size": 226705,
+      "sha256": "28f447d946aae1bd3ae97e6fe417e98b50462a9f7c97336a3cd0879c4bc4134f",
+      "modified_at_ns": 1786607996174856300
     },
     {
       "path": "src/v2/nativePrototype.css",
       "size": 127052,
       "sha256": "47363e027f16041dab6e535e5cbf643dc84b8a9b47568a51d3aa28fb9cbb3281",
-      "modified_at_ns": 1786296021785662600
+      "modified_at_ns": 1786607996186368500
     },
     {
       "path": "validation/structural_path_randomization_frontend_gate.py",
       "size": 7894,
       "sha256": "2c596e70cc96f1d8aedc73a2c4333d3ecd7bceb2d2158d3285e07492dc027205",
-      "modified_at_ns": 1786585641489400500
+      "modified_at_ns": 1786607996823269200
     }
   ],
   "source_stable_during_gate": true,

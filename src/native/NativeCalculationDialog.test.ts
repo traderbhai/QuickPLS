@@ -54,7 +54,11 @@ const nodes: Array<Node<ConstructData>> = [
 ];
 const edges: Edge[] = [{ id: "x-y", source: "x", target: "y" }];
 
-function renderReadyDialog(kind: NativeWorkbenchAnalysisKind, methodSettings: AnalysisUiSettings): string {
+function renderReadyDialog(
+  kind: NativeWorkbenchAnalysisKind,
+  methodSettings: AnalysisUiSettings,
+  analysisNodes: Array<Node<ConstructData>> = nodes,
+): string {
   return renderToStaticMarkup(createElement(NativeCalculationDialog, {
     kind,
     setKind: () => undefined,
@@ -64,7 +68,7 @@ function renderReadyDialog(kind: NativeWorkbenchAnalysisKind, methodSettings: An
     runMonitor,
     dataset: { id: "study", name: "study.csv", columns: [], rows: [], missing: 0 },
     analysisColumns: [],
-    nodes,
+    nodes: analysisNodes,
     edges,
     start: () => undefined,
     cancel: () => undefined,
@@ -242,7 +246,27 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).not.toContain('id="nd-calculation-permutations"');
     expect(markup).not.toContain('id="nd-calculation-seed"');
     expect(markup).not.toContain("Case-weight variable");
-    expect(markup).not.toContain("Confirmatory Tetrad Analysis");
+    expect(markup).toContain("Confirmatory Tetrad Analysis");
+    expect(markup).not.toContain('id="nd-calculation-cta-pls-scope"');
+  });
+
+  it("renders an accessible CTA-PLS eligible-block summary and bounded descriptive scope", () => {
+    const ctaNodes = nodes.map((node) => node.id === "x"
+      ? { ...node, data: { ...node.data, mode: "formative" as const, indicators: ["x1", "x2", "x3", "x4"] } }
+      : node);
+    const markup = renderReadyDialog("cta_pls", {
+      ...settings,
+      method: "cta_pls",
+      weightingScheme: "path",
+      preprocessing: "standardized",
+    }, ctaNodes);
+    expect(markup).toMatch(/id="nd-calculation-method-cta_pls"[^>]*role="option"[^>]*aria-selected="true"/);
+    expect(markup).toContain('id="nd-calculation-cta-pls-scope"');
+    expect(markup).toContain("Capability: 4 indicators, 3 tetrads");
+    expect(markup).toContain("Descriptive sample-covariance tetrads only");
+    expect(markup).toContain("Start tetrad diagnostics");
+    expect(markup).not.toContain('id="nd-calculation-bootstrap-samples"');
+    expect(markup).not.toContain('id="nd-calculation-permutations"');
   });
 
   it("renders one ID-backed endogenous IPMA target with fixed truthful settings", () => {
