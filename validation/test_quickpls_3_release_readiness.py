@@ -1,0 +1,786 @@
+from __future__ import annotations
+
+import copy
+import hashlib
+import json
+import struct
+import tempfile
+import unittest
+import zipfile
+from datetime import datetime, timezone
+from pathlib import Path
+from unittest import mock
+
+from validation import quickpls_3_release_readiness as readiness
+
+
+ROOT = Path(__file__).resolve().parents[1]
+CONTRACT_PATH = ROOT / "validation" / "quickpls_3_release_readiness.json"
+NOW = datetime(2026, 8, 13, 12, 0, tzinfo=timezone.utc)
+
+
+def repository_contract() -> dict:
+    return json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
+
+
+def sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def canonical_sha256(value: object) -> str:
+    encoded = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def write_artifact(root: Path, relative: str, content: bytes) -> dict:
+    path = root / relative
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(content)
+    return {"path": relative, "size": len(content), "sha256": sha256(path)}
+
+
+def minimal_signed_pe(marker: bytes) -> bytes:
+    data = bytearray(0x210)
+    data[:2] = b"MZ"
+    struct.pack_into("<I", data, 0x3C, 0x80)
+    data[0x80:0x84] = b"PE\0\0"
+    struct.pack_into("<HHIIIHH", data, 0x84, 0x8664, 1, 0, 0, 0, 0xF0, 0x0022)
+    optional = 0x98
+    struct.pack_into("<H", data, optional, 0x20B)
+    struct.pack_into("<I", data, optional + 108, 16)
+    struct.pack_into("<II", data, optional + 144, 0x200, 16)
+    data[0x188:0x190] = b".text\0\0\0"
+    struct.pack_into("<IHH", data, 0x200, 16, 0x0200, 0x0002)
+    data[0x208:0x210] = marker[:8].ljust(8, b"!")
+    return bytes(data)
+
+
+def trusted_signtool_execution(path: Path) -> dict[str, object]:
+    resolved = str(path.resolve())
+    return {
+        "returncode": 0,
+        "stdout": (
+            f"Verifying: {resolved}\n"
+            "Signing Certificate Chain:\n"
+            "    Issued to: QuickPLS Release Publisher\n"
+            "    Issued by: Trusted Test Code Signing CA\n"
+            "The signature is timestamped: 2026-08-13T10:45:00+00:00\n"
+            "Timestamp Verified by:\n"
+            "    Issued to: Trusted Test Timestamp CA\n"
+            f"Successfully verified: {resolved}\n"
+        ),
+        "stderr": "",
+    }
+
+
+def trusted_signature_fields(path: Path) -> dict[str, object]:
+    execution = trusted_signtool_execution(path)
+    output = readiness._normalize_signtool_output(
+        str(execution["stdout"]), str(execution["stderr"]), path
+    )
+    return {
+        "command": list(readiness.SIGNTOOL_ARGUMENTS),
+        "exit_code": 0,
+        "verification_output": output,
+        "verification_output_sha256": hashlib.sha256(output.encode()).hexdigest(),
+        "publisher": "QuickPLS Release Publisher",
+        "timestamp": "2026-08-13T10:45:00+00:00",
+        "verified_file_sha256": sha256(path),
+    }
+
+
+def build_candidate(
+    root: Path,
+    variant: str = "primary",
+    *,
+    fake_pe_role: str | None = None,
+    invalid_zip: bool = False,
+    invalid_sbom: bool = False,
+    signature_mismatch: bool = False,
+    publisher_mismatch: bool = False,
+    timestamp_mismatch: bool = False,
+) -> tuple[str, dict]:
+    artifact_map: dict[str, dict] = {}
+    for role in sorted(readiness.SIGNED_PE_ROLES):
+        payload = (
+            f"not-a-pe {role}\n".encode()
+            if fake_pe_role == role
+            else minimal_signed_pe(f"{variant}-{role}".encode())
+        )
+        artifact_map[role] = write_artifact(
+            root,
+            f"validation/results/candidate-{variant}/{role}.exe",
+            payload,
+        )
+
+    updater_relative = f"validation/results/candidate-{variant}/updater_bundle.zip"
+    updater_path = root / updater_relative
+    updater_path.parent.mkdir(parents=True, exist_ok=True)
+    if invalid_zip:
+        updater_path.write_bytes(b"not a ZIP archive")
+    else:
+        installer_path = root / artifact_map["installer"]["path"]
+        with zipfile.ZipFile(updater_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr("QuickPLS_3.0.0_x64-setup.exe", installer_path.read_bytes())
+    artifact_map["updater_bundle"] = {
+        "path": updater_relative,
+        "size": updater_path.stat().st_size,
+        "sha256": sha256(updater_path),
+    }
+
+    distribution_identity = {
+        "target_release": "3.0.0",
+        "artifacts": [
+            {
+                "role": role,
+                "size": artifact_map[role]["size"],
+                "sha256": artifact_map[role]["sha256"],
+            }
+            for role in sorted(readiness.DISTRIBUTION_CANDIDATE_ROLES)
+        ],
+    }
+    candidate_id = canonical_sha256(distribution_identity)
+    distribution_digests = {
+        role: artifact_map[role]["sha256"] for role in sorted(readiness.DISTRIBUTION_CANDIDATE_ROLES)
+    }
+
+    sbom_relative = f"validation/results/candidate-{variant}/sbom.json"
+    if invalid_sbom:
+        artifact_map["sbom"] = write_artifact(root, sbom_relative, b'{"schema_version":')
+    else:
+        sbom = {
+            "schema_version": 1,
+            "document_type": "quickpls_sbom",
+            "target_release": "3.0.0",
+            "candidate_id": candidate_id,
+            "candidate_artifact_digests": distribution_digests,
+            "format": "CycloneDX",
+            "spec_version": "1.6",
+            "components": [
+                {"type": "application", "name": "QuickPLS", "version": "3.0.0", "licenses": ["Proprietary"]}
+            ],
+        }
+        artifact_map["sbom"] = write_artifact(root, sbom_relative, json.dumps(sbom).encode())
+
+    provenance = {
+        "schema_version": 1,
+        "document_type": "quickpls_release_provenance",
+        "target_release": "3.0.0",
+        "candidate_id": candidate_id,
+        "candidate_artifact_digests": distribution_digests,
+        "source_commit": "a" * 40,
+        "build_id": f"QPLS3-BUILD-{variant}",
+        "builder_identity": "protected-windows-release-runner",
+        "build_started_at": "2026-08-13T10:00:00+00:00",
+        "build_finished_at": "2026-08-13T10:30:00+00:00",
+        "sbom_sha256": artifact_map["sbom"]["sha256"],
+    }
+    artifact_map["provenance"] = write_artifact(
+        root,
+        f"validation/results/candidate-{variant}/provenance.json",
+        json.dumps(provenance).encode(),
+    )
+
+    signatures = []
+    for role in sorted(readiness.SIGNED_PE_ROLES):
+        pe_path = root / artifact_map[role]["path"]
+        runtime_fields = trusted_signature_fields(pe_path)
+        if publisher_mismatch and role == "desktop":
+            runtime_fields["publisher"] = "Different Publisher"
+        if timestamp_mismatch and role == "desktop":
+            runtime_fields["timestamp"] = "2026-08-12T10:45:00+00:00"
+        signed_hash = "0" * 64 if signature_mismatch and role == "desktop" else artifact_map[role]["sha256"]
+        report = {
+            "schema_version": 1,
+            "target_release": "3.0.0",
+            "candidate_id": candidate_id,
+            "role": role,
+            "artifact_sha256": signed_hash,
+            "authenticode_valid": True,
+            "verification_tool": "signtool",
+            "warnings": [],
+            **runtime_fields,
+        }
+        report_descriptor = write_artifact(
+            root,
+            f"validation/results/candidate-{variant}/signature-{role}.json",
+            json.dumps(report).encode(),
+        )
+        signatures.append(
+            {
+                "role": role,
+                "artifact_sha256": artifact_map[role]["sha256"],
+                "report": report_descriptor,
+            }
+        )
+
+    artifacts = [{"role": role, **artifact_map[role]} for role in sorted(readiness.REQUIRED_CANDIDATE_ROLES)]
+    manifest_relative = f"validation/results/candidate-{variant}-manifest.json"
+    manifest_path = root / manifest_relative
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "target_release": "3.0.0",
+                "candidate_id": candidate_id,
+                "artifacts": artifacts,
+                "signature_evidence": signatures,
+            }
+        ),
+        encoding="utf-8",
+    )
+    descriptor = {
+        "path": manifest_relative,
+        "size": manifest_path.stat().st_size,
+        "sha256": sha256(manifest_path),
+    }
+    return candidate_id, descriptor
+
+
+def evidence_record(
+    contract: dict,
+    root: Path,
+    requirement_id: str,
+    *,
+    candidate: tuple[str, dict] | None = None,
+    performed_at: str = "2026-08-13T11:00:00+00:00",
+) -> dict:
+    requirement = next(item for item in contract["requirements"] if item["id"] == requirement_id)
+    identity_key = readiness.EXPECTED_IDENTITY[requirement_id]
+    if requirement_id in readiness.CANDIDATE_SCOPED_IDS and candidate is None:
+        candidate = build_candidate(root)
+    candidate_id = candidate[0] if candidate is not None and requirement_id in readiness.CANDIDATE_SCOPED_IDS else None
+    criterion_results = [
+        {
+            "check_id": check_id,
+            "passed": True,
+            "result": {
+                "summary": f"Verified {check_id}.",
+                "measurements": {"executed": True, "failures": 0},
+            },
+        }
+        for check_id in requirement["acceptance_check_ids"]
+    ]
+    if identity_key == "artifact_identity":
+        gate_report = {
+            "schema_version": 1,
+            "report_type": "quickpls_release_gate",
+            "requirement_id": requirement_id,
+            "target_release": "3.0.0",
+            "candidate_id": candidate_id,
+            "criterion_results": criterion_results,
+        }
+        artifact = write_artifact(
+            root,
+            f"validation/results/gate-artifacts/{requirement_id.replace('.', '-')}.json",
+            json.dumps(gate_report).encode(),
+        )
+        identity = {
+            "name": f"QuickPLS structured gate report for {requirement_id}",
+            "identifier": artifact["sha256"],
+            "artifact": artifact,
+        }
+    else:
+        identity = {
+            "name": f"Qualified reviewer for {requirement_id}",
+            "role": "independent release reviewer",
+            "organization": "Independent Method and Product Review Group",
+            "independence": "independent",
+            "conflict_disclosure": "No relevant financial, authorship, or product conflict disclosed.",
+            "disposition": "approved",
+            "reviewed_scope": f"QuickPLS 3.0.0 evidence and acceptance checks for {requirement_id}.",
+            "record_id": f"QPLS3/{requirement_id}/20260813",
+        }
+    record = {
+        "schema_version": 1,
+        "requirement_id": requirement_id,
+        "target_release": "3.0.0",
+        "passed": True,
+        "performed_at": performed_at,
+        "scope": f"Release acceptance for {requirement_id}",
+        "summary": "Every declared acceptance check executed successfully against the named candidate or review scope.",
+        "criterion_results": criterion_results,
+        identity_key: identity,
+    }
+    if requirement_id in readiness.CANDIDATE_SCOPED_IDS:
+        record["candidate_id"] = candidate[0]
+        record["candidate_manifest"] = candidate[1]
+    return record
+
+
+def attach_record(
+    contract: dict,
+    root: Path,
+    requirement_id: str,
+    *,
+    candidate: tuple[str, dict] | None = None,
+    record: dict | None = None,
+    raw: str | None = None,
+    filename: str | None = None,
+    performed_at: str = "2026-08-13T11:00:00+00:00",
+) -> Path:
+    item = next(row for row in contract["requirements"] if row["id"] == requirement_id)
+    relative = Path("validation") / "results" / (filename or f"{requirement_id.replace('.', '_')}.json")
+    destination = root / relative
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if raw is None:
+        destination.write_text(
+            json.dumps(
+                record
+                or evidence_record(
+                    contract,
+                    root,
+                    requirement_id,
+                    candidate=candidate,
+                    performed_at=performed_at,
+                )
+            ),
+            encoding="utf-8",
+        )
+    else:
+        destination.write_text(raw, encoding="utf-8")
+    item["status"] = "passed"
+    item["evidence"] = [{"type": "file", "ref": relative.as_posix()}]
+    return destination
+
+
+def competitor_inputs(contract: dict, root: Path, candidate_id: str) -> dict:
+    evidence_records = []
+    for requirement in contract["requirements"]:
+        for evidence in requirement["evidence"]:
+            if evidence["type"] == "file":
+                path = root / evidence["ref"]
+                evidence_records.append(
+                    {
+                        "requirement_id": requirement["id"],
+                        "path": evidence["ref"],
+                        "sha256": sha256(path),
+                    }
+                )
+    evidence_records.sort(key=lambda item: (item["requirement_id"], item["path"]))
+    contract_inputs = {
+        "schema_version": contract["schema_version"],
+        "target_release": contract["target_release"],
+        "target_channel": contract["target_channel"],
+        "product_policy": contract["product_policy"],
+        "release_channels": contract["release_channels"],
+        "evidence_policy": contract["evidence_policy"],
+        "requirements": [
+            {
+                "id": item["id"],
+                "status": item["status"],
+                "acceptance_check_ids": item["acceptance_check_ids"],
+                "evidence": item["evidence"],
+            }
+            for item in contract["requirements"]
+        ],
+    }
+    return {
+        "target_channel": "stable",
+        "required_requirement_ids": sorted(item["id"] for item in contract["requirements"]),
+        "evidence_records": evidence_records,
+        "candidate_id": candidate_id,
+        "contract_inputs_sha256": canonical_sha256(contract_inputs),
+    }
+
+
+def build_ready_contract(
+    root: Path,
+    *,
+    evidence_at: str = "2026-08-13T11:00:00+00:00",
+    approved_at: str = "2026-08-13T12:00:00+00:00",
+) -> tuple[dict, tuple[str, dict]]:
+    contract = repository_contract()
+    contract["overall_status"] = "passed"
+    candidate = build_candidate(root)
+    for requirement in contract["requirements"]:
+        attach_record(
+            contract,
+            root,
+            requirement["id"],
+            candidate=candidate,
+            performed_at=evidence_at,
+        )
+    decision_relative = Path("validation/results/release_decision.json")
+    decision = root / decision_relative
+    decision.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "target_release": "3.0.0",
+                "approved": True,
+                "approved_by": "release manager",
+                "approved_at": approved_at,
+                "summary": "All commercial-readiness inputs are bound and approved after final evidence.",
+                "competitor_ready_inputs": competitor_inputs(contract, root, candidate[0]),
+            }
+        ),
+        encoding="utf-8",
+    )
+    contract["release_decision"] = {
+        "status": "approved",
+        "approved_by": "release manager",
+        "approved_at": approved_at,
+        "record": decision_relative.as_posix(),
+    }
+    return contract, candidate
+
+
+class RepositoryContractTests(unittest.TestCase):
+    def test_contract_is_valid_and_deliberately_not_release_ready(self) -> None:
+        report = readiness.load_and_validate(CONTRACT_PATH, repository_root=ROOT)
+
+        self.assertTrue(report["structurally_valid"])
+        self.assertFalse(report["competitor_ready"])
+        self.assertFalse(report["release_ready"])
+        self.assertEqual(report["counts"], {"passed": 0, "pending": 18, "failed": 0})
+        self.assertEqual(set(report["pending"]), readiness.REQUIRED_IDS)
+        self.assertEqual(report["release_decision"], "pending")
+
+
+class ProductionSignToolSeamTests(unittest.TestCase):
+    def test_missing_signtool_fails_closed(self) -> None:
+        with mock.patch.object(readiness, "_locate_signtool", return_value=None):
+            with self.assertRaisesRegex(readiness.ContractError, "SignTool was not found"):
+                readiness._run_signtool(Path("candidate.exe"))
+
+    def test_signtool_invocation_uses_frozen_trust_and_timestamp_policy(self) -> None:
+        candidate = Path("candidate.exe").resolve()
+        signtool = Path("C:/Windows-Kits/signtool.exe").resolve()
+        completed = mock.Mock(returncode=0, stdout="verified", stderr="")
+        with (
+            mock.patch.object(readiness, "_locate_signtool", return_value=signtool),
+            mock.patch.object(readiness.subprocess, "run", return_value=completed) as run,
+        ):
+            result = readiness._run_signtool(candidate)
+
+        self.assertEqual(result, {"returncode": 0, "stdout": "verified", "stderr": ""})
+        run.assert_called_once_with(
+            [str(signtool), *readiness.SIGNTOOL_ARGUMENTS, str(candidate)],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=120,
+            check=False,
+            shell=False,
+        )
+
+
+class FailClosedValidationTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.signtool_patcher = mock.patch.object(
+            readiness,
+            "_run_signtool",
+            side_effect=trusted_signtool_execution,
+        )
+        self.signtool_mock = self.signtool_patcher.start()
+        self.addCleanup(self.signtool_patcher.stop)
+
+    def test_independent_scientific_review_is_mandatory_and_cannot_be_omitted(self) -> None:
+        contract = repository_contract()
+        contract["requirements"] = [
+            item for item in contract["requirements"] if item["id"] != "science.independent_review"
+        ]
+        with self.assertRaises(readiness.ContractError):
+            readiness.validate_contract(contract, repository_root=ROOT, now=NOW)
+
+    def test_rejects_missing_duplicate_and_unknown_requirements(self) -> None:
+        mutations = []
+        missing = repository_contract()
+        missing["requirements"].pop()
+        mutations.append(missing)
+        duplicate = repository_contract()
+        duplicate["requirements"][-1] = copy.deepcopy(duplicate["requirements"][0])
+        mutations.append(duplicate)
+        unknown = repository_contract()
+        unknown["requirements"][-1]["id"] = "governance.unknown"
+        mutations.append(unknown)
+        for contract in mutations:
+            with self.assertRaises(readiness.ContractError):
+                readiness.validate_contract(contract, repository_root=ROOT, now=NOW)
+
+    def test_rejects_invalid_status_and_premature_overall_pass(self) -> None:
+        invalid = repository_contract()
+        invalid["requirements"][0]["status"] = "waived"
+        with self.assertRaises(readiness.ContractError):
+            readiness.validate_contract(invalid, repository_root=ROOT, now=NOW)
+        premature = repository_contract()
+        premature["overall_status"] = "passed"
+        with self.assertRaises(readiness.ContractError):
+            readiness.validate_contract(premature, repository_root=ROOT, now=NOW)
+
+    def test_rejects_pass_without_bound_repository_json(self) -> None:
+        no_evidence = repository_contract()
+        no_evidence["requirements"][0]["status"] = "passed"
+        with self.assertRaises(readiness.ContractError):
+            readiness.validate_contract(no_evidence, repository_root=ROOT, now=NOW)
+        attestation_only = repository_contract()
+        attestation_only["requirements"][0]["status"] = "passed"
+        attestation_only["requirements"][0]["evidence"] = [
+            {"type": "attestation", "ref": "LEGAL-REVIEW-2026-001"}
+        ]
+        with self.assertRaises(readiness.ContractError):
+            readiness.validate_contract(attestation_only, repository_root=ROOT, now=NOW)
+
+    def test_rejects_missing_unsafe_or_non_json_evidence_file(self) -> None:
+        refs = [
+            "validation/results/not-created.json",
+            "../outside.json",
+            "target/release/report.json",
+            "validation/results/report.txt",
+        ]
+        for ref in refs:
+            contract = repository_contract()
+            contract["requirements"][0]["status"] = "passed"
+            contract["requirements"][0]["evidence"] = [{"type": "file", "ref": ref}]
+            with self.subTest(ref=ref), self.assertRaises(readiness.ContractError):
+                readiness.validate_contract(contract, repository_root=ROOT, now=NOW)
+
+    def test_rejects_wrong_requirement_release_or_passed_value(self) -> None:
+        mutations = [
+            {"requirement_id": "signing.artifacts"},
+            {"target_release": "2.46.0"},
+            {"passed": False},
+        ]
+        for update in mutations:
+            with self.subTest(update=update), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                contract = repository_contract()
+                record = evidence_record(contract, root, "signing.identity")
+                record.update(update)
+                attach_record(contract, root, "signing.identity", record=record)
+                with self.assertRaises(readiness.ContractError):
+                    readiness.validate_contract(contract, repository_root=root, now=NOW)
+
+    def test_rejects_stale_malformed_duplicate_key_and_nonfinite_records(self) -> None:
+        for name in ["stale", "malformed", "duplicate", "nonfinite"]:
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                contract = repository_contract()
+                valid = evidence_record(contract, root, "signing.identity")
+                if name == "stale":
+                    valid["performed_at"] = "2024-01-01T00:00:00Z"
+                    raw = json.dumps(valid)
+                elif name == "malformed":
+                    raw = '{"schema_version": 1'
+                elif name == "duplicate":
+                    raw = json.dumps(valid).replace('{"schema_version": 1', '{"schema_version": 1, "schema_version": 1', 1)
+                else:
+                    raw = json.dumps(valid).replace('"schema_version": 1', '"schema_version": NaN', 1)
+                attach_record(contract, root, "signing.identity", raw=raw)
+                with self.assertRaises(readiness.ContractError):
+                    readiness.validate_contract(contract, repository_root=root, now=NOW)
+
+    def test_rejects_wrong_artifact_hash(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            contract = repository_contract()
+            record = evidence_record(contract, root, "signing.identity")
+            wrong = "0" * 64
+            record["artifact_identity"]["identifier"] = wrong
+            record["artifact_identity"]["artifact"]["sha256"] = wrong
+            attach_record(contract, root, "signing.identity", record=record)
+            with self.assertRaises(readiness.ContractError):
+                readiness.validate_contract(contract, repository_root=root, now=NOW)
+
+    def test_rejects_plain_text_criterion_report(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            contract = repository_contract()
+            record = evidence_record(contract, root, "signing.identity")
+            descriptor = record["artifact_identity"]["artifact"]
+            report_path = root / descriptor["path"]
+            report_path.write_text("all checks passed", encoding="utf-8")
+            descriptor["size"] = report_path.stat().st_size
+            descriptor["sha256"] = sha256(report_path)
+            record["artifact_identity"]["identifier"] = descriptor["sha256"]
+            attach_record(contract, root, "signing.identity", record=record)
+            with self.assertRaises(readiness.ContractError):
+                readiness.validate_contract(contract, repository_root=root, now=NOW)
+
+    def test_rejects_wrong_reviewer_identity_kind(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            contract = repository_contract()
+            record = evidence_record(contract, root, "trust.legal")
+            record["artifact_identity"] = {
+                "name": "legal memo",
+                "identifier": "0" * 64,
+                "artifact": {"path": "missing", "size": 1, "sha256": "0" * 64},
+            }
+            del record["reviewer_identity"]
+            attach_record(contract, root, "trust.legal", record=record)
+            with self.assertRaises(readiness.ContractError):
+                readiness.validate_contract(contract, repository_root=root, now=NOW)
+
+    def test_rejects_empty_or_unbound_criterion_results(self) -> None:
+        for mutation in ["empty_rows", "empty_result", "wrong_check"]:
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                contract = repository_contract()
+                record = evidence_record(contract, root, "signing.identity")
+                if mutation == "empty_rows":
+                    record["criterion_results"] = []
+                elif mutation == "empty_result":
+                    record["criterion_results"][0]["result"] = ""
+                else:
+                    record["criterion_results"][0]["check_id"] = "signing.identity.unbound"
+                attach_record(contract, root, "signing.identity", record=record)
+                with self.assertRaises(readiness.ContractError):
+                    readiness.validate_contract(contract, repository_root=root, now=NOW)
+
+    def test_rejects_one_record_reused_across_requirements(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            contract = repository_contract()
+            attach_record(contract, root, "signing.identity", filename="shared.json")
+            second = next(item for item in contract["requirements"] if item["id"] == "signing.artifacts")
+            second["status"] = "passed"
+            second["evidence"] = [{"type": "file", "ref": "validation/results/shared.json"}]
+            with self.assertRaisesRegex(readiness.ContractError, "cannot be reused"):
+                readiness.validate_contract(contract, repository_root=root, now=NOW)
+
+    def test_rejects_cross_candidate_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            contract = repository_contract()
+            attach_record(contract, root, "signing.artifacts", candidate=build_candidate(root, "first"))
+            attach_record(contract, root, "installer.clean_offline", candidate=build_candidate(root, "second"))
+            with self.assertRaisesRegex(readiness.ContractError, "different release candidate"):
+                readiness.validate_contract(contract, repository_root=root, now=NOW)
+
+    def test_rejects_semantically_invalid_candidate_artifacts(self) -> None:
+        cases = [
+            ("fake-pe", {"fake_pe_role": "desktop"}),
+            ("invalid-zip", {"invalid_zip": True}),
+            ("invalid-sbom-json", {"invalid_sbom": True}),
+            ("signature-mismatch", {"signature_mismatch": True}),
+        ]
+        for variant, options in cases:
+            with self.subTest(variant=variant), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                contract = repository_contract()
+                candidate = build_candidate(root, variant, **options)
+                attach_record(contract, root, "signing.artifacts", candidate=candidate)
+                with self.assertRaises(readiness.ContractError):
+                    readiness.validate_contract(contract, repository_root=root, now=NOW)
+
+    def test_rejects_signtool_nonzero_and_untrusted_results(self) -> None:
+        executions = {
+            "nonzero": {
+                "returncode": 1,
+                "stdout": "",
+                "stderr": "SignTool Error: A certificate chain could not be built.",
+            },
+            "untrusted": {
+                "returncode": 0,
+                "stdout": (
+                    "Signing Certificate Chain:\n"
+                    "    Issued to: QuickPLS Release Publisher\n"
+                    "The signature is timestamped: 2026-08-13T10:45:00+00:00\n"
+                    "Timestamp Verified by:\n"
+                    "    Issued to: Trusted Test Timestamp CA\n"
+                    "Successfully verified: candidate.exe\n"
+                    "SignTool Error: The signing certificate is not trusted.\n"
+                ),
+                "stderr": "",
+            },
+        }
+        for variant, execution in executions.items():
+            with self.subTest(variant=variant), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                contract = repository_contract()
+                attach_record(
+                    contract,
+                    root,
+                    "signing.artifacts",
+                    candidate=build_candidate(root, f"signtool-{variant}"),
+                )
+                with mock.patch.object(readiness, "_run_signtool", return_value=execution):
+                    with self.assertRaises(readiness.ContractError):
+                        readiness.validate_contract(contract, repository_root=root, now=NOW)
+
+    def test_rejects_validation_time_publisher_and_timestamp_mismatches(self) -> None:
+        cases = [
+            ("publisher", {"publisher_mismatch": True}, "publisher does not match"),
+            ("timestamp", {"timestamp_mismatch": True}, "timestamp does not match"),
+        ]
+        for variant, options, error in cases:
+            with self.subTest(variant=variant), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                contract = repository_contract()
+                attach_record(
+                    contract,
+                    root,
+                    "signing.artifacts",
+                    candidate=build_candidate(root, variant, **options),
+                )
+                with self.assertRaisesRegex(readiness.ContractError, error):
+                    readiness.validate_contract(contract, repository_root=root, now=NOW)
+
+    def test_rejects_candidate_hash_change_during_signtool_verification(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            contract = repository_contract()
+            attach_record(
+                contract,
+                root,
+                "signing.artifacts",
+                candidate=build_candidate(root, "hash-change"),
+            )
+
+            def mutate_candidate(path: Path) -> dict[str, object]:
+                path.write_bytes(path.read_bytes() + b"tampered-after-prehash")
+                return trusted_signtool_execution(path)
+
+            with mock.patch.object(readiness, "_run_signtool", side_effect=mutate_candidate):
+                with self.assertRaisesRegex(readiness.ContractError, "file hash changed during"):
+                    readiness.validate_contract(contract, repository_root=root, now=NOW)
+
+    def test_failed_requirement_is_structurally_valid_but_blocks_release(self) -> None:
+        contract = repository_contract()
+        contract["requirements"][0]["status"] = "failed"
+        report = readiness.validate_contract(contract, repository_root=ROOT, now=NOW)
+        self.assertFalse(report["release_ready"])
+        self.assertEqual(report["failed"], ["signing.identity"])
+
+    def test_only_real_rehashed_bound_records_and_post_evidence_approval_can_be_ready(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            contract, _candidate = build_ready_contract(root)
+            report = readiness.validate_contract(contract, repository_root=root, now=NOW)
+            self.assertTrue(report["release_ready"])
+            self.assertEqual(report["counts"], {"passed": 18, "pending": 0, "failed": 0})
+            self.assertEqual(self.signtool_mock.call_count, 3)
+            self.assertEqual(
+                {call.args[0].name for call in self.signtool_mock.call_args_list},
+                {"desktop.exe", "cli.exe", "installer.exe"},
+            )
+
+    def test_rejects_approval_before_latest_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            contract, _candidate = build_ready_contract(
+                root,
+                evidence_at="2026-08-13T11:00:00+00:00",
+                approved_at="2026-08-13T10:00:00+00:00",
+            )
+            with self.assertRaisesRegex(readiness.ContractError, "must not precede"):
+                readiness.validate_contract(contract, repository_root=root, now=NOW)
+
+    def test_rejects_decision_that_does_not_bind_competitor_ready_inputs(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            contract, _candidate = build_ready_contract(root)
+            decision_path = root / contract["release_decision"]["record"]
+            decision = json.loads(decision_path.read_text(encoding="utf-8"))
+            decision["competitor_ready_inputs"]["candidate_id"] = "0" * 64
+            decision_path.write_text(json.dumps(decision), encoding="utf-8")
+            with self.assertRaisesRegex(readiness.ContractError, "does not bind"):
+                readiness.validate_contract(contract, repository_root=root, now=NOW)
+
+
+if __name__ == "__main__":
+    unittest.main()

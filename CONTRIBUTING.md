@@ -21,10 +21,12 @@ QuickPLS is proprietary source-available software. Contributions are welcome, bu
 ## Local Verification
 
 ```powershell
+python -m pip install --require-hashes -r validation/requirements.txt
 npm test -- --run
 npm run build
+python -m unittest validation.test_quickpls_3_competitor_program validation.test_method_promotion_manifest validation.test_quickpls_3_release_readiness validation.test_parity_ledger
+npm run qpls:competitor:foundation
 cargo test -p qpls-core
 npm run qpls:v10:audit
 cargo run -p qpls-cli -- gate v1_0_stable
 ```
-

@@ -8,7 +8,7 @@ QuickPLS is provided free of charge as proprietary software. You may install and
 
 ## Offline Operation
 
-QuickPLS 1.0.0 is designed to run offline. It does not require an account, activation server, telemetry, cloud sync, or remote computation.
+QuickPLS is designed to run offline. It does not require an account, activation server, telemetry, cloud sync, or remote computation.
 
 ## User Responsibilities
 
@@ -32,4 +32,3 @@ You may not:
 ## No Warranty
 
 QuickPLS is provided without warranty. The authors are not responsible for research conclusions, publication outcomes, data loss, or damages arising from use of the software.
-

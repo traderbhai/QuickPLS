@@ -9,7 +9,9 @@ because the ledger says that it passed.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import math
 import re
 import sys
 from collections import Counter
@@ -74,11 +76,124 @@ EXPECTED_CATALOG_CAPABILITIES = {
 }
 
 FEATURE_ID = re.compile(r"^qpls3\.[a-z0-9][a-z0-9_.-]*$")
+TRUTH_ASSERTION_KEYS = frozenset(
+    {
+        "passed",
+        "fresh",
+        "fresh_report",
+        "source_freshness",
+        "reported_freshness",
+        "not_older_than_sources",
+        "binary_not_older",
+        "report_not_older",
+        "tested_release_cli_is_current_and_bound",
+        "tested_desktop_binary_is_current_and_bound",
+        "fresh_after_packaged_report",
+        "test_executables_are_current_and_bound",
+        "desktop_bound_fresh",
+        "provisioning_cli_bound_fresh",
+        "fresh_sources_and_dist",
+        "executables_bound_fresh",
+        "inside_repository",
+        "present",
+        "exists",
+        "valid",
+        "matched",
+        "matches",
+        "success",
+        "ok",
+    }
+)
+
+# These named subtrees assert that prohibited/undesired content is absent. A
+# nested ``present: false`` is success there, not failed evidence.
+NEGATIVE_PRESENCE_CONTAINERS = frozenset(
+    {"bundleObsoleteStrings", "prohibited", "forbidden", "obsolete"}
+)
+
+
+def _strict_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
+def _reject_nonfinite(token: str) -> None:
+    raise ValueError(f"non-finite JSON number: {token}")
+
+
+def _strict_float(token: str) -> float:
+    value = float(token)
+    if not math.isfinite(value):
+        raise ValueError(f"non-finite JSON number: {token}")
+    return value
 
 
 def load_json(path: Path) -> Any:
     with path.open("r", encoding="utf-8") as handle:
-        return json.load(handle)
+        return json.load(
+            handle,
+            object_pairs_hook=_strict_object,
+            parse_constant=_reject_nonfinite,
+            parse_float=_strict_float,
+        )
+
+
+def _file_descriptor(path: Path, repository_root: Path) -> dict[str, Any]:
+    digest = hashlib.sha256()
+    size = 0
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            size += len(block)
+            digest.update(block)
+    try:
+        relative = path.resolve().relative_to(repository_root.resolve()).as_posix()
+    except ValueError:
+        relative = str(path.resolve())
+    return {"path": relative, "size": size, "sha256": digest.hexdigest()}
+
+
+def _semantic_report_failures(document: Any) -> list[str]:
+    """Reject nested failed checks and non-empty failure/error collections."""
+
+    failures: list[str] = []
+
+    def walk(value: Any, pointer: str = "", negative_presence: bool = False) -> None:
+        if isinstance(value, dict):
+            if "reported_size" in value or "reported_sha256" in value:
+                if value.get("reported_size") != value.get("actual_size"):
+                    failures.append(f"{pointer or '/'} reported_size differs from actual_size")
+                reported_hash = value.get("reported_sha256")
+                actual_hash = value.get("actual_sha256")
+                if not (
+                    isinstance(reported_hash, str)
+                    and isinstance(actual_hash, str)
+                    and reported_hash.lower() == actual_hash.lower()
+                ):
+                    failures.append(f"{pointer or '/'} reported_sha256 differs from actual_sha256")
+            for key, child in value.items():
+                escaped = key.replace("~", "~0").replace("/", "~1")
+                child_pointer = f"{pointer}/{escaped}"
+                child_negative_presence = negative_presence or key in NEGATIVE_PRESENCE_CONTAINERS
+                if (
+                    key in TRUTH_ASSERTION_KEYS
+                    and child is False
+                    and not (key in {"present", "exists"} and child_negative_presence)
+                ):
+                    failures.append(f"{child_pointer}=false")
+                if key in {"failures", "errors", "console_errors"}:
+                    if child not in (None, [], {}):
+                        failures.append(f"{child_pointer} is not empty")
+                walk(child, child_pointer, child_negative_presence)
+        elif isinstance(value, list):
+            for index, child in enumerate(value):
+                walk(child, f"{pointer}/{index}", negative_presence)
+
+    walk(document)
+    return failures
 
 
 def json_pointer(document: Any, pointer: str) -> Any:
@@ -190,6 +305,7 @@ def _evaluate_release_report(
         return result
 
     try:
+        result["descriptor"] = _file_descriptor(evidence_path, repository_root)
         document = load_json(evidence_path)
         expected = {
             "passed": True,
@@ -204,7 +320,15 @@ def _evaluate_release_report(
                 "actual": actual,
                 "expected": expected[label],
             }
-        result["passed"] = all(check["passed"] for check in result["checks"].values())
+        semantic_failures = _semantic_report_failures(document)
+        result["semantic_integrity"] = {
+            "passed": not semantic_failures,
+            "failures": semantic_failures,
+        }
+        result["passed"] = (
+            all(check["passed"] for check in result["checks"].values())
+            and not semantic_failures
+        )
     except (OSError, json.JSONDecodeError, KeyError, IndexError, TypeError, ValueError) as exc:
         result["error"] = f"{type(exc).__name__}: {exc}"
     return result
@@ -392,6 +516,18 @@ def validate_ledger_document(
 
     states = Counter(feature["declared_state"] for feature in evaluated)
     derived_states = Counter(feature["derived_state"] for feature in evaluated)
+    evidence_descriptors: dict[str, dict[str, Any]] = {}
+    for feature in evaluated:
+        release = feature.get("release_evidence", {})
+        if not isinstance(release, dict):
+            continue
+        for role in ("method_audit", "packaged_acceptance"):
+            report = release.get(role)
+            if not isinstance(report, dict):
+                continue
+            descriptor = report.get("descriptor")
+            if isinstance(descriptor, dict) and isinstance(descriptor.get("path"), str):
+                evidence_descriptors[descriptor["path"]] = descriptor
     return {
         "passed": not errors,
         "schema_version": document.get("schema_version"),
@@ -400,6 +536,9 @@ def validate_ledger_document(
         "declared_states": dict(sorted(states.items())),
         "derived_states": dict(sorted(derived_states.items())),
         "features": evaluated,
+        "release_evidence_descriptors": [
+            evidence_descriptors[path] for path in sorted(evidence_descriptors)
+        ],
         "errors": errors,
     }
 
@@ -411,7 +550,7 @@ def validate_ledger(
     root = repository_root.resolve() if repository_root else ledger_path.parent.parent
     try:
         document = load_json(ledger_path)
-    except (OSError, json.JSONDecodeError) as exc:
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
         return {
             "passed": False,
             "feature_count": 0,

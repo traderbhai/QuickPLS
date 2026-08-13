@@ -1,0 +1,274 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-13T00:00:00Z",
+    "manifest_path": "validation/methods/structural_path_randomization_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.inference.structural_path_randomization",
+    "label": "Structural Path Randomization",
+    "method_version": "freedman_lane_permutation_v1",
+    "method_kind": "stochastic",
+    "catalogue_snapshot_date": "2026-08-12",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/"
+  },
+  "claim": {
+    "supported_scope": "Single-model direct structural-path tests conditional on fixed original converged PLS construct scores, with exchangeable reduced-model residuals and deterministic two-sided plus-one probabilities.",
+    "estimand": "Direct structural path coefficients conditional on the original fixed PLS construct scores.",
+    "assumptions": [
+      "The structural model is recursive and supported by the PLS-PM v1 estimator.",
+      "Reduced-model residuals are exchangeable under the tested null.",
+      "Current calibration covers paired homoscedastic Gaussian constant-variance scenarios."
+    ],
+    "exclusions": [
+      "Measurement-model re-estimation within permutations is excluded.",
+      "Heteroskedastic and broader non-Gaussian calibration claims are excluded.",
+      "MGA, MICOM, multiplicity adjustment, mediation inference, and causal proof are excluded."
+    ],
+    "warnings": [
+      "Probabilities are conditional and approximate under the documented exchangeability assumptions.",
+      "Pathwise probabilities are unadjusted for multiplicity."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {
+        "id": "plus_one_probability",
+        "expression": "p = (1 + sum_b I(|beta_b| >= |beta_observed|)) / (B + 1)",
+        "variables": ["p", "beta_b", "beta_observed", "B"],
+        "source_reference_id": "freedman_lane_1983"
+      },
+      {
+        "id": "freedman_lane_response",
+        "expression": "y_b = fitted_reduced + permute(residual_reduced, pi_b)",
+        "variables": ["y_b", "fitted_reduced", "residual_reduced", "pi_b"],
+        "source_reference_id": "freedman_lane_1983"
+      }
+    ],
+    "references": [
+      {
+        "id": "freedman_lane_1983",
+        "kind": "primary_paper",
+        "citation": "Freedman and Lane (1983), A Nonstochastic Interpretation of Reported Significance Levels",
+        "locator": "https://doi.org/10.1080/01621459.1983.10477994",
+        "independence_group": "primary_equations",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "quickpls_independent_python_reference",
+        "kind": "independent_python",
+        "citation": "Independent Python fixed-score Freedman-Lane reference and frozen permutation plan",
+        "locator": "validation/structural_path_randomization_reference.py",
+        "independence_group": "python_reference",
+        "runtime_policy": "development_validation_only"
+      },
+      {
+        "id": "quickpls_independent_r_reference",
+        "kind": "independent_r",
+        "citation": "Independent R coefficient recomputation over the frozen permutation plan",
+        "locator": "validation/structural_path_randomization_reference.R",
+        "independence_group": "r_reference",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "simulations": [
+      {
+        "id": "calibrated_null",
+        "purpose": "type_i_error",
+        "design": "Paired homoscedastic Gaussian constant-variance null scenarios with the frozen fixed-score contract.",
+        "seed_policy": "Indexed deterministic streams with stable replicate ordering.",
+        "metrics": ["rejection_rate", "binomial_confidence_interval"],
+        "acceptance_rule": "The preregistered null-calibration boundary in the reference report must pass."
+      },
+      {
+        "id": "calibrated_signal",
+        "purpose": "power",
+        "design": "Paired homoscedastic Gaussian constant-variance signal scenarios using the same frozen designs as the null calibration.",
+        "seed_policy": "Indexed deterministic streams with stable replicate ordering.",
+        "metrics": ["rejection_rate", "null_to_signal_separation"],
+        "acceptance_rule": "The preregistered power boundary in the reference report must pass."
+      }
+    ],
+    "boundaries": [
+      {
+        "id": "singular_reduced_model",
+        "category": "data_pathology",
+        "case": "The reduced structural design is singular.",
+        "expected_behavior": "Execution is rejected with a typed diagnostic and no partial inference payload."
+      },
+      {
+        "id": "unsupported_measurement_reestimation",
+        "category": "unsupported_scope",
+        "case": "The recipe requests measurement-model re-estimation within permutations.",
+        "expected_behavior": "The recipe is blocked before execution."
+      },
+      {
+        "id": "row_and_construct_reorder",
+        "category": "metamorphic",
+        "case": "Rows or constructs are consistently reordered.",
+        "expected_behavior": "Mapped path estimates and probabilities remain equal within the frozen tolerance."
+      },
+      {
+        "id": "worker_invariance",
+        "category": "determinism",
+        "case": "The same recipe is executed with one and four workers.",
+        "expected_behavior": "Analytical payloads, permutation ordering, exceedances, and probabilities are exactly equal."
+      },
+      {
+        "id": "manifest_and_result_tamper",
+        "category": "tamper",
+        "case": "A saved parameter manifest, method identity, or probability is altered.",
+        "expected_behavior": "Strict project validation rejects the archive."
+      }
+    ],
+    "numerical_tolerance": 0.000001
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 3,
+      "result_schema_version": 1,
+      "payload_kind": "pls_pm_v3",
+      "tamper_tests": [
+        {
+          "category": "feature_identity",
+          "expected_behavior": "Reject an archive whose capability identity does not match the result contract."
+        },
+        {
+          "category": "method_version",
+          "expected_behavior": "Reject a current payload relabeled with another method version."
+        },
+        {
+          "category": "dataset_fingerprint",
+          "expected_behavior": "Reject a result whose dataset fingerprint does not match its saved dataset."
+        },
+        {
+          "category": "checksum",
+          "expected_behavior": "Reject any archive entry whose SHA-256 checksum differs from the manifest."
+        },
+        {
+          "category": "malformed_payload",
+          "expected_behavior": "Reject duplicate keys, unknown fields, non-finite values, or inconsistent counts."
+        },
+        {
+          "category": "legacy_reinterpretation",
+          "expected_behavior": "Read supported legacy data only under its original identity and never promote it as v1 evidence."
+        }
+      ],
+      "legacy_policy": "Historical inference payloads remain explicitly versioned and cannot satisfy the current feature's promotion evidence."
+    },
+    "native": {
+      "setup_controls": [
+        "Requested permutations",
+        "Seed",
+        "Worker count",
+        "Eligible structural paths"
+      ],
+      "applicability_blockers": [
+        "No eligible direct structural path",
+        "Unsupported model shape",
+        "Invalid permutation count",
+        "Missing deterministic dataset fingerprint"
+      ],
+      "result_surfaces": [
+        "Original path coefficients",
+        "Exceedance counts",
+        "Two-sided plus-one probabilities",
+        "Scope warnings",
+        "Run provenance"
+      ],
+      "gui_cli_parity_rule": "For the same recipe, seed, dataset fingerprint, method version, and settings, GUI and CLI analytical payloads must be exactly equal apart from operational timestamps.",
+      "accessibility_rules": [
+        "All result values and warnings are available in accessible tables.",
+        "Keyboard users can configure, run, cancel, inspect, and export the workflow."
+      ]
+    },
+    "export": {
+      "formats": ["xlsx"],
+      "tables": [
+        "Structural path randomization",
+        "Path coefficients",
+        "Run provenance"
+      ],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": ["windows"],
+      "workflow_steps": [
+        "setup",
+        "invalid_setup_blocked",
+        "execute",
+        "cancel_retry",
+        "inspect_results",
+        "export",
+        "save",
+        "close",
+        "reopen_same_run",
+        "cleanup"
+      ],
+      "viewports": ["1024x700", "1280x720", "1440x900"],
+      "offline_required": true,
+      "cancellation_required": true,
+      "process_cleanup_required": true
+    },
+    "audit": {
+      "exact_identity_fields": [
+        "passed",
+        "feature_id",
+        "method_version",
+        "catalogue_snapshot_date"
+      ],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
+  },
+  "qualification": {
+    "declared_state": "absent",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": [
+        "docs/methods/PERMUTATION_ENGINE_V1.md"
+      ],
+      "independent_reference": [
+        "validation/structural_path_randomization_reference.py",
+        "validation/structural_path_randomization_reference.R"
+      ],
+      "simulation_report": [
+        "validation/structural_path_randomization_reference.py"
+      ],
+      "boundary_report": [
+        "validation/structural_path_randomization_boundary_gate.py"
+      ],
+      "persistence_report": [
+        "validation/structural_path_randomization_boundary_gate.py",
+        "validation/test_structural_path_randomization_v1_packaged_acceptance.py"
+      ],
+      "frontend_report": [
+        "validation/structural_path_randomization_frontend_gate.py",
+        "src/native/nativeStructuralPathRandomization.test.ts"
+      ],
+      "export_report": [
+        "validation/v247_tauri_native_acceptance.mjs",
+        "src/native/nativeExportTables.test.ts"
+      ],
+      "method_audit": [
+        "validation/structural_path_randomization_method_promotion_audit.py",
+        "validation/test_structural_path_randomization_method_promotion_audit.py"
+      ],
+      "packaged_acceptance": [
+        "validation/run_v247_structural_path_randomization_native_acceptance.ps1",
+        "validation/v247_tauri_native_acceptance.mjs"
+      ]
+    },
+    "evidence": {
+      "engine_only": [],
+      "archive_qualified": [],
+      "native_qualified": [],
+      "release_qualified": []
+    }
+  }
+}

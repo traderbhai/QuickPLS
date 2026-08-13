@@ -8,6 +8,8 @@ QuickPLS runs locally. It does not require an account, activation server, teleme
 
 > QuickPLS is independently implemented from published methods and permitted documentation. It does not import SmartPLS project files, does not reverse-engineer SmartPLS, and does not claim identical results for undocumented SmartPLS behavior.
 
+QuickPLS 2.46.0 is the evidence-backed baseline for the QuickPLS 3.0 competitor program. The program does not treat a method name or engine preview as product parity: each advertised capability must pass its own scientific, archive, native-workflow, export, packaged-release, and claim-scope gates before promotion.
+
 ## Download
 
 Use the latest GitHub Release and download one of these Windows assets. For local development builds, the same files are created under `target/release/artifacts/`.
@@ -72,6 +74,9 @@ SmartPLS-class breadth is not yet complete. Native workflow and result coverage 
 Primary documentation:
 
 - [Method Compatibility](docs/METHOD_COMPATIBILITY.md)
+- [QuickPLS 3.0 Competitor Program](docs/QUICKPLS_3_COMPETITOR_PROGRAM.md)
+- [Method Promotion Factory](docs/METHOD_PROMOTION_FACTORY.md)
+- [Commercial Readiness](docs/QUICKPLS_3_COMMERCIAL_READINESS.md)
 - [Supported v1 Scope](docs/V1_SUPPORTED_SCOPE.md)
 - [Known Differences](docs/V1_KNOWN_DIFFERENCES.md)
 - [Methodology Manual](docs/METHODOLOGY_MANUAL_V1_0.md)

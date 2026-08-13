@@ -41,6 +41,12 @@ class ParityLedgerTests(unittest.TestCase):
             report["derived_states"],
             {"native_qualified": 13, "release_qualified": 4},
         )
+        self.assertEqual(len(report["release_evidence_descriptors"]), 8)
+        for descriptor in report["release_evidence_descriptors"]:
+            self.assertEqual(set(descriptor), {"path", "size", "sha256"})
+            self.assertTrue(descriptor["path"].startswith("validation/results/"))
+            self.assertGreater(descriptor["size"], 0)
+            self.assertRegex(descriptor["sha256"], r"^[0-9a-f]{64}$")
         self.assertEqual(
             [feature["id"] for feature in report["features"] if feature["declared_state"] == "release_qualified"],
             [
@@ -131,6 +137,172 @@ class ParityLedgerTests(unittest.TestCase):
             (results / "package.json").write_text(json.dumps(wrong_version), encoding="utf-8")
             rejected_identity = evaluate_release(feature, root, "2026-08-12")
             self.assertFalse(rejected_identity["passed"])
+
+    def test_release_reports_reject_duplicate_keys_and_nonfinite_numbers(self) -> None:
+        feature = {
+            "id": "qpls3.example.method",
+            "method_version": "example_v2",
+            "release_evidence": {
+                role: {
+                    "path": f"validation/results/{filename}",
+                    "passed_pointer": "/passed",
+                    "feature_id_pointer": "/feature_id",
+                    "method_version_pointer": "/method_version",
+                    "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date",
+                }
+                for role, filename in (
+                    ("current_scoped_method_audit", "method.json"),
+                    ("packaged_acceptance", "package.json"),
+                )
+            },
+        }
+        valid = {
+            "passed": True,
+            "feature_id": feature["id"],
+            "method_version": feature["method_version"],
+            "catalogue_snapshot_date": "2026-08-12",
+        }
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            results = root / "validation" / "results"
+            results.mkdir(parents=True)
+            (results / "package.json").write_text(json.dumps(valid), encoding="utf-8")
+
+            duplicate = (
+                '{"passed":false,"passed":true,'
+                '"feature_id":"qpls3.example.method",'
+                '"method_version":"example_v2",'
+                '"catalogue_snapshot_date":"2026-08-12"}'
+            )
+            (results / "method.json").write_text(duplicate, encoding="utf-8")
+            self.assertFalse(evaluate_release(feature, root, "2026-08-12")["passed"])
+
+            for token in ("NaN", "1e999", "-1e999"):
+                with self.subTest(token=token):
+                    (results / "method.json").write_text(
+                        json.dumps(valid)[:-1] + f',"metric":{token}}}',
+                        encoding="utf-8",
+                    )
+                    self.assertFalse(
+                        evaluate_release(feature, root, "2026-08-12")["passed"]
+                    )
+
+    def test_release_rejects_nested_failed_check_and_nonempty_errors(self) -> None:
+        feature = {
+            "id": "qpls3.example.method",
+            "method_version": "example_v2",
+            "release_evidence": {
+                role: {
+                    "path": f"validation/results/{filename}",
+                    "passed_pointer": "/passed",
+                    "feature_id_pointer": "/feature_id",
+                    "method_version_pointer": "/method_version",
+                    "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date",
+                }
+                for role, filename in (
+                    ("current_scoped_method_audit", "method.json"),
+                    ("packaged_acceptance", "package.json"),
+                )
+            },
+        }
+        base = {
+            "passed": True,
+            "feature_id": feature["id"],
+            "method_version": feature["method_version"],
+            "catalogue_snapshot_date": "2026-08-12",
+            "checks": {"identity": {"passed": True}},
+            "errors": [],
+        }
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            results = root / "validation" / "results"
+            results.mkdir(parents=True)
+            (results / "method.json").write_text(json.dumps(base), encoding="utf-8")
+            (results / "package.json").write_text(json.dumps(base), encoding="utf-8")
+            self.assertTrue(evaluate_release(feature, root, "2026-08-12")["passed"])
+
+            nested_false = deepcopy(base)
+            nested_false["checks"]["identity"]["passed"] = False
+            (results / "method.json").write_text(json.dumps(nested_false), encoding="utf-8")
+            false_report = evaluate_release(feature, root, "2026-08-12")
+            self.assertFalse(false_report["passed"])
+            self.assertIn(
+                "/checks/identity/passed=false",
+                false_report["method_audit"]["semantic_integrity"]["failures"],
+            )
+
+            (results / "method.json").write_text(json.dumps(base), encoding="utf-8")
+            nonempty_errors = deepcopy(base)
+            nonempty_errors["errors"] = ["hidden failure"]
+            (results / "package.json").write_text(json.dumps(nonempty_errors), encoding="utf-8")
+            error_report = evaluate_release(feature, root, "2026-08-12")
+            self.assertFalse(error_report["passed"])
+            self.assertIn(
+                "/errors is not empty",
+                error_report["packaged_acceptance"]["semantic_integrity"]["failures"],
+            )
+
+    def test_release_rejects_failed_freshness_and_inconsistent_reported_descriptor(self) -> None:
+        feature = {
+            "id": "qpls3.example.method",
+            "method_version": "example_v2",
+            "release_evidence": {
+                role: {
+                    "path": f"validation/results/{filename}",
+                    "passed_pointer": "/passed",
+                    "feature_id_pointer": "/feature_id",
+                    "method_version_pointer": "/method_version",
+                    "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date",
+                }
+                for role, filename in (
+                    ("current_scoped_method_audit", "method.json"),
+                    ("packaged_acceptance", "package.json"),
+                )
+            },
+        }
+        base = {
+            "passed": True,
+            "feature_id": feature["id"],
+            "method_version": feature["method_version"],
+            "catalogue_snapshot_date": "2026-08-12",
+            "source_freshness": [{"path": "source.rs", "report_not_older": True}],
+            "artifact": {
+                "path": "app.exe",
+                "reported_size": 10,
+                "actual_size": 10,
+                "reported_sha256": "a" * 64,
+                "actual_sha256": "a" * 64,
+                "passed": True,
+            },
+        }
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            results = root / "validation" / "results"
+            results.mkdir(parents=True)
+            (results / "method.json").write_text(json.dumps(base), encoding="utf-8")
+            (results / "package.json").write_text(json.dumps(base), encoding="utf-8")
+
+            stale = deepcopy(base)
+            stale["source_freshness"][0]["report_not_older"] = False
+            (results / "method.json").write_text(json.dumps(stale), encoding="utf-8")
+            stale_report = evaluate_release(feature, root, "2026-08-12")
+            self.assertFalse(stale_report["passed"])
+
+            (results / "method.json").write_text(json.dumps(base), encoding="utf-8")
+            inconsistent = deepcopy(base)
+            inconsistent["artifact"]["actual_sha256"] = "b" * 64
+            (results / "package.json").write_text(json.dumps(inconsistent), encoding="utf-8")
+            descriptor_report = evaluate_release(feature, root, "2026-08-12")
+            self.assertFalse(descriptor_report["passed"])
+            self.assertTrue(
+                any(
+                    "reported_sha256 differs" in failure
+                    for failure in descriptor_report["packaged_acceptance"]["semantic_integrity"]["failures"]
+                )
+            )
 
     def test_json_pointer_handles_arrays_and_escaping(self) -> None:
         document = {"a/b": [{"~value": "ok"}]}

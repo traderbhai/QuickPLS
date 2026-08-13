@@ -1,0 +1,484 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/method-promotion-manifest-v1.json",
+  "title": "QuickPLS method-promotion manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "governance",
+    "feature",
+    "claim",
+    "scientific_contract",
+    "product_contract",
+    "qualification"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "governance": { "$ref": "#/$defs/governance" },
+    "feature": { "$ref": "#/$defs/feature" },
+    "claim": { "$ref": "#/$defs/claim" },
+    "scientific_contract": { "$ref": "#/$defs/scientific_contract" },
+    "product_contract": { "$ref": "#/$defs/product_contract" },
+    "qualification": { "$ref": "#/$defs/qualification" }
+  },
+  "$defs": {
+    "non_empty_string": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": ".*\\S.*"
+    },
+    "non_empty_unique_strings": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/non_empty_string" }
+    },
+    "repository_path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract_frozen_at_utc",
+        "manifest_path",
+        "schema_path",
+        "validator_path",
+        "focused_test_path"
+      ],
+      "properties": {
+        "contract_frozen_at_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "manifest_path": { "$ref": "#/$defs/repository_path" },
+        "schema_path": { "$ref": "#/$defs/repository_path" },
+        "validator_path": { "$ref": "#/$defs/repository_path" },
+        "focused_test_path": { "$ref": "#/$defs/repository_path" }
+      }
+    },
+    "feature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "method_version",
+        "method_kind",
+        "catalogue_snapshot_date",
+        "catalogue_url"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^qpls3\\.[a-z0-9][a-z0-9_.-]*$"
+        },
+        "label": { "$ref": "#/$defs/non_empty_string" },
+        "method_version": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*_v[1-9][0-9]*$"
+        },
+        "method_kind": {
+          "enum": ["deterministic", "stochastic"]
+        },
+        "catalogue_snapshot_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "catalogue_url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://smartpls\\.com/"
+        }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "supported_scope",
+        "estimand",
+        "assumptions",
+        "exclusions",
+        "warnings"
+      ],
+      "properties": {
+        "supported_scope": { "$ref": "#/$defs/non_empty_string" },
+        "estimand": { "$ref": "#/$defs/non_empty_string" },
+        "assumptions": { "$ref": "#/$defs/non_empty_unique_strings" },
+        "exclusions": { "$ref": "#/$defs/non_empty_unique_strings" },
+        "warnings": { "$ref": "#/$defs/non_empty_unique_strings" }
+      }
+    },
+    "equation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "expression", "variables", "source_reference_id"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]*$" },
+        "expression": { "$ref": "#/$defs/non_empty_string" },
+        "variables": { "$ref": "#/$defs/non_empty_unique_strings" },
+        "source_reference_id": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]*$" }
+      }
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "citation",
+        "locator",
+        "independence_group",
+        "runtime_policy"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]*$" },
+        "kind": {
+          "enum": [
+            "primary_paper",
+            "published_fixture",
+            "hand_calculation",
+            "independent_python",
+            "independent_r"
+          ]
+        },
+        "citation": { "$ref": "#/$defs/non_empty_string" },
+        "locator": { "$ref": "#/$defs/non_empty_string" },
+        "independence_group": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]*$" },
+        "runtime_policy": {
+          "enum": ["no_runtime_dependency", "development_validation_only"]
+        }
+      }
+    },
+    "simulation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "purpose", "design", "seed_policy", "metrics", "acceptance_rule"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]*$" },
+        "purpose": {
+          "enum": [
+            "recovery",
+            "bias",
+            "coverage",
+            "type_i_error",
+            "power",
+            "false_positive_containment",
+            "class_recovery",
+            "model_selection",
+            "failure_behavior"
+          ]
+        },
+        "design": { "$ref": "#/$defs/non_empty_string" },
+        "seed_policy": { "$ref": "#/$defs/non_empty_string" },
+        "metrics": { "$ref": "#/$defs/non_empty_unique_strings" },
+        "acceptance_rule": { "$ref": "#/$defs/non_empty_string" }
+      }
+    },
+    "boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "category", "case", "expected_behavior"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]*$" },
+        "category": {
+          "enum": [
+            "data_pathology",
+            "unsupported_scope",
+            "metamorphic",
+            "determinism",
+            "tamper"
+          ]
+        },
+        "case": { "$ref": "#/$defs/non_empty_string" },
+        "expected_behavior": { "$ref": "#/$defs/non_empty_string" }
+      }
+    },
+    "scientific_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["equations", "references", "simulations", "boundaries", "numerical_tolerance"],
+      "properties": {
+        "equations": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/equation" }
+        },
+        "references": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "#/$defs/reference" }
+        },
+        "simulations": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/simulation" }
+        },
+        "boundaries": {
+          "type": "array",
+          "minItems": 5,
+          "items": { "$ref": "#/$defs/boundary" }
+        },
+        "numerical_tolerance": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 0.000001
+        }
+      }
+    },
+    "persistence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recipe_schema_version",
+        "result_schema_version",
+        "payload_kind",
+        "tamper_tests",
+        "legacy_policy"
+      ],
+      "properties": {
+        "recipe_schema_version": { "type": "integer", "minimum": 1 },
+        "result_schema_version": { "type": "integer", "minimum": 1 },
+        "payload_kind": { "type": "string", "pattern": "^[a-z][a-z0-9_]*_v[1-9][0-9]*$" },
+        "tamper_tests": {
+          "type": "array",
+          "minItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["category", "expected_behavior"],
+            "properties": {
+              "category": {
+                "enum": [
+                  "feature_identity",
+                  "method_version",
+                  "dataset_fingerprint",
+                  "checksum",
+                  "malformed_payload",
+                  "legacy_reinterpretation"
+                ]
+              },
+              "expected_behavior": { "$ref": "#/$defs/non_empty_string" }
+            }
+          }
+        },
+        "legacy_policy": { "$ref": "#/$defs/non_empty_string" }
+      }
+    },
+    "native": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["setup_controls", "applicability_blockers", "result_surfaces", "gui_cli_parity_rule", "accessibility_rules"],
+      "properties": {
+        "setup_controls": { "$ref": "#/$defs/non_empty_unique_strings" },
+        "applicability_blockers": { "$ref": "#/$defs/non_empty_unique_strings" },
+        "result_surfaces": { "$ref": "#/$defs/non_empty_unique_strings" },
+        "gui_cli_parity_rule": { "$ref": "#/$defs/non_empty_string" },
+        "accessibility_rules": { "$ref": "#/$defs/non_empty_unique_strings" }
+      }
+    },
+    "export": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["formats", "tables", "same_run_required", "provenance_required"],
+      "properties": {
+        "formats": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["csv", "xlsx", "html", "svg", "pdf", "png"] }
+        },
+        "tables": { "$ref": "#/$defs/non_empty_unique_strings" },
+        "same_run_required": { "const": true },
+        "provenance_required": { "const": true }
+      }
+    },
+    "packaged": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platforms",
+        "workflow_steps",
+        "viewports",
+        "offline_required",
+        "cancellation_required",
+        "process_cleanup_required"
+      ],
+      "properties": {
+        "platforms": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["windows"] }
+        },
+        "workflow_steps": { "$ref": "#/$defs/non_empty_unique_strings" },
+        "viewports": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": { "enum": ["1024x700", "1280x720", "1440x900"] }
+        },
+        "offline_required": { "const": true },
+        "cancellation_required": { "type": "boolean" },
+        "process_cleanup_required": { "const": true }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exact_identity_fields", "source_hashes_required", "freshness_required", "reports_must_pass"],
+      "properties": {
+        "exact_identity_fields": {
+          "type": "array",
+          "minItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "enum": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"]
+          }
+        },
+        "source_hashes_required": { "const": true },
+        "freshness_required": { "const": true },
+        "reports_must_pass": { "const": true }
+      }
+    },
+    "product_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["persistence", "native", "export", "packaged", "audit"],
+      "properties": {
+        "persistence": { "$ref": "#/$defs/persistence" },
+        "native": { "$ref": "#/$defs/native" },
+        "export": { "$ref": "#/$defs/export" },
+        "packaged": { "$ref": "#/$defs/packaged" },
+        "audit": { "$ref": "#/$defs/audit" }
+      }
+    },
+    "identity_pointers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["passed", "feature_id", "method_version", "catalogue_snapshot_date"],
+      "properties": {
+        "passed": { "type": "string", "pattern": "^/" },
+        "feature_id": { "type": "string", "pattern": "^/" },
+        "method_version": { "type": "string", "pattern": "^/" },
+        "catalogue_snapshot_date": { "type": "string", "pattern": "^/" }
+      }
+    },
+    "evidence_artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "roles", "verification"],
+      "properties": {
+        "path": { "$ref": "#/$defs/repository_path" },
+        "roles": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "method_spec",
+              "independent_reference",
+              "simulation_report",
+              "boundary_report",
+              "persistence_report",
+              "frontend_report",
+              "export_report",
+              "method_audit",
+              "packaged_acceptance"
+            ]
+          }
+        },
+        "verification": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "identity_pointers",
+            "source_artifacts_pointer",
+            "generated_at_pointer"
+          ],
+          "properties": {
+            "kind": { "const": "identity_report" },
+            "identity_pointers": { "$ref": "#/$defs/identity_pointers" },
+            "source_artifacts_pointer": { "type": "string", "pattern": "^/" },
+            "generated_at_pointer": { "type": "string", "pattern": "^/" }
+          }
+        }
+      }
+    },
+    "source_requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method_spec",
+        "independent_reference",
+        "simulation_report",
+        "boundary_report",
+        "persistence_report",
+        "frontend_report",
+        "export_report",
+        "method_audit",
+        "packaged_acceptance"
+      ],
+      "properties": {
+        "method_spec": { "$ref": "#/$defs/non_empty_unique_paths" },
+        "independent_reference": { "$ref": "#/$defs/non_empty_unique_paths" },
+        "simulation_report": { "$ref": "#/$defs/non_empty_unique_paths" },
+        "boundary_report": { "$ref": "#/$defs/non_empty_unique_paths" },
+        "persistence_report": { "$ref": "#/$defs/non_empty_unique_paths" },
+        "frontend_report": { "$ref": "#/$defs/non_empty_unique_paths" },
+        "export_report": { "$ref": "#/$defs/non_empty_unique_paths" },
+        "method_audit": { "$ref": "#/$defs/non_empty_unique_paths" },
+        "packaged_acceptance": { "$ref": "#/$defs/non_empty_unique_paths" }
+      }
+    },
+    "non_empty_unique_paths": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/repository_path" }
+    },
+    "stage_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["engine_only", "archive_qualified", "native_qualified", "release_qualified"],
+      "properties": {
+        "engine_only": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidence_artifact" }
+        },
+        "archive_qualified": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidence_artifact" }
+        },
+        "native_qualified": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidence_artifact" }
+        },
+        "release_qualified": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidence_artifact" }
+        }
+      }
+    },
+    "qualification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["declared_state", "target_state", "source_requirements", "evidence"],
+      "properties": {
+        "declared_state": {
+          "enum": ["absent", "engine_only", "archive_qualified", "native_qualified", "release_qualified"]
+        },
+        "target_state": {
+          "enum": ["absent", "engine_only", "archive_qualified", "native_qualified", "release_qualified"]
+        },
+        "source_requirements": { "$ref": "#/$defs/source_requirements" },
+        "evidence": { "$ref": "#/$defs/stage_evidence" }
+      }
+    }
+  }
+}

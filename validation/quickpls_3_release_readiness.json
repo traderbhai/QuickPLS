@@ -1,0 +1,368 @@
+{
+  "schema_version": 1,
+  "program": "quickpls_3_competitor_release",
+  "target_release": "3.0.0",
+  "target_channel": "stable",
+  "product_policy": {
+    "platform": "windows_x64",
+    "offline_default": true,
+    "telemetry_default": "disabled",
+    "update_check_default": "manual",
+    "positioning": "competitor_for_documented_supported_workflows",
+    "prohibited_claims": [
+      "complete_smartpls_parity",
+      "identical_undocumented_behavior",
+      "smartpls_project_compatibility",
+      "smartpls_affiliation"
+    ]
+  },
+  "release_channels": {
+    "internal": "maintainer_only",
+    "beta": "signed_prerelease",
+    "stable": "all_mandatory_gates_passed"
+  },
+  "evidence_policy": {
+    "record_schema_version": 1,
+    "max_age_days": 365,
+    "repository_json_required": true,
+    "requirement_and_release_binding": true,
+    "identity_binding": "requirement_specific_artifact_or_reviewer",
+    "artifact_rehash_required": true,
+    "candidate_semantic_validation": true,
+    "pe_authenticode_binding": true,
+    "authenticode_validation_time": "signtool_verify_pa_all_v_tw",
+    "authenticode_runtime_evidence_binding": true,
+    "authenticode_bypass": "prohibited",
+    "updater_zip_safety": true,
+    "sbom_provenance_binding": true,
+    "candidate_manifest_binding": true,
+    "criterion_result_binding": "structured_json",
+    "approval_after_evidence": true,
+    "reuse_across_requirements": "prohibited",
+    "supplementary_types": [
+      "url",
+      "attestation"
+    ]
+  },
+  "overall_status": "pending",
+  "release_decision": {
+    "status": "pending",
+    "approved_by": null,
+    "approved_at": null,
+    "record": null
+  },
+  "requirements": [
+    {
+      "id": "signing.identity",
+      "category": "signing",
+      "owner": "release_engineering",
+      "required": true,
+      "status": "pending",
+      "evidence_identity": "artifact_identity",
+      "acceptance_check_ids": [
+        "signing.identity.publisher_approved",
+        "signing.identity.secret_protection"
+      ],
+      "acceptance_criteria": [
+        "A CA-trusted or managed Authenticode identity is approved for QuickPLS releases.",
+        "Private signing material is hardware-backed or service-managed and is not stored in the repository."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "signing.artifacts",
+      "category": "signing",
+      "owner": "release_engineering",
+      "required": true,
+      "status": "pending",
+      "evidence_identity": "artifact_identity",
+      "acceptance_check_ids": [
+        "signing.artifacts.signatures_timestamped",
+        "signing.artifacts.signtool_verified",
+        "signing.artifacts.post_signing_hashes"
+      ],
+      "acceptance_criteria": [
+        "Desktop, CLI, and final installer are SHA-256 Authenticode signed and RFC 3161 timestamped.",
+        "SignTool verifies publisher, trust chain, timestamp, and every signature without warnings.",
+        "Checksums identify the post-signing binaries accepted on clean machines."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "installer.clean_offline",
+      "category": "installer_lifecycle",
+      "owner": "quality_engineering",
+      "required": true,
+      "status": "pending",
+      "evidence_identity": "artifact_identity",
+      "acceptance_check_ids": [
+        "installer.clean_offline.clean_matrix",
+        "installer.clean_offline.core_journey",
+        "installer.clean_offline.webview_offline"
+      ],
+      "acceptance_criteria": [
+        "Clean offline install and first launch pass on the oldest supported and current patched Windows releases.",
+        "Standard-user and administrator paths complete sample or import, calculation, export, save, and reopen.",
+        "The documented WebView2 strategy works without an undisclosed network prerequisite."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "installer.upgrade_recovery",
+      "category": "installer_lifecycle",
+      "owner": "quality_engineering",
+      "required": true,
+      "status": "pending",
+      "evidence_identity": "artifact_identity",
+      "acceptance_check_ids": [
+        "installer.upgrade_recovery.n_minus_one_preserved",
+        "installer.upgrade_recovery.interrupted_recovery"
+      ],
+      "acceptance_criteria": [
+        "N-1 upgrade preserves supported projects, results, settings, and recovery state.",
+        "Interrupted or failed upgrade has a tested recovery or full-installer fallback without data loss."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "installer.uninstall_deployment",
+      "category": "installer_lifecycle",
+      "owner": "quality_engineering",
+      "required": true,
+      "status": "pending",
+      "evidence_identity": "artifact_identity",
+      "acceptance_check_ids": [
+        "installer.uninstall_deployment.cleanup_preserve_projects",
+        "installer.uninstall_deployment.portable_coexistence",
+        "installer.uninstall_deployment.unattended_exit_codes"
+      ],
+      "acceptance_criteria": [
+        "Uninstall removes application-owned binaries, shortcuts, registry entries, and processes while preserving user projects by default.",
+        "Portable and installed editions coexist without corrupting shared user state.",
+        "Unattended installation, uninstall, and exit codes are documented and tested."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "updater.trust_channels",
+      "category": "updater",
+      "owner": "release_engineering",
+      "required": true,
+      "status": "pending",
+      "evidence_identity": "artifact_identity",
+      "acceptance_check_ids": [
+        "updater.trust_channels.signature_enforced",
+        "updater.trust_channels.channels_and_downgrade"
+      ],
+      "acceptance_criteria": [
+        "Updater artifacts use a protected signing key and signature verification cannot be disabled.",
+        "Beta and stable manifests are isolated and automatic downgrade is rejected."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "updater.offline_recovery",
+      "category": "updater",
+      "owner": "quality_engineering",
+      "required": true,
+      "status": "pending",
+      "evidence_identity": "artifact_identity",
+      "acceptance_check_ids": [
+        "updater.offline_recovery.manual_and_disclosed",
+        "updater.offline_recovery.recovery_paths"
+      ],
+      "acceptance_criteria": [
+        "Update checking is manual by default and its network behavior is disclosed.",
+        "Signature failure, interruption, retry, rollback, and offline full-installer recovery are tested."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "support.operations",
+      "category": "support",
+      "owner": "product_operations",
+      "required": true,
+      "status": "pending",
+      "evidence_identity": "reviewer_identity",
+      "acceptance_check_ids": [
+        "support.operations.channel_and_policy",
+        "support.operations.issues_and_security"
+      ],
+      "acceptance_criteria": [
+        "A monitored support channel, severity definitions, response targets, supported-version policy, and escalation owner are published.",
+        "Known issues, rollback guidance, and a private security-reporting route are current for the target release."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "support.docs_diagnostics",
+      "category": "support",
+      "owner": "product_operations",
+      "required": true,
+      "status": "pending",
+      "evidence_identity": "reviewer_identity",
+      "acceptance_check_ids": [
+        "support.docs_diagnostics.versioned_docs",
+        "support.docs_diagnostics.diagnostics_redaction"
+      ],
+      "acceptance_criteria": [
+        "Versioned system requirements, installation, update, uninstall, scope, tutorial, citation, release-note, and troubleshooting documentation are published.",
+        "User-initiated diagnostics exclude datasets, project contents, secrets, and full personal paths by default."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "trust.privacy_telemetry",
+      "category": "privacy_security_legal",
+      "owner": "product_owner",
+      "required": true,
+      "status": "pending",
+      "evidence_identity": "reviewer_identity",
+      "acceptance_check_ids": [
+        "trust.privacy_telemetry.privacy_notice",
+        "trust.privacy_telemetry.network_behavior"
+      ],
+      "acceptance_criteria": [
+        "A privacy notice covers offline processing, manual update checks, distribution-site logs, diagnostics, and support submissions.",
+        "Packaged network tests prove no undisclosed telemetry or automatic launch-time network request."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "trust.security",
+      "category": "privacy_security_legal",
+      "owner": "security_reviewer",
+      "required": true,
+      "status": "pending",
+      "evidence_identity": "reviewer_identity",
+      "acceptance_check_ids": [
+        "trust.security.threat_review",
+        "trust.security.finding_closure"
+      ],
+      "acceptance_criteria": [
+        "Threat review covers hostile data/project files, archive abuse, formula injection, active exports, file paths, Tauri IPC, updater, and signing keys.",
+        "Release-blocking findings are closed and dependency, advisory, secret, and license checks pass."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "trust.legal",
+      "category": "privacy_security_legal",
+      "owner": "legal_reviewer",
+      "required": true,
+      "status": "pending",
+      "evidence_identity": "reviewer_identity",
+      "acceptance_check_ids": [
+        "trust.legal.review_scope",
+        "trust.legal.disposition_record"
+      ],
+      "acceptance_criteria": [
+        "Qualified review covers EULA, source-available license, notices, privacy, trademark, comparative claims, liability, and institutional distribution.",
+        "The checked-in disposition identifies reviewer, date, scope, and stable confidential-record reference without exposing privileged material."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "science.independent_review",
+      "category": "scientific_review",
+      "owner": "scientific_review_lead",
+      "required": true,
+      "status": "pending",
+      "evidence_identity": "reviewer_identity",
+      "acceptance_check_ids": [
+        "science.independent_review.qualifications_and_conflicts",
+        "science.independent_review.material_findings_closed"
+      ],
+      "acceptance_criteria": [
+        "Independent reviewers with documented qualifications assess the target release's high-risk method families, declare relevant conflicts, and record review scope and disposition.",
+        "Every scientifically material finding is closed, release-blocking, or explicitly resolved through a bounded documented claim before approval."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "supply_chain.sbom_licenses",
+      "category": "sbom_provenance",
+      "owner": "release_engineering",
+      "required": true,
+      "status": "pending",
+      "evidence_identity": "artifact_identity",
+      "acceptance_check_ids": [
+        "supply_chain.sbom_licenses.sbom_and_licenses",
+        "supply_chain.sbom_licenses.advisory_disposition"
+      ],
+      "acceptance_criteria": [
+        "The exact release has a machine-readable SBOM and reviewed third-party license inventory.",
+        "Critical or high dependency advisories have an approved resolution or documented release-blocking disposition."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "supply_chain.provenance",
+      "category": "sbom_provenance",
+      "owner": "release_engineering",
+      "required": true,
+      "status": "pending",
+      "evidence_identity": "artifact_identity",
+      "acceptance_check_ids": [
+        "supply_chain.provenance.clean_build",
+        "supply_chain.provenance.exact_promotion"
+      ],
+      "acceptance_criteria": [
+        "A protected clean build records source commit, toolchain, versions, artifact hashes, SBOM, signatures, and attestation.",
+        "The exact tested signed hashes are promoted to the immutable stable tag and release."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "beta.cohort_journeys",
+      "category": "external_beta",
+      "owner": "product_research",
+      "required": true,
+      "status": "pending",
+      "evidence_identity": "reviewer_identity",
+      "acceptance_check_ids": [
+        "beta.cohort_journeys.cohort_diversity",
+        "beta.cohort_journeys.journey_threshold"
+      ],
+      "acceptance_criteria": [
+        "A privacy-safe external cohort includes experienced SmartPLS users and researchers new to SEM across at least five independent institutions or groups.",
+        "At least 15 participants complete at least 30 real workflows and at least 90 percent of designated core journeys finish without developer intervention."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "beta.exit_quality",
+      "category": "external_beta",
+      "owner": "release_manager",
+      "required": true,
+      "status": "pending",
+      "evidence_identity": "reviewer_identity",
+      "acceptance_check_ids": [
+        "beta.exit_quality.defect_exit",
+        "beta.exit_quality.final_rerun"
+      ],
+      "acceptance_criteria": [
+        "No unresolved P0 or P1 defect, reproducible data loss, or archive corruption remains.",
+        "Scientifically material discrepancies are fixed or explicitly explained and final signed lifecycle acceptance is rerun after beta fixes."
+      ],
+      "evidence": []
+    },
+    {
+      "id": "governance.claims_channels",
+      "category": "release_governance",
+      "owner": "release_manager",
+      "required": true,
+      "status": "pending",
+      "evidence_identity": "reviewer_identity",
+      "acceptance_check_ids": [
+        "governance.claims_channels.channel_rules",
+        "governance.claims_channels.claim_boundaries"
+      ],
+      "acceptance_criteria": [
+        "Internal, beta, and stable channels have distinct labels, manifests, eligibility rules, and rollback paths.",
+        "Public comparison claims link to current evidence and do not imply complete parity, identity, project compatibility, or affiliation."
+      ],
+      "evidence": []
+    }
+  ]
+}

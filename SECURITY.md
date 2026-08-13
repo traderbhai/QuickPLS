@@ -4,8 +4,9 @@
 
 | Version | Supported |
 | --- | --- |
-| 1.0.x | Yes |
-| Earlier preview builds | No public security support |
+| 2.46.x | Yes |
+| 2.45.x | Transition support while 2.46.x is the current stable line |
+| Earlier releases and preview builds | No public security support |
 
 ## Reporting A Vulnerability
 
@@ -15,7 +16,7 @@ Do not publish exploit details before the issue has been reviewed.
 
 ## Runtime Security Model
 
-QuickPLS 1.0.0 is designed as an offline Windows desktop application:
+QuickPLS is designed as an offline Windows desktop application:
 
 - No account.
 - No activation server.
@@ -23,5 +24,4 @@ QuickPLS 1.0.0 is designed as an offline Windows desktop application:
 - No cloud sync.
 - No remote computation.
 
-The installer is currently unsigned. Windows SmartScreen warnings are expected until a code-signing certificate is added and audited.
-
+The 2.46.0 installer is currently unsigned. Windows SmartScreen warnings are expected until a code-signing certificate is added and the exact signed artifacts pass the release-readiness gate. Unsigned builds must not be presented as the competitor-grade stable release.
