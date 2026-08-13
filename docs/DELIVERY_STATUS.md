@@ -1,5 +1,503 @@
 # Delivery Status
 
+## Active QuickPLS 2.x Work
+
+Current active working tracker: `docs/V2_ACTIVE_MILESTONE.md`.
+
+The QuickPLS 2.x frontend program now uses grouped milestones, targeted UI smoke/audit checks, and versioned desktop artifacts only for completed milestone versions.
+
+## v2.25.0 Model Workbench Integration
+
+Status: `validated`
+
+This frontend-only milestone integrates the SEM designer into a native model workbench with a left explorer tree, central interactive SEM canvas, right property-sheet inspector, bottom issues/output pane, Focus Diagram mode, and publication checks. The SEM canvas logic and numerical behavior are preserved.
+
+Evidence:
+
+- `src/components/ModelIssuesPane.tsx`
+- `src/components/ModelCanvas.tsx`
+- `src/components/Explorer.tsx`
+- `src/components/Inspector.tsx`
+- `src/styles.css`
+- `validation/v2250_model_workbench_smoke.mjs`
+- `validation/v2250_model_workbench_audit.py`
+- `validation/results/v2250_model_workbench_smoke.json`
+- `validation/results/v2250_model_workbench_audit.json`
+- `docs/V2_25_0_MODEL_WORKBENCH_INTEGRATION.md`
+- gate `v2_25_0_model_workbench_integration`
+
+## v2.24.0 Data Workbench Redesign
+
+Status: `validated`
+
+This frontend-only milestone turns Data into a native desktop-style workbench with Data View, Variable View, Import History, Data Quality, Notes, a dense data grid, variable metadata table, and method applicability guidance. Existing import APIs and dataset/project structures are preserved.
+
+Evidence:
+
+- `src/components/DataWorkspace.tsx`
+- `src/styles.css`
+- `validation/v2240_data_workbench_smoke.mjs`
+- `validation/v2240_data_workbench_audit.py`
+- `validation/results/v2240_data_workbench_smoke.json`
+- `validation/results/v2240_data_workbench_audit.json`
+- `docs/V2_24_0_DATA_WORKBENCH_REDESIGN.md`
+- gate `v2_24_0_data_workbench_redesign`
+
+## v2.23.0 Home And Project Manager
+
+Status: `validated`
+
+This frontend-only milestone turns Home into a compact desktop start center with project launcher actions, current workspace summary, recent-project list, recovery/autosave status, and quick links. It removes landing-page behavior without changing numerical behavior.
+
+Evidence:
+
+- `src/components/OnboardingWorkspace.tsx`
+- `src/styles.css`
+- `validation/v2230_home_project_manager_smoke.mjs`
+- `validation/v2230_home_project_manager_audit.py`
+- `validation/results/v2230_home_project_manager_smoke.json`
+- `validation/results/v2230_home_project_manager_audit.json`
+- `docs/V2_23_0_HOME_PROJECT_MANAGER.md`
+- gate `v2_23_0_home_project_manager`
+
+## v2.22.0 Menu Commands Dialogs Native Base
+
+Status: `validated`
+
+This frontend-only milestone starts the new SmartPLS/SPSS/AMOS-style native desktop redesign program by adding a typed command registry, full desktop menu coverage, dialog entry points, and permanent status-bar command feedback. It supersedes the earlier mockup-only shell direction without changing numerical behavior.
+
+Evidence:
+
+- `src/domain/desktopCommands.ts`
+- `src/components/TopBar.tsx`
+- `src/components/StatusBar.tsx`
+- `validation/v2220_native_commands_audit.py`
+- `validation/results/v2220_native_commands_audit.json`
+- `docs/V2_22_0_MENU_COMMANDS_DIALOGS_NATIVE_BASE.md`
+- gate `v2_22_0_menu_commands_dialogs_native_base`
+
+## v2.21.0 Desktop Design System And Shell
+
+Status: `validated`
+
+This frontend-only milestone adds the native shell foundation: compact neutral desktop chrome, explicit v2.21 shell markers, and UI-only command feedback in the bottom status bar.
+
+Evidence:
+
+- `src/components/TopBar.tsx`
+- `src/components/StatusBar.tsx`
+- `src/styles.css`
+- `validation/v2210_native_shell_audit.py`
+- `validation/results/v2210_native_shell_audit.json`
+- `docs/V2_21_0_DESKTOP_DESIGN_SYSTEM_SHELL.md`
+- gate `v2_21_0_desktop_design_system_shell`
+
+## v2.20.0 QuickPLS 2.0 Mockup Parity Release Audit
+
+Status: `validated`
+
+This frontend-only audit verifies the completed QuickPLS 2.0 mockup-parity program across the shell, menu/dialog layer, and all aligned workspaces. It confirms v2.16 through v2.19 remain clear and that no stale fixture wording, mojibake, SmartPLS-equivalence claim, or backend numerical change was introduced.
+
+Evidence:
+
+- `validation/v2200_mockup_parity_smoke.mjs`
+- `validation/v2200_mockup_parity_audit.py`
+- `validation/results/v2200_mockup_parity_smoke.json`
+- `validation/results/v2200_mockup_parity_audit.json`
+- `docs/V2_20_0_QUICKPLS_2_MOCKUP_PARITY_RELEASE_AUDIT.md`
+- gate `v2_20_0_quickpls_2_mockup_parity_release_audit`
+
+## v2.19.0 Report, Trust Center, And Settings Mockup Alignment
+
+Status: `validated`
+
+This frontend-only milestone aligns the Report export workflow, Trust Center validation evidence workspace, and Settings preferences workspace to the QuickPLS 2.0 mockup density while preserving export behavior, validation evidence display, and local UI preferences.
+
+Evidence:
+
+- `src/components/ReportsWorkspace.tsx`
+- `src/components/TrustCenterWorkspace.tsx`
+- `src/components/SettingsWorkspace.tsx`
+- `src/styles.css`
+- `validation/v2190_report_trust_settings_smoke.mjs`
+- `validation/v2190_report_trust_settings_audit.py`
+- `validation/results/v2190_report_trust_settings_smoke.json`
+- `validation/results/v2190_report_trust_settings_audit.json`
+- `docs/V2_19_0_REPORT_TRUST_SETTINGS_MOCKUP_ALIGNMENT.md`
+- gate `v2_19_0_report_trust_settings_mockup_alignment`
+
+## v2.18.0 Model, Run, And Results Mockup Alignment
+
+Status: `validated`
+
+This frontend-only milestone aligns the Model shell, Run calculation workspace, and Results workspace to the QuickPLS 2.0 mockup density and desktop workflow style while preserving SEM canvas behavior, run execution, result payloads, and interpretation logic.
+
+Evidence:
+
+- `src/components/ModelCanvas.tsx`
+- `src/components/RunWorkspace.tsx`
+- `src/components/RunHistory.tsx`
+- `src/styles.css`
+- `validation/v2180_model_run_results_smoke.mjs`
+- `validation/v2180_model_run_results_audit.py`
+- `validation/results/v2180_model_run_results_smoke.json`
+- `validation/results/v2180_model_run_results_audit.json`
+- `docs/V2_18_0_MODEL_RUN_RESULTS_MOCKUP_ALIGNMENT.md`
+- gate `v2_18_0_model_run_results_mockup_alignment`
+
+## v2.17.0 Home, Data, And Setup Mockup Alignment
+
+Status: `validated`
+
+This frontend-only milestone aligns the Home launcher, Data workspace, and Setup method-guidance workspace to the QuickPLS 2.0 mockup density and desktop workflow style while preserving the current statistical and project behavior.
+
+Evidence:
+
+- `src/components/OnboardingWorkspace.tsx`
+- `src/components/DataWorkspace.tsx`
+- `src/components/AnalysisCatalog.tsx`
+- `src/styles.css`
+- `validation/v2170_home_data_setup_smoke.mjs`
+- `validation/v2170_home_data_setup_audit.py`
+- `validation/results/v2170_home_data_setup_smoke.json`
+- `validation/results/v2170_home_data_setup_audit.json`
+- `docs/V2_17_0_HOME_DATA_SETUP_MOCKUP_ALIGNMENT.md`
+- gate `v2_17_0_home_data_setup_mockup_alignment`
+
+## v2.16.0 Desktop Shell Visual Contract
+
+Status: `validated`
+
+This frontend-only milestone establishes the mockup-parity desktop shell foundation for the QuickPLS 2.0 redesign: a React-rendered menu bar, compact command strip, native-style dialog shell, tighter desktop rail, and shared visual tokens around the existing workspaces.
+
+Evidence:
+
+- `src/components/TopBar.tsx`
+- `src/store.ts`
+- `src/types.ts`
+- `src/styles.css`
+- `validation/v2160_desktop_shell_smoke.mjs`
+- `validation/v2160_desktop_shell_audit.py`
+- `validation/results/v2160_desktop_shell_smoke.json`
+- `validation/results/v2160_desktop_shell_audit.json`
+- `docs/V2_16_0_DESKTOP_SHELL_VISUAL_CONTRACT.md`
+- gate `v2_16_0_desktop_shell_visual_contract`
+
+## v2.10.0 Results/Report Research Table Pass
+
+Status: `validated`
+
+This frontend-only milestone improves saved-run table scanning and report export-preview confidence in the Results and Report workspaces.
+
+Evidence:
+
+- `src/components/RunHistory.tsx`
+- `src/components/ReportsWorkspace.tsx`
+- `src/styles.css`
+- `validation/v2100_results_report_tables_smoke.mjs`
+- `validation/v2100_results_report_tables_audit.py`
+- `validation/results/v2100_results_report_tables_smoke.json`
+- `validation/results/v2100_results_report_tables_audit.json`
+- screenshots under `validation/results/screens/v2100/results-report-tables/`
+- gate `v2_10_0_results_report_research_table_pass`
+
+## v2.5.0 Navigation Hierarchy Polish
+
+Status: `validated`
+
+This frontend-only milestone clarifies the left navigation rail by separating the main research workflow from support utilities.
+
+Evidence:
+
+- `src/components/NavRail.tsx`
+- `src/styles.css`
+- `validation/v250_navigation_hierarchy_smoke.mjs`
+- `validation/v250_navigation_hierarchy_audit.py`
+- `validation/results/v250_navigation_hierarchy_smoke.json`
+- `validation/results/v250_navigation_hierarchy_audit.json`
+- `docs/V2_5_0_NAVIGATION_HIERARCHY_POLISH.md`
+- gate `v2_5_0_navigation_hierarchy_polish`
+
+## v2.4.1 QuickPLS 2 Release Readiness Audit
+
+Status: `validated`
+
+This frontend/documentation milestone consolidates the current QuickPLS 2.x UI program as a coherent release-ready baseline before further design iteration.
+
+Evidence:
+
+- `validation/v241_release_readiness_smoke.mjs`
+- `validation/v241_release_readiness_audit.py`
+- `validation/results/v241_release_readiness_smoke.json`
+- `validation/results/v241_release_readiness_audit.json`
+- `docs/V2_4_1_QUICKPLS_2_RELEASE_READINESS_AUDIT.md`
+- gate `v2_4_1_quickpls_2_release_readiness_audit`
+
+## v2.4.0 Public Documentation And Screenshot Refresh
+
+Status: `validated`
+
+This frontend/product documentation milestone updates the public GitHub-facing documentation for the QuickPLS 2.x interface. It refreshes README, installation, build, tutorial links, and screenshot references so users can understand, install, build, verify, and use the current app without stale v1.8.1 release instructions.
+
+Evidence:
+
+- `README.md`
+- `docs/INSTALLATION.md`
+- `docs/BUILD_FROM_SOURCE.md`
+- `docs/V2_4_0_PUBLIC_DOCUMENTATION_SCREENSHOT_REFRESH.md`
+- screenshots under `docs/screenshots/v2/`
+- `validation/results/v240_public_docs_smoke.json`
+- `validation/results/v240_public_docs_audit.json`
+- gate `v2_4_0_public_documentation_screenshot_refresh`
+
+## v2.3.2 Shared UI Verification Harness
+
+Status: `validated`
+
+This frontend/product-only milestone consolidates repeated v2 UI smoke and static audit logic into shared validation helpers. It keeps v2.3.1 shell integrity checks passing while adding a focused v2.3.2 smoke for command-bar blocker navigation and shared harness coverage.
+
+Evidence:
+
+- `validation/lib/v2_ui_smoke_harness.mjs`
+- `validation/lib/v2_ui_audit.py`
+- `validation/v231_ui_integrity_smoke.mjs`
+- `validation/v231_ui_integrity_audit.py`
+- `validation/results/v232_shared_ui_harness_smoke.json`
+- `validation/results/v232_shared_ui_harness_audit.json`
+- screenshots under `validation/results/screens/v232/shared-ui-harness/`
+- gate `v2_3_2_shared_ui_verification_harness`
+
+## v2.3.1 UI Integrity Consolidation
+
+Status: `validated`
+
+This frontend/product-only milestone consolidates the v2 shell integrity checks after the command-bar readiness pass. It verifies visible version metadata, command-bar readiness metadata, v2 visual-contract wording, no mojibake in normal v2 UI/docs, no stale visible labels, and no SmartPLS-equivalence claims.
+
+Evidence:
+
+- `validation/results/v231_ui_integrity_smoke.json`
+- `validation/results/v231_ui_integrity_audit.json`
+- screenshots under `validation/results/screens/v231/ui-integrity/`
+- gate `v2_3_1_ui_integrity_consolidation`
+
+## v2.3.0 Global Command Bar Readiness
+
+Status: `validated`
+
+This frontend/product-only milestone aligns the global command bar with workflow readiness by exposing run-state metadata, showing exact nearby disabled-run reasons, and routing blocker actions through destination context.
+
+Evidence:
+
+- `validation/results/v230_command_bar_smoke.json`
+- `validation/results/v230_command_bar_audit.json`
+- screenshots under `validation/results/screens/v230/command-bar/`
+- gate `v2_3_0_global_command_bar_readiness`
+
+## v2.2.9 Workflow Strip Context Alignment
+
+Status: `validated`
+
+This frontend/product-only milestone aligns the top workflow strip with coach feedback by exposing workflow-step metadata and recording source/destination context when workflow-step navigation moves the researcher between workspaces.
+
+Evidence:
+
+- `validation/results/v229_workflow_strip_smoke.json`
+- `validation/results/v229_workflow_strip_audit.json`
+- screenshots under `validation/results/screens/v229/workflow-strip/`
+- gate `v2_2_9_workflow_strip_context_alignment`
+
+## v2.2.8 Workflow Feedback Lifecycle
+
+Status: `validated`
+
+This frontend/product-only milestone makes workflow coach destination and command feedback dismissible and clears stale feedback on cross-workspace navigation, dataset replacement, project reset, and project load.
+
+Evidence:
+
+- `validation/results/v228_feedback_lifecycle_smoke.json`
+- `validation/results/v228_feedback_lifecycle_audit.json`
+- screenshots under `validation/results/screens/v228/feedback-lifecycle/`
+- gate `v2_2_8_workflow_feedback_lifecycle`
+
+## v2.2.7 Workflow Command Feedback
+
+Status: `validated`
+
+This frontend/product-only milestone records coach-driven command requests as UI-only command context, renders a compact command feedback note after enabled command actions, and verifies disabled command actions remain inert.
+
+Evidence:
+
+- `validation/results/v227_command_feedback_smoke.json`
+- `validation/results/v227_command_feedback_audit.json`
+- screenshots under `validation/results/screens/v227/command-feedback/`
+- gate `v2_2_7_workflow_command_feedback`
+
+## v2.2.6 Workflow Destination Context
+
+Status: `validated`
+
+This frontend/product-only milestone records coach-driven workspace transitions as UI-only destination context, renders a compact landing note after enabled view-target actions, and verifies disabled coach actions remain inert.
+
+Evidence:
+
+- `validation/results/v226_destination_context_smoke.json`
+- `validation/results/v226_destination_context_audit.json`
+- screenshots under `validation/results/screens/v226/destination-context/`
+- gate `v2_2_6_workflow_destination_context`
+
+## v2.2.5 Workflow Coach Action Execution
+
+Status: `validated`
+
+This frontend/product-only milestone makes workflow coach actions executable and auditable. Coach buttons expose explicit target view and command event metadata, enabled view-target actions are smoke-tested by click-through behavior, disabled actions remain inert with nearby reasons, and action labels are consistent.
+
+Evidence:
+
+- `validation/results/v225_coach_execution_smoke.json`
+- `validation/results/v225_coach_execution_audit.json`
+- screenshots under `validation/results/screens/v225/coach-execution/`
+- gate `v2_2_5_workflow_coach_action_execution`
+
+## v2.2.4 Workflow Coach Action Clarity
+
+Status: `validated`
+
+This frontend/product-only milestone makes workflow coach actions more explicit and testable. Coach buttons expose stable action metadata, disabled actions show nearby reasons, duplicate secondary actions are suppressed, and command dispatch remains within the existing frontend command contract.
+
+Evidence:
+
+- `validation/results/v224_coach_actions_smoke.json`
+- `validation/results/v224_coach_actions_audit.json`
+- screenshots under `validation/results/screens/v224/coach-actions/`
+- gate `v2_2_4_workflow_coach_action_clarity`
+
+## v2.2.3 Model Workflow Context
+
+Status: `validated`
+
+This frontend/product-only milestone adds the workflow strip and state-aware coach to the Model workspace shell, keeping the existing SEM Designer, Explorer, and Inspector intact while making Data -> Model -> Setup handoff visible inside the designer.
+
+Evidence:
+
+- `validation/results/v223_model_workflow_smoke.json`
+- `validation/results/v223_model_workflow_audit.json`
+- screenshots under `validation/results/screens/v223/model-workflow/`
+- gate `v2_2_3_model_workflow_context`
+
+## v2.2.2 Workflow Step Clarity
+
+Status: `validated`
+
+This frontend/product-only milestone makes the workflow strip stateful and actionable, with step-level state, compact action labels, hover/accessibility reasons, and desktop-width overflow checks. Existing native command implementations, statistical engines, result schemas, project archive format, and numerical fingerprints are unchanged.
+
+Evidence:
+- `validation/results/v222_workflow_step_smoke.json`
+- `validation/results/v222_workflow_step_audit.json`
+- screenshots under `validation/results/screens/v222/workflow-step/`
+- gate `v2_2_2_workflow_step_clarity`
+
+## v2.2.1 Command Handoff Consistency
+
+Status: `validated`
+
+This frontend/product-only milestone makes workflow coach actions and top-bar actions use one shared command-event contract for run, save, open, demo, and import workflows. Existing native command implementations, statistical engines, result schemas, project archive format, and numerical fingerprints are unchanged.
+
+Evidence:
+- `validation/results/v221_command_handoff_smoke.json`
+- `validation/results/v221_command_handoff_audit.json`
+- screenshots under `validation/results/screens/v221/command-handoff/`
+- gate `v2_2_1_command_handoff_consistency`
+
+## v2.2.0 Workflow Continuity And Command Clarity
+
+Status: `validated`
+
+This frontend/product-only milestone adds a compact workflow coach across the non-model workspaces so the app always explains the current state, the next practical action, and any calculation/report blocker. The SEM Designer, statistical engines, result schemas, project archive format, and numerical fingerprints are unchanged.
+
+Evidence:
+- `validation/results/v220_workflow_continuity_smoke.json`
+- `validation/results/v220_workflow_continuity_audit.json`
+- screenshots under `validation/results/screens/v220/workflow-continuity/`
+- gate `v2_2_0_workflow_continuity_command_clarity`
+
+## v2.1.5 Rendered Shell Consistency Audit
+
+Status: `validated`
+
+This frontend/product-only milestone adds one consolidated rendered QA gate across Home, Data, Model, Setup, Run, Results, Report, Trust Center, and Settings. It creates a stable v2 shell baseline before the next larger QuickPLS 2.0 UI milestone. Statistical engines, result schemas, project archive format, and numerical fingerprints are unchanged.
+
+Evidence:
+- `validation/results/v2115_rendered_shell_consistency_smoke.json`
+- `validation/results/v2115_rendered_shell_consistency_audit.json`
+- screenshots under `validation/results/screens/v2115/rendered-shell/`
+- gate `v2_1_5_rendered_shell_consistency_audit`
+
+## v2.1.4 Model/Trust/Settings Shell Alignment
+
+Status: `validated`
+
+This frontend/product-only milestone completes the QuickPLS 2.1 shell-alignment pass for the remaining Model shell, Trust Center, Settings, and global shell surfaces. The SEM designer behavior, analysis engines, result schemas, and numerical fingerprints are unchanged.
+
+Evidence:
+- `validation/results/v2114_model_trust_settings_shell_smoke.json`
+- `validation/results/v2114_model_trust_settings_shell_audit.json`
+- screenshots under `validation/results/screens/v2114/model-trust-settings/`
+- gate `v2_1_4_model_trust_settings_shell_alignment`
+
+## v2.1.3 Results/Report Mockup Alignment
+
+Status: `validated`
+
+This frontend/product-only milestone applies the QuickPLS 2.1 page, panel, metric, status, and confidence primitives to Results and Report. Existing saved-run review, interpretation, comparison, CSV/HTML/XLSX/SVG, and print/PDF-path behavior is preserved while the surfaces move closer to the approved desktop mockup direction.
+
+Evidence:
+- `validation/results/v2113_results_report_mockup_smoke.json`
+- `validation/results/v2113_results_report_mockup_audit.json`
+- screenshots under `validation/results/screens/v2113/results-report/`
+- gate `v2_1_3_results_report_mockup_alignment`
+
+## v2.1.2 Setup/Run Mockup Alignment
+
+Status: `validated`
+
+This frontend/product-only milestone applies the QuickPLS 2.1 page, panel, metric, status, and calculation primitives to Setup and Run. Existing method applicability, readiness, run-command event wiring, and saved-run handoff behavior is preserved while the surfaces move closer to the approved desktop mockup direction.
+
+Evidence:
+- `validation/results/v2112_setup_run_mockup_smoke.json`
+- `validation/results/v2112_setup_run_mockup_audit.json`
+- screenshots under `validation/results/screens/v2112/setup-run/`
+- gate `v2_1_2_setup_run_mockup_alignment`
+
+## v2.0.11 Mockup Pixel Alignment
+
+Status: `validated`
+
+This frontend/product-only milestone closes the v2.0.10 medium visual gaps by giving the Results empty state the same v2 command surface as populated Results, keeping a visible `Why trust this result?` route in evidence-heavy workspaces, and blocking normal UI `R²` mojibake.
+
+Evidence:
+- `validation/results/v211_mockup_pixel_alignment_smoke.json`
+- `validation/results/v211_mockup_pixel_alignment_audit.json`
+- screenshots under `validation/results/screens/v211/pixel-alignment/`
+- gate `v2_0_11_mockup_pixel_alignment`
+
+## v2.0.10 Visual Gap Audit
+
+Status: `validated`
+
+This frontend/product-only milestone adds rendered screenshot evidence and an issue register for the QuickPLS 2.0 mockup-matching program.
+
+Evidence:
+- `validation/results/v210_visual_gap_smoke.json`
+- `validation/results/v210_visual_gap_audit.json`
+- screenshots under `validation/results/screens/v210/visual-gap/`
+- gate `v2_0_10_visual_gap_audit`
+
+## v2.0.8 Trust Center And Scope Transparency
+
+Complete: the Trust Center now uses the QuickPLS 2.0 visual contract and exposes current-method confidence, validation artifacts, method scope/applicability, offline runtime boundaries, validation-only dependency boundaries, and SmartPLS non-equivalence wording. This is a frontend/product-only milestone; numerical engines, recipes, result schemas, project archives, validation tolerances, and fingerprints are unchanged.
+
+Evidence: `validation/results/v208_trust_center_smoke.json`, `validation/results/v208_trust_center_audit.json`, and gate `v2_0_8_trust_center_scope_transparency`.
+
 ## v0.1 Foundation
 
 Complete: Tauri/React shell, visual model editor, Rust contracts, validation primitives, method gates, and CLI foundation.
@@ -88,7 +586,7 @@ The HOC validation loop now reuses the built `target/debug/qpls.exe` CLI for rep
 
 The frontend build now uses Vite manual chunks for React Flow, icons, Tauri bindings, and remaining vendor code. `npm run build` completes without the previous large-chunk warning; the largest generated JS asset on 2026-07-19 was 317.20 kB before gzip.
 
-PLSc is now experimental for reflective constructs with path/factor weighting. `docs/methods/PLSC_V1.md` records the correction contract, `npm run qpls:plsc:reference` verifies corrected rho_A, construct correlations, paths, R2, and loadings against an independent Python fixture with observed max delta `4.57e-14`, and `npm run qpls:plsc:unsupported-guard` proves unsupported formative PLSc recipes are rejected before execution.
+PLSc uses the current reflective path/factor contract in `docs/methods/PLSC_V2.md`; `docs/methods/PLSC_V1.md` is now an explicit legacy-compatibility disclosure. `npm run qpls:plsc:reference` independently evaluates Dijkstra-Henseler Equation 3 and verifies corrected rho_A, construct correlations, paths, R2, and loadings, while `npm run qpls:plsc:unsupported-guard` proves unsupported formative PLSc recipes are rejected before execution.
 
 Gaussian-copula endogeneity diagnostics are now experimental. `docs/methods/PLS_GAUSSIAN_COPULA_ENDOGENEITY_V1.md` records the rankit inverse-normal copula contract, and `npm run qpls:endogeneity:reference` verifies copula coefficients, standard errors, t-statistics, and skewness against an independent Python fixture with observed max delta `5.54e-09`.
 
@@ -152,7 +650,7 @@ Started as an experimental method slice:
 - `npm run qpls:moderation:coverage-qualification` verifies a heavier 48-run, 199-permutation release-oriented coverage screen; the current report detected 24/24 signal datasets, flagged 1/24 null datasets, matched independent standardized OLS within `1e-10`, and completed in 22.43 seconds.
 - `ModelSpec.controls` adds backward-compatible control-variable path semantics. Core validation rejects malformed control declarations, estimation emits `control_estimates` matching the corresponding structural path coefficients, the path inspector can mark selected paths as controls, native recipes serialize the marked paths, and saved runs display control paths separately when present.
 - `ModelSpec.higher_order_constructs` adds a backward-compatible higher-order construct recipe contract for repeated-indicator, two-stage, and hybrid declarations. Core validation rejects duplicate ids, unknown HOC ids, insufficient components, self-components, unknown components, duplicate components, and invalid hybrid component splits while warning that HOC methods remain experimental. The construct inspector can mark HOC constructs, choose repeated-indicator, two-stage, or hybrid methods, select lower-order components, and serialize the declaration into native recipes. Repeated-indicator HOCs are expanded into ordered component-indicator blocks before PLS execution and assessment uses the same expanded execution recipe. `npm run qpls:hoc:reference` independently verifies paths, HOC loadings, and HOC weights with observed max absolute difference `4.49e-14`; `npm run qpls:hoc:metamorphic` passes affine, row-order, construct-order, component-order, warning, and degradation checks. Two-stage HOCs now use lower-order component scores as generated stage-2 HOC indicators, with assessment support; `npm run qpls:hoc:two-stage` independently verifies generated HOC paths/loadings/weights with observed reference delta `5.38e-14` and passes affine, row-order, construct-order, component-order, assessment, warning, and degradation checks. Hybrid HOCs now use an experimental indicator-split contract; `npm run qpls:hoc:hybrid-reference` independently verifies hybrid paths/loadings/weights with observed reference delta `1.37e-14`, and `npm run qpls:hoc:hybrid-guard` proves one-indicator components are blocked with `higher_order.hybrid_component_indicators`.
-- `AnalysisMethod::Plsc` now has an experimental reflective-only correction contract. QuickPLS emits `plsc_v1` with rho_A reliabilities, corrected construct correlations, corrected structural paths, bounded corrected R2, corrected outer loadings, and explicit warnings. `npm run qpls:plsc:validate` verifies independent-reference agreement and invalid-settings rejection.
+- `AnalysisMethod::Plsc` now emits method-versioned `plsc_v2` results using the shared canonical Dijkstra-Henseler rho_A equation, corrected construct correlations, corrected structural paths, bounded corrected R2, corrected outer loadings, and explicit inadmissibility guards. Legacy `plsc_v1` archives remain readable with a non-current warning because v1 used a provisional reliability expression that its Python reference repeated. `npm run qpls:plsc:validate` regenerates the canonical independent-reference comparison and invalid-settings rejection evidence.
 - `AnalysisMethod::Endogeneity` now has an experimental Gaussian-copula diagnostic contract. QuickPLS emits `gaussian_copula_endogeneity_v1` with rankit inverse-normal copula terms, augmented-regression diagnostics, and applicability warnings. `npm run qpls:endogeneity:reference` verifies the diagnostic against an independent Python fixture.
 - `AnalysisMethod::NonlinearEffects` now has an experimental quadratic diagnostic contract. QuickPLS emits `pls_quadratic_nonlinear_effects_v1` with centered squared construct-score terms, augmented-regression diagnostics, and R2 deltas. `npm run qpls:nonlinear:reference` verifies the diagnostic against an independent Python fixture.
 - `AnalysisMethod::ModeratedMediation` now has an experimental conditional indirect-effect contract. QuickPLS emits `pls_moderated_mediation_v1` with conditional indirect effects at standardized moderator scores `-1`, `0`, and `+1`, plus the index of moderated mediation. `npm run qpls:moderated-mediation:reference` verifies the diagnostic and invalid-recipe guard.
@@ -176,15 +674,15 @@ Started, with the first prediction slice implemented:
 - `AnalysisMethod::Predict` now runs an experimental `plspredict_holdout_v1` contract. It uses complete-case rows, assigns every fourth complete row to a deterministic test split, computes preprocessing parameters and PLS weights/paths on training rows only, applies training transforms/weights to test rows, and reports RMSE, MAE, benchmark errors, construct-score LM benchmark errors, and Q2 predict for endogenous constructs.
 - The same payload now includes bounded `plspredict_repeated_kfold_v1` metrics when at least 15 complete observations are available. It runs 3 deterministic repeats of 5 folds, recomputing preprocessing, weights, paths, PLS predictions, LM benchmarks, and paired loss comparisons from each fold's training rows only.
 - The repeated-fold block now includes an early CVPAT diagnostic comparing PLS squared prediction loss against the training-mean benchmark, the construct-score LM benchmark when available, and metadata-configured reduced structural models that drop specified direct paths. It reports mean paired loss difference, standard error, t statistic, two-sided p value, observations, preferred model, and warnings.
-- `docs/methods/IPMA_V1.md` freezes a bounded IPMA/cIPMA contract. `AnalysisMethod::Ipma` uses PLS total effects as construct importance and 0-100 min-max scaled standardized construct/indicator scores as performance. Recipes can set metadata `ipma_targets` to a comma-separated target list; otherwise every endogenous construct is reported. `npm run qpls:ipma:reference` writes `validation/results/ipma_reference_report.json`; the independent Python fixture currently agrees with QuickPLS construct and indicator IPMA rows at max delta about `8.2e-14`.
+- `docs/methods/IPMA_V1.md` freezes a bounded IPMA contract. `AnalysisMethod::Ipma` uses predecessor PLS total effects as construct importance and observed-range 0-100 min-max scaled listwise-standardized construct/indicator scores as performance. Recipes can set metadata `ipma_targets` to a comma-separated endogenous target list; the native workbench selects one explicit target per run. Theoretical-range correction and cIPMA are unsupported. `npm run qpls:ipma:reference` writes `validation/results/ipma_reference_report.json`; the independent Python fixture verifies the bounded construct and indicator rows.
 - `docs/methods/PLS_POS_BOUNDED_V1.md` freezes the legacy bounded segmentation contract, while `docs/methods/PLS_POS_V1.md` now defines experimental generalized 2-5 segment PLS-POS output with deterministic starts, minimum segment share, stable memberships, objective history, segment path estimates, and segment R2. `npm run qpls:pos:recovery` and `npm run qpls:v06:validate` write `validation/results/v06_group_methods_reference_report.json`; the current integrated fixture recovers 3 segments with objective improvement about `0.6792`.
 - `docs/methods/FIMIX_PLS_V1.md` defines an experimental 2-3 class FIMIX-PLS preview with deterministic starts, posterior-style probabilities, memberships, class paths/R2, log-likelihood, AIC, BIC, CAIC, and entropy. `npm run qpls:fimix:recovery` writes the same integrated v0.6 report; the current fixture emits 3 classes with finite BIC and entropy about `0.5037`.
 - `docs/methods/PLS_MGA_TWO_GROUP_V1.md` freezes the observed two-group MGA contract, and `docs/methods/PLS_MGA_PERMUTATION_V1.md` adds experimental permutation MGA. `AnalysisMethod::Mga` requires metadata `mga_group_column`, estimates each observed group independently with the PLS-PM engine, and can re-estimate deterministic group-label permutations when `group_methods` includes `mga_permutation`. `npm run qpls:mga:reference` still writes the original independent reference report; `npm run qpls:mga:permutation-reference` writes the integrated v0.6 report.
-- `docs/methods/MICOM_V1.md` adds experimental two-group MICOM output when `group_methods` includes `micom`, with configural, compositional, mean, and variance permutation diagnostics. `npm run qpls:micom:reference` writes the integrated v0.6 report.
+- `docs/methods/MICOM_V1.md` now records that the former two-group MICOM routine and its validation claim are withdrawn. `group_methods = "micom"` is blocked by core validation and estimator execution; historical payloads remain readable only.
 - `docs/methods/PLSPREDICT_HOLDOUT_V1.md` freezes the initial holdout/repeated-fold/CVPAT contract and explicitly excludes separate saved-model CVPAT, seeded/random repeated folds, indicator-level PLSpredict tables, MGA, MICOM, FIMIX-PLS, PLS-POS, generated interactions, higher-order constructs, and case-weighted prediction.
 - The runner, assessment compatibility guard, desktop method selector, analysis settings, run history, tabbed Groups workspace, report table builder, native XLSX export path, and CLI experimental export rows now recognize the prediction payload, repeated-fold block, CVPAT comparisons, LM benchmark fields, IPMA, PLS-POS, FIMIX-PLS, MGA, MICOM, and permutation-MGA payloads.
 - `npm run qpls:plspredict:reference` writes `validation/results/plspredict_holdout_reference_report.json`; the current report passes method-version, split-count, target-shape, predictive-improvement, LM benchmark, repeated-k-fold plan, repeated-k-fold improvement, repeated-k-fold LM benchmark, benchmark CVPAT, drop-path model-pair CVPAT, Q2 threshold, and experimental-warning checks.
-- The v0.6 registry now has passed gates for PLSpredict, repeated-k-fold/LM benchmark prediction, CVPAT diagnostics, IPMA, generalized PLS-POS, FIMIX-PLS, two-group MGA, MICOM, permutation MGA, integrated validation fixtures, CLI exports, report tables, saved-run surfacing, and the tabbed Groups workspace. All v0.6 methods remain experimental and watermarked.
+- The v0.6 registry retains passed gates for PLSpredict, repeated-k-fold/LM benchmark prediction, CVPAT diagnostics, IPMA, generalized PLS-POS, FIMIX-PLS, two-group MGA, permutation MGA, integrated validation fixtures, CLI exports, report tables, saved-run surfacing, and the tabbed Groups workspace. Its historical MICOM gate is superseded by the execution-withdrawal safety audit.
 
 PLSpredict holdout remains experimental and watermarked. It is a development preview slice, not a validated publication method.
 
@@ -207,10 +705,10 @@ Implemented as an experimental preview:
 
 - `AnalysisMethod::Pca` runs `pca_v1` as a standalone standardized raw-data PCA workflow with deterministic sign orientation, component retention metadata, eigenvalues, explained variance, loadings, weights, and scores.
 - `AnalysisMethod::Regression` runs `regression_ols_v1`, `regression_logistic_v1`, and bounded `regression_process_v1` depending on `regression_type` metadata. OLS reports fit, coefficients, HC-style standard errors, confidence intervals, predictions, and residuals. Logistic regression reports deterministic IRLS estimates, odds ratios, pseudo-R2, AIC/BIC, and predicted probabilities. PROCESS-style output currently covers bounded mediation/moderation effect rows and simple slopes.
-- `AnalysisMethod::Nca` runs `nca_v1` for numeric X/Y pairs with CE-FDH/CR-FDH effect sizes, deterministic permutation p values, and bottleneck tables.
-- `AnalysisMethod::Gsca` emits `gsca_v1` as a bounded component-model preview with weights, loadings, paths, R2, FIT/AFIT/GFI-style diagnostics, and warnings.
+- The original extended-method preview emitted `nca_v1`; that numerical interpretation is now superseded and retained only for explicit legacy archive compatibility. Current execution emits `nca_v2` with record-high CE-FDH peers, CR-FDH regression through those peers, seeded permutation p values, and status-bearing observed-range bottleneck rows.
+- The historical extended-method preview emitted `gsca_v1`; it is now legacy/archive-only. Current `AnalysisMethod::Gsca` execution emits independently checked `gsca_als_v2`, a bounded joint global least-squares ALS component model with strict native results, XLSX export, persistence, and same-run reopen evidence.
 - Desktop analysis settings, saved runs, report tables, CLI experimental export rows, method specs, compatibility status, and evidence aggregation now include PCA, regression/PROCESS, NCA, and GSCA.
-- `npm run qpls:v08:validate` writes `validation/results/v08_extended_methods_reference_report.json`, comparing the bounded preview against independent NumPy/Python fixtures for PCA, OLS, logistic regression, PROCESS mediation, NCA, and GSCA payload shape.
+- `npm run qpls:v08:validate` retains the aggregate historical coverage report and refreshes a separate report for each v0.8 method. Single-section commands write only their matching `v08_<method>_reference_report.json`; they cannot overwrite another method's promotion evidence. Current GSCA evidence is method-specific: `npm run qpls:gsca:reference` writes `validation/results/gsca_als_v2_reference_report.json` and compares the joint global criterion, weights, loadings, paths, R2, fit, and residual diagnostics with an independent SciPy optimizer.
 
 All v0.8 methods remain experimental and watermarked. They are suitable for workflow feedback and validation hardening, not unrestricted publication use.
 
@@ -326,7 +824,7 @@ Implemented as a bounded method-promotion milestone:
 - Added `v1_2_1_second_batch_method_promotion` to the registry.
 - Added method-specific promotion audits for mediation, two-stage moderation, PLSc, WPLS, IPMA, PLSpredict/CVPAT, and NCA.
 - Added `validation/second_batch_product_enforcement_audit.py` and `validation/second_batch_method_promotion_audit.py`.
-- Updated product-facing statuses so PLSc, WPLS, PLSpredict, IPMA, and NCA are validated only for documented scopes.
+- Updated product-facing statuses so PLSc, WPLS, and Deterministic Construct Prediction are validated only for documented scopes. NCA v2 is numerically and archive qualified for its bounded standalone raw-data scope, while packaged-native workflow acceptance remains open. IPMA has a fresh packaged run, native XLSX export, explicit save, and same-run reopen evidence for its bounded predecessor-only observed-range scope.
 - Updated engine warning text and result/export table status for promoted second-batch payloads.
 - Added method-scope aliases `MEDIATION_V1.md`, `TWO_STAGE_MODERATION_V1.md`, and `PLSPREDICT_V1.md`.
 
@@ -335,9 +833,9 @@ Implemented as a bounded method-promotion milestone:
 Implemented as a bounded method-promotion milestone:
 
 - Added `v1_2_2_group_prediction_regression_promotion` to the registry.
-- Added method-specific promotion audits for MICOM, permutation MGA, PLS-POS, FIMIX-PLS, logistic regression, and bounded PROCESS mediation/moderation.
+- Added method-specific audits for permutation MGA, PLS-POS, FIMIX-PLS, logistic regression, and bounded PROCESS mediation/moderation; the former MICOM promotion audit now verifies its safety withdrawal.
 - Added `validation/third_batch_product_enforcement_audit.py` and `validation/third_batch_method_promotion_audit.py`.
-- Updated product-facing statuses so MGA/MICOM, FIMIX-PLS, PLS-POS, logistic regression, and bounded PROCESS are validated only for documented scopes.
+- Updated product-facing statuses so MGA, FIMIX-PLS, PLS-POS, logistic regression, and bounded PROCESS are validated only for documented scopes; MICOM is not a validated or executable scope.
 - Updated engine warning text and result/export table status for promoted third-batch payloads.
 - Updated method docs and compatibility notes while keeping moderated mediation, CB-SEM/CFA, GSCA, HOC, nonlinear effects, endogeneity, CCA, and CTA-PLS experimental.
 
@@ -352,7 +850,7 @@ Implemented as the final bounded method-promotion milestones:
 - Updated engine warning text and result/export table status for promoted fourth- and fifth-batch payloads.
 - Updated method docs, alias docs, and compatibility notes while keeping unsupported variants excluded: CB-SEM bootstrap and unrestricted multigroup/invariance, robust/ordinal/FIML estimators, broad constraints, unrestricted GSCA variants, broader nonlinear SEM, bootstrap-based CCA/CTA decisions, unsupported HOC variants, and the full Hayes PROCESS catalogue.
 
-The v1.2 method-promotion program is now complete for documented bounded scopes.
+The bounded IPMA native promotion is accepted: canonical reference, source, strict project persistence, genuine packaged execution, native XLSX export, explicit save, and same-run reopen all pass. This does not promote theoretical-range correction, alternate SmartPLS representations, NCA integration, resampling inference, or cIPMA.
 ## v1.3.1 SEM Diagram Geometry Polish
 
 Complete:
@@ -454,6 +952,216 @@ Status: validated.
 This frontend-only milestone closes the visible screen-review issues from the v1.5.2 SmartPLS-user audit: card text collisions, repeated global warnings, scroll-state confusion, sparse readiness pages, Setup scope wording, Report control alignment, and missing local disabled reasons. Evidence is recorded in `validation/results/v153_layout_copy_smoke.json` and `validation/results/v153_layout_copy_audit.json`.
 
 No statistical engines, formulas, result schemas, recipes, project format, or numerical fingerprints changed.
+
+## v2.0.2 Setup Method Guidance Redesign
+
+Status: validated.
+
+This frontend-only milestone continues the QuickPLS 2.0 mockup-matching program by rebuilding Setup as a professional guided calculation workspace.
+
+Complete:
+
+- Replaced the older flat Setup page with a selected calculation command panel, readiness and scope panel, guided method browser, selected-method requirements sidecar, research presets, launch summary, and calculation preview.
+- Added method-specific requirement checks with exact next actions beside the selected method.
+- Kept Basic/Expert setup modes while moving advanced reproducibility and group/prediction settings into the selected-method sidecar.
+- Added `setup-v2-*` styles that reuse the QuickPLS 2.0 desktop design tokens.
+- Added `validation/v202_setup_guidance_smoke.mjs`, `validation/v202_setup_guidance_audit.py`, `docs/V2_0_2_SETUP_METHOD_GUIDANCE_REDESIGN.md`, and the registry slice `v2_0_2_setup_method_guidance_redesign`.
+- Release metadata now uses `2.0.2`; versioned desktop artifacts use the label `v2_0_2_setup_method_guidance_redesign`.
+
+## v2.0.3 Visual Fidelity Foundation
+
+Status: validated.
+
+This frontend-only milestone freezes the selected QuickPLS 2.0 mockup direction as a repeatable visual contract.
+
+Complete:
+
+- Added `docs/V2_UI_VISUAL_CONTRACT.md` for desktop target viewports, shell rules, shared tokens, component primitives, typography, status wording, and acceptance criteria.
+- Hardened `src/styles.css` with shared `--q2-*` page, panel, action, chip, shadow, and typography tokens.
+- Standardized reusable `.qpls2-*` primitives for page titles, subtitles, panels, command rows, cards, chips, and actions.
+- Added Results v2 shell styling hooks so the next Results workspace pass uses the same foundation.
+- Added `validation/v203_visual_fidelity_smoke.mjs`, `validation/v203_visual_fidelity_audit.py`, `docs/V2_0_3_VISUAL_FIDELITY_FOUNDATION.md`, and the registry slice `v2_0_3_visual_fidelity_foundation`.
+- Release metadata now uses `2.0.3`; versioned desktop artifacts use the label `v2_0_3_visual_fidelity_foundation`.
+
+## v2.0.4 Results Table And Interpretation Redesign
+
+Status: validated.
+
+This frontend-only milestone applies the QuickPLS 2.0 visual contract to the Results workspace.
+
+Complete:
+
+- Added a `Result workbook` navigation header and clearer selected-run context.
+- Added tab-aware Results lens guidance for overview, measurement, structural, validity, inference, prediction, groups, diagnostics, interpretation, and comparison views.
+- Added compact evidence cards for tab-specific findings, report action, and scope/status context.
+- Upgraded result table section headers with row count, visible-column count, construct count, and wide-table guidance.
+- Added `validation/v204_results_redesign_smoke.mjs`, `validation/v204_results_redesign_audit.py`, `docs/V2_0_4_RESULTS_TABLE_INTERPRETATION_REDESIGN.md`, and the registry slice `v2_0_4_results_table_interpretation_redesign`.
+- Release metadata now uses `2.0.4`; versioned desktop artifacts use the label `v2_0_4_results_table_interpretation_redesign`.
+
+No statistical engines, formulas, result schemas, recipes, project format, validation tolerances, or numerical fingerprints changed.
+
+## v2.11.0 Method Applicability Setup Polish
+
+Status: in validation.
+
+This frontend-only milestone improves Setup so QuickPLS explains which analyses fit the current data, SEM model, settings, and documented method scope.
+
+Complete:
+
+- Added a Setup availability summary for recommended, available, setup-required, and blocked/scoped methods.
+- Added card-level missing requirement copy and selected-method "why not available yet" guidance.
+- Kept Data and Model guidance wired to the same applicability engine.
+- Kept the top-bar method selector conservative, with broader discovery in Setup.
+- Added targeted smoke/audit scripts and v2.11 milestone documentation.
+
+No statistical engines, formulas, result schemas, recipes, project format, validation tolerances, or numerical fingerprints changed.
+
+## v2.9.0 Acceptance Backlog And Next Pass
+
+Status: validated.
+
+This frontend/product governance milestone converts the current rendered shell evidence and release handoff state into a grouped acceptance backlog for the next QuickPLS 2.x UI pass.
+
+Complete:
+
+- Added a rendered smoke that captures Home, Data, Model, Setup, Run, Results, Report, Trust Center, and Settings at `1440x900` and `1280x800`.
+- Generated `validation/results/v290_acceptance_backlog.json` with `do_next`, `defer`, and `do_not_do` workstreams.
+- Added a static audit that verifies backlog structure, version metadata, scripts, docs, registry state, and frontend-only boundaries.
+- Updated release metadata to `2.9.0` and artifact labeling to `v2_9_0_acceptance_backlog_and_next_pass`.
+
+Boundary: frontend/product backlog governance only; no statistical engine, formula, result schema, project archive format, validation tolerance, or numerical fingerprint changes.
+
+## v2.8.0 Release Handoff Consistency
+
+Status: validated.
+
+This documentation/release milestone aligns QuickPLS 2.x public handoff instructions with the current app version, verification gate, screenshots, and artifact workflow.
+
+Complete:
+
+- README, installation, and source-build docs now identify `v2.8.0` as the current development release.
+- Build and verification commands point to `npm run qpls:v280:release-handoff` and `cargo run -p qpls-cli -- gate v2_8_0_release_handoff_consistency`.
+- Release notes and a milestone note document the v2.8 handoff scope.
+- The audit verifies screenshot references, artifact naming guidance, stale-version markers, encoding safety, non-equivalence wording, and frontend-only boundaries.
+
+No statistical engines, formulas, result schemas, recipes, project format, validation tolerances, or numerical fingerprints changed.
+
+## v2.7.0 Visual Issue Register
+
+Status: validated.
+
+This frontend-only milestone creates a repeatable rendered-screen issue register for the QuickPLS 2.x shell.
+
+Complete:
+
+- Added rendered smoke coverage for Home, Data, Model, Setup, Run, Results, Report, Trust Center, and Settings at `1440x900` and `1280x800`.
+- Generated `validation/results/v270_visual_issue_register.json` so future UI work starts from concrete evidence.
+- Verified desktop views avoid document-level horizontal overflow.
+- Verified disabled controls are described, rendered text has no R-squared mojibake, no normal user-facing `Validation fixture` wording appears, and no SmartPLS equivalence claim appears.
+- Added static audit evidence for version metadata, active milestone tracking, scripts, source contracts, smoke evidence, issue-register evidence, and frontend-only boundaries.
+
+No statistical engines, formulas, result schemas, recipes, project format, validation tolerances, or numerical fingerprints changed.
+
+## v2.1.2 Setup/Run Mockup Alignment
+
+Status: validated.
+
+This frontend/product-only milestone applies the v2.1 design-system primitives to the Setup and Run workspaces.
+
+Complete:
+
+- Rebuilt Setup around shared `WorkspacePage`, `PageHeader`, `Panel`, `Card`, `StatusBadge`, and guided method surfaces.
+- Rebuilt Run around shared `WorkspacePage`, `PageHeader`, `Panel`, `MetricCard`, and `StatusBadge` while preserving the existing `quickpls:run-analysis` launch event.
+- Kept method applicability, readiness, exact disabled reasons, output preview, provenance, and Results/Report handoff aligned with the QuickPLS 2.0 visual contract.
+- Added `validation/v2112_setup_run_mockup_smoke.mjs`, `validation/v2112_setup_run_mockup_audit.py`, `docs/V2_1_2_SETUP_RUN_MOCKUP_ALIGNMENT.md`, and the registry slice `v2_1_2_setup_run_mockup_alignment`.
+- Updated release metadata to `2.1.2` and artifact labeling to `v2_1_2_setup_run_mockup_alignment`.
+
+No statistical engines, formulas, result schemas, recipes, project format, validation tolerances, or numerical fingerprints changed.
+
+## v2.1.1 Home/Data Mockup Alignment
+
+Status: validated.
+
+This frontend/product-only milestone applies the v2.1 design-system primitives to the Home and Data workspaces.
+
+Complete:
+
+- Rebuilt Home around shared `WorkspacePage`, `PageHeader`, `Panel`, `Card`, `MetricCard`, and `InlineNotice` primitives.
+- Rebuilt Data around shared `WorkspacePage`, `PageHeader`, `Panel`, `MetricCard`, and `InlineNotice` primitives while retaining native import and metadata APIs.
+- Kept first-viewport workflow actions, data quality, prefix construct creation, and metadata editing aligned with the QuickPLS 2.0 visual contract.
+- Added `validation/v2111_home_data_mockup_smoke.mjs`, `validation/v2111_home_data_mockup_audit.py`, `docs/V2_1_1_HOME_DATA_MOCKUP_ALIGNMENT.md`, and the registry slice `v2_1_1_home_data_mockup_alignment`.
+- Updated release metadata to `2.1.1` and artifact labeling to `v2_1_1_home_data_mockup_alignment`.
+
+No statistical engines, formulas, result schemas, recipes, project format, validation tolerances, or numerical fingerprints changed.
+
+## v2.0.7 Run Execution Surface Redesign
+
+Status: validated.
+
+This frontend-only milestone applies the QuickPLS 2.0 visual contract to the Run workspace.
+
+Complete:
+
+- Rebuilt Run as a calculation launch surface with method scope, readiness state, output preview, execution provenance, and completed-run handoff.
+- Put disabled-run reasons directly beside the launch action.
+- Preserved the existing `quickpls:run-analysis` event and desktop execution boundary.
+- Updated release metadata to `2.0.7` and artifact labeling to `v2_0_7_run_execution_surface_redesign`.
+- Added `validation/v207_run_surface_smoke.mjs`, `validation/v207_run_surface_audit.py`, `docs/V2_0_7_RUN_EXECUTION_SURFACE_REDESIGN.md`, and the registry slice `v2_0_7_run_execution_surface_redesign`.
+
+No statistical engines, formulas, result schemas, recipes, project format, validation tolerances, or numerical fingerprints changed.
+
+## v2.0.5 Report Export Flow Redesign
+
+Status: validated.
+
+This frontend-only milestone applies the QuickPLS 2.0 visual contract to the Report workspace.
+
+Complete:
+
+- Added a report package hero showing selected preset, selected run, table count, SVG readiness, and ready export outputs.
+- Added a v2 command center for export presets and the four-step report flow.
+- Reframed report settings, export review, preview shell, comparison link, and export actions with v2 panel styling.
+- Preserved the existing CSV, HTML, desktop XLSX, browser Print/PDF path, and SVG export actions with explicit disabled reasons.
+- Added `validation/v205_report_redesign_smoke.mjs`, `validation/v205_report_redesign_audit.py`, `docs/V2_0_5_REPORT_EXPORT_FLOW_REDESIGN.md`, and the registry slice `v2_0_5_report_export_flow_redesign`.
+- Release metadata now uses `2.0.5`; versioned desktop artifacts use the label `v2_0_5_report_export_flow_redesign`.
+
+No statistical engines, formulas, result schemas, recipes, project format, validation tolerances, or numerical fingerprints changed.
+
+No statistical engines, formulas, result schemas, recipes, project archive format, validation tolerances, or numerical fingerprints changed.
+
+No statistical engines, formulas, result schemas, recipes, project format, import backends, validation tolerances, or numerical fingerprints changed.
+
+## v2.0.0 Design System And Shell
+
+Status: validated.
+
+This frontend-only milestone starts the QuickPLS 2.0 redesign with the shared shell needed to match the approved professional desktop mockup.
+
+Complete:
+
+- Added first-class Trust Center and Settings workspace routes.
+- Updated the left rail, command palette, smoke API, and app routing for the expanded v2 shell.
+- Added shared v2 design tokens and reusable panel styling for later workspace redesigns.
+- Updated version metadata to `2.0.0` and artifact labeling to `v2_0_0_design_system_and_shell`.
+- Added `validation/v200_shell_smoke.mjs`, `validation/v200_shell_audit.py`, and `docs/V2_0_0_DESIGN_SYSTEM_AND_SHELL.md`.
+
+No statistical engines, formulas, result schemas, recipes, project format, import backends, validation tolerances, or numerical fingerprints changed.
+
+## v2.0.1 Home And Data Redesign
+
+Status: validated.
+
+This frontend-only milestone applies the QuickPLS 2.0 desktop mockup direction to the Home and Data workspaces.
+
+Complete:
+
+- Converted Home into a project command center with a current-workspace hero, recommended next step, primary command grid, workflow status, sample gallery, and guided dataset workflow.
+- Reworked Data into a workbench with import source and data-quality panels at the top, method applicability guidance, prefix construct creation, and a dominant preview/metadata editor.
+- Kept existing native import, sample dataset loading, metadata update, and browser CSV preview behavior.
+- Updated version metadata to `2.0.1` and artifact labeling to `v2_0_1_home_data_redesign`.
+- Added `validation/v201_home_data_smoke.mjs`, `validation/v201_home_data_audit.py`, and `docs/V2_0_1_HOME_DATA_REDESIGN.md`.
+
+No statistical engines, formulas, result schemas, recipes, project format, import backends, validation tolerances, or numerical fingerprints changed.
 
 ## v1.8.1 Method Applicability And Guided Setup
 
@@ -652,3 +1360,423 @@ Complete:
 - Cleaned remaining Results `R²`, `f²`, and `Q²` mojibake.
 
 No statistical engines, formulas, result schemas, recipes, project format, or numerical fingerprints changed.
+
+## v2.0.6 Model Shell And SEM Designer Surround
+
+Status: validated.
+
+This frontend-only milestone applies the QuickPLS 2.0 visual contract to the Model workspace shell around the existing SEM Designer.
+
+Complete:
+
+- Added v2 shell hooks and styling for the SEM Explorer, Model canvas, canvas toolbar, overlay/status surfaces, and Inspector.
+- Preserved the existing SEM Designer grammar and behavior: latent ovals, indicator rectangles, measurement links, structural paths, result overlays, and SVG/export parity.
+- Fixed remaining Model/Inspector `R²` encoding issues.
+- Added `validation/v206_model_shell_smoke.mjs`, `validation/v206_model_shell_audit.py`, `docs/V2_0_6_MODEL_SHELL_SEM_DESIGNER_SURROUND.md`, and the registry slice `v2_0_6_model_shell_sem_designer_surround`.
+
+No statistical engines, formulas, result schemas, recipes, project format, validation tolerances, or numerical fingerprints changed.
+
+## v2.0.9 Mockup Fidelity System
+
+Status: validated.
+
+This frontend/product-only milestone makes the approved QuickPLS 2.0 desktop mockup enforceable before additional screen rebuilds continue.
+
+Complete:
+
+- Expanded the QuickPLS 2.0 visual contract with source-of-truth, viewport, mockup-matching, screen completion, and versioned artifact rules.
+- Added `validation/v209_mockup_fidelity_smoke.mjs` to verify v2 primitives, workspace source coverage, current milestone text, encoding safety, and claim boundaries.
+- Added `validation/v209_mockup_fidelity_audit.py` to verify version metadata, registry state, roadmap expectations, docs, and artifact script conventions.
+- Added `docs/V2_0_9_MOCKUP_FIDELITY_SYSTEM.md` and the registry slice `v2_0_9_mockup_fidelity_system`.
+
+No statistical engines, formulas, result schemas, recipes, project format, validation tolerances, or numerical fingerprints changed.
+
+## v2.1.0 Design System Foundation
+
+Status: validated.
+
+This frontend/product-only milestone starts the deeper QuickPLS 2.x rebuild by turning the approved desktop mockup into reusable v2.1 design-system primitives.
+
+Complete:
+
+- Added shared primitives for workspace pages, workspace headers, panels, metric cards, command groups, toolbar buttons, inline notices, and cards.
+- Added a visible Settings design-system preview so the primitive language can be inspected in-app.
+- Kept the QuickPLS 2.0 visual contract as the source of truth for future workspace rebuilds.
+- Added `validation/v2100_design_system_smoke.mjs`, `validation/v2100_design_system_audit.py`, `docs/V2_1_0_DESIGN_SYSTEM_FOUNDATION.md`, and the registry slice `v2_1_0_design_system_foundation`.
+- Updated release metadata to `2.1.0` and artifact labeling to `v2_1_0_design_system_foundation`.
+
+No statistical engines, formulas, result schemas, recipes, project format, validation tolerances, or numerical fingerprints changed.
+
+## v2.5.1 Workflow Navigation Parity
+
+Status: validated.
+
+This frontend-only milestone aligns the top workflow strip with the left navigation hierarchy introduced in v2.5.0.
+
+Complete:
+
+- The left rail remains the full navigation surface: Research workflow plus Support utilities.
+- The top workflow strip is now explicitly scoped to the primary calculation workflow only.
+- Added a visible `Workflow` label and stable `data-workflow-scope` / `data-workflow-count` hooks.
+- Added rendered smoke evidence for workflow order, support-route exclusion, Settings navigation, and shell integrity.
+- Added static audit evidence for version metadata, registry state, scripts, roadmap expectations, no mojibake, no SmartPLS-equivalence claim, and frontend-only boundaries.
+
+No statistical engines, formulas, result schemas, recipes, project format, validation tolerances, or numerical fingerprints changed.
+
+## v2.5.2 Launcher And Support Shell Separation
+
+Status: validated.
+
+This frontend-only milestone separates launcher/support destinations from the primary calculation workflow band.
+
+Complete:
+
+- Home, Trust Center, and Settings now render as support shells without the primary workflow strip or coach.
+- Data, Setup, Run, Results, and Report keep the workflow strip and coach.
+- Model keeps its dedicated workflow band around the SEM Designer.
+- Added rendered smoke evidence for Home, Data, Trust, Settings, and Model shell behavior.
+- Added static audit evidence for version metadata, registry state, scripts, roadmap expectations, source contracts, no mojibake, no SmartPLS-equivalence claim, and frontend-only boundaries.
+
+No statistical engines, formulas, result schemas, recipes, project format, validation tolerances, or numerical fingerprints changed.
+
+## v2.5.3 Support Utility Shell Polish
+
+Status: validated.
+
+This frontend-only milestone makes Home, Trust Center, and Settings feel intentionally grouped as support utilities after they were removed from the primary calculation workflow.
+
+Complete:
+
+- Added a local support utility bar on Home, Trust Center, and Settings with direct switching between launcher, evidence/scope, and local preferences.
+- Kept Data, Setup, Run, Results, and Report focused on the primary research workflow without support utility controls.
+- Kept Model on its dedicated SEM Designer workflow surface without support utility controls.
+- Added rendered smoke evidence for support utility switching, workflow route separation, and shared shell integrity.
+- Added static audit evidence for version metadata, registry state, scripts, roadmap expectations, source contracts, no mojibake, no SmartPLS-equivalence claim, and frontend-only boundaries.
+
+No statistical engines, formulas, result schemas, recipes, project format, validation tolerances, or numerical fingerprints changed.
+
+## v2.5.4 Visual Contract Support-Shell Alignment
+
+Status: validated.
+
+This frontend/product milestone aligns the QuickPLS 2.0 visual contract with the support-shell information architecture.
+
+Complete:
+
+- Updated the v2 visual contract so the calculation workflow strip is Data, Model, Setup, Run, Results, and Report.
+- Documented Home, Trust Center, and Settings as support utilities with local support navigation instead of workflow progress controls.
+- Documented the Model workspace exception: it may keep a dedicated SEM Designer workflow band while calculation pages use the shared workflow treatment.
+- Fixed the remaining R-squared encoding artifact in the visual contract.
+- Added static audit evidence for version metadata, registry state, scripts, source contracts, no mojibake, no SmartPLS-equivalence claim, and frontend-only boundaries.
+
+No statistical engines, formulas, result schemas, recipes, project format, validation tolerances, or numerical fingerprints changed.
+
+## v2.5.5 Support Shell Viewport Alignment
+
+Status: validated.
+
+This frontend-only milestone aligns the support utility bar with Home, Trust Center, and Settings workspace content and verifies desktop viewport fit.
+
+Complete:
+
+- Wrapped the support utility bar in a workspace-aligned frame using the same max width and gutters as support page content.
+- Preserved Home, Trust Center, and Settings as support utilities without workflow progress controls.
+- Preserved calculation workflow pages without support utility controls.
+- Added rendered smoke evidence at `1440x900` and `1280x800` for support-shell alignment and horizontal overflow.
+- Added static audit evidence for version metadata, registry state, scripts, frame CSS, source contracts, no mojibake, no SmartPLS-equivalence claim, and frontend-only boundaries.
+
+No statistical engines, formulas, result schemas, recipes, project format, validation tolerances, or numerical fingerprints changed.
+
+## v2.6.0 Launch-Quality Visual Consolidation
+
+Status: validated.
+
+This frontend-only milestone adds a grouped launch-quality visual consolidation gate across the QuickPLS 2.x shell.
+
+Complete:
+
+- Added rendered smoke coverage for support utilities and workflow screens at `1440x900` and `1280x800`.
+- Verified Home, Trust Center, and Settings keep the support utility shell.
+- Verified Data, Model, Setup, Run, Results, and Report keep the primary workflow shell without support utility controls.
+- Verified desktop views avoid document-level horizontal overflow.
+- Verified disabled buttons have descriptions, rendered text has no R-squared mojibake, and no SmartPLS equivalence claim appears.
+- Added static audit evidence for active milestone tracking, scripts, source contracts, smoke evidence, and frontend-only boundaries.
+
+No statistical engines, formulas, result schemas, recipes, project format, validation tolerances, or numerical fingerprints changed.
+
+## v2.12.0 Real Dataset Review Protocol
+
+Status: validated.
+
+This frontend/product milestone adds a privacy-safe protocol for reviewing real researcher datasets without committing private data or value-revealing screenshots.
+
+Complete:
+
+- Added a manual checklist for Data, Setup, Results, and Report review with private datasets.
+- Added an anonymized issue-register template that separates product issues, method guidance gaps, export gaps, and statistical evidence gaps.
+- Documented the no-private-data persistence rule for raw datasets, private `.qpls` files, screenshots, and exported reports.
+- Added targeted smoke and audit evidence for the protocol, template, registry, scripts, and version metadata.
+
+No statistical engines, formulas, result schemas, recipes, project format, validation tolerances, or numerical fingerprints changed.
+
+## v2.13.0 Real Dataset Protocol Entrypoints
+
+Status: validated.
+
+This frontend-only milestone makes the v2.12 real dataset review protocol discoverable inside QuickPLS.
+
+Complete:
+
+- Added a Trust Center section for the real dataset review protocol and template.
+- Added a Settings section summarizing private-dataset review rules.
+- Added a Home notice for private dataset review workflows.
+- Added targeted smoke and static audit evidence for the entrypoints.
+
+No statistical engines, formulas, result schemas, recipes, project format, validation tolerances, or numerical fingerprints changed.
+## QuickPLS 2.14.0
+
+- `v2_14_0_real_dataset_feedback_triage` is validated.
+- The milestone adds anonymized real-dataset feedback triage so private researcher observations can be converted into grouped frontend milestones without committing raw private data, private projects, or value-revealing screenshots.
+- Evidence:
+  - `docs/V2_14_0_REAL_DATASET_FEEDBACK_TRIAGE.md`
+  - `validation/templates/real_dataset_feedback_triage_template.json`
+  - `validation/results/v2140_real_dataset_triage_smoke.json`
+  - `validation/results/v2140_real_dataset_triage_audit.json`
+  - `validation/results/v2140_real_dataset_triage_backlog.json`
+- Latest artifacts:
+  - `target/release/artifacts/QuickPLS_2.14.0_v2_14_0_real_dataset_feedback_triage_20260730-051333_x64_setup.exe`
+  - `target/release/artifacts/QuickPLS_2.14.0_v2_14_0_real_dataset_feedback_triage_20260730-051333_x64_portable.exe`
+  - `target/release/artifacts/QuickPLS_2.14.0_v2_14_0_real_dataset_feedback_triage_20260730-051333_x64_checksums.txt`
+
+## QuickPLS 2.15.0
+
+- `v2_15_0_workflow_method_guidance_triage_pass` is validated.
+- The milestone strengthens workflow and method guidance across Data, Model, Setup, and the top command bar.
+- Evidence:
+  - `docs/V2_15_0_WORKFLOW_METHOD_GUIDANCE_TRIAGE_PASS.md`
+  - `validation/results/v2150_workflow_method_guidance_smoke.json`
+  - `validation/results/v2150_workflow_method_guidance_audit.json`
+- Latest artifacts:
+  - `target/release/artifacts/QuickPLS_2.15.0_v2_15_0_workflow_method_guidance_triage_pass_20260730-054628_x64_setup.exe`
+  - `target/release/artifacts/QuickPLS_2.15.0_v2_15_0_workflow_method_guidance_triage_pass_20260730-054628_x64_portable.exe`
+  - `target/release/artifacts/QuickPLS_2.15.0_v2_15_0_workflow_method_guidance_triage_pass_20260730-054628_x64_checksums.txt`
+
+## QuickPLS 2.26.0
+
+- `v2_26_0_method_setup_applicability_center` is validated.
+- The milestone turns Setup into a native desktop calculation setup center with recommended, available, available-with-setup, diagnostic, standalone, and not-applicable method lanes.
+- Bootstrap is presented as an inference add-on rather than a confusing primary algorithm.
+- Selected methods show exact requirement checks, blocker actions, expected outputs, and scope evidence.
+- Evidence:
+  - `docs/V2_26_0_METHOD_SETUP_APPLICABILITY_CENTER.md`
+  - `validation/results/v2260_method_setup_smoke.json`
+  - `validation/results/v2260_method_setup_audit.json`
+- Boundary: frontend/product method setup presentation only; no statistical engine, formula, result schema, project archive, validation tolerance, or numerical fingerprint changes.
+
+## QuickPLS 2.27.0
+
+- `v2_27_0_calculation_run_monitor` is validated.
+- The milestone rebuilds Run as a native desktop calculation monitor with a procedure checklist, central progress/log panel, immutable settings summary, output availability list, cancellation handoff, and completed-run handoff.
+- Evidence:
+  - `docs/V2_27_0_CALCULATION_RUN_MONITOR.md`
+  - `validation/results/v2270_run_monitor_smoke.json`
+  - `validation/results/v2270_run_monitor_audit.json`
+- Boundary: frontend/product run monitoring only; no statistical engine, formula, result schema, project archive, validation tolerance, or numerical fingerprint changes.
+
+## QuickPLS 2.28.0
+
+- `v2_28_0_results_workbook_redesign` is validated.
+- The milestone rebuilds Results into a native desktop statistical workbook with a sticky selected-run header, central result table area, right interpretation/method-confidence pane, findings lanes, and provenance footer.
+- Evidence:
+  - `docs/V2_28_0_RESULTS_WORKBOOK_REDESIGN.md`
+  - `validation/results/v2280_results_workbook_smoke.json`
+  - `validation/results/v2280_results_workbook_audit.json`
+- Boundary: frontend/product results presentation only; no statistical engine, formula, result schema, project archive, validation tolerance, or numerical fingerprint changes.
+
+## QuickPLS 2.29.0
+
+- `v2_29_0_research_table_system` is validated.
+- The milestone upgrades Results tables into one shared research-table shell with sticky headers, sticky first data column, table search, sorting, precision, density, selected-row copy, table export, and row-detail interpretation.
+- PLSpredict and CVPAT tables now use the same shell as the measurement, structural, validity, inference, mediation, diagnostics, interpretation, and comparison outputs.
+- Evidence:
+  - `docs/V2_29_0_RESEARCH_TABLE_SYSTEM.md`
+  - `validation/results/v2290_research_tables_smoke.json`
+  - `validation/results/v2290_research_tables_audit.json`
+- Boundary: frontend/product table presentation only; no statistical engine, formula, result schema, project archive, validation tolerance, or numerical fingerprint changes.
+
+## QuickPLS 2.30.0
+
+- `v2_30_0_interpretation_reportability_assistant` is validated.
+- The milestone adds a Results reportability assistant with canonical checklist lanes, value-specific explanations, next inspection targets, and copyable report snippets from the selected run.
+- Threshold colors remain methodological guidance, not universal pass/fail rules.
+- Evidence:
+  - `docs/V2_30_0_INTERPRETATION_REPORTABILITY_ASSISTANT.md`
+  - `validation/results/v2300_reportability_assistant_smoke.json`
+  - `validation/results/v2300_reportability_assistant_audit.json`
+- Boundary: frontend/product interpretation presentation only; no statistical engine, formula, result schema, project archive, validation tolerance, or numerical fingerprint changes.
+
+## QuickPLS 2.31.0
+
+- `v2_31_0_report_export_wizard` is validated.
+- The milestone turns Report into a four-step desktop export wizard: Select content, Preview, Document settings, and Export.
+- Detailed run comparison remains in Results; Report links to the Results Comparison workspace instead of duplicating comparison tables.
+- Evidence:
+  - `docs/V2_31_0_REPORT_EXPORT_WIZARD.md`
+  - `validation/results/v2310_report_export_wizard_smoke.json`
+  - `validation/results/v2310_report_export_wizard_audit.json`
+- Boundary: frontend/product report presentation only; no statistical engine, formula, result schema, project archive, validation tolerance, or numerical fingerprint changes.
+
+## QuickPLS 2.36.0
+
+- `v2_36_0_native_desktop_ui_spec_and_component_plan` is validated.
+- The milestone freezes the native desktop UI blueprint from the final QuickPLS 2.0 screen and dialog mockups, including the workbench shell, workflow screens, task dialogs, focus diagram mode, reusable component inventory, and implementation map.
+- Evidence:
+  - `docs/V2_36_0_NATIVE_DESKTOP_UI_SPEC_AND_COMPONENT_PLAN.md`
+  - `validation/results/v236_native_ui_spec_audit.json`
+- Boundary: planning/frontend specification only; no statistical engine, formula, result schema, project archive, validation tolerance, or numerical fingerprint changes.
+
+## QuickPLS 2.37.0
+
+- `v2_37_0_native_frontend_prototype_shell` is validated.
+- The milestone adds an isolated QuickPLS 2 native desktop frontend prototype behind `?native_prototype=1`, using dummy data to match the new workbench direction before backend wiring.
+- The prototype includes the full desktop shell, menu bar, command strip, workflow rail, Home, Data, Model, Setup, Run, Results, Report, Trust Center, Settings, and task dialogs.
+- Evidence:
+  - `docs/V2_37_0_NATIVE_FRONTEND_PROTOTYPE_SHELL.md`
+  - `validation/results/v2370_native_frontend_prototype_smoke.json`
+  - `validation/results/v2370_native_frontend_prototype_audit.json`
+- Boundary: frontend prototype only; no statistical engine, formula, result schema, project archive, validation tolerance, or numerical fingerprint changes.
+
+## QuickPLS 2.38.0
+
+- `v2_38_0_native_frontend_backend_adapters` is validated.
+- The milestone connects the isolated native prototype to existing frontend workspace state through read-only adapters for project summary, dataset preview, variables, constructs, structural paths, methods, completed-run rows, and trust evidence.
+- Static prototype data remains available only as fallback when workspace content is absent.
+- Evidence:
+  - `docs/V2_38_0_NATIVE_FRONTEND_BACKEND_ADAPTERS.md`
+  - `validation/results/v2380_native_frontend_backend_adapters_smoke.json`
+  - `validation/results/v2380_native_frontend_backend_adapters_audit.json`
+- Boundary: frontend/product adapter only; no statistical engine, formula, result schema, project archive, validation tolerance, or numerical fingerprint changes.
+
+## QuickPLS 2.39.0
+
+- `v2_39_0_native_frontend_screen_replacement_plan` is validated.
+- The milestone adds an opt-in production-candidate native shell route behind `?native_shell=1`, keeps the isolated prototype behind `?native_prototype=1`, and preserves the default legacy app route.
+- The candidate shell synchronizes native rail navigation with the existing workspace ids so screen replacement can proceed safely route by route.
+- Evidence:
+  - `docs/V2_39_0_NATIVE_FRONTEND_SCREEN_REPLACEMENT_PLAN.md`
+  - `validation/results/v2390_native_frontend_screen_replacement_smoke.json`
+  - `validation/results/v2390_native_frontend_screen_replacement_audit.json`
+- Boundary: frontend/product shell-routing bridge only; no statistical engine, formula, result schema, project archive, validation tolerance, or numerical fingerprint changes.
+
+## QuickPLS 2.40.0
+
+- `v2_40_0_mockup_fidelity_native_shell_alignment` is validated.
+- The milestone tightens the production-candidate native shell against the supplied QuickPLS 2.0 mockups with a mockup-style ribbon, hierarchical SEM Explorer, tabbed Object Inspector, and bottom output pane.
+- Older UI surfaces that are not present in the mockups are documented separately for later product decisions instead of being mixed into the current parity target.
+- Evidence:
+  - `docs/V2_40_0_MOCKUP_FIDELITY_NATIVE_SHELL_ALIGNMENT.md`
+  - `docs/V2_40_MOCKUP_EXTRA_FEATURE_BACKLOG.md`
+  - `validation/results/v2400_mockup_fidelity_smoke.json`
+  - `validation/results/v2400_mockup_fidelity_audit.json`
+
+## v2.41.0 Full Mockup Screen Parity Pass
+
+- `v2_41_0_full_mockup_screen_parity_pass` is validated.
+- Added a strict manifest that maps every supplied QuickPLS 2.0 mockup PNG to a rendered screen or dialog state.
+- Added the `?native_shell=1&mockup_parity=1` route so parity review uses deterministic mockup data while the normal native shell remains backend-wired.
+- Tightened the native shell, ribbon, Model workbench panes, object inspector, diagram geometry, and bottom pane structure toward the supplied desktop mockup proportions.
+- Added targeted evidence:
+  - `validation/results/v2410_mockup_manifest_audit.json`
+  - `validation/results/v2410_mockup_visual_parity_smoke.json`
+  - `validation/results/v2410_mockup_visual_parity_audit.json`
+- Boundary: frontend/product mockup-fidelity alignment only; no statistical engine, formula, result schema, project archive, validation tolerance, or numerical fingerprint changes.
+
+## v2.42.0 Make Native Mockup Shell Default
+
+- `v2_42_0_make_native_mockup_shell_default` is validated.
+- The production-candidate native mockup-parity shell is now the default app UI.
+- `?native_shell=1` remains accepted for compatibility, `?native_prototype=1` remains the isolated static prototype, and `?legacy_shell=1` is the explicit fallback to the older shell during transition testing.
+- Added targeted evidence:
+  - `docs/V2_42_0_MAKE_NATIVE_MOCKUP_SHELL_DEFAULT.md`
+  - `validation/results/v2420_native_default_shell_smoke.json`
+  - `validation/results/v2420_native_default_shell_audit.json`
+- Boundary: frontend/product routing only; no statistical engine, formula, result schema, project archive, validation tolerance, or numerical fingerprint changes.
+
+## v2.42.1 Native Shell QA Test Pack
+
+- `v2_42_1_native_shell_qa_test_pack` is validated.
+- Added screen-by-screen QA coverage for Home, Data, Model, Setup, Run, Results, Report, Trust Center, Settings, Import Data, and Calculation Setup.
+- Added interaction wiring smoke for desktop menus, rail navigation, dialog close paths, Escape handling, SEM designer integration, and backend-adapter Run/Results/Report surfaces.
+- Added old-shell trace audit to keep the default route free of stale v1/v1.5 wording, old dashboard chrome, mojibake, duplicated global controls, and unsupported equivalence claims.
+- Version metadata is set to `2.42.1`; the release artifact label is `v2_42_1_native_shell_qa_test_pack`.
+
+## v2.43.0 Full Native Frontend/Backend Wiring
+
+- `v2_43_0_full_native_frontend_backend_wiring` is validated.
+- Default-shell commands now route to real production behavior, real task dialogs, or intentional absence.
+- Close Project, structured Data command dialogs, layout/status bar preferences, offline documentation, and checksum detail verification are wired.
+- Pause is intentionally absent because the current runner supports cancellation, not safe suspension/resumption.
+- Version metadata is set to `2.43.0`; the release artifact label is `v2_43_0_full_native_frontend_backend_wiring`.
+- Evidence:
+  - `docs/V2_42_1_NATIVE_SHELL_QA_TEST_PACK.md`
+  - `validation/results/v2421_native_screen_qa_smoke.json`
+  - `validation/results/v2421_native_interaction_wiring_smoke.json`
+  - `validation/results/v2421_native_web_trace_audit.json`
+  - `validation/results/v2421_native_qa_test_pack_audit.json`
+- Boundary: frontend/product QA, dialog keyboard behavior, release metadata, docs, and validation only; no statistical engine, formula, result schema, project archive, validation tolerance, or numerical fingerprint changes.
+
+## v2.44.0 Native UI Production Binding Completion
+
+- `v2_44_0_native_ui_production_binding_completion` is validated.
+- Default native-shell Home/Data/Model/Setup/Run/Results/Report surfaces now bind to real workspace/project/run/report state where available.
+- Explicit mockup-parity fallback data remains available only for visual review mode, not normal production use.
+- Fake telemetry and stale static run/project strings are removed from the default native shell.
+- Version metadata is set to `2.44.0`; the release artifact label is `v2_44_0_native_ui_production_binding_completion`.
+- Evidence:
+  - `docs/V2_44_0_NATIVE_UI_PRODUCTION_BINDING_COMPLETION.md`
+  - `validation/results/v244_home_project_status_smoke.json`
+  - `validation/results/v244_data_binding_smoke.json`
+  - `validation/results/v244_model_binding_smoke.json`
+  - `validation/results/v244_setup_binding_smoke.json`
+  - `validation/results/v244_run_results_report_binding_smoke.json`
+  - `validation/results/v244_trust_settings_commands_smoke.json`
+  - `validation/results/v244_production_binding_audit.json`
+- Boundary: frontend/native-shell production binding only; no statistical engine, formula, result schema, project archive, validation tolerance, or numerical fingerprint changes.
+# v2.45.0 Mockup Visible Feature Completion
+
+- Status: validated.
+- Scope: native-shell frontend/product binding only.
+- Evidence: `validation/results/v245_mockup_feature_completion_smoke.json` and `validation/results/v245_mockup_feature_completion_audit.json`.
+- Notes: Data tabs, Model explorer/bottom panes, Setup evidence drawer, Run output preview, and Trust release integrity now use live/default-shell state instead of fixed mockup placeholders. No numerical backend behavior changed.
+
+## QuickPLS 3.0 parity program — Wave 1 logistic checkpoint
+
+- `qpls3.standalone.logistic` is the first parity-ledger capability to reach `release_qualified` under the catalogue snapshot dated 2026-08-12.
+- Current execution emits `regression_logistic_v2` from a typed recipe-v3 standalone Regression contract; `regression_logistic_v1` remains readable historical output and cannot be appended as current evidence.
+- Accepted scope is an exactly coded numeric 0/1 outcome with both classes in the listwise-complete sample, deterministic single-worker Newton IRLS, fixed 95% Wald inference, odds-ratio intervals, likelihood diagnostics, fitted probabilities, convergence evidence, and explicitly in-sample descriptive classification.
+- Independent Python and validation-only R `glm` arithmetic, strict archive-v5 append/save/reopen/tamper gates, browser setup at 1024×700, 1280×720, and 1440×900, real packaged Tauri execution, native XLSX, strict-profile failure recovery, explicit save, and same-run reopen pass.
+- Evidence: `validation/results/logistic_v2_reference_report.json`, `validation/results/logistic_method_promotion_audit.json`, and `validation/results/logistic_v2_packaged_acceptance.json`.
+- This checkpoint did not change the package/release version. At the time of this logistic checkpoint, Wave 1 remained open for regression bootstrapping and the full graph-defined PROCESS workflow; no new installer was claimed.
+
+## QuickPLS 3.0 parity program - Wave 1 regression-bootstrap checkpoint
+
+- `qpls3.standalone.regression_bootstrap` reached `release_qualified` evidence status for the bounded `regression_bootstrap_v1` OLS and binary-logistic coefficient-inference scope.
+- Independent Python/R reference checks, exact scientific and archive-tamper boundaries, three-viewport browser acceptance, genuine packaged 10,000-resample OLS and logistic execution, cancellation, native XLSX export, explicit save, and same-run reopen pass.
+- Evidence: `validation/results/regression_bootstrap_v1_reference_report.json`, `validation/results/regression_bootstrap_v1_boundary_test_report.json`, `validation/results/regression_bootstrap_v1_packaged_acceptance.json`, and `validation/results/regression_bootstrap_method_promotion_audit.json`.
+- This checkpoint did not change the package/release version or publish an installer. PROCESS v2 and the coordinated Wave 1 2.46.0 release transition remained open at this point.
+
+## QuickPLS 3.0 parity program - Wave 1 PROCESS capability checkpoint
+
+- `qpls3.standalone.process` reached `release_qualified` evidence status for its documented bounded `regression_process_v2` scope.
+- Independent Python/R reference checks, exact scientific and archive-tamper boundaries, the focused frontend/type gate, three-viewport browser acceptance, genuine packaged 10,000-resample execution, cancellation/retry, accessible result and plot-data tables, native XLSX export, explicit save/reopen, repeated completion identity, and clean process/resource lifecycle evidence pass.
+- Evidence: `validation/results/process_v2_reference_report.json`, `validation/results/process_v2_boundary_test_report.json`, `validation/results/process_v2_frontend_gate_report.json`, `validation/results/v247_native_desktop_visual_acceptance.json`, `validation/results/process_v2_packaged_acceptance.json`, and `validation/results/process_v2_method_promotion_audit.json`.
+- This checkpoint does not change package version or publish an installer. The repository remains on the 2.45.0 recovery/candidate version; Wave 1 2.46.0 remains open for coordinated version metadata, public status-label transition, rebuilt artifacts, and release gates.
+
+## QuickPLS 2.46.0 Wave 1 capability qualification
+
+- The QuickPLS 3 parity ledger now records 17 in-scope capabilities: 13 remain `native_qualified`, while Structural Path Randomization v1, Binary Logistic Regression v2, Regression Bootstrapping v1, and Graph-defined PROCESS v2 are `release_qualified` through their own current method-specific and packaged evidence.
+- `qpls3.inference.structural_path_randomization` reached `release_qualified` evidence status for bounded `freedman_lane_permutation_v1`: single-model direct structural-score paths using fixed original converged PLS scores, intercept nuisance equations, deterministic path-specific streams, two-sided unadjusted plus-one probabilities, and exchangeable reduced-model residuals.
+- Independent Python/R recomputation, exact deterministic-index and worker-invariance boundaries, calibrated paired homoscedastic Gaussian null/power scenarios, strict archive/tamper validation, focused frontend/type checks, three-viewport visual acceptance, genuine packaged cancellation/retry/completion, native XLSX export, explicit save/reopen, and clean process/resource evidence pass.
+- Evidence: `validation/results/structural_path_randomization_reference_report.json`, `validation/results/structural_path_randomization_boundary_test_report.json`, `validation/results/structural_path_randomization_frontend_gate_report.json`, `validation/results/v247_native_desktop_visual_acceptance.json`, `validation/results/structural_path_randomization_v1_packaged_acceptance.json`, and `validation/results/structural_path_randomization_method_promotion_audit.json`.
+- This qualification does not cover measurement-model re-estimation, multiplicity adjustment, heteroskedastic or broader non-Gaussian validity, MGA, MICOM, causal proof, or numerical identity with another product. The explicit conditional/approximate interpretation warning remains required.
+- The coordinated QuickPLS 2.46.0 Wave 1 release records these capability qualifications. Installer construction, checksum publication, and signing remain governed by their separate release-artifact gates and are not implied by this evidence checkpoint.

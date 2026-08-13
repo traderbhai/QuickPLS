@@ -1,0 +1,6 @@
+parameter_ordinal,parameter,source,target,predictor_ordinal,predictor,is_focal,stored_original,stored_exceedances,stored_p_value,permutations
+0,"[""path"",[""comp"",""satisfaction""]]",comp,satisfaction,0,comp,1,0.7945750712093537,0,0.001,999
+0,"[""path"",[""comp"",""satisfaction""]]",comp,satisfaction,1,like,0,0.7945750712093537,0,0.001,999
+1,"[""path"",[""like"",""satisfaction""]]",like,satisfaction,0,comp,0,0.8043768882095139,0,0.001,999
+1,"[""path"",[""like"",""satisfaction""]]",like,satisfaction,1,like,1,0.8043768882095139,0,0.001,999
+2,"[""path"",[""satisfaction"",""loyalty""]]",satisfaction,loyalty,0,satisfaction,1,0.836535683314899,0,0.001,999

@@ -1,0 +1,402 @@
+{
+  "schema_version": "quickpls.packaged_acceptance.v1",
+  "kind": "quickpls3_scoped_tauri_regression_bootstrap_v1_acceptance",
+  "passed": true,
+  "generated_at_utc": "2026-08-13T07:01:08.098Z",
+  "completed_at_utc": "2026-08-13T07:02:52.778Z",
+  "feature_id": "qpls3.standalone.regression_bootstrap",
+  "method_version": "regression_bootstrap_v1",
+  "catalogue_snapshot_date": "2026-08-12",
+  "target": "windows_10_11_x64_packaged_tauri",
+  "runtime": "tauri-webview2-cdp",
+  "endpoint": "http://127.0.0.1:9222",
+  "generator": "validation/v247_tauri_native_acceptance.mjs",
+  "tested_product": {
+    "quickpls_desktop_exe": {
+      "path": "target/release/quickpls-desktop.exe",
+      "size": 28276736,
+      "sha256": "988a9006b9e63bd6a91c6d86b84a0449f9bc999e6b394c531320846d68efcaa1"
+    },
+    "dist_bundle": {
+      "path": "dist",
+      "size": 1170615,
+      "file_count": 19,
+      "sha256": "6df4c180f6d338dc7d4dd07db9f2862e40f9e17d3c7fe27762bcb966973eccfb",
+      "manifest": [
+        {
+          "path": "assets/NativeCalculationDialog-Bozvjmo2.js",
+          "size": 50628,
+          "sha256": "b66c6bf6cd92a6ffd025bee490caaee81e968be017d55f8910f87745ad78c132"
+        },
+        {
+          "path": "assets/NativeExportDialog-DRkEBJgy.js",
+          "size": 6227,
+          "sha256": "9b2ad9135d963146fa0792b052f9b0a8851b34db50c31c504c966a073f29eb4e"
+        },
+        {
+          "path": "assets/NativeGroupSetupDialog-BBekaerZ.js",
+          "size": 6779,
+          "sha256": "21a5df0bbf4e6402830eb82c38333ff22a4b987a1b6c1053cece32af5f08f02d"
+        },
+        {
+          "path": "assets/NativeHigherOrderDialog-Crr0cFk9.js",
+          "size": 2948,
+          "sha256": "2efa06bd7f77832abff54fa915b8f042812c0f456e9f35d631c1592781f0fe22"
+        },
+        {
+          "path": "assets/NativeModerationDialog-DgnDSg5q.js",
+          "size": 3081,
+          "sha256": "7362c82ed1c5380a752b83b99a3759087dbb5bdf065638aed22b1dc9f7456d32"
+        },
+        {
+          "path": "assets/NativeResultsSurface-D5M3tPKK.js",
+          "size": 31251,
+          "sha256": "5d789cf33e40d1c3b1c5fbf29aa6fd7fcae46699a7df68a6ec548474350fd1c8"
+        },
+        {
+          "path": "assets/NativeUtilityDialog-CyUdf7Td.js",
+          "size": 4346,
+          "sha256": "af2f5dfce8681cd3bbd7601937242846743df9e16558359fbb6aec65aa679a91"
+        },
+        {
+          "path": "assets/flow-BN-PNp2v.js",
+          "size": 83921,
+          "sha256": "e96e69cde521273e387064b0ff3ea9f94e29834ea085646f0b8e1fe9e0ea8fde"
+        },
+        {
+          "path": "assets/flow-BnuhLJ6X.css",
+          "size": 15869,
+          "sha256": "1243b61a71923367ce620fb944427c80c9b03e863e18374fcf4f74d6d06f63fc"
+        },
+        {
+          "path": "assets/icons-B3Zfv1lt.js",
+          "size": 20320,
+          "sha256": "44c646ff3a637e2eeb2ce149868b7b46b7407809366f31c77cd3845c34ecfef9"
+        },
+        {
+          "path": "assets/index-CCeoAjeY.js",
+          "size": 517696,
+          "sha256": "07bf64aa1f19765913686ccce679de99253173bfb4a36f4e1e5e887ebf8d62b6"
+        },
+        {
+          "path": "assets/index-CI3Uacl2.css",
+          "size": 73914,
+          "sha256": "22799add8872c2513a8cb9e43b438a23d58a2ecda11863539c143a97ff105365"
+        },
+        {
+          "path": "assets/largeModelSmoke-PEBccAlJ.js",
+          "size": 880,
+          "sha256": "a4977bf130c85a688b570fb1f17f8dac958787116a585c9300f3d4c3fbd6b535"
+        },
+        {
+          "path": "assets/nativeMga-DgYeq6DN.js",
+          "size": 3108,
+          "sha256": "024828f88efaf03205588f9bc34ca763bd8f484b36f5172f92d4a83ac4aa12ff"
+        },
+        {
+          "path": "assets/publicationDiagram-DBdD1Z-g.js",
+          "size": 8653,
+          "sha256": "d6afa743d4c0b4202732a7cfed58a514d6ec3ed01be08559bee595df67bbed67"
+        },
+        {
+          "path": "assets/smokeRun-CMXwsrTO.js",
+          "size": 7141,
+          "sha256": "33388a0e9df739d8812f2a03c2980f00a3f49046375ae48c9a854d8f94f7f962"
+        },
+        {
+          "path": "assets/tauri-CZBL8huA.js",
+          "size": 15818,
+          "sha256": "8fbb85b9879fc37af89bc405134891d8b7dec19829e03c6d7900ba79f71dbe77"
+        },
+        {
+          "path": "assets/vendor-3AznE2Td.js",
+          "size": 317214,
+          "sha256": "7dadeaa73f481ffd1ab52c5247997462fd195062a4dbe10353701ffbbc45711f"
+        },
+        {
+          "path": "index.html",
+          "size": 821,
+          "sha256": "2d9b0e87594f669c9a72d5b6c0f9a74be89b8c6f63cb557a588a3122b53b3fd6"
+        }
+      ]
+    }
+  },
+  "checks": {
+    "workflow": {
+      "passed": true,
+      "ols_completed": true,
+      "logistic_completed": true,
+      "active_lifecycle_captured": true,
+      "model_free": true,
+      "source_check": "regressionBootstrapWorkflow"
+    },
+    "results": {
+      "passed": true,
+      "ols_initial_selected_table": "regression_bootstrap_summary",
+      "logistic_initial_selected_table": "regression_bootstrap_summary",
+      "ols_coefficient_rows": 4,
+      "logistic_coefficient_rows": 4,
+      "percentile_primary_present": true,
+      "bca_conditional_present": true,
+      "failure_disclosure_truthful": true,
+      "validation_witness_not_rendered": true,
+      "no_na_fabrication": true,
+      "source_check": "regressionBootstrapResults"
+    },
+    "ols_export": {
+      "passed": true,
+      "workbook_sheets": [
+        "Coefficients",
+        "Model fit",
+        "Calculation scope",
+        "Regression bootstrap summary",
+        "Bootstrap coefficient inference",
+        "Percentile confidence intervals",
+        "BCa confidence intervals (condi",
+        "Fitted values and residuals",
+        "Run provenance"
+      ],
+      "validation_witness_excluded": true,
+      "witness_scan": {
+        "passed": true,
+        "total_members": 18,
+        "scanned_xml_and_rels_members": [
+          "[Content_Types].xml",
+          "_rels/.rels",
+          "xl/_rels/workbook.xml.rels",
+          "xl/theme/theme1.xml",
+          "xl/styles.xml",
+          "xl/workbook.xml",
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet3.xml",
+          "xl/worksheets/sheet4.xml",
+          "xl/worksheets/sheet5.xml",
+          "xl/worksheets/sheet6.xml",
+          "xl/worksheets/sheet7.xml",
+          "xl/worksheets/sheet8.xml",
+          "xl/worksheets/sheet9.xml",
+          "xl/sharedStrings.xml",
+          "docProps/core.xml",
+          "docProps/app.xml"
+        ],
+        "worksheet_members": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet3.xml",
+          "xl/worksheets/sheet4.xml",
+          "xl/worksheets/sheet5.xml",
+          "xl/worksheets/sheet6.xml",
+          "xl/worksheets/sheet7.xml",
+          "xl/worksheets/sheet8.xml",
+          "xl/worksheets/sheet9.xml"
+        ],
+        "worksheet_row_counts": {
+          "xl/worksheets/sheet1.xml": 8,
+          "xl/worksheets/sheet2.xml": 5,
+          "xl/worksheets/sheet3.xml": 15,
+          "xl/worksheets/sheet4.xml": 21,
+          "xl/worksheets/sheet5.xml": 8,
+          "xl/worksheets/sheet6.xml": 8,
+          "xl/worksheets/sheet7.xml": 8,
+          "xl/worksheets/sheet8.xml": 144,
+          "xl/worksheets/sheet9.xml": 39
+        },
+        "forbidden_matches": [],
+        "extraction_errors": []
+      },
+      "artifact_sha256": "cd80ac45a571126bec25591b32872b719203500ea4c791ae493a7648b41f08c3",
+      "source_check": "regressionBootstrapOlsExport"
+    },
+    "logistic_export": {
+      "passed": true,
+      "workbook_sheets": [
+        "Coefficients, Wald inference, a",
+        "Model fit and likelihood-ratio",
+        "Classification at probability t",
+        "Binary outcome profile",
+        "Estimator convergence",
+        "Complete-case fitted probabilit",
+        "Calculation scope",
+        "Regression bootstrap summary",
+        "Bootstrap coefficient inference",
+        "Percentile confidence intervals",
+        "BCa confidence intervals (condi",
+        "Bootstrap odds-ratio intervals",
+        "Run provenance"
+      ],
+      "validation_witness_excluded": true,
+      "witness_scan": {
+        "passed": true,
+        "total_members": 22,
+        "scanned_xml_and_rels_members": [
+          "[Content_Types].xml",
+          "_rels/.rels",
+          "xl/_rels/workbook.xml.rels",
+          "xl/theme/theme1.xml",
+          "xl/styles.xml",
+          "xl/workbook.xml",
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet3.xml",
+          "xl/worksheets/sheet4.xml",
+          "xl/worksheets/sheet5.xml",
+          "xl/worksheets/sheet6.xml",
+          "xl/worksheets/sheet7.xml",
+          "xl/worksheets/sheet8.xml",
+          "xl/worksheets/sheet9.xml",
+          "xl/worksheets/sheet10.xml",
+          "xl/worksheets/sheet11.xml",
+          "xl/worksheets/sheet12.xml",
+          "xl/worksheets/sheet13.xml",
+          "xl/sharedStrings.xml",
+          "docProps/core.xml",
+          "docProps/app.xml"
+        ],
+        "worksheet_members": [
+          "xl/worksheets/sheet1.xml",
+          "xl/worksheets/sheet2.xml",
+          "xl/worksheets/sheet3.xml",
+          "xl/worksheets/sheet4.xml",
+          "xl/worksheets/sheet5.xml",
+          "xl/worksheets/sheet6.xml",
+          "xl/worksheets/sheet7.xml",
+          "xl/worksheets/sheet8.xml",
+          "xl/worksheets/sheet9.xml",
+          "xl/worksheets/sheet10.xml",
+          "xl/worksheets/sheet11.xml",
+          "xl/worksheets/sheet12.xml",
+          "xl/worksheets/sheet13.xml"
+        ],
+        "worksheet_row_counts": {
+          "xl/worksheets/sheet1.xml": 8,
+          "xl/worksheets/sheet2.xml": 15,
+          "xl/worksheets/sheet3.xml": 5,
+          "xl/worksheets/sheet4.xml": 5,
+          "xl/worksheets/sheet5.xml": 5,
+          "xl/worksheets/sheet6.xml": 144,
+          "xl/worksheets/sheet7.xml": 15,
+          "xl/worksheets/sheet8.xml": 21,
+          "xl/worksheets/sheet9.xml": 8,
+          "xl/worksheets/sheet10.xml": 8,
+          "xl/worksheets/sheet11.xml": 8,
+          "xl/worksheets/sheet12.xml": 8,
+          "xl/worksheets/sheet13.xml": 45
+        },
+        "forbidden_matches": [],
+        "extraction_errors": []
+      },
+      "artifact_sha256": "95fe15918ed078223c14a3882b24e78cd374308b1305b740fc33383639be4c98",
+      "source_check": "regressionBootstrapLogisticExport"
+    },
+    "save_reopen": {
+      "passed": true,
+      "ols_same_run_restored": true,
+      "logistic_same_run_restored": true,
+      "ols_initial_selected_table": "regression_bootstrap_summary",
+      "logistic_initial_selected_table": "regression_bootstrap_summary",
+      "project_checksum_matches": true,
+      "archive_witness_validated": true,
+      "archive_sha256": "38077cf6056b9702cd4d97e4a230c8e845a0381ba283eff8324ecd7f6215de0c",
+      "source_check": "regressionBootstrapSaveReopen"
+    },
+    "cancellation": {
+      "passed": true,
+      "active_lifecycle_captured": true,
+      "no_partial_result": true,
+      "source_check": "regressionBootstrapCancellation"
+    },
+    "witness_boundary": {
+      "passed": true,
+      "archive_only": true,
+      "term_order_exact": true,
+      "bootstrap_index_partition_exact": true,
+      "jackknife_index_partition_exact": true,
+      "excluded_from_results": true,
+      "excluded_from_exports": true,
+      "source_check": "regressionBootstrapWitnessBoundary"
+    }
+  },
+  "artifacts": {
+    "ols_xlsx": {
+      "path": "validation/results/v247-native-regression-bootstrap-ols-20260813-121924925-38092-35700036.xlsx",
+      "size": 18279,
+      "sha256": "cd80ac45a571126bec25591b32872b719203500ea4c791ae493a7648b41f08c3"
+    },
+    "logistic_xlsx": {
+      "path": "validation/results/v247-native-regression-bootstrap-logistic-20260813-121924925-38092-35700036.xlsx",
+      "size": 21907,
+      "sha256": "95fe15918ed078223c14a3882b24e78cd374308b1305b740fc33383639be4c98"
+    },
+    "project_archive": {
+      "path": "validation/results/v247-native-regression-bootstrap-1786604468092-21920.qpls",
+      "size": 944342,
+      "sha256": "38077cf6056b9702cd4d97e4a230c8e845a0381ba283eff8324ecd7f6215de0c"
+    },
+    "screenshots": [
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/160-tauri-native-regression-bootstrap-fixture-data-1536x794.png",
+        "size": 293913,
+        "sha256": "93818582b7e4d6bb9279d101e7ed103d9916766847aec4ae0bacb7a150bab5ff"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/161-tauri-native-regression-bootstrap-cancellation-running-1536x794.png",
+        "size": 232121,
+        "sha256": "182cd6d4c12370ee689146a735f3eb5c9314d870b993248fcd517c9b0f23ab2c"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/162-tauri-native-regression-bootstrap-cancelled-1536x794.png",
+        "size": 284576,
+        "sha256": "2d597fb1d7011de92ca92f191eb9127d674fdc9e3fc6a23aa4925c390c583948"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/163-tauri-native-regression-bootstrap-ols-dialog-1536x794.png",
+        "size": 299587,
+        "sha256": "8f1ae2b37e5e49cdcf43281225c397e31f8d06df533a9b5b045b2ce25279cc3c"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/164-tauri-native-regression-bootstrap-ols-running-1536x794.png",
+        "size": 232121,
+        "sha256": "182cd6d4c12370ee689146a735f3eb5c9314d870b993248fcd517c9b0f23ab2c"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/165-tauri-native-regression-bootstrap-ols-results-1536x794.png",
+        "size": 111573,
+        "sha256": "daba62907233a8752527f39b18c8257488bc6d56e689de58b1d83409b5148ac2"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/166-tauri-native-regression-bootstrap-ols-export-1536x794.png",
+        "size": 111573,
+        "sha256": "daba62907233a8752527f39b18c8257488bc6d56e689de58b1d83409b5148ac2"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/167-tauri-native-regression-bootstrap-logistic-dialog-1536x794.png",
+        "size": 306956,
+        "sha256": "6001a979b198eddc08dbae781d11b25848d45750acc096ada624dd6428b65ece"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/168-tauri-native-regression-bootstrap-logistic-running-1536x794.png",
+        "size": 232121,
+        "sha256": "182cd6d4c12370ee689146a735f3eb5c9314d870b993248fcd517c9b0f23ab2c"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/169-tauri-native-regression-bootstrap-logistic-results-1536x794.png",
+        "size": 117459,
+        "sha256": "d77755a897769488c663a6255051948e5efe365b598539d9409b6896ece955eb"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/170-tauri-native-regression-bootstrap-logistic-export-1536x794.png",
+        "size": 117459,
+        "sha256": "d77755a897769488c663a6255051948e5efe365b598539d9409b6896ece955eb"
+      },
+      {
+        "path": "validation/results/screens/v247-native-desktop-acceptance/171-tauri-native-regression-bootstrap-reopened-1536x794.png",
+        "size": 115749,
+        "sha256": "62bdf1e39ab6f94d95ceb0d22326b211d68e8e6b8b50b03c000982aa1474cb61"
+      }
+    ]
+  },
+  "console_errors": [],
+  "failures": [],
+  "source_report": "validation/results/v247_tauri_native_acceptance_regression_bootstrap.json"
+}

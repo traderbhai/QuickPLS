@@ -1,0 +1,1168 @@
+{
+  "schema_version": 1,
+  "ledger_id": "quickpls_3_feature_equivalence",
+  "official_catalogue_snapshot": {
+    "date": "2026-08-12",
+    "url": "https://smartpls.com/documentation/algorithms-and-techniques/",
+    "comparison_rule": "Equivalent documented user outcomes within the stated QuickPLS scope; no copied internals or numerical-identity claim."
+  },
+  "allowed_states": [
+    "absent",
+    "engine_only",
+    "archive_qualified",
+    "native_qualified",
+    "release_qualified"
+  ],
+  "release_policy": {
+    "description": "release_qualified is derived only from a current scoped method audit and a packaged acceptance report. Both reports must have passed=true and must identify this feature ID, current method version, and catalogue snapshot date.",
+    "fresh_wave_0_gate_required": true
+  },
+  "features": [
+    {
+      "id": "qpls3.pls.algorithm",
+      "catalog_kind": "pls_algorithm",
+      "label": "PLS-SEM Algorithm",
+      "official_family": "PLS-SEM algorithm",
+      "quickpls_scope": "Deterministic PLS path modelling for supported recursive composite models, including weights, loadings, paths, scores, R-squared, effects, assessment tables, persistence, and native export.",
+      "method_version": "pls_pm_v1",
+      "state": "native_qualified",
+      "known_differences": [
+        "QuickPLS is independently implemented and does not claim numerical identity for every initialization, sign convention, or stopping path.",
+        "Unsupported model shapes remain blocked by the typed recipe validator."
+      ],
+      "evidence": {
+        "engine": [
+          {
+            "description": "Current estimator method version is defined in source.",
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "contains": "pub const PLS_METHOD_VERSION: &str = \"pls_pm_v1\";"
+          },
+          {
+            "description": "Current scoped PLS core audit passed.",
+            "path": "validation/results/pls_core_method_promotion_audit.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "Audit identity is the PLS core estimator promotion.",
+            "path": "validation/results/pls_core_method_promotion_audit.json",
+            "pointer": "/target",
+            "equals": "pls_core_estimator_output_promotion"
+          }
+        ],
+        "archive": [
+          {
+            "description": "The packaged PLS project was reopened.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/mediationSaveReopen/reopenedThroughRecentProjectRow",
+            "equals": true
+          },
+          {
+            "description": "The reopened archive retained the PLS Algorithm run.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/mediationSaveReopen/hasPlsAlgorithm",
+            "equals": true
+          }
+        ],
+        "native": [
+          {
+            "description": "The cumulative packaged-native acceptance report passed.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "A genuine PLS Algorithm result was shown.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/mediationPlsResult/runLabel",
+            "equals": "PLS-SEM Algorithm run"
+          },
+          {
+            "description": "Native XLSX export was available for the accepted PLS result flow.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/mediationExport/xlsxEnabled",
+            "equals": true
+          }
+        ]
+      },
+      "release_evidence": null
+    },
+    {
+      "id": "qpls3.pls.consistent",
+      "catalog_kind": "plsc",
+      "label": "Consistent PLS",
+      "official_family": "Consistent PLS",
+      "quickpls_scope": "Reflective-only PLSc with path or factor weighting, corrected construct correlations, paths, loadings, R-squared, and rho_A attenuation correction.",
+      "method_version": "plsc_v2",
+      "state": "native_qualified",
+      "known_differences": [
+        "Formative blocks and unsupported correction shapes are rejected.",
+        "Historical plsc_v1 output remains legacy archive data and is not current evidence."
+      ],
+      "evidence": {
+        "engine": [
+          {
+            "description": "Current PLSc method version is defined in source.",
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "contains": "pub const PLSC_METHOD_VERSION: &str = \"plsc_v2\";"
+          },
+          {
+            "description": "Current scoped PLSc audit passed.",
+            "path": "validation/results/plsc_method_promotion_audit.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "Audit identity is PLSc.",
+            "path": "validation/results/plsc_method_promotion_audit.json",
+            "pointer": "/method_id",
+            "equals": "plsc"
+          }
+        ],
+        "archive": [
+          {
+            "description": "The packaged results archive was reopened.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/completedResultsSaveReopen/reopenedThroughRecentProjectRow",
+            "equals": true
+          },
+          {
+            "description": "The reopened archive retained PLSc.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/completedResultsSaveReopen/hasPlsc",
+            "equals": true
+          }
+        ],
+        "native": [
+          {
+            "description": "The cumulative packaged-native acceptance report passed.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "A genuine Consistent PLS result was shown.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/plscResult/runLabel",
+            "equals": "Consistent PLS run"
+          },
+          {
+            "description": "Native XLSX export was available.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/export/xlsxEnabled",
+            "equals": true
+          }
+        ]
+      },
+      "release_evidence": null
+    },
+    {
+      "id": "qpls3.pls.weighted",
+      "catalog_kind": "wpls",
+      "label": "Weighted PLS",
+      "official_family": "Weighted PLS",
+      "quickpls_scope": "Positive case-weighted reflective PLS with standardized preprocessing and path or factor weighting.",
+      "method_version": "wpls_case_weighted_v1",
+      "state": "native_qualified",
+      "known_differences": [
+        "The current workflow accepts positive case weights and does not claim general survey-design estimation.",
+        "Formative measurement and non-standardized preprocessing are excluded."
+      ],
+      "evidence": {
+        "engine": [
+          {
+            "description": "Current WPLS method version is defined in source.",
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "contains": "pub const WPLS_METHOD_VERSION: &str = \"wpls_case_weighted_v1\";"
+          },
+          {
+            "description": "Current scoped WPLS audit passed.",
+            "path": "validation/results/wpls_method_promotion_audit.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "Audit identity is WPLS.",
+            "path": "validation/results/wpls_method_promotion_audit.json",
+            "pointer": "/method_id",
+            "equals": "wpls"
+          }
+        ],
+        "archive": [
+          {
+            "description": "The packaged results archive was reopened.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/completedResultsSaveReopen/reopenedThroughRecentProjectRow",
+            "equals": true
+          },
+          {
+            "description": "The reopened archive retained WPLS.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/completedResultsSaveReopen/hasWpls",
+            "equals": true
+          }
+        ],
+        "native": [
+          {
+            "description": "The cumulative packaged-native acceptance report passed.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "A genuine Weighted PLS result was shown.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/wplsResult/runLabel",
+            "equals": "Weighted PLS run"
+          },
+          {
+            "description": "Native XLSX export was available.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/export/xlsxEnabled",
+            "equals": true
+          }
+        ]
+      },
+      "release_evidence": null
+    },
+    {
+      "id": "qpls3.gsca.als",
+      "catalog_kind": "gsca",
+      "label": "GSCA",
+      "official_family": "Generalized structured component analysis",
+      "quickpls_scope": "Bounded joint global least-squares ALS for standardized raw data, disjoint reflective or formative blocks, and recursive single-group paths; point estimates only.",
+      "method_version": "gsca_als_v2",
+      "state": "native_qualified",
+      "known_differences": [
+        "Inference, controls, covariance paths, interactions, higher-order constructs, case weights, and multigroup analysis are not in the current accepted scope.",
+        "Historical gsca_v1 is preview-only and is never reinterpreted as v2 evidence."
+      ],
+      "evidence": {
+        "engine": [
+          {
+            "description": "Current GSCA method version is defined in source.",
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "contains": "pub const GSCA_METHOD_VERSION: &str = \"gsca_als_v2\";"
+          },
+          {
+            "description": "Current scoped GSCA audit passed.",
+            "path": "validation/results/gsca_method_promotion_audit.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "Audit identity is GSCA.",
+            "path": "validation/results/gsca_method_promotion_audit.json",
+            "pointer": "/method_id",
+            "equals": "gsca"
+          }
+        ],
+        "archive": [
+          {
+            "description": "The packaged archive reopened the same GSCA run.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/gscaSaveReopen/sameRunRestored",
+            "equals": true
+          },
+          {
+            "description": "The archived estimator identity is current GSCA ALS.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/gscaSaveReopen/archive/estimationMethodVersion",
+            "equals": "gsca_als_v2"
+          }
+        ],
+        "native": [
+          {
+            "description": "The cumulative packaged-native acceptance report passed.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "Native GSCA results identify the current method.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/gscaResult/scopeValues/Method version",
+            "equals": "gsca_als_v2"
+          },
+          {
+            "description": "Native GSCA XLSX export was available.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/gscaExport/xlsxEnabled",
+            "equals": true
+          }
+        ]
+      },
+      "release_evidence": null
+    },
+    {
+      "id": "qpls3.assessment.cca_residuals",
+      "catalog_kind": "cca",
+      "label": "CCA composite residual diagnostics",
+      "official_family": "Confirmatory composite analysis",
+      "quickpls_scope": "Descriptive observed-versus-reproduced composite correlation residuals for a supported recursive standardized composite path model.",
+      "method_version": "cca_composite_residual_v1",
+      "state": "native_qualified",
+      "known_differences": [
+        "Current output is descriptive residual diagnostics, not the full inferential CCA workflow planned for Wave 5.",
+        "No fabricated significance or reflective-versus-formative classification is reported."
+      ],
+      "evidence": {
+        "engine": [
+          {
+            "description": "Current CCA residual method version is defined in source.",
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "contains": "pub const CCA_METHOD_VERSION: &str = \"cca_composite_residual_v1\";"
+          },
+          {
+            "description": "Current scoped CCA audit passed.",
+            "path": "validation/results/cca_method_promotion_audit.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "Audit identity is CCA.",
+            "path": "validation/results/cca_method_promotion_audit.json",
+            "pointer": "/method_id",
+            "equals": "cca"
+          }
+        ],
+        "archive": [
+          {
+            "description": "The packaged archive reopened the same CCA run.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/ccaSaveReopen/sameRunRestored",
+            "equals": true
+          },
+          {
+            "description": "The archived CCA payload identity is current.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/ccaSaveReopen/archive/payloadMethodVersion",
+            "equals": "cca_composite_residual_v1"
+          }
+        ],
+        "native": [
+          {
+            "description": "The cumulative packaged-native acceptance report passed.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "Native CCA results identify the current method.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/ccaResult/methodVersion",
+            "contains": "cca_composite_residual_v1"
+          },
+          {
+            "description": "Native CCA XLSX export included residual tables.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/ccaExport/residualTablesIncluded",
+            "equals": true
+          }
+        ]
+      },
+      "release_evidence": null
+    },
+    {
+      "id": "qpls3.assessment.ipma",
+      "catalog_kind": "ipma",
+      "label": "Importance-Performance Map Analysis",
+      "official_family": "Importance-performance map analysis",
+      "quickpls_scope": "One endogenous target with predecessor-only total importance and observed-range construct performance on a fixed 0-100 scale.",
+      "method_version": "ipma_v1",
+      "state": "native_qualified",
+      "known_differences": [
+        "Multiple outcomes, conditional IPMA, and broader range policies are not in the current accepted scope.",
+        "Disconnected constructs are excluded from the predecessor map."
+      ],
+      "evidence": {
+        "engine": [
+          {
+            "description": "Current IPMA method version is defined in source.",
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "contains": "pub const IPMA_METHOD_VERSION: &str = \"ipma_v1\";"
+          },
+          {
+            "description": "Current scoped IPMA audit passed.",
+            "path": "validation/results/ipma_method_promotion_audit.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "Audit identity is IPMA.",
+            "path": "validation/results/ipma_method_promotion_audit.json",
+            "pointer": "/method_id",
+            "equals": "ipma"
+          }
+        ],
+        "archive": [
+          {
+            "description": "The packaged archive reopened the same IPMA run.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/ipmaSaveReopen/sameRunRestored",
+            "equals": true
+          },
+          {
+            "description": "The archived IPMA identity is current.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/ipmaSaveReopen/archive/ipmaMethodVersion",
+            "equals": "ipma_v1"
+          }
+        ],
+        "native": [
+          {
+            "description": "The cumulative packaged-native acceptance report passed.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "A genuine IPMA result was shown.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/ipmaResult/runLabel",
+            "equals": "Importance-Performance Map Analysis run"
+          },
+          {
+            "description": "Native IPMA XLSX export included method tables.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/ipmaExport/ipmaTablesIncluded",
+            "equals": true
+          }
+        ]
+      },
+      "release_evidence": null
+    },
+    {
+      "id": "qpls3.cbsem.ml",
+      "catalog_kind": "cbsem",
+      "label": "CB-SEM / CFA",
+      "official_family": "Covariance-based structural equation modelling",
+      "quickpls_scope": "Raw-data single-group reflective CFA or recursive SEM with maximum likelihood, marker identification, standardized and unstandardized parameters, residuals, fit indices, and residual-based modification screening.",
+      "method_version": "cbsem_ml_v1",
+      "state": "native_qualified",
+      "known_differences": [
+        "Mean structures, robust ML, ordinal WLSMV, FIML, bootstrap, unrestricted multigroup invariance, interactions, and higher-order models remain outside this workflow.",
+        "The current estimator is independently validated against external references but does not bundle an external statistical runtime."
+      ],
+      "evidence": {
+        "engine": [
+          {
+            "description": "Current CB-SEM ML method version is defined in source.",
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "contains": "pub const CBSEM_ML_METHOD_VERSION: &str = \"cbsem_ml_v1\";"
+          },
+          {
+            "description": "Current scoped CB-SEM/CFA audit passed.",
+            "path": "validation/results/cbsem_cfa_method_promotion_audit.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "Audit identity is CB-SEM/CFA.",
+            "path": "validation/results/cbsem_cfa_method_promotion_audit.json",
+            "pointer": "/method_id",
+            "equals": "cbsem_cfa"
+          }
+        ],
+        "archive": [
+          {
+            "description": "The packaged archive reopened the same CB-SEM run.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/cbsemSaveReopen/sameRunRestored",
+            "equals": true
+          },
+          {
+            "description": "The archived estimator identity is current CB-SEM ML.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/cbsemSaveReopen/archive/estimationMethodVersion",
+            "equals": "cbsem_ml_v1"
+          }
+        ],
+        "native": [
+          {
+            "description": "The cumulative packaged-native acceptance report passed.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "Native CB-SEM results identify the current estimator.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/cbsemResult/scopeValues/Estimator method version",
+            "equals": "cbsem_ml_v1"
+          },
+          {
+            "description": "Native CB-SEM XLSX export was available.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/cbsemExport/xlsxEnabled",
+            "equals": true
+          }
+        ]
+      },
+      "release_evidence": null
+    },
+    {
+      "id": "qpls3.inference.bootstrap",
+      "catalog_kind": "pls_bootstrap",
+      "label": "PLS-SEM Bootstrapping",
+      "official_family": "Bootstrapping",
+      "quickpls_scope": "Deterministic PLS resampling with documented percentile, BCa, studentized bootstrap-t, jackknife, progress, cancellation, persistence, and inference tables for supported models.",
+      "method_version": "indexed_resampling_v4",
+      "state": "native_qualified",
+      "known_differences": [
+        "Resampling claims are limited to supported PLS model shapes and documented defaults.",
+        "Regression bootstrapping is not part of the current accepted workflow and is scheduled for Wave 1."
+      ],
+      "evidence": {
+        "engine": [
+          {
+            "description": "Current indexed resampling method version is defined in source.",
+            "path": "crates/qpls-resampling/src/lib.rs",
+            "contains": "pub const RESAMPLING_METHOD_VERSION: &str = \"indexed_resampling_v4\";"
+          },
+          {
+            "description": "Current scoped inference audit passed.",
+            "path": "validation/results/inference_method_promotion_audit.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "The audit explicitly promotes percentile bootstrap.",
+            "path": "validation/results/inference_method_promotion_audit.json",
+            "pointer": "/scope_decision/promoted_procedures",
+            "contains": "bootstrap_percentile"
+          }
+        ],
+        "archive": [
+          {
+            "description": "The packaged bootstrap project was reopened.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/mediationSaveReopen/reopenedThroughRecentProjectRow",
+            "equals": true
+          },
+          {
+            "description": "The reopened archive retained Bootstrap.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/mediationSaveReopen/hasBootstrap",
+            "equals": true
+          }
+        ],
+        "native": [
+          {
+            "description": "The cumulative packaged-native acceptance report passed.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "A genuine Bootstrap result was shown.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/mediationBootstrapResult/runLabel",
+            "equals": "PLS-SEM Bootstrapping run"
+          },
+          {
+            "description": "Native Bootstrap XLSX export was available.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/mediationExport/xlsxEnabled",
+            "equals": true
+          }
+        ]
+      },
+      "release_evidence": null
+    },
+    {
+      "id": "qpls3.inference.structural_path_randomization",
+      "catalog_kind": "pls_permutation",
+      "label": "Structural Path Randomization",
+      "official_family": "Permutation testing",
+      "quickpls_scope": "Single-model Freedman-Lane structural path randomization under documented fixed-score linear nuisance assumptions.",
+      "method_version": "freedman_lane_permutation_v1",
+      "state": "release_qualified",
+      "known_differences": [
+        "This is single-model structural-score path randomization, not multigroup analysis, MGA, or MICOM.",
+        "The original converged PLS construct scores and measurement solution remain fixed; the measurement model is not re-estimated for each permutation.",
+        "Pathwise plus-one probabilities are unadjusted for multiplicity and assume exchangeable reduced-model residuals; qualification calibration is limited to paired homoscedastic Gaussian constant-variance scenarios and does not establish heteroskedastic or broader non-Gaussian validity."
+      ],
+      "evidence": {
+        "engine": [
+          {
+            "description": "Current Freedman-Lane method version is defined in source.",
+            "path": "crates/qpls-resampling/src/lib.rs",
+            "contains": "pub const PERMUTATION_METHOD_VERSION: &str = \"freedman_lane_permutation_v1\";"
+          },
+          {
+            "description": "The current method-specific promotion audit binds the exact structural-path-randomization method identity.",
+            "path": "validation/results/structural_path_randomization_method_promotion_audit.json",
+            "pointer": "/method_version",
+            "equals": "freedman_lane_permutation_v1"
+          }
+        ],
+        "archive": [
+          {
+            "description": "The genuine packaged Structural Path Randomization archive passed strict inspection.",
+            "path": "validation/results/structural_path_randomization_v1_packaged_acceptance.json",
+            "pointer": "/checks/structuralPathRandomizationArchive/passed",
+            "equals": true
+          },
+          {
+            "description": "The same packaged Structural Path Randomization run saved and reopened.",
+            "path": "validation/results/structural_path_randomization_v1_packaged_acceptance.json",
+            "pointer": "/checks/structuralPathRandomizationSaveReopen/passed",
+            "equals": true
+          }
+        ],
+        "native": [
+          {
+            "description": "The packaged Structural Path Randomization results workflow passed.",
+            "path": "validation/results/structural_path_randomization_v1_packaged_acceptance.json",
+            "pointer": "/checks/structuralPathRandomizationResults/passed",
+            "equals": true
+          },
+          {
+            "description": "The packaged Structural Path Randomization export workflow passed.",
+            "path": "validation/results/structural_path_randomization_v1_packaged_acceptance.json",
+            "pointer": "/checks/structuralPathRandomizationExport/passed",
+            "equals": true
+          }
+        ]
+      },
+      "release_evidence": {
+        "current_scoped_method_audit": {
+          "path": "validation/results/structural_path_randomization_method_promotion_audit.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        },
+        "packaged_acceptance": {
+          "path": "validation/results/structural_path_randomization_v1_packaged_acceptance.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        }
+      }
+    },
+    {
+      "id": "qpls3.groups.micom_permutation_mga",
+      "catalog_kind": "mga",
+      "label": "MICOM and Two-Group Permutation MGA",
+      "official_family": "Measurement invariance and multigroup analysis",
+      "quickpls_scope": "Two-group MICOM v2 plus deterministic two-tailed permutation comparisons for paths, outer loadings, and outer weights with explicit Group A minus Group B direction.",
+      "method_version": "pls_mga_permutation_v2",
+      "state": "native_qualified",
+      "known_differences": [
+        "Current native scope is two groups and permutation MGA coupled to MICOM; PLS-MGA, parametric, Welch, and consistent MGA variants remain pending.",
+        "Translation, coding meaning, and substantive measurement equivalence remain researcher responsibilities."
+      ],
+      "evidence": {
+        "engine": [
+          {
+            "description": "Current permutation MGA method version is defined in source.",
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "contains": "pub const PLS_MGA_PERMUTATION_METHOD_VERSION: &str = \"pls_mga_permutation_v2\";"
+          },
+          {
+            "description": "Current scoped permutation MGA audit passed.",
+            "path": "validation/results/mga_permutation_method_promotion_audit.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "Audit identity is current permutation MGA.",
+            "path": "validation/results/mga_permutation_method_promotion_audit.json",
+            "pointer": "/method_version",
+            "equals": "pls_mga_permutation_v2"
+          }
+        ],
+        "archive": [
+          {
+            "description": "The packaged archive reopened the MGA project.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/mgaSaveReopen/reopenedThroughRecentProjectRow",
+            "equals": true
+          },
+          {
+            "description": "The archived permutation MGA identity is current.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/mgaSaveReopen/archive/permutationMethodVersion",
+            "equals": "pls_mga_permutation_v2"
+          }
+        ],
+        "native": [
+          {
+            "description": "The cumulative packaged-native acceptance report passed.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "A genuine MGA result was shown.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/mgaResult/runLabel",
+            "equals": "MICOM and Two-Group Permutation MGA run"
+          },
+          {
+            "description": "Native MGA XLSX export was available.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/mgaExport/xlsxEnabled",
+            "equals": true
+          }
+        ]
+      },
+      "release_evidence": null
+    },
+    {
+      "id": "qpls3.prediction.plspredict_cvpat",
+      "catalog_kind": "predict",
+      "label": "PLSpredict / CVPAT",
+      "official_family": "Prediction and predictive model assessment",
+      "quickpls_scope": "Indicator-first seeded repeated 10-fold prediction with indicator-average and linear-model benchmarks plus single-model CVPAT; deterministic holdout remains secondary.",
+      "method_version": "plspredict_indicator_v2",
+      "state": "native_qualified",
+      "known_differences": [
+        "The seeded fold assignment is independently specified and does not reproduce another product's random fold assignments.",
+        "CVPAT compares one fitted model with IA and LM benchmarks; saved-model comparison is pending Wave 5."
+      ],
+      "evidence": {
+        "engine": [
+          {
+            "description": "Current indicator prediction method version is defined in source.",
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "contains": "pub const PLS_PREDICT_METHOD_VERSION: &str = \"plspredict_indicator_v2\";"
+          },
+          {
+            "description": "Current scoped PLSpredict audit passed.",
+            "path": "validation/results/plspredict_method_promotion_audit.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "Audit identity is current indicator prediction.",
+            "path": "validation/results/plspredict_method_promotion_audit.json",
+            "pointer": "/kind",
+            "equals": "plspredict_indicator_v2_method_promotion_audit"
+          }
+        ],
+        "archive": [
+          {
+            "description": "The packaged archive reopened the same prediction run.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/predictionV2SaveReopen/sameRunRestored",
+            "equals": true
+          },
+          {
+            "description": "The archived prediction identity is current.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/predictionV2SaveReopen/archive/resultMethodVersion",
+            "contains": "plspredict_indicator_v2"
+          }
+        ],
+        "native": [
+          {
+            "description": "The cumulative packaged-native acceptance report passed.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "A genuine PLSpredict/CVPAT result was shown.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/predictionV2Result/runLabel",
+            "equals": "PLSpredict / CVPAT run"
+          },
+          {
+            "description": "Native prediction XLSX export was available.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/predictionV2Export/xlsxEnabled",
+            "equals": true
+          }
+        ]
+      },
+      "release_evidence": null
+    },
+    {
+      "id": "qpls3.standalone.nca",
+      "catalog_kind": "nca",
+      "label": "Necessary Condition Analysis",
+      "official_family": "Necessary condition analysis",
+      "quickpls_scope": "One observed numeric condition and one observed numeric outcome with CE-FDH and CR-FDH ceilings, seeded permutation p-values, and observed-range bottlenecks.",
+      "method_version": "nca_v2",
+      "state": "native_qualified",
+      "known_differences": [
+        "Multiple conditions, latent-score NCA, theoretical ranges, and cIPMA are pending Wave 5.",
+        "Current bottlenecks use observed ranges."
+      ],
+      "evidence": {
+        "engine": [
+          {
+            "description": "Current NCA method version is defined in source.",
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "contains": "pub const NCA_METHOD_VERSION: &str = \"nca_v2\";"
+          },
+          {
+            "description": "Current scoped NCA audit passed.",
+            "path": "validation/results/nca_method_promotion_audit.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "Audit identity is NCA.",
+            "path": "validation/results/nca_method_promotion_audit.json",
+            "pointer": "/method_id",
+            "equals": "nca"
+          }
+        ],
+        "archive": [
+          {
+            "description": "The packaged archive reopened the same NCA run.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/ncaSaveReopen/sameRunRestored",
+            "equals": true
+          },
+          {
+            "description": "The archived NCA identity is current.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/ncaSaveReopen/archive/ncaMethodVersion",
+            "equals": "nca_v2"
+          }
+        ],
+        "native": [
+          {
+            "description": "The cumulative packaged-native acceptance report passed.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "Native NCA results identify the current method.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/ncaResult/navigation/scopeValues/Method version",
+            "equals": "nca_v2"
+          },
+          {
+            "description": "Native NCA XLSX export included method tables.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/ncaExport/ncaTablesIncluded",
+            "equals": true
+          }
+        ]
+      },
+      "release_evidence": null
+    },
+    {
+      "id": "qpls3.standalone.pca",
+      "catalog_kind": "pca",
+      "label": "Principal Component Analysis",
+      "official_family": "Principal component analysis",
+      "quickpls_scope": "Standardized numeric raw-data PCA with listwise deletion, deterministic sign orientation, fixed, Kaiser, or variance-threshold retention, eigenvalues, loadings, weights, and scores.",
+      "method_version": "pca_v1",
+      "state": "native_qualified",
+      "known_differences": [
+        "Rotations and covariance or correlation-matrix input are pending Wave 5.",
+        "Pairwise deletion and component-score uncertainty are not supported."
+      ],
+      "evidence": {
+        "engine": [
+          {
+            "description": "Current PCA method version is defined in source.",
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "contains": "pub const PCA_METHOD_VERSION: &str = \"pca_v1\";"
+          },
+          {
+            "description": "Current scoped PCA audit passed.",
+            "path": "validation/results/pca_method_promotion_audit.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "Audit identity is PCA promotion.",
+            "path": "validation/results/pca_method_promotion_audit.json",
+            "pointer": "/target",
+            "equals": "pca_method_promotion"
+          }
+        ],
+        "archive": [
+          {
+            "description": "The packaged archive reopened the same PCA run.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/pcaSaveReopen/sameRunRestored",
+            "equals": true
+          },
+          {
+            "description": "The archived PCA identity is current.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/pcaSaveReopen/archive/pcaMethodVersion",
+            "equals": "pca_v1"
+          }
+        ],
+        "native": [
+          {
+            "description": "The cumulative packaged-native acceptance report passed.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "Native PCA results identify the current method.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/pcaResult/scopeValues/Method version",
+            "equals": "pca_v1"
+          },
+          {
+            "description": "Native PCA XLSX export was available.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/pcaExport/xlsxEnabled",
+            "equals": true
+          }
+        ]
+      },
+      "release_evidence": null
+    },
+    {
+      "id": "qpls3.standalone.ols",
+      "catalog_kind": "regression",
+      "label": "Ordinary Least Squares Regression",
+      "official_family": "Linear regression",
+      "quickpls_scope": "Raw-data OLS with intercept, numeric predictors and controls, complete-case rows, HC3 robust standard errors, t tests, confidence intervals, fit diagnostics, fitted values, and residuals.",
+      "method_version": "regression_ols_v1",
+      "state": "native_qualified",
+      "known_differences": [
+        "Categorical coding helpers, survey weights, clustered standard errors, GLS, mixed models, and panel models are not supported.",
+        "Binary logistic regression, PROCESS, and regression bootstrap are Wave 1 work."
+      ],
+      "evidence": {
+        "engine": [
+          {
+            "description": "Current OLS method version is defined in source.",
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "contains": "pub const REGRESSION_OLS_METHOD_VERSION: &str = \"regression_ols_v1\";"
+          },
+          {
+            "description": "Current scoped OLS audit passed.",
+            "path": "validation/results/ols_method_promotion_audit.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "Audit identity is OLS regression promotion.",
+            "path": "validation/results/ols_method_promotion_audit.json",
+            "pointer": "/target",
+            "equals": "ols_regression_promotion"
+          }
+        ],
+        "archive": [
+          {
+            "description": "The packaged archive reopened the same OLS run.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/olsSaveReopen/sameRunRestored",
+            "equals": true
+          },
+          {
+            "description": "The archived OLS identity is current.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/olsSaveReopen/archive/regressionMethodVersion",
+            "equals": "regression_ols_v1"
+          }
+        ],
+        "native": [
+          {
+            "description": "The cumulative packaged-native acceptance report passed.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/passed",
+            "equals": true
+          },
+          {
+            "description": "Native OLS results identify the current method.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/olsResult/scopeValues/Method version",
+            "equals": "regression_ols_v1"
+          },
+          {
+            "description": "Native OLS XLSX export was available.",
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "pointer": "/checks/olsExport/xlsxEnabled",
+            "equals": true
+          }
+        ]
+      },
+      "release_evidence": null
+    },
+    {
+      "id": "qpls3.standalone.logistic",
+      "catalog_kind": "regression",
+      "label": "Binary Logistic Regression",
+      "official_family": "Logistic regression",
+      "quickpls_scope": "Binary logistic maximum-likelihood regression with an intercept, exact numeric 0/1 complete-case outcome profiling, numeric predictors and controls, deterministic Newton-IRLS, Wald inference, odds ratios, probabilities, classification diagnostics, and likelihood fit statistics.",
+      "method_version": "regression_logistic_v2",
+      "state": "release_qualified",
+      "known_differences": [
+        "The first bounded native release fixes two-sided 95% Wald inference, a 0.5 classification threshold, 100 IRLS iterations, a 1e-8 stopping tolerance, and one worker instead of exposing every SmartPLS calculation option.",
+        "Automatic categorical encoding, multinomial or ordinal outcomes, survey or case weights, clustered covariance, Firth or penalized estimation, and copied SmartPLS project files are not supported."
+      ],
+      "evidence": {
+        "engine": [
+          {
+            "description": "Current logistic v2 method version is defined in source.",
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "contains": "pub const REGRESSION_LOGISTIC_METHOD_VERSION: &str = \"regression_logistic_v2\";"
+          },
+          {
+            "description": "The scoped v2 promotion audit binds the current method identity.",
+            "path": "validation/results/logistic_method_promotion_audit.json",
+            "pointer": "/method_version",
+            "equals": "regression_logistic_v2"
+          }
+        ],
+        "archive": [
+          {
+            "description": "A genuine packaged logistic v2 run must save and reopen.",
+            "path": "validation/results/logistic_v2_packaged_acceptance.json",
+            "pointer": "/checks/save_reopen/passed",
+            "equals": true
+          }
+        ],
+        "native": [
+          {
+            "description": "The packaged logistic workflow must pass.",
+            "path": "validation/results/logistic_v2_packaged_acceptance.json",
+            "pointer": "/checks/workflow/passed",
+            "equals": true
+          }
+        ]
+      },
+      "release_evidence": {
+        "current_scoped_method_audit": {
+          "path": "validation/results/logistic_method_promotion_audit.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        },
+        "packaged_acceptance": {
+          "path": "validation/results/logistic_v2_packaged_acceptance.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        }
+      }
+    },
+    {
+      "id": "qpls3.standalone.regression_bootstrap",
+      "catalog_kind": "regression",
+      "label": "Regression Bootstrapping",
+      "official_family": "Regression bootstrapping",
+      "quickpls_scope": "Deterministic indexed case resampling for supported OLS and binary logistic coefficients, with a fixed two-sided 95% standard-normal bootstrap-ratio test, percentile-primary intervals, conditional BCa intervals, progress, cancellation, persistence, and native export.",
+      "method_version": "regression_bootstrap_v1",
+      "state": "release_qualified",
+      "known_differences": [
+        "QuickPLS uses a fixed seed and deterministic indexed worker-invariant streams; it does not claim numerical identity with SmartPLS random-number generation.",
+        "The first bounded slice fixes two-sided 95% inference, excludes studentized intervals and custom alpha/tail settings, and reports BCa as unavailable with a reason when delete-one acceleration is not estimable.",
+        "OLS and binary logistic evidence is qualified separately within the dedicated packaged report; generic PLS bootstrapping is never substituted for this feature."
+      ],
+      "evidence": {
+        "engine": [
+          {
+            "description": "The dedicated regression bootstrap method version must exist before promotion.",
+            "path": "crates/qpls-resampling/src/lib.rs",
+            "contains": "pub const REGRESSION_BOOTSTRAP_METHOD_VERSION: &str = \"regression_bootstrap_v1\";"
+          }
+        ],
+        "archive": [
+          {
+            "description": "A genuine packaged regression-bootstrap run must save and reopen.",
+            "path": "validation/results/regression_bootstrap_v1_packaged_acceptance.json",
+            "pointer": "/checks/save_reopen/passed",
+            "equals": true
+          }
+        ],
+        "native": [
+          {
+            "description": "The packaged regression-bootstrap workflow must pass.",
+            "path": "validation/results/regression_bootstrap_v1_packaged_acceptance.json",
+            "pointer": "/checks/workflow/passed",
+            "equals": true
+          }
+        ]
+      },
+      "release_evidence": {
+        "current_scoped_method_audit": {
+          "path": "validation/results/regression_bootstrap_method_promotion_audit.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        },
+        "packaged_acceptance": {
+          "path": "validation/results/regression_bootstrap_v1_packaged_acceptance.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        }
+      }
+    },
+    {
+      "id": "qpls3.standalone.process",
+      "catalog_kind": "regression",
+      "label": "Graph-defined Path Analysis and PROCESS",
+      "official_family": "PROCESS",
+      "quickpls_scope": "Independently implemented graph-defined continuous-outcome OLS path analysis with parallel and serial mediation, continuous or exact-0/1 moderation, bounded moderated mediation, conditional effects, HC3 and Student-t inference, simple slopes, Johnson-Neyman regions, and optional dedicated percentile and conditional-BCa case bootstrap without copied numbered macros.",
+      "method_version": "regression_process_v2",
+      "state": "release_qualified",
+      "known_differences": [
+        "Historical regression_process_v1 output is archive-readable only and is not accepted as current v2 execution or qualification evidence.",
+        "QuickPLS authors equivalent relationships visually and does not copy proprietary numbered PROCESS templates, source code, or SmartPLS project files.",
+        "The bounded v2 contract excludes binary endogenous equations, weights and clusters, broader categorical coding, intermediate or multiple moderated stages on one indirect path, studentized intervals, custom tails or alpha levels, and graphs beyond the documented caps."
+      ],
+      "evidence": {
+        "engine": [
+          {
+            "description": "The current PROCESS v2 method version is defined in source.",
+            "path": "crates/qpls-estimation/src/pls.rs",
+            "contains": "pub const REGRESSION_PROCESS_METHOD_VERSION: &str = \"regression_process_v2\";"
+          },
+          {
+            "description": "The scoped PROCESS v2 promotion audit binds the current method identity.",
+            "path": "validation/results/process_v2_method_promotion_audit.json",
+            "pointer": "/method_version",
+            "equals": "regression_process_v2"
+          }
+        ],
+        "archive": [
+          {
+            "description": "A genuine packaged PROCESS v2 run must save and reopen.",
+            "path": "validation/results/process_v2_packaged_acceptance.json",
+            "pointer": "/checks/save_reopen/passed",
+            "equals": true
+          }
+        ],
+        "native": [
+          {
+            "description": "The packaged PROCESS workflow must pass.",
+            "path": "validation/results/process_v2_packaged_acceptance.json",
+            "pointer": "/checks/workflow/passed",
+            "equals": true
+          }
+        ]
+      },
+      "release_evidence": {
+        "current_scoped_method_audit": {
+          "path": "validation/results/process_v2_method_promotion_audit.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        },
+        "packaged_acceptance": {
+          "path": "validation/results/process_v2_packaged_acceptance.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        }
+      }
+    }
+  ]
+}

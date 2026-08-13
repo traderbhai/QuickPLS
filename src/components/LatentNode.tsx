@@ -14,7 +14,12 @@ export function LatentNode({ id, data, selected }: NodeProps<Node<LatentNodeData
     if (label && label !== data.label) updateConstruct(id, { label });
     setEditing(false);
   };
-  const modeLabel = data.semantic === "interaction" ? "INT" : data.mode === "reflective" ? "Mode A" : "Mode B";
+  const beginEditing = () => {
+    setDraft(data.label);
+    setEditing(true);
+  };
+  const modeLabel = data.semantic === "interaction" ? "INT" : data.semantic === "higher_order" ? "HOC" : data.mode === "reflective" ? "Mode A" : "Mode B";
+  const acceptsIndicators = data.semantic !== "interaction" && data.semantic !== "higher_order";
 
   const paperStyle = data.displayMode === "sem" || data.displayMode === "publication" || data.displayMode === "smartpls_result";
   const editablePaperMode = data.displayMode === "sem";
@@ -26,11 +31,11 @@ export function LatentNode({ id, data, selected }: NodeProps<Node<LatentNodeData
   if (paperStyle) {
     return <div
       className={`smartpls-latent-node ${data.mode}${selected ? " selected" : ""}${dropTarget ? " drop-target" : ""}`}
-      onDragEnter={(event) => { if (lockedResultMode) return; event.preventDefault(); setDropTarget(true); setCanvasDropTarget(true); }}
-      onDragOver={(event) => { if (lockedResultMode) return; event.preventDefault(); event.dataTransfer.dropEffect = "move"; setCanvasDropTarget(true); }}
+      onDragEnter={(event) => { if (lockedResultMode || !acceptsIndicators) return; event.preventDefault(); setDropTarget(true); setCanvasDropTarget(true); }}
+      onDragOver={(event) => { if (lockedResultMode || !acceptsIndicators) return; event.preventDefault(); event.dataTransfer.dropEffect = "move"; setCanvasDropTarget(true); }}
       onDragLeave={() => { setDropTarget(false); setCanvasDropTarget(false); }}
       onDrop={(event) => {
-        if (lockedResultMode) return;
+        if (lockedResultMode || !acceptsIndicators) return;
         event.preventDefault();
         event.stopPropagation();
         setDropTarget(false);
@@ -68,16 +73,17 @@ export function LatentNode({ id, data, selected }: NodeProps<Node<LatentNodeData
           if (event.key === "Enter") commit();
           if (event.key === "Escape") { setDraft(data.label); setEditing(false); }
         }}
-      /> : <div className="smartpls-latent-label" role="button" tabIndex={0} title="Double-click to rename; drag the oval to move" onDoubleClick={() => { if (!lockedResultMode) { setDraft(data.label); setEditing(true); } }}>{data.label}</div>}
+      /> : <div className="smartpls-latent-label" role={lockedResultMode ? undefined : "button"} tabIndex={lockedResultMode ? undefined : 0} title={lockedResultMode ? "Result construct" : "Double-click, Enter, or F2 to rename; drag the oval to move"} onDoubleClick={() => { if (!lockedResultMode) beginEditing(); }} onKeyDown={(event) => { if (!lockedResultMode && (event.key === "Enter" || event.key === "F2")) { event.preventDefault(); beginEditing(); } }}>{data.label}</div>}
     </div>;
   }
 
   return <div
     className={`latent-node ${data.mode}${selected ? " selected" : ""}${dropTarget ? " drop-target" : ""}${data.semantic ? ` ${data.semantic}` : ""}`}
-    onDragEnter={(event) => { event.preventDefault(); setDropTarget(true); setCanvasDropTarget(true); }}
-    onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; setCanvasDropTarget(true); }}
+    onDragEnter={(event) => { if (!acceptsIndicators) return; event.preventDefault(); setDropTarget(true); setCanvasDropTarget(true); }}
+    onDragOver={(event) => { if (!acceptsIndicators) return; event.preventDefault(); event.dataTransfer.dropEffect = "move"; setCanvasDropTarget(true); }}
     onDragLeave={() => { setDropTarget(false); setCanvasDropTarget(false); }}
     onDrop={(event) => {
+      if (!acceptsIndicators) return;
       event.preventDefault();
       event.stopPropagation();
       setDropTarget(false);

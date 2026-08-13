@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "purpose": "Anonymized QuickPLS real-dataset feedback triage. Do not store raw private data, private project files, value-revealing screenshots, or unredacted exports.",
+  "dataset_alias": "dataset_a",
+  "review_date": "YYYY-MM-DD",
+  "reviewer": "manual",
+  "privacy_rules": {
+    "raw_data_committed": false,
+    "private_qpls_committed": false,
+    "value_revealing_screenshots_committed": false,
+    "only_anonymized_notes": true
+  },
+  "dataset_profile": {
+    "domain": "redacted",
+    "row_count_band": "small | medium | large",
+    "indicator_count_band": "small | medium | large",
+    "construct_count_band": "small | medium | large",
+    "has_groups": false,
+    "has_binary_outcome": false,
+    "has_missing_values": false,
+    "analysis_family": "PLS-SEM | CB-SEM | regression | NCA | prediction | other"
+  },
+  "findings": [
+    {
+      "id": "RDF-001",
+      "category": "workflow_friction",
+      "priority": "P1",
+      "screen": "Setup",
+      "summary": "Anonymized issue title",
+      "evidence_note": "Describe behavior without private values.",
+      "expected_behavior": "What the researcher expected.",
+      "synthetic_reproduction": "Needed | Available | Not needed",
+      "recommended_grouped_milestone": "pending",
+      "status": "open"
+    }
+  ],
+  "triage_summary": {
+    "p0_count": 0,
+    "p1_count": 1,
+    "p2_count": 0,
+    "p3_count": 0,
+    "recommended_next_grouped_milestone": "pending_real_dataset_feedback_or_next_grouped_frontend_pass"
+  }
+}

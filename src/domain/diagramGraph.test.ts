@@ -55,6 +55,51 @@ describe("SEM diagram graph", () => {
     expect(stale.diagnostic).toContain("Selected run does not match");
   });
 
+  it("uses PLSc corrected outer loadings for result overlays without changing corrected common paths or R-square", () => {
+    const reflectiveNodes = nodes.map((node) => ({
+      ...node,
+      data: { ...node.data, mode: "reflective" as const },
+    }));
+    const correctedOuterLoadings = result.outer_estimates.map((row, index) => ({
+      ...row,
+      loading: 0.991 - index * 0.01,
+      weight: 0.451 + index * 0.01,
+    }));
+    const plscRun: AnalysisRun = {
+      ...run,
+      id: "plsc-run",
+      name: "Consistent PLS run",
+      method: "Consistent PLS",
+      result: {
+        ...result,
+        method_version: "plsc_v2",
+        paths: [{ source: "x", target: "y", coefficient: 0.6543 }],
+        r_squared: { y: 0.4281 },
+        plsc: {
+          method_version: "plsc_v2",
+          reliability_method_version: "dijkstra_henseler_rho_a_v1",
+          tolerance: 1e-12,
+          reliabilities: [
+            { construct: "x", rho_a: 0.9 },
+            { construct: "y", rho_a: 0.88 },
+          ],
+          construct_correlations: [{ left: "x", right: "y", original: 0.6, corrected: 0.7 }],
+          corrected_paths: [{ source: "x", target: "y", coefficient: 0.6543 }],
+          corrected_outer_loadings: correctedOuterLoadings,
+          corrected_r_squared: { y: 0.4281 },
+          warnings: [],
+        },
+      },
+    };
+
+    const graph = buildDiagramGraph(reflectiveNodes, edges, "smartpls_result", "paths_r2", plscRun);
+    expect(graph.compatible).toBe(true);
+    expect(graph.edges.find((edge) => edge.id === "measurement::x::x1")?.label).toBe("0.991");
+    expect(graph.edges.find((edge) => edge.id === "measurement::x::x2")?.label).toBe("0.981");
+    expect(graph.edges.find((edge) => edge.id === "x-y")?.label).toBe("0.654");
+    expect(graph.nodes.find((node) => node.id === "y")?.data.resultR2).toBe(0.4281);
+  });
+
   it("keeps structural path labels visible in editable academic mode before results", () => {
     const graph = buildDiagramGraph(nodes, edges, "sem", "model");
     expect(graph.edges.find((edge) => edge.id === "x-y")?.label).toBe("Path");

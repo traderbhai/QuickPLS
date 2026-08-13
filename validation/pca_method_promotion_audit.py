@@ -1,6 +1,7 @@
 import csv
 import json
 import math
+import os
 import subprocess
 from pathlib import Path
 
@@ -15,7 +16,14 @@ TOL = 1e-6
 
 
 def run(command, check=False):
-    proc = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, timeout=180)
+    proc = subprocess.run(
+        command,
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=180,
+        env={**os.environ, "CARGO_BUILD_JOBS": "1"},
+    )
     if check and proc.returncode != 0:
         raise RuntimeError(f"command failed: {command}\nstdout={proc.stdout}\nstderr={proc.stderr}")
     return proc
@@ -39,7 +47,7 @@ def fingerprint(csv_path, name):
     return json.loads(inspected.stdout)["datasets"][0]["fingerprint"]
 
 
-def run_pca(csv_path, name, variables, rule="fixed", components=2):
+def run_pca(csv_path, name, variables, rule="fixed", components=2, variance_threshold=0.80):
     recipe = RESULTS / f"{name}.recipe.json"
     output = RESULTS / f"{name}_quickpls.json"
     payload = {
@@ -67,9 +75,12 @@ def run_pca(csv_path, name, variables, rule="fixed", components=2):
             "fixture": "pca_method_promotion_audit",
             "pca_variables": ",".join(variables),
             "pca_component_rule": rule,
-            "pca_components": str(components),
         },
     }
+    if rule == "fixed":
+        payload["metadata"]["pca_components"] = str(components)
+    if rule == "variance_threshold":
+        payload["metadata"]["pca_variance_threshold"] = str(variance_threshold)
     recipe.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     proc = run([
         str(CLI),
@@ -269,13 +280,160 @@ def constant_guard_fixture():
     }
 
 
+def retention_rules_fixture():
+    csv_path = RESULTS / "v08_extended_methods_fixture.csv"
+    variables = ["x", "m", "w", "y", "z"]
+    values, _, _, _ = pca_reference(csv_path, variables)
+    explained = values / values.sum()
+    cumulative = np.cumsum(explained)
+    expected_kaiser = int(np.count_nonzero(values >= 1.0))
+    expected_threshold = int(np.flatnonzero(cumulative >= 0.95)[0] + 1)
+    kaiser = run_pca(csv_path, "pca_promotion_kaiser", variables, "kaiser")
+    threshold = run_pca(
+        csv_path,
+        "pca_promotion_variance_threshold",
+        variables,
+        "variance_threshold",
+        variance_threshold=0.95,
+    )
+    observed_kaiser = kaiser.get("pca", {}).get("retained_components")
+    observed_threshold = threshold.get("pca", {}).get("retained_components")
+    threshold_components = threshold.get("pca", {}).get("components", [])
+    crossing_preserved = (
+        len(threshold_components) == expected_threshold
+        and threshold_components[-2]["cumulative_variance"] < 0.95
+        and threshold_components[-1]["cumulative_variance"] >= 0.95
+    )
+    return {
+        "passed": (
+            kaiser["ok"]
+            and threshold["ok"]
+            and observed_kaiser == expected_kaiser
+            and observed_threshold == expected_threshold
+            and crossing_preserved
+        ),
+        "kaiser": {"expected": expected_kaiser, "observed": observed_kaiser},
+        "variance_threshold": {
+            "threshold": 0.95,
+            "expected": expected_threshold,
+            "observed": observed_threshold,
+            "crossing_component_preserved": crossing_preserved,
+        },
+        "outputs": [kaiser.get("output"), threshold.get("output")],
+    }
+
+
+def native_browser_check():
+    path = ROOT / "validation" / "results" / "v247_native_desktop_visual_acceptance.json"
+    report = json.loads(path.read_text(encoding="utf-8"))
+    rows = report.get("checks", {}).get("pca", [])
+    return {
+        "path": str(path.relative_to(ROOT)),
+        "passed": (
+            report.get("passed") is True
+            and len(rows) == 3
+            and all(row.get("selectedMethod") == "Principal Component Analysis" for row in rows)
+            and all(row.get("catalogCount") == 11 for row in rows)
+            and all(row.get("fixture") == {"variables": 5, "models": 0} for row in rows)
+            and all(row.get("noModelBlocker") is True for row in rows)
+        ),
+        "viewports": [row.get("viewport") for row in rows],
+        "catalog_counts": [row.get("catalogCount") for row in rows],
+    }
+
+
+def packaged_native_check():
+    path = ROOT / "validation" / "results" / "v247_tauri_native_acceptance.json"
+    report = json.loads(path.read_text(encoding="utf-8"))
+    checks = report.get("checks", {})
+    result = checks.get("pcaResult", {})
+    exported = checks.get("pcaExport", {}).get("nativeXlsx", {})
+    reopened = checks.get("pcaSaveReopen", {})
+    archive = reopened.get("archive", {})
+    export_path = Path(exported.get("targetPath", "")) if exported.get("targetPath") else None
+    return {
+        "path": str(path.relative_to(ROOT)),
+        "passed": (
+            report.get("passed") is True
+            and report.get("focusedRun", {}).get("scope") == "pca"
+            and result.get("initialSelectedTable") == "pca_component_summary"
+            and result.get("summary", {}).get("rows") == 4
+            and result.get("loadings", {}).get("rows") == 20
+            and result.get("scopeValues", {}).get("Retention rule") == "Cumulative variance threshold"
+            and result.get("scopeValues", {}).get("Retained components") == "4"
+            and result.get("editModelCommand", {}).get("count") == 0
+            and result.get("editDataCommand", {}).get("enabled") is True
+            and exported.get("attempted") is True
+            and exported.get("file", {}).get("size", 0) > 0
+            and export_path is not None
+            and export_path.exists()
+            and reopened.get("sameRunRestored") is True
+            and archive.get("pcaMethodVersion") == "pca_v1"
+            and archive.get("thresholdCrossing") is True
+            and archive.get("models") == 0
+            and archive.get("activeModelId") is None
+            and archive.get("runModelId") is None
+            and archive.get("runModelSnapshot") is None
+        ),
+        "result_rows": {
+            "components": result.get("summary", {}).get("rows"),
+            "loadings": result.get("loadings", {}).get("rows"),
+        },
+        "export": exported,
+        "archive": {
+            "method_version": archive.get("pcaMethodVersion"),
+            "threshold_crossing": archive.get("thresholdCrossing"),
+            "models": archive.get("models"),
+            "active_model_id": archive.get("activeModelId"),
+            "run_model_id": archive.get("runModelId"),
+        },
+    }
+
+
+def implementation_contract_check():
+    project_source = (ROOT / "crates" / "qpls-project" / "src" / "lib.rs").read_text(encoding="utf-8")
+    estimator_source = (ROOT / "crates" / "qpls-estimation" / "src" / "pls.rs").read_text(encoding="utf-8")
+    catalog_source = (ROOT / "src" / "native" / "nativeAnalysisCatalog.ts").read_text(encoding="utf-8")
+    result_source = (ROOT / "src" / "native" / "nativeResults.ts").read_text(encoding="utf-8")
+    export_source = (ROOT / "src" / "native" / "nativeExportTables.ts").read_text(encoding="utf-8")
+    return {
+        "passed": all([
+            "AnalysisMethod::Pca => Some(PCA_METHOD_VERSION)" in project_source,
+            "validate_pca_payload_contract" in project_source,
+            "runner_generated_pca_v1_commits_saves_reopens_and_rejects_contract_tampering" in project_source,
+            "standalone_pca_v1_retains_the_component_that_crosses_variance_threshold" in estimator_source,
+            "standalone_pca_v1_supports_more_variables_than_complete_rows" in estimator_source,
+            'kind: "pca"' in catalog_source,
+            'title: "Component summary"' in result_source,
+            'title: "Component loadings and weights"' in result_source,
+            'title: "Component scores"' in export_source,
+        ]),
+        "strict_project_contract": "validate_pca_payload_contract" in project_source,
+        "threshold_crossing_test": "standalone_pca_v1_retains_the_component_that_crosses_variance_threshold" in estimator_source,
+        "more_variables_than_rows_test": "standalone_pca_v1_supports_more_variables_than_complete_rows" in estimator_source,
+        "native_catalog": 'kind: "pca"' in catalog_source,
+        "native_results": 'title: "Component summary"' in result_source,
+        "full_score_export": 'title: "Component scores"' in export_source,
+    }
+
+
 def integrated_v08_check():
-    report_path = "validation/results/v08_extended_methods_reference_report.json"
+    report_path = "validation/results/v08_pca_reference_report.json"
+    proc = run(["python", "validation/v08_extended_methods_reference.py", "--section", "pca"])
     report = json.loads((ROOT / report_path).read_text(encoding="utf-8"))
     pca = report.get("checks", {}).get("pca", {})
     return {
         "path": report_path,
-        "passed": report.get("passed") is True and pca.get("passed") is True and pca.get("method_version") == "pca_v1",
+        "passed": (
+            proc.returncode == 0
+            and report.get("passed") is True
+            and report.get("schema_version") == 2
+            and report.get("report_scope") == "method_specific"
+            and report.get("selected_section") == "pca"
+            and set(report.get("checks", {})) == {"pca"}
+            and pca.get("passed") is True
+            and pca.get("method_version") == "pca_v1"
+        ),
         "max_abs_difference": pca.get("max_abs_difference"),
         "retained_components": pca.get("retained_components"),
     }
@@ -290,17 +448,24 @@ def main():
         "high_dimensional_numpy_reference": high_dimensional_fixture(),
         "missing_data_listwise_fixture": missing_fixture(),
         "constant_column_guard": constant_guard_fixture(),
+        "retention_rules": retention_rules_fixture(),
+        "implementation_and_persistence_contract": implementation_contract_check(),
+        "native_browser_setup": native_browser_check(),
+        "genuine_packaged_native_workflow": packaged_native_check(),
     }
+    native_docs = (ROOT / "docs/NATIVE_DESKTOP_REDESIGN.md").read_text(encoding="utf-8")
     docs = {
         "method_spec": (ROOT / "docs/methods/PCA_V1.md").exists(),
         "known_differences": (ROOT / "docs/KNOWN_DIFFERENCES.md").exists(),
-        "method_compatibility_updated": "Standalone PCA | Validated for documented PCA scope" in (ROOT / "docs/METHOD_COMPATIBILITY.md").read_text(encoding="utf-8"),
+        "method_compatibility_updated": "Standalone PCA | Validated for documented model-free PCA scope" in (ROOT / "docs/METHOD_COMPATIBILITY.md").read_text(encoding="utf-8"),
+        "native_workbench_lists_eleven_workflows": "eleven packaged-accepted calculation workflows" in native_docs,
+        "native_backlog_no_longer_lists_pca": "CB-SEM/CFA, PCA, GSCA" not in native_docs,
     }
     report = {
-        "schema_version": 1,
+        "schema_version": 2,
         "target": "pca_method_promotion",
         "passed": all(item["passed"] for item in checks.values()) and all(docs.values()),
-        "status": "validated",
+        "status": "validated_packaged_native_bounded_scope",
         "scope_decision": {
             "stable_output_scope": "standardized numeric raw-data PCA with listwise deletion, deterministic sign orientation, fixed/Kaiser/variance-threshold retention, eigenvalues, loadings, weights, and scores",
             "excluded_from_this_promotion": [

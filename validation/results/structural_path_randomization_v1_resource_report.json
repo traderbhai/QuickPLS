@@ -1,0 +1,166 @@
+{
+    "schema_version":  1,
+    "feature_id":  "qpls3.inference.structural_path_randomization",
+    "method_version":  "freedman_lane_permutation_v1",
+    "generated_at_utc":  "2026-08-13T06:46:50.1301393Z",
+    "passed":  true,
+    "root_pid":  13300,
+    "sample_count":  85,
+    "first_sample":  {
+                         "recorded_at_utc":  "2026-08-13T06:45:57.6985009Z",
+                         "root_present":  true,
+                         "root_pid":  13300,
+                         "total_working_set_bytes":  136736768,
+                         "total_private_memory_bytes":  45555712,
+                         "total_handle_count":  1310,
+                         "total_thread_count":  72,
+                         "process_role_counts":  {
+                                                     "desktop_root":  1,
+                                                     "webview_other":  1,
+                                                     "webview_browser":  1
+                                                 },
+                         "processes":  [
+                                           {
+                                               "pid":  13300,
+                                               "parent_pid":  27448,
+                                               "name":  "quickpls-desktop.exe",
+                                               "role":  "desktop_root",
+                                               "creation_date":  "08/13/2026 12:15:55",
+                                               "working_set_bytes":  26177536,
+                                               "private_memory_bytes":  6975488,
+                                               "handle_count":  290,
+                                               "thread_count":  10
+                                           },
+                                           {
+                                               "pid":  45760,
+                                               "parent_pid":  55212,
+                                               "name":  "msedgewebview2.exe",
+                                               "role":  "webview_other",
+                                               "creation_date":  "08/13/2026 12:15:56",
+                                               "working_set_bytes":  11948032,
+                                               "private_memory_bytes":  4739072,
+                                               "handle_count":  142,
+                                               "thread_count":  12
+                                           },
+                                           {
+                                               "pid":  55212,
+                                               "parent_pid":  13300,
+                                               "name":  "msedgewebview2.exe",
+                                               "role":  "webview_browser",
+                                               "creation_date":  "08/13/2026 12:15:56",
+                                               "working_set_bytes":  98611200,
+                                               "private_memory_bytes":  33841152,
+                                               "handle_count":  878,
+                                               "thread_count":  50
+                                           }
+                                       ]
+                     },
+    "final_sample":  {
+                         "recorded_at_utc":  "2026-08-13T06:46:44.7642200Z",
+                         "root_present":  true,
+                         "root_pid":  13300,
+                         "total_working_set_bytes":  592687104,
+                         "total_private_memory_bytes":  382369792,
+                         "total_handle_count":  3919,
+                         "total_thread_count":  219,
+                         "process_role_counts":  {
+                                                     "desktop_root":  1,
+                                                     "webview_gpu":  1,
+                                                     "webview_other":  1,
+                                                     "webview_utility":  2,
+                                                     "webview_renderer":  1,
+                                                     "webview_browser":  1
+                                                 },
+                         "processes":  [
+                                           {
+                                               "pid":  13300,
+                                               "parent_pid":  27448,
+                                               "name":  "quickpls-desktop.exe",
+                                               "role":  "desktop_root",
+                                               "creation_date":  "08/13/2026 12:15:55",
+                                               "working_set_bytes":  78929920,
+                                               "private_memory_bytes":  21643264,
+                                               "handle_count":  721,
+                                               "thread_count":  48
+                                           },
+                                           {
+                                               "pid":  40692,
+                                               "parent_pid":  55212,
+                                               "name":  "msedgewebview2.exe",
+                                               "role":  "webview_gpu",
+                                               "creation_date":  "08/13/2026 12:15:57",
+                                               "working_set_bytes":  140976128,
+                                               "private_memory_bytes":  188989440,
+                                               "handle_count":  711,
+                                               "thread_count":  37
+                                           },
+                                           {
+                                               "pid":  45760,
+                                               "parent_pid":  55212,
+                                               "name":  "msedgewebview2.exe",
+                                               "role":  "webview_other",
+                                               "creation_date":  "08/13/2026 12:15:56",
+                                               "working_set_bytes":  21164032,
+                                               "private_memory_bytes":  5812224,
+                                               "handle_count":  230,
+                                               "thread_count":  16
+                                           },
+                                           {
+                                               "pid":  48712,
+                                               "parent_pid":  55212,
+                                               "name":  "msedgewebview2.exe",
+                                               "role":  "webview_utility",
+                                               "creation_date":  "08/13/2026 12:15:57",
+                                               "working_set_bytes":  23805952,
+                                               "private_memory_bytes":  11886592,
+                                               "handle_count":  196,
+                                               "thread_count":  13
+                                           },
+                                           {
+                                               "pid":  50724,
+                                               "parent_pid":  55212,
+                                               "name":  "msedgewebview2.exe",
+                                               "role":  "webview_utility",
+                                               "creation_date":  "08/13/2026 12:15:57",
+                                               "working_set_bytes":  39325696,
+                                               "private_memory_bytes":  15949824,
+                                               "handle_count":  358,
+                                               "thread_count":  25
+                                           },
+                                           {
+                                               "pid":  50840,
+                                               "parent_pid":  55212,
+                                               "name":  "msedgewebview2.exe",
+                                               "role":  "webview_renderer",
+                                               "creation_date":  "08/13/2026 12:15:57",
+                                               "working_set_bytes":  144568320,
+                                               "private_memory_bytes":  87429120,
+                                               "handle_count":  389,
+                                               "thread_count":  26
+                                           },
+                                           {
+                                               "pid":  55212,
+                                               "parent_pid":  13300,
+                                               "name":  "msedgewebview2.exe",
+                                               "role":  "webview_browser",
+                                               "creation_date":  "08/13/2026 12:15:56",
+                                               "working_set_bytes":  143917056,
+                                               "private_memory_bytes":  50659328,
+                                               "handle_count":  1314,
+                                               "thread_count":  54
+                                           }
+                                       ]
+                     },
+    "peak_total_working_set_bytes":  593584128,
+    "peak_total_private_memory_bytes":  386650112,
+    "peak_total_handle_count":  4122,
+    "peak_total_thread_count":  222,
+    "peak_process_count":  7,
+    "peak_working_set_under_2_gib":  true,
+    "zero_other_descendants":  true,
+    "scope":  "Single packaged cancellation/retry/completion/save/reopen run; this is a bounded process footprint report, not a sustained no-leak claim.",
+    "disk":  {
+                 "xlsx_bytes":  18364,
+                 "source_report_bytes":  34798
+             }
+}

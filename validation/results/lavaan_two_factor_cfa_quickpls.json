@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "id": "fe9a0658-b789-4c0f-9c25-bc2385ccef45",
+  "id": "f945332f-b9ca-4d52-9874-697252276103",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000071014",
     "dataset_fingerprint": "v2:7e0e681ed61124bfbed3bd0f2c85a63c87165ee97f52f6af04c72311b7e4faac",
     "method": "cbsem",
-    "method_version": "pls_pm_v1+cfa_ml_v1+cbsem_fit_v1+cbsem_modification_indices_v1+cbsem_ml_v1+pls_mediation_v1+pls_assessment_v7",
-    "engine_version": "1.0.0",
+    "method_version": "pls_pm_v1+cfa_ml_v1+cbsem_fit_v1+cbsem_modification_indices_v1+pls_mediation_v1+pls_assessment_v7",
+    "engine_version": "2.45.0",
     "seed": 20260722,
     "settings": {
       "method": "cbsem",
@@ -24,14 +24,14 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-07-19T14:34:36.796199100Z",
-    "completed_at": "2026-07-19T14:34:36.832886200Z"
+    "started_at": "2026-08-11T23:29:58.416702700Z",
+    "completed_at": "2026-08-11T23:29:58.487694300Z"
   },
   "diagnostics": [
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "CB-SEM/CFA ML v1 is experimental; this run used the v0.7.1 direct maximum-likelihood optimizer for the supported simple reflective raw-data scope."
+      "message": "CB-SEM/CFA ML v1 is validated for the documented QuickPLS v1.2.4 raw-data single-group reflective ML scope; bootstrap, unrestricted multigroup/invariance, robust, ordinal, and FIML estimators remain experimental or unsupported."
     }
   ],
   "payload": {
@@ -1088,7 +1088,7 @@
           }
         ],
         "warnings": [
-          "CB-SEM/CFA ML v1 is experimental; this run used the v0.7.1 direct maximum-likelihood optimizer for the supported simple reflective raw-data scope."
+          "CB-SEM/CFA ML v1 is validated for the documented QuickPLS v1.2.4 raw-data single-group reflective ML scope; bootstrap, unrestricted multigroup/invariance, robust, ordinal, and FIML estimators remain experimental or unsupported."
         ]
       },
       "cca": null,
@@ -1592,7 +1592,7 @@
         "method_version": "pls_mediation_v1",
         "tolerance": 1e-12,
         "warnings": [
-          "Mediation classes are descriptive effect-decomposition labels; publication inference requires validated bootstrap or permutation intervals for the relevant indirect effect."
+          "PLS mediation effect decomposition is validated for the documented QuickPLS v1.2.1 scope when paired with validated bootstrap or permutation intervals for the relevant indirect effect."
         ]
       },
       "method_version": "cfa_ml_v1",
@@ -1692,7 +1692,7 @@
       ],
       "used_observations": 240,
       "warnings": [
-        "CB-SEM/CFA ML v1 is experimental; this run used the v0.7.1 direct maximum-likelihood optimizer for the supported simple reflective raw-data scope."
+        "CB-SEM/CFA ML v1 is validated for the documented QuickPLS v1.2.4 raw-data single-group reflective ML scope; bootstrap, unrestricted multigroup/invariance, robust, ordinal, and FIML estimators remain experimental or unsupported."
       ],
       "wpls": null
     },

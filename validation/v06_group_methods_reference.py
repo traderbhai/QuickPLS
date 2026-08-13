@@ -1,4 +1,8 @@
-"""Integrated v0.6 group-method validation smoke/recovery fixtures."""
+"""Integrated group-method validation smoke/recovery fixtures.
+
+The MGA fixture covers only the currently supported two-group contract. MICOM
+has a separate safety-withdrawal audit and is never executed from this module.
+"""
 
 import argparse
 import csv
@@ -117,16 +121,35 @@ def validate_groups():
     write_group_rows(data)
     payload = run_recipe("v06_groups", data, "mga", {
         "mga_group_column": "group",
-        "group_methods": "micom,mga_permutation",
+        "mga_group_a": "A",
+        "mga_group_b": "B",
+        "group_methods": "mga_permutation",
         "group_permutation_samples": "99",
     })
     estimation = payload["payload"]["estimation"]
-    assert estimation["micom"]["method_version"] == "micom_v1"
-    assert estimation["mga_permutation"]["method_version"] == "pls_mga_permutation_v1"
-    assert estimation["mga_permutation"]["usable_permutations"] == 99
-    differences = [abs(item["original_difference"]) for item in estimation["mga_permutation"]["comparisons"]]
+    mga = estimation["mga"]
+    permutation = estimation["mga_permutation"]
+    assert estimation.get("micom") is None
+    assert mga["method_version"] == "pls_mga_two_group_v1"
+    assert [(item["group"], item["observations"]) for item in mga["groups"]] == [("A", 60), ("B", 60)]
+    assert all(item["group_a"] == "A" and item["group_b"] == "B" for item in mga["comparisons"])
+    assert permutation["method_version"] == "pls_mga_permutation_v1"
+    assert permutation["permutation_samples"] == 99
+    assert permutation["usable_permutations"] == 99
+    differences = [abs(item["original_difference"]) for item in permutation["comparisons"]]
     assert max(differences) > 0.5
-    return {"micom_constructs": len(estimation["micom"]["constructs"]), "max_mga_difference": max(differences)}
+    return {
+        "group_a": "A",
+        "group_b": "B",
+        "group_a_observations": mga["groups"][0]["observations"],
+        "group_b_observations": mga["groups"][1]["observations"],
+        "group_methods": "mga_permutation",
+        "mga_method_version": mga["method_version"],
+        "permutation_method_version": permutation["method_version"],
+        "usable_permutations": permutation["usable_permutations"],
+        "max_abs_path_difference": max(differences),
+        "micom_execution_enabled": False,
+    }
 
 
 def validate_pos():
@@ -164,11 +187,15 @@ def validate_fimix():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--section", choices=["all", "micom", "mga", "pos", "fimix"], default="all")
+    parser.add_argument("--section", choices=["all", "mga", "pos", "fimix"], default="all")
     args = parser.parse_args()
     RESULTS.mkdir(parents=True, exist_ok=True)
     report = {"kind": "v06_group_methods_reference", "sections": {}}
-    if args.section in ("all", "micom", "mga"):
+    if args.section != "all" and OUTPUT.exists():
+        existing = json.loads(OUTPUT.read_text(encoding="utf-8"))
+        if existing.get("kind") == report["kind"] and isinstance(existing.get("sections"), dict):
+            report = existing
+    if args.section in ("all", "mga"):
         report["sections"]["groups"] = validate_groups()
     if args.section in ("all", "pos"):
         report["sections"]["pos"] = validate_pos()

@@ -16,11 +16,23 @@ use arrow::{
     compute::take,
     record_batch::RecordBatch,
 };
-use qpls_core::{AnalysisMethod, AnalysisRecipe};
+use qpls_core::{
+    AnalysisMethod, AnalysisRecipe, MethodConfig, RegressionBootstrapAlgorithm,
+    RegressionBootstrapInterval, RegressionModelConfig, ValidatedExecutionRecipe,
+};
 use qpls_data::{DataKind, Dataset};
 use qpls_estimation::{
     EffectEstimate, EstimationError, OuterEstimate, PathEstimate, PlsResult,
-    estimate_pls_with_control,
+    ProcessBootstrapAnalysis, ProcessBootstrapEstimand, ProcessBootstrapFailedReplicate,
+    ProcessBootstrapValidationWitness, ProcessBootstrapWitnessBootstrapRow,
+    ProcessBootstrapWitnessJackknifeRow, REGRESSION_LOGISTIC_METHOD_VERSION,
+    REGRESSION_OLS_METHOD_VERSION, REGRESSION_PROCESS_METHOD_VERSION, RegressionBootstrapAnalysis,
+    RegressionBootstrapBcaInterval, RegressionBootstrapCoefficient,
+    RegressionBootstrapFailedJackknife, RegressionBootstrapFailedReplicate,
+    RegressionBootstrapOddsRatio, RegressionBootstrapTest, RegressionBootstrapValidationWitness,
+    RegressionBootstrapWitnessBootstrapRow, RegressionBootstrapWitnessJackknifeRow,
+    estimate_pls_validated_with_control, estimate_regression_case_resample_validated_with_control,
+    process_bootstrap_estimands, process_bootstrap_estimands_at_reference,
 };
 
 pub const RESAMPLING_METHOD_VERSION_V1: &str = "indexed_resampling_v1";
@@ -30,6 +42,22 @@ pub const RESAMPLING_METHOD_VERSION: &str = "indexed_resampling_v4";
 pub const JACKKNIFE_METHOD_VERSION: &str = "indexed_jackknife_v1";
 pub const PERMUTATION_METHOD_VERSION: &str = "freedman_lane_permutation_v1";
 pub const STUDENTIZED_METHOD_VERSION: &str = "nested_studentized_v1";
+pub const REGRESSION_BOOTSTRAP_METHOD_VERSION: &str = "regression_bootstrap_v1";
+pub const REGRESSION_BOOTSTRAP_ALGORITHM: &str = "indexed_case_resampling_v1";
+pub const REGRESSION_BOOTSTRAP_STREAM_TOKEN: &str = "quickpls_indexed_resampling_v1";
+pub const REGRESSION_BOOTSTRAP_INTERVAL_POLICY: &str = "percentile_primary_bca_conditional_v1";
+pub const REGRESSION_BOOTSTRAP_TEST_REFERENCE: &str = "standard_normal_bootstrap_ratio_v1";
+pub const REGRESSION_BOOTSTRAP_TEST_TOLERANCE_POLICY: &str = "64eps_max_1_original_replicates_v1";
+pub const REGRESSION_BOOTSTRAP_VALIDATION_WITNESS_VERSION: &str =
+    "regression_bootstrap_validation_witness_v1";
+pub const REGRESSION_BOOTSTRAP_MINIMUM_USABLE_FRACTION: f64 = 0.90;
+pub const PROCESS_BOOTSTRAP_METHOD_VERSION: &str = "regression_process_bootstrap_v1";
+pub const PROCESS_BOOTSTRAP_ALGORITHM: &str = "indexed_case_resampling_v1";
+pub const PROCESS_BOOTSTRAP_STREAM_TOKEN: &str = "process_indexed_case_stream_v1";
+pub const PROCESS_BOOTSTRAP_INTERVAL_POLICY: &str = "percentile_primary_bca_conditional_v1";
+pub const PROCESS_BOOTSTRAP_TEST_REFERENCE: &str = "standard_normal_bootstrap_ratio_v1";
+pub const PROCESS_BOOTSTRAP_VALIDATION_WITNESS_VERSION: &str =
+    "regression_process_bootstrap_validation_witness_v1";
 const SEED_DOMAIN: &[u8] = b"QuickPLS indexed resampling v1\0";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -66,6 +94,7 @@ impl BootstrapPlan {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct PermutationPlan {
     pub permutations: u32,
     pub master_seed: u64,
@@ -136,6 +165,7 @@ pub struct BootstrapRun<T> {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct PermutationRun<T> {
     pub method_version: String,
     pub plan: PermutationPlan,
@@ -279,6 +309,7 @@ pub struct PlsJackknifeEstimate {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct PlsPermutationResult {
     pub method_version: String,
     pub plan: PermutationPlan,
@@ -286,6 +317,7 @@ pub struct PlsPermutationResult {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct PermutationParameterInference {
     pub parameter: String,
     pub original: f64,
@@ -330,6 +362,24 @@ pub enum PlsBootstrapError {
     BaseEstimation(#[from] EstimationError),
     #[error("PLS jackknife required for BCa inference failed: {0}")]
     Jackknife(String),
+    #[error(transparent)]
+    Resampling(#[from] ResamplingError),
+}
+
+#[derive(Debug, Error)]
+pub enum RegressionBootstrapError {
+    #[error("regression bootstrap requires raw observations")]
+    RawDataRequired,
+    #[error("regression bootstrap requires a typed OLS or binary logistic case-bootstrap recipe")]
+    InvalidMethod,
+    #[error("regression bootstrap result is inconsistent with the base estimate: {0}")]
+    InconsistentResult(String),
+    #[error("regression bootstrap summary inputs are invalid: {0}")]
+    InvalidSummary(String),
+    #[error(
+        "regression bootstrap produced {usable} usable replicates; at least {required} are required"
+    )]
+    InsufficientUsableReplicates { usable: usize, required: usize },
     #[error(transparent)]
     Resampling(#[from] ResamplingError),
 }
@@ -602,6 +652,43 @@ pub fn bootstrap_pls(
     is_cancelled: impl Fn() -> bool + Sync,
     report_progress: impl Fn(ResamplingProgress) + Sync,
 ) -> Result<PlsBootstrapResult, PlsBootstrapError> {
+    if recipe.settings.studentized_inner_samples > 0
+        && (recipe.settings.bootstrap_samples < 999
+            || !(99..=999).contains(&recipe.settings.studentized_inner_samples)
+            || recipe.settings.studentized_inner_samples % 2 == 0)
+    {
+        return Err(PlsBootstrapError::InvalidStudentizedPlan);
+    }
+    let execution = ValidatedExecutionRecipe::for_dataset(recipe, &dataset.fingerprint.0)
+        .map_err(|error| PlsBootstrapError::InconsistentResult(error.to_string()))?;
+    bootstrap_pls_validated(
+        dataset,
+        &execution,
+        original,
+        workers,
+        is_cancelled,
+        report_progress,
+    )
+}
+
+/// Bootstraps an opaque schema-v3 recipe capability. The capability is
+/// validated once before the worker pool and the no-resampling base is reused
+/// by all replicates.
+pub fn bootstrap_pls_validated(
+    dataset: &Dataset,
+    recipe: &ValidatedExecutionRecipe,
+    original: &PlsResult,
+    workers: usize,
+    is_cancelled: impl Fn() -> bool + Sync,
+    report_progress: impl Fn(ResamplingProgress) + Sync,
+) -> Result<PlsBootstrapResult, PlsBootstrapError> {
+    let effective_recipe = recipe
+        .effective_for_dataset(&dataset.fingerprint.0)
+        .map_err(|error| PlsBootstrapError::InconsistentResult(error.to_string()))?;
+    let base_execution = recipe
+        .without_outer_resampling()
+        .map_err(|error| PlsBootstrapError::InconsistentResult(error.to_string()))?;
+    let recipe = effective_recipe;
     if dataset.schema.kind != DataKind::Raw {
         return Err(PlsBootstrapError::RawDataRequired);
     }
@@ -623,9 +710,8 @@ pub fn bootstrap_pls(
             "base estimate is not a converged PLS-PM v1 result".into(),
         ));
     }
-    let mut base_recipe = recipe.clone();
-    base_recipe.settings.bootstrap_samples = 0;
-    let complete_rows = complete_case_rows(dataset, &base_recipe);
+    let base_recipe = base_execution.effective();
+    let complete_rows = complete_case_rows(dataset, base_recipe);
     if original.used_observations != complete_rows.len() {
         return Err(PlsBootstrapError::InconsistentResult(
             "base estimate observation count differs from the complete-case sample".into(),
@@ -653,10 +739,11 @@ pub fn bootstrap_pls(
                 .iter()
                 .map(|position| complete_rows[*position])
                 .collect::<Vec<_>>();
-            let sampled =
-                resample_model_dataset(dataset, &base_recipe, &raw_indices, cancellation)?;
+            let sampled = resample_model_dataset(dataset, base_recipe, &raw_indices, cancellation)?;
             let mut estimate =
-                estimate_pls_with_control(&sampled, &base_recipe, |_| !cancellation())?;
+                estimate_pls_validated_with_control(&sampled, &base_execution, |_| {
+                    !cancellation()
+                })?;
             align_pls_signs(
                 &mut estimate,
                 &original.construct_scores,
@@ -667,7 +754,7 @@ pub fn bootstrap_pls(
                 if recipe.settings.studentized_inner_samples > 0 {
                     match inner_bootstrap_standard_errors(
                         &sampled,
-                        &base_recipe,
+                        &base_execution,
                         &estimate,
                         plan.master_seed,
                         replicate_index,
@@ -724,7 +811,7 @@ pub fn bootstrap_pls(
     let percentile = summarize_percentile(original, &run, recipe.settings.confidence_level)?;
     let jackknife = jackknife_pls(
         dataset,
-        &base_recipe,
+        &base_execution,
         original,
         workers,
         || cancellation(),
@@ -766,18 +853,1033 @@ pub fn bootstrap_pls(
     })
 }
 
-pub fn jackknife_pls(
+#[derive(Debug, Clone, PartialEq)]
+struct RegressionBootstrapEstimate {
+    coefficients: Vec<f64>,
+}
+
+/// Dedicated case-resampling inference for standalone OLS and binary logistic
+/// regression. This path deliberately does not return `PlsBootstrapResult`:
+/// its output is nested in the regression estimate and cannot be interpreted
+/// as PLS-PM resampling evidence.
+pub fn bootstrap_regression_validated(
     dataset: &Dataset,
-    recipe: &AnalysisRecipe,
+    execution: &ValidatedExecutionRecipe,
+    original: &PlsResult,
+    workers: usize,
+    is_cancelled: impl Fn() -> bool + Sync,
+    report_progress: impl Fn(ResamplingProgress) + Sync,
+) -> Result<RegressionBootstrapAnalysis, RegressionBootstrapError> {
+    if dataset.schema.kind != DataKind::Raw {
+        return Err(RegressionBootstrapError::RawDataRequired);
+    }
+    execution
+        .effective_for_dataset(&dataset.fingerprint.0)
+        .map_err(|error| RegressionBootstrapError::InconsistentResult(error.to_string()))?;
+    let source = execution.source();
+    let MethodConfig::Regression {
+        outcome,
+        predictors,
+        controls,
+        model,
+        bootstrap: Some(bootstrap),
+    } = source
+        .method_config
+        .as_ref()
+        .ok_or(RegressionBootstrapError::InvalidMethod)?
+    else {
+        return Err(RegressionBootstrapError::InvalidMethod);
+    };
+    if source.settings.method != AnalysisMethod::Regression
+        || workers != source.settings.workers
+        || source.settings.studentized_inner_samples != 0
+        || source.settings.permutation_samples != 0
+        || !(99..=10_000).contains(&source.settings.bootstrap_samples)
+        || bootstrap.algorithm != RegressionBootstrapAlgorithm::CaseResampling
+        || bootstrap.intervals
+            != [
+                RegressionBootstrapInterval::Percentile,
+                RegressionBootstrapInterval::Bca,
+            ]
+    {
+        return Err(RegressionBootstrapError::InvalidMethod);
+    }
+    let (regression_type, base_method_version, logistic) = match model {
+        RegressionModelConfig::Ols { .. } => ("ols", REGRESSION_OLS_METHOD_VERSION, false),
+        RegressionModelConfig::Logistic => ("logistic", REGRESSION_LOGISTIC_METHOD_VERSION, true),
+        RegressionModelConfig::Process { .. } => {
+            return Err(RegressionBootstrapError::InvalidMethod);
+        }
+    };
+    let original_regression = original.regression.as_ref().ok_or_else(|| {
+        RegressionBootstrapError::InconsistentResult("base regression payload is missing".into())
+    })?;
+    if original.method_version != base_method_version
+        || original_regression.method_version != base_method_version
+        || original_regression.regression_type != regression_type
+        || original_regression.bootstrap.is_some()
+    {
+        return Err(RegressionBootstrapError::InconsistentResult(
+            "base estimate method identity is not current point-only regression".into(),
+        ));
+    }
+    let expected_terms = std::iter::once("intercept".to_string())
+        .chain(predictors.iter().cloned())
+        .chain(controls.iter().cloned())
+        .collect::<Vec<_>>();
+    if original_regression.coefficients.len() != expected_terms.len()
+        || original_regression
+            .coefficients
+            .iter()
+            .zip(&expected_terms)
+            .any(|(coefficient, expected)| coefficient.term != *expected)
+    {
+        return Err(RegressionBootstrapError::InconsistentResult(
+            "base coefficient identities differ from the typed recipe".into(),
+        ));
+    }
+    let mut variables = Vec::with_capacity(1 + predictors.len() + controls.len());
+    variables.push(outcome.clone());
+    variables.extend(predictors.iter().cloned());
+    variables.extend(controls.iter().cloned());
+    let positions = variables
+        .iter()
+        .map(|variable| {
+            dataset.batch.schema().index_of(variable).map_err(|_| {
+                RegressionBootstrapError::InconsistentResult(format!(
+                    "typed regression variable is missing from the dataset: {variable}"
+                ))
+            })
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let complete_rows = complete_case_rows_at_positions(dataset, &positions);
+    if original.used_observations != complete_rows.len()
+        || original_regression.observations != complete_rows.len()
+    {
+        return Err(RegressionBootstrapError::InconsistentResult(
+            "base observation count differs from the regression complete-case sample".into(),
+        ));
+    }
+    let base_execution = execution
+        .without_outer_resampling()
+        .map_err(|error| RegressionBootstrapError::InconsistentResult(error.to_string()))?;
+    let plan = BootstrapPlan {
+        replicates: source.settings.bootstrap_samples,
+        master_seed: source.settings.seed,
+        operation: format!("regression_{regression_type}_case_bootstrap_v1"),
+    };
+    let cancellation = &is_cancelled;
+    let progress_callback = &report_progress;
+    let run = run_bootstrap(
+        complete_rows.len(),
+        &plan,
+        workers,
+        |_replicate_index, sampled_positions| {
+            let raw_indices = sampled_positions
+                .iter()
+                .map(|position| complete_rows[*position])
+                .collect::<Vec<_>>();
+            let estimate = estimate_regression_case_resample_validated_with_control(
+                dataset,
+                &base_execution,
+                &raw_indices,
+                |_| !cancellation(),
+            )
+            .map_err(regression_replicate_error)?;
+            let regression = estimate.regression.ok_or_else(|| {
+                "missing_regression_payload|resampled estimate omitted regression output"
+                    .to_string()
+            })?;
+            let coefficients = regression
+                .coefficients
+                .iter()
+                .map(|coefficient| coefficient.estimate)
+                .collect::<Vec<_>>();
+            if regression.method_version != base_method_version
+                || regression.coefficients.len() != expected_terms.len()
+                || regression.coefficients.iter().zip(&expected_terms).any(
+                    |(coefficient, expected)| {
+                        coefficient.term != *expected
+                            || !coefficient.estimate.is_finite()
+                            || (logistic && !coefficient.estimate.exp().is_finite())
+                    },
+                )
+            {
+                return Err(
+                    "inconsistent_replicate|resampled coefficient identity or value is invalid"
+                        .to_string(),
+                );
+            }
+            Ok(RegressionBootstrapEstimate { coefficients })
+        },
+        cancellation,
+        progress_callback,
+    )?;
+    let usable = run
+        .outcomes
+        .iter()
+        .filter(|outcome| matches!(outcome, ReplicateOutcome::Success { .. }))
+        .count();
+    let required = ((run.plan.replicates as f64 * REGRESSION_BOOTSTRAP_MINIMUM_USABLE_FRACTION)
+        .ceil() as usize)
+        .max(2);
+    if usable < required {
+        return Err(RegressionBootstrapError::InsufficientUsableReplicates { usable, required });
+    }
+
+    let jackknife = run_jackknife(
+        complete_rows.len(),
+        &format!("regression_{regression_type}_case_jackknife_v1"),
+        workers,
+        |omitted_case| {
+            let raw_indices = complete_rows
+                .iter()
+                .enumerate()
+                .filter_map(|(position, raw)| (position != omitted_case).then_some(*raw))
+                .collect::<Vec<_>>();
+            let estimate = estimate_regression_case_resample_validated_with_control(
+                dataset,
+                &base_execution,
+                &raw_indices,
+                |_| !cancellation(),
+            )
+            .map_err(regression_replicate_error)?;
+            let regression = estimate.regression.ok_or_else(|| {
+                "missing_regression_payload|delete-one estimate omitted regression output"
+                    .to_string()
+            })?;
+            if regression.coefficients.len() != expected_terms.len()
+                || regression.coefficients.iter().zip(&expected_terms).any(
+                    |(coefficient, expected)| {
+                        coefficient.term != *expected
+                            || !coefficient.estimate.is_finite()
+                            || (logistic && !coefficient.estimate.exp().is_finite())
+                    },
+                )
+            {
+                return Err(
+                    "inconsistent_replicate|delete-one coefficient identity or value is invalid"
+                        .to_string(),
+                );
+            }
+            Ok(regression
+                .coefficients
+                .iter()
+                .map(|coefficient| coefficient.estimate)
+                .collect::<Vec<_>>())
+        },
+        cancellation,
+        progress_callback,
+    )?;
+
+    let failed_replicates = run
+        .outcomes
+        .iter()
+        .enumerate()
+        .filter_map(|(index, outcome)| match outcome {
+            ReplicateOutcome::Failed { message } => {
+                let (reason_code, message) = split_regression_failure(message);
+                Some(RegressionBootstrapFailedReplicate {
+                    replicate_index: index as u32,
+                    reason_code,
+                    message,
+                })
+            }
+            ReplicateOutcome::Success { .. } => None,
+        })
+        .collect::<Vec<_>>();
+    let successful_bootstrap = run
+        .outcomes
+        .iter()
+        .filter_map(|outcome| match outcome {
+            ReplicateOutcome::Success { value } => Some(value.coefficients.clone()),
+            ReplicateOutcome::Failed { .. } => None,
+        })
+        .collect::<Vec<_>>();
+    let successful_jackknife = jackknife
+        .outcomes
+        .iter()
+        .filter_map(|outcome| match outcome {
+            ReplicateOutcome::Success { value } => Some(value.clone()),
+            ReplicateOutcome::Failed { .. } => None,
+        })
+        .collect::<Vec<_>>();
+    let coefficient_rows = summarize_regression_bootstrap_coefficients(
+        &expected_terms,
+        &original_regression
+            .coefficients
+            .iter()
+            .map(|coefficient| coefficient.estimate)
+            .collect::<Vec<_>>(),
+        &successful_bootstrap,
+        &successful_jackknife,
+        jackknife.case_count,
+        logistic,
+        source.settings.confidence_level,
+    )?;
+    let failed_jackknife = jackknife
+        .outcomes
+        .iter()
+        .filter(|outcome| matches!(outcome, ReplicateOutcome::Failed { .. }))
+        .count();
+    let validation_witness = RegressionBootstrapValidationWitness {
+        method_version: REGRESSION_BOOTSTRAP_VALIDATION_WITNESS_VERSION.into(),
+        terms: expected_terms,
+        successful_bootstrap: run
+            .outcomes
+            .iter()
+            .enumerate()
+            .filter_map(|(replicate_index, outcome)| match outcome {
+                ReplicateOutcome::Success { value } => {
+                    Some(RegressionBootstrapWitnessBootstrapRow {
+                        replicate_index: replicate_index as u32,
+                        coefficients: value.coefficients.clone(),
+                    })
+                }
+                ReplicateOutcome::Failed { .. } => None,
+            })
+            .collect(),
+        successful_jackknife: jackknife
+            .outcomes
+            .iter()
+            .enumerate()
+            .filter_map(|(omitted_case, outcome)| match outcome {
+                ReplicateOutcome::Success { value } => {
+                    Some(RegressionBootstrapWitnessJackknifeRow {
+                        omitted_case,
+                        coefficients: value.clone(),
+                    })
+                }
+                ReplicateOutcome::Failed { .. } => None,
+            })
+            .collect(),
+        failed_jackknife: jackknife
+            .outcomes
+            .iter()
+            .enumerate()
+            .filter_map(|(omitted_case, outcome)| match outcome {
+                ReplicateOutcome::Failed { message } => {
+                    let (reason_code, message) = split_regression_failure(message);
+                    Some(RegressionBootstrapFailedJackknife {
+                        omitted_case,
+                        reason_code,
+                        message,
+                    })
+                }
+                ReplicateOutcome::Success { .. } => None,
+            })
+            .collect(),
+    };
+    let mut warnings = vec![
+        "Regression bootstrap v1 uses deterministic indexed case resampling with replacement; percentile intervals are primary and BCa intervals are conditional on stable delete-one fits."
+            .into(),
+        "Bootstrap ratio statistics use an independently implemented two-sided standard-normal reference for both OLS and logistic coefficients; they are distinct from point-estimate t or Wald inference."
+            .into(),
+    ];
+    if !failed_replicates.is_empty() {
+        warnings.push(format!(
+            "{} of {} bootstrap replicates failed and were excluded from inference.",
+            failed_replicates.len(),
+            run.plan.replicates
+        ));
+    }
+    if failed_jackknife > 0 {
+        warnings.push(format!(
+            "{failed_jackknife} of {} delete-one fits failed; affected BCa intervals are explicitly unavailable.",
+            jackknife.case_count
+        ));
+    }
+    Ok(RegressionBootstrapAnalysis {
+        method_version: REGRESSION_BOOTSTRAP_METHOD_VERSION.into(),
+        algorithm: REGRESSION_BOOTSTRAP_ALGORITHM.into(),
+        confidence_level: source.settings.confidence_level,
+        alternative: "two_sided".into(),
+        interval_policy: REGRESSION_BOOTSTRAP_INTERVAL_POLICY.into(),
+        test_reference: REGRESSION_BOOTSTRAP_TEST_REFERENCE.into(),
+        test_tolerance_policy: REGRESSION_BOOTSTRAP_TEST_TOLERANCE_POLICY.into(),
+        requested_replicates: run.plan.replicates,
+        usable_replicates: usable as u32,
+        minimum_usable_fraction: REGRESSION_BOOTSTRAP_MINIMUM_USABLE_FRACTION,
+        jackknife_cases: jackknife.case_count,
+        usable_jackknife_cases: jackknife.case_count - failed_jackknife,
+        seed: run.plan.master_seed,
+        workers,
+        stream_token: REGRESSION_BOOTSTRAP_STREAM_TOKEN.into(),
+        failed_replicates,
+        coefficients: coefficient_rows,
+        validation_witness,
+        warnings,
+    })
+}
+
+/// Dedicated PROCESS v2 case resampling. Although it shares the generic
+/// schema-v3 case-resampling request, its method identity, stream domain,
+/// estimands, witness, and promotion evidence are separate from standalone
+/// OLS/logistic regression bootstrapping.
+pub fn bootstrap_process_validated(
+    dataset: &Dataset,
+    execution: &ValidatedExecutionRecipe,
+    original: &PlsResult,
+    workers: usize,
+    is_cancelled: impl Fn() -> bool + Sync,
+    report_progress: impl Fn(ResamplingProgress) + Sync,
+) -> Result<ProcessBootstrapAnalysis, RegressionBootstrapError> {
+    if dataset.schema.kind != DataKind::Raw {
+        return Err(RegressionBootstrapError::RawDataRequired);
+    }
+    execution
+        .effective_for_dataset(&dataset.fingerprint.0)
+        .map_err(|error| RegressionBootstrapError::InconsistentResult(error.to_string()))?;
+    let source = execution.source();
+    let MethodConfig::Regression {
+        outcome,
+        predictors,
+        controls,
+        model:
+            RegressionModelConfig::Process {
+                relationship: qpls_core::ProcessRelationshipConfig::Graph { .. },
+            },
+        bootstrap: Some(bootstrap),
+    } = source
+        .method_config
+        .as_ref()
+        .ok_or(RegressionBootstrapError::InvalidMethod)?
+    else {
+        return Err(RegressionBootstrapError::InvalidMethod);
+    };
+    if source.settings.method != AnalysisMethod::Regression
+        || workers != source.settings.workers
+        || source.settings.studentized_inner_samples != 0
+        || source.settings.permutation_samples != 0
+        || !(99..=10_000).contains(&source.settings.bootstrap_samples)
+        || bootstrap.algorithm != RegressionBootstrapAlgorithm::CaseResampling
+        || bootstrap.intervals
+            != [
+                RegressionBootstrapInterval::Percentile,
+                RegressionBootstrapInterval::Bca,
+            ]
+    {
+        return Err(RegressionBootstrapError::InvalidMethod);
+    }
+    let original_graph = original
+        .regression
+        .as_ref()
+        .and_then(|regression| regression.process.as_ref())
+        .and_then(|process| process.graph_v2.as_ref())
+        .ok_or_else(|| {
+            RegressionBootstrapError::InconsistentResult(
+                "base PROCESS v2 graph payload is missing".into(),
+            )
+        })?;
+    if original.method_version != REGRESSION_PROCESS_METHOD_VERSION
+        || original_graph.bootstrap.is_some()
+    {
+        return Err(RegressionBootstrapError::InconsistentResult(
+            "base estimate method identity is not point-only PROCESS v2".into(),
+        ));
+    }
+    let original_estimands = process_bootstrap_estimands(original_graph);
+    let estimand_ids = original_estimands
+        .iter()
+        .map(|(id, _)| id.clone())
+        .collect::<Vec<_>>();
+    if estimand_ids.is_empty()
+        || estimand_ids
+            .iter()
+            .collect::<std::collections::BTreeSet<_>>()
+            .len()
+            != estimand_ids.len()
+    {
+        return Err(RegressionBootstrapError::InconsistentResult(
+            "PROCESS v2 estimand identities are empty or duplicated".into(),
+        ));
+    }
+    let mut variables = Vec::with_capacity(1 + predictors.len() + controls.len());
+    variables.push(outcome.clone());
+    variables.extend(predictors.iter().cloned());
+    variables.extend(controls.iter().cloned());
+    let positions = variables
+        .iter()
+        .map(|variable| {
+            dataset.batch.schema().index_of(variable).map_err(|_| {
+                RegressionBootstrapError::InconsistentResult(format!(
+                    "typed PROCESS variable is missing from the dataset: {variable}"
+                ))
+            })
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let complete_rows = complete_case_rows_at_positions(dataset, &positions);
+    if original.used_observations != complete_rows.len()
+        || original_graph.complete_cases != complete_rows.len()
+    {
+        return Err(RegressionBootstrapError::InconsistentResult(
+            "base observation count differs from the PROCESS complete-case sample".into(),
+        ));
+    }
+    let base_execution = execution
+        .without_outer_resampling()
+        .map_err(|error| RegressionBootstrapError::InconsistentResult(error.to_string()))?;
+    let plan = BootstrapPlan {
+        replicates: source.settings.bootstrap_samples,
+        master_seed: source.settings.seed,
+        operation: PROCESS_BOOTSTRAP_STREAM_TOKEN.into(),
+    };
+    let cancellation = &is_cancelled;
+    let progress_callback = &report_progress;
+    let run = run_bootstrap(
+        complete_rows.len(),
+        &plan,
+        workers,
+        |_replicate_index, sampled_positions| {
+            let raw_indices = sampled_positions
+                .iter()
+                .map(|position| complete_rows[*position])
+                .collect::<Vec<_>>();
+            process_resample_estimands(
+                dataset,
+                &base_execution,
+                &raw_indices,
+                &estimand_ids,
+                original_graph,
+                cancellation,
+            )
+        },
+        cancellation,
+        progress_callback,
+    )?;
+    let usable = run
+        .outcomes
+        .iter()
+        .filter(|outcome| matches!(outcome, ReplicateOutcome::Success { .. }))
+        .count();
+    let required = ((run.plan.replicates as f64 * REGRESSION_BOOTSTRAP_MINIMUM_USABLE_FRACTION)
+        .ceil() as usize)
+        .max(2);
+    if usable < required {
+        return Err(RegressionBootstrapError::InsufficientUsableReplicates { usable, required });
+    }
+    let jackknife = run_jackknife(
+        complete_rows.len(),
+        "regression_process_case_jackknife_v1",
+        workers,
+        |omitted_case| {
+            let raw_indices = complete_rows
+                .iter()
+                .enumerate()
+                .filter_map(|(position, raw)| (position != omitted_case).then_some(*raw))
+                .collect::<Vec<_>>();
+            process_resample_estimands(
+                dataset,
+                &base_execution,
+                &raw_indices,
+                &estimand_ids,
+                original_graph,
+                cancellation,
+            )
+        },
+        cancellation,
+        progress_callback,
+    )?;
+    let successful_bootstrap = run
+        .outcomes
+        .iter()
+        .filter_map(|outcome| match outcome {
+            ReplicateOutcome::Success { value } => Some(value.coefficients.clone()),
+            ReplicateOutcome::Failed { .. } => None,
+        })
+        .collect::<Vec<_>>();
+    let successful_jackknife = jackknife
+        .outcomes
+        .iter()
+        .filter_map(|outcome| match outcome {
+            ReplicateOutcome::Success { value } => Some(value.coefficients.clone()),
+            ReplicateOutcome::Failed { .. } => None,
+        })
+        .collect::<Vec<_>>();
+    let estimands = summarize_process_bootstrap_estimands(
+        &estimand_ids,
+        &original_estimands
+            .iter()
+            .map(|(_, estimate)| *estimate)
+            .collect::<Vec<_>>(),
+        &successful_bootstrap,
+        &successful_jackknife,
+        jackknife.case_count,
+        source.settings.confidence_level,
+    )?;
+    let failed_replicates = run
+        .outcomes
+        .iter()
+        .enumerate()
+        .filter_map(|(replicate_index, outcome)| match outcome {
+            ReplicateOutcome::Failed { message } => {
+                let (reason_code, message) = split_regression_failure(message);
+                Some(ProcessBootstrapFailedReplicate {
+                    replicate_index: replicate_index as u32,
+                    reason_code,
+                    message,
+                })
+            }
+            ReplicateOutcome::Success { .. } => None,
+        })
+        .collect::<Vec<_>>();
+    let failed_jackknife = jackknife
+        .outcomes
+        .iter()
+        .filter(|outcome| matches!(outcome, ReplicateOutcome::Failed { .. }))
+        .count();
+    let validation_witness = ProcessBootstrapValidationWitness {
+        method_version: PROCESS_BOOTSTRAP_VALIDATION_WITNESS_VERSION.into(),
+        estimand_ids,
+        successful_bootstrap: run
+            .outcomes
+            .iter()
+            .enumerate()
+            .filter_map(|(replicate_index, outcome)| match outcome {
+                ReplicateOutcome::Success { value } => Some(ProcessBootstrapWitnessBootstrapRow {
+                    replicate_index: replicate_index as u32,
+                    estimates: value.coefficients.clone(),
+                }),
+                ReplicateOutcome::Failed { .. } => None,
+            })
+            .collect(),
+        successful_jackknife: jackknife
+            .outcomes
+            .iter()
+            .enumerate()
+            .filter_map(|(omitted_case, outcome)| match outcome {
+                ReplicateOutcome::Success { value } => Some(ProcessBootstrapWitnessJackknifeRow {
+                    omitted_case,
+                    estimates: value.coefficients.clone(),
+                }),
+                ReplicateOutcome::Failed { .. } => None,
+            })
+            .collect(),
+        failed_jackknife: jackknife
+            .outcomes
+            .iter()
+            .enumerate()
+            .filter_map(|(omitted_case, outcome)| match outcome {
+                ReplicateOutcome::Failed { message } => {
+                    let (reason_code, message) = split_regression_failure(message);
+                    Some(RegressionBootstrapFailedJackknife {
+                        omitted_case,
+                        reason_code,
+                        message,
+                    })
+                }
+                ReplicateOutcome::Success { .. } => None,
+            })
+            .collect(),
+    };
+    let mut warnings = vec![
+        "PROCESS bootstrap v1 uses deterministic indexed complete-case resampling with replacement; percentile intervals are primary and BCa intervals require every delete-one fit.".into(),
+        "PROCESS bootstrap ratio tests use the original effect divided by its bootstrap standard error with a fixed two-sided standard-normal reference.".into(),
+    ];
+    if !failed_replicates.is_empty() {
+        warnings.push(format!(
+            "{} of {} PROCESS bootstrap replicates failed and were excluded from inference.",
+            failed_replicates.len(),
+            run.plan.replicates
+        ));
+    }
+    if failed_jackknife > 0 {
+        warnings.push(format!(
+            "{failed_jackknife} of {} PROCESS delete-one fits failed; BCa intervals are explicitly unavailable.",
+            jackknife.case_count
+        ));
+    }
+    Ok(ProcessBootstrapAnalysis {
+        method_version: PROCESS_BOOTSTRAP_METHOD_VERSION.into(),
+        algorithm: PROCESS_BOOTSTRAP_ALGORITHM.into(),
+        interval_policy: PROCESS_BOOTSTRAP_INTERVAL_POLICY.into(),
+        test_reference: PROCESS_BOOTSTRAP_TEST_REFERENCE.into(),
+        requested_replicates: run.plan.replicates,
+        usable_replicates: usable as u32,
+        minimum_usable_fraction: REGRESSION_BOOTSTRAP_MINIMUM_USABLE_FRACTION,
+        jackknife_cases: jackknife.case_count,
+        usable_jackknife_cases: jackknife.case_count - failed_jackknife,
+        seed: run.plan.master_seed,
+        workers,
+        stream_token: PROCESS_BOOTSTRAP_STREAM_TOKEN.into(),
+        failed_replicates,
+        estimands,
+        validation_witness,
+        warnings,
+    })
+}
+
+fn process_resample_estimands(
+    dataset: &Dataset,
+    base_execution: &ValidatedExecutionRecipe,
+    raw_indices: &[usize],
+    expected_ids: &[String],
+    reference: &qpls_estimation::ProcessGraphAnalysis,
+    cancellation: &impl Fn() -> bool,
+) -> Result<RegressionBootstrapEstimate, String> {
+    let estimate = estimate_regression_case_resample_validated_with_control(
+        dataset,
+        base_execution,
+        raw_indices,
+        |_| !cancellation(),
+    )
+    .map_err(process_replicate_error)?;
+    let graph = estimate
+        .regression
+        .as_ref()
+        .and_then(|regression| regression.process.as_ref())
+        .and_then(|process| process.graph_v2.as_ref())
+        .ok_or_else(|| {
+            "nonfinite_estimate|resampled PROCESS estimate omitted graph output".to_string()
+        })?;
+    let estimands = process_bootstrap_estimands_at_reference(graph, reference)
+        .map_err(|message| format!("nonfinite_estimate|{message}"))?;
+    if estimands.len() != expected_ids.len()
+        || estimands
+            .iter()
+            .zip(expected_ids)
+            .any(|((id, value), expected)| id != expected || !value.is_finite())
+    {
+        return Err(
+            "nonfinite_estimate|resampled PROCESS estimand identity or value is invalid".into(),
+        );
+    }
+    Ok(RegressionBootstrapEstimate {
+        coefficients: estimands
+            .into_iter()
+            .map(|(_, estimate)| estimate)
+            .collect(),
+    })
+}
+
+fn process_replicate_error(error: EstimationError) -> String {
+    let reason = match &error {
+        EstimationError::RankDeficient(_) => "rank_deficient_equation",
+        EstimationError::UnsupportedMethod(message)
+            if message.starts_with("invalid_binary_profile|") =>
+        {
+            "invalid_binary_profile"
+        }
+        EstimationError::UnsupportedMethod(message)
+            if message.starts_with("high_leverage_hc3_instability|") =>
+        {
+            "high_leverage_hc3_instability"
+        }
+        EstimationError::Numerical(message) if message.starts_with("invalid_hc3_covariance|") => {
+            "invalid_hc3_covariance"
+        }
+        EstimationError::Numerical(message)
+            if message.starts_with("degenerate_simple_slope_variance|") =>
+        {
+            "degenerate_simple_slope_variance"
+        }
+        EstimationError::Cancelled => "cancelled",
+        _ => "nonfinite_estimate",
+    };
+    format!("{reason}|{error}")
+}
+
+fn normalize_process_bootstrap_statuses(
+    summary: &mut RegressionBootstrapCoefficient,
+    jackknife_values: &[f64],
+) {
+    if let RegressionBootstrapTest::Unavailable {
+        reason_code,
+        message,
+    } = &mut summary.test
+    {
+        *reason_code = "zero_bootstrap_standard_error".into();
+        *message = "PROCESS bootstrap ratio inference is unavailable because the estimand distribution has zero or nonfinite spread".into();
+    }
+    if let RegressionBootstrapBcaInterval::Unavailable {
+        reason_code,
+        message,
+    } = &mut summary.bca
+    {
+        match reason_code.as_str() {
+            "incomplete_jackknife" => {}
+            "insufficient_jackknife_estimates" => {
+                *reason_code = "zero_jackknife_variance".into();
+                *message = "PROCESS BCa is unavailable because the complete delete-one distribution has insufficient nonzero variation".into();
+            }
+            _ => {
+                let mean = if jackknife_values.is_empty() {
+                    0.0
+                } else {
+                    jackknife_values.iter().sum::<f64>() / jackknife_values.len() as f64
+                };
+                let spread = jackknife_values
+                    .iter()
+                    .map(|value| (value - mean).abs())
+                    .fold(0.0, f64::max);
+                if spread <= 64.0 * f64::EPSILON * mean.abs().max(1.0) {
+                    *reason_code = "zero_jackknife_variance".into();
+                    *message = "PROCESS BCa is unavailable because the complete delete-one distribution has zero variance".into();
+                } else {
+                    *reason_code = "nonfinite_adjusted_probability".into();
+                    *message = "PROCESS BCa is unavailable because the bias correction, acceleration, or adjusted probabilities are nonfinite".into();
+                }
+            }
+        }
+    }
+}
+
+/// Recomputes PROCESS v2 bootstrap summaries with PROCESS-specific tagged
+/// unavailable reasons. Archive validation calls the same pure function, so
+/// generic OLS/logistic reason tokens cannot accidentally enter PROCESS output.
+pub fn summarize_process_bootstrap_estimands(
+    estimand_ids: &[String],
+    original: &[f64],
+    bootstrap_estimates: &[Vec<f64>],
+    jackknife_estimates: &[Vec<f64>],
+    expected_jackknife_cases: usize,
+    confidence_level: f64,
+) -> Result<Vec<ProcessBootstrapEstimand>, RegressionBootstrapError> {
+    let summaries = summarize_regression_bootstrap_coefficients(
+        estimand_ids,
+        original,
+        bootstrap_estimates,
+        jackknife_estimates,
+        expected_jackknife_cases,
+        false,
+        confidence_level,
+    )?;
+    Ok(summaries
+        .into_iter()
+        .enumerate()
+        .map(|(index, mut summary)| {
+            normalize_process_bootstrap_statuses(
+                &mut summary,
+                &jackknife_estimates
+                    .iter()
+                    .map(|row| row[index])
+                    .collect::<Vec<_>>(),
+            );
+            ProcessBootstrapEstimand {
+                effect_id: summary.term,
+                original: summary.original,
+                bootstrap_mean: summary.bootstrap_mean,
+                bias: summary.bias,
+                standard_error: summary.standard_error,
+                test: summary.test,
+                percentile_lower: summary.percentile_lower,
+                percentile_upper: summary.percentile_upper,
+                bca: summary.bca,
+                usable_replicates: summary.usable_replicates,
+            }
+        })
+        .collect())
+}
+
+/// Pure, deterministic arithmetic used by the engine and validation-only
+/// reference harnesses. Rows are replicate-major, columns follow `terms`.
+pub fn summarize_regression_bootstrap_coefficients(
+    terms: &[String],
+    original: &[f64],
+    bootstrap_estimates: &[Vec<f64>],
+    jackknife_estimates: &[Vec<f64>],
+    expected_jackknife_cases: usize,
+    logistic: bool,
+    confidence_level: f64,
+) -> Result<Vec<RegressionBootstrapCoefficient>, RegressionBootstrapError> {
+    let width = terms.len();
+    if width == 0
+        || original.len() != width
+        || bootstrap_estimates.len() < 2
+        || !confidence_level.is_finite()
+        || !(0.0..1.0).contains(&confidence_level)
+        || original
+            .iter()
+            .any(|value| !value.is_finite() || (logistic && !value.exp().is_finite()))
+        || bootstrap_estimates.iter().any(|row| {
+            row.len() != width
+                || row
+                    .iter()
+                    .any(|value| !value.is_finite() || (logistic && !value.exp().is_finite()))
+        })
+        || expected_jackknife_cases < jackknife_estimates.len()
+        || jackknife_estimates.iter().any(|row| {
+            row.len() != width
+                || row
+                    .iter()
+                    .any(|value| !value.is_finite() || (logistic && !value.exp().is_finite()))
+        })
+    {
+        return Err(RegressionBootstrapError::InvalidSummary(
+            "term, point, bootstrap, jackknife, confidence, or finite-value dimensions differ"
+                .into(),
+        ));
+    }
+    let normal = Normal::standard();
+    let tail = (1.0 - confidence_level) / 2.0;
+    let mut rows = Vec::with_capacity(width);
+    for coefficient_index in 0..width {
+        let mut values = bootstrap_estimates
+            .iter()
+            .map(|row| row[coefficient_index])
+            .collect::<Vec<_>>();
+        values.sort_by(f64::total_cmp);
+        let point = original[coefficient_index];
+        let mean = values.iter().sum::<f64>() / values.len() as f64;
+        let standard_error = sample_standard_deviation(&values, mean);
+        let replicate_max_abs = values.iter().map(|value| value.abs()).fold(0.0, f64::max);
+        let test_tolerance = 64.0 * f64::EPSILON * point.abs().max(replicate_max_abs).max(1.0);
+        let test = if standard_error.is_finite() && standard_error > test_tolerance {
+            let statistic = point / standard_error;
+            RegressionBootstrapTest::Available {
+                statistic,
+                p_value_two_sided: (2.0 * normal.sf(statistic.abs())).clamp(0.0, 1.0),
+            }
+        } else {
+            RegressionBootstrapTest::Unavailable {
+                reason_code: "degenerate_bootstrap_standard_error".into(),
+                message: "Bootstrap ratio inference is unavailable because the coefficient distribution has zero or nonfinite spread".into(),
+            }
+        };
+        let jackknife_values = jackknife_estimates
+            .iter()
+            .map(|row| row[coefficient_index])
+            .collect::<Vec<_>>();
+        let jackknife_complete = jackknife_estimates.len() == expected_jackknife_cases;
+        let bca = regression_bca_status(
+            &values,
+            point,
+            &jackknife_values,
+            confidence_level,
+            jackknife_complete,
+        );
+        let odds_ratio = logistic.then(|| {
+            // `values` is sorted and exp is strictly monotone, so the
+            // transformed vector remains sorted for Type-7 quantiles. The
+            // interpolation is performed on the OR scale, not fabricated by
+            // exponentiating coefficient-scale interval endpoints.
+            let transformed = values.iter().map(|value| value.exp()).collect::<Vec<_>>();
+            let transformed_jackknife = jackknife_values
+                .iter()
+                .map(|value| value.exp())
+                .collect::<Vec<_>>();
+            RegressionBootstrapOddsRatio {
+                original: point.exp(),
+                percentile_lower: type7_quantile(&transformed, tail),
+                percentile_upper: type7_quantile(&transformed, 1.0 - tail),
+                bca: regression_bca_status(
+                    &transformed,
+                    point.exp(),
+                    &transformed_jackknife,
+                    confidence_level,
+                    jackknife_complete,
+                ),
+            }
+        });
+        rows.push(RegressionBootstrapCoefficient {
+            term: terms[coefficient_index].clone(),
+            original: point,
+            bootstrap_mean: mean,
+            bias: mean - point,
+            standard_error,
+            replicate_max_abs,
+            test_tolerance,
+            test,
+            percentile_lower: type7_quantile(&values, tail),
+            percentile_upper: type7_quantile(&values, 1.0 - tail),
+            usable_replicates: bootstrap_estimates.len() as u32,
+            bca,
+            odds_ratio,
+        });
+    }
+    Ok(rows)
+}
+
+fn regression_replicate_error(error: EstimationError) -> String {
+    let reason = match &error {
+        EstimationError::RankDeficient(_) => "rank_deficient",
+        EstimationError::LogisticNonConvergence(_) | EstimationError::NonConvergence(_) => {
+            "nonconvergence"
+        }
+        EstimationError::UnsupportedMethod(message) if message.contains("both 0 and 1") => {
+            "single_class_resample"
+        }
+        EstimationError::Numerical(_) => "numerical_failure",
+        EstimationError::Cancelled => "cancelled",
+        _ => "estimation_failure",
+    };
+    format!("{reason}|{error}")
+}
+
+fn split_regression_failure(value: &str) -> (String, String) {
+    value
+        .split_once('|')
+        .map(|(reason, message)| (reason.to_string(), message.to_string()))
+        .unwrap_or_else(|| ("estimation_failure".into(), value.to_string()))
+}
+
+fn sample_standard_deviation(values: &[f64], mean: f64) -> f64 {
+    if values.len() < 2 {
+        return f64::NAN;
+    }
+    (values
+        .iter()
+        .map(|value| (value - mean).powi(2))
+        .sum::<f64>()
+        / (values.len() - 1) as f64)
+        .sqrt()
+}
+
+fn regression_bca_status(
+    bootstrap_values: &[f64],
+    original: f64,
+    jackknife_values: &[f64],
+    confidence_level: f64,
+    jackknife_complete: bool,
+) -> RegressionBootstrapBcaInterval {
+    if !jackknife_complete {
+        return RegressionBootstrapBcaInterval::Unavailable {
+            reason_code: "incomplete_jackknife".into(),
+            message:
+                "BCa is unavailable because at least one required delete-one regression fit failed"
+                    .into(),
+        };
+    }
+    if jackknife_values.len() < 3 {
+        return RegressionBootstrapBcaInterval::Unavailable {
+            reason_code: "insufficient_jackknife_estimates".into(),
+            message: "BCa is unavailable because fewer than three finite delete-one estimates were usable"
+                .into(),
+        };
+    }
+    match bca_interval(
+        bootstrap_values,
+        original,
+        jackknife_values,
+        confidence_level,
+    ) {
+        Some(interval) => RegressionBootstrapBcaInterval::Available {
+            bias_correction: interval.bias_correction,
+            acceleration: interval.acceleration,
+            lower: interval.lower,
+            upper: interval.upper,
+        },
+        None => RegressionBootstrapBcaInterval::Unavailable {
+            reason_code: "degenerate_jackknife_acceleration".into(),
+            message: "BCa is unavailable because the delete-one acceleration or adjusted quantiles are numerically undefined"
+                .into(),
+        },
+    }
+}
+
+fn jackknife_pls(
+    dataset: &Dataset,
+    recipe: &ValidatedExecutionRecipe,
     original: &PlsResult,
     workers: usize,
     is_cancelled: impl Fn() -> bool + Sync,
     report_progress: impl Fn(ResamplingProgress) + Sync,
 ) -> Result<JackknifeRun<PlsJackknifeEstimate>, PlsJackknifeError> {
+    let effective_recipe = recipe.effective();
     if dataset.schema.kind != DataKind::Raw {
         return Err(PlsJackknifeError::RawDataRequired);
     }
-    if recipe.settings.method != AnalysisMethod::PlsPm {
+    if effective_recipe.settings.method != AnalysisMethod::PlsPm {
         return Err(PlsJackknifeError::InvalidMethod);
     }
     if !original.converged || original.method_version != qpls_estimation::PLS_METHOD_VERSION {
@@ -785,9 +1887,8 @@ pub fn jackknife_pls(
             "base estimate is not a converged PLS-PM v1 result".into(),
         ));
     }
-    let mut base_recipe = recipe.clone();
-    base_recipe.settings.bootstrap_samples = 0;
-    let complete_rows = complete_case_rows(dataset, &base_recipe);
+    let base_recipe = effective_recipe;
+    let complete_rows = complete_case_rows(dataset, base_recipe);
     if complete_rows.len() < 4 {
         return Err(PlsJackknifeError::InsufficientCases(complete_rows.len()));
     }
@@ -809,10 +1910,9 @@ pub fn jackknife_pls(
                 .iter()
                 .map(|position| complete_rows[*position])
                 .collect::<Vec<_>>();
-            let sampled =
-                resample_model_dataset(dataset, &base_recipe, &raw_indices, cancellation)?;
+            let sampled = resample_model_dataset(dataset, base_recipe, &raw_indices, cancellation)?;
             let mut estimate =
-                estimate_pls_with_control(&sampled, &base_recipe, |_| !cancellation())?;
+                estimate_pls_validated_with_control(&sampled, recipe, |_| !cancellation())?;
             align_pls_signs(
                 &mut estimate,
                 &original.construct_scores,
@@ -844,6 +1944,92 @@ struct StructuralPermutationSetup {
     residuals: Vec<f64>,
 }
 
+fn prepare_freedman_lane(
+    predictors: &[Vec<f64>],
+    outcome: &[f64],
+    focal_index: usize,
+    subject: &str,
+) -> Result<(f64, Vec<f64>, Vec<f64>), PlsPermutationError> {
+    if focal_index >= predictors.len() {
+        return Err(PlsPermutationError::Regression(format!(
+            "focal predictor index is out of range for {subject}"
+        )));
+    }
+    let (full_coefficients, _) = ols_with_intercept(predictors, outcome, subject)?;
+    let nuisance = predictors
+        .iter()
+        .enumerate()
+        .filter(|(index, _)| *index != focal_index)
+        .map(|(_, predictor)| predictor.clone())
+        .collect::<Vec<_>>();
+    let (_, fitted_nuisance) =
+        ols_with_intercept(&nuisance, outcome, &format!("nuisance model for {subject}"))?;
+    let residuals = outcome
+        .iter()
+        .zip(&fitted_nuisance)
+        .map(|(actual, fitted)| actual - fitted)
+        .collect::<Vec<_>>();
+    Ok((full_coefficients[focal_index], fitted_nuisance, residuals))
+}
+
+fn permuted_freedman_lane_focal_coefficient(
+    predictors: &[Vec<f64>],
+    fitted_nuisance: &[f64],
+    residuals: &[f64],
+    focal_index: usize,
+    permutation_indices: &[usize],
+    subject: &str,
+) -> Result<f64, PlsPermutationError> {
+    let permuted_outcome = fitted_nuisance
+        .iter()
+        .enumerate()
+        .map(|(row, fitted)| fitted + residuals[permutation_indices[row]])
+        .collect::<Vec<_>>();
+    let (coefficients, _) = ols_with_intercept(predictors, &permuted_outcome, subject)?;
+    Ok(coefficients[focal_index])
+}
+
+/// Computes one Freedman-Lane focal-path coefficient for an explicit
+/// permutation of complete-case construct-score rows. This non-persisted seam
+/// is intended for independent scientific reference checks and uses the same
+/// preparation and regression helpers as the production permutation engine.
+pub fn freedman_lane_focal_coefficient(
+    predictors: &[Vec<f64>],
+    outcome: &[f64],
+    focal_index: usize,
+    permutation_indices: &[usize],
+) -> Result<f64, PlsPermutationError> {
+    if permutation_indices.len() != outcome.len() {
+        return Err(PlsPermutationError::Regression(
+            "permutation index count differs from the outcome length".into(),
+        ));
+    }
+    let mut seen = vec![false; outcome.len()];
+    for &index in permutation_indices {
+        if index >= outcome.len() || seen[index] {
+            return Err(PlsPermutationError::Regression(
+                "permutation indices must be an exact zero-based bijection".into(),
+            ));
+        }
+        seen[index] = true;
+    }
+    if seen.iter().any(|value| !value) {
+        return Err(PlsPermutationError::Regression(
+            "permutation indices must be an exact zero-based bijection".into(),
+        ));
+    }
+    let (_, fitted_nuisance, residuals) =
+        prepare_freedman_lane(predictors, outcome, focal_index, "reference focal path")?;
+    permuted_freedman_lane_focal_coefficient(
+        predictors,
+        &fitted_nuisance,
+        &residuals,
+        focal_index,
+        permutation_indices,
+        "reference focal path",
+    )
+}
+
 pub fn permutation_pls(
     dataset: &Dataset,
     recipe: &AnalysisRecipe,
@@ -852,6 +2038,32 @@ pub fn permutation_pls(
     is_cancelled: impl Fn() -> bool + Sync,
     report_progress: impl Fn(ResamplingProgress) + Sync,
 ) -> Result<PlsPermutationResult, PlsPermutationError> {
+    let execution = ValidatedExecutionRecipe::for_dataset(recipe, &dataset.fingerprint.0)
+        .map_err(|error| PlsPermutationError::InconsistentResult(error.to_string()))?;
+    permutation_pls_validated(
+        dataset,
+        &execution,
+        original,
+        workers,
+        is_cancelled,
+        report_progress,
+    )
+}
+
+/// Permutes an opaque schema-v3 recipe capability whose configuration and
+/// compatibility projection cannot be forged by callers.
+pub fn permutation_pls_validated(
+    dataset: &Dataset,
+    recipe: &ValidatedExecutionRecipe,
+    original: &PlsResult,
+    workers: usize,
+    is_cancelled: impl Fn() -> bool + Sync,
+    report_progress: impl Fn(ResamplingProgress) + Sync,
+) -> Result<PlsPermutationResult, PlsPermutationError> {
+    let effective_recipe = recipe
+        .effective_for_dataset(&dataset.fingerprint.0)
+        .map_err(|error| PlsPermutationError::InconsistentResult(error.to_string()))?;
+    let recipe = effective_recipe;
     if dataset.schema.kind != DataKind::Raw {
         return Err(PlsPermutationError::RawDataRequired);
     }
@@ -920,12 +2132,12 @@ pub fn permutation_pls(
                 "construct-score length differs from the complete-case sample".into(),
             ));
         }
-        let (full_coefficients, _) = ols_with_intercept(
+        let (reproduced, fitted_nuisance, residuals) = prepare_freedman_lane(
             &predictors,
             outcome,
+            focal_index,
             &format!("full model for {} -> {}", path.source, path.target),
         )?;
-        let reproduced = full_coefficients[focal_index];
         if (reproduced - path.coefficient).abs()
             > 1e-10 * reproduced.abs().max(path.coefficient.abs()).max(1.0)
         {
@@ -934,22 +2146,6 @@ pub fn permutation_pls(
                 path.source, path.target
             )));
         }
-        let nuisance = predictors
-            .iter()
-            .enumerate()
-            .filter(|(index, _)| *index != focal_index)
-            .map(|(_, predictor)| predictor.clone())
-            .collect::<Vec<_>>();
-        let (_, fitted_nuisance) = ols_with_intercept(
-            &nuisance,
-            outcome,
-            &format!("nuisance model for {} -> {}", path.source, path.target),
-        )?;
-        let residuals = outcome
-            .iter()
-            .zip(&fitted_nuisance)
-            .map(|(actual, fitted)| actual - fitted)
-            .collect::<Vec<_>>();
         setups.push(StructuralPermutationSetup {
             parameter: parameter_key("path", &[&path.source, &path.target]),
             original: path.coefficient,
@@ -987,16 +2183,16 @@ pub fn permutation_pls(
                     &operation,
                     permutation_index,
                 );
-                let permuted_outcome = setup
-                    .fitted_nuisance
-                    .iter()
-                    .enumerate()
-                    .map(|(row, fitted)| fitted + setup.residuals[indices[row]])
-                    .collect::<Vec<_>>();
-                let (estimate, _) =
-                    ols_with_intercept(&setup.predictors, &permuted_outcome, &setup.parameter)
-                        .map_err(|error| error.to_string())?;
-                coefficients.insert(setup.parameter.clone(), estimate[setup.focal_index]);
+                let estimate = permuted_freedman_lane_focal_coefficient(
+                    &setup.predictors,
+                    &setup.fitted_nuisance,
+                    &setup.residuals,
+                    setup.focal_index,
+                    &indices,
+                    &setup.parameter,
+                )
+                .map_err(|error| error.to_string())?;
+                coefficients.insert(setup.parameter.clone(), estimate);
             }
             Ok::<_, String>(coefficients)
         },
@@ -1096,7 +2292,7 @@ fn ols_with_intercept(
 
 fn inner_bootstrap_standard_errors(
     primary_dataset: &Dataset,
-    recipe: &AnalysisRecipe,
+    recipe: &ValidatedExecutionRecipe,
     primary: &PlsResult,
     master_seed: u64,
     primary_replicate: u32,
@@ -1112,8 +2308,9 @@ fn inner_bootstrap_standard_errors(
             return Err(EstimationError::Cancelled);
         }
         let indices = bootstrap_indices(case_count, master_seed, &operation, inner_replicate);
-        let sampled = resample_model_dataset(primary_dataset, recipe, &indices, is_cancelled)?;
-        let estimate = estimate_pls_with_control(&sampled, recipe, |_| !is_cancelled());
+        let sampled =
+            resample_model_dataset(primary_dataset, recipe.effective(), &indices, is_cancelled)?;
+        let estimate = estimate_pls_validated_with_control(&sampled, recipe, |_| !is_cancelled());
         report_progress();
         let mut estimate = match estimate {
             Ok(estimate) => estimate,
@@ -1675,6 +2872,22 @@ fn resample_model_dataset(
     indices: &[usize],
     is_cancelled: &(impl Fn() -> bool + Sync),
 ) -> Result<Dataset, EstimationError> {
+    let indicator_names = recipe
+        .model
+        .constructs
+        .iter()
+        .flat_map(|construct| &construct.indicators)
+        .cloned()
+        .collect::<Vec<_>>();
+    resample_dataset_columns(dataset, &indicator_names, indices, is_cancelled)
+}
+
+fn resample_dataset_columns(
+    dataset: &Dataset,
+    column_names: &[String],
+    indices: &[usize],
+    is_cancelled: &(impl Fn() -> bool + Sync),
+) -> Result<Dataset, EstimationError> {
     if indices.iter().any(|index| *index > u32::MAX as usize) {
         return Err(EstimationError::Numerical(
             "bootstrap row index exceeds Arrow UInt32 capacity".into(),
@@ -1686,34 +2899,28 @@ fn resample_model_dataset(
             .map(|index| *index as u32)
             .collect::<Vec<_>>(),
     );
-    let indicator_names = recipe
-        .model
-        .constructs
-        .iter()
-        .flat_map(|construct| &construct.indicators)
-        .collect::<Vec<_>>();
-    let mut columns = Vec::with_capacity(indicator_names.len());
-    for indicator in &indicator_names {
+    let mut columns = Vec::with_capacity(column_names.len());
+    for column_name in column_names {
         if is_cancelled() {
             return Err(EstimationError::Cancelled);
         }
         let position = dataset
             .batch
             .schema()
-            .index_of(indicator)
-            .map_err(|_| EstimationError::InvalidIndicator((*indicator).clone()))?;
+            .index_of(column_name)
+            .map_err(|_| EstimationError::InvalidIndicator(column_name.clone()))?;
         let values = take(dataset.batch.column(position).as_ref(), &indices, None)
             .map_err(|error| EstimationError::Numerical(error.to_string()))?;
-        columns.push(((*indicator).clone(), values));
+        columns.push((column_name.clone(), values));
     }
     let batch = RecordBatch::try_from_iter(columns)
         .map_err(|error| EstimationError::Numerical(error.to_string()))?;
     let mut schema = dataset.schema.clone();
     schema.case_count = batch.num_rows();
     schema.columns.retain(|column| {
-        indicator_names
+        column_names
             .iter()
-            .any(|indicator| *indicator == &column.name)
+            .any(|column_name| column_name == &column.name)
     });
     Ok(Dataset {
         id: dataset.id,
@@ -1722,6 +2929,18 @@ fn resample_model_dataset(
         batch,
         fingerprint: dataset.fingerprint.clone(),
     })
+}
+
+fn complete_case_rows_at_positions(dataset: &Dataset, positions: &[usize]) -> Vec<usize> {
+    (0..dataset.batch.num_rows())
+        .filter(|row| {
+            positions.iter().all(|position| {
+                let array = dataset.batch.column(*position);
+                !array.is_null(*row)
+                    && numeric_value(array.as_ref(), *row).is_some_and(f64::is_finite)
+            })
+        })
+        .collect()
 }
 
 fn complete_case_rows(dataset: &Dataset, recipe: &AnalysisRecipe) -> Vec<usize> {
@@ -1826,10 +3045,239 @@ fn derive_seed(master_seed: u64, operation: &str, replicate_index: u32) -> [u8; 
 mod tests {
     use super::*;
     use chrono::Utc;
-    use qpls_core::{AnalysisSettings, Construct, MeasurementMode, ModelSpec, StructuralPath};
+    use qpls_core::{
+        ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisSettings, Construct, MeasurementMode, ModelSpec,
+        StructuralPath,
+    };
     use qpls_data::{ImportOptions, import_delimited_bytes};
     use std::sync::{Arc, atomic::AtomicBool};
     use uuid::Uuid;
+
+    fn current_recipe(mut recipe: AnalysisRecipe) -> AnalysisRecipe {
+        if recipe.schema_version < ANALYSIS_RECIPE_SCHEMA_VERSION {
+            recipe = recipe.migrated_v3().unwrap();
+        }
+        recipe
+    }
+
+    fn regression_bootstrap_test_recipe(
+        dataset: &Dataset,
+        model: RegressionModelConfig,
+        replicates: u32,
+        seed: u64,
+    ) -> AnalysisRecipe {
+        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../../validation/results/v08_regression_logistic.recipe.json"
+        ))
+        .unwrap();
+        recipe = current_recipe(recipe);
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        recipe.settings.preprocessing = qpls_core::Preprocessing::Unstandardized;
+        recipe.settings.bootstrap_samples = replicates;
+        recipe.settings.seed = seed;
+        recipe.settings.workers = 1;
+        recipe.method_config = Some(MethodConfig::Regression {
+            outcome: "y".into(),
+            predictors: vec!["x".into()],
+            controls: Vec::new(),
+            model,
+            bootstrap: Some(qpls_core::RegressionBootstrapConfig {
+                algorithm: RegressionBootstrapAlgorithm::CaseResampling,
+                intervals: vec![
+                    RegressionBootstrapInterval::Percentile,
+                    RegressionBootstrapInterval::Bca,
+                ],
+            }),
+        });
+        recipe
+    }
+
+    fn regression_bootstrap_test_original(
+        dataset: &Dataset,
+        recipe: &AnalysisRecipe,
+    ) -> (ValidatedExecutionRecipe, PlsResult) {
+        let execution =
+            ValidatedExecutionRecipe::for_dataset(recipe, &dataset.fingerprint.0).unwrap();
+        let point_only = execution.without_outer_resampling().unwrap();
+        let original = estimate_pls_validated_with_control(dataset, &point_only, |_| true).unwrap();
+        (execution, original)
+    }
+
+    fn process_graph_bootstrap_fixture(workers: usize) -> (Dataset, AnalysisRecipe) {
+        let dataset = import_delimited_bytes(
+            include_bytes!("../../../validation/results/process_v2_reference_fixture.csv"),
+            "process-v2-worker-invariance.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../../validation/results/process_v2_reference.recipe.json"
+        ))
+        .unwrap();
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        recipe.settings.bootstrap_samples = 99;
+        recipe.settings.workers = workers;
+        (dataset, recipe)
+    }
+
+    fn multi_path_permutation_fixture(seed: u64) -> (Dataset, AnalysisRecipe, PlsResult) {
+        let dataset = import_delimited_bytes(
+            include_bytes!("../../../validation/fixtures/corporate_reputation.csv"),
+            "corporate_reputation.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe: AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../../validation/fixtures/corporate_reputation.recipe.json"
+        ))
+        .unwrap();
+        recipe = current_recipe(recipe);
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        recipe.settings.permutation_samples = 199;
+        recipe.settings.seed = seed;
+        recipe.method_config = Some(qpls_core::MethodConfig::PlsPermutation);
+        let base_recipe = ValidatedExecutionRecipe::for_dataset(&recipe, &dataset.fingerprint.0)
+            .unwrap()
+            .without_outer_resampling()
+            .unwrap();
+        let original =
+            estimate_pls_validated_with_control(&dataset, &base_recipe, |_| true).unwrap();
+        (dataset, recipe, original)
+    }
+
+    #[test]
+    fn process_graph_v2_case_bootstrap_is_worker_invariant_and_bca_conditional() {
+        let (dataset, recipe_one) = process_graph_bootstrap_fixture(1);
+        let execution_one =
+            ValidatedExecutionRecipe::for_dataset(&recipe_one, &dataset.fingerprint.0).unwrap();
+        let point_one = execution_one.without_outer_resampling().unwrap();
+        let original_one =
+            estimate_pls_validated_with_control(&dataset, &point_one, |_| true).unwrap();
+        let one = bootstrap_process_validated(
+            &dataset,
+            &execution_one,
+            &original_one,
+            1,
+            || false,
+            |_| {},
+        )
+        .unwrap();
+
+        let (_, mut recipe_four) = process_graph_bootstrap_fixture(4);
+        recipe_four.dataset_fingerprint = dataset.fingerprint.0.clone();
+        let execution_four =
+            ValidatedExecutionRecipe::for_dataset(&recipe_four, &dataset.fingerprint.0).unwrap();
+        let point_four = execution_four.without_outer_resampling().unwrap();
+        let original_four =
+            estimate_pls_validated_with_control(&dataset, &point_four, |_| true).unwrap();
+        let four = bootstrap_process_validated(
+            &dataset,
+            &execution_four,
+            &original_four,
+            4,
+            || false,
+            |_| {},
+        )
+        .unwrap();
+        assert_eq!(
+            original_one
+                .regression
+                .as_ref()
+                .unwrap()
+                .process
+                .as_ref()
+                .unwrap()
+                .graph_v2
+                .as_ref(),
+            original_four
+                .regression
+                .as_ref()
+                .unwrap()
+                .process
+                .as_ref()
+                .unwrap()
+                .graph_v2
+                .as_ref(),
+        );
+        let mut normalized_four = four.clone();
+        normalized_four.workers = one.workers;
+        assert_eq!(one, normalized_four);
+        assert_eq!(one.usable_replicates, 99);
+        assert_eq!(one.jackknife_cases, original_one.used_observations);
+        assert!(one.jackknife_cases >= 170);
+        let exact_witness_values = (one.validation_witness.successful_bootstrap.len()
+            + one.validation_witness.successful_jackknife.len())
+            * one.validation_witness.estimand_ids.len();
+        assert!(exact_witness_values > 5_000);
+        assert!(one.estimands.iter().all(|estimand| matches!(
+            estimand.bca,
+            RegressionBootstrapBcaInterval::Available { .. }
+                | RegressionBootstrapBcaInterval::Unavailable { .. }
+        )));
+    }
+
+    #[test]
+    fn process_graph_v2_bootstrap_maps_high_leverage_hc3_failure() {
+        let mapped = process_replicate_error(EstimationError::UnsupportedMethod(
+            "high_leverage_hc3_instability|PROCESS equation Y has unstable leverage".into(),
+        ));
+        assert!(mapped.starts_with("high_leverage_hc3_instability|"));
+        assert!(mapped.contains("PROCESS equation Y has unstable leverage"));
+    }
+
+    #[test]
+    fn process_graph_v2_bootstrap_maps_invalid_hc3_covariance_failure() {
+        let mapped = process_replicate_error(EstimationError::Numerical(
+            "invalid_hc3_covariance|PROCESS equation Y has a negative diagonal".into(),
+        ));
+        assert!(mapped.starts_with("invalid_hc3_covariance|"));
+    }
+
+    #[test]
+    fn process_graph_v2_bootstrap_maps_degenerate_simple_slope_failure() {
+        let mapped = process_replicate_error(EstimationError::Numerical(
+            "degenerate_simple_slope_variance|PROCESS moderation X->Y@W is degenerate".into(),
+        ));
+        assert!(mapped.starts_with("degenerate_simple_slope_variance|"));
+    }
+
+    fn imbalanced_logistic_dataset(minority_cases: usize) -> Dataset {
+        assert_eq!(minority_cases, 1);
+        let outcomes = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        let predictors = [
+            -2.0, -2.0, -2.0, -2.0, -1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0,
+            2.0, 2.0, 2.0, 2.0,
+        ];
+        let mut csv = String::from("y,x\n");
+        for (outcome, predictor) in outcomes.into_iter().zip(predictors) {
+            csv.push_str(&format!("{outcome},{predictor}\n"));
+        }
+        import_delimited_bytes(
+            csv.as_bytes(),
+            &format!("regression-bootstrap-{minority_cases}-minority.csv"),
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap()
+    }
+
+    fn moderately_imbalanced_logistic_dataset() -> Dataset {
+        let mut csv = String::from("y,x\n");
+        for row in 0..40 {
+            let outcome = usize::from(matches!(row, 0 | 6 | 12 | 18 | 24));
+            let predictor = row as i32 % 5 - 2;
+            csv.push_str(&format!("{outcome},{predictor}\n"));
+        }
+        import_delimited_bytes(
+            csv.as_bytes(),
+            "regression-bootstrap-five-minority.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap()
+    }
 
     #[test]
     fn indexed_samples_are_repeatable_and_replicate_specific() {
@@ -1847,6 +3295,16 @@ mod tests {
         let mut sorted = first;
         sorted.sort_unstable();
         assert_eq!(sorted, (0..20).collect::<Vec<_>>());
+
+        let frozen_operation = "pls_pm_freedman_lane_v1:[\"path\",[\"comp\",\"satisfaction\"]]";
+        assert_eq!(
+            permutation_indices(12, 20_260_718, frozen_operation, 0),
+            vec![1, 8, 2, 9, 7, 6, 3, 10, 0, 11, 5, 4]
+        );
+        assert_eq!(
+            permutation_indices(12, 20_260_718, frozen_operation, 98),
+            vec![0, 5, 1, 10, 6, 2, 4, 7, 9, 11, 3, 8]
+        );
     }
 
     #[test]
@@ -2011,10 +3469,13 @@ mod tests {
             "../../../validation/fixtures/simple_reflective.recipe.json"
         ))
         .unwrap();
+        recipe = current_recipe(recipe);
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         recipe.settings.bootstrap_samples = 24;
+        recipe.method_config = Some(qpls_core::MethodConfig::PlsBootstrap);
         let mut base_recipe = recipe.clone();
         base_recipe.settings.bootstrap_samples = 0;
+        base_recipe.method_config = Some(qpls_core::MethodConfig::PlsAlgorithm);
         let original = qpls_estimation::estimate_pls(&dataset, &base_recipe).unwrap();
         let progress = Arc::new(Mutex::new(Vec::new()));
         let serial_progress = progress.clone();
@@ -2130,17 +3591,19 @@ mod tests {
             interactions: Vec::new(),
         };
         let mut recipe = AnalysisRecipe {
-            schema_version: 2,
+            schema_version: qpls_core::ANALYSIS_RECIPE_SCHEMA_VERSION,
             id: Uuid::nil(),
             created_at: Utc::now(),
             dataset_fingerprint: dataset.fingerprint.0.clone(),
             model,
             settings: AnalysisSettings::default(),
+            method_config: Some(qpls_core::MethodConfig::PlsBootstrap),
             metadata: std::collections::BTreeMap::new(),
         };
         recipe.settings.bootstrap_samples = 99;
         let mut base_recipe = recipe.clone();
         base_recipe.settings.bootstrap_samples = 0;
+        base_recipe.method_config = Some(qpls_core::MethodConfig::PlsAlgorithm);
         let original = qpls_estimation::estimate_pls(&dataset, &base_recipe).unwrap();
         let result = bootstrap_pls(&dataset, &recipe, &original, 1, || false, |_| {}).unwrap();
         let indirect_key = parameter_key("indirect_effect", &["x", "y"]);
@@ -2177,10 +3640,15 @@ mod tests {
             "../../../validation/fixtures/simple_reflective.recipe.json"
         ))
         .unwrap();
+        recipe = current_recipe(recipe);
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         let original = qpls_estimation::estimate_pls(&dataset, &recipe).unwrap();
-        let serial = jackknife_pls(&dataset, &recipe, &original, 1, || false, |_| {}).unwrap();
-        let parallel = jackknife_pls(&dataset, &recipe, &original, 4, || false, |_| {}).unwrap();
+        let execution = ValidatedExecutionRecipe::for_dataset(&recipe, &dataset.fingerprint.0)
+            .unwrap()
+            .without_outer_resampling()
+            .unwrap();
+        let serial = jackknife_pls(&dataset, &execution, &original, 1, || false, |_| {}).unwrap();
+        let parallel = jackknife_pls(&dataset, &execution, &original, 4, || false, |_| {}).unwrap();
         assert_eq!(serial, parallel);
         assert_eq!(serial.case_count, original.used_observations);
         assert!(serial.outcomes.iter().enumerate().all(|(index, outcome)| {
@@ -2202,9 +3670,17 @@ mod tests {
             "../../../validation/fixtures/simple_reflective.recipe.json"
         ))
         .unwrap();
+        recipe = current_recipe(recipe);
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         recipe.settings.permutation_samples = 199;
-        let original = qpls_estimation::estimate_pls(&dataset, &recipe).unwrap();
+        recipe.method_config = Some(qpls_core::MethodConfig::PlsPermutation);
+        let base_recipe = ValidatedExecutionRecipe::for_dataset(&recipe, &dataset.fingerprint.0)
+            .unwrap()
+            .without_outer_resampling()
+            .unwrap();
+        let original =
+            qpls_estimation::estimate_pls_validated_with_control(&dataset, &base_recipe, |_| true)
+                .unwrap();
         let serial = permutation_pls(&dataset, &recipe, &original, 1, || false, |_| {}).unwrap();
         let parallel = permutation_pls(&dataset, &recipe, &original, 4, || false, |_| {}).unwrap();
         assert_eq!(serial, parallel);
@@ -2215,6 +3691,201 @@ mod tests {
         assert_eq!(
             serial.parameters[0].p_value_two_sided,
             (serial.parameters[0].exceedances as f64 + 1.0) / 200.0
+        );
+    }
+
+    #[test]
+    fn freedman_lane_reference_seam_matches_orthogonal_multi_predictor_fixture_and_rejects_invalid_indices()
+     {
+        let focal = vec![-1.0, -1.0, -1.0, -1.0, 1.0, 1.0, 1.0, 1.0];
+        let nuisance_a = vec![-1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0];
+        let nuisance_b = vec![-1.0, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0];
+        let outcome = (0..focal.len())
+            .map(|row| {
+                2.0 * focal[row]
+                    + 3.0 * nuisance_a[row]
+                    + 5.0 * nuisance_b[row]
+                    + focal[row] * nuisance_a[row]
+            })
+            .collect::<Vec<_>>();
+        let predictors = vec![focal, nuisance_a, nuisance_b];
+        let reversed = (0..outcome.len()).rev().collect::<Vec<_>>();
+        let estimate =
+            freedman_lane_focal_coefficient(&predictors, &outcome, 0, &reversed).unwrap();
+        assert!((estimate + 2.0).abs() < 1e-12);
+
+        for (focal_index, indices) in [
+            (0, vec![0, 1, 2]),
+            (0, vec![0, 1, 2, 3, 4, 5, 6, 6]),
+            (0, vec![0, 1, 2, 3, 4, 5, 6, 8]),
+            (predictors.len(), reversed.clone()),
+        ] {
+            assert!(matches!(
+                freedman_lane_focal_coefficient(&predictors, &outcome, focal_index, &indices,),
+                Err(PlsPermutationError::Regression(_))
+            ));
+        }
+        let mut inconsistent = predictors.clone();
+        inconsistent[1].pop();
+        assert!(matches!(
+            freedman_lane_focal_coefficient(&inconsistent, &outcome, 0, &reversed),
+            Err(PlsPermutationError::Regression(_))
+        ));
+    }
+
+    #[test]
+    fn pls_freedman_lane_multi_path_is_seeded_worker_invariant_and_progressive() {
+        let seed = 20_260_718;
+        let (dataset, recipe, original) = multi_path_permutation_fixture(seed);
+        let serial_progress = Arc::new(Mutex::new(Vec::new()));
+        let serial_updates = serial_progress.clone();
+        let serial = permutation_pls(
+            &dataset,
+            &recipe,
+            &original,
+            1,
+            || false,
+            |update| serial_updates.lock().unwrap().push(update),
+        )
+        .unwrap();
+        let repeat = permutation_pls(&dataset, &recipe, &original, 1, || false, |_| {}).unwrap();
+        let parallel_progress = Arc::new(Mutex::new(Vec::new()));
+        let parallel_updates = parallel_progress.clone();
+        let parallel = permutation_pls(
+            &dataset,
+            &recipe,
+            &original,
+            4,
+            || false,
+            |update| parallel_updates.lock().unwrap().push(update),
+        )
+        .unwrap();
+        assert_eq!(serial, repeat);
+        assert_eq!(serial, parallel);
+        assert_eq!(serial.parameters.len(), 3);
+        assert_eq!(
+            serial
+                .parameters
+                .iter()
+                .map(|parameter| parameter.parameter.clone())
+                .collect::<Vec<_>>(),
+            original
+                .paths
+                .iter()
+                .map(|path| parameter_key("path", &[&path.source, &path.target]))
+                .collect::<Vec<_>>()
+        );
+        let expected_progress = (1..=recipe.settings.permutation_samples)
+            .map(|completed_replicates| ResamplingProgress {
+                phase: ResamplingPhase::Permutation,
+                completed_replicates,
+                total_replicates: recipe.settings.permutation_samples,
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(*serial_progress.lock().unwrap(), expected_progress);
+        assert_eq!(*parallel_progress.lock().unwrap(), expected_progress);
+
+        let (_, alternate_recipe, alternate_original) = multi_path_permutation_fixture(seed + 1);
+        let alternate = permutation_pls(
+            &dataset,
+            &alternate_recipe,
+            &alternate_original,
+            4,
+            || false,
+            |_| {},
+        )
+        .unwrap();
+        assert_eq!(
+            serial
+                .parameters
+                .iter()
+                .map(|parameter| (&parameter.parameter, parameter.original))
+                .collect::<Vec<_>>(),
+            alternate
+                .parameters
+                .iter()
+                .map(|parameter| (&parameter.parameter, parameter.original))
+                .collect::<Vec<_>>()
+        );
+        assert_ne!(serial.plan.master_seed, alternate.plan.master_seed);
+        let first_parameter = &serial.parameters[0].parameter;
+        let operation = format!("{}:{first_parameter}", serial.plan.operation);
+        assert_ne!(
+            permutation_indices(original.used_observations, seed, &operation, 0),
+            permutation_indices(original.used_observations, seed + 1, &operation, 0)
+        );
+    }
+
+    #[test]
+    fn pls_freedman_lane_multi_path_cancellation_discards_partial_output() {
+        let (dataset, recipe, original) = multi_path_permutation_fixture(20_260_718);
+        let cancelled = Arc::new(AtomicBool::new(false));
+        let cancellation = cancelled.clone();
+        let progress = Arc::new(Mutex::new(Vec::new()));
+        let progress_updates = progress.clone();
+        let cancellation_from_progress = cancelled.clone();
+        let result = permutation_pls(
+            &dataset,
+            &recipe,
+            &original,
+            1,
+            || cancellation.load(Ordering::Relaxed),
+            |update| {
+                progress_updates.lock().unwrap().push(update);
+                if update.completed_replicates == 3 {
+                    cancellation_from_progress.store(true, Ordering::Relaxed);
+                }
+            },
+        );
+        assert!(matches!(
+            result,
+            Err(PlsPermutationError::Resampling(ResamplingError::Cancelled))
+        ));
+        assert_eq!(progress.lock().unwrap().len(), 3);
+    }
+
+    #[test]
+    fn permutation_wire_contract_rejects_unknown_fields() {
+        assert!(
+            serde_json::from_value::<PermutationPlan>(serde_json::json!({
+                "permutations": 99,
+                "master_seed": 7,
+                "operation": "fixture",
+                "undeclared": true
+            }))
+            .is_err()
+        );
+        assert!(
+            serde_json::from_value::<PermutationRun<u32>>(serde_json::json!({
+                "method_version": PERMUTATION_METHOD_VERSION,
+                "plan": {
+                    "permutations": 99,
+                    "master_seed": 7,
+                    "operation": "fixture"
+                },
+                "outcomes": [],
+                "undeclared": true
+            }))
+            .is_err()
+        );
+        assert!(
+            serde_json::from_value::<PlsPermutationResult>(serde_json::json!({
+                "method_version": PERMUTATION_METHOD_VERSION,
+                "plan": {
+                    "permutations": 99,
+                    "master_seed": 7,
+                    "operation": "fixture"
+                },
+                "parameters": [{
+                    "parameter": "path",
+                    "original": 0.5,
+                    "exceedances": 2,
+                    "p_value_two_sided": 0.03,
+                    "permutations": 99,
+                    "undeclared": true
+                }]
+            }))
+            .is_err()
         );
     }
 
@@ -2271,6 +3942,347 @@ mod tests {
     }
 
     #[test]
+    fn regression_bootstrap_summary_freezes_type7_bca_normal_test_and_degenerate_status() {
+        let terms = vec!["intercept".into(), "x".into()];
+        let bootstrap = vec![
+            vec![0.8, -0.6],
+            vec![1.1, -0.4],
+            vec![0.9, -0.55],
+            vec![1.2, -0.45],
+        ];
+        let jackknife = vec![
+            vec![0.95, -0.52],
+            vec![1.05, -0.48],
+            vec![0.98, -0.51],
+            vec![1.02, -0.49],
+        ];
+        let rows = summarize_regression_bootstrap_coefficients(
+            &terms,
+            &[1.0, -0.5],
+            &bootstrap,
+            &jackknife,
+            jackknife.len(),
+            true,
+            0.95,
+        )
+        .unwrap();
+        assert_eq!(rows.len(), 2);
+        assert_eq!(rows[0].term, "intercept");
+        assert!((rows[0].bootstrap_mean - 1.0).abs() < 1e-12);
+        assert!((rows[0].bias - 0.0).abs() < 1e-12);
+        assert_eq!(rows[0].usable_replicates, 4);
+        assert!(matches!(
+            rows[0].test,
+            RegressionBootstrapTest::Available { .. }
+        ));
+        assert!(matches!(
+            rows[0].bca,
+            RegressionBootstrapBcaInterval::Available { .. }
+        ));
+        let odds = rows[0].odds_ratio.as_ref().unwrap();
+        let transformed = [0.8_f64.exp(), 0.9_f64.exp(), 1.1_f64.exp(), 1.2_f64.exp()];
+        assert!((odds.percentile_lower - type7_quantile(&transformed, 0.025)).abs() < 1e-12);
+        assert!((odds.percentile_upper - type7_quantile(&transformed, 0.975)).abs() < 1e-12);
+
+        let degenerate = summarize_regression_bootstrap_coefficients(
+            &["x".into()],
+            &[2.0],
+            &[vec![2.0], vec![2.0], vec![2.0]],
+            &[vec![2.0], vec![2.0], vec![2.0]],
+            3,
+            false,
+            0.95,
+        )
+        .unwrap();
+        assert!(matches!(
+            &degenerate[0].test,
+            RegressionBootstrapTest::Unavailable { reason_code, message }
+                if reason_code == "degenerate_bootstrap_standard_error" && !message.is_empty()
+        ));
+        assert!(matches!(
+            &degenerate[0].bca,
+            RegressionBootstrapBcaInterval::Unavailable { reason_code, .. }
+                if reason_code == "degenerate_jackknife_acceleration"
+        ));
+        assert!(
+            summarize_regression_bootstrap_coefficients(
+                &["x".into()],
+                &[1.0],
+                &[vec![1.0, 2.0], vec![1.1, 2.1]],
+                &[],
+                0,
+                false,
+                0.95,
+            )
+            .is_err()
+        );
+
+        let incomplete = summarize_regression_bootstrap_coefficients(
+            &["x".into()],
+            &[1.0],
+            &[vec![0.8], vec![1.0], vec![1.2]],
+            &[vec![0.9], vec![1.0], vec![1.1]],
+            4,
+            false,
+            0.95,
+        )
+        .unwrap();
+        assert!(matches!(
+            &incomplete[0].bca,
+            RegressionBootstrapBcaInterval::Unavailable { reason_code, .. }
+                if reason_code == "incomplete_jackknife"
+        ));
+    }
+
+    #[test]
+    fn regression_bootstrap_failure_boundary_listwise_complete_cases_are_the_only_sampling_frame() {
+        let dataset = import_delimited_bytes(
+            b"y,x,unused\n1.1,1,10\n2.0,2,11\n3.2,3,12\n4.1,NA,13\n5.3,5,14\n6.0,6,15\n7.4,7,16\n8.2,8,17\n9.1,9,18\nNA,10,19\n11.3,11,20\n12.0,12,21\n13.2,13,22\n14.1,14,NA\n",
+            "regression-bootstrap-listwise.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let recipe = regression_bootstrap_test_recipe(
+            &dataset,
+            RegressionModelConfig::Ols {
+                robust_se: qpls_core::RobustStandardError::Hc3,
+            },
+            99,
+            4201,
+        );
+        let positions = [
+            dataset.batch.schema().index_of("y").unwrap(),
+            dataset.batch.schema().index_of("x").unwrap(),
+        ];
+        let complete_rows = complete_case_rows_at_positions(&dataset, &positions);
+        assert_eq!(complete_rows, vec![0, 1, 2, 4, 5, 6, 7, 8, 10, 11, 12, 13]);
+        let (execution, original) = regression_bootstrap_test_original(&dataset, &recipe);
+        assert_eq!(original.used_observations, complete_rows.len());
+        assert_eq!(original.omitted_observations, 2);
+
+        let bootstrap =
+            bootstrap_regression_validated(&dataset, &execution, &original, 1, || false, |_| {})
+                .unwrap();
+        assert_eq!(bootstrap.jackknife_cases, complete_rows.len());
+        assert_eq!(bootstrap.usable_jackknife_cases, complete_rows.len());
+        assert_eq!(bootstrap.usable_replicates, 99);
+        assert!(bootstrap.failed_replicates.is_empty());
+
+        for replicate_index in 0..bootstrap.requested_replicates {
+            let sampled_raw_rows = bootstrap_indices(
+                complete_rows.len(),
+                recipe.settings.seed,
+                "regression_ols_case_bootstrap_v1",
+                replicate_index,
+            )
+            .into_iter()
+            .map(|position| complete_rows[position])
+            .collect::<Vec<_>>();
+            assert_eq!(sampled_raw_rows.len(), complete_rows.len());
+            assert!(
+                sampled_raw_rows
+                    .iter()
+                    .all(|row| complete_rows.contains(row) && !matches!(*row, 3 | 9))
+            );
+        }
+    }
+
+    #[test]
+    fn regression_bootstrap_failure_boundary_captures_zero_based_single_class_replicates() {
+        let dataset = moderately_imbalanced_logistic_dataset();
+        let recipe =
+            regression_bootstrap_test_recipe(&dataset, RegressionModelConfig::Logistic, 99, 9103);
+        let (execution, original) = regression_bootstrap_test_original(&dataset, &recipe);
+        let outcomes = (0..dataset.batch.num_rows())
+            .map(|row| numeric_value(dataset.batch.column(0).as_ref(), row).unwrap())
+            .collect::<Vec<_>>();
+        let expected_single_class_indices = (0..recipe.settings.bootstrap_samples)
+            .filter(|replicate_index| {
+                let sampled = bootstrap_indices(
+                    outcomes.len(),
+                    recipe.settings.seed,
+                    "regression_logistic_case_bootstrap_v1",
+                    *replicate_index,
+                );
+                sampled
+                    .iter()
+                    .all(|position| outcomes[*position] == outcomes[sampled[0]])
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(expected_single_class_indices, vec![7]);
+
+        let bootstrap =
+            bootstrap_regression_validated(&dataset, &execution, &original, 1, || false, |_| {})
+                .unwrap();
+        let captured = bootstrap
+            .failed_replicates
+            .iter()
+            .filter(|failure| failure.reason_code == "single_class_resample")
+            .map(|failure| {
+                (
+                    failure.replicate_index,
+                    failure.reason_code.as_str(),
+                    failure.message.as_str(),
+                )
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            captured,
+            expected_single_class_indices
+                .iter()
+                .map(|index| (
+                    *index,
+                    "single_class_resample",
+                    "unsupported estimation method: logistic regression outcome must contain both 0 and 1 after listwise deletion",
+                ))
+                .collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn regression_bootstrap_failure_boundary_rejects_below_ninety_percent_usable() {
+        let dataset = imbalanced_logistic_dataset(1);
+        let recipe =
+            regression_bootstrap_test_recipe(&dataset, RegressionModelConfig::Logistic, 99, 9101);
+        let (execution, original) = regression_bootstrap_test_original(&dataset, &recipe);
+        let error =
+            bootstrap_regression_validated(&dataset, &execution, &original, 1, || false, |_| {})
+                .unwrap_err();
+        let RegressionBootstrapError::InsufficientUsableReplicates { usable, required } = error
+        else {
+            panic!("expected the 90% usable-replicate gate, got {error}")
+        };
+        assert_eq!(required, 90);
+        assert!(usable < required, "usable={usable}, required={required}");
+    }
+
+    #[test]
+    fn regression_bootstrap_failure_boundary_real_delete_one_failure_disables_all_bca() {
+        let dataset = imbalanced_logistic_dataset(1);
+        let recipe =
+            regression_bootstrap_test_recipe(&dataset, RegressionModelConfig::Logistic, 99, 9101);
+        let (execution, original) = regression_bootstrap_test_original(&dataset, &recipe);
+        let point_only = execution.without_outer_resampling().unwrap();
+        let regression = original.regression.as_ref().unwrap();
+        let terms = regression
+            .coefficients
+            .iter()
+            .map(|coefficient| coefficient.term.clone())
+            .collect::<Vec<_>>();
+        let complete_rows = (0..dataset.batch.num_rows()).collect::<Vec<_>>();
+        let jackknife = run_jackknife(
+            complete_rows.len(),
+            "regression_logistic_case_jackknife_v1",
+            1,
+            |omitted_case| {
+                let raw_indices = complete_rows
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(position, raw)| (position != omitted_case).then_some(*raw))
+                    .collect::<Vec<_>>();
+                let estimate = estimate_regression_case_resample_validated_with_control(
+                    &dataset,
+                    &point_only,
+                    &raw_indices,
+                    |_| true,
+                )
+                .map_err(regression_replicate_error)?;
+                let resampled = estimate.regression.ok_or_else(|| {
+                    "missing_regression_payload|delete-one estimate omitted regression output"
+                        .to_string()
+                })?;
+                if resampled
+                    .coefficients
+                    .iter()
+                    .zip(&terms)
+                    .any(|(coefficient, expected)| {
+                        coefficient.term != *expected || !coefficient.estimate.is_finite()
+                    })
+                {
+                    return Err(
+                        "inconsistent_replicate|delete-one coefficient identity or value is invalid"
+                            .to_string(),
+                    );
+                }
+                Ok(resampled
+                    .coefficients
+                    .iter()
+                    .map(|coefficient| coefficient.estimate)
+                    .collect::<Vec<_>>())
+            },
+            || false,
+            |_| {},
+        )
+        .unwrap();
+        let failures = jackknife
+            .outcomes
+            .iter()
+            .enumerate()
+            .filter_map(|(omitted_case, outcome)| match outcome {
+                ReplicateOutcome::Failed { message } => {
+                    let (reason_code, message) = split_regression_failure(message);
+                    Some((omitted_case, reason_code, message))
+                }
+                ReplicateOutcome::Success { .. } => None,
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            failures,
+            vec![(
+                9,
+                "single_class_resample".to_string(),
+                "unsupported estimation method: logistic regression outcome must contain both 0 and 1 after listwise deletion".to_string(),
+            )]
+        );
+        let successful_jackknife = jackknife
+            .outcomes
+            .iter()
+            .filter_map(|outcome| match outcome {
+                ReplicateOutcome::Success { value } => Some(value.clone()),
+                ReplicateOutcome::Failed { .. } => None,
+            })
+            .collect::<Vec<_>>();
+        let point = regression
+            .coefficients
+            .iter()
+            .map(|coefficient| coefficient.estimate)
+            .collect::<Vec<_>>();
+        let deterministic_bootstrap = (0..99)
+            .map(|replicate| {
+                point
+                    .iter()
+                    .enumerate()
+                    .map(|(term, estimate)| {
+                        estimate + ((replicate % 11) as f64 - 5.0) * 0.002 * (term + 1) as f64
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>();
+        let summaries = summarize_regression_bootstrap_coefficients(
+            &terms,
+            &point,
+            &deterministic_bootstrap,
+            &successful_jackknife,
+            jackknife.case_count,
+            true,
+            0.95,
+        )
+        .unwrap();
+        assert!(summaries.iter().all(|row| {
+            matches!(
+                &row.bca,
+                RegressionBootstrapBcaInterval::Unavailable { reason_code, message }
+                    if reason_code == "incomplete_jackknife" && !message.is_empty()
+            ) && matches!(
+                row.odds_ratio.as_ref().map(|odds| &odds.bca),
+                Some(RegressionBootstrapBcaInterval::Unavailable { reason_code, message })
+                    if reason_code == "incomplete_jackknife" && !message.is_empty()
+            )
+        }));
+    }
+
+    #[test]
     fn studentized_interval_matches_reversed_pivot_quantiles() {
         let interval =
             studentized_interval(10.0, 2.0, &[-2.0, -1.0, 0.0, 1.0, 2.0], 0.8, 12.0).unwrap();
@@ -2302,6 +4314,7 @@ mod tests {
             "../../../validation/fixtures/simple_reflective.recipe.json"
         ))
         .unwrap();
+        recipe = current_recipe(recipe);
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         let original = qpls_estimation::estimate_pls(&dataset, &recipe).unwrap();
         let estimate = PlsBootstrapEstimate {
@@ -2356,10 +4369,12 @@ mod tests {
             "../../../validation/fixtures/simple_reflective.recipe.json"
         ))
         .unwrap();
+        recipe = current_recipe(recipe);
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         let original = qpls_estimation::estimate_pls(&dataset, &recipe).unwrap();
         recipe.settings.bootstrap_samples = 998;
         recipe.settings.studentized_inner_samples = 99;
+        recipe.method_config = Some(qpls_core::MethodConfig::PlsBootstrap);
         assert!(matches!(
             bootstrap_pls(&dataset, &recipe, &original, 1, || false, |_| {}),
             Err(PlsBootstrapError::InvalidStudentizedPlan)
@@ -2403,6 +4418,42 @@ mod tests {
     }
 
     #[test]
+    fn process_graph_v2_unavailable_inference_uses_process_specific_tokens() {
+        let ids = vec!["direct:X->Y".to_string()];
+        let bootstrap = vec![vec![0.5]; 99];
+        let jackknife = vec![vec![0.5]; 8];
+        let summaries =
+            summarize_process_bootstrap_estimands(&ids, &[0.5], &bootstrap, &jackknife, 8, 0.95)
+                .unwrap();
+        assert_eq!(summaries.len(), 1);
+        assert!(matches!(
+            &summaries[0].test,
+            RegressionBootstrapTest::Unavailable { reason_code, .. }
+                if reason_code == "zero_bootstrap_standard_error"
+        ));
+        assert!(matches!(
+            &summaries[0].bca,
+            RegressionBootstrapBcaInterval::Unavailable { reason_code, .. }
+                if reason_code == "zero_jackknife_variance"
+        ));
+
+        let incomplete = summarize_process_bootstrap_estimands(
+            &ids,
+            &[0.5],
+            &bootstrap,
+            &jackknife[..7],
+            8,
+            0.95,
+        )
+        .unwrap();
+        assert!(matches!(
+            &incomplete[0].bca,
+            RegressionBootstrapBcaInterval::Unavailable { reason_code, .. }
+                if reason_code == "incomplete_jackknife"
+        ));
+    }
+
+    #[test]
     fn missing_data_bootstrap_uses_the_fixed_complete_case_sample() {
         let mut csv = String::from("x1,x2,y1,y2\n");
         for row in 1..=30 {
@@ -2428,6 +4479,7 @@ mod tests {
             "../../../validation/fixtures/simple_reflective.recipe.json"
         ))
         .unwrap();
+        recipe = current_recipe(recipe);
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         let complete_rows = complete_case_rows(&dataset, &recipe);
         let original = qpls_estimation::estimate_pls(&dataset, &recipe).unwrap();
@@ -2442,7 +4494,13 @@ mod tests {
                 .collect::<Vec<_>>();
             let sampled =
                 resample_model_dataset(&dataset, &recipe, &raw_indices, &|| false).unwrap();
-            let estimate = qpls_estimation::estimate_pls(&sampled, &recipe).unwrap();
+            let execution =
+                ValidatedExecutionRecipe::for_dataset(&recipe, &dataset.fingerprint.0).unwrap();
+            let estimate =
+                qpls_estimation::estimate_pls_validated_with_control(&sampled, &execution, |_| {
+                    true
+                })
+                .unwrap();
             assert_eq!(estimate.used_observations, original.used_observations);
             assert_eq!(estimate.omitted_observations, 0);
         }

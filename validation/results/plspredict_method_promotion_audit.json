@@ -1,28 +1,42 @@
 {
-  "schema_version": 1,
-  "target": "v1_2_1_second_batch_method_promotion",
-  "method_id": "plspredict",
-  "promoted_scope": "Deterministic PLSpredict holdout, repeated k-fold, construct-score LM benchmark, Q2 predict, RMSE/MAE, and bounded CVPAT diagnostics.",
+  "kind": "plspredict_indicator_v2_method_promotion_audit",
   "passed": true,
-  "reports": [
+  "promotion_status": "packaged_native_validated_bounded_scope",
+  "checks": [
     {
-      "path": "validation\\results\\plspredict_holdout_reference_report.json",
-      "present": true,
-      "passed": true
+      "name": "independent_indicator_and_cvpat_reference",
+      "passed": true,
+      "detail": "The independent Python oracle reproduces the seeded SHA-256 10x10 plan, train-only recursive indicator prediction, IA/LM metrics, and one-sided paired CVPAT statistics."
     },
     {
-      "path": "validation\\results\\prediction_heterogeneity_publication_audit.json",
-      "present": true,
-      "passed": true
-    }
-  ],
-  "docs": [
+      "name": "current_engine_and_validation_contract",
+      "passed": true,
+      "detail": "The executable v2 engine uses the exact versioned fold/CVPAT contract and blocks unsupported endogenous, missing-data, resampling, interaction, HOC, and case-weight shapes."
+    },
     {
-      "path": "docs\\methods\\PLSPREDICT_HOLDOUT_V1.md",
-      "present": true,
-      "bytes": 6702
+      "name": "strict_archive_and_legacy_boundary",
+      "passed": true,
+      "detail": "Current v2 results append/save/reopen only after strict payload validation; v1 construct-score archives remain readable and visibly legacy without being accepted as new v2 evidence."
+    },
+    {
+      "name": "native_results_and_export_are_indicator_first",
+      "passed": true,
+      "detail": "Native Results default to indicator prediction, show explicit IA/LM availability and single-model CVPAT, preserve blank unavailable numerics with reasons, and export the exact fold digest/provenance."
+    },
+    {
+      "name": "genuine_packaged_native_workflow",
+      "passed": true,
+      "detail": "A genuine packaged Tauri run must visibly author the model, run v2, capture active progress, inspect indicator/CVPAT tables, create a native XLSX, and reopen the exact saved result."
+    },
+    {
+      "name": "bounded_scope_and_legacy_docs",
+      "passed": true,
+      "detail": "The current method note documents the exact fixed indicator/CVPAT scope and the v1 note remains archive-only rather than being relabeled as current evidence."
     }
   ],
-  "checks": [],
-  "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."
+  "limitations": [
+    "The fixed seeded 10x10 plan is independently implemented and does not reproduce SmartPLS random fold assignments.",
+    "CVPAT compares one fitted PLS model with IA and LM benchmarks; separately saved-model comparison remains outside this workflow.",
+    "Formative endogenous constructs, HOCs, interactions, case weights, non-listwise missing-data handling, and external inference mixing remain unsupported."
+  ]
 }

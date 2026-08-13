@@ -2,8 +2,16 @@
   "kind": "v06_group_methods_reference",
   "sections": {
     "groups": {
-      "micom_constructs": 3,
-      "max_mga_difference": 1.3959928789199458
+      "group_a": "A",
+      "group_b": "B",
+      "group_a_observations": 60,
+      "group_b_observations": 60,
+      "group_methods": "mga_permutation",
+      "mga_method_version": "pls_mga_two_group_v1",
+      "permutation_method_version": "pls_mga_permutation_v1",
+      "usable_permutations": 99,
+      "max_abs_path_difference": 1.3959928789199458,
+      "micom_execution_enabled": false
     },
     "pos": {
       "segments": 3,

@@ -10,6 +10,7 @@ export function StatusBar() {
   const dataset = useWorkspace((state) => state.dataset);
   const settings = useWorkspace((state) => state.analysisSettings);
   const projectPath = useWorkspace((state) => state.projectPath);
+  const desktopCommandStatus = useWorkspace((state) => state.desktopCommandStatus);
   const setShortcutOverlayOpen = useWorkspace((state) => state.setShortcutOverlayOpen);
   const issues = validateModel(nodes, edges);
   const readiness = analysisReadiness({ dataset, nodes, edges, settings, nativeDesktop: isNativeDesktop() });
@@ -23,6 +24,11 @@ export function StatusBar() {
     </span>
     <span><Database size={14} />{dataset.rows.length} rows</span><span>{nodes.length} constructs</span><span>{structuralPathCount} paths</span>
     <span>{projectPath ? "Autosave active" : "Save project to enable autosave"}</span>
+    {desktopCommandStatus ? (
+      <span className={`status-command-feedback ${desktopCommandStatus.tone}`} title={desktopCommandStatus.detail}>
+        {desktopCommandStatus.label}: {desktopCommandStatus.detail}
+      </span>
+    ) : null}
     <span className="status-spacer" /><button className="status-link" onClick={() => setShortcutOverlayOpen(true)}>Shortcuts ?</button><span><WifiOff size={14} />Offline mode</span><span>Validated documented scopes</span>
   </footer>;
 }

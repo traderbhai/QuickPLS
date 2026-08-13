@@ -28,9 +28,14 @@
   ],
   "docs": [
     {
+      "path": "docs\\methods\\PLSC_V2.md",
+      "present": true,
+      "bytes": 3482
+    },
+    {
       "path": "docs\\methods\\PLSC_V1.md",
       "present": true,
-      "bytes": 1763
+      "bytes": 1261
     },
     {
       "path": "docs\\methods\\PLS_RHO_A_V1.md",

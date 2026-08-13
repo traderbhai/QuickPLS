@@ -1,37 +1,38 @@
 {
   "checks": {
-    "loading_delta": 0.0,
+    "loading_delta": 5.551115123125783e-16,
     "method_version": true,
-    "path_delta": 4.574118861455645e-14,
+    "path_delta": 2.7977620220553945e-14,
     "plsc_payload_version": true,
-    "r2_delta": 0.0,
-    "rho_a_delta": 7.771561172376096e-16
+    "r2_delta": 3.9246383920499284e-14,
+    "rho_a_delta": 4.551914400963142e-15,
+    "rho_a_method_version": true
   },
-  "kind": "plsc_reference_v1",
+  "kind": "plsc_reference_v2",
   "passed": true,
   "quickpls": {
-    "method_version": "plsc_v1",
+    "method_version": "plsc_v2",
     "paths": [
       {
-        "coefficient": 0.5345416989533425,
+        "coefficient": 0.37608577626235473,
         "source": "x",
         "target": "y"
       },
       {
-        "coefficient": 0.5973690934120451,
+        "coefficient": 0.3987951324293336,
         "source": "z",
         "target": "y"
       }
     ],
     "r_squared": {
-      "y": 1.0
+      "y": 0.4032435686317305
     },
     "rho_a": {
-      "x": 0.5722690825793687,
-      "y": 0.5726251955661182,
-      "z": 0.572484210385336
+      "x": 0.9948937003247046,
+      "y": 0.9928210487094147,
+      "z": 0.9941985046855688
     }
   },
-  "schema_version": 1,
+  "schema_version": 2,
   "tolerance": 1e-06
 }

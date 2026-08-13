@@ -69,29 +69,28 @@ Update the app so researcher-ready methods appear without experimental watermark
 
 Current enforcement pass:
 
-- PLS core, documented PLS assessment/inference scope, standalone PCA, OLS, second-batch PLS/prediction/NCA methods, and v1.2.2 group/prediction/regression methods are eligible for validated product status.
+- PLS core, documented PLS assessment/inference scope, standalone PCA, OLS, second-batch PLS/prediction methods, and v1.2.2 group/prediction/regression methods are eligible for validated product status within their evidence-backed bounds. Corrected NCA v2, standalone PCA v1, and bounded OLS v1 now have genuine packaged execution, native XLSX, canonical save, and same-run reopen evidence; none of those claims extends beyond its documented model-free scope.
 - The broad Regression method remains setting-aware: OLS, logistic, and bounded PROCESS mediation/moderation are validated; PROCESS moderated mediation remains experimental.
 - Higher-order constructs, nonlinear effects, endogeneity, CCA, CTA-PLS, PLS moderated mediation, CB-SEM/CFA, and GSCA are validated only for the bounded v1.2.3/v1.2.4 scopes listed below.
 - Newly generated result warnings and export tables must not mark an unpromoted method as validated.
 
 ## v1.2.1 Second Batch
 
-The second promotion batch is validated for bounded scopes:
+The second promotion batch retains validated bounded numerical scopes. Bounded IPMA, NCA v2, and current indicator-level prediction promotion require independent numerical/reference evidence, strict archive contracts, genuine packaged runs, native XLSX export, explicit save, and same-run reopen:
 
 - PLS mediation effect decomposition with validated indirect-effect inference.
 - Two-stage moderation with one generated product-score interaction and validated interaction inference.
 - Reflective-only PLSc with path/factor weighting.
 - Positive case-weighted reflective WPLS with standardized preprocessing and path/factor weighting.
-- Bounded IPMA/cIPMA using PLS total effects and standardized-score performance.
-- Deterministic PLSpredict holdout, repeated k-fold, LM benchmark, Q2 predict, RMSE/MAE, and bounded CVPAT diagnostics.
-- Numeric X/Y NCA with CE-FDH and CR-FDH ceilings, deterministic permutation p values, and bottleneck tables.
+- Bounded IPMA using predecessor total effects and observed-range standardized-score performance; numerical/reference, strict persistence, native UI, packaged execution, XLSX export, and save/reopen contracts pass. Theoretical-range correction and cIPMA remain unsupported.
+- PLSpredict / CVPAT v2 with train-only reflective endogenous-indicator prediction, a fixed seeded balanced 10-fold plan repeated 10 times, IA and LM benchmarks, Q²_predict, RMSE/MAE/MAPE, and one-sided 95% aggregate benchmark tests. Construct scores and the modulo-4 holdout are supplementary; folds are independently fixed rather than SmartPLS-randomized, and separate saved-model comparison remains unsupported. `plspredict_holdout_v1` is archive-readable legacy output only.
+- Numeric X/Y NCA v2 with record-high CE-FDH peers, CR-FDH regression through those peers, seeded permutation p values, status-bearing observed-range bottlenecks, strict append/save/reopen validation, and packaged setup/results/XLSX/reopen acceptance. The former nca_v1 result is legacy-only.
 
 ## v1.2.2 Group, Prediction, And Regression Batch
 
-The third promotion batch is validated for bounded scopes:
+The third promotion batch retains these validated bounded scopes:
 
-- MICOM for exactly two observed groups with configural, compositional, mean, and variance permutation diagnostics.
-- Two-group permutation MGA with deterministic group-label permutation and MICOM warning enforcement.
+- MICOM v2 plus two-group permutation MGA v2 with explicit ordered groups, 5,000–10,000 usable deterministic label permutations, group-specific path/loading/weight re-estimation, MICOM Steps 1–3, strict result persistence, native table-only export, and packaged save/reopen evidence. Historical `micom_v1` remains withdrawn.
 - Deterministic PLS-POS with 2-5 segments, deterministic starts, objective history, memberships, segment paths, and segment R2.
 - Bounded deterministic 2-3 class FIMIX-PLS with probabilities, memberships, information criteria, entropy, and no unrestricted EM/FIMIX parity claim.
 - Binary numeric complete-case logistic regression with deterministic IRLS, Wald tests, odds ratios, probabilities, log-likelihood, pseudo-R2, AIC, and BIC.
@@ -114,10 +113,10 @@ Bootstrap decision rules, unrestricted nonlinear SEM, broad HOC variants, and fu
 
 The fifth promotion batch is validated for bounded scopes:
 
-- Raw-data single-group reflective CFA/SEM ML with marker identification, lavaan parity fixtures, standardized solutions, residuals, fit indices, and modification-index diagnostics.
-- Bounded deterministic GSCA component-model output for reflective/formative blocks, recursive paths, weights, loadings, scores, R2, and FIT/AFIT/GFI-style diagnostics.
+- Raw-data single-group reflective measurement-only CFA or recursive SEM ML with marker identification, lavaan parity fixtures, standardized and unstandardized parameters, residual matrices, fit indices, and residual-based modification screening. Packaged native execution, XLSX export, strict typed persistence, and same-run reopen are accepted for this bounded scope.
+- Bounded `gsca_als_v2` joint global least-squares ALS for listwise-standardized raw data, disjoint reflective/formative blocks, and recursive single-group paths. Evidence covers weights, loadings, paths, R2, objective, FIT/adjusted/local FIT, GFI, SRMR, convergence, independent numerical comparison, genuine packaged execution, native XLSX, strict typed persistence, and same-run reopen. Historical `gsca_v1` remains legacy preview-only.
 
-CB-SEM bootstrap, unrestricted multigroup/invariance, robust/ordinal/FIML estimators, broad constraints, and unrestricted GSCA variants remain experimental or unsupported.
+CB-SEM mean structures, bootstrap, unrestricted multigroup/invariance, robust/ordinal/FIML estimators, controls, interactions, higher-order constructs, broad constraints, GSCA score export, GSCA inference, and unrestricted GSCA variants remain experimental or unsupported.
 
 ## Gate
 

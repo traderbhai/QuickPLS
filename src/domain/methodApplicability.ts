@@ -51,6 +51,7 @@ const categories: Record<AnalysisMethodId, MethodCategory> = {
   cbsem: "core_model_estimation",
   gsca: "core_model_estimation",
   bootstrap: "inference_add_on",
+  permutation: "inference_add_on",
   cca: "assessment_diagnostics",
   cta_pls: "assessment_diagnostics",
   endogeneity: "assessment_diagnostics",
@@ -67,6 +68,7 @@ const categories: Record<AnalysisMethodId, MethodCategory> = {
 const outputMap: Record<AnalysisMethodId, string[]> = {
   pls_pm: ["paths", "loadings / weights", "R²", "effects", "quality diagnostics"],
   bootstrap: ["bootstrap standard errors", "p values", "confidence intervals"],
+  permutation: ["structural path coefficients", "exceedance counts", "raw two-sided plus-one p values"],
   plsc: ["consistent PLS corrected paths", "corrected loadings", "corrected R²"],
   wpls: ["weighted paths", "weighted loadings", "weighted R²"],
   cca: ["composite residual diagnostics", "reproduced correlations"],
@@ -163,6 +165,14 @@ function evaluateOne(method: MethodDefinition & { id: AnalysisMethodId }, input:
       status = failed(checks) ? "needs_setup" : "available";
       reason = failed(checks) ? firstFailure(checks).detail : "Use as an inference add-on after the base estimator is ready.";
       nextActionLabel = failed(checks) ? firstFailure(checks).actionLabel ?? "Complete setup" : "Enable bootstrap";
+      break;
+    case "permutation":
+      checks = [base.runtime, raw, ...sem, numericIndicators, structuralPathCheck(shape)];
+      status = failed(checks) ? "needs_setup" : "experimental";
+      reason = failed(checks)
+        ? firstFailure(checks).detail
+        : "Candidate fixed-score Freedman-Lane inference is available for the current structural paths; p values are raw and unadjusted for multiplicity.";
+      nextActionLabel = failed(checks) ? firstFailure(checks).actionLabel ?? "Complete setup" : "Setup path randomization";
       break;
     case "plsc":
       checks = [base.runtime, raw, ...sem, numericIndicators, reflective];
@@ -337,8 +347,8 @@ function regressionCheck(input: MethodApplicabilityInput): RequirementCheck {
   if (input.settings.regressionType === "logistic" && !isBinaryColumn(input.dataset, outcome, metadataFor(input.dataset, outcome))) {
     return fail("logistic-binary", "Binary outcome", "Logistic regression requires a binary 0/1 or two-level outcome.", "Choose binary outcome", "analyses");
   }
-  if (input.settings.regressionType === "process" && input.settings.processModel === "moderated_mediation") {
-    return fail("process-scope", "PROCESS scope", "Moderated mediation remains excluded from the validated PROCESS-style scope.", "Choose mediation or moderation", "analyses");
+  if (input.settings.regressionType === "process" && !input.settings.processGraph) {
+    return fail("process-scope", "PROCESS scope", "New PROCESS work requires an explicit graph-defined v2 relationship; historical generated v1 templates are archive-only.", "Author PROCESS graph", "analyses");
   }
   return pass("regression-variables", "Regression variables", "Required regression variables are selected and numeric-compatible.");
 }

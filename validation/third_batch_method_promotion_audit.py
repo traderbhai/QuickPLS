@@ -37,6 +37,7 @@ def main() -> int:
             "path": str(path.relative_to(ROOT)),
             "present": present,
             "passed": value.get("passed") is True,
+            "promotion_status": value.get("promotion_status"),
         })
     registry = load(ROOT / "validation" / "development_slices.json")
     slices = {item["id"]: item for item in registry["slices"]}
@@ -49,9 +50,10 @@ def main() -> int:
         "target": TARGET,
         "passed": passed,
         "artifacts": artifacts,
+        "micom_status": "validated_micom_v2_bounded_scope",
         "registry_gate_present": gate_present,
         "registry_gate_all_passed": gate_all_passed,
-        "note": "Third-batch promotion is bounded to documented scopes; CB-SEM/CFA, GSCA, HOC, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation remain experimental.",
+        "note": "The aggregate requires the bounded MICOM v2 plus permutation-MGA v2 scientific, persistence, native product, XLSX export, and packaged reopen evidence while retaining micom_v1 as legacy-only.",
     }, indent=2) + "\n", encoding="utf-8")
     print(f"wrote {OUTPUT} | passed={passed}")
     return 0 if passed else 1

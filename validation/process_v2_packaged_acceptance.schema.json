@@ -1,0 +1,645 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/process-v2-packaged-acceptance.schema.json",
+  "title": "QuickPLS graph-defined PROCESS v2 packaged acceptance evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "kind", "passed", "generated_at_utc", "completed_at_utc",
+    "feature_id", "method_version", "bootstrap_method_version",
+    "catalogue_snapshot_date", "target", "runtime", "endpoint", "generator",
+    "tested_product", "checks", "artifacts", "console_errors", "failures",
+    "source_report"
+  ],
+  "properties": {
+    "schema_version": { "const": "quickpls.packaged_acceptance.v1" },
+    "kind": { "const": "quickpls3_scoped_tauri_process_v2_acceptance" },
+    "passed": { "type": "boolean" },
+    "generated_at_utc": { "type": "string", "format": "date-time" },
+    "completed_at_utc": { "type": ["string", "null"], "format": "date-time" },
+    "feature_id": { "const": "qpls3.standalone.process" },
+    "method_version": { "const": "regression_process_v2" },
+    "bootstrap_method_version": { "const": "regression_process_bootstrap_v1" },
+    "catalogue_snapshot_date": { "const": "2026-08-12" },
+    "target": { "const": "windows_10_11_x64_packaged_tauri" },
+    "runtime": { "const": "tauri-webview2-cdp" },
+    "endpoint": { "type": "string", "pattern": "^http://127\\.0\\.0\\.1:[0-9]+$" },
+    "generator": { "const": "validation/v247_tauri_native_acceptance.mjs" },
+    "tested_product": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["qpls_cli_exe", "quickpls_desktop_exe", "dist_bundle"],
+      "properties": {
+        "qpls_cli_exe": { "$ref": "#/$defs/testedCliExecutable" },
+        "quickpls_desktop_exe": { "$ref": "#/$defs/testedDesktopExecutable" },
+        "dist_bundle": { "$ref": "#/$defs/distBundle" }
+      }
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runtime_preflight", "workflow", "setup", "results", "export", "save_reopen",
+        "cancellation", "cancelled_retry_setup", "witness_boundary", "resource_reset", "resources"
+      ],
+      "properties": {
+        "runtime_preflight": { "$ref": "#/$defs/runtimePreflight" },
+        "workflow": { "$ref": "#/$defs/workflow" },
+        "setup": { "$ref": "#/$defs/setup" },
+        "results": { "$ref": "#/$defs/results" },
+        "export": { "$ref": "#/$defs/export" },
+        "save_reopen": { "$ref": "#/$defs/saveReopen" },
+        "cancellation": { "$ref": "#/$defs/cancellation" },
+        "cancelled_retry_setup": { "$ref": "#/$defs/cancelledRetrySetup" },
+        "witness_boundary": { "$ref": "#/$defs/witnessBoundary" },
+        "resource_reset": { "$ref": "#/$defs/resourceReset" },
+        "resources": { "$ref": "#/$defs/resources" }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["xlsx", "project_archive", "resource_report", "resource_samples", "resource_phases", "resource_phase_snapshots", "screenshots"],
+      "properties": {
+        "xlsx": { "anyOf": [{ "$ref": "#/$defs/artifact" }, { "type": "null" }] },
+        "project_archive": { "anyOf": [{ "$ref": "#/$defs/artifact" }, { "type": "null" }] },
+        "resource_report": { "$ref": "#/$defs/artifact" },
+        "resource_samples": { "$ref": "#/$defs/artifact" },
+        "resource_phases": { "$ref": "#/$defs/artifact" },
+        "resource_phase_snapshots": {
+          "type": "array", "minItems": 5, "maxItems": 5, "uniqueItems": true,
+          "items": { "$ref": "#/$defs/artifact" }
+        },
+        "screenshots": { "type": "array", "minItems": 5, "items": { "$ref": "#/$defs/artifact" } }
+      }
+    },
+    "console_errors": { "type": "array", "maxItems": 0 },
+    "failures": { "type": "array", "maxItems": 0 },
+    "source_report": { "const": "validation/results/v247_tauri_native_acceptance_process_v2.json" }
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "size", "sha256"],
+      "properties": {
+        "path": { "type": "string", "pattern": "^validation/results/" },
+        "size": { "type": "integer", "minimum": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "testedDesktopExecutable": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "size", "sha256"],
+      "properties": {
+        "path": { "const": "target/release/quickpls-desktop.exe" },
+        "size": { "type": "integer", "minimum": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "testedCliExecutable": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "size", "sha256"],
+      "properties": {
+        "path": { "const": "target/release/qpls.exe" },
+        "size": { "type": "integer", "minimum": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "distManifestEntry": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "size", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "size": { "type": "integer", "minimum": 0 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "distBundle": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "size", "file_count", "sha256", "manifest"],
+      "properties": {
+        "path": { "const": "dist" },
+        "size": { "type": "integer", "minimum": 1 },
+        "file_count": { "type": "integer", "minimum": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "manifest": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/distManifestEntry" } }
+      }
+    },
+    "cdpPage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["index", "url", "origin", "title", "shell_visible", "tauri_runtime"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0 },
+        "url": { "type": "string", "minLength": 1 },
+        "origin": { "type": ["string", "null"] },
+        "title": { "type": "string" },
+        "shell_visible": { "type": "boolean" },
+        "tauri_runtime": { "type": "boolean" }
+      }
+    },
+    "qualifiedCdpPage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["index", "url", "origin", "title", "shell_visible", "tauri_runtime"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0 },
+        "url": { "type": "string", "pattern": "^http://tauri\\.localhost(?:[/?#].*)?$" },
+        "origin": { "const": "http://tauri.localhost" },
+        "title": { "type": "string" },
+        "shell_visible": { "const": true },
+        "tauri_runtime": { "const": true }
+      }
+    },
+    "runtimePreflight": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "passed", "expected_origin", "enumerated_pages", "qualifying_page_count",
+        "pre_reload", "reload_count", "post_reload", "same_origin", "source_check"
+      ],
+      "properties": {
+        "passed": { "const": true },
+        "expected_origin": { "const": "http://tauri.localhost" },
+        "enumerated_pages": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/cdpPage" } },
+        "qualifying_page_count": { "const": 1 },
+        "pre_reload": { "$ref": "#/$defs/qualifiedCdpPage" },
+        "reload_count": { "const": 1 },
+        "post_reload": { "$ref": "#/$defs/qualifiedCdpPage" },
+        "same_origin": { "const": true },
+        "source_check": { "const": "runtimePreflight" }
+      }
+    },
+    "workflow": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "completed", "active_lifecycle_captured", "model_free", "graph_defined_without_numbered_templates", "source_check"],
+      "properties": {
+        "passed": { "type": "boolean" }, "completed": { "type": "boolean" },
+        "active_lifecycle_captured": { "type": "boolean" }, "model_free": { "type": "boolean" },
+        "graph_defined_without_numbered_templates": { "type": "boolean" },
+        "source_check": { "const": "processV2Workflow" }
+      }
+    },
+    "setup": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "outcome", "focal_predictor", "top_level_predictors", "top_level_predictors_maximum", "paths", "moderators", "moderations", "controls", "controls_maximum", "equation_non_intercept_terms_maximum", "bootstrap_replicates", "workers", "seed", "source_check"],
+      "properties": {
+        "passed": { "type": "boolean" }, "outcome": { "const": "Y" },
+        "focal_predictor": { "const": "X" },
+        "top_level_predictors": { "type": "integer", "const": 7 },
+        "top_level_predictors_maximum": { "type": "integer", "const": 8 },
+        "paths": { "type": "integer", "const": 8 }, "moderators": { "type": "integer", "const": 2 },
+        "moderations": { "type": "integer", "const": 3 }, "controls": { "type": "integer", "const": 1 },
+        "controls_maximum": { "type": "integer", "const": 1 },
+        "equation_non_intercept_terms_maximum": { "type": "integer", "const": 50 },
+        "bootstrap_replicates": { "type": "integer", "const": 10000 },
+        "workers": { "type": "integer", "minimum": 1, "maximum": 64 },
+        "seed": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "source_check": { "const": "processV2Setup" }
+      }
+    },
+    "results": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "initial_selected_table", "table_ids", "exact_table_ids", "equation_count", "reference_effect_rows", "conditional_indirect_rows", "moderated_mediation_index_rows", "simple_slope_rows", "conditional_plot_point_rows", "johnson_neyman_rows", "johnson_neyman_analysis_count", "johnson_neyman_analysis_keys", "johnson_neyman_curve_point_rows", "bootstrap_estimand_rows", "accessible_non_color_plot_semantics", "reference_effect_columns_exact", "reference_condition_rows_exact", "candidate_promotion_warnings_exact", "curve_warning_disclosure_exact", "failure_disclosure_truthful", "validation_witness_not_rendered", "no_na_fabrication", "generic_regression_shell_not_applicable", "expected_counts_source", "expected_graph_counts", "source_check"],
+      "properties": {
+        "passed": { "type": "boolean" }, "initial_selected_table": { "const": "process_model_summary" },
+        "table_ids": {
+          "const": [
+            "process_model_summary", "process_paths", "process_equation_coefficients",
+            "process_equation_fit", "process_reference_effects",
+            "process_conditional_indirect_effects", "process_moderated_mediation_indices",
+            "process_simple_slopes", "process_conditional_plot_points", "process_johnson_neyman",
+            "process_johnson_neyman_curve_points", "process_bootstrap_summary",
+            "process_bootstrap_failures", "process_bootstrap_inference", "process_bootstrap_bca",
+            "process_scope"
+          ]
+        },
+        "exact_table_ids": { "type": "boolean" }, "equation_count": { "type": "integer", "const": 5 },
+        "reference_effect_rows": { "type": "integer", "const": 6 },
+        "conditional_indirect_rows": { "type": "integer", "const": 5 },
+        "moderated_mediation_index_rows": { "type": "integer", "const": 2 },
+        "simple_slope_rows": { "type": "integer", "const": 11 },
+        "conditional_plot_point_rows": { "type": "integer", "const": 275 },
+        "johnson_neyman_rows": { "type": "integer", "const": 7 },
+        "johnson_neyman_analysis_count": { "type": "integer", "const": 4 },
+        "johnson_neyman_analysis_keys": { "const": [
+          ["moderation:X->M3@W", "W", ""],
+          ["moderation:X->Y@W|B", "W", "B = 0.0000 (coded 0.0000)"],
+          ["moderation:X->Y@W|B", "W", "B = 1.0000 (coded 1.0000)"],
+          ["moderation:M4->Y@B", "B", ""]
+        ] },
+        "johnson_neyman_curve_point_rows": { "type": "integer", "const": 303 },
+        "bootstrap_estimand_rows": { "type": "integer", "const": 24 },
+        "accessible_non_color_plot_semantics": { "type": "boolean" },
+        "reference_effect_columns_exact": { "const": true },
+        "reference_condition_rows_exact": { "const": true },
+        "candidate_promotion_warnings_exact": { "const": true },
+        "curve_warning_disclosure_exact": { "const": true },
+        "failure_disclosure_truthful": { "type": "boolean" },
+        "validation_witness_not_rendered": { "type": "boolean" },
+        "no_na_fabrication": { "type": "boolean" },
+        "generic_regression_shell_not_applicable": { "type": "boolean" },
+        "expected_counts_source": { "const": "validation/process_v2_reference.py:reference_graph" },
+        "expected_graph_counts": { "$ref": "#/$defs/graphCounts" },
+        "source_check": { "const": "processV2Results" }
+      }
+    },
+    "graphCounts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["completeCases", "omittedCases", "equations", "paths", "moderations", "referenceEffects", "conditionalIndirectEffects", "moderatedMediationIndices", "simpleSlopes", "plots", "conditionalPlotPoints", "johnsonNeyman", "johnsonNeymanRegionRows", "availableJohnsonNeyman", "johnsonNeymanCurvePoints", "estimands"],
+      "properties": {
+        "completeCases": { "type": "integer", "minimum": 1 },
+        "omittedCases": { "type": "integer", "minimum": 0 },
+        "equations": { "type": "integer", "minimum": 1 },
+        "paths": { "type": "integer", "minimum": 1 },
+        "moderations": { "type": "integer", "minimum": 1 },
+        "referenceEffects": { "type": "integer", "minimum": 1 },
+        "conditionalIndirectEffects": { "type": "integer", "minimum": 1 },
+        "moderatedMediationIndices": { "type": "integer", "minimum": 1 },
+        "simpleSlopes": { "type": "integer", "minimum": 1 },
+        "plots": { "type": "integer", "minimum": 1 },
+        "conditionalPlotPoints": { "type": "integer", "minimum": 1 },
+        "johnsonNeyman": { "type": "integer", "const": 4 },
+        "johnsonNeymanRegionRows": { "type": "integer", "const": 7 },
+        "availableJohnsonNeyman": { "type": "integer", "const": 3 },
+        "johnsonNeymanCurvePoints": { "type": "integer", "minimum": 1 },
+        "estimands": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "witnessScan": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "total_members", "scanned_xml_and_rels_members", "worksheet_members", "worksheet_row_counts", "forbidden_matches", "extraction_errors"],
+      "properties": {
+        "passed": { "type": "boolean" }, "total_members": { "type": "integer", "minimum": 1 },
+        "scanned_xml_and_rels_members": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "worksheet_members": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^xl/worksheets/.+\\.xml$" } },
+        "worksheet_row_counts": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "forbidden_matches": { "type": "array", "maxItems": 0 },
+        "extraction_errors": { "type": "array", "maxItems": 0 }
+      }
+    },
+    "export": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "workbook_sheets", "validation_witness_excluded", "witness_scan", "process_table_contract", "artifact_sha256", "source_check"],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "workbook_sheets": { "const": [
+          "Model summary", "Directed paths", "Equation coefficients", "Equation fit",
+          "Reference effects", "Conditional indirect effects", "Moderated-mediation indices",
+          "Simple slopes and conditional p", "Conditional outcome plot data",
+          "Johnson-Neyman regions", "Johnson-Neyman curve data", "Bootstrap summary",
+          "Bootstrap failures", "Bootstrap inference", "Bootstrap BCa intervals",
+          "Scope and provenance", "Run provenance"
+        ] },
+        "validation_witness_excluded": { "type": "boolean" }, "witness_scan": { "$ref": "#/$defs/witnessScan" },
+        "process_table_contract": { "$ref": "#/$defs/processTableContract" },
+        "artifact_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "source_check": { "const": "processV2Export" }
+      }
+    },
+    "processTableContract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "reference_sheet", "reference_columns", "reference_effect_rows", "reference_condition", "candidate_status", "promotion_pending_warning", "curve_warning_disclosure", "curve_warning_disclosure_exact", "required_shared_strings_verified"],
+      "properties": {
+        "passed": { "const": true },
+        "reference_sheet": { "const": "Reference effects" },
+        "reference_columns": { "const": ["Effect ID", "Kind", "Path", "Estimate", "Reference condition"] },
+        "reference_effect_rows": { "const": 6 },
+        "reference_condition": { "const": "Continuous moderators are evaluated at their original complete-sample raw means (coded 0); binary moderators are evaluated at 0." },
+        "candidate_status": { "const": "experimental" },
+        "promotion_pending_warning": { "const": "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass." },
+        "curve_warning_disclosure": { "const": "Exact engine-persisted Johnson-Neyman curve points; bootstrap validation witnesses are never exported." },
+        "curve_warning_disclosure_exact": { "const": true },
+        "required_shared_strings_verified": { "const": true }
+      }
+    },
+    "saveReopen": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "passed", "same_run_restored", "initial_selected_table", "project_checksum_matches",
+        "archive_witness_validated", "archive_sha256", "cycle_1_settled_autosave",
+        "cycle_1_autosave_after_checkpoint", "source_check"
+      ],
+      "properties": {
+        "passed": { "type": "boolean" }, "same_run_restored": { "type": "boolean" },
+        "initial_selected_table": { "const": "process_model_summary" },
+        "project_checksum_matches": { "type": "boolean" }, "archive_witness_validated": { "type": "boolean" },
+        "archive_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "cycle_1_settled_autosave": { "$ref": "#/$defs/cycle1SettledAutosave" },
+        "cycle_1_autosave_after_checkpoint": { "$ref": "#/$defs/cycle1SettledAutosave" },
+        "source_check": { "const": "processV2SaveReopen" }
+      }
+    },
+    "cycle1SettledAutosave": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "prefix", "coversEverySiblingPrefix", "present", "artifacts", "required", "allowed",
+        "missing", "forbidden", "exactAllowedIdentity", "autosavePath", "logicalState", "capturedArtifacts"
+      ],
+      "properties": {
+        "prefix": { "type": "string", "pattern": "^validation/results/v247-native-process-v2-[^/]+\\.qpls$" },
+        "coversEverySiblingPrefix": { "const": true },
+        "present": { "type": "array", "minItems": 4, "maxItems": 5, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "artifacts": { "type": "array", "minItems": 4, "maxItems": 5, "uniqueItems": true, "items": { "$ref": "#/$defs/artifact" } },
+        "required": { "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "allowed": { "type": "array", "minItems": 5, "maxItems": 5, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "missing": { "type": "array", "maxItems": 0 },
+        "forbidden": { "type": "array", "maxItems": 0 },
+        "exactAllowedIdentity": { "const": true },
+        "autosavePath": { "type": "string", "pattern": "^validation/results/v247-native-process-v2-[^/]+\\.qpls\\.autosave$" },
+        "logicalState": {
+          "type": "object", "additionalProperties": false,
+          "required": [
+            "manifestValid", "completedResultCount", "witnessCount", "completedRunIds",
+            "witnessRunIds", "recipeIds", "recipeCount", "workspaceRunIds", "selectedRunId"
+          ],
+          "properties": {
+            "manifestValid": { "const": true }, "completedResultCount": { "const": 1 },
+            "witnessCount": { "const": 1 },
+            "completedRunIds": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "type": "string", "minLength": 1 } },
+            "witnessRunIds": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "type": "string", "minLength": 1 } },
+            "recipeIds": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "type": "string", "minLength": 1 } },
+            "recipeCount": { "const": 1 },
+            "workspaceRunIds": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "type": "string", "minLength": 1 } },
+            "selectedRunId": { "type": "string", "minLength": 1 }
+          }
+        },
+        "capturedArtifacts": {
+          "type": "array", "minItems": 4, "maxItems": 5, "uniqueItems": true,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["source_path", "source_size", "source_sha256", "snapshot"],
+            "properties": {
+              "source_path": { "type": "string", "minLength": 1 },
+              "source_size": { "type": "integer", "minimum": 1 },
+              "source_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+              "snapshot": { "$ref": "#/$defs/artifact" }
+            }
+          }
+        }
+      }
+    },
+    "cancellation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "active_lifecycle_captured", "no_partial_result", "source_check"],
+      "properties": {
+        "passed": { "type": "boolean" }, "active_lifecycle_captured": { "type": "boolean" },
+        "no_partial_result": { "type": "boolean" }, "source_check": { "const": "processV2Cancellation" }
+      }
+    },
+    "processPath": {
+      "type": "object", "additionalProperties": false,
+      "required": ["from", "to"],
+      "properties": { "from": { "type": "string", "minLength": 1 }, "to": { "type": "string", "minLength": 1 } }
+    },
+    "processModerator": {
+      "type": "object", "additionalProperties": false,
+      "required": ["variable", "scale"],
+      "properties": {
+        "variable": { "type": "string", "minLength": 1 },
+        "scale": { "enum": ["continuous", "binary_0_1"] }
+      }
+    },
+    "processModeration": {
+      "type": "object", "additionalProperties": false,
+      "required": ["edge", "primary", "conditioning"],
+      "properties": {
+        "edge": { "type": "string", "minLength": 1 },
+        "primary": { "type": "string", "minLength": 1 },
+        "conditioning": { "type": "string" }
+      }
+    },
+    "processSetupSnapshot": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "catalogCount", "selectedMethod", "regressionType", "outcome", "focalPredictor",
+        "paths", "moderators", "moderations", "selectedControls", "samples", "workers", "seed",
+        "profile", "profileAriaBusy", "scope", "bootstrapScope", "blockers", "startEnabled",
+        "capacity", "graphDefinedWithoutNumberedTemplates"
+      ],
+      "properties": {
+        "catalogCount": { "const": 14 }, "selectedMethod": { "const": "Regression" },
+        "regressionType": { "const": "process" }, "outcome": { "const": "Y" },
+        "focalPredictor": { "const": "X" },
+        "paths": { "const": [
+          { "from": "X", "to": "Y" }, { "from": "X", "to": "M1" },
+          { "from": "M1", "to": "M2" }, { "from": "M2", "to": "Y" },
+          { "from": "X", "to": "M3" }, { "from": "M3", "to": "Y" },
+          { "from": "X", "to": "M4" }, { "from": "M4", "to": "Y" }
+        ] },
+        "moderators": { "const": [
+          { "variable": "W", "scale": "continuous" },
+          { "variable": "B", "scale": "binary_0_1" }
+        ] },
+        "moderations": { "const": [
+          { "edge": "X -> Y", "primary": "W", "conditioning": "B" },
+          { "edge": "X -> M3", "primary": "W", "conditioning": "" },
+          { "edge": "M4 -> Y", "primary": "B", "conditioning": "" }
+        ] },
+        "selectedControls": { "const": ["C"] }, "samples": { "const": "10000" },
+        "workers": { "type": "string", "pattern": "^[1-9][0-9]?$" },
+        "seed": { "type": "string", "pattern": "^[0-9]+$" },
+        "profile": { "type": "string", "pattern": "175 global listwise-complete cases; 5 rows omitted; 5 OLS equations verified" },
+        "profileAriaBusy": { "const": "false" }, "scope": { "type": "string", "minLength": 1 },
+        "bootstrapScope": { "type": "string", "minLength": 1 }, "blockers": { "type": "array", "maxItems": 0 },
+        "startEnabled": { "const": true },
+        "capacity": {
+          "type": "object", "additionalProperties": false,
+          "required": ["topLevelPredictors", "topLevelPredictorsMaximum", "controls", "controlsMaximum", "equationNonInterceptTermsMaximum"],
+          "properties": {
+            "topLevelPredictors": { "const": 7 }, "topLevelPredictorsMaximum": { "const": 8 },
+            "controls": { "const": 1 }, "controlsMaximum": { "const": 1 },
+            "equationNonInterceptTermsMaximum": { "const": 50 }
+          }
+        },
+        "graphDefinedWithoutNumberedTemplates": { "const": true }
+      }
+    },
+    "cancelledRetrySetup": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "read_only", "exact_frozen_setup_match", "snapshot", "frozen_setup", "source_check"],
+      "properties": {
+        "passed": { "const": true }, "read_only": { "const": true },
+        "exact_frozen_setup_match": { "const": true },
+        "snapshot": { "$ref": "#/$defs/processSetupSnapshot" },
+        "frozen_setup": { "$ref": "#/$defs/processSetupSnapshot" },
+        "source_check": { "const": "processV2CancelledRetrySetup" }
+      }
+    },
+    "witnessBoundary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "archive_only", "witness_method_version", "estimand_order_exact", "bootstrap_index_partition_exact", "jackknife_index_partition_exact", "excluded_from_results", "excluded_from_exports", "source_check"],
+      "properties": {
+        "passed": { "type": "boolean" }, "archive_only": { "type": "boolean" },
+        "witness_method_version": { "const": "regression_process_bootstrap_validation_witness_v1" },
+        "estimand_order_exact": { "type": "boolean" }, "bootstrap_index_partition_exact": { "type": "boolean" },
+        "jackknife_index_partition_exact": { "type": "boolean" }, "excluded_from_results": { "type": "boolean" },
+        "excluded_from_exports": { "type": "boolean" }, "source_check": { "const": "processV2WitnessBoundary" }
+      }
+    },
+    "resourceReset": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "passed", "original_path", "reset_path", "distinct_path", "original_archive", "reset_archive",
+        "result_id", "recipe_id", "run_id", "completed_result_count", "witness_count",
+        "no_sidecars_before_copy", "no_sidecars_after_copy", "no_sidecars_before_open",
+        "settled_autosave_sidecars_exact", "autosave_sidecars_stable_after_checkpoint",
+        "recovery_disclosure_absent", "table_ids", "selected_run_id", "selected_table_id", "source_check"
+      ],
+      "properties": {
+        "passed": { "const": true },
+        "original_path": { "type": "string", "pattern": "^validation/results/v247-native-process-v2-[^/]+\\.qpls$" },
+        "reset_path": { "type": "string", "pattern": "^validation/results/v247-native-process-v2-reset-[^/]+\\.qpls$" },
+        "distinct_path": { "const": true },
+        "original_archive": { "$ref": "#/$defs/artifact" },
+        "reset_archive": { "$ref": "#/$defs/artifact" },
+        "result_id": { "type": "string", "minLength": 1 },
+        "recipe_id": { "type": "string", "minLength": 1 },
+        "run_id": { "type": "string", "minLength": 1 },
+        "completed_result_count": { "const": 1 }, "witness_count": { "const": 1 },
+        "no_sidecars_before_copy": { "const": true }, "no_sidecars_after_copy": { "const": true },
+        "no_sidecars_before_open": { "const": true },
+        "settled_autosave_sidecars_exact": { "const": true },
+        "autosave_sidecars_stable_after_checkpoint": { "const": true },
+        "recovery_disclosure_absent": { "const": true },
+        "table_ids": { "const": [
+          "process_model_summary", "process_paths", "process_equation_coefficients", "process_equation_fit",
+          "process_reference_effects", "process_conditional_indirect_effects", "process_moderated_mediation_indices",
+          "process_simple_slopes", "process_conditional_plot_points", "process_johnson_neyman",
+          "process_johnson_neyman_curve_points", "process_bootstrap_summary", "process_bootstrap_failures",
+          "process_bootstrap_inference", "process_bootstrap_bca", "process_scope"
+        ] },
+        "selected_run_id": { "type": "string", "minLength": 1 },
+        "selected_table_id": { "const": "process_model_summary" },
+        "source_check": { "const": "processV2ResourceResetClone" }
+      }
+    },
+    "resources": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "passed", "sample_count", "raw_sample_count", "first_sample", "monitor_terminal_reason",
+        "peak_working_set_bytes", "peak_private_memory_bytes", "peak_working_set_under_2_gib", "policy",
+        "cancellation_within_baseline_tolerance", "equal_state_working_set_within_tolerance",
+        "equal_state_private_memory_within_tolerance", "equal_state_handle_count_within_tolerance",
+        "equal_state_thread_count_within_tolerance", "equal_state_process_roles_exact",
+        "process_roles_bounded_and_terminally_stable",
+        "retained_history_disclosure", "phase_snapshots_attested", "phase_document_attested",
+        "conclusion", "cancellation_cycle_count",
+        "completed_cycle_count", "idle_checkpoint_count",
+        "idle_settle_milliseconds", "idle_checkpoints_ordered_and_distinct",
+        "capture_delay_milliseconds", "sample_window_milliseconds", "minimum_samples_per_checkpoint",
+        "checkpoint_diagnostic_count", "checkpoint_diagnostics_all_passed",
+        "artifact_disk_deltas_recorded", "zero_lingering_descendants",
+        "graceful_exit_confirmed", "parent_absent", "forced_parent_termination",
+        "forced_descendant_pids", "forced_resource_monitor_termination", "source_check"
+      ],
+      "properties": {
+        "passed": { "const": true },
+        "sample_count": { "type": "integer", "minimum": 30 },
+        "raw_sample_count": { "type": "integer", "minimum": 30 },
+        "first_sample": { "$ref": "#/$defs/resourceSample" },
+        "monitor_terminal_reason": { "const": "stop_signal" },
+        "peak_working_set_bytes": { "type": "integer", "minimum": 1 },
+        "peak_private_memory_bytes": { "type": "integer", "minimum": 1 },
+        "peak_working_set_under_2_gib": { "const": true },
+        "policy": { "const": "bounded_equal_logical_state_window_median_v2" },
+        "cancellation_within_baseline_tolerance": { "const": true },
+        "equal_state_working_set_within_tolerance": { "const": true },
+        "equal_state_private_memory_within_tolerance": { "const": true },
+        "equal_state_handle_count_within_tolerance": { "const": true },
+        "equal_state_thread_count_within_tolerance": { "const": true },
+        "equal_state_process_roles_exact": { "const": true },
+        "process_roles_bounded_and_terminally_stable": { "const": true },
+        "retained_history_disclosure": {
+          "type": "object", "additionalProperties": false,
+          "required": [
+            "checkpoint", "median_working_set_bytes", "median_private_memory_bytes",
+            "completed_result_count", "witness_count", "qualification_role"
+          ],
+          "properties": {
+            "checkpoint": { "const": "post_completed_history_2_idle" },
+            "median_working_set_bytes": { "type": "integer", "minimum": 1 },
+            "median_private_memory_bytes": { "type": "integer", "minimum": 1 },
+            "completed_result_count": { "const": 2 },
+            "witness_count": { "const": 2 },
+            "qualification_role": { "const": "disclosure_only_not_a_threshold" }
+          }
+        },
+        "phase_snapshots_attested": { "const": true },
+        "phase_document_attested": { "const": true },
+        "conclusion": { "const": "bounded_post_replacement_recovery_v2" },
+        "cancellation_cycle_count": { "const": 1 },
+        "completed_cycle_count": { "const": 2 },
+        "idle_checkpoint_count": { "const": 5 },
+        "idle_settle_milliseconds": { "const": 5000 },
+        "idle_checkpoints_ordered_and_distinct": { "const": true },
+        "capture_delay_milliseconds": { "const": 500 },
+        "sample_window_milliseconds": { "const": 5000 },
+        "minimum_samples_per_checkpoint": { "const": 6 },
+        "checkpoint_diagnostic_count": { "const": 5 },
+        "checkpoint_diagnostics_all_passed": { "const": true },
+        "artifact_disk_deltas_recorded": { "const": true },
+        "zero_lingering_descendants": { "const": true },
+        "graceful_exit_confirmed": { "const": true },
+        "parent_absent": { "const": true },
+        "forced_parent_termination": { "const": false },
+        "forced_descendant_pids": { "type": "array", "maxItems": 0 },
+        "forced_resource_monitor_termination": { "const": false },
+        "source_check": { "const": "processV2Resources" }
+      }
+    },
+    "resourceProcess": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "pid", "parent_pid", "name", "role", "creation_date", "working_set_bytes",
+        "private_memory_bytes", "handle_count", "thread_count"
+      ],
+      "properties": {
+        "pid": { "type": "integer", "minimum": 1 },
+        "parent_pid": { "type": "integer", "minimum": 0 },
+        "name": { "type": "string", "minLength": 1 },
+        "role": { "enum": [
+          "desktop_root", "webview_browser", "webview_renderer", "webview_gpu",
+          "webview_utility", "webview_other", "other_descendant"
+        ] },
+        "creation_date": { "type": "string", "minLength": 1 },
+        "working_set_bytes": { "type": "integer", "minimum": 1 },
+        "private_memory_bytes": { "type": "integer", "minimum": 1 },
+        "handle_count": { "type": "integer", "minimum": 1 },
+        "thread_count": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "resourceRoleCounts": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "desktop_root", "webview_browser", "webview_renderer", "webview_gpu",
+        "webview_utility", "webview_other", "other_descendant"
+      ],
+      "properties": {
+        "desktop_root": { "const": 1 },
+        "webview_browser": { "type": "integer", "minimum": 0 },
+        "webview_renderer": { "type": "integer", "minimum": 0 },
+        "webview_gpu": { "type": "integer", "minimum": 0 },
+        "webview_utility": { "type": "integer", "minimum": 0 },
+        "webview_other": { "type": "integer", "minimum": 0 },
+        "other_descendant": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "resourceSample": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "recorded_at_utc", "root_present", "root_pid", "total_working_set_bytes",
+        "total_private_memory_bytes", "total_handle_count", "total_thread_count",
+        "process_role_counts", "processes"
+      ],
+      "properties": {
+        "recorded_at_utc": { "type": "string", "format": "date-time" },
+        "root_present": { "const": true },
+        "root_pid": { "type": "integer", "minimum": 1 },
+        "total_working_set_bytes": { "type": "integer", "minimum": 1 },
+        "total_private_memory_bytes": { "type": "integer", "minimum": 1 },
+        "total_handle_count": { "type": "integer", "minimum": 1 },
+        "total_thread_count": { "type": "integer", "minimum": 1 },
+        "process_role_counts": { "$ref": "#/$defs/resourceRoleCounts" },
+        "processes": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/resourceProcess" } }
+      }
+    }
+  }
+}

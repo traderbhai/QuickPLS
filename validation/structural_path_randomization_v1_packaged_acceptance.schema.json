@@ -1,0 +1,706 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/structural-path-randomization-v1-packaged-acceptance.schema.json",
+  "title": "QuickPLS Structural Path Randomization v1 packaged acceptance evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "kind", "passed", "generated_at_utc", "completed_at_utc",
+    "feature_id", "method_version", "catalogue_snapshot_date", "target", "runtime",
+    "endpoint", "generator", "acceptance_scope", "tested_product", "checks", "artifacts",
+    "console_errors", "failures", "source_report"
+  ],
+  "properties": {
+    "schema_version": { "const": "quickpls.packaged_acceptance.v1" },
+    "kind": { "const": "quickpls3_scoped_tauri_structural_path_randomization_v1_acceptance" },
+    "passed": { "const": true },
+    "generated_at_utc": { "type": "string", "format": "date-time" },
+    "completed_at_utc": { "type": "string", "format": "date-time" },
+    "feature_id": { "const": "qpls3.inference.structural_path_randomization" },
+    "method_version": { "const": "freedman_lane_permutation_v1" },
+    "catalogue_snapshot_date": { "const": "2026-08-12" },
+    "target": { "const": "windows_10_11_x64_packaged_tauri" },
+    "runtime": { "const": "tauri-webview2-cdp" },
+    "endpoint": { "type": "string", "pattern": "^http://127\\.0\\.0\\.1:[0-9]+$" },
+    "generator": { "const": "validation/v247_tauri_native_acceptance.mjs" },
+    "acceptance_scope": { "const": "structural_path_randomization" },
+    "tested_product": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["qpls_cli_exe", "quickpls_desktop_exe", "dist_bundle"],
+      "properties": {
+        "qpls_cli_exe": { "$ref": "#/$defs/qplsCli" },
+        "quickpls_desktop_exe": { "$ref": "#/$defs/desktop" },
+        "dist_bundle": { "$ref": "#/$defs/distBundle" }
+      }
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runtimePreflight", "structuralPathRandomizationFixtureProvisioning",
+        "structuralPathRandomizationSetup", "structuralPathRandomizationCancellation",
+        "structuralPathRandomizationResults", "structuralPathRandomizationExport",
+        "structuralPathRandomizationArchive", "structuralPathRandomizationSaveReopen",
+        "resources", "cleanup"
+      ],
+      "properties": {
+        "runtimePreflight": { "$ref": "#/$defs/runtimePreflight" },
+        "structuralPathRandomizationFixtureProvisioning": { "$ref": "#/$defs/fixture" },
+        "structuralPathRandomizationSetup": { "$ref": "#/$defs/setup" },
+        "structuralPathRandomizationCancellation": { "$ref": "#/$defs/cancellation" },
+        "structuralPathRandomizationResults": { "$ref": "#/$defs/results" },
+        "structuralPathRandomizationExport": { "$ref": "#/$defs/export" },
+        "structuralPathRandomizationArchive": { "$ref": "#/$defs/archive" },
+        "structuralPathRandomizationSaveReopen": { "$ref": "#/$defs/saveReopen" },
+        "resources": { "$ref": "#/$defs/resources" },
+        "cleanup": { "$ref": "#/$defs/cleanup" }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xlsx", "project_archive", "resource_samples", "resource_report", "cleanup_report",
+        "cancellation_archive_before", "cancellation_archive_after", "screenshots"
+      ],
+      "properties": {
+        "xlsx": { "$ref": "#/$defs/resultArtifact" },
+        "project_archive": { "$ref": "#/$defs/resultArtifact" },
+        "resource_samples": { "$ref": "#/$defs/resultArtifact" },
+        "resource_report": { "$ref": "#/$defs/resultArtifact" },
+        "cleanup_report": { "$ref": "#/$defs/resultArtifact" },
+        "cancellation_archive_before": { "$ref": "#/$defs/cancellationSnapshotArtifact" },
+        "cancellation_archive_after": { "$ref": "#/$defs/cancellationSnapshotArtifact" },
+        "screenshots": {
+          "type": "array", "minItems": 6, "uniqueItems": true,
+          "items": { "$ref": "#/$defs/screenshotArtifact" }
+        }
+      }
+    },
+    "console_errors": { "type": "array", "maxItems": 0 },
+    "failures": { "type": "array", "maxItems": 0 },
+    "source_report": { "const": "validation/results/v247_tauri_native_acceptance_structural_path_randomization.json" }
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "size", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "size": { "type": "integer", "minimum": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "resultArtifact": {
+      "allOf": [
+        { "$ref": "#/$defs/artifact" },
+        { "properties": { "path": { "pattern": "^validation/results/" } } }
+      ]
+    },
+    "screenshotArtifact": {
+      "allOf": [
+        { "$ref": "#/$defs/artifact" },
+        { "properties": { "path": { "pattern": "^validation/results/screens/v247-native-desktop-acceptance/(?:19[0-9]|20[0-9])-tauri-native-structural-path-randomization-.*\\.png$" } } }
+      ]
+    },
+    "cancellationSnapshotArtifact": {
+      "allOf": [
+        { "$ref": "#/$defs/artifact" },
+        { "properties": { "path": { "pattern": "^validation/results/v247-native-structural-path-randomization-[0-9]+-[0-9]+-cancellation-(?:before|after)\\.qpls$" } } }
+      ]
+    },
+    "qplsCli": {
+      "allOf": [
+        { "$ref": "#/$defs/artifact" },
+        { "properties": { "path": { "const": "target/release/qpls.exe" } } }
+      ]
+    },
+    "desktop": {
+      "allOf": [
+        { "$ref": "#/$defs/artifact" },
+        { "properties": { "path": { "const": "target/release/quickpls-desktop.exe" } } }
+      ]
+    },
+    "distBundle": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "size", "file_count", "sha256", "manifest"],
+      "properties": {
+        "path": { "const": "dist" },
+        "size": { "type": "integer", "minimum": 1 },
+        "file_count": { "type": "integer", "minimum": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "manifest": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/artifact" } }
+      }
+    },
+    "cdpPage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["index", "url", "origin", "title", "shell_visible", "tauri_runtime"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0 },
+        "url": { "type": "string", "minLength": 1 },
+        "origin": { "type": ["string", "null"] },
+        "title": { "type": "string" },
+        "shell_visible": { "type": "boolean" },
+        "tauri_runtime": { "type": "boolean" }
+      }
+    },
+    "runtimePreflight": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "expectedOrigin", "enumeratedPages", "qualifyingPageCount", "preReload", "reloadCount", "postReload", "sameOrigin"],
+      "properties": {
+        "passed": { "const": true },
+        "expectedOrigin": { "const": "http://tauri.localhost" },
+        "enumeratedPages": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/rawCdpPage" } },
+        "qualifyingPageCount": { "const": 1 },
+        "preReload": { "$ref": "#/$defs/rawQualifiedPage" },
+        "reloadCount": { "const": 1 },
+        "postReload": { "$ref": "#/$defs/rawQualifiedPage" },
+        "sameOrigin": { "const": true }
+      }
+    },
+    "rawCdpPage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["index", "url", "origin", "title", "shellVisible", "tauriRuntime"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0 },
+        "url": { "type": "string", "minLength": 1 },
+        "origin": { "type": ["string", "null"] },
+        "title": { "type": "string" },
+        "shellVisible": { "type": "boolean" },
+        "tauriRuntime": { "type": "boolean" }
+      }
+    },
+    "rawQualifiedPage": {
+      "allOf": [
+        { "$ref": "#/$defs/rawCdpPage" },
+        { "properties": {
+          "url": { "pattern": "^http://tauri\\.localhost(?:[/?#].*)?$" },
+          "origin": { "const": "http://tauri.localhost" },
+          "shellVisible": { "const": true },
+          "tauriRuntime": { "const": true }
+        } }
+      ]
+    },
+    "fixture": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "fixture", "project", "model_name", "status", "columns", "observations", "initialArchive"],
+      "properties": {
+        "passed": { "const": true },
+        "fixture": { "type": "object" },
+        "project": { "type": "object" },
+        "model_name": { "const": "Structural Path Randomization Model" },
+        "status": { "type": "string", "pattern": "180 cases" },
+        "columns": { "const": ["#", "group", "x1", "x2", "z1", "z2", "y1", "y2"] },
+        "observations": { "const": 180 },
+        "initialArchive": { "type": "object" }
+      }
+    },
+    "numericInput": {
+      "type": "object", "additionalProperties": false,
+      "required": ["count", "type", "minimum", "maximum", "value"],
+      "properties": {
+        "count": { "const": 1 }, "type": { "const": "number" },
+        "minimum": { "type": "string" }, "maximum": { "type": "string" },
+        "step": { "type": "string" }, "value": { "type": "string" }
+      }
+    },
+    "xToYRandomizationRow": {
+      "type": "array", "minItems": 5, "maxItems": 5, "items": false,
+      "prefixItems": [
+        { "const": "X -> Y" },
+        { "type": "string", "pattern": "^-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?$" },
+        { "type": "string", "pattern": "^(?:0|[1-9][0-9]{0,4})$" },
+        { "const": "10000" },
+        { "type": "string", "pattern": "^(?:0|1|0?\\.[0-9]+)(?:[eE][+-]?[0-9]+)?$" }
+      ]
+    },
+    "zToYRandomizationRow": {
+      "type": "array", "minItems": 5, "maxItems": 5, "items": false,
+      "prefixItems": [
+        { "const": "Z -> Y" },
+        { "type": "string", "pattern": "^-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?$" },
+        { "type": "string", "pattern": "^(?:0|[1-9][0-9]{0,4})$" },
+        { "const": "10000" },
+        { "type": "string", "pattern": "^(?:0|1|0?\\.[0-9]+)(?:[eE][+-]?[0-9]+)?$" }
+      ]
+    },
+    "permutationInput": {
+      "allOf": [
+        { "$ref": "#/$defs/numericInput" },
+        { "type": "object", "required": ["step"], "properties": {
+          "minimum": { "const": "99" }, "maximum": { "const": "10000" }, "step": { "const": "1" }, "value": { "const": "10000" }
+        } }
+      ]
+    },
+    "workerInput": {
+      "allOf": [
+        { "$ref": "#/$defs/numericInput" },
+        { "properties": { "minimum": { "const": "1" }, "maximum": { "const": "64" }, "value": { "const": "4" } } }
+      ]
+    },
+    "cancellationWorkerInput": {
+      "allOf": [
+        { "$ref": "#/$defs/numericInput" },
+        { "properties": { "minimum": { "const": "1" }, "maximum": { "const": "64" }, "value": { "const": "1" } } }
+      ]
+    },
+    "seedInput": {
+      "allOf": [
+        { "$ref": "#/$defs/numericInput" },
+        { "properties": { "minimum": { "const": "0" }, "maximum": { "const": "4294967295" }, "value": { "const": "20260718" } } }
+      ]
+    },
+    "setup": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "passed", "model", "catalogCount", "selectedMethod", "permutations", "workers", "seed",
+        "bootstrapControls", "groupControls", "scopeLabel", "scope", "blockers", "startLabel",
+        "startEnabled", "feature_id", "method_version", "catalogue_snapshot_date"
+      ],
+      "properties": {
+        "passed": { "const": true },
+        "model": { "type": "object" },
+        "catalogCount": { "const": 14 },
+        "selectedMethod": { "const": "Structural Path Randomization" },
+        "permutations": { "$ref": "#/$defs/permutationInput" },
+        "workers": { "$ref": "#/$defs/workerInput" },
+        "seed": { "$ref": "#/$defs/seedInput" },
+        "bootstrapControls": { "const": 0 },
+        "groupControls": { "const": 0 },
+        "scopeLabel": { "const": "Candidate scope" },
+        "scope": { "const": "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only." },
+        "blockers": { "type": "array", "maxItems": 0 },
+        "startLabel": { "const": "Start path randomization" },
+        "startEnabled": { "const": true },
+        "feature_id": { "const": "qpls3.inference.structural_path_randomization" },
+        "method_version": { "const": "freedman_lane_permutation_v1" },
+        "catalogue_snapshot_date": { "const": "2026-08-12" }
+      }
+    },
+    "setupReadback": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "catalogCount", "selectedMethod", "permutations", "workers", "seed",
+        "bootstrapControls", "groupControls", "scopeLabel", "scope", "blockers",
+        "startLabel", "startEnabled"
+      ],
+      "properties": {
+        "catalogCount": { "const": 14 },
+        "selectedMethod": { "const": "Structural Path Randomization" },
+        "permutations": { "$ref": "#/$defs/permutationInput" },
+        "workers": { "$ref": "#/$defs/numericInput" },
+        "seed": { "$ref": "#/$defs/seedInput" },
+        "bootstrapControls": { "const": 0 },
+        "groupControls": { "const": 0 },
+        "scopeLabel": { "const": "Candidate scope" },
+        "scope": { "const": "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only." },
+        "blockers": { "type": "array", "maxItems": 0 },
+        "startLabel": { "enum": ["Start path randomization", "Retry path randomization"] },
+        "startEnabled": { "const": true }
+      }
+    },
+    "cancellationSetup": {
+      "allOf": [
+        { "$ref": "#/$defs/setupReadback" },
+        { "properties": {
+          "workers": { "$ref": "#/$defs/cancellationWorkerInput" },
+          "startLabel": { "const": "Start path randomization" }
+        } }
+      ]
+    },
+    "cancellationRetrySetup": {
+      "allOf": [
+        { "$ref": "#/$defs/setupReadback" },
+        { "properties": {
+          "workers": { "$ref": "#/$defs/cancellationWorkerInput" },
+          "startLabel": { "const": "Retry path randomization" }
+        } }
+      ]
+    },
+    "completionRetrySetup": {
+      "allOf": [
+        { "$ref": "#/$defs/setupReadback" },
+        { "properties": {
+          "workers": { "$ref": "#/$defs/workerInput" },
+          "startLabel": { "const": "Retry path randomization" }
+        } }
+      ]
+    },
+    "cancellation": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "passed", "activeLifecycleCaptured", "activeState", "cancelButtonCount", "cancelButtonEnabled",
+        "cancelClickDispatched", "terminalOutcome", "completionWonRace", "cancelledState", "cancelledMessage",
+        "cancellationLogNewest", "cancellationLogExact", "archiveBeforeSnapshot", "archiveAfterSnapshot",
+        "archiveSnapshotsByteIdentical", "zeroResultRecipeRunDelta", "noPartialResult", "cancellationSetup",
+        "exactFrozenSetupOnRetry", "retrySetup", "completionSetup", "completionSetupExact",
+        "retryCompleted", "retryRunId", "retryNewIdentity"
+      ],
+      "properties": {
+        "passed": { "const": true },
+        "activeLifecycleCaptured": { "const": true },
+        "activeState": {
+          "type": "object", "additionalProperties": false,
+          "required": ["ariaBusy", "status", "phase", "message", "progressValue", "progressMax", "logEntries"],
+          "properties": {
+            "ariaBusy": { "const": "true" },
+            "status": { "enum": ["queued", "validating", "running"] },
+            "phase": { "type": "string", "minLength": 1 },
+            "message": { "type": "string" },
+            "progressValue": { "type": ["string", "null"] },
+            "progressMax": { "type": ["string", "null"] },
+            "logEntries": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "cancelButtonCount": { "const": 1 },
+        "cancelButtonEnabled": { "const": true },
+        "cancelClickDispatched": { "const": true },
+        "terminalOutcome": { "const": "cancelled" },
+        "completionWonRace": { "const": false },
+        "cancelledState": {
+          "type": "object", "additionalProperties": false,
+          "required": ["ariaBusy", "status", "phase", "message", "progressValue", "progressMax", "logEntries", "logMessages"],
+          "properties": {
+            "ariaBusy": { "const": "false" },
+            "status": { "const": "cancelled" },
+            "phase": { "const": "Cancelled" },
+            "message": { "const": "Calculation cancelled." },
+            "progressValue": { "type": ["string", "null"] },
+            "progressMax": { "type": ["string", "null"] },
+            "logEntries": { "type": "integer", "minimum": 2 },
+            "logMessages": { "type": "array", "minItems": 2, "items": { "type": "string" } }
+          }
+        },
+        "cancelledMessage": { "const": "Calculation cancelled." },
+        "cancellationLogNewest": {
+          "type": "array", "minItems": 2, "maxItems": 2,
+          "prefixItems": [
+            { "const": "Calculation cancelled." },
+            { "const": "Cancellation requested." }
+          ],
+          "items": false
+        },
+        "cancellationLogExact": { "const": true },
+        "archiveBeforeSnapshot": { "allOf": [{ "$ref": "#/$defs/cancellationArchiveSnapshot" }, { "properties": { "phase": { "const": "before" } } }] },
+        "archiveAfterSnapshot": { "allOf": [{ "$ref": "#/$defs/cancellationArchiveSnapshot" }, { "properties": { "phase": { "const": "after" } } }] },
+        "archiveSnapshotsByteIdentical": { "const": true },
+        "zeroResultRecipeRunDelta": { "const": true },
+        "noPartialResult": { "const": true },
+        "cancellationSetup": { "$ref": "#/$defs/cancellationSetup" },
+        "exactFrozenSetupOnRetry": { "const": true },
+        "retrySetup": { "$ref": "#/$defs/cancellationRetrySetup" },
+        "completionSetup": { "$ref": "#/$defs/completionRetrySetup" },
+        "completionSetupExact": { "const": true },
+        "retryCompleted": { "const": true },
+        "retryRunId": { "type": "string", "minLength": 1 },
+        "retryNewIdentity": { "const": true }
+      }
+    },
+    "cancellationArchiveSnapshot": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "phase", "artifact", "sourcePath", "sourceSize", "sourceSha256",
+        "sourceMtimeNsBefore", "sourceMtimeNsAfter", "sourceStableDuringCopy", "snapshotMatchesSource",
+        "datasetCount", "modelCount", "modelName", "constructLabels", "pathLabels",
+        "recipeCount", "resultCount", "runCount", "recipeIds", "resultIds", "runIds"
+      ],
+      "properties": {
+        "phase": { "enum": ["before", "after"] },
+        "artifact": { "$ref": "#/$defs/cancellationSnapshotArtifact" },
+        "sourcePath": { "type": "string", "pattern": "^validation/results/v247-native-structural-path-randomization-[0-9]+-[0-9]+\\.qpls$" },
+        "sourceSize": { "type": "integer", "minimum": 1 },
+        "sourceSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "sourceMtimeNsBefore": { "type": "string", "pattern": "^[0-9]+$" },
+        "sourceMtimeNsAfter": { "type": "string", "pattern": "^[0-9]+$" },
+        "sourceStableDuringCopy": { "const": true },
+        "snapshotMatchesSource": { "const": true },
+        "datasetCount": { "const": 1 },
+        "modelCount": { "const": 1 },
+        "modelName": { "const": "Structural Path Randomization Model" },
+        "constructLabels": { "const": ["X", "Z", "Y"] },
+        "pathLabels": { "const": ["X -> Y", "Z -> Y"] },
+        "recipeCount": { "const": 0 },
+        "resultCount": { "const": 0 },
+        "runCount": { "const": 0 },
+        "recipeIds": { "type": "array", "maxItems": 0 },
+        "resultIds": { "type": "array", "maxItems": 0 },
+        "runIds": { "type": "array", "maxItems": 0 }
+      }
+    },
+    "results": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "passed", "runId", "selectedRunId", "selectedRunLabel", "initialSelectedTable", "group",
+        "tableId", "title", "warning", "columns", "rows", "pathOrder",
+        "plusOneProbabilityGridExact", "noBootstrapTables", "noPlaceholderValues", "activeLifecycle", "runDetails"
+      ],
+      "properties": {
+        "passed": { "const": true },
+        "runId": { "type": "string", "minLength": 1 },
+        "selectedRunId": { "type": "string", "minLength": 1 },
+        "selectedRunLabel": { "type": "string", "pattern": "Structural Path Randomization" },
+        "initialSelectedTable": { "const": "model_estimates" },
+        "group": { "const": "Inference" },
+        "tableId": { "const": "permutation" },
+        "title": { "const": "Structural path randomization" },
+        "warning": { "const": "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only." },
+        "columns": { "const": ["Path", "Original", "Exceedances", "Permutations", "Raw two-sided p"] },
+        "rows": {
+          "type": "array", "minItems": 2, "maxItems": 2,
+          "prefixItems": [
+            { "$ref": "#/$defs/xToYRandomizationRow" },
+            { "$ref": "#/$defs/zToYRandomizationRow" }
+          ]
+        },
+        "pathOrder": { "const": ["X -> Y", "Z -> Y"] },
+        "plusOneProbabilityGridExact": { "const": true },
+        "noBootstrapTables": { "const": true },
+        "noPlaceholderValues": { "const": true },
+        "activeLifecycle": { "type": "object" },
+        "runDetails": {
+          "type": "object", "additionalProperties": false,
+          "required": ["properties", "logEntries"],
+          "properties": {
+            "properties": {
+              "type": "object", "additionalProperties": false,
+              "required": ["Run", "Method", "Created", "Recorded seed", "Dataset fingerprint", "Recipe", "Engine", "Method version", "Weighting", "Preprocessing"],
+              "properties": {
+                "Run": { "type": "string", "minLength": 1 },
+                "Method": { "const": "Structural Path Randomization" },
+                "Created": { "type": "string", "minLength": 1 },
+                "Recorded seed": { "const": "20260718" },
+                "Dataset fingerprint": { "type": "string", "minLength": 1 },
+                "Recipe": { "type": "string", "minLength": 1 },
+                "Engine": { "type": "string", "minLength": 1 },
+                "Method version": { "const": "pls_pm_v1+pls_mediation_v1+pls_assessment_v7+freedman_lane_permutation_v1" },
+                "Weighting": { "const": "path" },
+                "Preprocessing": { "const": "standardized" }
+              }
+            },
+            "logEntries": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    },
+    "export": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "xlsxEnabled", "buttonCount", "expectedSheets", "expectedSharedStrings", "nativeXlsx"],
+      "properties": {
+        "passed": { "const": true },
+        "xlsxEnabled": { "const": true },
+        "buttonCount": { "type": "integer", "minimum": 5 },
+        "expectedSheets": { "const": ["Structural path randomization", "Run provenance"] },
+        "expectedSharedStrings": { "const": [
+          "Structural path randomization",
+          "Run provenance",
+          "experimental",
+          "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only.",
+          "Randomization method",
+          "freedman_lane_permutation_v1",
+          "Randomization operation",
+          "pls_pm_freedman_lane_v1",
+          "Randomized structural paths",
+          "2",
+          "Requested path permutations",
+          "10000",
+          "Randomization estimand",
+          "Structural path coefficients conditional on fixed original PLS construct scores",
+          "Pathwise probability",
+          "Conditional/approximate two-sided plus-one probability under exchangeable reduced-model residuals; no multiplicity adjustment",
+          "Qualification status",
+          "Internal candidate/experimental product label; method-specific qualification evidence is tracked separately"
+        ] },
+        "nativeXlsx": {
+          "type": "object", "additionalProperties": false,
+          "required": ["attempted", "targetPath", "helper", "appFeedback", "file", "workbookSheets", "exactRequiredSheets", "noBootstrapSheets"],
+          "properties": {
+            "attempted": { "const": true }, "targetPath": { "type": "string", "pattern": "\\.xlsx$" },
+            "helper": {
+              "type": "object", "additionalProperties": false,
+              "required": ["ready", "completion"],
+              "properties": {
+                "ready": {
+                  "type": "object", "additionalProperties": false,
+                  "required": ["event", "passed", "phase", "targetPath", "resultsRoot", "mainWindow"],
+                  "properties": {
+                    "event": { "const": "ready" }, "passed": { "const": true },
+                    "phase": { "const": "main_window_binding" },
+                    "targetPath": { "type": "string", "pattern": "\\.xlsx$" },
+                    "resultsRoot": { "type": "string", "minLength": 1 },
+                    "mainWindow": { "$ref": "#/$defs/nativeWindow" }
+                  }
+                },
+                "completion": {
+                  "type": "object", "additionalProperties": false,
+                  "required": ["event", "passed", "phase", "targetPath", "mainWindow", "dialog", "boundControls", "saveSubmission", "workbook", "transport"],
+                  "properties": {
+                    "event": { "const": "complete" }, "passed": { "const": true },
+                    "phase": { "const": "xlsx_creation_and_readback" },
+                    "targetPath": { "type": "string", "pattern": "\\.xlsx$" },
+                    "mainWindow": { "$ref": "#/$defs/nativeWindow" },
+                    "dialog": { "type": "object" },
+                    "boundControls": { "const": { "filenameEditControlId": 1001, "saveButtonControlId": 1 } },
+                    "saveSubmission": { "type": "object" },
+                    "workbook": { "$ref": "#/$defs/randomizationWorkbookReadback" },
+                    "transport": {
+                      "type": "object", "additionalProperties": false,
+                      "required": ["exitCode", "signal", "stderr", "events", "protocolErrors"],
+                      "properties": {
+                        "exitCode": { "const": 0 },
+                        "signal": { "const": null },
+                        "stderr": { "const": "" },
+                        "events": { "type": "array", "minItems": 2, "items": { "type": "object" } },
+                        "protocolErrors": { "type": "array", "maxItems": 0 }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "appFeedback": { "type": "string", "pattern": "^Saved .+\\.xlsx\\.$" },
+            "file": {
+              "type": "object", "additionalProperties": false,
+              "required": ["size", "isFile"],
+              "properties": { "size": { "type": "integer", "minimum": 1 }, "isFile": { "const": true } }
+            },
+            "workbookSheets": { "const": [
+              "Path coefficients",
+              "Outer loadings",
+              "Outer weights",
+              "R-square",
+              "Total effects",
+              "Construct reliability and valid",
+              "Cross loadings",
+              "Fornell-Larcker criterion",
+              "HTMT+",
+              "Original HTMT",
+              "Structural model",
+              "Inner VIF values",
+              "f-square effect sizes",
+              "Model fit",
+              "Construct cross-validated redun",
+              "Structural path randomization",
+              "Run provenance"
+            ] },
+            "exactRequiredSheets": { "const": true }, "noBootstrapSheets": { "const": true }
+          }
+        }
+      }
+    },
+    "nativeWindow": {
+      "type": "object", "additionalProperties": false,
+      "required": ["pid", "handle", "title", "executable"],
+      "properties": {
+        "pid": { "type": "integer", "minimum": 1 },
+        "handle": { "type": "integer", "minimum": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "executable": { "type": "string", "pattern": "quickpls-desktop\\.exe$" }
+      }
+    },
+    "randomizationWorkbookReadback": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "size", "sha256", "sheetNames", "requiredSharedStrings", "requiredSheets"],
+      "properties": {
+        "path": { "type": "string", "pattern": "\\.xlsx$" },
+        "size": { "type": "integer", "minimum": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "sheetNames": { "const": [
+          "Path coefficients",
+          "Outer loadings",
+          "Outer weights",
+          "R-square",
+          "Total effects",
+          "Construct reliability and valid",
+          "Cross loadings",
+          "Fornell-Larcker criterion",
+          "HTMT+",
+          "Original HTMT",
+          "Structural model",
+          "Inner VIF values",
+          "f-square effect sizes",
+          "Model fit",
+          "Construct cross-validated redun",
+          "Structural path randomization",
+          "Run provenance"
+        ] },
+        "requiredSharedStrings": { "const": [
+          "Structural path randomization",
+          "Run provenance",
+          "experimental",
+          "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only.",
+          "Randomization method",
+          "freedman_lane_permutation_v1",
+          "Randomization operation",
+          "pls_pm_freedman_lane_v1",
+          "Randomized structural paths",
+          "2",
+          "Requested path permutations",
+          "10000",
+          "Randomization estimand",
+          "Structural path coefficients conditional on fixed original PLS construct scores",
+          "Pathwise probability",
+          "Conditional/approximate two-sided plus-one probability under exchangeable reduced-model residuals; no multiplicity adjustment",
+          "Qualification status",
+          "Internal candidate/experimental product label; method-specific qualification evidence is tracked separately"
+        ] },
+        "requiredSheets": { "const": ["Structural path randomization", "Run provenance"] }
+      }
+    },
+    "archive": {
+      "type": "object", "required": ["passed", "manifest", "resultSchemaVersion", "payloadKind", "bootstrapAbsent", "recipeSchemaVersion", "recipeMethodConfigExact", "pathOrderExact", "permutation", "run"],
+      "properties": {
+        "passed": { "const": true },
+        "manifest": { "type": "object", "properties": { "schemaVersion": { "const": 5 }, "checksumAlgorithm": { "const": "sha256" }, "projectChecksumMatches": { "const": true } }, "required": ["schemaVersion", "checksumAlgorithm", "projectChecksumMatches"] },
+        "resultSchemaVersion": { "const": 1 }, "payloadKind": { "const": "pls_pm_v3" },
+        "bootstrapAbsent": { "const": true }, "recipeSchemaVersion": { "const": 3 },
+        "recipeMethodConfigExact": { "const": true }, "pathOrderExact": { "const": true },
+        "permutation": { "type": "object", "properties": {
+          "methodVersion": { "const": "freedman_lane_permutation_v1" }, "operation": { "const": "pls_pm_freedman_lane_v1" },
+          "permutations": { "const": 10000 }, "masterSeed": { "const": 20260718 }, "parameterCount": { "const": 2 },
+          "parameterContract": { "const": true }
+        }, "required": ["methodVersion", "operation", "permutations", "masterSeed", "parameterCount", "parameterContract"] },
+        "run": { "type": "object", "properties": { "method": { "const": "Structural Path Randomization" }, "status": { "const": "completed" }, "snapshotNodes": { "const": 3 }, "snapshotEdges": { "const": 2 } }, "required": ["method", "status", "snapshotNodes", "snapshotEdges"] }
+      }
+    },
+    "saveReopen": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "expectedRunId", "reopenedRunId", "selectedRunId", "sameRunRestored", "initialSelectedTable", "rows", "columns", "values", "warning", "archiveChecksumMatches"],
+      "properties": {
+        "passed": { "const": true },
+        "expectedRunId": { "type": "string", "minLength": 1 }, "reopenedRunId": { "type": "string", "minLength": 1 }, "selectedRunId": { "type": "string", "minLength": 1 },
+        "sameRunRestored": { "const": true }, "initialSelectedTable": { "const": "model_estimates" }, "rows": { "const": 2 },
+        "columns": { "const": ["Path", "Original", "Exceedances", "Permutations", "Raw two-sided p"] },
+        "values": { "type": "array", "minItems": 2, "maxItems": 2 },
+        "warning": { "const": "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only." },
+        "archiveChecksumMatches": { "const": true }
+      }
+    },
+    "resources": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "sample_count", "peak_total_working_set_bytes", "peak_total_private_memory_bytes", "peak_total_handle_count", "peak_total_thread_count", "peak_process_count", "peak_working_set_under_2_gib", "zero_other_descendants", "scope", "disk", "artifacts"],
+      "properties": {
+        "passed": { "const": true }, "sample_count": { "type": "integer", "minimum": 4 },
+        "peak_total_working_set_bytes": { "type": "integer", "minimum": 1, "exclusiveMaximum": 2147483648 },
+        "peak_total_private_memory_bytes": { "type": "integer", "minimum": 1 },
+        "peak_total_handle_count": { "type": "integer", "minimum": 1 }, "peak_total_thread_count": { "type": "integer", "minimum": 1 }, "peak_process_count": { "type": "integer", "minimum": 1 },
+        "peak_working_set_under_2_gib": { "const": true }, "zero_other_descendants": { "const": true },
+        "scope": { "const": "Single packaged cancellation/retry/completion/save/reopen run; this is a bounded process footprint report, not a sustained no-leak claim." },
+        "disk": { "type": "object", "properties": { "xlsx_bytes": { "type": "integer", "minimum": 1 }, "source_report_bytes": { "type": "integer", "minimum": 1 } }, "required": ["xlsx_bytes", "source_report_bytes"], "additionalProperties": false },
+        "artifacts": { "type": "object", "properties": { "samples": { "$ref": "#/$defs/resultArtifact" }, "report": { "$ref": "#/$defs/resultArtifact" } }, "required": ["samples", "report"], "additionalProperties": false }
+      }
+    },
+    "cleanup": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "launched_pid", "graceful_close_exit_code", "graceful_exit_confirmed", "forced_parent_termination", "forced_descendant_pids", "parent_exit_confirmed", "lingering_descendant_pids", "resource_monitor_exit_confirmed", "resource_monitor_exit_code", "forced_resource_monitor_termination", "artifact"],
+      "properties": {
+        "passed": { "const": true }, "launched_pid": { "type": "integer", "minimum": 1 },
+        "graceful_close_exit_code": { "const": 0 }, "graceful_exit_confirmed": { "const": true },
+        "forced_parent_termination": { "const": false }, "forced_descendant_pids": { "type": "array", "maxItems": 0 },
+        "parent_exit_confirmed": { "const": true }, "lingering_descendant_pids": { "type": "array", "maxItems": 0 },
+        "resource_monitor_exit_confirmed": { "const": true }, "resource_monitor_exit_code": { "const": 0 },
+        "forced_resource_monitor_termination": { "const": false }, "artifact": { "$ref": "#/$defs/resultArtifact" }
+      }
+    }
+  }
+}

@@ -1,0 +1,487 @@
+{
+  "schema_version": 1,
+  "target": "structural_path_randomization_reference_v1",
+  "feature_id": "qpls3.inference.structural_path_randomization",
+  "method_version": "freedman_lane_permutation_v1",
+  "catalogue_snapshot_date": "2026-08-12",
+  "generated_at": "2026-08-13T07:03:58.203632+00:00",
+  "passed": true,
+  "checks": [
+    {
+      "name": "release_cli_exact_path_and_freshness",
+      "passed": true
+    },
+    {
+      "name": "schema_v2_to_v3_recipe_migration",
+      "passed": true
+    },
+    {
+      "name": "exact_ordered_three_path_manifest",
+      "passed": true
+    },
+    {
+      "name": "exact_permutation_plan_and_method_version",
+      "passed": true
+    },
+    {
+      "name": "frozen_deterministic_indices_0_and_98",
+      "passed": true
+    },
+    {
+      "name": "python_fixed_score_freedman_lane_coefficients",
+      "passed": true
+    },
+    {
+      "name": "python_exact_exceedances_and_plus_one_probabilities",
+      "passed": true
+    },
+    {
+      "name": "r_full_coefficient_recomputation",
+      "passed": true
+    },
+    {
+      "name": "r_exact_exceedances_and_plus_one_probabilities",
+      "passed": true
+    },
+    {
+      "name": "workers_1_and_4_exact_payload_equality",
+      "passed": true
+    },
+    {
+      "name": "calibrated_null_boundary",
+      "passed": true
+    },
+    {
+      "name": "calibrated_power_boundary",
+      "passed": true
+    }
+  ],
+  "tested_product": {
+    "release_cli": {
+      "path": "target/release/qpls.exe",
+      "size": 20648448,
+      "sha256": "bd4e1780563055398729dc6d2c16cab655bbdb17af0b1c2133bd56283413879b",
+      "modified_utc": "2026-08-13T04:11:07.593770+00:00"
+    },
+    "commands": [
+      [
+        "D:\\QuickPLS\\target\\release\\qpls.exe",
+        "run",
+        "D:\\QuickPLS\\validation\\results\\qpls-structural-randomization-hcikgg_t\\workers_1.recipe.json",
+        "--data",
+        "D:\\QuickPLS\\validation\\fixtures\\corporate_reputation.csv",
+        "--output",
+        "D:\\QuickPLS\\validation\\results\\qpls-structural-randomization-hcikgg_t\\workers_1.result.json",
+        "--permutation-samples",
+        "999",
+        "--workers",
+        "1"
+      ],
+      [
+        "D:\\QuickPLS\\target\\release\\qpls.exe",
+        "run",
+        "D:\\QuickPLS\\validation\\results\\qpls-structural-randomization-hcikgg_t\\workers_4.recipe.json",
+        "--data",
+        "D:\\QuickPLS\\validation\\fixtures\\corporate_reputation.csv",
+        "--output",
+        "D:\\QuickPLS\\validation\\results\\qpls-structural-randomization-hcikgg_t\\workers_4.result.json",
+        "--permutation-samples",
+        "999",
+        "--workers",
+        "4"
+      ]
+    ],
+    "workers": [
+      {
+        "workers": 1,
+        "result_id": "06b5fa55-ed4a-4f55-bc15-d8293053a2cd",
+        "result_schema_version": 1,
+        "recipe_id": "00000000-0000-0000-0000-000000032001",
+        "dataset_fingerprint": "v2:75a6f88e3d90b593c433ba8df2de2b4091e5ac1af415bc6ac295db2784b04011",
+        "method_version": "pls_pm_v1+pls_mediation_v1+pls_assessment_v7+freedman_lane_permutation_v1",
+        "parameters": [
+          {
+            "exceedances": 0,
+            "original": 0.7945750712093537,
+            "p_value_two_sided": 0.001,
+            "parameter": "[\"path\",[\"comp\",\"satisfaction\"]]",
+            "permutations": 999
+          },
+          {
+            "exceedances": 0,
+            "original": 0.8043768882095139,
+            "p_value_two_sided": 0.001,
+            "parameter": "[\"path\",[\"like\",\"satisfaction\"]]",
+            "permutations": 999
+          },
+          {
+            "exceedances": 0,
+            "original": 0.836535683314899,
+            "p_value_two_sided": 0.001,
+            "parameter": "[\"path\",[\"satisfaction\",\"loyalty\"]]",
+            "permutations": 999
+          }
+        ],
+        "construct_score_rows": 12
+      },
+      {
+        "workers": 4,
+        "result_id": "33f22df8-9547-4b25-8408-908bcfb94d22",
+        "result_schema_version": 1,
+        "recipe_id": "00000000-0000-0000-0000-000000032004",
+        "dataset_fingerprint": "v2:75a6f88e3d90b593c433ba8df2de2b4091e5ac1af415bc6ac295db2784b04011",
+        "method_version": "pls_pm_v1+pls_mediation_v1+pls_assessment_v7+freedman_lane_permutation_v1",
+        "parameters": [
+          {
+            "exceedances": 0,
+            "original": 0.7945750712093537,
+            "p_value_two_sided": 0.001,
+            "parameter": "[\"path\",[\"comp\",\"satisfaction\"]]",
+            "permutations": 999
+          },
+          {
+            "exceedances": 0,
+            "original": 0.8043768882095139,
+            "p_value_two_sided": 0.001,
+            "parameter": "[\"path\",[\"like\",\"satisfaction\"]]",
+            "permutations": 999
+          },
+          {
+            "exceedances": 0,
+            "original": 0.836535683314899,
+            "p_value_two_sided": 0.001,
+            "parameter": "[\"path\",[\"satisfaction\",\"loyalty\"]]",
+            "permutations": 999
+          }
+        ],
+        "construct_score_rows": 12
+      }
+    ]
+  },
+  "evidence_sources": [
+    {
+      "path": "validation/structural_path_randomization_reference.py",
+      "size": 48644,
+      "sha256": "8946d5525cb1c51012e3788dc0f34ace825e96282b33580622cd10d4960eeb7d",
+      "modified_utc": "2026-08-13T02:14:41.418983+00:00"
+    },
+    {
+      "path": "validation/structural_path_randomization_reference.R",
+      "size": 5681,
+      "sha256": "7d116ca49a4371921da59c2c4bb0f1dba25eefd574346a6c5ccfc422f5f9e0a7",
+      "modified_utc": "2026-08-13T00:49:40.335089+00:00"
+    },
+    {
+      "path": "validation/r_runtime.py",
+      "size": 2696,
+      "sha256": "1e23214ddbe392801be92846cd3709421eedd088df950df5be1c7c62801486c8",
+      "modified_utc": "2026-07-19T02:46:04.679914+00:00"
+    },
+    {
+      "path": "validation/test_structural_path_randomization_reference.py",
+      "size": 13362,
+      "sha256": "3b22d59da367d99d097ffb8b1bd6aa284c6826f80984d0ea3fce5fb87b867145",
+      "modified_utc": "2026-08-13T02:14:41.422403+00:00"
+    },
+    {
+      "path": "validation/structural_path_randomization_boundary_gate.py",
+      "size": 9991,
+      "sha256": "93074fe54942cd3211e17a79989ca535c073c11014ab111d67fa3ee4ea8a7a7a",
+      "modified_utc": "2026-08-13T00:55:48.228328+00:00"
+    },
+    {
+      "path": "validation/structural_path_randomization_frontend_gate.py",
+      "size": 7894,
+      "sha256": "2c596e70cc96f1d8aedc73a2c4333d3ecd7bceb2d2158d3285e07492dc027205",
+      "modified_utc": "2026-08-13T01:47:21.489400+00:00"
+    },
+    {
+      "path": "validation/structural_path_randomization_method_promotion_audit.py",
+      "size": 99637,
+      "sha256": "33a86d0abc1915eca95107c8c21fe90cdea102104a6302bf7225eb1670b35104",
+      "modified_utc": "2026-08-13T03:44:51.310379+00:00"
+    },
+    {
+      "path": "validation/test_structural_path_randomization_method_promotion_audit.py",
+      "size": 47059,
+      "sha256": "c7a80c2b2ed25be1b48d2363ffe7ff56c62cb770c0eb70647fc15cbe142cb369",
+      "modified_utc": "2026-08-13T04:05:27.219006+00:00"
+    },
+    {
+      "path": "validation/inference_publication_audit.py",
+      "size": 6461,
+      "sha256": "89223e3a028074ca8c3c2ea10ec7dbf3c905d7b430f86e6ed04f676a1ee1b04a",
+      "modified_utc": "2026-08-13T01:02:23.963320+00:00"
+    },
+    {
+      "path": "validation/inference_method_promotion_audit.py",
+      "size": 7560,
+      "sha256": "42c56a15b1ab2fc844a753157c8a21b58b39020150aaefbcbb670e1869c1f3c6",
+      "modified_utc": "2026-08-13T04:05:27.212315+00:00"
+    }
+  ],
+  "fixtures": {
+    "data": {
+      "path": "validation/fixtures/corporate_reputation.csv",
+      "size": 270,
+      "sha256": "e72185ab375a85cdfd72760bd23fbf897da8742168af384dbe607d4d2752689f",
+      "modified_utc": "2026-07-18T08:14:55.022605+00:00"
+    },
+    "source_schema_v2_recipe": {
+      "path": "validation/fixtures/corporate_reputation.recipe.json",
+      "size": 1452,
+      "sha256": "53eba85327585dcca535217d687d888ec95f438a114c01a9692bc3a43155f5ac",
+      "modified_utc": "2026-07-18T16:41:44.967238+00:00"
+    },
+    "generated_schema_v3_recipes": [
+      {
+        "path": "validation/results/structural_path_randomization_reference/workers_1.recipe.json",
+        "size": 2345,
+        "sha256": "cd6592033942ffb3572e85726459b985a54de58f1d61312d975d9c06552d8eed",
+        "modified_utc": "2026-08-13T07:03:58.217736+00:00"
+      },
+      {
+        "path": "validation/results/structural_path_randomization_reference/workers_4.recipe.json",
+        "size": 2345,
+        "sha256": "f71a352d3ee3dd9b4660fe2d6f0b9996949e00cefedca9a86ec9dd54616a112c",
+        "modified_utc": "2026-08-13T07:03:58.264203+00:00"
+      }
+    ]
+  },
+  "contract": {
+    "schema_identities": {
+      "result_envelope": 1,
+      "analysis_recipe": 3,
+      "pls_inference_payload_kind": "pls_pm_v3",
+      "project_archive_context_only": 5
+    },
+    "plan_operation": "pls_pm_freedman_lane_v1",
+    "index_stream_version": "sha256_chacha20_rand_0_9_fisher_yates_v1",
+    "seed": 20260718,
+    "permutations": 999,
+    "ordered_parameters": [
+      "[\"path\",[\"comp\",\"satisfaction\"]]",
+      "[\"path\",[\"like\",\"satisfaction\"]]",
+      "[\"path\",[\"satisfaction\",\"loyalty\"]]"
+    ],
+    "frozen_indices": {
+      "0": [
+        1,
+        8,
+        2,
+        9,
+        7,
+        6,
+        3,
+        10,
+        0,
+        11,
+        5,
+        4
+      ],
+      "98": [
+        0,
+        5,
+        1,
+        10,
+        6,
+        2,
+        4,
+        7,
+        9,
+        11,
+        3,
+        8
+      ]
+    },
+    "exceedance_rule": "abs(permuted_focal_coefficient) >= abs(original_focal_coefficient)",
+    "p_value_rule": "(exceedances + 1) / (permutations + 1)"
+  },
+  "python_reference": {
+    "runtime": "3.13.1 (tags/v3.13.1:0671451, Dec  3 2024, 19:06:28) [MSC v.1942 64 bit (AMD64)]",
+    "numpy": "1.26.4",
+    "parameters": [
+      {
+        "ordinal": 0,
+        "parameter": "[\"path\",[\"comp\",\"satisfaction\"]]",
+        "source": "comp",
+        "target": "satisfaction",
+        "predictor_ids": [
+          "comp",
+          "like"
+        ],
+        "focal_index": 0,
+        "stored_original": 0.7945750712093537,
+        "reproduced_original": 0.7945750712093533,
+        "stored_exceedances": 0,
+        "reference_exceedances": 0,
+        "stored_p_value": 0.001,
+        "reference_p_value": 0.001,
+        "coefficient_sha256_le_f64": "75f862da714e401c9e12c49f7b84ff7a2cf0c475d08e791bd6a4ba30c44456b9",
+        "minimum_absolute_threshold_margin": 0.03865681178176428
+      },
+      {
+        "ordinal": 1,
+        "parameter": "[\"path\",[\"like\",\"satisfaction\"]]",
+        "source": "like",
+        "target": "satisfaction",
+        "predictor_ids": [
+          "comp",
+          "like"
+        ],
+        "focal_index": 1,
+        "stored_original": 0.8043768882095139,
+        "reproduced_original": 0.8043768882095137,
+        "stored_exceedances": 0,
+        "reference_exceedances": 0,
+        "stored_p_value": 0.001,
+        "reference_p_value": 0.001,
+        "coefficient_sha256_le_f64": "3f6be70db6174732273affeb99718d99a2752ea4d46df0838f3bcf5d57caecad",
+        "minimum_absolute_threshold_margin": 0.008149822762799963
+      },
+      {
+        "ordinal": 2,
+        "parameter": "[\"path\",[\"satisfaction\",\"loyalty\"]]",
+        "source": "satisfaction",
+        "target": "loyalty",
+        "predictor_ids": [
+          "satisfaction"
+        ],
+        "focal_index": 0,
+        "stored_original": 0.836535683314899,
+        "reproduced_original": 0.8365356833148992,
+        "stored_exceedances": 0,
+        "reference_exceedances": 0,
+        "stored_p_value": 0.001,
+        "reference_p_value": 0.001,
+        "coefficient_sha256_le_f64": "8a98682ad7d478cb2cea4087473225e999da5c4593b05a57345190511fecf820",
+        "minimum_absolute_threshold_margin": 0.006925544255353189
+      }
+    ]
+  },
+  "r_reference": {
+    "runtime": "Rscript (R) version 4.6.1 (2026-06-24)",
+    "script": {
+      "path": "validation/structural_path_randomization_reference.R",
+      "size": 5681,
+      "sha256": "7d116ca49a4371921da59c2c4bb0f1dba25eefd574346a6c5ccfc422f5f9e0a7",
+      "modified_utc": "2026-08-13T00:49:40.335089+00:00"
+    },
+    "inputs": {
+      "scores": {
+        "path": "validation/results/structural_path_randomization_reference/construct_scores.csv",
+        "size": 1002,
+        "sha256": "564ab7cba95b6092a941fdff207189c37c17d29b2635888bd2ee189a8ef191bf",
+        "modified_utc": "2026-08-13T07:03:58.800397+00:00"
+      },
+      "design": {
+        "path": "validation/results/structural_path_randomization_reference/design_manifest.csv",
+        "size": 660,
+        "sha256": "182993f60701c80f76a6c3b6b970ccdb0fcbced5f306a42bad7610b3b0afc8be",
+        "modified_utc": "2026-08-13T07:03:58.813219+00:00"
+      },
+      "indices": {
+        "path": "validation/results/structural_path_randomization_reference/permutation_indices.csv",
+        "size": 367738,
+        "sha256": "5c284306902f69a92738f199d2fd00045244ffed3d811a3fd1ce5dafc84f6465",
+        "modified_utc": "2026-08-13T07:03:58.831670+00:00"
+      }
+    },
+    "command": [
+      "C:\\Users\\mohd.naved\\Documents\\PLS-Sem\\dist-desktop\\r-runtime\\bin\\Rscript.exe",
+      "--vanilla",
+      "D:\\QuickPLS\\validation\\structural_path_randomization_reference.R",
+      "D:\\QuickPLS\\validation\\results\\structural_path_randomization_reference\\construct_scores.csv",
+      "D:\\QuickPLS\\validation\\results\\structural_path_randomization_reference\\design_manifest.csv",
+      "D:\\QuickPLS\\validation\\results\\structural_path_randomization_reference\\permutation_indices.csv",
+      "D:\\QuickPLS\\validation\\results\\structural_path_randomization_reference\\r_coefficients.csv"
+    ],
+    "comparisons": [
+      {
+        "parameter": "[\"path\",[\"comp\",\"satisfaction\"]]",
+        "coefficient_count": 999,
+        "reproduced_original": 0.794575071209353,
+        "maximum_absolute_difference_from_python": 1.0547118733938987e-15,
+        "maximum_relative_difference_from_python": 1.0547118733938987e-15,
+        "exceedances": 0,
+        "p_value_two_sided": 0.001
+      },
+      {
+        "parameter": "[\"path\",[\"like\",\"satisfaction\"]]",
+        "coefficient_count": 999,
+        "reproduced_original": 0.804376888209513,
+        "maximum_absolute_difference_from_python": 1.0547118733938987e-15,
+        "maximum_relative_difference_from_python": 1.0547118733938987e-15,
+        "exceedances": 0,
+        "p_value_two_sided": 0.001
+      },
+      {
+        "parameter": "[\"path\",[\"satisfaction\",\"loyalty\"]]",
+        "coefficient_count": 999,
+        "reproduced_original": 0.836535683314899,
+        "maximum_absolute_difference_from_python": 7.771561172376096e-16,
+        "maximum_relative_difference_from_python": 7.771561172376096e-16,
+        "exceedances": 0,
+        "p_value_two_sided": 0.001
+      }
+    ],
+    "output": {
+      "path": "validation/results/structural_path_randomization_reference/r_coefficients.csv",
+      "size": 280522,
+      "sha256": "34b9882414757b4899a555675c2a392c3371f9a15f0226f7c21632db1ad0eb72",
+      "modified_utc": "2026-08-13T07:04:00.656739+00:00"
+    }
+  },
+  "calibration": {
+    "design": {
+      "replications": 240,
+      "permutations": 199,
+      "cases": 80,
+      "alpha": 0.05,
+      "focal_nuisance_correlation": 0.35,
+      "nuisance_coefficient": 0.8,
+      "signal_coefficient": 0.65,
+      "noise_standard_deviation": 1.0,
+      "outcome_noise_distribution": "homoscedastic_standard_gaussian",
+      "error_variance_model": "constant",
+      "paired_null_signal_scenarios": true,
+      "data_rng": "numpy_pcg64",
+      "data_seed": 20260813,
+      "permutation_seed": 20260814
+    },
+    "thresholds": {
+      "null_rejection_rate_maximum": 0.09923900046372455,
+      "null_boundary_formula": "alpha + 3.5 * sqrt(alpha * (1-alpha) / replications)",
+      "null_wilson_95_must_contain_alpha": true,
+      "power_wilson_95_lower_minimum": 0.8
+    },
+    "null": {
+      "rejections": 17,
+      "rate": 0.07083333333333333,
+      "wilson_95": [
+        0.04469193703717767,
+        0.11049684424599365
+      ],
+      "minimum_p": 0.01,
+      "median_p": 0.465
+    },
+    "signal": {
+      "rejections": 240,
+      "power": 1.0,
+      "wilson_95": [
+        0.9842460800584412,
+        1.0
+      ],
+      "maximum_p": 0.025,
+      "median_p": 0.005
+    },
+    "passed": true
+  },
+  "limitations": [
+    "The structural randomization scope treats converged PLS construct scores as fixed and does not re-estimate the measurement model per permutation.",
+    "The bundled corporate fixture has 12 complete rows; broader behavior is probed by a separate preregistered synthetic fixed-score calibration.",
+    "The synthetic calibration is limited to paired homoscedastic Gaussian-error scenarios with constant variance.",
+    "Floating-point coefficients are compared with declared relative tolerances; parameter identity, order, index vectors, exceedance counts, +1 arithmetic, and worker equality are exact.",
+    "This scientific reference does not by itself qualify native authoring, archive persistence, accessibility, or packaged export workflows."
+  ]
+}

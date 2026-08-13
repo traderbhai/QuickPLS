@@ -46,5 +46,7 @@
   ],
   "registry_gate_present": true,
   "registry_gate_all_passed": true,
-  "note": "Second-batch promotion is bounded to the documented scopes; later-batch methods remain experimental."
+  "ipma_native_workflow_ready": true,
+  "prediction_native_workflow_ready": true,
+  "note": "Second-batch promotion requires genuine packaged-native run, XLSX export, save, and reopen evidence for bounded IPMA and current indicator-level PLSpredict/CVPAT; numerical and source evidence alone are insufficient."
 }

@@ -15,12 +15,21 @@ OUTPUT = RESULTS / "method_promotion_matrix_v1_2.json"
 LEGACY_OUTPUT = RESULTS / "publication_promotion_matrix.json"
 
 
-def artifact(path: str, purpose: str, required: bool = True) -> dict:
+def artifact(path: str, purpose: str, required: bool = True, require_passed: bool = False) -> dict:
+    source = ROOT / path
+    report_passed = None
+    if source.exists() and require_passed:
+        try:
+            report_passed = json.loads(source.read_text(encoding="utf-8")).get("passed") is True
+        except (json.JSONDecodeError, OSError):
+            report_passed = False
     return {
         "path": path,
         "purpose": purpose,
         "required": required,
-        "present": (ROOT / path).exists(),
+        "present": source.exists(),
+        "require_passed": require_passed,
+        "passed": report_passed,
     }
 
 
@@ -105,13 +114,13 @@ FIRST_BATCH = [
     {
         "id": "inference_resampling",
         "family": "Inference",
-        "method": "Bootstrap, BCa, studentized bootstrap, jackknife, and permutation",
+        "method": "Bootstrap, BCa, studentized bootstrap, and jackknife",
         "current_status": "experimental_family_label",
         "target_status": "validated",
         "promotion_batch": 1,
         "candidate_scope": (
             "Documented PLS resampling settings with indexed ChaCha streams, percentile, BCa, "
-            "studentized intervals, jackknife, and Freedman-Lane permutation where audited."
+            "studentized intervals, and jackknife where audited."
         ),
         "required_evidence": [
             "fixed-seed reproducibility",
@@ -135,7 +144,8 @@ FIRST_BATCH = [
         ],
         "blocking_questions": [],
         "scope_decisions": [
-            "Percentile bootstrap, BCa, studentized/bootstrap-t, jackknife support, and Freedman-Lane path permutation are promoted together for documented PLS inference settings.",
+            "Percentile bootstrap, BCa, studentized/bootstrap-t, and jackknife support are promoted for documented PLS inference settings.",
+            "Structural Path Randomization is release-qualified only through validation/results/structural_path_randomization_method_promotion_audit.json; generic bootstrap evidence is not reusable for this scope.",
             "Small-sample and non-normal claims are limited to the audited Monte Carlo qualification cells and documented diagnostics.",
             "Inference does not promote experimental base estimators or unsupported model shapes.",
         ],
@@ -144,8 +154,8 @@ FIRST_BATCH = [
         "id": "pca",
         "family": "Components",
         "method": "Standalone PCA",
-        "current_status": "experimental",
-        "target_status": "validated",
+        "current_status": "validated_packaged_native_bounded_scope",
+        "target_status": "validated_packaged_native_bounded_scope",
         "promotion_batch": 1,
         "candidate_scope": (
             "Standardized numeric raw-data PCA with deterministic sign orientation, eigenvalues, "
@@ -157,46 +167,52 @@ FIRST_BATCH = [
             "missing/constant/high-dimensional guards",
             "component sign and order metamorphic checks",
             "GUI/CLI/export parity",
+            "strict append/save/reopen and genuine packaged-native workflow",
             "known-difference note for sign orientation",
         ],
         "artifacts": [
             artifact("docs/methods/PCA_V1.md", "method specification"),
             artifact("validation/results/pca_method_promotion_audit.json", "v1.2 PCA promotion audit"),
-            artifact("validation/results/v08_extended_methods_reference_report.json", "integrated NumPy/Python reference"),
+            artifact("validation/results/v08_pca_reference_report.json", "method-specific NumPy/Python reference"),
             artifact("validation/results/extended_methods_publication_audit.json", "publication audit"),
+            artifact("validation/results/v247_native_desktop_visual_acceptance.json", "responsive native setup evidence", require_passed=True),
+            artifact("validation/results/v247_tauri_native_acceptance.json", "packaged native run/export/save/reopen evidence", require_passed=True),
             artifact("docs/KNOWN_DIFFERENCES.md", "known differences"),
         ],
         "blocking_questions": [],
         "scope_decisions": [
             "Standalone PCA is promoted for standardized numeric raw-data PCA with listwise deletion and deterministic sign orientation.",
             "Rotation methods, pairwise deletion, covariance/correlation-only input, nonnumeric variables, and inference remain excluded.",
-            "Logistic regression, PROCESS, NCA, and GSCA remain separate v0.8 experimental methods.",
+            "The native PCA workflow is model-free and table-only; full scores are materialized for export rather than duplicated in the ordinary Results surface.",
         ],
     },
     {
         "id": "ols_regression",
         "family": "Regression",
         "method": "OLS regression",
-        "current_status": "experimental",
-        "target_status": "validated",
+        "current_status": "validated_packaged_native_bounded_scope",
+        "target_status": "validated_packaged_native_bounded_scope",
         "promotion_batch": 1,
         "candidate_scope": (
-            "OLS with intercept, controls, HC0/HC3/HC4 standard errors, confidence intervals, "
-            "fit diagnostics, predictions, residual diagnostics, and documented rank-deficiency guards."
+            "Raw numeric OLS with intercept, optional controls, listwise deletion, fixed HC3 standard errors, "
+            "two-sided 95% intervals, fit diagnostics, fitted values, residuals, and rank-deficiency guards."
         ),
         "required_evidence": [
             "independent Python reference",
             "R lm/sandwich/lmtest reference",
             "rank deficiency and collinearity guards",
             "robust-SE formula tests",
-            "bootstrap interval qualification if promoted",
-            "GUI/CLI/export parity",
+            "strict append/save/reopen contract",
+            "responsive native setup and genuine packaged execution",
+            "table-only fitted/residual XLSX export",
         ],
         "artifacts": [
             artifact("docs/methods/REGRESSION_OLS_V1.md", "method specification"),
-            artifact("validation/results/ols_method_promotion_audit.json", "v1.2 OLS promotion audit"),
-            artifact("validation/results/v08_extended_methods_reference_report.json", "integrated Python reference"),
+            artifact("validation/results/ols_method_promotion_audit.json", "strict v1.2 OLS promotion audit", require_passed=True),
+            artifact("validation/results/v08_ols_reference_report.json", "method-specific Python reference"),
             artifact("validation/results/extended_methods_publication_audit.json", "publication audit"),
+            artifact("validation/results/v247_native_desktop_visual_acceptance.json", "responsive native OLS setup evidence", require_passed=True),
+            artifact("validation/results/v247_tauri_native_acceptance.json", "packaged-native OLS evidence consumed by the strict audit", require_passed=True),
         ],
         "blocking_questions": [],
         "scope_decisions": [
@@ -262,14 +278,18 @@ SECOND_BATCH = [
         "candidate_scope": "Reflective-only PLSc with path/factor weighting, rho_A attenuation correction, corrected paths/loadings/R2.",
         "required_evidence": ["method spec", "independent Python reference", "unsupported guards", "rho_A second-source evidence"],
         "artifacts": [
-            artifact("docs/methods/PLSC_V1.md", "method specification"),
+            artifact("docs/methods/PLSC_V2.md", "current method specification"),
+            artifact("docs/methods/PLSC_V1.md", "legacy compatibility disclosure"),
             artifact("validation/results/plsc_method_promotion_audit.json", "v1.2.1 PLSc promotion audit"),
             artifact("validation/results/plsc_reference_report.json", "independent reference"),
             artifact("validation/results/plsc_unsupported_guard_report.json", "unsupported guard evidence"),
             artifact("validation/results/rho_a_csem_comparison.json", "rho_A second source"),
         ],
         "blocking_questions": [],
-        "scope_decisions": ["Formative PLSc and PCA-weighting PLSc remain unsupported."],
+        "scope_decisions": [
+            "Formative PLSc and PCA-weighting PLSc remain unsupported.",
+            "plsc_v1 remains readable as a flagged legacy result; new analyses emit canonical plsc_v2.",
+        ],
     },
     {
         "id": "wpls",
@@ -291,53 +311,71 @@ SECOND_BATCH = [
     {
         "id": "ipma",
         "family": "Prediction",
-        "method": "IPMA / cIPMA",
-        "current_status": "experimental",
-        "target_status": "validated",
+        "method": "Importance-Performance Map Analysis (IPMA)",
+        "current_status": "ipma_v1_packaged_native_validated_bounded_scope",
+        "target_status": "packaged_native_validated_bounded_scope",
         "promotion_batch": 2,
-        "candidate_scope": "Bounded IPMA using PLS total effects as importance and 0-100 standardized-score performance.",
-        "required_evidence": ["method spec", "independent Python reference", "target-selection checks", "product/export enforcement"],
+        "candidate_scope": "Bounded predecessor-only IPMA using PLS total effects as importance and observed-sample 0-100 performance from listwise-standardized scores.",
+        "required_evidence": ["method spec", "independent Python reference", "target/unrelated exclusion checks", "exact provenance and scale", "strict project persistence", "native setup/results/export source contract", "packaged native run/export/save/reopen"],
         "artifacts": [
             artifact("docs/methods/IPMA_V1.md", "method specification"),
-            artifact("validation/results/ipma_method_promotion_audit.json", "v1.2.1 IPMA promotion audit"),
+            artifact(
+                "validation/results/ipma_method_promotion_audit.json",
+                "v1.2.1 IPMA promotion audit",
+                require_passed=True,
+            ),
             artifact("validation/results/ipma_reference_report.json", "independent reference"),
+            artifact(
+                "validation/results/v247_tauri_native_acceptance.json",
+                "packaged native acceptance artifact",
+                require_passed=True,
+            ),
         ],
         "blocking_questions": [],
-        "scope_decisions": ["Broader cIPMA extensions remain unsupported."],
+        "scope_decisions": ["Theoretical-range correction, alternate SmartPLS map representations, NCA integration, and cIPMA remain unsupported."],
     },
     {
         "id": "plspredict",
         "family": "Prediction",
         "method": "PLSpredict / CVPAT",
-        "current_status": "experimental",
-        "target_status": "validated",
+        "current_status": "packaged_native_validated_bounded_scope",
+        "target_status": "packaged_native_validated_bounded_scope",
         "promotion_batch": 2,
-        "candidate_scope": "Deterministic holdout, repeated k-fold, construct-score LM benchmark, Q2 predict, RMSE/MAE, and bounded CVPAT diagnostics.",
-        "required_evidence": ["method spec", "leakage-free independent reference", "CVPAT checks", "product/export enforcement"],
+        "candidate_scope": "Indicator-level endogenous prediction with train-only preprocessing, fixed seeded balanced 10-fold by 10-repeat complete-case validation, IA and LM benchmarks, one-sided 95% single-model CVPAT, supplementary construct scores, and a secondary deterministic modulo-4 holdout.",
+        "required_evidence": ["current and legacy method specs", "independent indicator and CVPAT reference", "strict append/save/reopen/tamper tests", "native result and export enforcement", "genuine packaged-native run/export/reopen evidence"],
         "artifacts": [
-            artifact("docs/methods/PLSPREDICT_V1.md", "method specification alias"),
-            artifact("validation/results/plspredict_method_promotion_audit.json", "v1.2.1 PLSpredict promotion audit"),
-            artifact("validation/results/plspredict_holdout_reference_report.json", "independent reference"),
+            artifact("docs/methods/PLSPREDICT_INDICATOR_V2.md", "current bounded indicator prediction and CVPAT specification"),
+            artifact("docs/methods/PLSPREDICT_HOLDOUT_V1.md", "legacy archive compatibility specification"),
+            artifact("validation/results/plspredict_method_promotion_audit.json", "strict current prediction promotion audit", require_passed=True),
+            artifact("validation/results/plspredict_indicator_reference_report.json", "independent indicator prediction and paired CVPAT reference", require_passed=True),
+            artifact("validation/results/v247_tauri_native_acceptance.json", "packaged native run/export/save/reopen evidence", require_passed=True),
         ],
         "blocking_questions": [],
-        "scope_decisions": ["Separate saved-model CVPAT and indicator-level PLSpredict remain unsupported."],
+        "scope_decisions": ["Fold assignment is fixed and seeded rather than SmartPLS-randomized. Separate saved-model comparison, formative endogenous targets, HOCs, interactions, weights, and non-listwise missing handling remain unsupported."],
     },
     {
         "id": "nca",
         "family": "NCA",
         "method": "CE-FDH and CR-FDH",
-        "current_status": "experimental",
-        "target_status": "validated",
+        "current_status": "packaged_native_validated_bounded_scope",
+        "target_status": "packaged_native_validated_bounded_scope",
         "promotion_batch": 2,
-        "candidate_scope": "Numeric X/Y CE-FDH and CR-FDH NCA with deterministic permutation p values and bottleneck tables.",
-        "required_evidence": ["method spec", "independent Python reference", "constant/nonnumeric guards", "product/export enforcement"],
+        "candidate_scope": "Standalone observed numeric X/Y CE-FDH and CR-FDH NCA v2 with listwise deletion, seeded permutation p values, observed-range bottlenecks, strict archive persistence, no phantom model, bounded native results/export, and no full-parity claim.",
+        "required_evidence": ["current and legacy method specs", "independent CE/CR Python reference", "recipe and data guards", "strict append/save/reopen/tamper tests", "no-model snapshot test", "native results/export enforcement", "genuine packaged-native run/export/reopen evidence"],
         "artifacts": [
-            artifact("docs/methods/NCA_V1.md", "method specification"),
-            artifact("validation/results/nca_method_promotion_audit.json", "v1.2.1 NCA promotion audit"),
-            artifact("validation/results/v08_extended_methods_reference_report.json", "integrated independent reference"),
+            artifact("docs/methods/NCA_V2.md", "current method specification"),
+            artifact("docs/methods/NCA_V1.md", "legacy compatibility and supersession policy"),
+            artifact("validation/results/nca_method_promotion_audit.json", "strict NCA v2 promotion audit", require_passed=True),
+            artifact("validation/results/v08_nca_reference_report.json", "method-specific independent CE-FDH/CR-FDH reference"),
+            artifact("validation/results/v247_tauri_native_acceptance.json", "packaged-native evidence consumed by the strict audit"),
         ],
         "blocking_questions": [],
-        "scope_decisions": ["Broader NCA ceiling variants and nonnumeric variables remain unsupported."],
+        "scope_decisions": [
+            "nca_v1 is archive-readable only and is not current scientific evidence; new runs emit nca_v2.",
+            "The qualified backend scope is one observed numeric X and one observed numeric Y with CE-FDH/CR-FDH, listwise deletion, and observed-range bottlenecks.",
+            "Multiple conditions, latent-score NCA, cIPMA integration, categorical/ordinal variables, alternative ceilings, and full SmartPLS or R-package parity remain unsupported.",
+            "Packaged-native promotion is accepted only because the NCA-specific audit now passes; mere artifact presence remains insufficient.",
+        ],
     },
 ]
 
@@ -347,37 +385,43 @@ THIRD_BATCH = [
         "id": "micom",
         "family": "Groups",
         "method": "MICOM measurement invariance",
-        "current_status": "experimental",
+        "current_status": "validated_micom_v2_bounded_scope",
         "target_status": "validated",
         "promotion_batch": 3,
-        "candidate_scope": "Exactly two observed groups with configural checklist, compositional permutation, and composite mean/variance permutation diagnostics.",
-        "required_evidence": ["method spec", "integrated permutation reference", "invariant/non-invariant evidence", "unsupported guards", "product/export enforcement"],
+        "candidate_scope": "MICOM v2 Steps 1-3 for two explicitly ordered groups, with group-specific PLS re-estimation and 5,000-10,000 usable deterministic label permutations.",
+        "required_evidence": ["group-specific implementation", "method spec", "independent numerical reference", "invariant/non-invariant evidence", "strict persistence", "native results/export/reopen enforcement"],
         "artifacts": [
-            artifact("docs/methods/MICOM_V1.md", "method specification"),
-            artifact("validation/results/v06_group_methods_reference_report.json", "integrated group-method reference"),
-            artifact("validation/results/prediction_heterogeneity_publication_audit.json", "publication audit"),
-            artifact("validation/results/micom_method_promotion_audit.json", "v1.2.2 MICOM promotion audit"),
+            artifact("docs/methods/MICOM_V2.md", "current bounded method specification"),
+            artifact("docs/methods/MICOM_V1.md", "withdrawn legacy compatibility disclosure"),
+            artifact("validation/results/micom_v2_reference_report.json", "independent v2 numerical comparison"),
+            artifact("validation/results/micom_method_promotion_audit.json", "strict MICOM v2 promotion audit"),
+            artifact("validation/results/v247_tauri_native_acceptance.json", "packaged native run, XLSX export, save, and reopen evidence"),
         ],
         "blocking_questions": [],
-        "scope_decisions": ["More than two groups and broader invariance claims remain unsupported."],
+        "scope_decisions": [
+            "Historical micom_v1 payloads remain legacy-only and are not validated evidence.",
+            "MICOM v2 runs only with path weighting, standardized listwise data, explicit configural confirmation, and the joint permutation-MGA v2 plan.",
+            "Failed Step 2 blocks an invariance-supported MGA interpretation for that composite; failed Step 3 blocks full-invariance and pooling claims.",
+        ],
     },
     {
         "id": "mga_permutation",
         "family": "Groups",
         "method": "Two-group permutation MGA",
-        "current_status": "experimental",
+        "current_status": "validated_v2_bounded_scope",
         "target_status": "validated",
         "promotion_batch": 3,
-        "candidate_scope": "Two observed groups with group-specific PLS re-estimation, deterministic label permutation, empirical p values, and MICOM warning enforcement.",
-        "required_evidence": ["method spec", "independent reference", "integrated permutation fixture", "worker invariance", "product/export enforcement"],
+        "candidate_scope": "Two observed groups with group-specific PLS re-estimation, deterministic label permutation, empirical p values for paths/loadings/weights, and the companion MICOM v2 hierarchy.",
+        "required_evidence": ["v2 method spec", "independent reference", "integrated permutation fixture", "strict persistence", "native product/export enforcement"],
         "artifacts": [
-            artifact("docs/methods/PLS_MGA_PERMUTATION_V1.md", "method specification"),
-            artifact("validation/results/mga_reference_report.json", "bounded MGA reference"),
-            artifact("validation/results/v06_group_methods_reference_report.json", "integrated permutation reference"),
-            artifact("validation/results/mga_permutation_method_promotion_audit.json", "v1.2.2 permutation MGA promotion audit"),
+            artifact("docs/methods/PLS_MGA_PERMUTATION_V2.md", "current method specification"),
+            artifact("docs/methods/PLS_MGA_PERMUTATION_V1.md", "legacy compatibility disclosure"),
+            artifact("validation/results/micom_v2_reference_report.json", "joint independent MICOM/MGA v2 reference"),
+            artifact("validation/results/mga_permutation_method_promotion_audit.json", "strict permutation-MGA v2 promotion audit"),
+            artifact("validation/results/v247_tauri_native_acceptance.json", "packaged native run, XLSX export, save, and reopen evidence"),
         ],
         "blocking_questions": [],
-        "scope_decisions": ["Approximate normal path-difference diagnostics remain descriptive; publication interpretation should prefer permutation output."],
+        "scope_decisions": ["Approximate-normal diagnostics are omitted from the native report; inference uses the deterministic two-tailed permutation tables and must be interpreted with the MICOM hierarchy."],
     },
     {
         "id": "pls_pos",
@@ -425,7 +469,7 @@ THIRD_BATCH = [
         "required_evidence": ["method spec", "Python IRLS reference", "R glm reference", "separation/rank guards", "product/export enforcement"],
         "artifacts": [
             artifact("docs/methods/REGRESSION_LOGISTIC_V1.md", "method specification"),
-            artifact("validation/results/v08_extended_methods_reference_report.json", "integrated Python reference"),
+            artifact("validation/results/v08_logistic_reference_report.json", "method-specific Python reference"),
             artifact("validation/results/extended_methods_publication_audit.json", "publication audit"),
             artifact("validation/results/logistic_method_promotion_audit.json", "v1.2.2 logistic promotion audit"),
         ],
@@ -443,7 +487,7 @@ THIRD_BATCH = [
         "required_evidence": ["method spec", "Python OLS equations", "R base-lm parity", "mediation/moderation fixtures", "product/export enforcement"],
         "artifacts": [
             artifact("docs/methods/PROCESS_V1.md", "method specification"),
-            artifact("validation/results/v08_extended_methods_reference_report.json", "integrated Python reference"),
+            artifact("validation/results/v08_process_reference_report.json", "method-specific Python reference"),
             artifact("validation/results/mediation_method_promotion_audit.json", "mediation evidence"),
             artifact("validation/results/moderation_method_promotion_audit.json", "moderation evidence"),
             artifact("validation/results/process_method_promotion_audit.json", "v1.2.2 PROCESS promotion audit"),
@@ -598,16 +642,18 @@ FIFTH_BATCH = [
         "current_status": "validated_bounded_scope",
         "target_status": "validated",
         "promotion_batch": 5,
-        "candidate_scope": "Bounded deterministic GSCA component model with reflective/formative blocks, recursive paths, FIT/AFIT/GFI diagnostics, weights, loadings, scores, and R2.",
-        "required_evidence": ["independent reference", "publication audit", "product/export enforcement"],
+        "candidate_scope": "Bounded gsca_als_v2 joint global least-squares ALS with standardized raw data, disjoint reflective/formative blocks, recursive paths, weights, loadings, paths, R2, objective, FIT/AFIT/local FIT, GFI, SRMR, and convergence.",
+        "required_evidence": ["independent global-criterion reference", "strict persistence", "packaged native lifecycle/export/reopen"],
         "artifacts": [
-            artifact("docs/methods/GSCA_V1.md", "method specification"),
-            artifact("validation/results/gsca_method_promotion_audit.json", "v1.2.4 GSCA promotion audit"),
-            artifact("validation/results/v08_extended_methods_reference_report.json", "integrated reference"),
-            artifact("validation/results/extended_methods_publication_audit.json", "publication audit"),
+            artifact("docs/methods/GSCA_ALS_V2.md", "current method specification"),
+            artifact("docs/methods/GSCA_V1.md", "legacy preview boundary"),
+            artifact("validation/results/gsca_method_promotion_audit.json", "GSCA ALS v2 promotion audit"),
+            artifact("validation/results/gsca_als_v2_reference_report.json", "independent global-criterion reference"),
+            artifact("validation/results/v247_native_desktop_visual_acceptance.json", "browser setup and viewport acceptance"),
+            artifact("validation/results/v247_tauri_native_acceptance_gsca.json", "genuine packaged workflow evidence"),
         ],
         "blocking_questions": [],
-        "scope_decisions": ["Unrestricted GSCA variants and GSCA bootstrap claims remain unsupported unless separately audited."],
+        "scope_decisions": ["Historical gsca_v1 is legacy preview-only; score export, inference, multigroup, and unrestricted GSCA variants remain unsupported unless separately audited."],
     },
 ]
 
@@ -650,14 +696,20 @@ LATER_BATCHES = [
 
 def summarize_row(row: dict) -> dict:
     missing = [item["path"] for item in row["artifacts"] if item["required"] and not item["present"]]
+    failed = [
+        item["path"]
+        for item in row["artifacts"]
+        if item["required"] and item.get("require_passed") and item.get("passed") is not True
+    ]
     return {
         **row,
         "artifact_summary": {
             "required": sum(1 for item in row["artifacts"] if item["required"]),
             "present": sum(1 for item in row["artifacts"] if item["required"] and item["present"]),
             "missing": missing,
+            "failed": failed,
         },
-        "promotion_ready": not missing and not row["blocking_questions"],
+        "promotion_ready": not missing and not failed and not row["blocking_questions"],
     }
 
 

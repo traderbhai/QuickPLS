@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "id": "990e2c6a-a7fe-4d08-8d48-669be9cf499f",
+  "id": "61d0d46a-e6c1-4ab3-8067-8655cd452164",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000000071",
     "dataset_fingerprint": "v2:9eb741fb99873f99b9667037d701603437340692adab76baeaf7654af3a2a175",
     "method": "mga",
     "method_version": "pls_pm_v1+pls_mga_two_group_v1+pls_mediation_v1+pls_assessment_v7",
-    "engine_version": "0.3.0-alpha.1",
+    "engine_version": "2.45.0",
     "seed": 20260719,
     "settings": {
       "method": "mga",
@@ -24,34 +24,20 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-07-19T06:31:55.146096500Z",
-    "completed_at": "2026-07-19T06:31:55.327152700Z"
+    "started_at": "2026-08-11T02:33:32.801048400Z",
+    "completed_at": "2026-08-11T02:33:33.113380400Z"
   },
   "diagnostics": [
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "Bounded MGA is experimental; this preview compares two observed groups with approximate normal path-difference diagnostics and does not implement permutation MGA, MICOM, or publication-ready invariance testing."
-    },
-    {
-      "code": "estimation.warning",
-      "level": "warning",
-      "message": "rho_a.two_indicator_limited_information for construct 'x'"
-    },
-    {
-      "code": "estimation.warning",
-      "level": "warning",
-      "message": "rho_a.two_indicator_limited_information for construct 'z'"
-    },
-    {
-      "code": "estimation.warning",
-      "level": "warning",
-      "message": "rho_a.two_indicator_limited_information for construct 'y'"
+      "message": "Two-group MGA v1 is limited to Group A/Group B path coefficients, R-squared values, and A-minus-B path differences; inference, when requested, uses only the documented QuickPLS v1.2.2 deterministic two-tailed group-label permutation scope. Measurement invariance is not assessed."
     }
   ],
   "payload": {
     "kind": "pls_pm_v1",
     "estimation": {
+      "cbsem": null,
       "cca": null,
       "construct_scores": {
         "x": [
@@ -621,6 +607,9 @@
         }
       ],
       "endogeneity": null,
+      "fimix": null,
+      "gsca": null,
+      "ipma": null,
       "iterations": 4,
       "mediation": {
         "estimates": [
@@ -648,7 +637,7 @@
         "method_version": "pls_mediation_v1",
         "tolerance": 1e-12,
         "warnings": [
-          "Mediation classes are descriptive effect-decomposition labels; publication inference requires validated bootstrap or permutation intervals for the relevant indirect effect."
+          "PLS mediation effect decomposition is validated for the documented QuickPLS v1.2.1 scope when paired with validated bootstrap or permutation intervals for the relevant indirect effect."
         ]
       },
       "method_version": "pls_mga_two_group_v1",
@@ -724,9 +713,11 @@
         ],
         "method_version": "pls_mga_two_group_v1",
         "warnings": [
-          "Bounded MGA is experimental; this preview compares two observed groups with approximate normal path-difference diagnostics and does not implement permutation MGA, MICOM, or publication-ready invariance testing."
+          "Two-group MGA v1 is limited to Group A/Group B path coefficients, R-squared values, and A-minus-B path differences; inference, when requested, uses only the documented QuickPLS v1.2.2 deterministic two-tailed group-label permutation scope. Measurement invariance is not assessed."
         ]
       },
+      "mga_permutation": null,
+      "micom": null,
       "moderated_mediation": null,
       "moderation": {
         "estimates": [],
@@ -738,6 +729,7 @@
         ],
         "warnings": []
       },
+      "nca": null,
       "nonlinear_effects": null,
       "omitted_observations": 0,
       "outer_estimates": [
@@ -790,11 +782,13 @@
           "target": "y"
         }
       ],
+      "pca": null,
       "plsc": null,
       "predict": null,
       "r_squared": {
         "y": 0.32876877580782304
       },
+      "regression": null,
       "segmentation": null,
       "transforms": [
         {
@@ -830,7 +824,7 @@
       ],
       "used_observations": 180,
       "warnings": [
-        "Bounded MGA is experimental; this preview compares two observed groups with approximate normal path-difference diagnostics and does not implement permutation MGA, MICOM, or publication-ready invariance testing."
+        "Two-group MGA v1 is limited to Group A/Group B path coefficients, R-squared values, and A-minus-B path differences; inference, when requested, uses only the documented QuickPLS v1.2.2 deterministic two-tailed group-label permutation scope. Measurement invariance is not assessed."
       ],
       "wpls": null
     },

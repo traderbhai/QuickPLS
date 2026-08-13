@@ -1,4 +1,9 @@
-"""Independent IPMA reference for the experimental v0.6 bounded slice."""
+"""Independent reference for the canonical bounded IPMA v1 contract.
+
+The fixture deliberately contains a second, unrelated structural component.
+Only direct and indirect predecessors of the selected target may be reported;
+the target itself and every unrelated construct/indicator must be absent.
+"""
 
 import csv
 import json
@@ -15,6 +20,9 @@ QUICKPLS = RESULTS / "ipma_reference_quickpls.json"
 OUTPUT = RESULTS / "ipma_reference_report.json"
 CLI_EXE = ROOT / "target" / "debug" / "qpls.exe"
 TOLERANCE = 1e-6
+METHOD_VERSION = "ipma_v1"
+PERFORMANCE_SCALE = "min_max_0_100_from_standardized_scores_v1"
+PROVENANCE_METHOD_VERSION = "pls_pm_v1+ipma_v1+pls_mediation_v1+pls_assessment_v7"
 CLI_READY = False
 
 
@@ -34,18 +42,22 @@ def qpls(args, **kwargs):
 def write_dataset():
     RESULTS.mkdir(parents=True, exist_ok=True)
     with DATA.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=["x1", "z1", "m1", "y1"])
+        writer = csv.DictWriter(handle, fieldnames=["x1", "z1", "m1", "y1", "u1", "v1"])
         writer.writeheader()
         for index in range(1, 81):
             x = index / 10.0
             z = ((index * 7) % 29) / 10.0
             m = 0.62 * x + 0.38 * z + ((index % 5) - 2) * 0.035
             y = 0.34 * x + 0.21 * z + 0.71 * m + ((index % 7) - 3) * 0.025
+            u = ((index * 11) % 37) / 10.0 + ((index % 3) - 1) * 0.02
+            v = 0.57 * u + (((index * 13) % 17) - 8) * 0.01
             writer.writerow({
                 "x1": f"{x:.12f}",
                 "z1": f"{z:.12f}",
                 "m1": f"{m:.12f}",
                 "y1": f"{y:.12f}",
+                "u1": f"{u:.12f}",
+                "v1": f"{v:.12f}",
             })
 
 
@@ -70,6 +82,8 @@ def write_recipe(fingerprint):
                 {"id": "z", "name": "Z", "short_name": "Z", "mode": "reflective", "indicators": ["z1"]},
                 {"id": "m", "name": "M", "short_name": "M", "mode": "reflective", "indicators": ["m1"]},
                 {"id": "y", "name": "Y", "short_name": "Y", "mode": "reflective", "indicators": ["y1"]},
+                {"id": "u", "name": "Unrelated U", "short_name": "U", "mode": "reflective", "indicators": ["u1"]},
+                {"id": "v", "name": "Unrelated V", "short_name": "V", "mode": "reflective", "indicators": ["v1"]},
             ],
             "paths": [
                 {"source": "x", "target": "m"},
@@ -77,6 +91,7 @@ def write_recipe(fingerprint):
                 {"source": "x", "target": "y"},
                 {"source": "z", "target": "y"},
                 {"source": "m", "target": "y"},
+                {"source": "u", "target": "v"},
             ],
         },
         "settings": {
@@ -149,14 +164,16 @@ def performance(values):
 
 
 def independent_reference(rows):
-    scores = {name: standardize([row[f"{name}1"] for row in rows]) for name in ["x", "z", "m", "y"]}
+    scores = {
+        name: standardize([row[f"{name}1"] for row in rows])
+        for name in ["x", "z", "m", "y", "u", "v"]
+    }
     bx_m, bz_m = ols([scores["x"], scores["z"]], scores["m"])
     bx_y, bz_y, bm_y = ols([scores["x"], scores["z"], scores["m"]], scores["y"])
     effects = {
         "x": bx_y + bx_m * bm_y,
         "z": bz_y + bz_m * bm_y,
         "m": bm_y,
-        "y": 1.0,
     }
     return {
         "constructs": {
@@ -165,7 +182,7 @@ def independent_reference(rows):
                 "performance": performance(scores[construct]),
                 "score_mean": mean(scores[construct]),
             }
-            for construct in ["x", "z", "m", "y"]
+            for construct in ["x", "z", "m"]
         },
         "indicators": {
             f"{construct}1": {
@@ -175,8 +192,11 @@ def independent_reference(rows):
                 "performance": performance(scores[construct]),
                 "score_mean": mean(scores[construct]),
             }
-            for construct in ["x", "z", "m", "y"]
+            for construct in ["x", "z", "m"]
         },
+        "selected_target": "y",
+        "excluded_constructs": ["y", "u", "v"],
+        "excluded_indicators": ["y1", "u1", "v1"],
     }
 
 
@@ -193,32 +213,105 @@ def main():
     result = run_quickpls()
     estimation = result["payload"]["estimation"]
     ipma = estimation["ipma"]
-    quick_constructs = {row["construct"]: row for row in ipma["constructs"] if row["target"] == "y"}
-    quick_indicators = {row["indicator"]: row for row in ipma["indicators"] if row["target"] == "y"}
+    construct_rows = [row for row in ipma["constructs"] if row["target"] == "y"]
+    indicator_rows = [row for row in ipma["indicators"] if row["target"] == "y"]
+    quick_constructs = {row["construct"]: row for row in construct_rows}
+    quick_indicators = {row["indicator"]: row for row in indicator_rows}
+    expected_construct_ids = list(reference["constructs"])
+    expected_indicator_ids = list(reference["indicators"])
+    actual_construct_ids = [row["construct"] for row in construct_rows]
+    actual_indicator_ids = [row["indicator"] for row in indicator_rows]
     construct_deltas = {
         f"{construct}.{metric}": abs(quick_constructs[construct][metric] - expected[metric])
         for construct, expected in reference["constructs"].items()
+        if construct in quick_constructs
         for metric in ["importance", "performance", "score_mean"]
     }
     indicator_deltas = {
         f"{indicator}.{metric}": abs(quick_indicators[indicator][metric] - expected[metric])
         for indicator, expected in reference["indicators"].items()
+        if indicator in quick_indicators
         for metric in ["construct_importance", "loading", "performance", "score_mean"]
     }
+    max_construct_delta = max(construct_deltas.values()) if construct_deltas else None
+    max_indicator_delta = max(indicator_deltas.values()) if indicator_deltas else None
+    warning_text = " ".join(ipma.get("warnings", []))
+    payload = result["payload"]
     checks = {
-        "method_version": estimation["method_version"] == "ipma_v1" and ipma["method_version"] == "ipma_v1",
-        "provenance_version": "ipma_v1" in result["provenance"]["method_version"],
-        "target_selection": ipma["targets"] == ["y"] and set(quick_constructs) == {"x", "z", "m", "y"},
-        "construct_reference_agreement": max(construct_deltas.values()) < TOLERANCE,
-        "indicator_reference_agreement": max(indicator_deltas.values()) < TOLERANCE,
+        "method_version_exact": estimation["method_version"] == METHOD_VERSION and ipma["method_version"] == METHOD_VERSION,
+        "provenance_version_exact": result["provenance"]["method_version"] == PROVENANCE_METHOD_VERSION,
+        "performance_scale_exact": ipma.get("performance_scale") == PERFORMANCE_SCALE,
+        "target_selection_exact": ipma["targets"] == ["y"],
+        "all_rows_match_selected_target": all(
+            row["target"] == "y" for row in ipma["constructs"] + ipma["indicators"]
+        ),
+        "predecessor_construct_rows_exact": actual_construct_ids == expected_construct_ids,
+        "predecessor_indicator_rows_exact": actual_indicator_ids == expected_indicator_ids,
+        "target_and_unrelated_rows_excluded": not (
+            set(reference["excluded_constructs"]) & set(actual_construct_ids)
+            or set(reference["excluded_indicators"]) & set(actual_indicator_ids)
+        ),
+        "construct_row_schema_exact": all(
+            set(row) == {"target", "construct", "importance", "performance", "score_mean"}
+            for row in construct_rows
+        ),
+        "indicator_row_schema_exact": all(
+            set(row) == {
+                "target",
+                "construct",
+                "indicator",
+                "construct_importance",
+                "loading",
+                "performance",
+                "score_mean",
+            }
+            for row in indicator_rows
+        ),
+        "construct_reference_agreement": (
+            actual_construct_ids == expected_construct_ids
+            and max_construct_delta is not None
+            and max_construct_delta < TOLERANCE
+        ),
+        "indicator_reference_agreement": (
+            actual_indicator_ids == expected_indicator_ids
+            and max_indicator_delta is not None
+            and max_indicator_delta < TOLERANCE
+        ),
         "performance_bounds": all(0.0 <= row["performance"] <= 100.0 for row in ipma["constructs"] + ipma["indicators"]),
-        "warnings_present": any("IPMA" in warning for warning in ipma["warnings"]),
+        "observed_sample_boundary_warning": all(
+            phrase in warning_text
+            for phrase in [
+                "direct and indirect structural predecessors only",
+                "observed sample range",
+                "listwise-standardized scores",
+                "Theoretical-range performance and cIPMA are unsupported",
+            ]
+        ),
+        "no_resampling_payload": payload.get("bootstrap") is None and payload.get("permutation") is None,
     }
     report = {
+        "schema_version": 2,
+        "method_version": ipma["method_version"],
+        "performance_scale": ipma["performance_scale"],
+        "provenance_method_version": result["provenance"]["method_version"],
+        "scope": {
+            "kind": "predecessor_only_observed_sample_ipma",
+            "selected_target": "y",
+            "performance_range": [0.0, 100.0],
+            "theoretical_range_correction": False,
+            "cipma": False,
+            "resampling_inference": False,
+        },
+        "fixture": {
+            "expected_predecessor_constructs": expected_construct_ids,
+            "expected_predecessor_indicators": expected_indicator_ids,
+            "excluded_target_and_unrelated_constructs": reference["excluded_constructs"],
+            "excluded_target_and_unrelated_indicators": reference["excluded_indicators"],
+        },
         "checks": checks,
         "passed": all(checks.values()),
-        "max_construct_delta": max(construct_deltas.values()),
-        "max_indicator_delta": max(indicator_deltas.values()),
+        "max_construct_delta": max_construct_delta,
+        "max_indicator_delta": max_indicator_delta,
         "construct_deltas": construct_deltas,
         "indicator_deltas": indicator_deltas,
         "quickpls": ipma,
@@ -227,7 +320,15 @@ def main():
     OUTPUT.write_text(json.dumps(report, indent=2), encoding="utf-8")
     if not report["passed"]:
         raise SystemExit(json.dumps(report, indent=2))
-    print(json.dumps({"passed": True, "max_construct_delta": report["max_construct_delta"], "max_indicator_delta": report["max_indicator_delta"]}, indent=2))
+    print(json.dumps({
+        "passed": True,
+        "construct_rows": actual_construct_ids,
+        "indicator_rows": actual_indicator_ids,
+        "max_construct_delta": report["max_construct_delta"],
+        "max_indicator_delta": report["max_indicator_delta"],
+        "performance_scale": report["performance_scale"],
+        "provenance_method_version": report["provenance_method_version"],
+    }, indent=2))
 
 
 if __name__ == "__main__":

@@ -1,49 +1,52 @@
 {
-  "schema_version": 1,
-  "target": "v1_2_2_group_prediction_regression_promotion",
+  "schema_version": 2,
+  "target": "pls_mga_permutation_v2_method_promotion",
   "method_id": "mga_permutation",
-  "promoted_scope": "Two observed groups with group-specific PLS re-estimation, deterministic label permutation, empirical p values, and MICOM warning enforcement.",
+  "method_version": "pls_mga_permutation_v2",
+  "promotion_status": "qualified",
   "passed": true,
-  "reports": [
-    {
-      "path": "validation\\results\\mga_reference_report.json",
-      "present": true,
-      "passed": true
-    },
-    {
-      "path": "validation\\results\\v06_group_methods_reference_report.json",
-      "present": true,
-      "passed": true
-    },
-    {
-      "path": "validation\\results\\prediction_heterogeneity_publication_audit.json",
-      "present": true,
-      "passed": true
-    }
-  ],
-  "docs": [
-    {
-      "path": "docs\\methods\\PLS_MGA_PERMUTATION_V1.md",
-      "present": true,
-      "bytes": 1216
-    },
-    {
-      "path": "docs\\methods\\PLS_MGA_TWO_GROUP_V1.md",
-      "present": true,
-      "bytes": 1837
-    }
-  ],
+  "reference": "validation\\results\\micom_v2_reference_report.json",
   "checks": [
     {
-      "name": "permutation_fixture_present",
+      "name": "independent_reference_passes",
       "passed": true,
-      "detail": "v06 integrated report covers permutation MGA path-difference output."
+      "detail": "The independent 5,000-permutation reference must agree for path, loading, and weight distributions."
     },
     {
-      "name": "micom_warning_policy_present",
+      "name": "v2_payload_covers_paths_and_measurement_parameters",
       "passed": true,
-      "detail": "Engine emits a warning when permutation MGA runs without passing MICOM partial invariance."
+      "detail": "The current payload versions path, loading, weight, and permutation-accounting evidence."
+    },
+    {
+      "name": "every_permutation_reestimates_both_groups",
+      "passed": true,
+      "detail": "Each usable label assignment re-fits both groups and reuses that pair for paths, loadings, weights, and MICOM."
+    },
+    {
+      "name": "bounded_coupled_recipe_contract",
+      "passed": true,
+      "detail": "The recipe contract fixes 5,000\u201310,000 permutations and couples permutation MGA to MICOM Step-1 confirmation."
+    },
+    {
+      "name": "persistence_validates_current_and_archives_v1",
+      "passed": true,
+      "detail": "Persistence keeps v1 archives readable while validating the complete v2 comparison identities and counts."
+    },
+    {
+      "name": "native_workflow_requests_complete_method_pair",
+      "passed": true,
+      "detail": "The native calculation surface requests the complete current method pair and the final-study permutation floor."
+    },
+    {
+      "name": "v2_contract_is_documented",
+      "passed": true,
+      "detail": "The v2 document defines direction, inference, measurement rows, MICOM dependency, and interpretation limits."
+    },
+    {
+      "name": "legacy_contract_remains_distinct",
+      "passed": true,
+      "detail": "The narrower historical v1 contract remains documented separately rather than being silently reinterpreted as v2."
     }
   ],
-  "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."
+  "note": "A passing audit qualifies only the documented two-group path-weighting scope. MICOM v2 results must be interpreted before any path-difference claim."
 }

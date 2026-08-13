@@ -44,14 +44,13 @@
         "target": "z"
       },
       {
-        "source": "x",
-        "target": "y"
-      },
-      {
         "source": "z",
         "target": "y"
       }
-    ]
+    ],
+    "controls": [],
+    "higher_order_constructs": [],
+    "interactions": []
   },
   "settings": {
     "method": "cca",
@@ -59,11 +58,16 @@
     "tolerance": 1e-07,
     "max_iterations": 3000,
     "bootstrap_samples": 0,
+    "studentized_inner_samples": 0,
+    "permutation_samples": 0,
     "seed": 20260719,
+    "workers": 1,
+    "confidence_level": 0.95,
     "preprocessing": "standardized",
-    "missing_data": "listwise_deletion"
+    "missing_data": "listwise_deletion",
+    "case_weight_column": null
   },
   "metadata": {
-    "fixture": "independent_cca_reference"
+    "fixture": "independent_nonsaturated_cca_reference"
   }
 }

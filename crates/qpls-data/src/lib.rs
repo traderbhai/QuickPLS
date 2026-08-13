@@ -3,6 +3,7 @@ use arrow::{
     datatypes::{DataType, Field, Schema},
     ipc::{reader::StreamReader, writer::StreamWriter},
     record_batch::RecordBatch,
+    util::display::array_value_to_string,
 };
 use calamine::{Reader, open_workbook_auto};
 use faer::{Mat, Side};
@@ -100,6 +101,33 @@ pub struct ImportOptions {
     pub missing_markers: Vec<String>,
     pub data_kind: DataKind,
     pub sample_size: Option<usize>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum RecodeUnmappedPolicy {
+    KeepOriginal,
+    SetMissing,
+    Error,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct RecodeValueMapping {
+    pub source: String,
+    pub target: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct RecodeColumnSpec {
+    pub source_column: String,
+    pub target_column: String,
+    pub target_label: Option<String>,
+    pub target_type: ColumnType,
+    pub target_scale: ScaleType,
+    pub mappings: Vec<RecodeValueMapping>,
+    pub unmapped: RecodeUnmappedPolicy,
 }
 
 impl Default for ImportOptions {
@@ -403,6 +431,320 @@ pub fn update_column_metadata(
     Ok(())
 }
 
+/// Creates an immutable dataset revision with one derived recoded column.
+///
+/// The transformation always reads the complete Arrow batch. The source
+/// dataset is never mutated, so completed analyses can continue resolving its
+/// exact fingerprint after the revision is added to a project.
+pub fn recode_column(dataset: &Dataset, spec: &RecodeColumnSpec) -> Result<Dataset, DataError> {
+    if dataset.schema.kind != DataKind::Raw {
+        return Err(DataError::Import(
+            "derived indicators require raw row-level data".into(),
+        ));
+    }
+    validate_recode_spec(dataset, spec)?;
+
+    let source_index = dataset
+        .schema
+        .columns
+        .iter()
+        .position(|column| column.name == spec.source_column)
+        .ok_or_else(|| DataError::Import(format!("unknown column {}", spec.source_column)))?;
+    let source_metadata = &dataset.schema.columns[source_index];
+    let source_array = dataset.batch.column(source_index);
+    let mappings = parsed_recode_mappings(source_metadata.column_type, spec)?;
+    let mut values = Vec::with_capacity(dataset.batch.num_rows());
+
+    for row in 0..dataset.batch.num_rows() {
+        let Some(source_value) = typed_array_value(
+            source_array,
+            row,
+            source_metadata.column_type,
+            &spec.source_column,
+        )?
+        else {
+            values.push(None);
+            continue;
+        };
+
+        if let Some((_, replacement)) = mappings
+            .iter()
+            .find(|(candidate, _)| candidate == &source_value)
+        {
+            values.push(replacement.clone());
+            continue;
+        }
+
+        match spec.unmapped {
+            RecodeUnmappedPolicy::SetMissing => values.push(None),
+            RecodeUnmappedPolicy::Error => {
+                return Err(DataError::Import(format!(
+                    "unmapped value {} in column {} at row {}",
+                    source_value.display(),
+                    spec.source_column,
+                    row + 1
+                )));
+            }
+            RecodeUnmappedPolicy::KeepOriginal => values.push(Some(
+                convert_typed_value(source_value, spec.target_type).map_err(|message| {
+                    DataError::Import(format!(
+                        "cannot keep the original value in target column {} at row {}: {message}",
+                        spec.target_column,
+                        row + 1
+                    ))
+                })?,
+            )),
+        }
+    }
+
+    let target_array = typed_values_array(values, spec.target_type)?;
+    let target_data_type = match spec.target_type {
+        ColumnType::Numeric => DataType::Float64,
+        ColumnType::Text => DataType::Utf8,
+        ColumnType::Boolean => DataType::Boolean,
+    };
+    let mut fields = dataset
+        .batch
+        .schema()
+        .fields()
+        .iter()
+        .cloned()
+        .collect::<Vec<_>>();
+    fields.push(Arc::new(Field::new(
+        &spec.target_column,
+        target_data_type,
+        true,
+    )));
+    let mut arrays = dataset.batch.columns().to_vec();
+    arrays.push(target_array);
+    let batch = RecordBatch::try_new(Arc::new(Schema::new(fields)), arrays)
+        .map_err(|error| DataError::Arrow(error.to_string()))?;
+
+    let mut schema = dataset.schema.clone();
+    schema.columns.push(ColumnMetadata {
+        name: spec.target_column.clone(),
+        label: spec
+            .target_label
+            .as_deref()
+            .map(str::trim)
+            .filter(|label| !label.is_empty())
+            .map(str::to_owned),
+        column_type: spec.target_type,
+        scale_type: spec.target_scale,
+        missing_markers: vec![],
+        theoretical_min: None,
+        theoretical_max: None,
+        value_labels: BTreeMap::new(),
+    });
+    schema.case_count = batch.num_rows();
+    let fingerprint = fingerprint_v2(&batch, &schema)?;
+
+    Ok(Dataset {
+        id: Uuid::new_v4(),
+        name: format!("{} - {} recode", dataset.name, spec.target_column),
+        schema,
+        batch,
+        fingerprint,
+    })
+}
+
+#[derive(Debug, Clone, PartialEq)]
+enum TypedRecodeValue {
+    Numeric(f64),
+    Text(String),
+    Boolean(bool),
+}
+
+impl TypedRecodeValue {
+    fn display(&self) -> String {
+        match self {
+            Self::Numeric(value) => value.to_string(),
+            Self::Text(value) => value.clone(),
+            Self::Boolean(value) => value.to_string(),
+        }
+    }
+}
+
+fn validate_recode_spec(dataset: &Dataset, spec: &RecodeColumnSpec) -> Result<(), DataError> {
+    if spec.source_column.trim() != spec.source_column || spec.source_column.is_empty() {
+        return Err(DataError::InvalidColumnName(spec.source_column.clone()));
+    }
+    if spec.target_column.trim() != spec.target_column || spec.target_column.is_empty() {
+        return Err(DataError::InvalidColumnName(spec.target_column.clone()));
+    }
+    let mut names = dataset
+        .schema
+        .columns
+        .iter()
+        .map(|column| column.name.clone())
+        .collect::<Vec<_>>();
+    names.push(spec.target_column.clone());
+    validate_headers(&names)?;
+    if !dataset
+        .schema
+        .columns
+        .iter()
+        .any(|column| column.name == spec.source_column)
+    {
+        return Err(DataError::Import(format!(
+            "unknown column {}",
+            spec.source_column
+        )));
+    }
+    if spec.mappings.is_empty() {
+        return Err(DataError::Import(
+            "at least one recode mapping is required".into(),
+        ));
+    }
+    match (spec.target_type, spec.target_scale) {
+        (ColumnType::Text, ScaleType::Continuous) => Err(DataError::Import(
+            "a text recode cannot use a continuous scale".into(),
+        )),
+        (ColumnType::Boolean, scale) if scale != ScaleType::Binary => Err(DataError::Import(
+            "a boolean recode must use a binary scale".into(),
+        )),
+        _ => Ok(()),
+    }
+}
+
+fn parsed_recode_mappings(
+    source_type: ColumnType,
+    spec: &RecodeColumnSpec,
+) -> Result<Vec<(TypedRecodeValue, Option<TypedRecodeValue>)>, DataError> {
+    let mut parsed = Vec::with_capacity(spec.mappings.len());
+    for mapping in &spec.mappings {
+        let source = parse_typed_value(&mapping.source, source_type, "mapping source")?;
+        if parsed.iter().any(
+            |(candidate, _): &(TypedRecodeValue, Option<TypedRecodeValue>)| candidate == &source,
+        ) {
+            return Err(DataError::Import(format!(
+                "duplicate recode mapping for source value {}",
+                source.display()
+            )));
+        }
+        let target = mapping
+            .target
+            .as_deref()
+            .map(|value| parse_typed_value(value, spec.target_type, "mapping target"))
+            .transpose()?;
+        parsed.push((source, target));
+    }
+    Ok(parsed)
+}
+
+fn typed_array_value(
+    array: &ArrayRef,
+    row: usize,
+    column_type: ColumnType,
+    column_name: &str,
+) -> Result<Option<TypedRecodeValue>, DataError> {
+    if array.is_null(row) {
+        return Ok(None);
+    }
+    let displayed = array_value_to_string(array.as_ref(), row)
+        .map_err(|error| DataError::Arrow(error.to_string()))?;
+    parse_typed_value(&displayed, column_type, column_name).map(Some)
+}
+
+fn parse_typed_value(
+    value: &str,
+    column_type: ColumnType,
+    context: &str,
+) -> Result<TypedRecodeValue, DataError> {
+    match column_type {
+        ColumnType::Numeric => {
+            let parsed = value.trim().parse::<f64>().map_err(|_| {
+                DataError::Import(format!("{context} value {value:?} is not numeric"))
+            })?;
+            if !parsed.is_finite() {
+                return Err(DataError::Import(format!(
+                    "{context} value {value:?} must be finite"
+                )));
+            }
+            Ok(TypedRecodeValue::Numeric(parsed))
+        }
+        ColumnType::Text => Ok(TypedRecodeValue::Text(value.to_owned())),
+        ColumnType::Boolean => match value.trim().to_ascii_lowercase().as_str() {
+            "true" | "1" => Ok(TypedRecodeValue::Boolean(true)),
+            "false" | "0" => Ok(TypedRecodeValue::Boolean(false)),
+            _ => Err(DataError::Import(format!(
+                "{context} value {value:?} is not boolean"
+            ))),
+        },
+    }
+}
+
+fn convert_typed_value(
+    value: TypedRecodeValue,
+    target_type: ColumnType,
+) -> Result<TypedRecodeValue, String> {
+    match (value, target_type) {
+        (value @ TypedRecodeValue::Numeric(_), ColumnType::Numeric)
+        | (value @ TypedRecodeValue::Text(_), ColumnType::Text)
+        | (value @ TypedRecodeValue::Boolean(_), ColumnType::Boolean) => Ok(value),
+        (TypedRecodeValue::Numeric(value), ColumnType::Text) => {
+            Ok(TypedRecodeValue::Text(value.to_string()))
+        }
+        (TypedRecodeValue::Boolean(value), ColumnType::Text) => {
+            Ok(TypedRecodeValue::Text(value.to_string()))
+        }
+        (TypedRecodeValue::Text(value), target) => {
+            parse_typed_value(&value, target, "unmapped source").map_err(|error| error.to_string())
+        }
+        (TypedRecodeValue::Boolean(value), ColumnType::Numeric) => {
+            Ok(TypedRecodeValue::Numeric(if value { 1.0 } else { 0.0 }))
+        }
+        (TypedRecodeValue::Numeric(0.0), ColumnType::Boolean) => {
+            Ok(TypedRecodeValue::Boolean(false))
+        }
+        (TypedRecodeValue::Numeric(1.0), ColumnType::Boolean) => {
+            Ok(TypedRecodeValue::Boolean(true))
+        }
+        (TypedRecodeValue::Numeric(value), ColumnType::Boolean) => {
+            Err(format!("numeric value {value} is not 0 or 1"))
+        }
+    }
+}
+
+fn typed_values_array(
+    values: Vec<Option<TypedRecodeValue>>,
+    column_type: ColumnType,
+) -> Result<ArrayRef, DataError> {
+    match column_type {
+        ColumnType::Numeric => Ok(Arc::new(Float64Array::from(
+            values
+                .into_iter()
+                .map(|value| match value {
+                    Some(TypedRecodeValue::Numeric(value)) => Some(value),
+                    None => None,
+                    _ => unreachable!("validated numeric recode value"),
+                })
+                .collect::<Vec<_>>(),
+        ))),
+        ColumnType::Boolean => Ok(Arc::new(BooleanArray::from(
+            values
+                .into_iter()
+                .map(|value| match value {
+                    Some(TypedRecodeValue::Boolean(value)) => Some(value),
+                    None => None,
+                    _ => unreachable!("validated boolean recode value"),
+                })
+                .collect::<Vec<_>>(),
+        ))),
+        ColumnType::Text => {
+            let mut builder = StringBuilder::new();
+            for value in values {
+                match value {
+                    Some(TypedRecodeValue::Text(value)) => builder.append_value(value),
+                    None => builder.append_null(),
+                    _ => unreachable!("validated text recode value"),
+                }
+            }
+            Ok(Arc::new(builder.finish()))
+        }
+    }
+}
+
 fn validate_matrix(
     batch: &RecordBatch,
     kind: DataKind,
@@ -546,7 +888,17 @@ pub fn dataset_from_descriptor(
 }
 
 pub fn preview(dataset: &Dataset, limit: usize) -> Vec<BTreeMap<String, Option<String>>> {
-    (0..dataset.batch.num_rows().min(limit))
+    preview_page(dataset, 0, limit)
+}
+
+pub fn preview_page(
+    dataset: &Dataset,
+    offset: usize,
+    limit: usize,
+) -> Vec<BTreeMap<String, Option<String>>> {
+    let start = offset.min(dataset.batch.num_rows());
+    let end = start.saturating_add(limit).min(dataset.batch.num_rows());
+    (start..end)
         .map(|row| {
             dataset
                 .batch
@@ -683,6 +1035,25 @@ mod tests {
         let restored = read_arrow(&bytes).unwrap();
         assert_eq!(restored, data.batch);
     }
+
+    #[test]
+    fn preview_page_returns_only_the_requested_bounded_window() {
+        let data = import_delimited_bytes(
+            b"x,y\n1,a\n2,b\n3,c\n4,d\n5,e\n",
+            "fixture.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+
+        let rows = preview_page(&data, 2, 2);
+        assert_eq!(rows.len(), 2);
+        assert_eq!(rows[0]["x"].as_deref(), Some("3"));
+        assert_eq!(rows[1]["y"].as_deref(), Some("d"));
+        assert!(preview_page(&data, 99, 10).is_empty());
+        assert_eq!(preview_page(&data, 4, usize::MAX).len(), 1);
+    }
+
     #[test]
     fn duplicate_headers_are_rejected() {
         assert!(matches!(
@@ -748,6 +1119,167 @@ mod tests {
         assert_eq!(data.schema.columns[0].scale_type, ScaleType::Ordinal);
         assert_ne!(data.fingerprint, previous_fingerprint);
         assert!(data.fingerprint.0.starts_with("v2:"));
+    }
+
+    #[test]
+    fn recode_column_versions_the_complete_arrow_batch_and_preserves_the_source() {
+        let mut csv = String::from("score,group\n");
+        for row in 0..600 {
+            csv.push_str(&format!(
+                "{},{}\n",
+                row % 3,
+                if row % 2 == 0 { "A" } else { "B" }
+            ));
+        }
+        let source =
+            import_delimited_bytes(csv.as_bytes(), "large.csv", b',', &ImportOptions::default())
+                .unwrap();
+        let original = source.clone();
+        let derived = recode_column(
+            &source,
+            &RecodeColumnSpec {
+                source_column: "score".into(),
+                target_column: "score_recode".into(),
+                target_label: Some("Recoded score".into()),
+                target_type: ColumnType::Numeric,
+                target_scale: ScaleType::Ordinal,
+                mappings: vec![
+                    RecodeValueMapping {
+                        source: "1".into(),
+                        target: None,
+                    },
+                    RecodeValueMapping {
+                        source: "2".into(),
+                        target: Some("20".into()),
+                    },
+                ],
+                unmapped: RecodeUnmappedPolicy::KeepOriginal,
+            },
+        )
+        .unwrap();
+
+        assert_eq!(source.id, original.id);
+        assert_eq!(source.batch, original.batch);
+        assert_eq!(source.schema, original.schema);
+        assert_eq!(source.fingerprint, original.fingerprint);
+        assert_ne!(derived.id, source.id);
+        assert_ne!(derived.fingerprint, source.fingerprint);
+        assert_eq!(derived.schema.case_count, 600);
+        assert_eq!(derived.batch.num_rows(), 600);
+        assert_eq!(
+            derived.schema.columns.len(),
+            source.schema.columns.len() + 1
+        );
+        assert_eq!(derived.schema.columns.last().unwrap().name, "score_recode");
+        assert_eq!(
+            derived.schema.columns.last().unwrap().label.as_deref(),
+            Some("Recoded score")
+        );
+
+        let after_preview_boundary = preview_page(&derived, 549, 3);
+        assert_eq!(
+            after_preview_boundary[0]["score_recode"].as_deref(),
+            Some("0")
+        );
+        assert_eq!(after_preview_boundary[1]["score_recode"], None);
+        assert_eq!(
+            after_preview_boundary[2]["score_recode"].as_deref(),
+            Some("20")
+        );
+    }
+
+    #[test]
+    fn recode_column_validates_rules_and_propagates_source_nulls() {
+        let source = import_delimited_bytes(
+            b"group\nA\nNA\nB\nC\n",
+            "groups.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let base = RecodeColumnSpec {
+            source_column: "group".into(),
+            target_column: "group_code".into(),
+            target_label: None,
+            target_type: ColumnType::Numeric,
+            target_scale: ScaleType::Nominal,
+            mappings: vec![
+                RecodeValueMapping {
+                    source: "A".into(),
+                    target: Some("1".into()),
+                },
+                RecodeValueMapping {
+                    source: "B".into(),
+                    target: Some("2".into()),
+                },
+            ],
+            unmapped: RecodeUnmappedPolicy::SetMissing,
+        };
+        let derived = recode_column(&source, &base).unwrap();
+        let rows = preview(&derived, 10);
+        assert_eq!(rows[0]["group_code"].as_deref(), Some("1"));
+        assert_eq!(rows[1]["group_code"], None);
+        assert_eq!(rows[2]["group_code"].as_deref(), Some("2"));
+        assert_eq!(rows[3]["group_code"], None);
+
+        let collision = RecodeColumnSpec {
+            target_column: "group".into(),
+            ..base.clone()
+        };
+        assert!(matches!(
+            recode_column(&source, &collision),
+            Err(DataError::InvalidColumnName(name)) if name == "group"
+        ));
+
+        let duplicate = RecodeColumnSpec {
+            mappings: vec![
+                RecodeValueMapping {
+                    source: "A".into(),
+                    target: Some("1".into()),
+                },
+                RecodeValueMapping {
+                    source: "A".into(),
+                    target: Some("2".into()),
+                },
+            ],
+            ..base.clone()
+        };
+        assert!(matches!(
+            recode_column(&source, &duplicate),
+            Err(DataError::Import(message)) if message.contains("duplicate recode mapping")
+        ));
+
+        let strict = RecodeColumnSpec {
+            unmapped: RecodeUnmappedPolicy::Error,
+            ..base
+        };
+        assert!(matches!(
+            recode_column(&source, &strict),
+            Err(DataError::Import(message)) if message.contains("unmapped value C") && message.contains("row 4")
+        ));
+    }
+
+    #[test]
+    fn recode_spec_has_a_stable_typed_camel_case_wire_contract() {
+        let value = serde_json::json!({
+            "sourceColumn": "group",
+            "targetColumn": "group_code",
+            "targetLabel": "Group code",
+            "targetType": "numeric",
+            "targetScale": "nominal",
+            "mappings": [
+                { "source": "A", "target": "1" },
+                { "source": "B", "target": null }
+            ],
+            "unmapped": "keep_original"
+        });
+        let spec: RecodeColumnSpec = serde_json::from_value(value.clone()).unwrap();
+        assert_eq!(spec.source_column, "group");
+        assert_eq!(spec.target_type, ColumnType::Numeric);
+        assert_eq!(spec.target_scale, ScaleType::Nominal);
+        assert_eq!(spec.unmapped, RecodeUnmappedPolicy::KeepOriginal);
+        assert_eq!(spec.mappings[1].target, None);
+        assert_eq!(serde_json::to_value(spec).unwrap(), value);
     }
     #[test]
     fn xlsx_fixture_imports_numeric_and_text_columns() {

@@ -2,7 +2,7 @@
   "schema_version": 2,
   "id": "00000000-0000-0000-0000-000000000081",
   "created_at": "2026-07-19T00:00:00Z",
-  "dataset_fingerprint": "v2:6ee7f9b51caf3ac7ba3508c19b425ec58ee94b294e0d68bc048733fe0f7add15",
+  "dataset_fingerprint": "v2:d0c59bf8bc184aaa99db8c3e87772e7b93b36400263db8b30193042cc030bb87",
   "model": {
     "id": "00000000-0000-0000-0000-000000000082",
     "name": "IPMA reference",
@@ -42,6 +42,24 @@
         "indicators": [
           "y1"
         ]
+      },
+      {
+        "id": "u",
+        "name": "Unrelated U",
+        "short_name": "U",
+        "mode": "reflective",
+        "indicators": [
+          "u1"
+        ]
+      },
+      {
+        "id": "v",
+        "name": "Unrelated V",
+        "short_name": "V",
+        "mode": "reflective",
+        "indicators": [
+          "v1"
+        ]
       }
     ],
     "paths": [
@@ -64,6 +82,10 @@
       {
         "source": "m",
         "target": "y"
+      },
+      {
+        "source": "u",
+        "target": "v"
       }
     ]
   },

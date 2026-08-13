@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "milestone": "v2_14_0_real_dataset_feedback_triage",
+  "generated_at": "2026-07-30T05:05:48.347Z",
+  "source_evidence": [
+    "docs/V2_12_0_REAL_DATASET_REVIEW_PROTOCOL.md",
+    "docs/V2_13_0_REAL_DATASET_PROTOCOL_ENTRYPOINTS.md",
+    "validation/templates/real_dataset_feedback_triage_template.json"
+  ],
+  "privacy_boundary": {
+    "raw_private_data_in_repo": false,
+    "value_revealing_screenshots_in_repo": false,
+    "private_projects_in_repo": false,
+    "automated_gates_use_private_data": false
+  },
+  "triage_lanes": [
+    {
+      "id": "launch_blockers",
+      "priority": "P0",
+      "next_action": "Only start a fix milestone when a synthetic reproduction or redacted manual evidence exists."
+    },
+    {
+      "id": "workflow_and_method_guidance",
+      "priority": "P1",
+      "next_action": "Batch Setup, Data, Model, Results, and Report confusion into grouped UI milestones."
+    },
+    {
+      "id": "visual_polish_and_export_friction",
+      "priority": "P2",
+      "next_action": "Batch visual and export refinements by workspace, not as micro-fixes."
+    },
+    {
+      "id": "statistical_evidence_gap",
+      "priority": "separate",
+      "next_action": "Keep out of frontend-only milestones; route to validation/method-promotion work."
+    }
+  ],
+  "next_grouped_milestone_policy": "Choose from anonymized triage notes, generated fixtures, or explicit user feedback; do not start a micro-fix."
+}

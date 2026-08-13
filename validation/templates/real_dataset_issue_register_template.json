@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "dataset_alias": "private-dataset-a",
+  "review_date": "YYYY-MM-DD",
+  "reviewer": "",
+  "privacy": {
+    "raw_data_committed": false,
+    "private_project_committed": false,
+    "value_revealing_screenshots_committed": false,
+    "notes": "Use aliases and synthetic reproductions only. Do not store private row values, respondent identifiers, organization names, or sensitive construct labels."
+  },
+  "dataset_profile": {
+    "source_type": "csv|xlsx|sav|covariance|correlation|other",
+    "row_count_bucket": "not_recorded|small|medium|large",
+    "column_count_bucket": "not_recorded|small|medium|large",
+    "model_shape": "reflective|formative|mixed|mediation|moderation|group|prediction|standalone|unknown",
+    "contains_group_column": "unknown|yes|no",
+    "contains_binary_outcome": "unknown|yes|no",
+    "contains_case_weights": "unknown|yes|no"
+  },
+  "reviewed_screens": {
+    "data": {
+      "reviewed": false,
+      "notes": []
+    },
+    "setup": {
+      "reviewed": false,
+      "notes": []
+    },
+    "results": {
+      "reviewed": false,
+      "notes": []
+    },
+    "report": {
+      "reviewed": false,
+      "notes": []
+    }
+  },
+  "issues": [
+    {
+      "id": "issue-001",
+      "type": "ui_issue|workflow_gap|method_guidance_gap|export_gap|statistical_evidence_gap|cannot_reproduce_without_private_data",
+      "screen": "data|setup|results|report|cross-workspace",
+      "severity": "low|medium|high|blocking",
+      "summary": "",
+      "anonymized_observation": "",
+      "expected_behavior": "",
+      "suggested_next_action": "",
+      "synthetic_reproduction_needed": true,
+      "private_data_required_to_reproduce": false
+    }
+  ],
+  "follow_up": {
+    "product_changes_recommended": [],
+    "statistical_evidence_gaps": [],
+    "synthetic_fixture_requests": []
+  }
+}

@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/logistic-v2-packaged-acceptance.schema.json",
+  "title": "QuickPLS logistic v2 scoped packaged acceptance evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "kind",
+    "passed",
+    "generated_at_utc",
+    "completed_at_utc",
+    "feature_id",
+    "method_version",
+    "catalogue_snapshot_date",
+    "target",
+    "runtime",
+    "endpoint",
+    "generator",
+    "checks",
+    "artifacts",
+    "console_errors",
+    "failures",
+    "source_report"
+  ],
+  "properties": {
+    "schema_version": { "const": "quickpls.packaged_acceptance.v1" },
+    "kind": { "const": "quickpls3_scoped_tauri_logistic_v2_acceptance" },
+    "passed": { "type": "boolean" },
+    "generated_at_utc": { "type": "string", "format": "date-time" },
+    "completed_at_utc": { "type": ["string", "null"], "format": "date-time" },
+    "feature_id": { "const": "qpls3.standalone.logistic" },
+    "method_version": { "const": "regression_logistic_v2" },
+    "catalogue_snapshot_date": { "const": "2026-08-12" },
+    "target": { "const": "windows_10_11_x64_packaged_tauri" },
+    "runtime": { "const": "tauri-webview2-cdp" },
+    "endpoint": { "type": "string", "pattern": "^http://127\\.0\\.0\\.1:[0-9]+$" },
+    "generator": { "const": "validation/v247_tauri_native_acceptance.mjs" },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workflow", "results", "export", "save_reopen", "failure_lifecycle", "legacy_v1"],
+      "properties": {
+        "workflow": { "$ref": "#/$defs/workflowCheck" },
+        "results": { "$ref": "#/$defs/resultsCheck" },
+        "export": { "$ref": "#/$defs/exportCheck" },
+        "save_reopen": { "$ref": "#/$defs/saveReopenCheck" },
+        "failure_lifecycle": { "$ref": "#/$defs/failureCheck" },
+        "legacy_v1": { "$ref": "#/$defs/legacyCheck" }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["xlsx", "project_archive", "screenshots"],
+      "properties": {
+        "xlsx": { "anyOf": [{ "$ref": "#/$defs/artifact" }, { "type": "null" }] },
+        "project_archive": { "anyOf": [{ "$ref": "#/$defs/artifact" }, { "type": "null" }] },
+        "screenshots": { "type": "array", "items": { "$ref": "#/$defs/artifact" } }
+      }
+    },
+    "console_errors": { "type": "array", "items": { "type": "object" } },
+    "failures": { "type": "array", "items": { "type": "string" } },
+    "source_report": { "const": "validation/results/v247_tauri_native_acceptance_logistic.json" }
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "size", "sha256"],
+      "properties": {
+        "path": { "type": "string", "pattern": "^validation/results/" },
+        "size": { "type": "integer", "minimum": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "workflowCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["passed", "full_data_profiled", "active_lifecycle_captured", "model_free", "source_check"],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "full_data_profiled": { "type": "boolean" },
+        "active_lifecycle_captured": { "type": "boolean" },
+        "model_free": { "type": "boolean" },
+        "source_check": { "const": "logisticWorkflow" }
+      }
+    },
+    "resultsCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["passed", "coefficient_rows", "probability_rows", "in_sample_disclaimer", "source_check"],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "coefficient_rows": { "type": ["integer", "null"], "minimum": 0 },
+        "probability_rows": { "type": ["integer", "null"], "minimum": 0 },
+        "in_sample_disclaimer": { "type": ["string", "null"] },
+        "source_check": { "const": "logisticResult" }
+      }
+    },
+    "exportCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["passed", "workbook_sheets", "in_sample_disclaimer_included", "artifact_sha256", "source_check"],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "workbook_sheets": { "type": "array", "items": { "type": "string" } },
+        "in_sample_disclaimer_included": { "type": "boolean" },
+        "artifact_sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+        "source_check": { "const": "logisticExport" }
+      }
+    },
+    "saveReopenCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["passed", "same_run_restored", "project_checksum_matches", "archive_sha256", "source_check"],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "same_run_restored": { "type": "boolean" },
+        "project_checksum_matches": { "type": "boolean" },
+        "archive_sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+        "source_check": { "const": "logisticSaveReopen" }
+      }
+    },
+    "failureCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["passed", "boundary", "source_check"],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "boundary": { "const": "strict_nonbinary_outcome_profile_rejected_then_valid_profile_recovered" },
+        "source_check": { "const": "logisticFailureLifecycle" }
+      }
+    },
+    "legacyCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["passed", "boundary", "historical_archive_readability_evidence", "source_check"],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "boundary": { "const": "current_packaged_v2_result_is_not_reinterpreted_as_historical_v1" },
+        "historical_archive_readability_evidence": { "const": "backend_persistence_gate" },
+        "source_check": { "const": "logisticLegacyV1" }
+      }
+    }
+  }
+}

@@ -3,7 +3,6 @@ import {
   BackgroundVariant,
   Controls,
   MarkerType,
-  MiniMap,
   ReactFlow,
   type EdgeChange,
   type EdgeTypes,
@@ -12,15 +11,12 @@ import {
   type NodeTypes,
   type ReactFlowInstance,
 } from "@xyflow/react";
-import { AlignCenterHorizontal, AlignCenterVertical, AlignHorizontalSpaceBetween, AlignStartHorizontal, AlignStartVertical, AlignVerticalSpaceBetween, ArrowLeftRight, CircleHelp, Columns3, Copy, Focus, GitBranch, Hand, Link2, MousePointer2, Plus, Redo2, Trash2, Undo2 } from "lucide-react";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent } from "react";
-import { analysisReadiness } from "../domain/analysisReadiness";
 import { buildDiagramGraph, isIndicatorNodeId, parseIndicatorNodeId } from "../domain/diagramGraph";
 import { SEM_SIZES } from "../domain/semGeometry";
-import { isNativeDesktop } from "../services/projectService";
 import { useWorkspace } from "../store";
-import type { ConstructData, DiagramToolMode, IndicatorSide } from "../types";
+import type { ConstructData, DiagramToolMode } from "../types";
 import { ConstructNode } from "./ConstructNode";
 import { IndicatorNode } from "./IndicatorNode";
 import { LatentNode } from "./LatentNode";
@@ -30,32 +26,37 @@ const nodeTypes: NodeTypes = { construct: memo(ConstructNode), latent: memo(Late
 const edgeTypes: EdgeTypes = { semEdge: SemEdge };
 const SNAP_SIZE = 10;
 const ALIGN_THRESHOLD = 8;
+const animationDuration = (milliseconds: number) =>
+  window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? 0 : milliseconds;
+
 const smartplsNodeSize = { width: SEM_SIZES.smartplsLatent.width, height: SEM_SIZES.smartplsLatent.height };
 const compactNodeSize = { width: 170, height: 118 };
 
-const isEditingText = (target: EventTarget | null) => {
-  const element = target as HTMLElement | null;
-  return element?.matches("input, textarea, select, [contenteditable='true']") ?? false;
-};
+export type ModelCanvasContextMenuTarget =
+  | { kind: "canvas" }
+  | { kind: "construct"; id: string }
+  | { kind: "path"; id: string };
 
-export function ModelCanvas() {
+export interface ModelCanvasContextMenuRequest {
+  clientX: number;
+  clientY: number;
+  returnFocus: HTMLElement | null;
+  target: ModelCanvasContextMenuTarget;
+}
+
+export interface ModelCanvasProps {
+  onContextMenuRequest?: (request: ModelCanvasContextMenuRequest) => void;
+}
+
+export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
   const nodes = useWorkspace((state) => state.nodes);
   const edges = useWorkspace((state) => state.edges);
-  const dataset = useWorkspace((state) => state.dataset);
   const runs = useWorkspace((state) => state.runs);
-  const selectedNodeId = useWorkspace((state) => state.selectedNodeId);
-  const selectedEdgeId = useWorkspace((state) => state.selectedEdgeId);
   const selectedResultRunId = useWorkspace((state) => state.selectedResultRunId);
   const diagramMode = useWorkspace((state) => state.diagramMode);
   const diagramTool = useWorkspace((state) => state.diagramTool);
   const diagramOverlaySettings = useWorkspace((state) => state.diagramOverlaySettings);
   const diagramLayout = useWorkspace((state) => state.diagramLayout);
-  const uiPreferences = useWorkspace((state) => state.uiPreferences);
-  const largeModelViewState = useWorkspace((state) => state.largeModelViewState);
-  const explorerCollapsed = useWorkspace((state) => state.explorerCollapsed);
-  const inspectorCollapsed = useWorkspace((state) => state.inspectorCollapsed);
-  const pastCount = useWorkspace((state) => state.past.length);
-  const futureCount = useWorkspace((state) => state.future.length);
   const onNodesChange = useWorkspace((state) => state.onNodesChange);
   const onEdgesChange = useWorkspace((state) => state.onEdgesChange);
   const onConnect = useWorkspace((state) => state.onConnect);
@@ -64,157 +65,41 @@ export function ModelCanvas() {
   const addCovariance = useWorkspace((state) => state.addCovariance);
   const setSelectedNode = useWorkspace((state) => state.setSelectedNode);
   const setSelectedEdge = useWorkspace((state) => state.setSelectedEdge);
-  const setSelectedResultRun = useWorkspace((state) => state.setSelectedResultRun);
-  const setView = useWorkspace((state) => state.setView);
-  const setDiagramMode = useWorkspace((state) => state.setDiagramMode);
   const setDiagramTool = useWorkspace((state) => state.setDiagramTool);
-  const setDiagramOverlaySettings = useWorkspace((state) => state.setDiagramOverlaySettings);
-  const setDiagramTheme = useWorkspace((state) => state.setDiagramTheme);
-  const setDiagramGridVisible = useWorkspace((state) => state.setDiagramGridVisible);
-  const setDiagramLayoutLocked = useWorkspace((state) => state.setDiagramLayoutLocked);
-  const setUiPreferences = useWorkspace((state) => state.setUiPreferences);
-  const setLargeModelViewState = useWorkspace((state) => state.setLargeModelViewState);
-  const setExplorerCollapsed = useWorkspace((state) => state.setExplorerCollapsed);
-  const setInspectorCollapsed = useWorkspace((state) => state.setInspectorCollapsed);
   const checkpoint = useWorkspace((state) => state.checkpoint);
   const addConstruct = useWorkspace((state) => state.addConstruct);
-  const duplicateSelected = useWorkspace((state) => state.duplicateSelected);
   const removeSelection = useWorkspace((state) => state.removeSelection);
-  const reverseSelectedPath = useWorkspace((state) => state.reverseSelectedPath);
-  const setSelectedPathRouting = useWorkspace((state) => state.setSelectedPathRouting);
-  const setPathRouting = useWorkspace((state) => state.setPathRouting);
-  const alignSelectedConstructs = useWorkspace((state) => state.alignSelectedConstructs);
-  const distributeSelectedConstructs = useWorkspace((state) => state.distributeSelectedConstructs);
   const autoLayout = useWorkspace((state) => state.autoLayout);
   const moveIndicator = useWorkspace((state) => state.moveIndicator);
-  const setIndicatorSide = useWorkspace((state) => state.setIndicatorSide);
-  const setConstructIndicatorSide = useWorkspace((state) => state.setConstructIndicatorSide);
-  const toggleConstructPinned = useWorkspace((state) => state.toggleConstructPinned);
-  const resetIndicatorLayout = useWorkspace((state) => state.resetIndicatorLayout);
   const assignIndicator = useWorkspace((state) => state.assignIndicator);
   const assignIndicators = useWorkspace((state) => state.assignIndicators);
-  const unassignIndicator = useWorkspace((state) => state.unassignIndicator);
-  const updateConstruct = useWorkspace((state) => state.updateConstruct);
-  const updateEdge = useWorkspace((state) => state.updateEdge);
-  const nudgeEdgeLabel = useWorkspace((state) => state.nudgeEdgeLabel);
-  const resetEdgeLabel = useWorkspace((state) => state.resetEdgeLabel);
-  const resetAllEdgeLabels = useWorkspace((state) => state.resetAllEdgeLabels);
-  const analysisSettings = useWorkspace((state) => state.analysisSettings);
   const undo = useWorkspace((state) => state.undo);
   const redo = useWorkspace((state) => state.redo);
   const [flow, setFlow] = useState<ReactFlowInstance | null>(null);
   const previousNodeCount = useRef(nodes.length);
   const preserveViewportForDrop = useRef(false);
   const [pathSource, setPathSource] = useState<string | null>(null);
-  const [showHelp, setShowHelp] = useState(false);
   const [dropHint, setDropHint] = useState<null | { count: number; x: number; y: number; targetConstructId?: string | null }>(null);
   const [dragGuide, setDragGuide] = useState<null | { vertical?: number; horizontal?: number; x: number; y: number; label: string }>(null);
   const [actionFeedback, setActionFeedback] = useState<null | { message: string; x?: number; y?: number }>(null);
   const [draggingVariableCount, setDraggingVariableCount] = useState(0);
   const [hoverDropTargetId, setHoverDropTargetId] = useState<string | null>(null);
-  const [selectedIndicator, setSelectedIndicator] = useState<null | { constructId: string; indicator: string }>(null);
-  const [openToolbarMenu, setOpenToolbarMenu] = useState<null | "arrange" | "view" | "results">(null);
-  const [showMiniMap, setShowMiniMap] = useState(false);
-  const [contextMenu, setContextMenu] = useState<null | { kind: "canvas"; x: number; y: number } | { kind: "construct"; id: string; x: number; y: number } | { kind: "indicator"; constructId: string; indicator: string; x: number; y: number } | { kind: "edge"; id: string; x: number; y: number }>(null);
-  useEffect(() => {
-    if (selectedNodeId || selectedEdgeId) setSelectedIndicator(null);
-  }, [selectedEdgeId, selectedNodeId]);
   const resultRuns = useMemo(() => runs.filter((run) => run.status === "completed" && run.result), [runs]);
   const selectedResultRun = useMemo(() => resultRuns.find((run) => run.id === selectedResultRunId), [resultRuns, selectedResultRunId]);
   const graph = useMemo(() => buildDiagramGraph(nodes, edges, diagramMode, diagramOverlaySettings.mode, selectedResultRun, { layout: diagramLayout, layoutSource: diagramMode === "publication" ? "current_canvas" : undefined }), [diagramLayout, diagramMode, diagramOverlaySettings.mode, edges, nodes, selectedResultRun]);
-  const selectedConstructCount = useMemo(() => new Set([...nodes.filter((node) => node.selected).map((node) => node.id), ...(selectedNodeId ? [selectedNodeId] : [])]).size, [nodes, selectedNodeId]);
-  const selectedEdge = useMemo(() => edges.find((edge) => edge.id === selectedEdgeId), [edges, selectedEdgeId]);
-  const selectedConstruct = useMemo(() => selectedNodeId ? nodes.find((node) => node.id === selectedNodeId) ?? null : null, [nodes, selectedNodeId]);
-  const selectedIndicatorOwner = useMemo(() => selectedIndicator ? nodes.find((node) => node.id === selectedIndicator.constructId) ?? null : null, [nodes, selectedIndicator]);
-  const validSelectedIndicator = selectedIndicator && selectedIndicatorOwner?.data.indicators.includes(selectedIndicator.indicator) ? selectedIndicator : null;
-  const selectedRouteValue = useMemo(() => {
-    const layout = selectedEdgeId ? diagramLayout.edgeLayouts[selectedEdgeId] : null;
-    if (!layout?.pinned) return "straight";
-    return layout.routing === "orthogonal" ? "smoothstep" : layout.routing === "curved" ? "default" : "straight";
-  }, [diagramLayout.edgeLayouts, selectedEdgeId]);
   const resultDiagramMode = diagramMode === "smartpls_result" || diagramMode === "publication";
   const paperStyleCanvas = diagramMode === "sem" || diagramMode === "publication" || diagramMode === "smartpls_result";
   const layoutLocked = diagramLayout.layoutLocked && !resultDiagramMode;
   const canEditLayout = !resultDiagramMode && !layoutLocked;
-  const readiness = useMemo(() => analysisReadiness({ dataset, nodes, edges, settings: analysisSettings, nativeDesktop: isNativeDesktop() }), [analysisSettings, dataset, edges, nodes]);
-  const visibleGraph = useMemo(() => {
-    if (!largeModelViewState.isolatedConstructId || largeModelViewState.neighborhoodMode === "off") return graph;
-    const focusId = largeModelViewState.isolatedConstructId;
-    const adjacent = new Set<string>([focusId]);
-    graph.edges.forEach((edge) => {
-      if (edge.source === focusId) adjacent.add(edge.target);
-      if (edge.target === focusId) adjacent.add(edge.source);
-    });
-    const visibleNodeIds = new Set<string>();
-    graph.nodes.forEach((node) => {
-      const indicator = parseIndicatorNodeId(node.id);
-      if (adjacent.has(node.id) || (indicator && adjacent.has(indicator.constructId))) visibleNodeIds.add(node.id);
-    });
-    return {
-      ...graph,
-      nodes: graph.nodes.filter((node) => visibleNodeIds.has(node.id)),
-      edges: graph.edges.filter((edge) => visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target)),
-    };
-  }, [graph, largeModelViewState.isolatedConstructId, largeModelViewState.neighborhoodMode]);
-  const overlayStatus = graph.diagnostic
-    ? { tone: "warning", label: "Overlay blocked", detail: graph.diagnostic }
-    : selectedResultRun
-      ? { tone: "ready", label: "Result overlay active", detail: `${selectedResultRun.name} supplies loadings, paths, and R² where available.` }
-      : { tone: "idle", label: "Model-only diagram", detail: "Run or select a compatible result to show loadings, path coefficients, and R²." };
-  const nextAction = readiness.blockers.find((item) => item.actionView && item.actionView !== "models")
-    ?? (readiness.canRun && !selectedResultRun ? { actionLabel: "Open run checklist", actionView: "run" as const, detail: "Model is structurally ready. Review settings and launch the selected method." } : null)
-    ?? (!readiness.canRun ? { actionLabel: "Open run checklist", actionView: "run" as const, detail: readiness.blockers[0]?.detail ?? readiness.summary } : null);
+  const visibleGraph = graph;
   const arrangeModel = (direction: "horizontal" | "vertical" | "smartpls") => {
     autoLayout(direction);
-    window.setTimeout(() => { void flow?.fitView({ padding: 0.2, duration: 220 }); }, 0);
+    window.setTimeout(() => { void flow?.fitView({ padding: 0.2, duration: animationDuration(220) }); }, 0);
   };
-  const disabledActionReason = resultDiagramMode
-    ? "Result and publication views are locked to protect saved results. Switch to Edit model to move, delete, reconnect, or assign diagram objects."
-    : layoutLocked
-      ? "Layout lock is on. Unlock layout in View to move constructs, reroute paths, or reposition indicators."
-    : selectedEdgeId && selectedEdge?.data?.role === "covariance"
-      ? "Covariance display arcs cannot be reversed as structural paths. Use route, label, reset, or delete actions from the edge context menu."
-      : selectedEdgeId && !selectedEdge
-        ? "The selected edge is not available in the current model."
-        : selectedNodeId
-          ? null
-          : "Select a construct, indicator, or path to enable object-specific editing actions.";
-  const setMode = (mode: typeof diagramMode) => {
-    setDiagramMode(mode);
-    setOpenToolbarMenu(null);
-    if (mode === "smartpls_result" || mode === "publication") {
-      setDiagramOverlaySettings({ mode: selectedResultRunId ? "paths_r2" : "model" });
-      window.setTimeout(() => { void flow?.fitView({ padding: 0.16, duration: 220 }); }, 0);
-    }
-  };
-  const fitSelectedObject = () => {
-    if (!flow) return;
-    const selectedGraphNode = selectedNodeId ? graph.nodes.find((node) => node.id === selectedNodeId) : null;
-    if (selectedGraphNode) {
-      const size = selectedGraphNode.type === "latent" ? smartplsNodeSize : compactNodeSize;
-      void flow.setCenter(selectedGraphNode.position.x + size.width / 2, selectedGraphNode.position.y + size.height / 2, { zoom: Math.max(0.85, flow.getZoom()), duration: 220 });
-      return;
-    }
-    if (selectedEdgeId) {
-      window.dispatchEvent(new CustomEvent("quickpls:focus-edge", { detail: { id: selectedEdgeId } }));
-      return;
-    }
-    void flow.fitView({ padding: 0.22, duration: 220 });
-  };
-  const isolateSelectedObject = () => {
-    if (!selectedNodeId) {
-      setActionFeedback({ message: "Select a construct first to isolate its local neighborhood." });
-      return;
-    }
-    const constructId = parseIndicatorNodeId(selectedNodeId)?.constructId ?? selectedNodeId;
-    setLargeModelViewState({ isolatedConstructId: constructId, neighborhoodMode: "selected" });
-    window.setTimeout(() => { void flow?.fitView({ padding: 0.24, duration: 220 }); }, 0);
-  };
-
   useEffect(() => {
     if (nodes.length > previousNodeCount.current) {
       if (preserveViewportForDrop.current) preserveViewportForDrop.current = false;
-      else window.setTimeout(() => { void flow?.fitView({ padding: 0.16, duration: 220 }); }, 0);
+      else window.setTimeout(() => { void flow?.fitView({ padding: 0.16, duration: animationDuration(220) }); }, 0);
     }
     previousNodeCount.current = nodes.length;
   }, [flow, nodes.length]);
@@ -224,14 +109,14 @@ export function ModelCanvas() {
       const node = graph.nodes.find((candidate) => candidate.id === id);
       if (!node || !flow) return;
       const size = node.type === "latent" ? smartplsNodeSize : compactNodeSize;
-      void flow.setCenter(node.position.x + size.width / 2, node.position.y + size.height / 2, { zoom: Math.max(0.75, flow.getZoom()), duration: 240 });
+      void flow.setCenter(node.position.x + size.width / 2, node.position.y + size.height / 2, { zoom: Math.max(0.75, flow.getZoom()), duration: animationDuration(240) });
     };
     const centerEdge = (id: string) => {
       const edge = graph.edges.find((candidate) => candidate.id === id);
       const source = edge ? graph.nodes.find((node) => node.id === edge.source) : null;
       const target = edge ? graph.nodes.find((node) => node.id === edge.target) : null;
       if (!source || !target || !flow) return;
-      void flow.setCenter((source.position.x + target.position.x) / 2 + smartplsNodeSize.width / 2, (source.position.y + target.position.y) / 2 + smartplsNodeSize.height / 2, { zoom: Math.max(0.7, flow.getZoom()), duration: 240 });
+      void flow.setCenter((source.position.x + target.position.x) / 2 + smartplsNodeSize.width / 2, (source.position.y + target.position.y) / 2 + smartplsNodeSize.height / 2, { zoom: Math.max(0.7, flow.getZoom()), duration: animationDuration(240) });
     };
     const handleConstruct = (event: Event) => centerNode((event as CustomEvent<{ id: string }>).detail.id);
     const handleEdge = (event: Event) => centerEdge((event as CustomEvent<{ id: string }>).detail.id);
@@ -242,63 +127,6 @@ export function ModelCanvas() {
       window.removeEventListener("quickpls:focus-edge", handleEdge);
     };
   }, [flow, graph.edges, graph.nodes]);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (isEditingText(event.target)) return;
-      const command = event.ctrlKey || event.metaKey;
-      if (command && event.key.toLowerCase() === "z") {
-        event.preventDefault();
-        event.shiftKey ? redo() : undo();
-      } else if (command && event.key.toLowerCase() === "y") {
-        event.preventDefault();
-        redo();
-      } else if (command && event.key.toLowerCase() === "d") {
-        event.preventDefault();
-        if (resultDiagramMode) return;
-        duplicateSelected();
-      } else if (event.key === "Delete" || event.key === "Backspace") {
-        event.preventDefault();
-        if (resultDiagramMode) return;
-        removeSelection();
-      } else if (event.key === "Escape") {
-        setDiagramTool("select");
-        setOpenToolbarMenu(null);
-        setPathSource(null);
-      } else if (event.key === "Enter") {
-        if (resultDiagramMode) return;
-        const selectedNode = nodes.find((node) => node.id === selectedNodeId);
-        if (selectedNode) {
-          event.preventDefault();
-          const value = window.prompt("Construct name", selectedNode.data.label);
-          if (value?.trim()) updateConstruct(selectedNode.id, { label: value.trim() });
-          return;
-        }
-        const edge = edges.find((candidate) => candidate.id === selectedEdgeId);
-        if (edge && !edge.id.startsWith("measurement::")) {
-          event.preventDefault();
-          const current = typeof edge.label === "string" ? edge.label : "";
-          const value = window.prompt("Path label", current);
-          if (value?.trim()) updateEdge(edge.id, { label: value.trim() });
-        }
-      } else if (resultDiagramMode) {
-        return;
-      } else if (event.key.toLowerCase() === "p") {
-        setDiagramTool("path");
-        setPathSource(null);
-      } else if (event.key.toLowerCase() === "c") {
-        setDiagramTool("covariance");
-        setPathSource(null);
-      } else if (event.key.toLowerCase() === "v") {
-        setDiagramTool("select");
-        setPathSource(null);
-      } else if (event.key.toLowerCase() === "f") {
-        void flow?.fitView({ padding: 0.22, duration: 220 });
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [duplicateSelected, edges, flow, nodes, redo, removeSelection, resultDiagramMode, selectedEdgeId, selectedNodeId, setDiagramTool, undo, updateConstruct, updateEdge]);
 
   useEffect(() => {
     const handleVariablesDragging = (event: Event) => {
@@ -326,7 +154,6 @@ export function ModelCanvas() {
 
   const selectTool = (tool: DiagramToolMode) => {
     setDiagramTool(tool);
-    setOpenToolbarMenu(null);
     setPathSource(null);
     setActionFeedback(null);
   };
@@ -440,28 +267,6 @@ export function ModelCanvas() {
       label: `Align ${anchorLabel} with ${matched.label}`,
     });
   };
-  const renameConstruct = (id: string) => {
-    const node = nodes.find((candidate) => candidate.id === id);
-    if (!node) return;
-    const value = window.prompt("Construct name", node.data.label);
-    if (value?.trim()) updateConstruct(id, { label: value.trim() });
-  };
-  const renameIndicator = (constructId: string, indicator: string) => {
-    const node = nodes.find((candidate) => candidate.id === constructId);
-    const value = window.prompt("Indicator label", indicator);
-    if (!node || !value?.trim() || value.trim() === indicator) return;
-    updateConstruct(constructId, { indicators: node.data.indicators.map((item) => item === indicator ? value.trim() : item) });
-  };
-  const setIndicatorSideFromMenu = (side: IndicatorSide) => {
-    if (contextMenu?.kind !== "indicator") return;
-    setIndicatorSide(contextMenu.constructId, contextMenu.indicator, side);
-    setContextMenu(null);
-  };
-  const setConstructIndicatorSideFromMenu = (side: Exclude<IndicatorSide, "free">) => {
-    if (contextMenu?.kind !== "construct") return;
-    setConstructIndicatorSide(contextMenu.id, side);
-    setContextMenu(null);
-  };
   const draggedIndicators = (event: DragEvent) => {
     const encoded = event.dataTransfer.getData("application/qpls-indicators");
     const indicator = event.dataTransfer.getData("application/qpls-indicator");
@@ -492,218 +297,77 @@ export function ModelCanvas() {
     : null;
 
   const showDropCue = draggingVariableCount > 0 && canEditLayout;
-  const toggleToolbarMenu = (menu: "arrange" | "view" | "results") => setOpenToolbarMenu((current) => current === menu ? null : menu);
-  const toggleFocusDiagram = () => {
-    const next = !uiPreferences.focusDiagramMode;
-    setUiPreferences({ focusDiagramMode: next });
-    setExplorerCollapsed(next);
-    setInspectorCollapsed(next);
-    window.setTimeout(() => { void flow?.fitView({ padding: next ? 0.12 : 0.2, duration: 220 }); }, 0);
-  };
-  const validateDiagram = () => {
-    const structuralPaths = edges.filter((edge) => edge.data?.role !== "covariance");
-    const offCanvas = graph.nodes.filter((node) => node.position.x < -80 || node.position.y < -80).length;
-    const missingIndicators = nodes.filter((node) => node.data.indicators.length === 0).length;
-    const publicationMessage = [
-      readiness.canRun ? "Diagram validation passed for selected method settings." : readiness.blockers[0]?.detail ?? readiness.summary,
-      structuralPaths.length > 12 ? "Publication check: many structural paths may need Focus Diagram or tidy layout before export." : "Publication check: structural path count is readable for the current model.",
-      offCanvas ? `${offCanvas} diagram item(s) are near or outside the canvas origin.` : "No obvious off-canvas diagram elements detected.",
-      missingIndicators ? `${missingIndicators} construct(s) have no indicators.` : "All constructs have assigned indicators.",
-      graph.diagnostic ?? "",
-    ].filter(Boolean).join(" ");
-    setOpenToolbarMenu(null);
-    setActionFeedback({ message: publicationMessage });
-  };
-  const selectIndicatorForToolbar = (constructId: string, indicator: string) => {
-    setSelectedIndicator({ constructId, indicator });
+  useEffect(() => {
+    const handleTool = (event: Event) => {
+      const tool = (event as CustomEvent<{ tool?: DiagramToolMode }>).detail?.tool;
+      if (tool === "select" || tool === "pan" || tool === "path" || tool === "covariance") selectTool(tool);
+    };
+    const handleAddConstruct = () => {
+      if (!canEditLayout) {
+        setActionFeedback({ message: layoutLocked ? "Unlock layout before adding a construct." : "Switch to Edit model before adding a construct." });
+        return;
+      }
+      addConstruct();
+    };
+    const handleArrange = (event: Event) => {
+      const direction = (event as CustomEvent<{ direction?: "horizontal" | "vertical" | "smartpls" }>).detail?.direction ?? "smartpls";
+      if (!canEditLayout) {
+        setActionFeedback({ message: layoutLocked ? "Unlock layout before arranging the diagram." : "Switch to Edit model before arranging the diagram." });
+        return;
+      }
+      arrangeModel(direction);
+    };
+    const handleFit = () => { void flow?.fitView({ padding: 0.22, duration: animationDuration(220) }); };
+    const handleDeleteSelection = () => {
+      if (resultDiagramMode) {
+        setActionFeedback({ message: "Result and publication views are locked. Switch to Edit model before deleting diagram objects." });
+        return;
+      }
+      removeSelection();
+    };
+    const handleUndo = () => undo();
+    const handleRedo = () => redo();
+
+    window.addEventListener("quickpls:model-tool", handleTool);
+    window.addEventListener("quickpls:model-add-construct", handleAddConstruct);
+    window.addEventListener("quickpls:model-arrange", handleArrange);
+    window.addEventListener("quickpls:model-fit", handleFit);
+    window.addEventListener("quickpls:model-delete-selection", handleDeleteSelection);
+    window.addEventListener("quickpls:model-undo", handleUndo);
+    window.addEventListener("quickpls:model-redo", handleRedo);
+    return () => {
+      window.removeEventListener("quickpls:model-tool", handleTool);
+      window.removeEventListener("quickpls:model-add-construct", handleAddConstruct);
+      window.removeEventListener("quickpls:model-arrange", handleArrange);
+      window.removeEventListener("quickpls:model-fit", handleFit);
+      window.removeEventListener("quickpls:model-delete-selection", handleDeleteSelection);
+      window.removeEventListener("quickpls:model-undo", handleUndo);
+      window.removeEventListener("quickpls:model-redo", handleRedo);
+    };
+  }, [addConstruct, arrangeModel, canEditLayout, flow, layoutLocked, redo, removeSelection, resultDiagramMode, selectTool, undo]);
+  const selectIndicatorForToolbar = (constructId: string, _indicator: string) => {
     setSelectedNode(constructId);
   };
   const clearSelectionForCanvas = () => {
-    setContextMenu(null);
-    setSelectedIndicator(null);
     setSelectedNode(null);
   };
-  const renameSelectedPath = () => {
-    if (!selectedEdge) return;
-    const current = typeof selectedEdge.label === "string" ? selectedEdge.label : "";
-    const value = window.prompt("Path label", current);
-    if (value?.trim()) updateEdge(selectedEdge.id, { label: value.trim() });
+  const requestNativeContextMenu = (event: { clientX: number; clientY: number; target: EventTarget | null; stopPropagation: () => void }, target: ModelCanvasContextMenuTarget) => {
+    if (!onContextMenuRequest) return;
+    event.stopPropagation();
+    const eventTarget = event.target instanceof Element ? event.target : null;
+    const returnFocus = eventTarget?.closest<HTMLElement>("[tabindex], button, input, select, textarea, [href]")
+      ?? document.getElementById("nd-main");
+    onContextMenuRequest({ clientX: event.clientX, clientY: event.clientY, returnFocus, target });
   };
-  const reassignSelectedIndicator = () => {
-    if (!validSelectedIndicator) return;
-    const candidates = nodes.filter((node) => node.id !== validSelectedIndicator.constructId);
-    if (candidates.length === 0) {
-      setActionFeedback({ message: "Create another construct before reassigning this indicator." });
-      return;
-    }
-    const options = candidates.map((node) => `${node.data.shortName}: ${node.data.label}`).join("\n");
-    const value = window.prompt(`Reassign ${validSelectedIndicator.indicator} to construct short name:\n${options}`, candidates[0]?.data.shortName ?? "");
-    const target = candidates.find((node) => node.data.shortName.toLowerCase() === value?.trim().toLowerCase() || node.data.label.toLowerCase() === value?.trim().toLowerCase());
-    if (!target) {
-      if (value?.trim()) setActionFeedback({ message: "No matching construct short name or label was found for reassignment." });
-      return;
-    }
-    assignIndicator(target.id, validSelectedIndicator.indicator);
-    setSelectedIndicator({ constructId: target.id, indicator: validSelectedIndicator.indicator });
-  };
-  const selectedConstructPinned = selectedConstruct ? Boolean(diagramLayout.constructLayouts[selectedConstruct.id]?.pinned) : false;
-  const contextToolbar = resultDiagramMode ? null : validSelectedIndicator ? <div className="canvas-context-toolbar" role="toolbar" aria-label="Selected indicator actions">
-    <strong>Indicator: {validSelectedIndicator.indicator}</strong>
-    <button onClick={() => renameIndicator(validSelectedIndicator.constructId, validSelectedIndicator.indicator)}>Rename</button>
-    <button onClick={reassignSelectedIndicator}>Reassign</button>
-    <details className="context-menu-lite"><summary>Side</summary><div>
-      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicator to the left side."} onClick={() => setIndicatorSide(validSelectedIndicator.constructId, validSelectedIndicator.indicator, "left")}>Left</button>
-      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicator to the right side."} onClick={() => setIndicatorSide(validSelectedIndicator.constructId, validSelectedIndicator.indicator, "right")}>Right</button>
-      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicator to the top side."} onClick={() => setIndicatorSide(validSelectedIndicator.constructId, validSelectedIndicator.indicator, "top")}>Top</button>
-      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicator to the bottom side."} onClick={() => setIndicatorSide(validSelectedIndicator.constructId, validSelectedIndicator.indicator, "bottom")}>Bottom</button>
-    </div></details>
-    <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to reset indicator position." : "Reset manually positioned indicator."} onClick={() => resetIndicatorLayout(validSelectedIndicator.constructId, validSelectedIndicator.indicator)}>Reset</button>
-    <button className="danger" onClick={() => { unassignIndicator(validSelectedIndicator.constructId, validSelectedIndicator.indicator); setSelectedIndicator(null); }}>Unassign</button>
-  </div> : selectedEdge ? <div className="canvas-context-toolbar" role="toolbar" aria-label={selectedEdge.data?.role === "covariance" ? "Selected covariance actions" : "Selected path actions"}>
-    <strong>{selectedEdge.data?.role === "covariance" ? "Covariance" : "Path"}: {selectedEdge.source} -&gt; {selectedEdge.target}</strong>
-    {selectedEdge.data?.role !== "covariance" ? <button onClick={reverseSelectedPath}><ArrowLeftRight size={13} /> Reverse</button> : <button disabled title="Covariance arcs have no structural direction to reverse.">Reverse</button>}
-    {selectedEdge.data?.role !== "covariance" ? <details className="context-menu-lite"><summary>Route</summary><div>
-      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to change path routing." : "Use a direct shortest boundary-to-boundary route."} className={selectedRouteValue === "straight" ? "active" : ""} onClick={() => setSelectedPathRouting("straight")}>Straight</button>
-      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to change path routing." : "Use a curved route."} className={selectedRouteValue === "default" ? "active" : ""} onClick={() => setSelectedPathRouting("default")}>Curved</button>
-      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to change path routing." : "Use an orthogonal route."} className={selectedRouteValue === "smoothstep" ? "active" : ""} onClick={() => setSelectedPathRouting("smoothstep")}>Orthogonal</button>
-    </div></details> : <button onClick={() => resetEdgeLabel(selectedEdge.id)}>Reset arc label</button>}
-    <button onClick={renameSelectedPath}>Label</button>
-    <button onClick={() => resetEdgeLabel(selectedEdge.id)}>Reset label</button>
-    {selectedEdge.data?.role !== "covariance" ? <details className="context-menu-lite"><summary>More</summary><div><button onClick={() => updateEdge(selectedEdge.id, { label: "Control", data: { ...selectedEdge.data, role: "control" } })}>Mark control</button></div></details> : null}
-    <button className="danger" onClick={removeSelection}>Delete</button>
-  </div> : selectedConstructCount >= 2 ? <div className="canvas-context-toolbar" role="toolbar" aria-label="Selected constructs alignment actions">
-    <strong>{selectedConstructCount} constructs selected</strong>
-    <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to align constructs." : "Align selected constructs left."} onClick={() => alignSelectedConstructs("left")}><AlignStartVertical size={13} /> Left</button>
-    <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to align constructs." : "Align selected construct centers on X."} onClick={() => alignSelectedConstructs("centerX")}><AlignCenterVertical size={13} /> Center X</button>
-    <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to align constructs." : "Align selected constructs top."} onClick={() => alignSelectedConstructs("top")}><AlignStartHorizontal size={13} /> Top</button>
-    <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to align constructs." : "Align selected construct centers on Y."} onClick={() => alignSelectedConstructs("centerY")}><AlignCenterHorizontal size={13} /> Center Y</button>
-    <button disabled={selectedConstructCount < 3 || layoutLocked} title={selectedConstructCount < 3 ? "Select at least three constructs to distribute." : "Unlock layout in View to distribute constructs."} onClick={() => distributeSelectedConstructs("horizontal")}><AlignHorizontalSpaceBetween size={13} /> Distribute H</button>
-    <button disabled={selectedConstructCount < 3 || layoutLocked} title={selectedConstructCount < 3 ? "Select at least three constructs to distribute." : "Unlock layout in View to distribute constructs."} onClick={() => distributeSelectedConstructs("vertical")}><AlignVerticalSpaceBetween size={13} /> Distribute V</button>
-    <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to tidy selected constructs." : "Tidy selected constructs."} onClick={() => arrangeModel("smartpls")}>Tidy selection</button>
-  </div> : selectedConstruct ? <div className="canvas-context-toolbar" role="toolbar" aria-label="Selected construct actions">
-    <strong>Construct: {selectedConstruct.data.label}</strong>
-    <button onClick={() => renameConstruct(selectedConstruct.id)}>Rename</button>
-    <button onClick={duplicateSelected}><Copy size={13} /> Duplicate</button>
-    <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to auto-place indicators." : "Auto-place this construct's indicators."} onClick={() => resetIndicatorLayout(selectedConstruct.id)}>Auto indicators</button>
-    <details className="context-menu-lite"><summary>Indicators</summary><div>
-      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicators left."} onClick={() => setConstructIndicatorSide(selectedConstruct.id, "left")}>Left</button>
-      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicators right."} onClick={() => setConstructIndicatorSide(selectedConstruct.id, "right")}>Right</button>
-      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicators top."} onClick={() => setConstructIndicatorSide(selectedConstruct.id, "top")}>Top</button>
-      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to move indicators." : "Move indicators bottom."} onClick={() => setConstructIndicatorSide(selectedConstruct.id, "bottom")}>Bottom</button>
-      <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to reset indicator layout." : "Reset this construct's indicator layout."} onClick={() => resetIndicatorLayout(selectedConstruct.id)}>Reset layout</button>
-    </div></details>
-    <button disabled={layoutLocked} title={layoutLocked ? "Unlock layout in View to tidy selected construct." : "Tidy selected construct."} onClick={() => arrangeModel("smartpls")}>Tidy</button>
-    <button onClick={() => toggleConstructPinned(selectedConstruct.id)}>{selectedConstructPinned ? "Unpin" : "Pin"}</button>
-    <button className="danger" onClick={removeSelection}><Trash2 size={13} /> Delete</button>
-  </div> : null;
-
-  return <main className={`model-canvas theme-${diagramLayout.diagramTheme}${paperStyleCanvas ? " smartpls-result-canvas" : ""}${resultDiagramMode ? " locked-result-canvas" : ""}${layoutLocked ? " layout-locked-canvas" : ""}${showDropCue ? " can-drop-variables" : ""}${largeModelViewState.isolatedConstructId ? " isolating-neighborhood" : ""}`}>
-    <div className="canvas-toolbar redesigned" role="toolbar" aria-label="Model editing tools">
-      <div className="canvas-toolbar-primary">
-        <div className="canvas-tool-group">
-          <button aria-label="Undo" title="Undo (Ctrl+Z)" disabled={pastCount === 0} onClick={undo}><Undo2 size={15} /></button>
-          <button aria-label="Redo" title="Redo (Ctrl+Y)" disabled={futureCount === 0} onClick={redo}><Redo2 size={15} /></button>
-        </div>
-        <div className="canvas-tool-group segmented">
-          <button aria-label="Select and move diagram items" className={diagramTool === "select" ? "active" : ""} title={layoutLocked ? "Layout is locked. Select is available for inspection; unlock layout to move items." : "Select and move diagram items (V)"} disabled={resultDiagramMode} onClick={() => selectTool("select")}><MousePointer2 size={15} /><span>Select</span></button>
-          <button aria-label="Pan canvas" className={diagramTool === "pan" ? "active" : ""} title="Pan canvas" onClick={() => selectTool("pan")}><Hand size={15} /><span>Pan</span></button>
-        </div>
-        <div className="canvas-tool-group">
-          <button title={layoutLocked ? "Unlock layout in View to add constructs." : "Add construct"} disabled={!canEditLayout} onClick={() => addConstruct()}><Plus size={15} /><span>Construct</span></button>
-          <button className={diagramTool === "path" ? "active" : ""} title={layoutLocked ? "Unlock layout in View to draw paths." : "Draw structural path (P)"} disabled={!canEditLayout} onClick={() => selectTool("path")}><GitBranch size={15} /><span>Path</span></button>
-          <button className={diagramTool === "covariance" ? "active" : ""} title={layoutLocked ? "Unlock layout in View to draw covariances." : "Draw covariance display arc (C)"} disabled={!canEditLayout} onClick={() => selectTool("covariance")}><Link2 size={15} /><span>Cov</span></button>
-        </div>
-        <div className="canvas-tool-group menu-group">
-          <button aria-haspopup="menu" aria-expanded={openToolbarMenu === "arrange"} title="Arrange model" onClick={() => toggleToolbarMenu("arrange")}><Columns3 size={15} /><span>Arrange</span></button>
-          {openToolbarMenu === "arrange" ? <div className="canvas-dropdown-menu" role="menu" aria-label="Arrange model options">
-            <button role="menuitem" disabled={!canEditLayout} title={layoutLocked ? "Unlock layout in View to arrange the model." : undefined} onClick={() => { arrangeModel("smartpls"); setOpenToolbarMenu(null); }}>Arrange like SmartPLS</button>
-            <button role="menuitem" disabled={!canEditLayout} title={layoutLocked ? "Unlock layout in View to arrange the model." : undefined} onClick={() => { arrangeModel("horizontal"); setOpenToolbarMenu(null); }}>Left to right</button>
-            <button role="menuitem" disabled={!canEditLayout} title={layoutLocked ? "Unlock layout in View to arrange the model." : undefined} onClick={() => { arrangeModel("vertical"); setOpenToolbarMenu(null); }}>Top to bottom</button>
-            <button role="menuitem" disabled title="Dedicated CFA preset will use the existing SmartPLS layout engine in a later pass.">CFA measurement preset</button>
-            <button role="menuitem" disabled title="Dedicated mediation preset will use the existing SmartPLS layout engine in a later pass.">Mediation preset</button>
-            <button role="menuitem" disabled title="Large-model compaction is available through Compact view.">Large model preset</button>
-          </div> : null}
-          <button aria-label="Fit model to view" title="Fit model to view (F)" onClick={() => { void flow?.fitView({ padding: 0.22, duration: 220 }); }}><Focus size={15} /><span>Fit</span></button>
-          <button aria-label="Check diagram for publication" title="Check diagram for publication and analysis readiness" onClick={validateDiagram}><span>Validate</span></button>
-        </div>
-        <div className="canvas-tool-group result-tools menu-group">
-          <button aria-haspopup="menu" aria-expanded={openToolbarMenu === "view"} title="View and diagram mode" onClick={() => toggleToolbarMenu("view")}><span>View</span></button>
-          {openToolbarMenu === "view" ? <div className="canvas-dropdown-menu view-menu" role="menu" aria-label="View options">
-            <label>Diagram mode<select aria-label="Diagram mode" value={diagramMode} onChange={(event) => setMode(event.target.value as typeof diagramMode)}>
-              <option value="sem">Edit model</option>
-              <option value="smartpls_result">Result diagram</option>
-              <option value="compact">Compact</option>
-              <option value="publication">Publication preview</option>
-            </select></label>
-            <button role="menuitem" className={diagramLayout.diagramTheme === "smartpls_like" ? "active" : ""} onClick={() => setDiagramTheme("smartpls_like")}>SmartPLS-like theme</button>
-            <button role="menuitem" className={diagramLayout.diagramTheme === "academic_grayscale" ? "active" : ""} onClick={() => setDiagramTheme("academic_grayscale")}>Academic grayscale</button>
-            <button role="menuitem" className={diagramLayout.diagramTheme === "quickpls_color" ? "active" : ""} onClick={() => setDiagramTheme("quickpls_color")}>QuickPLS color</button>
-            <button role="menuitem" className={diagramLayout.diagramTheme === "journal_mono" ? "active" : ""} onClick={() => setDiagramTheme("journal_mono")}>Journal mono</button>
-            <button role="menuitem" className={diagramLayout.diagramTheme === "high_contrast" ? "active" : ""} onClick={() => setDiagramTheme("high_contrast")}>High contrast</button>
-            <button role="menuitem" className={largeModelViewState.indicatorsCollapsed ? "active" : ""} onClick={() => {
-              const nextCollapsed = !largeModelViewState.indicatorsCollapsed;
-              setLargeModelViewState({ indicatorsCollapsed: nextCollapsed });
-              setMode(nextCollapsed ? "compact" : "sem");
-            }}>{largeModelViewState.indicatorsCollapsed ? "Show measurement indicators" : "Collapse measurement indicators"}</button>
-            <button role="menuitem" className={uiPreferences.focusDiagramMode ? "active" : ""} onClick={toggleFocusDiagram}>{uiPreferences.focusDiagramMode ? "Exit Focus Diagram" : "Focus Diagram"}</button>
-            <button role="menuitem" className={explorerCollapsed ? "active" : ""} onClick={() => setExplorerCollapsed(!explorerCollapsed)}>{explorerCollapsed ? "Show left explorer" : "Collapse left explorer"}</button>
-            <button role="menuitem" className={inspectorCollapsed ? "active" : ""} onClick={() => setInspectorCollapsed(!inspectorCollapsed)}>{inspectorCollapsed ? "Show right inspector" : "Collapse right inspector"}</button>
-            <button role="menuitem" className={showMiniMap ? "active" : ""} onClick={() => setShowMiniMap((value) => !value)}>{showMiniMap ? "Hide minimap" : "Show minimap"}</button>
-            <button role="menuitem" disabled={!selectedNodeId} title={!selectedNodeId ? "Select a construct to isolate its neighborhood." : "Show the selected construct and directly connected constructs."} className={largeModelViewState.neighborhoodMode === "selected" ? "active" : ""} onClick={isolateSelectedObject}>Isolate selected neighborhood</button>
-            <button role="menuitem" disabled={!largeModelViewState.isolatedConstructId} title={!largeModelViewState.isolatedConstructId ? "No isolated neighborhood is active." : "Return to the full diagram."} onClick={() => {
-              setLargeModelViewState({ isolatedConstructId: null, neighborhoodMode: "off" });
-              window.setTimeout(() => { void flow?.fitView({ padding: 0.22, duration: 220 }); }, 0);
-            }}>Clear isolation</button>
-            <button role="menuitem" title={selectedNodeId || selectedEdgeId ? "Fit the selected diagram object." : "Select a construct or path to fit only that object."} onClick={fitSelectedObject}>Fit selected</button>
-            <button role="menuitem" className={diagramLayout.layoutLocked ? "active" : ""} onClick={() => setDiagramLayoutLocked(!diagramLayout.layoutLocked)}>{diagramLayout.layoutLocked ? "Unlock layout" : "Lock layout"}</button>
-            <button role="menuitem" className={diagramLayout.showGrid ? "active" : ""} onClick={() => setDiagramGridVisible(!diagramLayout.showGrid)}>{diagramLayout.showGrid ? "Hide grid" : "Show grid"}</button>
-          </div> : null}
-          <button aria-haspopup="menu" aria-expanded={openToolbarMenu === "results"} title={selectedResultRunId ? "Result overlay controls" : "no compatible result selected. Run PLS or select a completed compatible result to enable overlays."} onClick={() => toggleToolbarMenu("results")}><span>Results</span></button>
-          {openToolbarMenu === "results" ? <div className="canvas-dropdown-menu results-menu" role="menu" aria-label="Result overlay options">
-            <label>Run<select aria-label="Diagram result run" value={selectedResultRunId ?? ""} disabled={resultRuns.length === 0} onChange={(event) => setSelectedResultRun(event.target.value || null)}>
-              <option value="">No diagram estimates</option>
-              {resultRuns.map((run) => <option key={run.id} value={run.id}>{run.name} | {new Date(run.createdAt).toLocaleString()}</option>)}
-            </select></label>
-            <label>Overlay<select aria-label="Diagram result overlay" value={diagramOverlaySettings.mode} disabled={!selectedResultRunId} onChange={(event) => setDiagramOverlaySettings({ mode: event.target.value as typeof diagramOverlaySettings.mode })}>
-              <option value="model">Model only</option>
-              <option value="loadings">Loadings / weights</option>
-              <option value="paths_r2">Paths + R²</option>
-              <option value="significance">Significance</option>
-              <option value="quality">Reliability warnings</option>
-              <option value="cbsem_standardized">CB-SEM standardized</option>
-              <option value="cbsem_residuals">CB-SEM residuals</option>
-              <option value="modification_indices">Modification indices</option>
-            </select></label>
-            <label>Precision<select aria-label="Diagram overlay precision" value={diagramOverlaySettings.precision} disabled={!selectedResultRunId} onChange={(event) => setDiagramOverlaySettings({ precision: Number(event.target.value) })}>
-              {[2, 3, 4, 5, 6].map((value) => <option key={value} value={value}>{value} decimals</option>)}
-            </select></label>
-            <label><input type="checkbox" checked={diagramOverlaySettings.showLoadings} disabled={!selectedResultRunId} onChange={(event) => setDiagramOverlaySettings({ showLoadings: event.target.checked })} /> Loadings</label>
-            <label><input type="checkbox" checked={diagramOverlaySettings.showPathCoefficients} disabled={!selectedResultRunId} onChange={(event) => setDiagramOverlaySettings({ showPathCoefficients: event.target.checked })} /> Path coefficients</label>
-            <label><input type="checkbox" checked={diagramOverlaySettings.showRSquared} disabled={!selectedResultRunId} onChange={(event) => setDiagramOverlaySettings({ showRSquared: event.target.checked })} /> R²</label>
-            <label><input type="checkbox" checked={diagramOverlaySettings.showPValues || diagramOverlaySettings.showTValues} disabled={!selectedResultRunId} onChange={(event) => setDiagramOverlaySettings({ showPValues: event.target.checked, showTValues: event.target.checked })} /> Significance</label>
-          </div> : null}
-          <button aria-label="Show diagram legend" title="Diagram legend" onClick={() => setShowHelp((value) => !value)}><CircleHelp size={15} /></button>
-        </div>
-      </div>
-      {contextToolbar}
-      {resultDiagramMode ? <div className="canvas-tool-status warning">Result view is locked. Switch to Edit model to move, delete, or reconnect diagram objects.</div> : null}
-      {(diagramTool === "path" || diagramTool === "covariance") && <div className="canvas-tool-status">{pathSource ? `Choose ${diagramTool === "path" ? "outcome construct" : "second construct"}` : `Choose ${diagramTool === "path" ? "predictor construct" : "first construct"}`}</div>}
-    </div>
-    {disabledActionReason ? <div className="canvas-disabled-action-reason" role="status">{disabledActionReason}</div> : null}
+  return <div className={`model-canvas theme-${diagramLayout.diagramTheme}${paperStyleCanvas ? " smartpls-result-canvas" : ""}${resultDiagramMode ? " locked-result-canvas" : ""}${layoutLocked ? " layout-locked-canvas" : ""}${showDropCue ? " can-drop-variables" : ""}`}>
+    {resultDiagramMode ? <div className="canvas-tool-status warning">Result view is locked. Switch to Edit model to change diagram objects.</div> : null}
+    {!resultDiagramMode && (diagramTool === "path" || diagramTool === "covariance") ? <span className="sr-only" role="status" aria-live="polite">{pathSource ? `Choose ${diagramTool === "path" ? "outcome construct" : "second construct"}` : `Choose ${diagramTool === "path" ? "predictor construct" : "first construct"}`}</span> : null}
     {actionFeedback ? <div
       className={`canvas-action-feedback${actionFeedback.x !== undefined && actionFeedback.y !== undefined ? " local" : ""}`}
       style={actionFeedback.x !== undefined && actionFeedback.y !== undefined ? { left: actionFeedback.x + 12, top: actionFeedback.y + 12 } : undefined}
       role="status"
       aria-live="polite"
     >{actionFeedback.message}</div> : null}
-    <div className={`canvas-overlay-status compact ${overlayStatus.tone}`} role="status" aria-live="polite">
-      <strong>{overlayStatus.label}</strong>
-      <span>{overlayStatus.detail}</span>
-    </div>
-    {nextAction ? <div className="canvas-next-action" aria-label="Recommended next workflow action">
-      <strong title={nextAction.detail}>Next step</strong>
-      <button type="button" onClick={() => setView(nextAction.actionView!)}>{nextAction.actionLabel}</button>
-    </div> : null}
     {showDropCue && !dropHint ? <div className="canvas-drop-guide" aria-live="polite">
       <strong>Drop on canvas</strong>
       <span>Create a construct, or drop onto an oval to assign indicators.</span>
@@ -712,58 +376,9 @@ export function ModelCanvas() {
       <strong>{dropTargetLabel ? `Drop on ${dropTargetLabel}` : "Drop to create construct"}</strong>
       <span>{dropHint.count} variable{dropHint.count === 1 ? "" : "s"} will {dropTargetLabel ? "be assigned as indicator" : "become indicator"}{dropHint.count === 1 ? "" : "s"}</span>
     </div> : null}
-    {showHelp && <div className="diagram-help" role="dialog" aria-label="Diagram legend">
-      <strong>Diagram legend</strong>
-      <span><i className="legend-latent" />Latent construct</span>
-      <span><i className="legend-indicator" />Observed indicator</span>
-      <span><i className="legend-path" />Structural path</span>
-      <span><i className="legend-covariance" />Covariance display</span>
-      <span>Shortcuts: P path, C covariance, V select, F fit view, Esc cancel. Right-click opens object actions.</span>
-    </div>}
     {dragGuide?.vertical !== undefined ? <div className="canvas-alignment-guide vertical" style={{ left: dragGuide.vertical }} /> : null}
     {dragGuide?.horizontal !== undefined ? <div className="canvas-alignment-guide horizontal" style={{ top: dragGuide.horizontal }} /> : null}
     {dragGuide ? <div className="canvas-snap-hint" style={{ left: dragGuide.x + 12, top: dragGuide.y + 12 }}>{dragGuide.label}</div> : null}
-    {contextMenu ? <div className="diagram-context-menu" style={{ left: contextMenu.x, top: contextMenu.y }}>
-      {contextMenu.kind === "canvas" ? <>
-        <button onClick={() => { if (flow) addConstruct(flow.screenToFlowPosition({ x: contextMenu.x, y: contextMenu.y })); setContextMenu(null); }}>Add latent construct</button>
-        <button onClick={() => { arrangeModel("smartpls"); setContextMenu(null); }}>Arrange like SmartPLS</button>
-        <button onClick={() => { resetAllEdgeLabels(); setContextMenu(null); }}>Tidy labels</button>
-        <button onClick={() => { void flow?.fitView({ padding: 0.22, duration: 220 }); setContextMenu(null); }}>Fit view</button>
-      </> : contextMenu.kind === "construct" ? <>
-        <button onClick={() => { renameConstruct(contextMenu.id); setContextMenu(null); }}>Rename construct</button>
-        <button onClick={() => { updateConstruct(contextMenu.id, { mode: nodes.find((node) => node.id === contextMenu.id)?.data.mode === "reflective" ? "formative" : "reflective" }); setContextMenu(null); }}>Invert reflective/formative</button>
-        <button onClick={() => setConstructIndicatorSideFromMenu("left")}>Place all indicators left</button>
-        <button onClick={() => setConstructIndicatorSideFromMenu("right")}>Place all indicators right</button>
-        <button onClick={() => setConstructIndicatorSideFromMenu("top")}>Place all indicators top</button>
-        <button onClick={() => setConstructIndicatorSideFromMenu("bottom")}>Place all indicators bottom</button>
-        <button onClick={() => { resetIndicatorLayout(contextMenu.id); setContextMenu(null); }}>Auto-place indicators</button>
-        <button onClick={() => { resetIndicatorLayout(contextMenu.id); resetAllEdgeLabels(); setContextMenu(null); }}>Tidy selected construct</button>
-        <button onClick={() => { resetIndicatorLayout(contextMenu.id); setContextMenu(null); }}>Reset indicator layout</button>
-        <button onClick={() => { setSelectedNode(contextMenu.id); duplicateSelected(); setContextMenu(null); }}>Duplicate</button>
-        <button className="danger" onClick={() => { setSelectedNode(contextMenu.id); removeSelection(); setContextMenu(null); }}>Delete</button>
-      </> : contextMenu.kind === "indicator" ? <>
-        <button onClick={() => { renameIndicator(contextMenu.constructId, contextMenu.indicator); setContextMenu(null); }}>Rename indicator label</button>
-        <button onClick={() => setIndicatorSideFromMenu("left")}>Move left</button>
-        <button onClick={() => setIndicatorSideFromMenu("right")}>Move right</button>
-        <button onClick={() => setIndicatorSideFromMenu("top")}>Move top</button>
-        <button onClick={() => setIndicatorSideFromMenu("bottom")}>Move bottom</button>
-        <button onClick={() => { resetIndicatorLayout(contextMenu.constructId, contextMenu.indicator); setContextMenu(null); }}>Reset position</button>
-        <button className="danger" onClick={() => { unassignIndicator(contextMenu.constructId, contextMenu.indicator); setContextMenu(null); }}>Unassign</button>
-      </> : <>
-        <button onClick={() => { setSelectedEdge(contextMenu.id); reverseSelectedPath(); setContextMenu(null); }}>Reverse path</button>
-        <button onClick={() => { setPathRouting(contextMenu.id, "straight"); setContextMenu(null); }}>Straight route</button>
-        <button onClick={() => { setPathRouting(contextMenu.id, "smoothstep"); setContextMenu(null); }}>Orthogonal route</button>
-        <button onClick={() => { setPathRouting(contextMenu.id, "default"); setContextMenu(null); }}>Curved route</button>
-        <button onClick={() => { updateEdge(contextMenu.id, { label: "Control", data: { role: "control" } }); setContextMenu(null); }}>Mark control</button>
-        <button onClick={() => { const edge = edges.find((item) => item.id === contextMenu.id); if (edge) updateEdge(contextMenu.id, { label: "Covariance", data: { ...edge.data, role: "covariance" } }); setContextMenu(null); }}>Convert to covariance display</button>
-        <button onClick={() => nudgeEdgeLabel(contextMenu.id, { x: 0, y: -16 })}>Move label up</button>
-        <button onClick={() => nudgeEdgeLabel(contextMenu.id, { x: 0, y: 16 })}>Move label down</button>
-        <button onClick={() => nudgeEdgeLabel(contextMenu.id, { x: -18, y: 0 })}>Move label left</button>
-        <button onClick={() => nudgeEdgeLabel(contextMenu.id, { x: 18, y: 0 })}>Move label right</button>
-        <button onClick={() => { resetEdgeLabel(contextMenu.id); setContextMenu(null); }}>Reset label</button>
-        <button className="danger" onClick={() => { setSelectedEdge(contextMenu.id); removeSelection(); setContextMenu(null); }}>Delete</button>
-      </>}
-    </div> : null}
     <ReactFlow
       nodes={visibleGraph.nodes}
       edges={visibleGraph.edges}
@@ -806,33 +421,38 @@ export function ModelCanvas() {
         const indicator = parseIndicatorNodeId(node.id);
         if (indicator) selectIndicatorForToolbar(indicator.constructId, indicator.indicator);
         else {
-          setSelectedIndicator(null);
           chooseConstruct(node.id, { x: event.clientX, y: event.clientY });
         }
       }}
-      onEdgeClick={(_, edge) => { setSelectedIndicator(null); setSelectedEdge(edge.id); }}
+      onEdgeClick={(_, edge) => setSelectedEdge(edge.id)}
       onNodeContextMenu={(event, node) => {
         event.preventDefault();
         if (!canEditLayout) return;
         const indicator = parseIndicatorNodeId(node.id);
-        if (indicator) selectIndicatorForToolbar(indicator.constructId, indicator.indicator);
-        else {
-          setSelectedIndicator(null);
+        if (indicator) {
+          selectIndicatorForToolbar(indicator.constructId, indicator.indicator);
+          requestNativeContextMenu(event, { kind: "construct", id: indicator.constructId });
+        } else {
           setSelectedNode(node.id);
+          requestNativeContextMenu(event, { kind: "construct", id: node.id });
         }
-        setContextMenu(indicator ? { kind: "indicator", ...indicator, x: event.clientX, y: event.clientY } : { kind: "construct", id: node.id, x: event.clientX, y: event.clientY });
       }}
       onEdgeContextMenu={(event, edge) => {
         event.preventDefault();
-        if (!canEditLayout || edge.id.startsWith("measurement::")) return;
-        setSelectedIndicator(null);
+        if (!canEditLayout) return;
+        if (edge.id.startsWith("measurement::")) {
+          clearSelectionForCanvas();
+          requestNativeContextMenu(event, { kind: "canvas" });
+          return;
+        }
         setSelectedEdge(edge.id);
-        setContextMenu({ kind: "edge", id: edge.id, x: event.clientX, y: event.clientY });
+        requestNativeContextMenu(event, { kind: "path", id: edge.id });
       }}
       onPaneContextMenu={(event) => {
         event.preventDefault();
         if (!canEditLayout) return;
-        setContextMenu({ kind: "canvas", x: event.clientX, y: event.clientY });
+        clearSelectionForCanvas();
+        requestNativeContextMenu(event, { kind: "canvas" });
       }}
       onPaneClick={(event) => {
         clearSelectionForCanvas();
@@ -893,7 +513,6 @@ export function ModelCanvas() {
     >
       {diagramLayout.showGrid && !resultDiagramMode ? <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#dbe1e4" /> : null}
       <Controls showInteractive={false} />
-      {showMiniMap && !resultDiagramMode ? <MiniMap pannable zoomable nodeColor={(node) => node.type === "indicator" ? "#f8dd8a" : "#c6eef0"} maskColor="rgba(246,248,249,.7)" /> : null}
     </ReactFlow>
-  </main>;
+  </div>;
 }

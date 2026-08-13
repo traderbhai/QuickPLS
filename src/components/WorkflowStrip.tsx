@@ -1,17 +1,8 @@
-import { CheckCircle2, Circle } from "lucide-react";
-import { analysisReadiness } from "../domain/analysisReadiness";
+import { ArrowRightCircle, CheckCircle2, Circle, Clock3, Lock } from "lucide-react";
+import { workflowProgress, workflowStepStatusSummary, type WorkflowStepState } from "../domain/workflowProgress";
 import { isNativeDesktop } from "../services/projectService";
 import { useWorkspace } from "../store";
 import type { WorkspaceView } from "../types";
-
-const steps: Array<{ view: WorkspaceView; label: string }> = [
-  { view: "data", label: "Data" },
-  { view: "models", label: "Model" },
-  { view: "analyses", label: "Setup" },
-  { view: "run", label: "Run" },
-  { view: "runs", label: "Results" },
-  { view: "reports", label: "Report" },
-];
 
 export function WorkflowStrip() {
   const view = useWorkspace((state) => state.view);
@@ -21,33 +12,57 @@ export function WorkflowStrip() {
   const edges = useWorkspace((state) => state.edges);
   const runs = useWorkspace((state) => state.runs);
   const settings = useWorkspace((state) => state.analysisSettings);
-  const readiness = analysisReadiness({ dataset, nodes, edges, settings, nativeDesktop: isNativeDesktop() });
-  const completedRuns = runs.filter((run) => run.status === "completed" && run.result);
-  const complete = {
-    welcome: true,
-    data: dataset.columns.length > 0 && (dataset.rowCount ?? dataset.rows.length) > 0,
-    models: nodes.length > 0 && nodes.every((node) => node.data.indicators.length > 0) && edges.length > 0,
-    analyses: readiness.items.filter((item) => item.id !== "runtime").every((item) => item.status !== "blocked"),
-    run: completedRuns.length > 0,
-    runs: completedRuns.length > 0,
-    reports: completedRuns.length > 0,
-    groups: runs.some((run) => Boolean(run.result?.segmentation || run.result?.mga || run.result?.micom || run.result?.mga_permutation || run.result?.fimix || run.result?.ipma)),
-  } satisfies Record<WorkspaceView, boolean>;
-  return <nav className="workflow-strip" aria-label="Research workflow">
+  const steps = workflowProgress({ view, dataset, nodes, edges, runs, settings, nativeDesktop: isNativeDesktop() });
+  const summary = workflowStepStatusSummary(steps);
+  const openStep = (targetView: WorkspaceView, label: string) => {
+    if (targetView === view) {
+      setView(targetView);
+      return;
+    }
+    setView(targetView, {
+      from: view,
+      to: targetView,
+      actionLabel: `Workflow: ${label}`,
+      coachId: "workflow-strip",
+    });
+  };
+  return <nav
+    className="workflow-strip"
+    aria-label="Primary research workflow progress"
+    aria-description={`${workflowStepStatusSummary(steps)} Support destinations are available from the left navigation rail.`}
+    data-workflow-scope="primary-research-workflow"
+    data-workflow-count={steps.length}
+  >
+    <span className="workflow-strip-label" aria-hidden="true">Workflow</span>
     {steps.map((step) => {
-      const active = step.view === view;
-      const completed = complete[step.view];
       return <button
         key={step.view}
         type="button"
-        className={`workflow-step${active ? " active" : ""}${completed ? " completed" : ""}`}
-        aria-current={active ? "step" : undefined}
-        aria-label={`${step.label}${completed ? ", complete" : ""}`}
-        onClick={() => setView(step.view)}
+        className={`workflow-step ${step.state}`}
+        data-workflow-state={step.state}
+        data-workflow-view={step.view}
+        data-workflow-label={step.label}
+        data-workflow-action={step.actionLabel}
+        data-workflow-detail={step.detail}
+        title={step.detail}
+        aria-current={step.view === view ? "step" : undefined}
+        aria-label={`${step.label}: ${step.state}. ${step.detail}. ${summary}`}
+        onClick={() => openStep(step.view, step.label)}
       >
-        {completed ? <CheckCircle2 size={14} /> : <Circle size={14} />}
-        <span>{step.label}</span>
+        <WorkflowStepIcon state={step.state} />
+        <span>
+          <strong>{step.label}</strong>
+          <small>{step.actionLabel}</small>
+        </span>
       </button>;
     })}
   </nav>;
+}
+
+function WorkflowStepIcon({ state }: { state: WorkflowStepState }) {
+  if (state === "complete") return <CheckCircle2 size={14} />;
+  if (state === "current") return <ArrowRightCircle size={14} />;
+  if (state === "blocked") return <Lock size={14} />;
+  if (state === "ready") return <Clock3 size={14} />;
+  return <Circle size={14} />;
 }

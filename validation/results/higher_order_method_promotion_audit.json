@@ -2,7 +2,7 @@
   "schema_version": 1,
   "target": "v1_2_3_extended_pls_diagnostics_promotion",
   "method_id": "higher_order",
-  "promoted_scope": "Repeated-indicator, two-stage, and documented hybrid higher-order construct estimation for supported PLS recipes.",
+  "promoted_scope": "Backend-qualified repeated-indicator, two-stage, and documented hybrid estimation; packaged native authoring is limited to one reflective-reflective disjoint two-stage point-estimate HOC.",
   "passed": true,
   "reports": [
     {
@@ -34,25 +34,40 @@
       "path": "validation\\results\\v05_extended_pls_evidence.json",
       "present": true,
       "passed": true
+    },
+    {
+      "path": "validation\\results\\v247_native_desktop_visual_acceptance.json",
+      "present": true,
+      "passed": true
+    },
+    {
+      "path": "validation\\results\\v247_tauri_native_acceptance.json",
+      "present": true,
+      "passed": true
     }
   ],
   "docs": [
     {
       "path": "docs\\methods\\PLS_HIGHER_ORDER_V1.md",
       "present": true,
-      "bytes": 8903
+      "bytes": 10025
     }
   ],
   "checks": [
     {
-      "name": "hoc_scope_is_bounded",
+      "name": "hoc_native_source_contract",
       "passed": true,
-      "detail": "Promotion excludes unsupported HOC constraints and invalid hybrid indicator splits."
+      "detail": "Native source contains bounded authoring, readiness, result-table, strict persistence, and runner-backed tamper contracts."
     },
     {
-      "name": "hoc_metamorphic_coverage",
+      "name": "hoc_responsive_authoring",
       "passed": true,
-      "detail": "Reference artifacts cover affine, row-order, construct-order, component-order, and degradation checks."
+      "detail": "Three production-bundle viewports author ordinary components and verify the exact bounded HOC dialog without fabricated results."
+    },
+    {
+      "name": "hoc_packaged_workflow",
+      "passed": true,
+      "detail": "A genuine packaged run exposes component/path/scope tables, real XLSX output, strict archive shape, explicit save, and same-run reopen."
     }
   ],
   "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."

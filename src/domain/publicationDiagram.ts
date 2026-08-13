@@ -2,6 +2,7 @@ import type { Edge, Node } from "@xyflow/react";
 import { buildDiagramGraph } from "./diagramGraph";
 import { SEM_SIZES, routeBetweenBoxes, semNodeBox } from "./semGeometry";
 import type { AnalysisRun, ConstructData, DiagramLayoutState, PublicationDiagramSettings } from "../types";
+import { NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING, nativeStructuralPathRandomizationProjection } from "../native/nativeStructuralPathRandomization";
 
 const PADDING = 42;
 const FALLBACK_SETTINGS: PublicationDiagramSettings = {
@@ -40,7 +41,9 @@ export function publicationDiagramSvg(nodes: Array<Node<ConstructData>>, edges: 
   const edgeMarkup = graph.edges.map((edge) => renderEdge(edge, graph.nodes, bounds, smartpls, options)).join("\n");
   const title = run ? `${run.name} publication diagram` : "QuickPLS model diagram";
   const warning = run && options.showValidationWatermark
-    ? `<text x="${PADDING}" y="${height - 15}" class="warning">Validated for documented QuickPLS supported scope; unsupported shapes remain blocked.</text>`
+    ? `<text x="${PADDING}" y="${height - 15}" class="warning">${escapeXml(nativeStructuralPathRandomizationProjection(run)
+      ? NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING
+      : "Validated for documented QuickPLS supported scope; unsupported shapes remain blocked.")}</text>`
     : "";
   const provenance = run && options.showRunProvenance
     ? `<text x="${width - PADDING}" y="${height - 15}" text-anchor="end" class="caption">Run ${escapeXml(run.id)} | ${escapeXml(run.createdAt)}</text>`

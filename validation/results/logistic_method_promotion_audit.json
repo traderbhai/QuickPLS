@@ -1,44 +1,847 @@
 {
   "schema_version": 1,
-  "target": "v1_2_2_group_prediction_regression_promotion",
-  "method_id": "logistic",
-  "promoted_scope": "Binary 0/1 numeric complete-case logistic regression with deterministic IRLS, Wald SE/z/p, odds ratios, predicted probabilities, log-likelihood, pseudo-R2, AIC, and BIC.",
+  "integrity_contract": "exact_current_reference_and_packaged_identity_v1",
+  "generated_at_utc": "2026-08-12T11:45:42.155296Z",
+  "target": "quickpls3_standalone_logistic_v2_promotion",
+  "feature_id": "qpls3.standalone.logistic",
+  "method_version": "regression_logistic_v2",
+  "catalogue_snapshot_date": "2026-08-12",
+  "legacy_method_version": "regression_logistic_v1",
+  "legacy_status": "archive_only",
   "passed": true,
-  "reports": [
-    {
-      "path": "validation\\results\\v08_extended_methods_reference_report.json",
+  "reference_report": {
+    "path": "validation\\results\\logistic_v2_reference_report.json",
+    "present": true,
+    "bytes": 3292,
+    "sha256": "a99f9103126c46a84e0db9aae0afac80e914d4a19fcc8766e85bbbc095e09a24",
+    "readable": true,
+    "explicit_pass_state": {
       "present": true,
+      "passed": true,
+      "states": [
+        {
+          "path": "passed",
+          "present": true,
+          "value": true,
+          "passed": true
+        }
+      ]
+    },
+    "requirement_checks": [
+      {
+        "path": "schema_version",
+        "expected": 1,
+        "observed": 1,
+        "passed": true
+      },
+      {
+        "path": "target",
+        "expected": "binary_logistic_regression_v2_reference",
+        "observed": "binary_logistic_regression_v2_reference",
+        "passed": true
+      },
+      {
+        "path": "feature_id",
+        "expected": "qpls3.standalone.logistic",
+        "observed": "qpls3.standalone.logistic",
+        "passed": true
+      },
+      {
+        "path": "method_version",
+        "expected": "regression_logistic_v2",
+        "observed": "regression_logistic_v2",
+        "passed": true
+      },
+      {
+        "path": "catalogue_snapshot_date",
+        "expected": "2026-08-12",
+        "observed": "2026-08-12",
+        "passed": true
+      },
+      {
+        "path": "tolerance",
+        "expected": 2e-06,
+        "observed": 2e-06,
+        "passed": true
+      },
+      {
+        "path": "scope.outcome_coding",
+        "expected": "exact numeric 0 and 1",
+        "observed": "exact numeric 0 and 1",
+        "passed": true
+      },
+      {
+        "path": "scope.missing_data",
+        "expected": "listwise_deletion",
+        "observed": "listwise_deletion",
+        "passed": true
+      },
+      {
+        "path": "scope.confidence",
+        "expected": "two_sided_95_percent_fixed",
+        "observed": "two_sided_95_percent_fixed",
+        "passed": true
+      },
+      {
+        "path": "scope.classification_threshold",
+        "expected": 0.5,
+        "observed": 0.5,
+        "passed": true
+      },
+      {
+        "path": "scope.workers",
+        "expected": 1,
+        "observed": 1,
+        "passed": true
+      },
+      {
+        "path": "artifacts.fixture",
+        "expected": "validation/results/logistic_v2_reference.csv",
+        "observed": "validation/results/logistic_v2_reference.csv",
+        "passed": true
+      },
+      {
+        "path": "artifacts.recipe",
+        "expected": "validation/results/logistic_v2_reference.recipe.json",
+        "observed": "validation/results/logistic_v2_reference.recipe.json",
+        "passed": true
+      },
+      {
+        "path": "artifacts.quickpls_result",
+        "expected": "validation/results/logistic_v2_reference_quickpls.json",
+        "observed": "validation/results/logistic_v2_reference_quickpls.json",
+        "passed": true
+      },
+      {
+        "path": "checks.complete_separation_rejected",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.external_r_glm_full_arithmetic",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.independent_python_full_arithmetic",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.non_binary_outcome_rejected",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.nondefault_worker_count_rejected",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.quickpls_v2_exact_contract",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.rank_deficiency_rejected",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.seed_invariant_deterministic_result",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.single_class_outcome_rejected",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "r_reference.version",
+        "expected": "nonempty",
+        "observed_type": "str",
+        "passed": true
+      }
+    ],
+    "companions": [
+      {
+        "path": "validation/results/logistic_v2_reference.recipe.json",
+        "present": true,
+        "bytes": 1169,
+        "sha256": "5a5f6bdf2068aee33b5aef19cd8918c89ecc11c40ff935c3f7b7d67f63689b97",
+        "readable": true,
+        "checks": [
+          {
+            "path": "schema_version",
+            "expected": 3,
+            "observed": 3,
+            "passed": true
+          },
+          {
+            "path": "settings.method",
+            "expected": "regression",
+            "observed": "regression",
+            "passed": true
+          },
+          {
+            "path": "settings.preprocessing",
+            "expected": "unstandardized",
+            "observed": "unstandardized",
+            "passed": true
+          },
+          {
+            "path": "settings.workers",
+            "expected": 1,
+            "observed": 1,
+            "passed": true
+          },
+          {
+            "path": "settings.confidence_level",
+            "expected": 0.95,
+            "observed": 0.95,
+            "passed": true
+          },
+          {
+            "path": "method_config.kind",
+            "expected": "regression",
+            "observed": "regression",
+            "passed": true
+          },
+          {
+            "path": "method_config.model.type",
+            "expected": "logistic",
+            "observed": "logistic",
+            "passed": true
+          },
+          {
+            "path": "model.constructs",
+            "expected": [],
+            "observed": [],
+            "passed": true
+          },
+          {
+            "path": "model.paths",
+            "expected": [],
+            "observed": [],
+            "passed": true
+          },
+          {
+            "path": "dataset_fingerprint",
+            "expected": "nonempty",
+            "observed_type": "str",
+            "passed": true
+          }
+        ],
+        "passed": true
+      },
+      {
+        "path": "validation/results/logistic_v2_reference_quickpls.json",
+        "present": true,
+        "bytes": 42149,
+        "sha256": "ae397870ad7a0d308f3f237ff9545dc197c406393bc10a7a6a96b2857f1ffe3b",
+        "readable": true,
+        "checks": [
+          {
+            "path": "status",
+            "expected": "completed",
+            "observed": "completed",
+            "passed": true
+          },
+          {
+            "path": "provenance.method",
+            "expected": "regression",
+            "observed": "regression",
+            "passed": true
+          },
+          {
+            "path": "provenance.method_version",
+            "expected": "regression_logistic_v2",
+            "observed": "regression_logistic_v2",
+            "passed": true
+          },
+          {
+            "path": "provenance.settings.workers",
+            "expected": 1,
+            "observed": 1,
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.method_version",
+            "expected": "regression_logistic_v2",
+            "observed": "regression_logistic_v2",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.method_version",
+            "expected": "regression_logistic_v2",
+            "observed": "regression_logistic_v2",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.regression_type",
+            "expected": "logistic",
+            "observed": "logistic",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.logistic.outcome_profile.readiness",
+            "expected": "ready",
+            "observed": "ready",
+            "passed": true
+          },
+          {
+            "path": "payload.estimation.regression.logistic.convergence.converged",
+            "expected": true,
+            "observed": true,
+            "passed": true
+          },
+          {
+            "path": "payload.assessment.method_version",
+            "expected": "assessment_not_applicable_v1",
+            "observed": "assessment_not_applicable_v1",
+            "passed": true
+          }
+        ],
+        "passed": true
+      }
+    ],
+    "passed": true,
+    "freshness": {
+      "checked": true,
+      "passed": true,
+      "report_modified_at_utc": "2026-08-12T10:26:36.370464Z",
+      "age_days": 0.054928,
+      "max_age_days": null,
+      "sources": [
+        {
+          "path": "validation\\logistic_v2_reference.py",
+          "present": true,
+          "modified_at_utc": "2026-08-12T10:26:21.248378Z"
+        },
+        {
+          "path": "crates\\qpls-core\\src\\contract.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T06:00:41.703255Z"
+        },
+        {
+          "path": "crates\\qpls-core\\src\\validation.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T10:03:14.493058Z"
+        },
+        {
+          "path": "crates\\qpls-estimation\\src\\pls.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T09:59:34.317976Z"
+        },
+        {
+          "path": "crates\\qpls-project\\src\\lib.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T10:12:17.725308Z"
+        },
+        {
+          "path": "crates\\qpls-runner\\src\\lib.rs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T09:57:15.486099Z"
+        }
+      ]
+    },
+    "generated_at": null
+  },
+  "packaged_acceptance": {
+    "path": "validation\\results\\logistic_v2_packaged_acceptance.json",
+    "present": true,
+    "bytes": 4375,
+    "sha256": "5dc4b06c07147f3c179b979bc6eb85ca47a811670595e37623237ea9695247ce",
+    "readable": true,
+    "explicit_pass_state": {
+      "present": true,
+      "passed": true,
+      "states": [
+        {
+          "path": "passed",
+          "present": true,
+          "value": true,
+          "passed": true
+        }
+      ]
+    },
+    "requirement_checks": [
+      {
+        "path": "schema_version",
+        "expected": "quickpls.packaged_acceptance.v1",
+        "observed": "quickpls.packaged_acceptance.v1",
+        "passed": true
+      },
+      {
+        "path": "kind",
+        "expected": "quickpls3_scoped_tauri_logistic_v2_acceptance",
+        "observed": "quickpls3_scoped_tauri_logistic_v2_acceptance",
+        "passed": true
+      },
+      {
+        "path": "target",
+        "expected": "windows_10_11_x64_packaged_tauri",
+        "observed": "windows_10_11_x64_packaged_tauri",
+        "passed": true
+      },
+      {
+        "path": "feature_id",
+        "expected": "qpls3.standalone.logistic",
+        "observed": "qpls3.standalone.logistic",
+        "passed": true
+      },
+      {
+        "path": "method_version",
+        "expected": "regression_logistic_v2",
+        "observed": "regression_logistic_v2",
+        "passed": true
+      },
+      {
+        "path": "catalogue_snapshot_date",
+        "expected": "2026-08-12",
+        "observed": "2026-08-12",
+        "passed": true
+      },
+      {
+        "path": "runtime",
+        "expected": "tauri-webview2-cdp",
+        "observed": "tauri-webview2-cdp",
+        "passed": true
+      },
+      {
+        "path": "generator",
+        "expected": "validation/v247_tauri_native_acceptance.mjs",
+        "observed": "validation/v247_tauri_native_acceptance.mjs",
+        "passed": true
+      },
+      {
+        "path": "source_report",
+        "expected": "validation/results/v247_tauri_native_acceptance_logistic.json",
+        "observed": "validation/results/v247_tauri_native_acceptance_logistic.json",
+        "passed": true
+      },
+      {
+        "path": "checks.export.passed",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.failure_lifecycle.passed",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.legacy_v1.passed",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.results.passed",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.save_reopen.passed",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "checks.workflow.passed",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "path": "generated_at_utc",
+        "expected": "nonempty",
+        "observed_type": "str",
+        "passed": true
+      },
+      {
+        "path": "completed_at_utc",
+        "expected": "nonempty",
+        "observed_type": "str",
+        "passed": true
+      }
+    ],
+    "companions": [
+      {
+        "path": "validation/results/v247_tauri_native_acceptance_logistic.json",
+        "present": true,
+        "bytes": 391100,
+        "sha256": "5dfb656dc86b23ec5a68b247fa228983cd80443c8b7ccc38a8bd6c1e861dfcfd",
+        "readable": true,
+        "checks": [
+          {
+            "path": "schema_version",
+            "expected": "quickpls.packaged_acceptance.v1",
+            "observed": "quickpls.packaged_acceptance.v1",
+            "passed": true
+          },
+          {
+            "path": "feature_id",
+            "expected": "qpls3.standalone.logistic",
+            "observed": "qpls3.standalone.logistic",
+            "passed": true
+          },
+          {
+            "path": "method_version",
+            "expected": "regression_logistic_v2",
+            "observed": "regression_logistic_v2",
+            "passed": true
+          },
+          {
+            "path": "catalogue_snapshot_date",
+            "expected": "2026-08-12",
+            "observed": "2026-08-12",
+            "passed": true
+          },
+          {
+            "path": "runtime",
+            "expected": "tauri-webview2-cdp",
+            "observed": "tauri-webview2-cdp",
+            "passed": true
+          },
+          {
+            "path": "checks.logisticWorkflow.passed",
+            "expected": true,
+            "observed": true,
+            "passed": true
+          },
+          {
+            "path": "checks.logisticWorkflow.feature_id",
+            "expected": "qpls3.standalone.logistic",
+            "observed": "qpls3.standalone.logistic",
+            "passed": true
+          },
+          {
+            "path": "checks.logisticWorkflow.method_version",
+            "expected": "regression_logistic_v2",
+            "observed": "regression_logistic_v2",
+            "passed": true
+          },
+          {
+            "path": "checks.logisticWorkflow.catalogue_snapshot_date",
+            "expected": "2026-08-12",
+            "observed": "2026-08-12",
+            "passed": true
+          },
+          {
+            "path": "checks.logisticFailureLifecycle.passed",
+            "expected": true,
+            "observed": true,
+            "passed": true
+          },
+          {
+            "path": "checks.logisticLegacyV1.passed",
+            "expected": true,
+            "observed": true,
+            "passed": true
+          },
+          {
+            "path": "generatedAt",
+            "expected": "nonempty",
+            "observed_type": "str",
+            "passed": true
+          },
+          {
+            "path": "focusedRun.completedAt",
+            "expected": "nonempty",
+            "observed_type": "str",
+            "passed": true
+          },
+          {
+            "path": "screenshots",
+            "expected": "nonempty",
+            "observed_type": "list",
+            "passed": true
+          }
+        ],
+        "passed": true,
+        "explicit_pass_state": {
+          "present": true,
+          "passed": true,
+          "states": [
+            {
+              "path": "passed",
+              "present": true,
+              "value": true,
+              "passed": true
+            }
+          ]
+        }
+      }
+    ],
+    "passed": true,
+    "freshness": {
+      "checked": true,
+      "passed": true,
+      "report_modified_at_utc": "2026-08-12T11:34:27.259093Z",
+      "age_days": 0.007811,
+      "max_age_days": null,
+      "sources": [
+        {
+          "path": "validation\\v247_tauri_native_acceptance.mjs",
+          "present": true,
+          "modified_at_utc": "2026-08-12T11:31:09.279237Z"
+        },
+        {
+          "path": "validation\\logistic_v2_packaged_acceptance.schema.json",
+          "present": true,
+          "modified_at_utc": "2026-08-12T10:28:53.119265Z"
+        },
+        {
+          "path": "validation\\run_v247_logistic_native_acceptance.ps1",
+          "present": true,
+          "modified_at_utc": "2026-08-12T10:28:53.114969Z"
+        }
+      ]
+    },
+    "generated_at": "2026-08-12T11:31:20.078Z"
+  },
+  "exact_check_sets": {
+    "reference": {
+      "expected": [
+        "complete_separation_rejected",
+        "external_r_glm_full_arithmetic",
+        "independent_python_full_arithmetic",
+        "non_binary_outcome_rejected",
+        "nondefault_worker_count_rejected",
+        "quickpls_v2_exact_contract",
+        "rank_deficiency_rejected",
+        "seed_invariant_deterministic_result",
+        "single_class_outcome_rejected"
+      ],
+      "observed": [
+        "complete_separation_rejected",
+        "external_r_glm_full_arithmetic",
+        "independent_python_full_arithmetic",
+        "non_binary_outcome_rejected",
+        "nondefault_worker_count_rejected",
+        "quickpls_v2_exact_contract",
+        "rank_deficiency_rejected",
+        "seed_invariant_deterministic_result",
+        "single_class_outcome_rejected"
+      ],
+      "passed": true
+    },
+    "packaged_acceptance": {
+      "expected": [
+        "export",
+        "failure_lifecycle",
+        "legacy_v1",
+        "results",
+        "save_reopen",
+        "workflow"
+      ],
+      "observed": [
+        "export",
+        "failure_lifecycle",
+        "legacy_v1",
+        "results",
+        "save_reopen",
+        "workflow"
+      ],
+      "passed": true
+    }
+  },
+  "reference_attestation": {
+    "checks": {
+      "python_delta_within_declared_tolerance": true,
+      "r_delta_within_declared_tolerance": true,
+      "external_r_reference_identified": true
+    },
+    "passed": true
+  },
+  "packaged_attestation": {
+    "checks": {
+      "ordered_utc_timestamps": true,
+      "xlsx_artifact_matches_disk": true,
+      "project_archive_matches_disk": true,
+      "screenshot_artifacts_match_disk": true,
+      "artifact_paths_are_unique": true,
+      "export_digest_is_bound": true,
+      "archive_digest_is_bound": true
+    },
+    "artifacts": {
+      "xlsx": {
+        "path": "validation/results/v247-native-logistic-20260812-170118164.xlsx",
+        "reported_size": 16134,
+        "reported_sha256": "91f712e442fa9b7214ab881c0597d6c89dbbbfc2b7e5fafe8c6cfacd91e47fdb",
+        "present": true,
+        "inside_repository": true,
+        "actual_size": 16134,
+        "actual_sha256": "91f712e442fa9b7214ab881c0597d6c89dbbbfc2b7e5fafe8c6cfacd91e47fdb",
+        "passed": true
+      },
+      "project_archive": {
+        "path": "validation/results/v247-native-logistic-1786534280072-60296.qpls",
+        "reported_size": 20226,
+        "reported_sha256": "80940815a1024a8760b61ecdbc28b69fc96466e719cdde38eb32c257268e4ef0",
+        "present": true,
+        "inside_repository": true,
+        "actual_size": 20226,
+        "actual_sha256": "80940815a1024a8760b61ecdbc28b69fc96466e719cdde38eb32c257268e4ef0",
+        "passed": true
+      },
+      "screenshots": [
+        {
+          "path": "validation/results/screens/v247-native-desktop-acceptance/150-tauri-native-logistic-fixture-data-1536x794.png",
+          "reported_size": 292324,
+          "reported_sha256": "629a325c18d9fd856e2bd9b8ca68d7eb72d5c909f068ea3e22c2f70200967860",
+          "present": true,
+          "inside_repository": true,
+          "actual_size": 292324,
+          "actual_sha256": "629a325c18d9fd856e2bd9b8ca68d7eb72d5c909f068ea3e22c2f70200967860",
+          "passed": true
+        },
+        {
+          "path": "validation/results/screens/v247-native-desktop-acceptance/151-tauri-native-logistic-dialog-1536x794.png",
+          "reported_size": 284712,
+          "reported_sha256": "2c0bd4a2d78b931214e18218112d96460a05294c038081462860f821a56b3a60",
+          "present": true,
+          "inside_repository": true,
+          "actual_size": 284712,
+          "actual_sha256": "2c0bd4a2d78b931214e18218112d96460a05294c038081462860f821a56b3a60",
+          "passed": true
+        },
+        {
+          "path": "validation/results/screens/v247-native-desktop-acceptance/152-tauri-native-logistic-running-1536x794.png",
+          "reported_size": 229199,
+          "reported_sha256": "68578e95310b629f1ff52e6a85fec421e1de215b3abf8e8c08953c6db9f9e3da",
+          "present": true,
+          "inside_repository": true,
+          "actual_size": 229199,
+          "actual_sha256": "68578e95310b629f1ff52e6a85fec421e1de215b3abf8e8c08953c6db9f9e3da",
+          "passed": true
+        },
+        {
+          "path": "validation/results/screens/v247-native-desktop-acceptance/153-tauri-native-logistic-results-1536x794.png",
+          "reported_size": 90649,
+          "reported_sha256": "3d982ca36ce4770b9a43472b23ccbe840a693bc7ee508b8768877e4eebfcfd1c",
+          "present": true,
+          "inside_repository": true,
+          "actual_size": 90649,
+          "actual_sha256": "3d982ca36ce4770b9a43472b23ccbe840a693bc7ee508b8768877e4eebfcfd1c",
+          "passed": true
+        },
+        {
+          "path": "validation/results/screens/v247-native-desktop-acceptance/154-tauri-native-logistic-export-1536x794.png",
+          "reported_size": 116167,
+          "reported_sha256": "24da548f3c6d50ba8a0eefa970c33e4f0cfc529ab90e35cf4eff0ead877b1e22",
+          "present": true,
+          "inside_repository": true,
+          "actual_size": 116167,
+          "actual_sha256": "24da548f3c6d50ba8a0eefa970c33e4f0cfc529ab90e35cf4eff0ead877b1e22",
+          "passed": true
+        },
+        {
+          "path": "validation/results/screens/v247-native-desktop-acceptance/155-tauri-native-logistic-reopened-1536x794.png",
+          "reported_size": 97916,
+          "reported_sha256": "221d795533bba8f9e633cc1a446387e5cd492c959d7f00ed1d14f5553ff55635",
+          "present": true,
+          "inside_repository": true,
+          "actual_size": 97916,
+          "actual_sha256": "221d795533bba8f9e633cc1a446387e5cd492c959d7f00ed1d14f5553ff55635",
+          "passed": true
+        }
+      ]
+    },
+    "passed": true
+  },
+  "docs": [
+    {
+      "path": "docs\\methods\\REGRESSION_LOGISTIC_V2.md",
+      "present": true,
+      "bytes": 2613,
+      "sha256": "19c354958b4645c3e0dae25d1afce026300eeaed4b3389fd487c945b903ce6eb",
+      "required_phrases": [
+        {
+          "phrase": "regression_logistic_v2",
+          "present": true
+        },
+        {
+          "phrase": "exact numeric values `0` and `1`",
+          "present": true
+        },
+        {
+          "phrase": "deterministic Newton IRLS",
+          "present": true
+        },
+        {
+          "phrase": "single-worker",
+          "present": true
+        },
+        {
+          "phrase": "not a validated predictive performance estimate",
+          "present": true
+        },
+        {
+          "phrase": "Historical `regression_logistic_v1` results remain readable",
+          "present": true
+        }
+      ],
+      "forbidden_phrases": [],
       "passed": true
     },
     {
-      "path": "validation\\results\\extended_methods_publication_audit.json",
-      "present": true,
-      "passed": true
-    }
-  ],
-  "docs": [
-    {
       "path": "docs\\methods\\REGRESSION_LOGISTIC_V1.md",
       "present": true,
-      "bytes": 1374
+      "bytes": 1636,
+      "sha256": "644850aad7e13f8212b9498b3d3170a1ca09d2ba28aa2e082f81236cd0c03a6c",
+      "required_phrases": [
+        {
+          "phrase": "regression_logistic_v1",
+          "present": true
+        },
+        {
+          "phrase": "historical archive-readable contract",
+          "present": true
+        },
+        {
+          "phrase": "New execution and append are disabled",
+          "present": true
+        },
+        {
+          "phrase": "regression_logistic_v2",
+          "present": true
+        }
+      ],
+      "forbidden_phrases": [],
+      "passed": true
     }
   ],
   "checks": [
     {
-      "name": "python_irls_reference_present",
+      "name": "dedicated_current_v2_reference",
       "passed": true,
-      "detail": "v0.8 reference report compares logistic estimates with an independent Python IRLS implementation."
+      "detail": "The dedicated report must reproduce the exact v2 numerical and guard contract and bind its schema-v3 recipe plus QuickPLS result."
     },
     {
-      "name": "r_glm_scope_recorded",
+      "name": "genuine_method_specific_packaged_acceptance",
       "passed": true,
-      "detail": "Promotion doc records the R glm comparison requirement and bounded binary numeric scope."
+      "detail": "A dedicated packaged-Tauri report must prove the logistic workflow, truthful results, export, save/reopen, failure lifecycle, and legacy-v1 handling with bound artifact digests."
     },
     {
-      "name": "edge_guards_present",
+      "name": "current_and_legacy_contracts_are_separate",
       "passed": true,
-      "detail": "Rank deficiency, separation, nonconvergence, and unsupported-model guards are part of the documented promotion scope."
+      "detail": "The current v2 contract and archive-only v1 contract must remain explicitly separate."
     }
   ],
-  "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."
+  "note": "Promotion remains false until the dedicated current-v2 reference and a genuine method-specific packaged Windows/Tauri acceptance report both pass with the exact feature, method-version, and catalogue-snapshot identities. Historical v1 evidence is archive-only and cannot satisfy this audit."
 }

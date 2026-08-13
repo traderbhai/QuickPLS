@@ -3,13 +3,13 @@ use chrono::Utc;
 use clap::{Parser, Subcommand, ValueEnum};
 use qpls_assessment::{
     ASSESSMENT_METHOD_VERSION, HTMT_ORIGINAL_METHOD_VERSION, HTMT_PLUS_METHOD_VERSION,
-    RHO_A_METHOD_VERSION, assess_pls,
+    RHO_A_METHOD_VERSION,
 };
 use qpls_core::{
-    AnalysisMethod, AnalysisPayload, AnalysisRecipe, AnalysisResult, AnalysisSettings, Construct,
-    GateStatus, METHOD_CAPABILITIES, MeasurementMode, ModelSpec, PROJECT_SCHEMA_VERSION, RunStatus,
-    Severity, SliceStatus, StructuralPath, development_slice_registry, validate_recipe,
-    validate_slice_registry,
+    ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisMethod, AnalysisPayload, AnalysisRecipe,
+    AnalysisResult, AnalysisSettings, Construct, GateStatus, METHOD_CAPABILITIES, MeasurementMode,
+    MethodConfig, ModelSpec, RunStatus, Severity, SliceStatus, StructuralPath,
+    ValidatedExecutionRecipe, development_slice_registry, validate_recipe, validate_slice_registry,
 };
 use qpls_data::{DataKind, ImportOptions, import_path};
 use qpls_project::{Project, load_project_with_autosave, save_project};
@@ -119,6 +119,13 @@ enum Command {
         #[arg(long)]
         json: bool,
     },
+    /// Create a distinct schema-v3 recipe copy while preserving the historical source.
+    MigrateRecipe {
+        input: PathBuf,
+        output: PathBuf,
+        #[arg(long)]
+        json: bool,
+    },
     Methods {
         #[arg(long)]
         json: bool,
@@ -162,7 +169,9 @@ enum Command {
         recipe_id: Option<String>,
         #[arg(long)]
         output: PathBuf,
-        #[arg(long)]
+        // Retained as a hidden no-op so existing validation automation keeps
+        // working after bounded PLS inference was promoted to validated.
+        #[arg(long, hide = true)]
         allow_experimental: bool,
         #[arg(long)]
         bootstrap_samples: Option<u32>,
@@ -227,6 +236,11 @@ fn main() -> Result<()> {
             Ok(())
         }
         Command::Inspect { project, json } => inspect_project(&project, json),
+        Command::MigrateRecipe {
+            input,
+            output,
+            json,
+        } => migrate_recipe(&input, &output, json),
         Command::Methods { json } => {
             if json {
                 println!("{}", serde_json::to_string_pretty(METHOD_CAPABILITIES)?);
@@ -1026,6 +1040,44 @@ fn push_experimental_method_payloads(estimation: &serde_json::Value, rows: &mut 
                         }
                     }
                 }
+                if let Some(estimates) = group
+                    .get("outer_estimates")
+                    .and_then(|value| value.as_array())
+                {
+                    for estimate in estimates {
+                        for metric in ["weight", "loading"] {
+                            if let Some(value) = estimate.get(metric) {
+                                rows.push(row(
+                                    "mga_group_measurement",
+                                    &json_str(group, "group"),
+                                    &json_str(estimate, "indicator"),
+                                    &json_str(estimate, "construct"),
+                                    "",
+                                    metric,
+                                    json_value(value),
+                                ));
+                            }
+                        }
+                    }
+                }
+                if let Some(transforms) = group.get("transforms").and_then(|value| value.as_array())
+                {
+                    for transform in transforms {
+                        for metric in ["mean", "scale"] {
+                            if let Some(value) = transform.get(metric) {
+                                rows.push(row(
+                                    "mga_group_transform",
+                                    &json_str(group, "group"),
+                                    &json_str(transform, "indicator"),
+                                    "",
+                                    "",
+                                    metric,
+                                    json_value(value),
+                                ));
+                            }
+                        }
+                    }
+                }
             }
         }
         if let Some(comparisons) = mga.get("comparisons").and_then(|value| value.as_array()) {
@@ -1055,6 +1107,32 @@ fn push_experimental_method_payloads(estimation: &serde_json::Value, rows: &mut 
                 }
             }
         }
+        if let Some(comparisons) = mga
+            .get("measurement_comparisons")
+            .and_then(|value| value.as_array())
+        {
+            for comparison in comparisons {
+                for metric in [
+                    "group_a",
+                    "group_b",
+                    "estimate_a",
+                    "estimate_b",
+                    "difference",
+                ] {
+                    if let Some(value) = comparison.get(metric) {
+                        rows.push(row(
+                            "mga_measurement_comparison",
+                            &json_str(comparison, "construct"),
+                            &json_str(comparison, "indicator"),
+                            "",
+                            "",
+                            &format!("{}_{}", json_str(comparison, "parameter"), metric),
+                            json_value(value),
+                        ));
+                    }
+                }
+            }
+        }
         push_json_warnings("mga", mga.get("warnings"), rows);
     }
     if let Some(micom) = estimation.get("micom").and_then(|value| value.as_object()) {
@@ -1063,9 +1141,27 @@ fn push_experimental_method_payloads(estimation: &serde_json::Value, rows: &mut 
             "group_column",
             "permutation_samples",
             "usable_permutations",
+            "attempted_permutations",
+            "failed_permutations",
+            "confidence_level",
         ] {
             if let Some(value) = micom.get(metric) {
                 rows.push(row("micom", "", "", "", "", metric, json_value(value)));
+            }
+        }
+        if let Some(groups) = micom.get("groups").and_then(|value| value.as_array()) {
+            for group in groups {
+                if let Some(value) = group.get("observations") {
+                    rows.push(row(
+                        "micom_group",
+                        &json_str(group, "group"),
+                        "",
+                        "",
+                        "",
+                        "observations",
+                        json_value(value),
+                    ));
+                }
             }
         }
         if let Some(constructs) = micom.get("constructs").and_then(|value| value.as_array()) {
@@ -1074,10 +1170,21 @@ fn push_experimental_method_payloads(estimation: &serde_json::Value, rows: &mut 
                     "configural_invariance",
                     "compositional_correlation",
                     "compositional_p_value",
+                    "compositional_correlation_lower",
+                    "mean_a",
+                    "mean_b",
                     "mean_difference",
                     "mean_p_value",
+                    "mean_difference_lower",
+                    "mean_difference_upper",
+                    "variance_a",
+                    "variance_b",
                     "variance_difference",
                     "variance_p_value",
+                    "variance_difference_lower",
+                    "variance_difference_upper",
+                    "equal_means",
+                    "equal_variances",
                     "partial_invariance",
                     "full_invariance",
                 ] {
@@ -1106,6 +1213,8 @@ fn push_experimental_method_payloads(estimation: &serde_json::Value, rows: &mut 
             "group_column",
             "permutation_samples",
             "usable_permutations",
+            "attempted_permutations",
+            "failed_permutations",
         ] {
             if let Some(value) = mga_permutation.get(metric) {
                 rows.push(row(
@@ -1117,6 +1226,30 @@ fn push_experimental_method_payloads(estimation: &serde_json::Value, rows: &mut 
                     metric,
                     json_value(value),
                 ));
+            }
+        }
+        if let Some(comparisons) = mga_permutation
+            .get("measurement_comparisons")
+            .and_then(|value| value.as_array())
+        {
+            for comparison in comparisons {
+                for metric in [
+                    "original_difference",
+                    "empirical_p_value_two_sided",
+                    "percentile_rank",
+                ] {
+                    if let Some(value) = comparison.get(metric) {
+                        rows.push(row(
+                            "mga_permutation_measurement_comparison",
+                            &json_str(comparison, "construct"),
+                            &json_str(comparison, "indicator"),
+                            "",
+                            "",
+                            &format!("{}_{}", json_str(comparison, "parameter"), metric),
+                            json_value(value),
+                        ));
+                    }
+                }
             }
         }
         if let Some(comparisons) = mga_permutation
@@ -2312,10 +2445,12 @@ fn write_v08_extended_methods_evidence(output: Option<&Path>) -> Result<()> {
     let artifacts = [
         "docs/methods/PCA_V1.md",
         "docs/methods/REGRESSION_OLS_V1.md",
+        "docs/methods/REGRESSION_LOGISTIC_V2.md",
         "docs/methods/REGRESSION_LOGISTIC_V1.md",
         "docs/methods/PROCESS_V1.md",
+        "docs/methods/NCA_V2.md",
         "docs/methods/NCA_V1.md",
-        "docs/methods/GSCA_V1.md",
+        "docs/methods/GSCA_ALS_V2.md",
         "validation/results/v08_extended_methods_reference_report.json",
     ];
     let artifact_status = artifacts
@@ -3052,10 +3187,24 @@ fn repository_root() -> Result<PathBuf> {
 }
 
 fn run_cli_worker_matrix(root: &Path) -> Result<serde_json::Value> {
-    let recipe = root.join("validation/fixtures/simple_reflective.recipe.json");
+    let historical_recipe = root.join("validation/fixtures/simple_reflective.recipe.json");
     let data = root.join("validation/fixtures/simple_reflective.csv");
     let directory = root.join("target/qualification/v04-inference");
     fs::create_dir_all(&directory)?;
+    let recipe = directory.join("simple_reflective.v3.recipe.json");
+    let historical: AnalysisRecipe = serde_json::from_slice(
+        &fs::read(&historical_recipe)
+            .with_context(|| format!("cannot read {}", historical_recipe.display()))?,
+    )
+    .context("invalid historical worker-matrix recipe JSON")?;
+    fs::write(
+        &recipe,
+        serde_json::to_vec_pretty(
+            &historical
+                .migrated_v3()
+                .context("cannot migrate worker-matrix recipe to schema v3")?,
+        )?,
+    )?;
     let mut payloads = Vec::new();
     let mut diagnostics = Vec::new();
     for workers in [1, 2, 4] {
@@ -3096,17 +3245,22 @@ fn run_bootstrap_cancellation_latency(root: &Path) -> Result<serde_json::Value> 
     let data_path = root.join("validation/fixtures/simple_reflective.csv");
     let dataset = import_path(&data_path, &ImportOptions::default())
         .with_context(|| format!("cannot import {}", data_path.display()))?;
-    let mut recipe: AnalysisRecipe = serde_json::from_slice(
+    let historical: AnalysisRecipe = serde_json::from_slice(
         &fs::read(&recipe_path)
             .with_context(|| format!("cannot read {}", recipe_path.display()))?,
     )
     .context("invalid cancellation benchmark recipe JSON")?;
+    let mut recipe = historical
+        .migrated_v3()
+        .context("cannot migrate cancellation benchmark recipe to schema v3")?;
     recipe.settings.bootstrap_samples = 10_000;
     recipe.settings.studentized_inner_samples = 0;
     recipe.settings.permutation_samples = 0;
     recipe.settings.workers = 4;
+    recipe.method_config = Some(MethodConfig::PlsBootstrap);
     let mut base_recipe = recipe.clone();
     base_recipe.settings.bootstrap_samples = 0;
+    base_recipe.method_config = Some(MethodConfig::PlsAlgorithm);
     let original = qpls_estimation::estimate_pls(&dataset, &base_recipe)
         .context("base PLS estimate failed")?;
     let cancelled = Arc::new(AtomicBool::new(false));
@@ -3162,18 +3316,23 @@ fn run_studentized_cancellation_latency(root: &Path) -> Result<serde_json::Value
     let data_path = root.join("validation/fixtures/simple_reflective.csv");
     let dataset = import_path(&data_path, &ImportOptions::default())
         .with_context(|| format!("cannot import {}", data_path.display()))?;
-    let mut recipe: AnalysisRecipe = serde_json::from_slice(
+    let historical: AnalysisRecipe = serde_json::from_slice(
         &fs::read(&recipe_path)
             .with_context(|| format!("cannot read {}", recipe_path.display()))?,
     )
     .context("invalid studentized cancellation benchmark recipe JSON")?;
+    let mut recipe = historical
+        .migrated_v3()
+        .context("cannot migrate studentized cancellation benchmark recipe to schema v3")?;
     recipe.settings.bootstrap_samples = 999;
     recipe.settings.studentized_inner_samples = 99;
     recipe.settings.permutation_samples = 0;
     recipe.settings.workers = 4;
+    recipe.method_config = Some(MethodConfig::PlsBootstrap);
     let mut base_recipe = recipe.clone();
     base_recipe.settings.bootstrap_samples = 0;
     base_recipe.settings.studentized_inner_samples = 0;
+    base_recipe.method_config = Some(MethodConfig::PlsAlgorithm);
     let original = qpls_estimation::estimate_pls(&dataset, &base_recipe)
         .context("base PLS estimate failed")?;
     let cancelled = Arc::new(AtomicBool::new(false));
@@ -4275,7 +4434,7 @@ fn build_demo_project(root: &Path) -> Result<(Project, serde_json::Value)> {
     settings.seed = 20_260_718;
     settings.workers = 1;
     let recipe = AnalysisRecipe {
-        schema_version: PROJECT_SCHEMA_VERSION,
+        schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
         id: "00000000-0000-0000-0000-00000000d004"
             .parse()
             .expect("fixed demo recipe UUID is valid"),
@@ -4285,6 +4444,9 @@ fn build_demo_project(root: &Path) -> Result<(Project, serde_json::Value)> {
         dataset_fingerprint: dataset.fingerprint.0.clone(),
         model: model.clone(),
         settings,
+        // QuickPLS supports the historical combined output contract: bootstrap
+        // is the primary typed workflow and permutation is an added result.
+        method_config: Some(MethodConfig::PlsBootstrap),
         metadata: std::collections::BTreeMap::from([
             ("demo".into(), "quickpls_v04_demo".into()),
             (
@@ -4294,7 +4456,7 @@ fn build_demo_project(root: &Path) -> Result<(Project, serde_json::Value)> {
         ]),
     };
     let result = run_demo_recipe(&dataset, &recipe)?;
-    let mut project = Project::new("QuickPLS v0.4 Demo Evidence Project");
+    let mut project = Project::new("Corporate Reputation Sample");
     project.datasets.push(dataset);
     project.models.push(model);
     project.recipes.push(recipe);
@@ -4383,13 +4545,21 @@ fn run_demo_recipe(
     recipe: &AnalysisRecipe,
 ) -> Result<AnalysisResult> {
     let started_at = Utc::now();
-    let mut base_recipe = recipe.clone();
-    base_recipe.settings.bootstrap_samples = 0;
-    base_recipe.settings.permutation_samples = 0;
-    let estimation = qpls_estimation::estimate_pls(dataset, &base_recipe)
-        .context("demo PLS estimation failed")?;
-    let assessment =
-        assess_pls(dataset, &base_recipe, &estimation).context("demo PLS assessment failed")?;
+    let execution = ValidatedExecutionRecipe::for_dataset(recipe, &dataset.fingerprint.0)
+        .context("demo recipe validation failed")?;
+    let base_recipe = execution
+        .without_outer_resampling()
+        .context("demo base recipe derivation failed")?;
+    let estimation =
+        qpls_estimation::estimate_pls_validated_with_control(dataset, &base_recipe, |_| true)
+            .context("demo PLS estimation failed")?;
+    let assessment = qpls_assessment::assess_pls_validated_with_control(
+        dataset,
+        &base_recipe,
+        &estimation,
+        |_| true,
+    )
+    .context("demo PLS assessment failed")?;
     let bootstrap = bootstrap_pls(
         dataset,
         recipe,
@@ -4549,20 +4719,12 @@ fn run_analysis(
     data_path: Option<&Path>,
     recipe_id: Option<&str>,
     output: &Path,
-    allow_experimental: bool,
+    _allow_experimental: bool,
     bootstrap_samples: Option<u32>,
     studentized_inner_samples: Option<u32>,
     permutation_samples: Option<u32>,
     workers: Option<usize>,
 ) -> Result<()> {
-    let requests_experimental_inference = bootstrap_samples.unwrap_or(0) > 0
-        || studentized_inner_samples.unwrap_or(0) > 0
-        || permutation_samples.unwrap_or(0) > 0;
-    if !allow_experimental && requests_experimental_inference {
-        bail!(
-            "PLS inference add-ons are experimental; rerun with --allow-experimental after reviewing the validation status"
-        );
-    }
     let (dataset, mut recipe) = if input
         .extension()
         .and_then(|value| value.to_str())
@@ -4570,6 +4732,7 @@ fn run_analysis(
     {
         let (project, _) = load_project_with_autosave(input)
             .with_context(|| format!("invalid project {}", input.display()))?;
+        require_executable_project(&project)?;
         let recipe = if let Some(recipe_id) = recipe_id {
             project
                 .recipes
@@ -4614,6 +4777,14 @@ fn run_analysis(
     if let Some(workers) = workers {
         recipe.settings.workers = workers;
     }
+    if (bootstrap_samples.is_some()
+        || studentized_inner_samples.is_some()
+        || permutation_samples.is_some())
+        && recipe.schema_version == ANALYSIS_RECIPE_SCHEMA_VERSION
+        && recipe.settings.method == AnalysisMethod::PlsPm
+    {
+        recipe.method_config = Some(MethodConfig::default_for_settings(&recipe.settings));
+    }
     let issues = validate_recipe(&recipe);
     if let Some(issue) = issues
         .iter()
@@ -4629,6 +4800,16 @@ fn run_analysis(
     fs::write(output, serde_json::to_vec_pretty(&envelope)?)
         .with_context(|| format!("cannot write {}", output.display()))?;
     println!("wrote analysis result {}", output.display());
+    Ok(())
+}
+
+fn require_executable_project(project: &Project) -> Result<()> {
+    if project.read_only {
+        bail!(
+            "project archive schema {} is newer than this QuickPLS build; it is available for read-only inspection/export but cannot execute new analyses",
+            project.manifest.schema_version
+        );
+    }
     Ok(())
 }
 
@@ -4688,16 +4869,115 @@ fn validate_input(input: &Path, json_output: bool) -> Result<()> {
     Ok(())
 }
 
+fn migrate_recipe(input: &Path, output: &Path, json_output: bool) -> Result<()> {
+    if input == output {
+        bail!("migration output must differ from the historical source recipe");
+    }
+    if output.exists() {
+        bail!("migration output already exists: {}", output.display());
+    }
+    let source: AnalysisRecipe = serde_json::from_slice(
+        &fs::read(input).with_context(|| format!("cannot read {}", input.display()))?,
+    )
+    .context("invalid historical analysis recipe JSON")?;
+    let migrated = source
+        .migrated_v3_with_fresh_id()
+        .context("historical recipe cannot be migrated automatically")?;
+    let issues = validate_recipe(&migrated);
+    let errors = issues
+        .iter()
+        .filter(|issue| issue.severity == Severity::Error)
+        .collect::<Vec<_>>();
+    if !errors.is_empty() {
+        bail!(
+            "migrated recipe failed schema-v3 validation: {}",
+            errors
+                .iter()
+                .map(|issue| format!("{}: {}", issue.code, issue.message))
+                .collect::<Vec<_>>()
+                .join("; ")
+        );
+    }
+    if let Some(parent) = output.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("cannot create {}", parent.display()))?;
+    }
+    fs::write(output, serde_json::to_vec_pretty(&migrated)?)
+        .with_context(|| format!("cannot write {}", output.display()))?;
+    let report = json!({
+        "source": input,
+        "output": output,
+        "source_schema_version": source.schema_version,
+        "target_schema_version": migrated.schema_version,
+        "source_recipe_id": source.id,
+        "target_recipe_id": migrated.id,
+        "source_method": source.settings.method,
+        "target_method": migrated.settings.method,
+        "method_config_kind": migrated.method_config.as_ref().map(MethodConfig::kind),
+        "preserved_source": true,
+        "issues": issues,
+    });
+    if json_output {
+        println!("{}", serde_json::to_string_pretty(&report)?);
+    } else {
+        println!(
+            "migrated schema v{} recipe {} to schema v{} recipe {} at {}; source preserved",
+            source.schema_version,
+            source.id,
+            migrated.schema_version,
+            migrated.id,
+            output.display()
+        );
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    fn write_migrated_v3_recipe(source: &Path, destination: &Path) {
+        let historical: AnalysisRecipe =
+            serde_json::from_slice(&fs::read(source).unwrap()).unwrap();
+        fs::write(
+            destination,
+            serde_json::to_vec_pretty(&historical.migrated_v3().unwrap()).unwrap(),
+        )
+        .unwrap();
+    }
+
     #[test]
-    fn cli_analysis_payload_is_exactly_worker_invariant() {
+    fn migrate_recipe_writes_a_fresh_valid_copy_and_preserves_the_source() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-        let recipe = root.join("validation/fixtures/simple_reflective.recipe.json");
+        let source = root.join("validation/fixtures/simple_reflective.recipe.json");
+        let original = fs::read(&source).unwrap();
+        let directory = tempfile::tempdir().unwrap();
+        let output = directory.path().join("migrated.recipe.json");
+
+        migrate_recipe(&source, &output, true).unwrap();
+        let historical: AnalysisRecipe = serde_json::from_slice(&original).unwrap();
+        let migrated: AnalysisRecipe = serde_json::from_slice(&fs::read(&output).unwrap()).unwrap();
+        assert_eq!(fs::read(&source).unwrap(), original);
+        assert_eq!(migrated.schema_version, ANALYSIS_RECIPE_SCHEMA_VERSION);
+        assert_ne!(migrated.id, historical.id);
+        assert!(migrated.method_config.is_some());
+        assert!(
+            validate_recipe(&migrated)
+                .iter()
+                .all(|issue| issue.severity != Severity::Error)
+        );
+        assert!(migrate_recipe(&source, &output, false).is_err());
+        assert!(migrate_recipe(&source, &source, false).is_err());
+    }
+
+    #[test]
+    fn validated_cli_inference_is_worker_invariant_without_legacy_opt_in() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let historical_recipe = root.join("validation/fixtures/simple_reflective.recipe.json");
         let data = root.join("validation/fixtures/simple_reflective.csv");
         let directory = tempfile::tempdir().unwrap();
+        let recipe = directory.path().join("simple_reflective.v3.recipe.json");
+        write_migrated_v3_recipe(&historical_recipe, &recipe);
         let serial_path = directory.path().join("serial.json");
         let parallel_path = directory.path().join("parallel.json");
         run_analysis(
@@ -4705,7 +4985,7 @@ mod tests {
             Some(&data),
             None,
             &serial_path,
-            true,
+            false,
             Some(24),
             None,
             Some(99),
@@ -4717,7 +4997,7 @@ mod tests {
             Some(&data),
             None,
             &parallel_path,
-            true,
+            false,
             Some(24),
             None,
             Some(99),
@@ -4736,6 +5016,56 @@ mod tests {
         );
         assert_eq!(serial.provenance.settings.workers, 1);
         assert_eq!(parallel.provenance.settings.workers, 4);
+    }
+
+    #[test]
+    fn cli_does_not_reinterpret_invalid_v3_config_without_sampling_overrides() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let data = root.join("validation/fixtures/simple_reflective.csv");
+        let directory = tempfile::tempdir().unwrap();
+        let recipe_path = directory.path().join("invalid-v3.recipe.json");
+        let result_path = directory.path().join("result.json");
+        let historical: AnalysisRecipe = serde_json::from_slice(
+            &fs::read(root.join("validation/fixtures/simple_reflective.recipe.json")).unwrap(),
+        )
+        .unwrap();
+        let mut recipe = historical.migrated_v3().unwrap();
+        recipe.method_config = Some(MethodConfig::PlsBootstrap);
+        fs::write(&recipe_path, serde_json::to_vec_pretty(&recipe).unwrap()).unwrap();
+
+        let error = run_analysis(
+            &recipe_path,
+            Some(&data),
+            None,
+            &result_path,
+            false,
+            None,
+            None,
+            None,
+            Some(1),
+        )
+        .unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("method_config.resampling_mismatch")
+        );
+        assert!(!result_path.exists());
+    }
+
+    #[test]
+    fn cli_rejects_execution_from_a_read_only_future_project() {
+        let mut project = Project::new("Future read-only project");
+        project.manifest.schema_version = qpls_project::PROJECT_ARCHIVE_VERSION + 1;
+        project.read_only = true;
+
+        let error = require_executable_project(&project).unwrap_err();
+        assert!(error.to_string().contains("read-only inspection/export"));
+        assert!(
+            error
+                .to_string()
+                .contains(&project.manifest.schema_version.to_string())
+        );
     }
 
     #[test]
@@ -4975,9 +5305,13 @@ mod tests {
     #[test]
     fn export_writes_validated_v03_estimator_csv_and_html_only() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-        let recipe = root.join("validation/fixtures/simple_reflective.recipe.json");
         let data = root.join("validation/fixtures/simple_reflective.csv");
         let directory = tempfile::tempdir().unwrap();
+        let recipe = directory.path().join("simple_reflective.v3.recipe.json");
+        write_migrated_v3_recipe(
+            &root.join("validation/fixtures/simple_reflective.recipe.json"),
+            &recipe,
+        );
         let result_path = directory.path().join("result.json");
         let csv_path = directory.path().join("estimator.csv");
         let html_path = directory.path().join("estimator.html");
@@ -5018,9 +5352,13 @@ mod tests {
     fn export_writes_xlsx_workbook_with_estimator_rows() {
         use calamine::{Reader, open_workbook_auto};
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-        let recipe = root.join("validation/fixtures/simple_reflective.recipe.json");
         let data = root.join("validation/fixtures/simple_reflective.csv");
         let directory = tempfile::tempdir().unwrap();
+        let recipe = directory.path().join("simple_reflective.v3.recipe.json");
+        write_migrated_v3_recipe(
+            &root.join("validation/fixtures/simple_reflective.recipe.json"),
+            &recipe,
+        );
         let result_path = directory.path().join("result.json");
         let xlsx_path = directory.path().join("estimator.xlsx");
 
@@ -5050,9 +5388,13 @@ mod tests {
     #[test]
     fn export_rejects_legacy_result_payloads() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-        let recipe = root.join("validation/fixtures/simple_reflective.recipe.json");
         let data = root.join("validation/fixtures/simple_reflective.csv");
         let directory = tempfile::tempdir().unwrap();
+        let recipe = directory.path().join("simple_reflective.v3.recipe.json");
+        write_migrated_v3_recipe(
+            &root.join("validation/fixtures/simple_reflective.recipe.json"),
+            &recipe,
+        );
         let result_path = directory.path().join("result.json");
         let legacy_path = directory.path().join("legacy.json");
 
@@ -5086,9 +5428,13 @@ mod tests {
     #[test]
     fn export_includes_watermarked_experimental_method_tables_when_requested() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-        let recipe = root.join("validation/results/wpls_reference.recipe.json");
         let data = root.join("validation/results/wpls_reference.csv");
         let directory = tempfile::tempdir().unwrap();
+        let recipe = directory.path().join("wpls_reference.v3.recipe.json");
+        write_migrated_v3_recipe(
+            &root.join("validation/results/wpls_reference.recipe.json"),
+            &recipe,
+        );
         let result_path = directory.path().join("wpls.json");
         let csv_path = directory.path().join("wpls.csv");
 
@@ -5130,6 +5476,9 @@ mod tests {
         let expected = directory.path().join("demo.expected.json");
         let validation = directory.path().join("demo.validation.json");
         create_demo_project(Some(&project), Some(&expected)).unwrap();
+        let (saved_project, recovery) = load_project_with_autosave(&project).unwrap();
+        assert!(recovery.is_none());
+        assert_eq!(saved_project.manifest.name, "Corporate Reputation Sample");
         validate_demo_project(Some(&project), Some(&expected), Some(&validation)).unwrap();
         let report: serde_json::Value =
             serde_json::from_slice(&fs::read(validation).unwrap()).unwrap();
@@ -5143,17 +5492,24 @@ fn inspect_project(path: &Path, json_output: bool) -> Result<()> {
         .with_context(|| format!("invalid project {}", path.display()))?;
     let recovered = recovery_source.is_some();
     let datasets = project.datasets.iter().map(|dataset| json!({"id": dataset.id, "name": dataset.name, "rows": dataset.schema.case_count, "columns": dataset.schema.columns.len(), "kind": dataset.schema.kind, "sampleSize": dataset.schema.sample_size, "fingerprint": dataset.fingerprint.0})).collect::<Vec<_>>();
-    let summary = json!({"schemaVersion": project.manifest.schema_version, "projectId": project.manifest.project_id, "name": project.manifest.name, "engineVersion": project.manifest.engine_version, "readOnly": project.read_only, "recovered": recovered, "datasets": datasets, "models": project.models.len(), "recipes": project.recipes.len(), "results": project.results.len()});
+    let summary = json!({"schemaVersion": project.manifest.schema_version, "sourceArchiveVersion": project.source_archive_version, "migrationPending": project.migration_pending, "compatibilityNoticeCount": project.compatibility_notices.len(), "futureUnsupported": {"models": project.future_unsupported.models, "recipes": project.future_unsupported.recipes, "results": project.future_unsupported.results}, "projectId": project.manifest.project_id, "name": project.manifest.name, "engineVersion": project.manifest.engine_version, "readOnly": project.read_only, "recovered": recovered, "datasets": datasets, "models": project.models.len(), "recipes": project.recipes.len(), "results": project.results.len()});
     if json_output {
         println!("{}", serde_json::to_string_pretty(&summary)?);
     } else {
         println!(
-            "{}\nschema: {} | datasets: {} | models: {} | recipes: {}{}",
+            "{}\nschema: {} | source schema: {} | datasets: {} | models: {} | recipes: {} | compatibility notices: {}{}{}",
             project.manifest.name,
             project.manifest.schema_version,
+            project.source_archive_version,
             project.datasets.len(),
             project.models.len(),
             project.recipes.len(),
+            project.compatibility_notices.len(),
+            if project.migration_pending {
+                " | migration pending"
+            } else {
+                ""
+            },
             if recovered { " | recovered backup" } else { "" }
         );
     }

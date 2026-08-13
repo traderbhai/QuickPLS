@@ -107,7 +107,7 @@
       }
     ],
     "warnings": [
-      "Bounded MGA is experimental; this preview compares two observed groups with approximate normal path-difference diagnostics and does not implement permutation MGA, MICOM, or publication-ready invariance testing."
+      "Two-group MGA v1 is limited to Group A/Group B path coefficients, R-squared values, and A-minus-B path differences; inference, when requested, uses only the documented QuickPLS v1.2.2 deterministic two-tailed group-label permutation scope. Measurement invariance is not assessed."
     ]
   }
 }

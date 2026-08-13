@@ -68,8 +68,11 @@ export function buildDiagramGraph(
   const result = run?.status === "completed" ? run.result : undefined;
   const compatible = result ? resultMatchesModel(modelNodes, structuralEdges, result) : true;
   const resultForOverlay = result && compatible ? result : undefined;
+  const outerEstimatesForOverlay = resultForOverlay?.plsc
+    ? resultForOverlay.plsc.corrected_outer_loadings ?? []
+    : resultForOverlay?.outer_estimates ?? [];
   const loadingByConstruct = new Map<string, Map<string, { loading: number; weight: number }>>();
-  for (const estimate of resultForOverlay?.outer_estimates ?? []) {
+  for (const estimate of outerEstimatesForOverlay) {
     const current = loadingByConstruct.get(estimate.construct) ?? new Map<string, { loading: number; weight: number }>();
     current.set(estimate.indicator, { loading: estimate.loading, weight: estimate.weight });
     loadingByConstruct.set(estimate.construct, current);

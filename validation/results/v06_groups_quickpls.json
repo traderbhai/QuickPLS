@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "id": "9ffcec8d-59f8-4874-8fe2-96d202e53954",
+  "id": "810f9d0c-7188-4a4e-ae82-71077d3ed632",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000000601",
     "dataset_fingerprint": "v2:a22bfbef9909ddb70ced8749f6c139739083f3e34c146e10bf340eb5b3ced049",
     "method": "mga",
-    "method_version": "pls_pm_v1+pls_mga_two_group_v1+pls_mga_permutation_v1+micom_v1+pls_mediation_v1+pls_assessment_v7",
-    "engine_version": "1.0.0",
+    "method_version": "pls_pm_v1+pls_mga_two_group_v1+pls_mga_permutation_v1+pls_mediation_v1+pls_assessment_v7",
+    "engine_version": "2.45.0",
     "seed": 20260719,
     "settings": {
       "method": "mga",
@@ -24,24 +24,24 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-07-21T06:57:58.926894400Z",
-    "completed_at": "2026-07-21T06:57:59.409805300Z"
+    "started_at": "2026-08-11T07:19:42.980376300Z",
+    "completed_at": "2026-08-11T07:19:43.781387200Z"
   },
   "diagnostics": [
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "Two-group MGA v1 is validated for the documented QuickPLS v1.2.2 group-specific estimate and permutation-workflow scope; approximate normal path-difference diagnostics remain descriptive."
+      "message": "Two-group MGA v1 is limited to Group A/Group B path coefficients, R-squared values, and A-minus-B path differences; inference, when requested, uses only the documented QuickPLS v1.2.2 deterministic two-tailed group-label permutation scope. Measurement invariance is not assessed."
     },
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "MICOM v1 is validated for the documented QuickPLS v1.2.2 two-group configural, compositional, mean, and variance permutation scope."
+      "message": "Measurement invariance is not assessed in this bounded two-group analysis."
     },
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "Permutation MGA v1 is validated for the documented QuickPLS v1.2.2 two-group deterministic group-label permutation scope."
+      "message": "Two-group permutation inference uses the documented QuickPLS v1.2.2 deterministic two-tailed group-label permutation of A-minus-B path differences."
     }
   ],
   "payload": {
@@ -543,7 +543,7 @@
         ],
         "method_version": "pls_mga_two_group_v1",
         "warnings": [
-          "Two-group MGA v1 is validated for the documented QuickPLS v1.2.2 group-specific estimate and permutation-workflow scope; approximate normal path-difference diagnostics remain descriptive."
+          "Two-group MGA v1 is limited to Group A/Group B path coefficients, R-squared values, and A-minus-B path differences; inference, when requested, uses only the documented QuickPLS v1.2.2 deterministic two-tailed group-label permutation scope. Measurement invariance is not assessed."
         ]
       },
       "mga_permutation": {
@@ -568,66 +568,11 @@
         "permutation_samples": 99,
         "usable_permutations": 99,
         "warnings": [
-          "Permutation MGA v1 is validated for the documented QuickPLS v1.2.2 two-group deterministic group-label permutation scope."
+          "Measurement invariance is not assessed in this bounded two-group analysis.",
+          "Two-group permutation inference uses the documented QuickPLS v1.2.2 deterministic two-tailed group-label permutation of A-minus-B path differences."
         ]
       },
-      "micom": {
-        "constructs": [
-          {
-            "compositional_correlation": 0.9999999999999998,
-            "compositional_p_value": 1.0,
-            "configural_invariance": true,
-            "construct": "x",
-            "full_invariance": true,
-            "mean_difference": 0.14609945045024825,
-            "mean_p_value": 0.43,
-            "partial_invariance": true,
-            "variance_difference": -0.17068871428225874,
-            "variance_p_value": 0.59
-          },
-          {
-            "compositional_correlation": 1.0,
-            "compositional_p_value": 1.0,
-            "configural_invariance": true,
-            "construct": "z",
-            "full_invariance": true,
-            "mean_difference": -0.09100954127755284,
-            "mean_p_value": 0.55,
-            "partial_invariance": true,
-            "variance_difference": -0.0959810065312704,
-            "variance_p_value": 0.74
-          },
-          {
-            "compositional_correlation": 1.0,
-            "compositional_p_value": 1.0,
-            "configural_invariance": true,
-            "construct": "y",
-            "full_invariance": true,
-            "mean_difference": -0.1412106696703681,
-            "mean_p_value": 0.45,
-            "partial_invariance": true,
-            "variance_difference": 0.042632437362825626,
-            "variance_p_value": 0.9
-          }
-        ],
-        "group_column": "group",
-        "groups": [
-          {
-            "group": "A",
-            "observations": 60
-          },
-          {
-            "group": "B",
-            "observations": 60
-          }
-        ],
-        "method_version": "micom_v1",
-        "permutation_samples": 99,
-        "usable_permutations": 99,
-        "warnings": [
-          "MICOM v1 is validated for the documented QuickPLS v1.2.2 two-group configural, compositional, mean, and variance permutation scope."
-        ]
-      },
+      "micom": null,
       "moderated_mediation": null,
       "moderation": {
         "estimates": [],
@@ -734,9 +679,9 @@
       ],
       "used_observations": 120,
       "warnings": [
-        "Two-group MGA v1 is validated for the documented QuickPLS v1.2.2 group-specific estimate and permutation-workflow scope; approximate normal path-difference diagnostics remain descriptive.",
-        "MICOM v1 is validated for the documented QuickPLS v1.2.2 two-group configural, compositional, mean, and variance permutation scope.",
-        "Permutation MGA v1 is validated for the documented QuickPLS v1.2.2 two-group deterministic group-label permutation scope."
+        "Two-group MGA v1 is limited to Group A/Group B path coefficients, R-squared values, and A-minus-B path differences; inference, when requested, uses only the documented QuickPLS v1.2.2 deterministic two-tailed group-label permutation scope. Measurement invariance is not assessed.",
+        "Measurement invariance is not assessed in this bounded two-group analysis.",
+        "Two-group permutation inference uses the documented QuickPLS v1.2.2 deterministic two-tailed group-label permutation of A-minus-B path differences."
       ],
       "wpls": null
     },

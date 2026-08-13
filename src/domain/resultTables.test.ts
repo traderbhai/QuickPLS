@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { methodResultTables, runExportTables, tablesToCsv, tablesToHtml } from "./resultTables";
 import type { AnalysisRun, PlsResult } from "../types";
+import { processV2Run } from "../native/nativeProcessTestFixture";
 
 const result: PlsResult = {
   method_version: "wpls_case_weighted_v1",
@@ -189,6 +190,79 @@ const result: PlsResult = {
 };
 
 describe("result export tables", () => {
+  it("uses graph equation tables when the PROCESS v2 generic fit shell is null", () => {
+    const processResult = processV2Run().result!;
+    const tables = methodResultTables(processResult);
+    expect(tables.map((table) => table.id)).toEqual([
+      "process_model_summary",
+      "process_equation_coefficients",
+    ]);
+    expect(JSON.stringify(tables)).not.toContain("N/A");
+    expect(tables.find((table) => table.id === "process_equation_coefficients")?.rows).toHaveLength(4);
+  });
+
+  it("routes completed PROCESS runs through the complete canonical report/export table set", () => {
+    const run = processV2Run(true);
+    const tables = runExportTables(run);
+    expect(tables.map((table) => table.id)).toEqual([
+      "run_provenance",
+      "process_model_summary",
+      "process_paths",
+      "process_equation_coefficients",
+      "process_equation_fit",
+      "process_reference_effects",
+      "process_simple_slopes",
+      "process_conditional_plot_points",
+      "process_johnson_neyman",
+      "process_johnson_neyman_curve_points",
+      "process_bootstrap_summary",
+      "process_bootstrap_failures",
+      "process_bootstrap_inference",
+      "process_bootstrap_bca",
+      "process_scope",
+    ]);
+    expect(tables.every((table) => table.status === "experimental")).toBe(true);
+    expect(tables.find((table) => table.id === "process_reference_effects")?.columns)
+      .toContain("Reference condition");
+    const csv = tablesToCsv(tables);
+    const html = tablesToHtml(tables);
+    for (const expected of [
+      "Reference condition",
+      "Conditional outcome plot data",
+      "Johnson-Neyman curve data",
+      "Bootstrap inference",
+    ]) {
+      expect(csv).toContain(expected);
+      expect(html).toContain(expected);
+    }
+
+    const failed = { ...run, status: "failed" as const };
+    expect(runExportTables(failed)).toEqual([]);
+  });
+
+  it("fails closed for unknown PROCESS versions and models", () => {
+    for (const withBootstrap of [false, true]) {
+      expect(methodResultTables(processV2Run(withBootstrap).result!).every(
+        (table) => table.status === "experimental",
+      )).toBe(true);
+    }
+    const futureRegression = structuredClone(processV2Run().result!);
+    futureRegression.regression!.method_version = "regression_process_v3";
+    expect(methodResultTables(futureRegression).every((table) => table.status === "experimental")).toBe(true);
+
+    const futureProcess = structuredClone(processV2Run().result!);
+    futureProcess.regression!.process!.method_version = "regression_process_v3";
+    expect(methodResultTables(futureProcess).every((table) => table.status === "experimental")).toBe(true);
+
+    const unknownModel = structuredClone(processV2Run().result!);
+    unknownModel.regression!.process!.model = "future_graph";
+    expect(methodResultTables(unknownModel).every((table) => table.status === "experimental")).toBe(true);
+
+    const futureEnvelope = structuredClone(processV2Run().result!);
+    futureEnvelope.method_version = "regression_process_v3";
+    expect(methodResultTables(futureEnvelope).every((table) => table.status === "experimental")).toBe(true);
+  });
+
   it("builds validated method-specific tables for promoted scopes", () => {
     const tables = methodResultTables(result);
     expect(tables.map((table) => table.id)).toEqual([
@@ -221,7 +295,7 @@ describe("result export tables", () => {
     expect(tables[0].rows[0]).toEqual(["WEIGHT", "135.250000", "111.1250", "weighted sample covariance"]);
   });
 
-  it("marks promoted PCA, OLS, logistic, and bounded PROCESS tables as validated", () => {
+  it("marks promoted PCA, OLS, logistic, and historical bounded PROCESS v1 tables as validated", () => {
     const pcaTables = methodResultTables({
       ...result,
       method_version: "pca_v1",
@@ -275,7 +349,7 @@ describe("result export tables", () => {
 
     const logisticTables = methodResultTables({
       ...result,
-      method_version: "regression_logistic_v1",
+      method_version: "regression_logistic_v2",
       wpls: undefined,
       cca: undefined,
       cta_pls: undefined,
@@ -283,6 +357,30 @@ describe("result export tables", () => {
       segmentation: undefined,
       mga: undefined,
       ipma: undefined,
+      regression: {
+        method_version: "regression_logistic_v2",
+        regression_type: "logistic",
+        outcome: "y",
+        predictors: ["x"],
+        controls: [],
+        observations: 10,
+        coefficients: [{ term: "x", estimate: 2, standard_error: 0.1, statistic: 20, p_value_two_sided: 0.00001, confidence_interval_lower: 1.8, confidence_interval_upper: 2.2, odds_ratio: 7.389 }],
+        fit: { pseudo_r_squared: 0.8, aic: 12, bic: 13 },
+        predictions: [{ observation: 0, fitted: 0.8, probability: 0.8 }],
+        logistic: {
+          outcome_profile: { outcome: "y", coding: "numeric_0_1_exact_v1", complete_cases: 10, omitted_cases: 0, zero_count: 5, one_count: 5, invalid_count: 0, prevalence: 0.5, readiness: "ready" },
+          convergence: { algorithm: "deterministic_newton_irls_v1", converged: true, iterations: 5, max_iterations: 100, tolerance: 1e-8, final_max_abs_step: 1e-10, separation_probability_tolerance: 1e-9 },
+          classification: { threshold: 0.5, true_positive: 4, true_negative: 4, false_positive: 1, false_negative: 1, accuracy: 0.8, sensitivity: 0.8, specificity: 0.8 },
+        },
+        process: null,
+        warnings: ["Logistic regression v2 is validated for the documented binary numeric complete-case scope."],
+      },
+    });
+    expect(logisticTables.every((table) => table.status === "validated")).toBe(true);
+
+    const legacyLogisticTables = methodResultTables({
+      ...result,
+      method_version: "regression_logistic_v1",
       regression: {
         method_version: "regression_logistic_v1",
         regression_type: "logistic",
@@ -294,10 +392,14 @@ describe("result export tables", () => {
         fit: { pseudo_r_squared: 0.8, aic: 12, bic: 13 },
         predictions: [{ observation: 0, fitted: 0.8, probability: 0.8 }],
         process: null,
-        warnings: ["Logistic regression v1 is validated for the documented QuickPLS v1.2.2 binary numeric complete-case scope."],
+        warnings: ["Historical logistic v1 archive."],
       },
     });
-    expect(logisticTables.every((table) => table.status === "validated")).toBe(true);
+    expect(
+      legacyLogisticTables
+        .filter((table) => table.id === "regression_coefficients" || table.id === "regression_fit")
+        .every((table) => table.status === "experimental"),
+    ).toBe(true);
 
     const processTables = methodResultTables({
       ...result,
@@ -323,7 +425,7 @@ describe("result export tables", () => {
         warnings: ["PROCESS-style regression v1 is validated for the documented QuickPLS v1.2.2 bounded mediation/moderation workflow scope."],
       },
     });
-    expect(processTables.every((table) => table.status === "validated")).toBe(true);
+    expect(processTables.every((table) => table.status === "experimental")).toBe(true);
 
     const moderatedMediationTables = methodResultTables({
       ...result,
@@ -350,6 +452,55 @@ describe("result export tables", () => {
       },
     });
     expect(moderatedMediationTables.every((table) => table.status === "experimental")).toBe(true);
+  });
+
+  it("reports only nca_v2 as current and distinguishes nullable bottleneck states without N/A", () => {
+    const ncaV2: PlsResult = {
+      ...result,
+      method_version: "nca_v2",
+      wpls: undefined,
+      cca: undefined,
+      cta_pls: undefined,
+      predict: undefined,
+      segmentation: undefined,
+      mga: undefined,
+      ipma: undefined,
+      nca: {
+        method_version: "nca_v2",
+        ceiling: "both",
+        permutation_samples: 19,
+        usable_permutations: 19,
+        x: "x",
+        y: "y",
+        observations: 4,
+        scope: { minimum_x: 0, maximum_x: 3, minimum_y: 1, maximum_y: 4 },
+        ce_fdh_peers: [{ x: 0, y: 1 }, { x: 1, y: 3 }, { x: 3, y: 4 }],
+        ceilings: [
+          { ceiling: "ce_fdh", effect_size: 5 / 9, permutation_p_value: 0.1, slope: null, intercept: null },
+          { ceiling: "cr_fdh", effect_size: 36 / 91, permutation_p_value: 0.15, slope: 13 / 14, intercept: 10 / 7 },
+        ],
+        bottlenecks: [
+          { ceiling: "ce_fdh", outcome_percent: 50, required_x_percent: 100 / 3, status: "required" },
+          { ceiling: "cr_fdh", outcome_percent: 10, required_x_percent: null, status: "not_necessary" },
+        ],
+        warnings: ["NCA v2 bounded observed numeric X/Y scope."],
+      },
+    };
+
+    const current = methodResultTables(ncaV2);
+    expect(current).toHaveLength(2);
+    expect(current.every((table) => table.status === "validated")).toBe(true);
+    expect(current[0].columns).toEqual(["Ceiling", "Effect size", "Permutation p", "Slope", "Intercept"]);
+    expect(current[0].rows[0].slice(-2)).toEqual(["", ""]);
+    expect(current[1].rows[1]).toEqual(["cr fdh", "10.0", "", "Not necessary at this outcome level"]);
+    expect(JSON.stringify(current)).not.toContain("N/A");
+
+    const legacy = methodResultTables({
+      ...ncaV2,
+      method_version: "nca_v1",
+      nca: { ...ncaV2.nca!, method_version: "nca_v1" },
+    });
+    expect(legacy.every((table) => table.status === "experimental")).toBe(true);
   });
 
   it("exports run provenance plus escaped CSV and HTML tables", () => {

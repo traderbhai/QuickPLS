@@ -10,5 +10,5 @@ raise SystemExit(audit_method(
         "extended_pls_publication_audit.json",
         "rho_a_csem_comparison.json",
     ],
-    ["PLSC_V1.md", "PLS_RHO_A_V1.md"],
+    ["PLSC_V2.md", "PLSC_V1.md", "PLS_RHO_A_V1.md"],
 ))

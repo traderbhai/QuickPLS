@@ -3,6 +3,8 @@ import { publicationDiagramSvg } from "./publicationDiagram";
 import { defaultDiagramLayout } from "./diagramGraph";
 import type { Edge, Node } from "@xyflow/react";
 import type { AnalysisRun, ConstructData, PlsResult } from "../types";
+import { completedStructuralPathRandomizationRun } from "../native/nativeStructuralPathRandomization.testFixture";
+import { NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING } from "../native/nativeStructuralPathRandomization";
 
 const nodes: Array<Node<ConstructData>> = [
   { id: "x", type: "construct", position: { x: 100, y: 80 }, data: { label: "Predictor", shortName: "X", mode: "reflective", indicators: ["x1", "x2"] } },
@@ -61,6 +63,12 @@ describe("publication diagram SVG", () => {
     expect(svg).toContain("class=\"latent reflective\"");
     expect(svg).toContain("class=\"indicator reflective\"");
     expect(svg).toContain("R&#178; 0.208");
+  });
+
+  it("uses the candidate warning rather than a validated watermark for Structural Path Randomization", () => {
+    const svg = publicationDiagramSvg(nodes, edges, completedStructuralPathRandomizationRun());
+    expect(svg).toContain(NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING);
+    expect(svg).not.toContain("Validated for documented QuickPLS supported scope");
   });
 
   it("escapes labels in model-only diagrams", () => {

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "target": "v1_2_1_second_batch_method_promotion",
   "method_id": "nca",
-  "promoted_scope": "Numeric X/Y NCA with CE-FDH and CR-FDH ceilings, deterministic permutation p values, and bottleneck tables.",
+  "promoted_scope": "Standalone observed numeric X/Y NCA v2 with exact CE-FDH record-high peers, CR-FDH OLS through those peers, seeded permutation p values, observed-range bottlenecks, strict archive persistence, and no phantom SEM model; broader variants and parity claims are excluded.",
   "passed": true,
   "reports": [
     {
@@ -11,18 +11,148 @@
       "passed": true
     },
     {
-      "path": "validation\\results\\extended_methods_publication_audit.json",
+      "path": "validation\\results\\v247_tauri_native_acceptance.json",
       "present": true,
       "passed": true
     }
   ],
   "docs": [
     {
+      "path": "docs\\methods\\NCA_V2.md",
+      "present": true,
+      "bytes": 6229
+    },
+    {
       "path": "docs\\methods\\NCA_V1.md",
       "present": true,
-      "bytes": 1013
+      "bytes": 1479
     }
   ],
-  "checks": [],
+  "checks": [
+    {
+      "name": "executable_backend_gates",
+      "passed": true,
+      "detail": "Focused core, estimator, runner, project, and desktop no-model tests plus the independent reference must execute successfully.",
+      "commands": [
+        {
+          "command": [
+            "C:\\Python313\\python.exe",
+            "validation/v08_extended_methods_reference.py",
+            "--section",
+            "nca"
+          ],
+          "returncode": 0,
+          "passed": true,
+          "stdout_tail": "{\n  \"passed\": true,\n  \"schema_version\": 1,\n  \"target\": \"nca_v2 bounded backend qualification\",\n  \"selected_section\": \"nca\",\n  \"tolerance\": 1e-06,\n  \"checks\": {\n    \"nca\": {\n      \"passed\": true,\n      \"method_version\": \"nca_v2\",\n      \"max_abs_difference\": 1.7763568394002505e-14,\n      \"ce_fdh_peer_count\": 14,\n      \"ce_fdh_peers_ordered\": true,\n      \"cr_fdh_regression_checked\": true,\n      \"all_bottleneck_rows_checked\": true,\n      \"permutation_p_value_lattice\": true,\n      \"seeded_repeat_deterministic\": true,\n      \"exact_standalone_envelope\": true,\n      \"exact_ceiling_shape\": true,\n      \"scope\": {\n        \"observed_numeric_variables\": 2,\n        \"listwise_complete_rows_minimum\": 3,\n        \"ceilings\": [\n          \"ce_fdh\",\n          \"cr_fdh\"\n        ],\n        \"latent_score_nca\": false,\n        \"multiple_conditions\": false,\n        \"cipma\": false\n      }\n    }\n  },\n  \"note\": \"NCA v2 evidence is limited to the documented standalone observed numeric X/Y CE-FDH/CR-FDH scope; packaged-native acceptance and broader method parity are separate gates.\"\n}\n",
+          "stderr_tail": ""
+        },
+        {
+          "command": [
+            "cargo",
+            "test",
+            "--release",
+            "-p",
+            "qpls-core",
+            "bounded_nca_v2",
+            "--",
+            "--nocapture"
+          ],
+          "returncode": 0,
+          "passed": true,
+          "stdout_tail": "\nrunning 2 tests\ntest validation::tests::bounded_nca_v2_accepts_a_no_model_raw_numeric_recipe ... ok\ntest validation::tests::bounded_nca_v2_rejects_ambiguous_variables_and_incompatible_settings ... ok\n\ntest result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 31 filtered out; finished in 0.00s\n\n",
+          "stderr_tail": "    Finished `release` profile [optimized] target(s) in 2.35s\n     Running unittests src\\lib.rs (target\\release\\deps\\qpls_core-a24760bfd00221ad.exe)\n"
+        },
+        {
+          "command": [
+            "cargo",
+            "test",
+            "--release",
+            "-p",
+            "qpls-estimation",
+            "nca_v2",
+            "--",
+            "--nocapture"
+          ],
+          "returncode": 0,
+          "passed": true,
+          "stdout_tail": "\nrunning 3 tests\ntest pls::tests::nca_v2_uses_record_high_ce_fdh_peers_and_regresses_cr_fdh_through_them ... ok\ntest pls::tests::nca_v2_permutations_are_seeded_independent_shuffles ... ok\ntest pls::tests::nca_v2_payload_contract_rejects_tampered_geometry ... ok\n\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 27 filtered out; finished in 0.00s\n\n",
+          "stderr_tail": "    Finished `release` profile [optimized] target(s) in 2.67s\n     Running unittests src\\lib.rs (target\\release\\deps\\qpls_estimation-e9d941a727fdcffc.exe)\n"
+        },
+        {
+          "command": [
+            "cargo",
+            "test",
+            "--release",
+            "-p",
+            "qpls-runner",
+            "standalone_nca_uses_exact_v2_provenance_and_versionless_assessment_warning",
+            "--",
+            "--nocapture"
+          ],
+          "returncode": 0,
+          "passed": true,
+          "stdout_tail": "\nrunning 1 test\ntest tests::standalone_nca_uses_exact_v2_provenance_and_versionless_assessment_warning ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s\n\n",
+          "stderr_tail": "   Compiling qpls-runner v2.45.0 (D:\\QuickPLS\\crates\\qpls-runner)\n    Finished `release` profile [optimized] target(s) in 24.36s\n     Running unittests src\\lib.rs (target\\release\\deps\\qpls_runner-1e08a9d5a65a318b.exe)\n"
+        },
+        {
+          "command": [
+            "cargo",
+            "test",
+            "--release",
+            "-p",
+            "qpls-project",
+            "runner_generated_nca_v2_commits_saves_reopens_and_rejects_contract_tampering",
+            "--",
+            "--nocapture"
+          ],
+          "returncode": 0,
+          "passed": true,
+          "stdout_tail": "\nrunning 1 test\ntest tests::runner_generated_nca_v2_commits_saves_reopens_and_rejects_contract_tampering ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 24 filtered out; finished in 0.03s\n\n",
+          "stderr_tail": "    Finished `release` profile [optimized] target(s) in 2.48s\n     Running unittests src\\lib.rs (target\\release\\deps\\qpls_project-6c46cf7862b98d0c.exe)\n"
+        },
+        {
+          "command": [
+            "cargo",
+            "test",
+            "--release",
+            "-p",
+            "quickpls-desktop",
+            "standalone_nca_recipe_never_reopens_as_a_phantom_active_model",
+            "--",
+            "--nocapture"
+          ],
+          "returncode": 0,
+          "passed": true,
+          "stdout_tail": "\nrunning 1 test\ntest desktop_job_tests::standalone_nca_recipe_never_reopens_as_a_phantom_active_model ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.03s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+          "stderr_tail": "   Compiling quickpls-desktop v2.45.0 (D:\\QuickPLS\\src-tauri)\n    Finished `release` profile [optimized] target(s) in 43.82s\n     Running unittests src\\lib.rs (target\\release\\deps\\quickpls_desktop_lib-7b5a47732307a2fb.exe)\n     Running unittests src\\main.rs (target\\release\\deps\\quickpls_desktop-19876c3281e24048.exe)\n"
+        }
+      ]
+    },
+    {
+      "name": "independent_ce_cr_reference",
+      "passed": true,
+      "detail": "The independent reference must check ordered record-high CE peers, NumPy OLS CR-FDH, both effects, every bottleneck, exact standalone envelope, p-value lattice, and seeded repeat determinism."
+    },
+    {
+      "name": "canonical_nca_v2_engine_and_runner_contract",
+      "passed": true,
+      "detail": "Core, estimation, and runner sources must freeze nca_v2, bounded recipe guards, independent seeded permutations, limitation wording, exact provenance, and the versionless assessment warning."
+    },
+    {
+      "name": "strict_project_persistence_and_no_model_contract",
+      "passed": true,
+      "detail": "qpls-project must reject NCA contract tampering while preserving explicit v1 legacy reads, and the desktop snapshot must exclude standalone recipe placeholders from active-model resolution."
+    },
+    {
+      "name": "legacy_supersession_and_no_parity_overclaim",
+      "passed": true,
+      "detail": "Documentation must mark nca_v1 archive-only, define the corrected bounded v2 equations, and explicitly exclude broad SmartPLS/R-package parity."
+    },
+    {
+      "name": "genuine_packaged_native_workflow",
+      "passed": true,
+      "detail": "A current packaged-Tauri artifact must prove the transparent four-row fixture, no-model setup, genuine run lifecycle, exact geometry and provenance, NCA XLSX export, save/reopen, and canonical models=[]/activeModelId=null. Source or browser-only fixtures cannot satisfy this check."
+    }
+  ],
   "note": "Promotion is limited to this documented scope; broader variants remain experimental or unsupported."
 }

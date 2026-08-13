@@ -38,6 +38,7 @@ describe("model editor state", () => {
     expect(methods.find((method) => method.id === "nca")?.status).toBe("validated");
     expect(methods.find((method) => method.id === "cbsem")?.status).toBe("validated");
     expect(methods.find((method) => method.id === "gsca")?.status).toBe("validated");
+    expect(methods.find((method) => method.id === "permutation")?.status).toBe("experimental");
   });
 
   it("supports undo and redo for construct creation", () => {
@@ -57,6 +58,14 @@ describe("model editor state", () => {
     expect(state.edges.every((edge) => edge.label === "Path")).toBe(true);
   });
 
+  it("caps transient desktop notifications so they cannot obscure the workbench", () => {
+    useWorkspace.getState().pushToast({ tone: "info", title: "First" });
+    useWorkspace.getState().pushToast({ tone: "success", title: "Second" });
+    useWorkspace.getState().pushToast({ tone: "warning", title: "Third" });
+
+    expect(useWorkspace.getState().toasts.map((toast) => toast.title)).toEqual(["Third", "Second"]);
+  });
+
   it("keeps SEM explorer UI preferences separate from numerical history", () => {
     const beforeHistory = useWorkspace.getState().past.length;
     useWorkspace.getState().setExplorerTab("variables");
@@ -67,6 +76,44 @@ describe("model editor state", () => {
     expect(state.explorerWidth).toBe(430);
     expect(state.explorerCollapsed).toBe(true);
     expect(state.past).toHaveLength(beforeHistory);
+  });
+
+  it("switches models atomically while retaining each model graph and presentation", () => {
+    const initial = useWorkspace.getState();
+    const firstModel = initial.projectModels[0];
+    const secondModel = { ...firstModel, id: "alternate-model", name: "Alternate model" };
+    const secondNodes = initial.nodes.map((node) => ({
+      ...node,
+      position: { x: node.position.x + 700, y: node.position.y + 250 },
+    }));
+    initial.loadProject({
+      nodes: initial.nodes,
+      edges: initial.edges,
+      dataset: initial.dataset,
+      projectModels: [firstModel, secondModel],
+      activeModelId: firstModel.id,
+      modelPresentations: {
+        [firstModel.id]: { nodes: initial.nodes, edges: initial.edges, diagramLayout: initial.diagramLayout },
+        [secondModel.id]: { nodes: secondNodes, edges: initial.edges, diagramLayout: initial.diagramLayout },
+      },
+    });
+    useWorkspace.getState().updateConstruct("competence", { label: "Edited competence" });
+    useWorkspace.getState().onNodesChange([{ id: "competence", type: "position", position: { x: 123, y: 456 } }]);
+
+    expect(useWorkspace.getState().switchProjectModel(secondModel.id)).toBe(true);
+    let switched = useWorkspace.getState();
+    expect(switched.activeModelId).toBe(secondModel.id);
+    expect(switched.nodes.find((node) => node.id === "competence")?.position.x).toBeGreaterThan(600);
+    expect(switched.projectModels.find((model) => model.id === firstModel.id)?.constructs.find((construct) => construct.id === "competence")?.name).toBe("Edited competence");
+
+    expect(switched.switchProjectModel(firstModel.id)).toBe(true);
+    switched = useWorkspace.getState();
+    expect(switched.nodes.find((node) => node.id === "competence")).toMatchObject({
+      position: { x: 123, y: 456 },
+      data: { label: "Edited competence" },
+    });
+    expect(switched.past).toEqual([]);
+    expect(switched.future).toEqual([]);
   });
 
   it("prevents self paths and duplicate directed paths", () => {
@@ -82,6 +129,40 @@ describe("model editor state", () => {
     const state = useWorkspace.getState();
     expect(state.nodes.find((node) => node.id === "competence")?.data.indicators).not.toContain("COMP1");
     expect(state.nodes.find((node) => node.id === "likeability")?.data.indicators).toContain("COMP1");
+  });
+
+  it("does not assign manifest indicators to generated higher-order blocks", () => {
+    useWorkspace.getState().updateConstruct("satisfaction", {
+      semantic: "higher_order",
+      higherOrder: {
+        id: "satisfaction",
+        components: ["competence", "likeability"],
+        method: "two_stage",
+        stage_one_recipe: null,
+      },
+    });
+    const before = useWorkspace.getState().nodes.map((node) => ({ id: node.id, indicators: [...node.data.indicators] }));
+
+    useWorkspace.getState().assignIndicator("satisfaction", "COMP1");
+    useWorkspace.getState().assignIndicators("satisfaction", ["COMP1", "COMP2"]);
+
+    expect(useWorkspace.getState().nodes.map((node) => ({ id: node.id, indicators: node.data.indicators }))).toEqual(before);
+  });
+
+  it("keeps the configured grouping variable out of every indicator assignment path", () => {
+    useWorkspace.getState().unassignIndicator("competence", "COMP1");
+    useWorkspace.getState().setAnalysisSettings({ groupColumn: "COMP1" });
+
+    useWorkspace.getState().assignIndicator("likeability", "COMP1");
+    useWorkspace.getState().assignIndicators("likeability", ["COMP1", "COMP2"]);
+    useWorkspace.getState().addConstruct(undefined, ["COMP1", "COMP3"]);
+    useWorkspace.getState().addConstructsFromIndicators(["COMP1"]);
+    useWorkspace.getState().addConstructsFromIndicatorGroups(["COMP1"]);
+
+    const state = useWorkspace.getState();
+    expect(state.nodes.flatMap((node) => node.data.indicators)).not.toContain("COMP1");
+    expect(state.nodes.find((node) => node.id === "likeability")?.data.indicators).toContain("COMP2");
+    expect(state.nodes.at(-1)?.data.indicators).toEqual(["COMP3"]);
   });
 
   it("creates a construct from dropped indicators without duplicate ownership", () => {
@@ -146,19 +227,100 @@ describe("model editor state", () => {
     expect(useWorkspace.getState().edges).toHaveLength(before + 1);
   });
 
-  it("creates a two-stage interaction placeholder without duplicate interaction terms", () => {
+  it("creates one two-stage moderating effect and atomically adds the moderator main effect", () => {
+    useWorkspace.setState((state) => ({ edges: state.edges.filter((edge) => edge.id !== "like-cusa") }));
     const beforeNodes = useWorkspace.getState().nodes.length;
-    useWorkspace.getState().addTwoStageInteraction("competence", "likeability", "satisfaction");
+    expect(useWorkspace.getState().edges.some((edge) => edge.source === "likeability" && edge.target === "satisfaction")).toBe(false);
+    const created = useWorkspace.getState().addTwoStageInteraction("competence", "likeability", "satisfaction");
+    expect(created).toEqual(expect.objectContaining({ status: "created" }));
     const state = useWorkspace.getState();
     const interaction = state.nodes.find((node) => node.data.semantic === "interaction")!;
     expect(state.nodes).toHaveLength(beforeNodes + 1);
     expect(interaction.data.interaction).toEqual({ predictor: "competence", moderator: "likeability", outcome: "satisfaction", method: "two_stage_product_score" });
     expect(interaction.data.indicators).toEqual([]);
+    expect(state.edges).toContainEqual(expect.objectContaining({ source: "likeability", target: "satisfaction", label: "Path" }));
     expect(state.edges).toContainEqual(expect.objectContaining({ source: interaction.id, target: "satisfaction", label: "Interaction" }));
-    useWorkspace.getState().addTwoStageInteraction("competence", "likeability", "satisfaction");
+    const duplicate = useWorkspace.getState().addTwoStageInteraction("competence", "likeability", "satisfaction");
+    expect(duplicate).toEqual({ status: "blocked", reason: "interaction_exists" });
     expect(useWorkspace.getState().nodes.filter((node) => node.data.semantic === "interaction")).toHaveLength(1);
     useWorkspace.getState().undo();
     expect(useWorkspace.getState().nodes.filter((node) => node.data.semantic === "interaction")).toHaveLength(0);
+    expect(useWorkspace.getState().edges.some((edge) => edge.source === "likeability" && edge.target === "satisfaction")).toBe(false);
+  });
+
+  it("requires a focal structural path and does not assign manifest indicators to generated interactions", () => {
+    const before = useWorkspace.getState();
+    expect(before.addTwoStageInteraction("loyalty", "likeability", "satisfaction")).toEqual({
+      status: "blocked",
+      reason: "focal_path_missing",
+    });
+    expect(useWorkspace.getState().nodes.some((node) => node.data.semantic === "interaction")).toBe(false);
+
+    before.addTwoStageInteraction("competence", "likeability", "satisfaction");
+    const interaction = useWorkspace.getState().nodes.find((node) => node.data.semantic === "interaction")!;
+    useWorkspace.getState().assignIndicator(interaction.id, "COMP1");
+    useWorkspace.getState().assignIndicators(interaction.id, ["COMP2", "COMP3"]);
+    expect(useWorkspace.getState().nodes.find((node) => node.id === interaction.id)?.data.indicators).toEqual([]);
+    const beforeEdges = useWorkspace.getState().edges.length;
+    useWorkspace.getState().addPath(interaction.id, "loyalty");
+    useWorkspace.getState().addCovariance(interaction.id, "loyalty");
+    expect(useWorkspace.getState().edges).toHaveLength(beforeEdges);
+  });
+
+  it("returns a truthful blocker instead of creating moderation around control paths", () => {
+    useWorkspace.setState((state) => ({
+      edges: state.edges.map((edge) => edge.id === "like-cusa"
+        ? { ...edge, data: { ...(edge.data ?? {}), role: "control" } }
+        : edge),
+    }));
+    expect(useWorkspace.getState().addTwoStageInteraction("competence", "likeability", "satisfaction")).toEqual({
+      status: "blocked",
+      reason: "control_paths_unsupported",
+    });
+    expect(useWorkspace.getState().nodes.some((node) => node.data.semantic === "interaction")).toBe(false);
+  });
+
+  it("protects required moderation relationships and cascades interaction removal", () => {
+    expect(useWorkspace.getState().addTwoStageInteraction("competence", "likeability", "satisfaction")).toEqual(
+      expect.objectContaining({ status: "created" }),
+    );
+    const interaction = useWorkspace.getState().nodes.find((node) => node.data.semantic === "interaction")!;
+    const focal = useWorkspace.getState().edges.find((edge) => edge.source === "competence" && edge.target === "satisfaction")!;
+    useWorkspace.getState().setSelectedEdge(focal.id);
+    useWorkspace.getState().reverseSelectedPath();
+    expect(useWorkspace.getState().edges.find((edge) => edge.id === focal.id)).toMatchObject({ source: "competence", target: "satisfaction" });
+
+    useWorkspace.getState().removeSelection();
+    expect(useWorkspace.getState().edges.some((edge) => edge.id === focal.id)).toBe(false);
+    expect(useWorkspace.getState().nodes.some((node) => node.id === interaction.id)).toBe(false);
+    useWorkspace.getState().undo();
+    expect(useWorkspace.getState().edges.some((edge) => edge.id === focal.id)).toBe(true);
+    expect(useWorkspace.getState().nodes.some((node) => node.id === interaction.id)).toBe(true);
+
+    useWorkspace.getState().setSelectedNode("likeability");
+    useWorkspace.getState().removeSelection();
+    expect(useWorkspace.getState().nodes.some((node) => node.id === "likeability")).toBe(false);
+    expect(useWorkspace.getState().nodes.some((node) => node.data.semantic === "interaction")).toBe(false);
+  });
+
+  it("keeps generated interaction semantics and required endpoints immutable in the store", () => {
+    useWorkspace.getState().addTwoStageInteraction("competence", "likeability", "satisfaction");
+    const interaction = useWorkspace.getState().nodes.find((node) => node.data.semantic === "interaction")!;
+    useWorkspace.getState().updateConstruct(interaction.id, { mode: "reflective", indicators: ["COMP1"], semantic: undefined, interaction: undefined });
+    expect(useWorkspace.getState().nodes.find((node) => node.id === interaction.id)?.data).toMatchObject({
+      mode: "formative",
+      indicators: [],
+      semantic: "interaction",
+      interaction: interaction.data.interaction,
+    });
+
+    const productPath = useWorkspace.getState().edges.find((edge) => edge.source === interaction.id && edge.target === "satisfaction")!;
+    useWorkspace.getState().updateEdge(productPath.id, { source: "loyalty", target: "competence", data: { role: "covariance" } });
+    expect(useWorkspace.getState().edges.find((edge) => edge.id === productPath.id)).toMatchObject({
+      source: interaction.id,
+      target: "satisfaction",
+    });
+    expect(useWorkspace.getState().edges.find((edge) => edge.id === productPath.id)?.data?.role).toBeUndefined();
   });
 
   it("keeps a stable edge id when a path endpoint is reconnected", () => {
@@ -215,6 +377,45 @@ describe("model editor state", () => {
     expect(construct.data.higherOrder).toBeUndefined();
   });
 
+  it("creates one bounded two-stage HOC atomically, locks generated semantics, and cascades component deletion", () => {
+    const state = useWorkspace.getState();
+    state.loadProject({
+      dataset: state.dataset,
+      nodes: [
+        { id: "x", position: { x: 0, y: 0 }, data: { label: "Capability", shortName: "CAP", mode: "reflective", indicators: ["COMP1"] } },
+        { id: "z", position: { x: 0, y: 180 }, data: { label: "Likeability", shortName: "LIKE", mode: "reflective", indicators: ["LIKE1"] } },
+        { id: "y", position: { x: 500, y: 90 }, data: { label: "Loyalty", shortName: "LOY", mode: "reflective", indicators: ["CUSL1"] } },
+      ],
+      edges: [],
+    });
+
+    const created = useWorkspace.getState().addHigherOrderConstruct({
+      name: "Corporate reputation",
+      shortName: "REPU",
+      components: ["x", "z"],
+    });
+    expect(created.status).toBe("created");
+    if (created.status !== "created") return;
+    let hoc = useWorkspace.getState().nodes.find((node) => node.id === created.constructId)!;
+    expect(hoc.data).toMatchObject({
+      mode: "reflective",
+      indicators: [],
+      semantic: "higher_order",
+      higherOrder: { id: created.constructId, components: ["x", "z"], method: "two_stage", stage_one_recipe: null },
+    });
+
+    useWorkspace.getState().updateConstruct(created.constructId, { mode: "formative", indicators: ["CUSL1"], semantic: undefined, higherOrder: undefined });
+    hoc = useWorkspace.getState().nodes.find((node) => node.id === created.constructId)!;
+    expect(hoc.data).toMatchObject({ mode: "reflective", indicators: [], semantic: "higher_order" });
+    expect(hoc.data.higherOrder?.components).toEqual(["x", "z"]);
+
+    useWorkspace.getState().setSelectedNode("x");
+    useWorkspace.getState().removeSelection();
+    expect(useWorkspace.getState().nodes.map((node) => node.id)).toEqual(["z", "y"]);
+    useWorkspace.getState().undo();
+    expect(useWorkspace.getState().nodes.map((node) => node.id)).toEqual(["x", "z", "y", created.constructId]);
+  });
+
   it("does not reverse a path when the opposite directed path already exists", () => {
     const state = useWorkspace.getState();
     state.loadProject({
@@ -246,6 +447,20 @@ describe("model editor state", () => {
     expect(useWorkspace.getState().analysisSettings.permutationSamples).toBe(0);
   });
 
+  it("normalizes the bounded joint MICOM and permutation-MGA settings", () => {
+    useWorkspace.getState().setAnalysisSettings({
+      groupMethods: "micom, mga_permutation, micom",
+      groupPermutationSamples: 1_000,
+      micomConfiguralConfirmed: true,
+    });
+    expect(useWorkspace.getState().analysisSettings.groupMethods).toBe("micom,mga_permutation");
+    expect(useWorkspace.getState().analysisSettings.groupPermutationSamples).toBe(5_000);
+    expect(useWorkspace.getState().analysisSettings.micomConfiguralConfirmed).toBe(true);
+
+    useWorkspace.getState().setAnalysisSettings({ groupMethods: "micom" });
+    expect(useWorkspace.getState().analysisSettings.groupMethods).toBe("micom");
+  });
+
   it("normalizes studentized bootstrap to qualified odd inner counts", () => {
     useWorkspace.getState().setAnalysisSettings({ studentizedInnerSamples: 100 });
     expect(useWorkspace.getState().analysisSettings.studentizedInnerSamples).toBe(101);
@@ -259,6 +474,13 @@ describe("model editor state", () => {
     useWorkspace.getState().setAnalysisSettings({ method: "wpls", caseWeightColumn: "COMP1" });
     expect(useWorkspace.getState().analysisSettings.method).toBe("wpls");
     expect(useWorkspace.getState().analysisSettings.caseWeightColumn).toBe("COMP1");
+    useWorkspace.getState().loadProject({
+      nodes: useWorkspace.getState().nodes,
+      edges: useWorkspace.getState().edges,
+      dataset: useWorkspace.getState().dataset,
+      analysisSettings: { ...useWorkspace.getState().analysisSettings, method: "permutation", permutationSamples: 999 },
+    });
+    expect(useWorkspace.getState().analysisSettings).toMatchObject({ method: "permutation", permutationSamples: 999 });
     useWorkspace.getState().loadProject({
       nodes: useWorkspace.getState().nodes,
       edges: useWorkspace.getState().edges,
@@ -323,6 +545,25 @@ describe("model editor state", () => {
     expect(state.publicationDiagramSettings.layoutSource).toBe("current_canvas");
     expect(state.diagramLayout.diagramVersion).toBe("sem_designer_v1");
     expect(state.diagramLayout.constructLayouts.competence).toMatchObject({ x: state.nodes.find((node) => node.id === "competence")?.position.x });
+  });
+
+  it("persists the explicit regression-bootstrap setup flag", () => {
+    useWorkspace.getState().setAnalysisSettings({
+      method: "regression",
+      regressionType: "logistic",
+      regressionBootstrap: true,
+      bootstrapSamples: 10_000,
+      workers: 4,
+    });
+    expect(useWorkspace.getState().analysisSettings).toMatchObject({
+      method: "regression",
+      regressionType: "logistic",
+      regressionBootstrap: true,
+      bootstrapSamples: 10_000,
+      workers: 4,
+    });
+    useWorkspace.getState().setAnalysisSettings({ regressionBootstrap: false, bootstrapSamples: 0 });
+    expect(useWorkspace.getState().analysisSettings.regressionBootstrap).toBe(false);
   });
 
   it("persists toolbar view preferences without changing the engine model", () => {

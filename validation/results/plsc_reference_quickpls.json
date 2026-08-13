@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "id": "db9cf481-44ed-4558-a17b-146d0285e4f1",
+  "id": "86d226cc-45a0-4f90-b92f-51f1032b4dc5",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000000003",
     "dataset_fingerprint": "v2:f38ee35231816456cd88f59bde3004c996c7b060ba9e3341a7c3be274b64e6b8",
     "method": "plsc",
-    "method_version": "pls_pm_v1+pls_mediation_v1+pls_assessment_v7",
-    "engine_version": "0.3.0-alpha.1",
+    "method_version": "pls_pm_v1+plsc_v2+pls_mediation_v1+pls_assessment_v7",
+    "engine_version": "2.45.0",
     "seed": 20260719,
     "settings": {
       "method": "plsc",
@@ -21,46 +21,24 @@
       "workers": 1,
       "confidence_level": 0.95,
       "preprocessing": "standardized",
-      "missing_data": "listwise_deletion"
+      "missing_data": "listwise_deletion",
+      "case_weight_column": null
     },
-    "started_at": "2026-07-19T03:31:01.518725Z",
-    "completed_at": "2026-07-19T03:31:01.558063Z"
+    "started_at": "2026-08-10T18:01:25.339175600Z",
+    "completed_at": "2026-08-10T18:01:25.404962500Z"
   },
   "diagnostics": [
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "PLSc is experimental; validate corrected estimates against the method contract before publication."
-    },
-    {
-      "code": "estimation.warning",
-      "level": "warning",
-      "message": "rho_a.two_indicator_limited_information for construct 'x'"
-    },
-    {
-      "code": "estimation.warning",
-      "level": "warning",
-      "message": "rho_a.two_indicator_limited_information for construct 'z'"
-    },
-    {
-      "code": "estimation.warning",
-      "level": "warning",
-      "message": "rho_a.two_indicator_limited_information for construct 'y'"
-    },
-    {
-      "code": "estimation.warning",
-      "level": "warning",
-      "message": "Cohen f-squared is undefined for 'x -> y' because included R-squared is one within numerical tolerance"
-    },
-    {
-      "code": "estimation.warning",
-      "level": "warning",
-      "message": "Cohen f-squared is undefined for 'z -> y' because included R-squared is one within numerical tolerance"
+      "message": "PLSc is validated for the documented QuickPLS v1.2.1 reflective path/factor-weighting scope."
     }
   ],
   "payload": {
     "kind": "pls_pm_v1",
     "estimation": {
+      "cbsem": null,
+      "cca": null,
       "construct_scores": {
         "x": [
           1.224483089244301,
@@ -431,43 +409,47 @@
       },
       "control_estimates": [],
       "converged": true,
+      "cta_pls": null,
       "effects": [
         {
-          "direct": 0.5345416989533425,
+          "direct": 0.37608577626235473,
           "indirect": 0.0,
           "source": "x",
           "target": "y",
-          "total": 0.5345416989533425
+          "total": 0.37608577626235473
         },
         {
-          "direct": 0.5973690934120451,
+          "direct": 0.3987951324293336,
           "indirect": 0.0,
           "source": "z",
           "target": "y",
-          "total": 0.5973690934120451
+          "total": 0.3987951324293336
         }
       ],
       "endogeneity": null,
+      "fimix": null,
+      "gsca": null,
+      "ipma": null,
       "iterations": 3,
       "mediation": {
         "estimates": [
           {
             "classification": "direct_only",
-            "direct": 0.5345416989533425,
+            "direct": 0.37608577626235473,
             "indirect": 0.0,
             "source": "x",
             "target": "y",
-            "total": 0.5345416989533425,
+            "total": 0.37608577626235473,
             "variance_accounted_for": 0.0,
             "warning": "direct-only structural effect; no mediated component exceeds tolerance"
           },
           {
             "classification": "direct_only",
-            "direct": 0.5973690934120451,
+            "direct": 0.3987951324293336,
             "indirect": 0.0,
             "source": "z",
             "target": "y",
-            "total": 0.5973690934120451,
+            "total": 0.3987951324293336,
             "variance_accounted_for": 0.0,
             "warning": "direct-only structural effect; no mediated component exceeds tolerance"
           }
@@ -475,10 +457,14 @@
         "method_version": "pls_mediation_v1",
         "tolerance": 1e-12,
         "warnings": [
-          "Mediation classes are descriptive effect-decomposition labels; publication inference requires validated bootstrap or permutation intervals for the relevant indirect effect."
+          "PLS mediation effect decomposition is validated for the documented QuickPLS v1.2.1 scope when paired with validated bootstrap or permutation intervals for the relevant indirect effect."
         ]
       },
-      "method_version": "plsc_v1",
+      "method_version": "plsc_v2",
+      "mga": null,
+      "mga_permutation": null,
+      "micom": null,
+      "moderated_mediation": null,
       "moderation": {
         "estimates": [],
         "method_version": "pls_two_stage_moderation_v1",
@@ -489,6 +475,8 @@
         ],
         "warnings": []
       },
+      "nca": null,
+      "nonlinear_effects": null,
       "omitted_observations": 0,
       "outer_estimates": [
         {
@@ -530,32 +518,33 @@
       ],
       "paths": [
         {
-          "coefficient": 0.5345416989533425,
+          "coefficient": 0.37608577626235473,
           "source": "x",
           "target": "y"
         },
         {
-          "coefficient": 0.5973690934120451,
+          "coefficient": 0.3987951324293336,
           "source": "z",
           "target": "y"
         }
       ],
+      "pca": null,
       "plsc": {
         "construct_correlations": [
           {
-            "corrected": 0.5952831384462308,
+            "corrected": 0.3425946574291061,
             "left": "x",
             "original": 0.34072616047483145,
             "right": "z"
           },
           {
-            "corrected": 0.8901454476904443,
+            "corrected": 0.5127108580413773,
             "left": "x",
             "original": 0.5095611902393443,
             "right": "y"
           },
           {
-            "corrected": 0.9155727535953712,
+            "corrected": 0.5276401101118945,
             "left": "z",
             "original": 0.5242154820143359,
             "right": "y"
@@ -571,25 +560,25 @@
           {
             "construct": "x",
             "indicator": "x2",
-            "loading": 1.0,
+            "loading": 0.9999933544294413,
             "weight": 0.5001239501177455
           },
           {
             "construct": "z",
             "indicator": "z1",
-            "loading": 1.0,
+            "loading": 0.9997023053279397,
             "weight": 0.4952435237801834
           },
           {
             "construct": "z",
             "indicator": "z2",
-            "loading": 1.0,
+            "loading": 0.9998604482434397,
             "weight": 0.5078882147644481
           },
           {
             "construct": "y",
             "indicator": "y1",
-            "loading": 1.0,
+            "loading": 0.9999474218526276,
             "weight": 0.49918865555728126
           },
           {
@@ -601,43 +590,46 @@
         ],
         "corrected_paths": [
           {
-            "coefficient": 0.5345416989533425,
+            "coefficient": 0.37608577626235473,
             "source": "x",
             "target": "y"
           },
           {
-            "coefficient": 0.5973690934120451,
+            "coefficient": 0.3987951324293336,
             "source": "z",
             "target": "y"
           }
         ],
         "corrected_r_squared": {
-          "y": 1.0
+          "y": 0.4032435686317305
         },
-        "method_version": "plsc_v1",
+        "method_version": "plsc_v2",
         "reliabilities": [
           {
             "construct": "x",
-            "rho_a": 0.5722690825793687
+            "rho_a": 0.9948937003247046
           },
           {
             "construct": "z",
-            "rho_a": 0.572484210385336
+            "rho_a": 0.9941985046855688
           },
           {
             "construct": "y",
-            "rho_a": 0.5726251955661182
+            "rho_a": 0.9928210487094147
           }
         ],
         "reliability_method_version": "dijkstra_henseler_rho_a_v1",
         "tolerance": 1e-12,
         "warnings": [
-          "PLSc is experimental; reflective construct correlations, paths, loadings, and R2 are attenuation-corrected."
+          "PLSc is validated for the documented QuickPLS v1.2.1 reflective path/factor-weighting scope; broader PLSc shapes remain unsupported."
         ]
       },
+      "predict": null,
       "r_squared": {
-        "y": 1.0
+        "y": 0.4032435686317305
       },
+      "regression": null,
+      "segmentation": null,
       "transforms": [
         {
           "indicator": "x1",
@@ -672,8 +664,9 @@
       ],
       "used_observations": 120,
       "warnings": [
-        "PLSc is experimental; validate corrected estimates against the method contract before publication."
-      ]
+        "PLSc is validated for the documented QuickPLS v1.2.1 reflective path/factor-weighting scope."
+      ],
+      "wpls": null
     },
     "assessment": {
       "blindfolding": {
@@ -681,8 +674,8 @@
           {
             "construct": "y",
             "observation_sum_squares": 291.83478501375726,
-            "prediction_error_sum_squares": 187.07296675568233,
-            "q_squared": 0.3589764607846059
+            "prediction_error_sum_squares": 180.71018670617562,
+            "q_squared": 0.3807791394790143
           }
         ],
         "settings": {
@@ -857,15 +850,15 @@
       "f_squared": [
         {
           "excluded_r_squared": 0.2748018715835219,
-          "f_squared": null,
-          "included_r_squared": 1.0,
+          "f_squared": 0.21523303360755044,
+          "included_r_squared": 0.4032435686317305,
           "source_construct": "x",
           "target_construct": "y"
         },
         {
           "excluded_r_squared": 0.25965260659813727,
-          "f_squared": null,
-          "included_r_squared": 1.0,
+          "f_squared": 0.2406190440283342,
+          "included_r_squared": 0.4032435686317305,
           "source_construct": "z",
           "target_construct": "y"
         }
@@ -1025,8 +1018,8 @@
       "method_version": "pls_assessment_v7",
       "model_fit": {
         "estimated": {
-          "d_uls": 0.46417853250604624,
-          "srmr": 0.14867326472215864
+          "d_uls": 0.0004967392243448243,
+          "srmr": 0.004863563382780671
         },
         "saturated": {
           "d_uls": 0.00044228889924578514,
@@ -1034,15 +1027,15 @@
         }
       },
       "r_squared": {
-        "y": 1.0
+        "y": 0.4032435686317305
       },
       "rho_a_method_version": "dijkstra_henseler_rho_a_v1",
       "structural_quality": [
         {
-          "adjusted_r_squared": 1.0,
+          "adjusted_r_squared": 0.39304260399295665,
           "construct": "y",
           "predictor_count": 2,
-          "r_squared": 1.0
+          "r_squared": 0.4032435686317305
         }
       ],
       "structural_vif": [
@@ -1060,9 +1053,7 @@
       "warnings": [
         "rho_a.two_indicator_limited_information for construct 'x'",
         "rho_a.two_indicator_limited_information for construct 'z'",
-        "rho_a.two_indicator_limited_information for construct 'y'",
-        "Cohen f-squared is undefined for 'x -> y' because included R-squared is one within numerical tolerance",
-        "Cohen f-squared is undefined for 'z -> y' because included R-squared is one within numerical tolerance"
+        "rho_a.two_indicator_limited_information for construct 'y'"
       ]
     }
   }

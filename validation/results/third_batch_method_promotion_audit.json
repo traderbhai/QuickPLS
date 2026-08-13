@@ -6,40 +6,48 @@
     {
       "path": "validation\\results\\micom_method_promotion_audit.json",
       "present": true,
-      "passed": true
+      "passed": true,
+      "promotion_status": "qualified"
     },
     {
       "path": "validation\\results\\mga_permutation_method_promotion_audit.json",
       "present": true,
-      "passed": true
+      "passed": true,
+      "promotion_status": "qualified"
     },
     {
       "path": "validation\\results\\pls_pos_method_promotion_audit.json",
       "present": true,
-      "passed": true
+      "passed": true,
+      "promotion_status": null
     },
     {
       "path": "validation\\results\\fimix_pls_method_promotion_audit.json",
       "present": true,
-      "passed": true
+      "passed": true,
+      "promotion_status": null
     },
     {
       "path": "validation\\results\\logistic_method_promotion_audit.json",
       "present": true,
-      "passed": true
+      "passed": true,
+      "promotion_status": null
     },
     {
       "path": "validation\\results\\process_method_promotion_audit.json",
       "present": true,
-      "passed": true
+      "passed": true,
+      "promotion_status": null
     },
     {
       "path": "validation\\results\\third_batch_product_enforcement_audit.json",
       "present": true,
-      "passed": true
+      "passed": true,
+      "promotion_status": null
     }
   ],
+  "micom_status": "validated_micom_v2_bounded_scope",
   "registry_gate_present": true,
   "registry_gate_all_passed": true,
-  "note": "Third-batch promotion is bounded to documented scopes; CB-SEM/CFA, GSCA, HOC, nonlinear effects, endogeneity, CCA, CTA-PLS, and moderated mediation remain experimental."
+  "note": "The aggregate requires the bounded MICOM v2 plus permutation-MGA v2 scientific, persistence, native product, XLSX export, and packaged reopen evidence while retaining micom_v1 as legacy-only."
 }

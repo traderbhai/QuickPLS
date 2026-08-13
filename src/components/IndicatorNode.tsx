@@ -29,6 +29,6 @@ export function IndicatorNode({ data, selected }: NodeProps<Node<IndicatorNodeDa
     <Handle id="source" type="source" position={Position.Right} />
     <span title={data.indicator}>{data.indicator}</span>
     {statistic !== undefined ? <b>{statistic.toFixed(3)}</b> : null}
-    <button title={`Remove ${data.indicator}`} onClick={(event) => { event.stopPropagation(); unassignIndicator(data.constructId, data.indicator); }}><Trash2 size={12} /></button>
+    <button type="button" aria-label={`Remove ${data.indicator}`} title={`Remove ${data.indicator}`} onClick={(event) => { event.stopPropagation(); unassignIndicator(data.constructId, data.indicator); }}><Trash2 size={12} aria-hidden="true" /></button>
   </div>;
 }

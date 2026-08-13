@@ -28,6 +28,7 @@ REQUIRED_METHOD_DOCS = [
     "CBSEM_ML_V1.md",
     "PCA_V1.md",
     "REGRESSION_OLS_V1.md",
+    "NCA_V2.md",
     "NCA_V1.md",
     "GSCA_V1.md",
 ]

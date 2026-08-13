@@ -5,7 +5,9 @@ use arrow::{
 };
 use faer::{Mat, prelude::*};
 use qpls_core::{
-    AnalysisMethod, AnalysisRecipe, Construct, HigherOrderMethod, MeasurementMode, WeightingScheme,
+    AnalysisRecipe, Construct, DIJKSTRA_HENSELER_RHO_A_METHOD_VERSION, HigherOrderMethod,
+    MeasurementMode, RhoABoundaryWarning, RhoAEquationError, ValidatedExecutionRecipe,
+    WeightingScheme, dijkstra_henseler_rho_a_from_normalized,
 };
 use qpls_data::{DataKind, Dataset};
 use qpls_estimation::{
@@ -14,7 +16,7 @@ use qpls_estimation::{
     GAUSSIAN_COPULA_ENDOGENEITY_METHOD_VERSION, IPMA_METHOD_VERSION,
     MODERATED_MEDIATION_METHOD_VERSION, NONLINEAR_EFFECTS_METHOD_VERSION, PLS_METHOD_VERSION,
     PLS_MGA_METHOD_VERSION, PLS_PREDICT_METHOD_VERSION, PLSC_METHOD_VERSION, PlsResult,
-    WPLS_METHOD_VERSION, estimate_pls_with_control,
+    WPLS_METHOD_VERSION, estimate_pls_validated_with_control,
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -30,7 +32,7 @@ pub const ASSESSMENT_METHOD_VERSION_V4: &str = "pls_assessment_v4";
 pub const ASSESSMENT_METHOD_VERSION_V5: &str = "pls_assessment_v5";
 pub const ASSESSMENT_METHOD_VERSION_V6: &str = "pls_assessment_v6";
 pub const ASSESSMENT_METHOD_VERSION: &str = "pls_assessment_v7";
-pub const RHO_A_METHOD_VERSION: &str = "dijkstra_henseler_rho_a_v1";
+pub const RHO_A_METHOD_VERSION: &str = DIJKSTRA_HENSELER_RHO_A_METHOD_VERSION;
 pub const HTMT_PLUS_METHOD_VERSION: &str = "ringle_et_al_htmt_plus_v1";
 pub const HTMT_ORIGINAL_METHOD_VERSION: &str = "henseler_et_al_htmt_v1";
 const NESTED_PROGRESS_SCALE: u64 = 1_000_000;
@@ -290,12 +292,42 @@ pub fn assess_pls_with_control(
     dataset: &Dataset,
     recipe: &AnalysisRecipe,
     estimation: &PlsResult,
+    control: impl FnMut(AssessmentProgress) -> bool,
+) -> Result<AssessmentResult, AssessmentError> {
+    let execution = ValidatedExecutionRecipe::for_dataset(recipe, &dataset.fingerprint.0)
+        .and_then(|recipe| recipe.without_outer_resampling())
+        .map_err(|error| match error {
+            qpls_core::ExecutionRecipeError::DatasetFingerprintMismatch => {
+                AssessmentError::DatasetMismatch
+            }
+            other => AssessmentError::ResultMismatch(other.to_string()),
+        })?;
+    assess_pls_validated_with_control(dataset, &execution, estimation, control)
+}
+
+/// Assesses an opaque no-resampling recipe capability that has passed the
+/// complete schema-v3 scientific preflight.
+pub fn assess_pls_validated_with_control(
+    dataset: &Dataset,
+    recipe: &ValidatedExecutionRecipe,
+    estimation: &PlsResult,
     mut control: impl FnMut(AssessmentProgress) -> bool,
 ) -> Result<AssessmentResult, AssessmentError> {
-    let execution_recipe = expand_higher_order_for_assessment(recipe)?;
+    let effective_recipe = recipe
+        .effective_for_dataset(&dataset.fingerprint.0)
+        .map_err(|error| match error {
+            qpls_core::ExecutionRecipeError::DatasetFingerprintMismatch => {
+                AssessmentError::DatasetMismatch
+            }
+            other => AssessmentError::ResultMismatch(other.to_string()),
+        })?;
+    let execution_recipe = expand_higher_order_for_assessment(effective_recipe)?;
+    let nested_execution = recipe
+        .with_validated_model(execution_recipe.model.clone())
+        .map_err(|error| AssessmentError::ResultMismatch(error.to_string()))?;
     validate_inputs(dataset, &execution_recipe, estimation)?;
-    let mut complete_columns = complete_case_columns(dataset, recipe, &mut control)?;
-    add_two_stage_higher_order_columns(&mut complete_columns, recipe, estimation)?;
+    let mut complete_columns = complete_case_columns(dataset, effective_recipe, &mut control)?;
+    add_two_stage_higher_order_columns(&mut complete_columns, effective_recipe, estimation)?;
     let recipe = &execution_recipe;
     if complete_columns.values().next().map(Vec::len) != Some(estimation.used_observations) {
         return Err(AssessmentError::ResultMismatch(
@@ -850,6 +882,7 @@ pub fn assess_pls_with_control(
     let blindfolding = calculate_blindfolding(
         dataset,
         recipe,
+        &nested_execution,
         estimation,
         &complete_columns,
         &mut warnings,
@@ -1141,6 +1174,7 @@ fn fit_measures(observed: &[Vec<f64>], implied: &[Vec<f64>]) -> FitMeasures {
 fn calculate_blindfolding(
     dataset: &Dataset,
     recipe: &AnalysisRecipe,
+    nested_execution: &ValidatedExecutionRecipe,
     estimation: &PlsResult,
     complete_columns: &BTreeMap<String, Vec<f64>>,
     warnings: &mut Vec<String>,
@@ -1181,12 +1215,6 @@ fn calculate_blindfolding(
         .iter()
         .flat_map(|construct| construct.indicators.iter().cloned())
         .collect::<Vec<_>>();
-    let mut blindfold_recipe = recipe.clone();
-    if blindfold_recipe.settings.method == AnalysisMethod::Mga {
-        blindfold_recipe.settings.method = AnalysisMethod::PlsPm;
-        blindfold_recipe.metadata.remove("mga_group_column");
-        blindfold_recipe.metadata.remove("mga.group_column");
-    }
     let mut rows = Vec::with_capacity(endogenous.len());
     for (construct_index, construct) in endogenous.iter().enumerate() {
         if construct.mode == MeasurementMode::Formative {
@@ -1242,8 +1270,10 @@ fn calculate_blindfolding(
             let round_start = item_index as u64 * NESTED_PROGRESS_SCALE;
             let round_end = round_start + NESTED_PROGRESS_SCALE;
             let mut last_nested_progress = round_start;
-            let round_estimate =
-                estimate_pls_with_control(&blinded_dataset, &blindfold_recipe, |progress| {
+            let round_estimate = estimate_pls_validated_with_control(
+                &blinded_dataset,
+                nested_execution,
+                |progress| {
                     let mut mapped = estimation_nested_progress(
                         item_index as u64,
                         total_rounds as u64,
@@ -1255,7 +1285,8 @@ fn calculate_blindfolding(
                         .clamp(last_nested_progress, round_end);
                     last_nested_progress = mapped.completed_units;
                     control(mapped)
-                });
+                },
+            );
             let round_estimate = match round_estimate {
                 Ok(result) => result,
                 Err(EstimationError::Cancelled) => return Err(AssessmentError::Cancelled),
@@ -2271,55 +2302,40 @@ fn rho_a_from_normalized_inputs(
     weights: &[f64],
     score_variance: f64,
 ) -> RhoACalculation {
-    let weight_norm_squared = weights.iter().map(|value| value * value).sum::<f64>();
-    let fourth_sum = weights.iter().map(|value| value.powi(4)).sum::<f64>();
-    let denominator = weight_norm_squared.powi(2) - fourth_sum;
-    let numerator = (0..weights.len())
-        .flat_map(|row| (0..weights.len()).map(move |column| (row, column)))
-        .filter(|(row, column)| row != column)
-        .map(|(row, column)| weights[row] * weights[column] * correlations[row][column])
-        .sum::<f64>();
-    let tolerance = 64.0 * f64::EPSILON * weight_norm_squared.powi(2).max(fourth_sum).max(1.0);
-    if !weight_norm_squared.is_finite() || !numerator.is_finite() || !denominator.is_finite() {
-        return RhoACalculation::unavailable("rho_a.nonfinite_result", Some(score_variance));
-    }
-    if denominator <= tolerance {
-        return RhoACalculation::unavailable(
-            "rho_a.off_diagonal_denominator_zero",
-            Some(score_variance),
-        );
-    }
-    let mut value = weight_norm_squared.powi(2) * numerator / denominator;
-    if !value.is_finite() {
-        return RhoACalculation::unavailable("rho_a.nonfinite_result", Some(score_variance));
-    }
-    let boundary_tolerance = 64.0 * f64::EPSILON * value.abs().max(1.0);
+    let equation = match dijkstra_henseler_rho_a_from_normalized(correlations, weights) {
+        Ok(equation) => equation,
+        Err(RhoAEquationError::OffDiagonalDenominatorZero) => {
+            return RhoACalculation::unavailable(
+                "rho_a.off_diagonal_denominator_zero",
+                Some(score_variance),
+            );
+        }
+        Err(_) => {
+            return RhoACalculation::unavailable("rho_a.nonfinite_result", Some(score_variance));
+        }
+    };
     let mut warning_codes = Vec::new();
-    if value < 0.0 {
-        if value >= -boundary_tolerance {
-            value = 0.0;
-        } else {
+    match equation.boundary_warning {
+        Some(RhoABoundaryWarning::ImproperBelowZero) => {
             warning_codes.push("rho_a.improper_below_zero".into());
         }
-    } else if value > 1.0 {
-        if value <= 1.0 + boundary_tolerance {
-            value = 1.0;
-        } else {
+        Some(RhoABoundaryWarning::ImproperAboveOne) => {
             warning_codes.push("rho_a.improper_above_one".into());
         }
+        None => {}
     }
     if weights.len() == 2 {
         warning_codes.push("rho_a.two_indicator_limited_information".into());
     }
     RhoACalculation {
-        value: Some(value),
+        value: Some(equation.value),
         status: RhoAStatus::Available,
         reason: None,
         warning_codes,
         score_variance: Some(score_variance),
-        weight_norm_squared: Some(weight_norm_squared),
-        numerator: Some(numerator),
-        denominator: Some(denominator),
+        weight_norm_squared: Some(equation.weight_norm_squared),
+        numerator: Some(equation.off_diagonal_numerator),
+        denominator: Some(equation.off_diagonal_denominator),
     }
 }
 
@@ -2373,7 +2389,8 @@ mod tests {
     use approx::assert_abs_diff_eq;
     use chrono::Utc;
     use qpls_core::{
-        AnalysisSettings, Construct, ModelSpec, PROJECT_SCHEMA_VERSION, StructuralPath,
+        ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisSettings, Construct, MethodConfig, ModelSpec,
+        StructuralPath,
     };
     use qpls_data::{ImportOptions, import_delimited_bytes};
     use qpls_estimation::estimate_pls;
@@ -2389,7 +2406,7 @@ mod tests {
         )
         .unwrap();
         let recipe = AnalysisRecipe {
-            schema_version: PROJECT_SCHEMA_VERSION,
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
             id: Uuid::nil(),
             created_at: Utc::now(),
             dataset_fingerprint: dataset.fingerprint.0.clone(),
@@ -2421,6 +2438,7 @@ mod tests {
                 interactions: Vec::new(),
             },
             settings: AnalysisSettings::default(),
+            method_config: Some(MethodConfig::PlsAlgorithm),
             metadata: BTreeMap::new(),
         };
         (dataset, recipe)
@@ -2435,7 +2453,7 @@ mod tests {
         )
         .unwrap();
         let recipe = AnalysisRecipe {
-            schema_version: PROJECT_SCHEMA_VERSION,
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
             id: Uuid::nil(),
             created_at: Utc::now(),
             dataset_fingerprint: dataset.fingerprint.0.clone(),
@@ -2491,6 +2509,7 @@ mod tests {
                 interactions: Vec::new(),
             },
             settings: AnalysisSettings::default(),
+            method_config: Some(MethodConfig::PlsAlgorithm),
             metadata: BTreeMap::new(),
         };
         (dataset, recipe)
@@ -2515,7 +2534,7 @@ mod tests {
             })
             .collect();
         let recipe = AnalysisRecipe {
-            schema_version: PROJECT_SCHEMA_VERSION,
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
             id: Uuid::nil(),
             created_at: Utc::now(),
             dataset_fingerprint: dataset.fingerprint.0.clone(),
@@ -2542,6 +2561,7 @@ mod tests {
                 interactions: Vec::new(),
             },
             settings: AnalysisSettings::default(),
+            method_config: Some(MethodConfig::PlsAlgorithm),
             metadata: BTreeMap::new(),
         };
         (dataset, recipe)

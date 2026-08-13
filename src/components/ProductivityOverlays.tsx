@@ -1,4 +1,4 @@
-import { BookOpen, CheckCircle2, Command, Database, Download, FileText, FlaskConical, FolderOpen, Keyboard, Network, Play, Search, Settings, X } from "lucide-react";
+import { BookOpen, CheckCircle2, Command, Database, Download, FileText, FlaskConical, FolderOpen, Keyboard, Network, Play, Search, Settings, ShieldCheck, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useWorkspace } from "../store";
 import type { WorkspaceView } from "../types";
@@ -74,6 +74,8 @@ export function ProductivityOverlays() {
     { label: "Open Results", detail: `${runCount} saved runs`, icon: FileText, action: () => setView("runs" as WorkspaceView) },
     { label: "Open Results: Groups", detail: "Review MICOM, MGA, FIMIX, PLS-POS, and IPMA output in Results", icon: FileText, action: () => { useWorkspace.getState().setResultWorkspaceState({ selectedTab: "groups" }); setView("runs" as WorkspaceView); } },
     { label: "Open Publication Report", detail: "Preview diagram and table exports", icon: Download, action: () => setView("reports" as WorkspaceView) },
+    { label: "Open Trust Center", detail: "Review validated scope, evidence, and known limitations", icon: ShieldCheck, action: () => setView("trust" as WorkspaceView) },
+    { label: "Open Settings", detail: "Adjust desktop density, precision, and threshold colors", icon: Settings, action: () => setView("settings" as WorkspaceView) },
     { label: "Publication preview mode", detail: "Lock canvas into publication figure view", icon: FileText, action: () => { setView("models" as WorkspaceView); setDiagramMode("publication"); } },
     { label: "Show keyboard shortcuts", detail: "Open shortcut overlay", icon: Keyboard, action: () => setShortcutOverlayOpen(true) },
   ], [applyMethodPreset, autoLayout, constructCount, datasetColumnCount, runCount, setDiagramMode, setDiagramTool, setShortcutOverlayOpen, setView]);

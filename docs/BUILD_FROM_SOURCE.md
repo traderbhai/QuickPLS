@@ -32,11 +32,11 @@ npm run build
 cargo test -p qpls-core -p qpls-project -p qpls-runner -p quickpls-desktop
 ```
 
-## Run Current v1.8.1 Gate
+## Run Current v2 Release Handoff Gate
 
 ```powershell
-npm run qpls:v181:method-applicability
-cargo run -p qpls-cli -- gate v1_8_1_method_applicability_guided_setup
+npm run qpls:v290:acceptance-backlog
+cargo run -p qpls-cli -- gate v2_9_0_acceptance_backlog_and_next_pass
 ```
 
 ## Development Desktop App

@@ -1,4 +1,4 @@
-﻿import { readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const read = (path: string) => readFileSync(path, "utf8");
@@ -19,7 +19,7 @@ describe("desktop accessibility contracts", () => {
       "result summary",
       "measurement quality tables",
       "bootstrap parameter table",
-      "permutation parameter table",
+      "Structural path randomization",
     ]) {
       expect(results).toContain(label);
     }
@@ -53,49 +53,65 @@ describe("desktop accessibility contracts", () => {
     expect(reports).not.toContain(doubleEncodedR2);
     expect(reports).not.toContain("Rï¿½");
   });
-  it("keeps SEM canvas overlay state visible to users", () => {
+  it("keeps model commands in the native shell instead of duplicating them inside the canvas", () => {
     const canvas = read("src/components/ModelCanvas.tsx");
+    const native = read("src/native/NativeDesktopApp.tsx");
+    const canvasStyles = read("src/native/nativeCanvas.css");
     const latent = read("src/components/LatentNode.tsx");
-    const styles = read("src/styles.css");
 
-    expect(canvas).toContain("canvas-overlay-status");
-    expect(canvas).toContain("canvas-next-action");
-    expect(canvas).toContain("Model-only diagram");
-    expect(canvas).toContain("Result overlay active");
-    expect(canvas).toContain("Overlay blocked");
-    expect(canvas).toContain("Recommended next workflow action");
-    expect(canvas).toContain("R²");
+    expect(native).toContain('className="nd-commandbar" role="toolbar"');
+    expect(canvas).not.toContain('aria-label="Model editing tools"');
+    expect(canvas).not.toContain('className="canvas-toolbar');
+    expect(canvas).not.toContain("CFA measurement preset");
+    expect(canvas).not.toContain("Mediation preset");
+    expect(canvas).not.toContain("Arrange like SmartPLS");
+    expect(canvas).toContain('window.addEventListener("quickpls:model-tool"');
+    expect(canvas).toContain('window.addEventListener("quickpls:model-arrange"');
+    expect(canvas).toContain('window.addEventListener("quickpls:model-fit"');
+    expect(canvas).toContain("<Controls showInteractive={false} />");
+    expect(canvas).not.toContain('className="diagram-context-menu"');
+    expect(canvas).not.toContain("window.prompt(");
+    expect(native).toContain('case "model.edit-selection"');
+    expect(native).toContain('id="nd-model-construct-name"');
+    expect(native).toContain('id="nd-model-path-label"');
+    expect(canvasStyles).not.toContain(".canvas-toolbar");
+    expect(canvasStyles).not.toContain(".diagram-help");
+    expect(canvasStyles).not.toContain(".diagram-context-menu");
     expect(latent).toContain("R²");
-    expect(canvas).not.toContain(mojibakeR2);
     expect(latent).not.toContain(mojibakeR2);
-    expect(styles).toContain(".canvas-overlay-status");
-    expect(styles).toContain(".canvas-next-action");
-    expect(styles).toContain(".canvas-overlay-status.ready");
-    expect(styles).toContain(".canvas-overlay-status.warning");
   });
 
-  it("keeps documented SEM canvas keyboard shortcuts wired", () => {
+  it("routes global canvas shortcuts through the typed native command registry", () => {
     const canvas = read("src/components/ModelCanvas.tsx");
+    const commands = read("src/native/nativeCommands.ts");
 
     for (const shortcut of [
-      'event.key.toLowerCase() === "z"',
-      'event.key.toLowerCase() === "y"',
-      'event.key.toLowerCase() === "d"',
-      'event.key === "Delete"',
-      'event.key === "Backspace"',
-      'event.key === "Escape"',
-      'event.key === "Enter"',
-      'event.key.toLowerCase() === "p"',
-      'event.key.toLowerCase() === "c"',
-      'event.key.toLowerCase() === "v"',
-      'event.key.toLowerCase() === "f"',
+      'id: "select-tool"',
+      'id: "pan-tool"',
+      'id: "add-construct"',
+      'id: "path-tool"',
+      'id: "edit-selection"',
+      'id: "delete-selection"',
+      'id: "fit-model"',
     ]) {
-      expect(canvas).toContain(shortcut);
+      expect(commands).toContain(shortcut);
     }
 
-    expect(canvas).toContain('window.prompt("Construct name"');
-    expect(canvas).toContain('window.prompt("Path label"');
-    expect(canvas).toContain("if (isEditingText(event.target)) return;");
+    for (const eventName of [
+      "quickpls:model-tool",
+      "quickpls:model-add-construct",
+      "quickpls:model-delete-selection",
+      "quickpls:model-undo",
+      "quickpls:model-redo",
+    ]) {
+      expect(canvas).toContain(eventName);
+    }
+
+    expect(canvas).toContain("deleteKeyCode={null}");
+    expect(canvas).not.toContain('window.addEventListener("keydown"');
+    expect(commands).toContain('shortcut: { key: "enter" }');
+    expect(canvas).not.toContain('event.key === "Enter"');
+    expect(canvas).not.toContain("window.prompt(");
   });
 
   it("keeps a persistent desktop readiness checklist in the status bar", () => {

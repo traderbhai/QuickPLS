@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "id": "2ae5d3fb-d582-40db-a643-e14ec18e748a",
+  "id": "019a9324-2d7f-4ff8-b053-040fd74ee879",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000122259",
     "dataset_fingerprint": "v2:0341c27af4c3a95cf1879c90f436d53239c58ae882be78e3ee5c42c2ccd3664d",
     "method": "pca",
     "method_version": "pca_v1",
-    "engine_version": "1.0.0",
+    "engine_version": "2.45.0",
     "seed": 20260721,
     "settings": {
       "method": "pca",
@@ -24,8 +24,8 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-07-21T06:59:51.719059300Z",
-    "completed_at": "2026-07-21T06:59:51.720295100Z"
+    "started_at": "2026-08-11T20:36:01.812175400Z",
+    "completed_at": "2026-08-11T20:36:01.813502200Z"
   },
   "diagnostics": [
     {
@@ -36,7 +36,7 @@
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "PLS assessment and PLS resampling engines are not applicable to standalone v0.8 methods."
+      "message": "PLS assessment and PLS resampling engines are not applicable to standalone raw-data analyses."
     }
   ],
   "payload": {
@@ -213,7 +213,7 @@
     "assessment": {
       "method_version": "assessment_not_applicable_v1",
       "warnings": [
-        "PLS assessment is not applicable to standalone v0.8 methods."
+        "PLS assessment is not applicable to standalone raw-data analyses."
       ]
     }
   }

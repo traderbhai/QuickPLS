@@ -1,24 +1,7 @@
-# GSCA_V1
+# GSCA v1 (legacy preview)
 
-Status: validated for the documented QuickPLS v1.2.4 bounded deterministic GSCA component-model scope.
+Status: legacy/archive compatibility only. It is not current GSCA evidence.
 
-`gsca_v1` is a bounded generalized structured component analysis implementation for raw-data component models.
+`gsca_v1` reused the historical PLS component/path stage and emitted GSCA-shaped summaries, including placeholder intervals. It did not implement the joint global least-squares ALS estimator and must not be described as validated GSCA or inference.
 
-## Contract
-
-- The promoted v1.2.4 scope uses existing component-score and path-estimation infrastructure to emit a GSCA-style payload for reflective/formative blocks and recursive paths.
-- Output includes component weights, loadings, scores through the shared result envelope, paths, R2, FIT, AFIT, GFI-style diagnostics, bootstrap-interval placeholders, convergence metadata, warnings, and `method_version = gsca_v1`.
-- Formative and reflective block semantics follow the existing QuickPLS model specification.
-
-## Unsupported Outside v1.2.4
-
-- Interactions.
-- Higher-order constructs.
-- Case weights.
-- Covariance/correlation input.
-- Nonrecursive models.
-- Unrestricted GSCA variants outside the documented QuickPLS deterministic component-model scope.
-
-## Validation
-
-`npm run qpls:gsca:reference` verifies bounded payload shape, finite path estimates, and method-version surfacing. `validation/gsca_method_promotion_audit.py` promotes only this bounded deterministic scope; GSCA bootstrap and unrestricted ALS parity claims remain unsupported unless separately audited.
+New calculations use [`GSCA_ALS_V2.md`](GSCA_ALS_V2.md). Existing v1 records retain their original method version and are never upgraded or relabeled as v2 results.

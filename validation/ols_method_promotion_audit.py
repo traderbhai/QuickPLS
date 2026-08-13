@@ -1,6 +1,7 @@
 import csv
 import json
 import math
+import os
 import subprocess
 from pathlib import Path
 
@@ -12,7 +13,8 @@ from r_runtime import find_rscript_optional
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "validation" / "results"
 OUTPUT = RESULTS / "ols_method_promotion_audit.json"
-CLI = ROOT / "target" / "debug" / "qpls.exe"
+DEFAULT_RELEASE_CLI = ROOT / "target" / "release" / "qpls.exe"
+CLI = Path(os.environ.get("QUICKPLS_CLI_PATH", DEFAULT_RELEASE_CLI if DEFAULT_RELEASE_CLI.exists() else ROOT / "target" / "debug" / "qpls.exe"))
 TOL = 1e-6
 
 
@@ -24,6 +26,8 @@ def run(command, check=False):
 
 
 def ensure_cli():
+    if CLI.exists():
+        return
     run(["cargo", "build", "-p", "qpls-cli"], check=True)
 
 
@@ -74,7 +78,7 @@ def run_ols(csv_path, name, predictors, controls=None):
             "max_iterations": 3000,
             "bootstrap_samples": 0,
             "seed": 20260721,
-            "preprocessing": "standardized",
+            "preprocessing": "unstandardized",
             "missing_data": "listwise_deletion",
             "confidence_level": 0.95,
         },
@@ -250,16 +254,98 @@ def main():
     r_ref = r_lm_reference(csv_path, predictors)
     r_compare = compare_quickpls_to_r(regression, r_ref) if regression else {"passed": False}
     rank_guard = rank_deficiency_guard(csv_path)
-    integrated = json.loads((RESULTS / "v08_extended_methods_reference_report.json").read_text(encoding="utf-8"))
-    integrated_ols = integrated.get("checks", {}).get("ols", {})
+    retained_v08_ols = json.loads((RESULTS / "v08_regression_ols_quickpls.json").read_text(encoding="utf-8"))
+    retained_v08_regression = retained_v08_ols.get("payload", {}).get("estimation", {}).get("regression", {})
     method_compat = (ROOT / "docs/METHOD_COMPATIBILITY.md").read_text(encoding="utf-8")
+    method_note = (ROOT / "docs/methods/REGRESSION_OLS_V1.md").read_text(encoding="utf-8")
+    project_source = (ROOT / "crates/qpls-project/src/lib.rs").read_text(encoding="utf-8")
+    browser_report_path = RESULTS / "v247_native_desktop_visual_acceptance.json"
+    native_report_path = RESULTS / "v247_tauri_native_acceptance.json"
+    browser_report = json.loads(browser_report_path.read_text(encoding="utf-8")) if browser_report_path.exists() else {}
+    native_report = json.loads(native_report_path.read_text(encoding="utf-8")) if native_report_path.exists() else {}
+    browser_ols = browser_report.get("checks", {}).get("ols", [])
+    responsive_native_setup = (
+        browser_report.get("passed") is True
+        and len(browser_ols) == 3
+        and {row.get("viewport") for row in browser_ols} == {"1024x700", "1280x720", "1440x900"}
+        and all(
+            row.get("catalogCount") == 12
+            and row.get("selectedMethod") == "Ordinary Least Squares Regression"
+            and row.get("fixture") == {"variables": 5, "models": 0}
+            and row.get("outcome") == "outcome"
+            and row.get("predictors") == ["predictor"]
+            and row.get("controls") == ["control"]
+            and row.get("unsupportedControlCount") == 0
+            and row.get("startCommandDisabled") is True
+            and row.get("runtimeBlockerVisible") is True
+            and row.get("noModelBlocker") is True
+            and row.get("truthAndOverflow", {}).get("noFabricatedRunState") is True
+            and row.get("truthAndOverflow", {}).get("noHorizontalOverflow") is True
+            and row.get("closeFocus", {}).get("dialogClosed") is True
+            and row.get("closeFocus", {}).get("focusRestored") is True
+            for row in browser_ols
+        )
+    )
+    native_checks = native_report.get("checks", {})
+    native_dialog = native_checks.get("olsDialog", {})
+    native_result = native_checks.get("olsResult", {})
+    native_export = native_checks.get("olsExport", {}).get("nativeXlsx") or {}
+    native_reopen = native_checks.get("olsSaveReopen", {})
+    archive = native_reopen.get("archive", {})
+    export_path = Path(native_export.get("targetPath", "")) if native_export.get("targetPath") else None
+    genuine_packaged_native_workflow = (
+        native_report.get("passed") is True
+        and native_checks.get("olsFixture", {}).get("cases") == 140
+        and native_dialog.get("catalogCount") == 12
+        and native_dialog.get("selectedMethod") == "Ordinary Least Squares Regression"
+        and native_dialog.get("outcome") == "y"
+        and native_dialog.get("selectedPredictors") == ["x", "m"]
+        and native_dialog.get("selectedControls") == ["z"]
+        and native_dialog.get("startEnabled") is True
+        and native_result.get("initialSelectedTable") == "ols_coefficients"
+        and native_result.get("coefficients", {}).get("rows") == 4
+        and native_result.get("fit", {}).get("rows") == 1
+        and native_result.get("scope", {}).get("rows") == 11
+        and native_result.get("noPlaceholder") is True
+        and native_result.get("noSemResultGroups") is True
+        and native_export.get("attempted") is True
+        and native_export.get("file", {}).get("isFile") is True
+        and native_export.get("file", {}).get("size", 0) > 0
+        and export_path is not None
+        and export_path.is_file()
+        and native_reopen.get("sameRunRestored") is True
+        and archive.get("provenanceMethod") == "regression"
+        and archive.get("provenanceMethodVersion") == "regression_ols_v1"
+        and archive.get("regressionMethodVersion") == "regression_ols_v1"
+        and archive.get("regressionType") == "ols"
+        and archive.get("coefficientContract") is True
+        and archive.get("predictionContract") is True
+        and archive.get("fitContract") is True
+        and archive.get("models") == 0
+        and archive.get("activeModelId") is None
+        and archive.get("runModelId") is None
+        and archive.get("runModelSnapshot") is None
+    )
+    strict_persistence_contract = (
+        "fn validate_ols_payload_contract" in project_source
+        and "REGRESSION_OLS_METHOD_VERSION" in project_source
+        and "runner_generated_ols_v1_commits_saves_reopens_and_rejects_contract_tampering" in project_source
+    )
     checks = {
         "main_quickpls_run": run_result["ok"] and regression["method_version"] == "regression_ols_v1",
         "independent_python_hc3_reference": numpy_delta is not None and numpy_delta <= TOL,
         "r_lm_hc3_reference": r_compare.get("passed") is True,
         "rank_deficiency_guard": rank_guard["passed"],
-        "integrated_v08_ols_reference": integrated.get("passed") is True and integrated_ols.get("passed") is True,
-        "method_compatibility_updated": "OLS regression | Validated for documented OLS scope" in method_compat,
+        "retained_v08_ols_artifact": retained_v08_regression.get("method_version") == "regression_ols_v1",
+        "method_compatibility_updated": "| Regression | OLS regression | Validated for documented packaged-native OLS scope:" in method_compat,
+        "strict_project_persistence_contract": strict_persistence_contract,
+        "responsive_native_setup": responsive_native_setup,
+        "genuine_packaged_native_workflow": genuine_packaged_native_workflow,
+        "bounded_method_note": (
+            "Status: validated for the bounded packaged-native scope below." in method_note
+            and "HC0 or HC4 public claims" in method_note
+            and "Logistic regression and PROCESS-style workflows" in method_note
+        ),
     }
     report = {
         "schema_version": 1,
@@ -281,6 +367,12 @@ def main():
         "r_reference": r_compare,
         "rank_deficiency_guard": rank_guard,
         "quickpls_output": run_result.get("output"),
+        "packaged_native": {
+            "report": str(native_report_path.relative_to(ROOT)),
+            "run_id": native_result.get("runId"),
+            "xlsx": str(export_path) if export_path else None,
+            "same_run_reopened": native_reopen.get("sameRunRestored"),
+        },
     }
     OUTPUT.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(f"wrote {OUTPUT} | passed={report['passed']}")

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildResultInterpretation, findingsByGroup, rowSpecificInterpretation } from "./resultInterpretation";
 import type { AnalysisRun, AssessmentResult, PlsResult } from "../types";
+import { processV2Run } from "../native/nativeProcessTestFixture";
 
 const resultFixture: PlsResult = {
   method_version: "pls_pm_v1",
@@ -149,6 +150,57 @@ describe("result-specific interpretation", () => {
     const findings = new Map(buildResultInterpretation({ run }).findings.filter((finding) => finding.id.startsWith("bootstrap.percentile")).map((finding) => [finding.id, finding.severity]));
     expect(findings.get("bootstrap.percentile.competence -> satisfaction")).toBe("good");
     expect(findings.get("bootstrap.percentile.satisfaction -> loyalty")).toBe("caution");
+  });
+
+  it("uses dedicated PROCESS point and bootstrap inference without generic PLS reinterpretation", () => {
+    const pointRun = processV2Run(false);
+    const point = buildResultInterpretation({
+      run: pointRun,
+      nodes: [{ id: "unrelated", data: { label: "Unrelated PLS construct", mode: "reflective", indicators: ["I1"] } }],
+    });
+    expect(point.findings.map((finding) => finding.id)).toContain("inference.process_bootstrap_missing");
+    expect(point.findings.map((finding) => finding.id)).not.toContain("inference.missing");
+    expect(point.reportParagraphs.map((paragraph) => paragraph.section)).toEqual([
+      "Model and provenance",
+      "Graph-defined path analysis",
+      "Inference caveat",
+      "Reporting checks",
+    ]);
+    expect(point.reportParagraphs.map((paragraph) => paragraph.text).join(" ")).toContain("Y R-squared 0.5500");
+    expect(point.reportParagraphs.map((paragraph) => paragraph.text).join(" ")).not.toContain("No endogenous R2");
+    expect(point.reportParagraphs.map((paragraph) => paragraph.text).join(" ")).not.toContain("outer loading");
+    expect(point.diagramAdvice).toEqual([]);
+
+    const bootstrap = buildResultInterpretation({ run: processV2Run(true) });
+    expect(bootstrap.findings.map((finding) => finding.id)).toContain("inference.process_bootstrap");
+    expect(bootstrap.findings.map((finding) => finding.id)).not.toContain("inference.missing");
+    expect(bootstrap.reportParagraphs.find((paragraph) => paragraph.section === "Inference caveat")?.text)
+      .toContain("99 usable indexed case-bootstrap replicates");
+    expect(bootstrap.reportParagraphs.map((paragraph) => paragraph.text).join(" ")).not.toContain("generic PLS");
+  });
+
+  it("keeps historical PROCESS v1 interpretation read-only and isolated from generic PLS rules", () => {
+    const legacy = structuredClone(processV2Run());
+    legacy.provenance!.method_version = "regression_process_v1";
+    legacy.result!.method_version = "regression_process_v1";
+    legacy.result!.regression!.method_version = "regression_process_v1";
+    legacy.result!.regression!.process = {
+      method_version: "regression_process_v1",
+      model: "mediation",
+      effects: [{ effect: "indirect", estimate: 0.2, lower_percentile: 0.1, upper_percentile: 0.3 }],
+      simple_slopes: [],
+      warnings: ["Historical PROCESS v1 archive."],
+    };
+    const interpretation = buildResultInterpretation({
+      run: legacy,
+      nodes: [{ id: "unrelated", data: { label: "Unrelated PLS construct", mode: "reflective", indicators: ["I1"] } }],
+    });
+    expect(interpretation.findings.map((finding) => finding.id)).toEqual(["process_v1.historical_read_only"]);
+    expect(interpretation.diagramAdvice).toEqual([]);
+    expect(interpretation.reportParagraphs).toHaveLength(1);
+    expect(interpretation.reportParagraphs[0].section).toBe("Historical archive disclosure");
+    expect(interpretation.reportParagraphs[0].text).toContain("no generic PLS, current PROCESS v2, parity, or fresh validation claim");
+    expect(interpretation.reportParagraphs[0].text).not.toContain("No endogenous R2");
   });
 
   it("generates row detail text using exact selected row values", () => {

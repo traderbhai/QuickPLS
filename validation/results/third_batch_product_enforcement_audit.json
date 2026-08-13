@@ -4,39 +4,44 @@
   "passed": true,
   "checks": [
     {
-      "name": "desktop_catalog_promotes_group_and_regression_methods",
-      "passed": true,
-      "detail": "Desktop catalog marks MGA, prediction, and regression as validated entry points with setting-aware scope text."
-    },
-    {
       "name": "core_registry_promotes_entry_points",
       "passed": true,
       "detail": "Core registry exposes the promoted entry points as validated while validation guards unsupported settings."
     },
     {
-      "name": "setting_aware_boundaries",
+      "name": "native_primary_catalog_exposes_truthful_micom_mga",
       "passed": true,
-      "detail": "UI method status is setting-aware for MGA and regression PROCESS moderated-mediation exclusion."
+      "detail": "The primary catalog exposes one bounded joint MICOM/MGA v2 workflow and no conflicting standalone MICOM kind."
     },
     {
-      "name": "result_tables_promote_third_batch",
+      "name": "native_recipe_enforces_explicit_groups",
       "passed": true,
-      "detail": "Report/export tables promote only v1.2.2 scoped group, segmentation, logistic, and bounded PROCESS payloads."
+      "detail": "The native recipe requires explicit distinct Group A/B values and serializes the exact current MICOM/MGA v2 plan."
     },
     {
-      "name": "groups_workspace_uses_validated_scope_language",
+      "name": "native_results_expose_complete_truthful_micom_mga_tables",
       "passed": true,
-      "detail": "Groups workspace labels promoted v1.2.2 payloads as validated scope."
+      "detail": "Native Results derives the complete current group, measurement, permutation, and MICOM hierarchy without placeholder tables."
+    },
+    {
+      "name": "micom_v2_scope_is_enforced",
+      "passed": true,
+      "detail": "Core validation and estimation enforce the bounded current v2 contract while retaining v1 only as an explicit historical identifier."
     },
     {
       "name": "engine_warnings_promoted_scope",
       "passed": true,
-      "detail": "Newly generated result warnings use bounded v1.2.2 validated-scope language."
+      "detail": "Generated warnings retain bounded claims for eligible third-batch methods and state the current joint MGA/MICOM v2 scope."
     },
     {
-      "name": "later_methods_remain_experimental",
+      "name": "compatibility_documents_current_group_boundaries",
       "passed": true,
-      "detail": "Unpromoted later methods remain experimental in compatibility docs."
+      "detail": "The compatibility matrix promotes only the bounded current v2 workflow and records micom_v1 as legacy-only."
+    },
+    {
+      "name": "packaged_micom_mga_v2_workflow",
+      "passed": true,
+      "detail": "The packaged desktop completed the current native setup, active lifecycle, Results, real XLSX export, explicit save, and same-run reopen sequence."
     }
   ]
 }

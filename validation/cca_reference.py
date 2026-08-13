@@ -1,7 +1,14 @@
-"""Independent CCA composite-correlation residual reference."""
+"""Independent bounded CCA composite-correlation residual reference.
 
+The fixture is deliberately non-saturated. It validates descriptive residual
+reconstruction only; it does not manufacture a CCA threshold, decision,
+classification, or inference contract.
+"""
+
+import copy
 import csv
 import json
+import math
 import random
 import subprocess
 from pathlib import Path
@@ -20,6 +27,9 @@ OUTPUT = RESULTS / "cca_reference_report.json"
 GUARD_RECIPE = RESULTS / "cca_invalid.recipe.json"
 CLI_EXE = ROOT / "target" / "debug" / "qpls.exe"
 TOLERANCE = 1e-10
+MINIMUM_NONSATURATED_RESIDUAL = 0.05
+CCA_METHOD_VERSION = "cca_composite_residual_v1"
+CCA_MODEL_VERSION = "recursive_standardized_composite_path_model_v1"
 CLI_READY = False
 
 
@@ -105,9 +115,11 @@ def recipe_payload(fingerprint):
             ],
             "paths": [
                 {"source": "x", "target": "z"},
-                {"source": "x", "target": "y"},
                 {"source": "z", "target": "y"},
             ],
+            "controls": [],
+            "higher_order_constructs": [],
+            "interactions": [],
         },
         "settings": {
             "method": "cca",
@@ -115,11 +127,16 @@ def recipe_payload(fingerprint):
             "tolerance": 1e-7,
             "max_iterations": 3000,
             "bootstrap_samples": 0,
+            "studentized_inner_samples": 0,
+            "permutation_samples": 0,
             "seed": 20260719,
+            "workers": 1,
+            "confidence_level": 0.95,
             "preprocessing": "standardized",
             "missing_data": "listwise_deletion",
+            "case_weight_column": None,
         },
-        "metadata": {"fixture": "independent_cca_reference"},
+        "metadata": {"fixture": "independent_nonsaturated_cca_reference"},
     }
 
 
@@ -184,7 +201,6 @@ def run_quickpls():
             str(DATA.relative_to(ROOT)),
             "--output",
             str(QUICKPLS.relative_to(ROOT)),
-            "--allow-experimental",
         ],
         check=True,
         stdout=subprocess.DEVNULL,
@@ -192,21 +208,134 @@ def run_quickpls():
     return json.loads(QUICKPLS.read_text(encoding="utf-8"))
 
 
-def check_guard(fingerprint):
-    recipe = recipe_payload(fingerprint)
-    recipe["settings"]["weighting_scheme"] = "pca"
-    recipe["metadata"]["fixture"] = "invalid_cca_pca"
+def validate_recipe(recipe):
     GUARD_RECIPE.write_text(json.dumps(recipe, indent=2) + "\n", encoding="utf-8")
     validation = qpls(
         ["validate", str(GUARD_RECIPE.relative_to(ROOT)), "--json"],
         capture_output=True,
         text=True,
     )
-    codes = [issue["code"] for issue in json.loads(validation.stdout)]
+    issues = json.loads(validation.stdout)
+    return validation.returncode, [issue["code"] for issue in issues]
+
+
+def check_guard(fingerprint, name, expected_code, mutate):
+    recipe = copy.deepcopy(recipe_payload(fingerprint))
+    recipe["metadata"]["fixture"] = f"invalid_cca_{name}"
+    mutate(recipe)
+    returncode, codes = validate_recipe(recipe)
     return {
-        "passed": validation.returncode != 0 and "cca.pca_unsupported" in codes,
+        "passed": returncode != 0 and expected_code in codes,
+        "expected_code": expected_code,
         "validation_codes": codes,
     }
+
+
+def check_guards(fingerprint):
+    guards = {
+        "pca_weighting": check_guard(
+            fingerprint,
+            "pca_weighting",
+            "cca.pca_unsupported",
+            lambda recipe: recipe["settings"].update(weighting_scheme="pca"),
+        ),
+        "nonstandardized_preprocessing": check_guard(
+            fingerprint,
+            "nonstandardized_preprocessing",
+            "cca.standardized_required",
+            lambda recipe: recipe["settings"].update(preprocessing="mean_centered"),
+        ),
+        "too_few_constructs": check_guard(
+            fingerprint,
+            "too_few_constructs",
+            "cca.constructs_required",
+            lambda recipe: (
+                recipe["model"].update(constructs=recipe["model"]["constructs"][:1], paths=[])
+            ),
+        ),
+        "no_structural_path": check_guard(
+            fingerprint,
+            "no_structural_path",
+            "cca.structural_path_required",
+            lambda recipe: recipe["model"].update(paths=[]),
+        ),
+        "formative_construct": check_guard(
+            fingerprint,
+            "formative_construct",
+            "cca.reflective_only",
+            lambda recipe: recipe["model"]["constructs"][0].update(mode="formative"),
+        ),
+        "empty_indicator_block": check_guard(
+            fingerprint,
+            "empty_indicator_block",
+            "cca.observed_indicators_required",
+            lambda recipe: recipe["model"]["constructs"][0].update(indicators=[]),
+        ),
+        "interaction": check_guard(
+            fingerprint,
+            "interaction",
+            "cca.interactions_unsupported",
+            lambda recipe: recipe["model"].update(interactions=[{
+                "id": "x_by_z",
+                "predictor": "x",
+                "moderator": "z",
+                "product_construct": "x_by_z",
+                "outcome": "y",
+                "method": "two_stage_product_score",
+            }]),
+        ),
+        "higher_order_construct": check_guard(
+            fingerprint,
+            "higher_order_construct",
+            "cca.higher_order_unsupported",
+            lambda recipe: recipe["model"].update(higher_order_constructs=[{
+                "id": "y",
+                "components": ["x", "z"],
+                "method": "repeated_indicators",
+                "stage_one_recipe": None,
+            }]),
+        ),
+        "control_path": check_guard(
+            fingerprint,
+            "control_path",
+            "cca.controls_unsupported",
+            lambda recipe: recipe["model"].update(controls=[{
+                "source": "x",
+                "target": "z",
+                "label": "Control",
+            }]),
+        ),
+        "case_weights": check_guard(
+            fingerprint,
+            "case_weights",
+            "cca.case_weights_unsupported",
+            lambda recipe: recipe["settings"].update(case_weight_column="x1"),
+        ),
+        "resampling": check_guard(
+            fingerprint,
+            "resampling",
+            "cca.resampling_unsupported",
+            lambda recipe: recipe["settings"].update(
+                bootstrap_samples=999,
+                studentized_inner_samples=99,
+                permutation_samples=99,
+            ),
+        ),
+    }
+
+    factor_recipe = copy.deepcopy(recipe_payload(fingerprint))
+    factor_recipe["settings"]["weighting_scheme"] = "factor"
+    factor_recipe["metadata"]["fixture"] = "valid_cca_factor_weighting"
+    factor_returncode, factor_codes = validate_recipe(factor_recipe)
+    guards["factor_weighting_allowed"] = {
+        "passed": factor_returncode == 0,
+        "validation_codes": factor_codes,
+    }
+    guards["listwise_policy_fixed"] = {
+        "passed": recipe_payload(fingerprint)["settings"]["missing_data"] == "listwise_deletion",
+        "detail": "Listwise deletion is the only currently representable missing-data policy; the Rust contract retains a future-proof cca.listwise_required guard.",
+    }
+    return guards
 
 
 def main():
@@ -218,6 +347,7 @@ def main():
     quickpls = run_quickpls()
     estimation = quickpls["payload"]["estimation"]
     analysis = estimation["cca"]
+    provenance = quickpls["provenance"]
     expected = reference_cca(rows, recipe)
     observed = {
         (row["left"], row["right"]): row
@@ -231,23 +361,82 @@ def main():
         analysis["max_absolute_residual"] - max(row["absolute_residual"] for row in expected.values())
     )
     max_delta = max(deltas.values())
-    guard = check_guard(fingerprint)
+    guards = check_guards(fingerprint)
+    expected_pairs = set(expected)
+    observed_pairs = set(observed)
+    correlations_finite = all(
+        math.isfinite(row[field])
+        for row in analysis["correlations"]
+        for field in ["observed", "reproduced", "residual", "absolute_residual"]
+    )
+    row_algebra_valid = all(
+        abs(row["residual"] - (row["observed"] - row["reproduced"])) <= TOLERANCE
+        and abs(row["absolute_residual"] - abs(row["residual"])) <= TOLERANCE
+        for row in analysis["correlations"]
+    )
+    expected_payload_keys = {
+        "method_version",
+        "model",
+        "correlations",
+        "max_absolute_residual",
+        "warnings",
+    }
+    expected_row_keys = {
+        "left",
+        "right",
+        "observed",
+        "reproduced",
+        "residual",
+        "absolute_residual",
+    }
+    provenance_versions = provenance["method_version"].split("+")
     checks = {
-        "method_version": estimation["method_version"] == "cca_composite_residual_v1",
-        "payload_version": analysis["method_version"] == "cca_composite_residual_v1",
+        "method": provenance["method"] == "cca" and provenance["settings"]["method"] == "cca",
+        "method_version": estimation["method_version"] == CCA_METHOD_VERSION,
+        "payload_version": analysis["method_version"] == CCA_METHOD_VERSION,
+        "provenance_includes_payload_version": CCA_METHOD_VERSION in provenance_versions,
+        "nested_model_version": analysis["model"] == CCA_MODEL_VERSION,
+        "nonsaturated_fixture": len(recipe["model"]["paths"]) == 2
+        and len(analysis["correlations"]) == 3
+        and analysis["max_absolute_residual"] >= MINIMUM_NONSATURATED_RESIDUAL,
+        "exact_pair_identity": observed_pairs == expected_pairs,
         "correlation_count": len(analysis["correlations"]) == 3,
+        "finite_rows": correlations_finite and math.isfinite(analysis["max_absolute_residual"]),
+        "residual_algebra": row_algebra_valid,
+        "max_residual_identity": abs(
+            analysis["max_absolute_residual"]
+            - max(row["absolute_residual"] for row in analysis["correlations"])
+        ) <= TOLERANCE,
+        "descriptive_payload_only": set(analysis) == expected_payload_keys
+        and all(set(row) == expected_row_keys for row in analysis["correlations"]),
         "max_delta_within_tolerance": max_delta <= TOLERANCE,
-        "guard": guard["passed"],
+        "bounded_scope_guards": all(guard["passed"] for guard in guards.values()),
     }
     report = {
         "schema_version": 1,
         "kind": "cca_reference_v1",
         "passed": all(checks.values()),
         "tolerance": TOLERANCE,
+        "minimum_nonsaturated_residual": MINIMUM_NONSATURATED_RESIDUAL,
         "max_delta": max_delta,
+        "max_absolute_residual": analysis["max_absolute_residual"],
+        "method_version": CCA_METHOD_VERSION,
+        "nested_model_version": CCA_MODEL_VERSION,
+        "fixture": {
+            "constructs": [construct["id"] for construct in recipe["model"]["constructs"]],
+            "paths": recipe["model"]["paths"],
+            "correlation_pairs": sorted([list(pair) for pair in expected_pairs]),
+            "saturated": False,
+        },
         "checks": checks,
         "deltas": deltas,
-        "guard": guard,
+        "guards": guards,
+        "scope": {
+            "kind": "descriptive_composite_correlation_residuals_only",
+            "inference": False,
+            "thresholds": False,
+            "classification": False,
+        },
     }
     OUTPUT.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(f"wrote {OUTPUT} | passed={report['passed']} | max_delta={max_delta:.3g}")

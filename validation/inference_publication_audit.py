@@ -42,7 +42,15 @@ PROCEDURES = [
     ("bca", "BCa bootstrap intervals", "validation/results/studentized_supplied_reference.json", "validation/results/studentized_worker_matrix.json", "validation/results/monte_carlo_qualification.json", "validation/results/studentized_release_stress.json", "requires jackknife availability; degenerate acceleration is explicit"),
     ("studentized_bootstrap_t", "nested studentized/bootstrap-t intervals", "validation/results/studentized_supplied_reference.json", "validation/results/studentized_worker_matrix.json", "validation/results/monte_carlo_studentized_qualification.json", "validation/results/studentized_release_stress.json", "nested failure is explicit without corrupting percentile results"),
     ("jackknife", "jackknife support for BCa and diagnostics", "validation/results/studentized_supplied_reference.json", "validation/results/studentized_worker_matrix.json", "validation/results/monte_carlo_studentized_qualification.json", "validation/results/v04_inference_qualification_quick.json", "invalid plans and cancellation are explicit"),
-    ("freedman_lane_permutation", "Freedman-Lane path permutation", "validation/results/v04_inference_qualification_quick.json", "validation/results/studentized_worker_matrix.json", "validation/results/monte_carlo_qualification.json", "validation/results/v04_inference_qualification_quick.json", "linear nuisance model assumptions documented"),
+    (
+        "freedman_lane_permutation",
+        "Freedman-Lane path permutation",
+        "validation/results/structural_path_randomization_reference_report.json",
+        "validation/results/structural_path_randomization_boundary_test_report.json",
+        "validation/results/structural_path_randomization_reference_report.json",
+        "validation/results/structural_path_randomization_v1_packaged_acceptance.json",
+        "fixed converged construct scores; intercept nuisance equations; no measurement-model re-estimation inside permutations",
+    ),
 ]
 
 
@@ -58,6 +66,10 @@ def main():
         "validation/results/pls_bootstrap_corporate_csem_reference.json",
         "validation/results/pls_bootstrap_plspm_external_reference.json",
         "validation/results/v04_inference_qualification_quick.json",
+        "validation/results/structural_path_randomization_reference_report.json",
+        "validation/results/structural_path_randomization_boundary_test_report.json",
+        "validation/results/structural_path_randomization_v1_packaged_acceptance.json",
+        "validation/results/structural_path_randomization_method_promotion_audit.json",
     ]
     evidence = [{"path": path, "present": (ROOT / path).exists(), "passed": (ROOT / path).exists() and passed(path)} for path in required]
     matrix_rows = [
@@ -69,7 +81,11 @@ def main():
             "coverage_type_i_evidence": coverage,
             "performance_evidence": performance,
             "unsupported_cases": unsupported,
-            "complete": all((ROOT / path).exists() for path in [reference, worker, coverage, performance]) and bool(unsupported),
+            "complete": all(
+                (ROOT / path).exists() and passed(path)
+                for path in [reference, worker, coverage, performance]
+            )
+            and bool(unsupported),
         }
         for procedure, contract, reference, worker, coverage, performance, unsupported in PROCEDURES
     ]

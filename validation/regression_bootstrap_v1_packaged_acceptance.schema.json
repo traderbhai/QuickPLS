@@ -1,0 +1,280 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/regression-bootstrap-v1-packaged-acceptance.schema.json",
+  "title": "QuickPLS regression bootstrap v1 scoped packaged acceptance evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "kind",
+    "passed",
+    "generated_at_utc",
+    "completed_at_utc",
+    "feature_id",
+    "method_version",
+    "catalogue_snapshot_date",
+    "target",
+    "runtime",
+    "endpoint",
+    "generator",
+    "tested_product",
+    "checks",
+    "artifacts",
+    "console_errors",
+    "failures",
+    "source_report"
+  ],
+  "properties": {
+    "schema_version": { "const": "quickpls.packaged_acceptance.v1" },
+    "kind": { "const": "quickpls3_scoped_tauri_regression_bootstrap_v1_acceptance" },
+    "passed": { "type": "boolean" },
+    "generated_at_utc": { "type": "string", "format": "date-time" },
+    "completed_at_utc": { "type": ["string", "null"], "format": "date-time" },
+    "feature_id": { "const": "qpls3.standalone.regression_bootstrap" },
+    "method_version": { "const": "regression_bootstrap_v1" },
+    "catalogue_snapshot_date": { "const": "2026-08-12" },
+    "target": { "const": "windows_10_11_x64_packaged_tauri" },
+    "runtime": { "const": "tauri-webview2-cdp" },
+    "endpoint": { "type": "string", "pattern": "^http://127\\.0\\.0\\.1:[0-9]+$" },
+    "generator": { "const": "validation/v247_tauri_native_acceptance.mjs" },
+    "tested_product": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quickpls_desktop_exe", "dist_bundle"],
+      "properties": {
+        "quickpls_desktop_exe": { "$ref": "#/$defs/testedDesktopExecutable" },
+        "dist_bundle": { "$ref": "#/$defs/distBundle" }
+      }
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workflow",
+        "results",
+        "ols_export",
+        "logistic_export",
+        "save_reopen",
+        "cancellation",
+        "witness_boundary"
+      ],
+      "properties": {
+        "workflow": { "$ref": "#/$defs/workflowCheck" },
+        "results": { "$ref": "#/$defs/resultsCheck" },
+        "ols_export": { "$ref": "#/$defs/exportCheck" },
+        "logistic_export": { "$ref": "#/$defs/exportCheck" },
+        "save_reopen": { "$ref": "#/$defs/saveReopenCheck" },
+        "cancellation": { "$ref": "#/$defs/cancellationCheck" },
+        "witness_boundary": { "$ref": "#/$defs/witnessBoundaryCheck" }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ols_xlsx", "logistic_xlsx", "project_archive", "screenshots"],
+      "properties": {
+        "ols_xlsx": { "anyOf": [{ "$ref": "#/$defs/artifact" }, { "type": "null" }] },
+        "logistic_xlsx": { "anyOf": [{ "$ref": "#/$defs/artifact" }, { "type": "null" }] },
+        "project_archive": { "anyOf": [{ "$ref": "#/$defs/artifact" }, { "type": "null" }] },
+        "screenshots": { "type": "array", "items": { "$ref": "#/$defs/artifact" } }
+      }
+    },
+    "console_errors": { "type": "array", "items": { "type": "object" } },
+    "failures": { "type": "array", "items": { "type": "string" } },
+    "source_report": { "const": "validation/results/v247_tauri_native_acceptance_regression_bootstrap.json" }
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "size", "sha256"],
+      "properties": {
+        "path": { "type": "string", "pattern": "^validation/results/" },
+        "size": { "type": "integer", "minimum": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "testedDesktopExecutable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "size", "sha256"],
+      "properties": {
+        "path": { "const": "target/release/quickpls-desktop.exe" },
+        "size": { "type": "integer", "minimum": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "distManifestEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "size", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "size": { "type": "integer", "minimum": 0 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "distBundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "size", "file_count", "sha256", "manifest"],
+      "properties": {
+        "path": { "const": "dist" },
+        "size": { "type": "integer", "minimum": 1 },
+        "file_count": { "type": "integer", "minimum": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "manifest": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/distManifestEntry" } }
+      }
+    },
+    "witnessScan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "passed", "total_members", "scanned_xml_and_rels_members", "worksheet_members",
+        "worksheet_row_counts", "forbidden_matches", "extraction_errors"
+      ],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "total_members": { "type": "integer", "minimum": 1 },
+        "scanned_xml_and_rels_members": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "worksheet_members": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^xl/worksheets/.+\\.xml$" } },
+        "worksheet_row_counts": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "forbidden_matches": { "type": "array", "items": { "type": "string" } },
+        "extraction_errors": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "workflowCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "passed",
+        "ols_completed",
+        "logistic_completed",
+        "active_lifecycle_captured",
+        "model_free",
+        "source_check"
+      ],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "ols_completed": { "type": "boolean" },
+        "logistic_completed": { "type": "boolean" },
+        "active_lifecycle_captured": { "type": "boolean" },
+        "model_free": { "type": "boolean" },
+        "source_check": { "const": "regressionBootstrapWorkflow" }
+      }
+    },
+    "resultsCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "passed",
+        "ols_initial_selected_table",
+        "logistic_initial_selected_table",
+        "ols_coefficient_rows",
+        "logistic_coefficient_rows",
+        "percentile_primary_present",
+        "bca_conditional_present",
+        "failure_disclosure_truthful",
+        "validation_witness_not_rendered",
+        "no_na_fabrication",
+        "source_check"
+      ],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "ols_initial_selected_table": { "const": "regression_bootstrap_summary" },
+        "logistic_initial_selected_table": { "const": "regression_bootstrap_summary" },
+        "ols_coefficient_rows": { "type": ["integer", "null"], "minimum": 0 },
+        "logistic_coefficient_rows": { "type": ["integer", "null"], "minimum": 0 },
+        "percentile_primary_present": { "type": "boolean" },
+        "bca_conditional_present": { "type": "boolean" },
+        "failure_disclosure_truthful": { "type": "boolean" },
+        "validation_witness_not_rendered": { "type": "boolean" },
+        "no_na_fabrication": { "type": "boolean" },
+        "source_check": { "const": "regressionBootstrapResults" }
+      }
+    },
+    "exportCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "passed",
+        "workbook_sheets",
+        "validation_witness_excluded",
+        "witness_scan",
+        "artifact_sha256",
+        "source_check"
+      ],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "workbook_sheets": { "type": "array", "items": { "type": "string" } },
+        "validation_witness_excluded": { "type": "boolean" },
+        "witness_scan": { "$ref": "#/$defs/witnessScan" },
+        "artifact_sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+        "source_check": {
+          "enum": ["regressionBootstrapOlsExport", "regressionBootstrapLogisticExport"]
+        }
+      }
+    },
+    "saveReopenCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "passed",
+        "ols_same_run_restored",
+        "logistic_same_run_restored",
+        "ols_initial_selected_table",
+        "logistic_initial_selected_table",
+        "project_checksum_matches",
+        "archive_witness_validated",
+        "archive_sha256",
+        "source_check"
+      ],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "ols_same_run_restored": { "type": "boolean" },
+        "logistic_same_run_restored": { "type": "boolean" },
+        "ols_initial_selected_table": { "const": "regression_bootstrap_summary" },
+        "logistic_initial_selected_table": { "const": "regression_bootstrap_summary" },
+        "project_checksum_matches": { "type": "boolean" },
+        "archive_witness_validated": { "type": "boolean" },
+        "archive_sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+        "source_check": { "const": "regressionBootstrapSaveReopen" }
+      }
+    },
+    "cancellationCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["passed", "active_lifecycle_captured", "no_partial_result", "source_check"],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "active_lifecycle_captured": { "type": "boolean" },
+        "no_partial_result": { "type": "boolean" },
+        "source_check": { "const": "regressionBootstrapCancellation" }
+      }
+    },
+    "witnessBoundaryCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "passed",
+        "archive_only",
+        "term_order_exact",
+        "bootstrap_index_partition_exact",
+        "jackknife_index_partition_exact",
+        "excluded_from_results",
+        "excluded_from_exports",
+        "source_check"
+      ],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "archive_only": { "type": "boolean" },
+        "term_order_exact": { "type": "boolean" },
+        "bootstrap_index_partition_exact": { "type": "boolean" },
+        "jackknife_index_partition_exact": { "type": "boolean" },
+        "excluded_from_results": { "type": "boolean" },
+        "excluded_from_exports": { "type": "boolean" },
+        "source_check": { "const": "regressionBootstrapWitnessBoundary" }
+      }
+    }
+  }
+}

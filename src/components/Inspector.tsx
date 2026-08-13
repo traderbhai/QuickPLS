@@ -29,7 +29,7 @@ export function Inspector() {
   const [interactionDraft, setInteractionDraft] = useState({ predictor: "", moderator: "", outcome: "" });
   const collapseControl = <button className="inspector-collapse-button" type="button" title="Collapse inspector" aria-label="Collapse inspector" onClick={() => setInspectorCollapsed(true)}><ChevronsRight size={15} /></button>;
 
-  if (inspectorCollapsed) return <aside className="inspector collapsed" aria-label="Collapsed inspector">
+  if (inspectorCollapsed) return <aside className="inspector collapsed model-v2-inspector model-v225-inspector" aria-label="Collapsed inspector">
     <button type="button" title="Expand inspector" aria-label="Expand inspector" onClick={() => setInspectorCollapsed(false)}><ChevronsLeft size={15} /></button>
     <span>Inspector</span>
   </aside>;
@@ -40,7 +40,7 @@ export function Inspector() {
     const isControl = edge.data?.role === "control";
     const isCovariance = edge.data?.role === "covariance";
     const controlLabel = typeof edge.data?.controlLabel === "string" ? edge.data.controlLabel : "";
-    if (isCovariance) return <aside className="inspector">
+    if (isCovariance) return <aside className="inspector model-v2-inspector model-v225-inspector" data-v225-model-workbench="property-inspector">
       {collapseControl}
       <div className="inspector-tabs"><button onClick={() => setSelectedNode(source?.id ?? null)}>Construct</button><button className="active">Covariance</button><button onClick={() => setSelectedNode(null)}>Model</button></div>
       <div className="path-heading"><Network size={16} /><div><strong>Covariance display</strong><span>{source?.data.shortName} &lt;-&gt; {target?.data.shortName}</span></div></div>
@@ -50,7 +50,7 @@ export function Inspector() {
       <div className="inspector-actions"><button className="secondary-button danger" onClick={removeSelection}><Trash2 size={14} />Delete</button></div>
       <div className="method-note"><strong>Visual covariance</strong><p>This arc is excluded from PLS recipe paths. CB-SEM covariance estimation remains controlled by the supported method settings and engine schema.</p></div>
     </aside>;
-    return <aside className="inspector">
+    return <aside className="inspector model-v2-inspector model-v225-inspector" data-v225-model-workbench="property-inspector">
       {collapseControl}
       <div className="inspector-tabs"><button onClick={() => setSelectedNode(source?.id ?? null)}>Construct</button><button className="active">Path</button><button onClick={() => setSelectedNode(null)}>Model</button></div>
       <div className="path-heading"><Network size={16} /><div><strong>Structural path</strong><span>{source?.data.shortName} -&gt; {target?.data.shortName}</span></div></div>
@@ -71,7 +71,7 @@ export function Inspector() {
     </aside>;
   }
 
-  if (!node) return <aside className="inspector model-inspector">
+  if (!node) return <aside className="inspector model-inspector model-v2-inspector model-v225-inspector" data-v225-model-workbench="property-inspector">
     {collapseControl}
     <div className="inspector-tabs"><button onClick={() => setSelectedNode(nodes[0]?.id ?? null)}>Construct</button><button onClick={() => setSelectedEdge(edges[0]?.id ?? null)}>Path</button><button className="active">Model</button></div>
     <div className="path-heading"><Network size={16} /><div><strong>Structural model</strong><span>{nodes.length} constructs | {edges.length} paths</span></div></div>
@@ -125,7 +125,7 @@ export function Inspector() {
       },
     });
   };
-  return <aside className="inspector">
+  return <aside className="inspector model-v2-inspector model-v225-inspector" data-v225-model-workbench="property-inspector">
     {collapseControl}
     <div className="inspector-tabs"><button className="active">Construct</button><button onClick={() => setSelectedEdge(edges.find((item) => item.source === node.id || item.target === node.id)?.id ?? edges[0]?.id ?? null)}>Path</button><button onClick={() => setSelectedNode(null)}>Model</button></div>
     <details className="inspector-section" open><summary>Essentials</summary>

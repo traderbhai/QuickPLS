@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "id": "cbe52123-399f-4678-855b-d8af18274b63",
+  "id": "d78a668f-060c-462e-aebc-fe8fa92c2ca1",
   "status": "completed",
   "provenance": {
     "recipe_id": "00000000-0000-0000-0000-000000000601",
     "dataset_fingerprint": "v2:ab3c89398f3ee2eac71ad698ccb09b3677b7006d4aa0e2850e52123b5cd87189",
     "method": "predict",
     "method_version": "pls_pm_v1+plspredict_holdout_v1+pls_pos_v1+pls_mediation_v1+pls_assessment_v7",
-    "engine_version": "1.0.0",
+    "engine_version": "2.45.0",
     "seed": 20260719,
     "settings": {
       "method": "predict",
@@ -24,14 +24,14 @@
       "missing_data": "listwise_deletion",
       "case_weight_column": null
     },
-    "started_at": "2026-07-21T06:57:59.699405900Z",
-    "completed_at": "2026-07-21T06:58:00.871120Z"
+    "started_at": "2026-08-11T07:19:44.053547300Z",
+    "completed_at": "2026-08-11T07:19:45.726121500Z"
   },
   "diagnostics": [
     {
       "code": "estimation.warning",
       "level": "warning",
-      "message": "PLSpredict holdout v1 is validated for the documented QuickPLS v1.2.1 bounded prediction scope."
+      "message": "Deterministic construct prediction completed within the documented QuickPLS v1.2.1 bounded construct-score scope."
     },
     {
       "code": "estimation.warning",
@@ -525,7 +525,7 @@
           ],
           "total_test_observations": 504,
           "warnings": [
-            "Repeated k-fold PLSpredict and bounded CVPAT diagnostics are validated for the documented QuickPLS v1.2.1 deterministic assignment scope."
+            "The paired prediction-loss diagnostic is limited to the documented QuickPLS v1.2.1 deterministic repeated five-fold construct-score comparisons."
           ]
         },
         "split": "deterministic_complete_case_modulo_4_test_rows",
@@ -546,7 +546,7 @@
         "test_observations": 42,
         "training_observations": 126,
         "warnings": [
-          "PLSpredict holdout v1 is validated for the documented QuickPLS v1.2.1 deterministic holdout, repeated k-fold, LM benchmark, Q2 predict, RMSE/MAE, and bounded CVPAT diagnostic scope; separate saved-model CVPAT and indicator-level PLSpredict remain unsupported."
+          "Deterministic construct prediction is limited to the documented QuickPLS v1.2.1 construct-score scope: one deterministic holdout, deterministic repeated five-fold evaluation, training-mean and optional linear-model benchmarks, Q-squared prediction, RMSE/MAE, and a paired prediction-loss diagnostic. Indicator-level prediction and separately saved-model comparison procedures are not included."
         ]
       },
       "r_squared": {
@@ -1322,7 +1322,7 @@
       ],
       "used_observations": 168,
       "warnings": [
-        "PLSpredict holdout v1 is validated for the documented QuickPLS v1.2.1 bounded prediction scope.",
+        "Deterministic construct prediction completed within the documented QuickPLS v1.2.1 bounded construct-score scope.",
         "PLS-POS v1 is validated for the documented QuickPLS v1.2.2 deterministic 2-5 segment score-space partitioning scope; full unrestricted PLS-POS claims remain unsupported."
       ],
       "wpls": null

@@ -16,7 +16,7 @@
     "max_iterations": 3000,
     "bootstrap_samples": 0,
     "seed": 20260719,
-    "preprocessing": "standardized",
+    "preprocessing": "unstandardized",
     "missing_data": "listwise_deletion"
   },
   "metadata": {

@@ -8,10 +8,12 @@ NumPy/Python calculations for bounded fixtures.
 import argparse
 import csv
 import json
+import os
 import math
 import random
 import subprocess
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 
@@ -19,8 +21,17 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "validation" / "results"
 DATA = RESULTS / "v08_extended_methods_fixture.csv"
-OUTPUT = RESULTS / "v08_extended_methods_reference_report.json"
-CLI_EXE = ROOT / "target" / "debug" / "qpls.exe"
+AGGREGATE_OUTPUT_NAME = "v08_extended_methods_reference_report.json"
+METHOD_OUTPUT_NAMES = {
+    "pca": "v08_pca_reference_report.json",
+    "ols": "v08_ols_reference_report.json",
+    "logistic": "v08_logistic_reference_report.json",
+    "process": "v08_process_reference_report.json",
+    "nca": "v08_nca_reference_report.json",
+    "gsca": "v08_gsca_reference_report.json",
+}
+CONFIGURED_CLI = os.environ.get("QUICKPLS_CLI_PATH", "").strip()
+CLI_EXE = Path(CONFIGURED_CLI).resolve() if CONFIGURED_CLI else ROOT / "target" / "debug" / "qpls.exe"
 CLI_READY = False
 TOL = 1e-6
 
@@ -28,7 +39,10 @@ TOL = 1e-6
 def ensure_cli():
     global CLI_READY
     if not CLI_READY:
-        subprocess.run(["cargo", "build", "-p", "qpls-cli"], cwd=ROOT, check=True, stdout=subprocess.DEVNULL)
+        if not CLI_EXE.exists():
+            if CONFIGURED_CLI:
+                raise FileNotFoundError(f"QUICKPLS_CLI_PATH does not exist: {CLI_EXE}")
+            subprocess.run(["cargo", "build", "-p", "qpls-cli"], cwd=ROOT, check=True, stdout=subprocess.DEVNULL)
         CLI_READY = True
     return CLI_EXE
 
@@ -88,7 +102,7 @@ def base_settings(method):
         "max_iterations": 3000,
         "bootstrap_samples": 0,
         "seed": 20260719,
-        "preprocessing": "standardized",
+        "preprocessing": "unstandardized" if method == "nca" else "standardized",
         "missing_data": "listwise_deletion",
     }
 
@@ -248,20 +262,83 @@ def check_process():
     return {"passed": diff <= TOL, "method_version": process["method_version"], "max_abs_difference": diff}
 
 
-def nca_effect(x, y):
-    order = np.lexsort((y, x))
-    xs = x[order]
-    ys = y[order]
-    min_y = float(np.min(y))
-    max_y = float(np.max(y))
-    scope = max(float((np.max(x) - np.min(x)) * (max_y - min_y)), np.finfo(float).eps)
-    area = 0.0
-    for i in range(len(xs) - 1):
-        x0 = float(xs[i])
-        x1 = float(xs[i + 1])
-        ceiling_y = max(float(value) for value, x_value in zip(ys, xs) if float(x_value) >= x0)
-        area += max(0.0, x1 - x0) * max(0.0, max_y - ceiling_y)
-    return min(1.0, max(0.0, area / scope))
+def nca_reference(x, y):
+    """Independent CE-FDH peer, CR-FDH regression, and bottleneck equations.
+
+    CE-FDH is expressed as cumulative record highs over unique ascending X.
+    CR-FDH is a separate least-squares fit through those peers. This avoids
+    repeating the production implementation's iteration structure.
+    """
+    maximum_y_by_x = {}
+    for x_value, y_value in zip(x, y):
+        x_value = float(x_value)
+        maximum_y_by_x[x_value] = max(maximum_y_by_x.get(x_value, -math.inf), float(y_value))
+    peers = []
+    record_high = -math.inf
+    for x_value, y_value in sorted(maximum_y_by_x.items()):
+        if y_value > record_high:
+            peers.append((x_value, y_value))
+            record_high = y_value
+
+    minimum_x, maximum_x = float(np.min(x)), float(np.max(x))
+    minimum_y, maximum_y = float(np.min(y)), float(np.max(y))
+    scope_area = (maximum_x - minimum_x) * (maximum_y - minimum_y)
+    ce_area = sum(
+        ((peers[index + 1][0] if index + 1 < len(peers) else maximum_x) - peer[0])
+        * (maximum_y - peer[1])
+        for index, peer in enumerate(peers)
+    )
+    ce_effect = ce_area / scope_area
+
+    design = np.column_stack([np.ones(len(peers)), np.array([peer[0] for peer in peers])])
+    intercept, slope = np.linalg.lstsq(design, np.array([peer[1] for peer in peers]), rcond=None)[0]
+    breakpoints = [minimum_x, maximum_x]
+    for boundary_y in (minimum_y, maximum_y):
+        crossing = (boundary_y - float(intercept)) / float(slope)
+        if minimum_x < crossing < maximum_x:
+            breakpoints.append(crossing)
+    breakpoints = sorted(set(breakpoints))
+    cr_area = 0.0
+    for left, right in zip(breakpoints, breakpoints[1:]):
+        left_y = min(maximum_y, max(minimum_y, float(intercept + slope * left)))
+        right_y = min(maximum_y, max(minimum_y, float(intercept + slope * right)))
+        cr_area += (right - left) * ((maximum_y - left_y) + (maximum_y - right_y)) / 2.0
+
+    def bottleneck(ceiling, outcome_percent):
+        threshold = minimum_y + (maximum_y - minimum_y) * outcome_percent / 100.0
+        required = None
+        status = "not_attainable"
+        if ceiling == "ce_fdh":
+            if threshold <= peers[0][1]:
+                status = "not_necessary"
+            else:
+                required_peer = next((peer for peer in peers if peer[1] >= threshold), None)
+                if required_peer is not None:
+                    required, status = required_peer[0], "required"
+        else:
+            left_y = float(intercept + slope * minimum_x)
+            right_y = float(intercept + slope * maximum_x)
+            if threshold <= left_y:
+                status = "not_necessary"
+            elif threshold <= right_y:
+                required, status = float((threshold - intercept) / slope), "required"
+        required_percent = None if required is None else 100.0 * (required - minimum_x) / (maximum_x - minimum_x)
+        return {
+            "ceiling": ceiling,
+            "outcome_percent": float(outcome_percent),
+            "required_x_percent": required_percent,
+            "status": status,
+        }
+
+    return {
+        "scope": {"minimum_x": minimum_x, "maximum_x": maximum_x, "minimum_y": minimum_y, "maximum_y": maximum_y},
+        "peers": peers,
+        "ce_effect": ce_effect,
+        "cr_effect": cr_area / scope_area,
+        "slope": float(slope),
+        "intercept": float(intercept),
+        "bottlenecks": [bottleneck(ceiling, level) for ceiling in ("ce_fdh", "cr_fdh") for level in range(10, 100, 10)],
+    }
 
 
 def check_nca():
@@ -271,13 +348,96 @@ def check_nca():
         "nca_ceiling": "both",
         "nca_permutation_samples": "99",
     })
+    repeated = run_recipe("v08_nca_repeat", "nca", {
+        "nca_x": "x",
+        "nca_y": "y",
+        "nca_ceiling": "both",
+        "nca_permutation_samples": "99",
+    })["nca"]
     nca = estimation["nca"]
+    envelope = json.loads((RESULTS / "v08_nca_quickpls.json").read_text(encoding="utf-8"))
     data = matrix(["x", "y"])
-    ref = nca_effect(data[:, 0], data[:, 1])
-    fdh = next(row for row in nca["ceilings"] if row["ceiling"] == "ce_fdh")
-    diff = abs(fdh["effect_size"] - ref)
-    monotonic = all(nca["bottlenecks"][i]["required_x_percent"] <= nca["bottlenecks"][i + 1]["required_x_percent"] + 1e-9 for i in range(len(nca["bottlenecks"]) - 1))
-    return {"passed": diff <= TOL and monotonic, "method_version": nca["method_version"], "max_abs_difference": diff, "bottleneck_monotonic": monotonic}
+    reference = nca_reference(data[:, 0], data[:, 1])
+    ceiling_by_name = {row["ceiling"]: row for row in nca["ceilings"]}
+    numeric_differences = [
+        abs(nca["scope"][field] - reference["scope"][field])
+        for field in reference["scope"]
+    ]
+    numeric_differences.extend(
+        abs(actual[field] - expected[index])
+        for actual, expected in zip(nca["ce_fdh_peers"], reference["peers"])
+        for index, field in enumerate(("x", "y"))
+    )
+    numeric_differences.extend([
+        abs(ceiling_by_name["ce_fdh"]["effect_size"] - reference["ce_effect"]),
+        abs(ceiling_by_name["cr_fdh"]["effect_size"] - reference["cr_effect"]),
+        abs(ceiling_by_name["cr_fdh"]["slope"] - reference["slope"]),
+        abs(ceiling_by_name["cr_fdh"]["intercept"] - reference["intercept"]),
+    ])
+    bottleneck_shape_matches = len(nca["bottlenecks"]) == len(reference["bottlenecks"])
+    for actual, expected in zip(nca["bottlenecks"], reference["bottlenecks"]):
+        bottleneck_shape_matches &= all(actual[field] == expected[field] for field in ("ceiling", "outcome_percent", "status"))
+        if actual["required_x_percent"] is None or expected["required_x_percent"] is None:
+            bottleneck_shape_matches &= actual["required_x_percent"] is expected["required_x_percent"]
+        else:
+            numeric_differences.append(abs(actual["required_x_percent"] - expected["required_x_percent"]))
+    p_values = [row["permutation_p_value"] for row in nca["ceilings"]]
+    p_value_lattice = all(0.01 <= value <= 1.0 and abs(value * 100.0 - round(value * 100.0)) <= 1e-9 for value in p_values)
+    deterministic = nca == repeated
+    exact_envelope = (
+        envelope["provenance"]["method"] == "nca"
+        and envelope["provenance"]["method_version"] == "nca_v2"
+        and envelope["payload"]["kind"] == "pls_pm_v1"
+        and envelope["payload"]["assessment"] == {
+            "method_version": "assessment_not_applicable_v1",
+            "warnings": ["PLS assessment is not applicable to standalone raw-data analyses."],
+        }
+        and "bootstrap" not in envelope["payload"]
+        and "permutation" not in envelope["payload"]
+    )
+    exact_ceiling_shape = (
+        [row["ceiling"] for row in nca["ceilings"]] == ["ce_fdh", "cr_fdh"]
+        and ceiling_by_name["ce_fdh"]["slope"] is None
+        and ceiling_by_name["ce_fdh"]["intercept"] is None
+        and math.isfinite(ceiling_by_name["cr_fdh"]["slope"])
+        and math.isfinite(ceiling_by_name["cr_fdh"]["intercept"])
+    )
+    ordered_peers = all(
+        left["x"] < right["x"] and left["y"] < right["y"]
+        for left, right in zip(nca["ce_fdh_peers"], nca["ce_fdh_peers"][1:])
+    )
+    max_difference = max(numeric_differences, default=0.0)
+    return {
+        "passed": (
+            nca["method_version"] == "nca_v2"
+            and len(nca["ce_fdh_peers"]) == len(reference["peers"])
+            and max_difference <= TOL
+            and bottleneck_shape_matches
+            and p_value_lattice
+            and deterministic
+            and exact_envelope
+            and exact_ceiling_shape
+            and ordered_peers
+        ),
+        "method_version": nca["method_version"],
+        "max_abs_difference": max_difference,
+        "ce_fdh_peer_count": len(nca["ce_fdh_peers"]),
+        "ce_fdh_peers_ordered": ordered_peers,
+        "cr_fdh_regression_checked": True,
+        "all_bottleneck_rows_checked": bottleneck_shape_matches,
+        "permutation_p_value_lattice": p_value_lattice,
+        "seeded_repeat_deterministic": deterministic,
+        "exact_standalone_envelope": exact_envelope,
+        "exact_ceiling_shape": exact_ceiling_shape,
+        "scope": {
+            "observed_numeric_variables": 2,
+            "listwise_complete_rows_minimum": 3,
+            "ceilings": ["ce_fdh", "cr_fdh"],
+            "latent_score_nca": False,
+            "multiple_conditions": False,
+            "cipma": False,
+        },
+    }
 
 
 def check_gsca():
@@ -304,6 +464,89 @@ CHECKS = {
 }
 
 
+def build_report(selected_section: str, checks: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    """Build an aggregate or single-method report with an explicit scope.
+
+    A method report always contains exactly one matching check. This prevents a
+    promotion gate from accidentally accepting evidence left by another
+    ``--section`` invocation.
+    """
+
+    if selected_section != "all":
+        if selected_section not in CHECKS:
+            raise ValueError(f"unknown v0.8 reference section: {selected_section}")
+        if set(checks) != {selected_section}:
+            raise ValueError(
+                f"method report {selected_section!r} must contain only its matching check"
+            )
+    elif set(checks) != set(CHECKS):
+        raise ValueError("aggregate v0.8 report must contain every registered check")
+
+    nca_only = selected_section == "nca"
+    return {
+        "passed": all(item.get("passed") is True for item in checks.values()),
+        "schema_version": 2,
+        "report_scope": "aggregate" if selected_section == "all" else "method_specific",
+        "target": (
+            "nca_v2 bounded backend qualification"
+            if nca_only
+            else (
+                "v0.8 extended methods mixed-status reference"
+                if selected_section == "all"
+                else f"v0.8 {selected_section} method reference"
+            )
+        ),
+        "selected_section": selected_section,
+        "tolerance": TOL,
+        "checks": checks,
+        "note": (
+            "NCA v2 evidence is limited to the documented standalone observed numeric X/Y CE-FDH/CR-FDH scope; packaged-native acceptance and broader method parity are separate gates."
+            if nca_only
+            else (
+                "Each method keeps its own documented promotion status; this aggregate fixture does not promote broader variants."
+                if selected_section == "all"
+                else "This file is method-specific evidence and is not overwritten by other --section runs. Broader variants require separate promotion evidence."
+            )
+        ),
+    }
+
+
+def _write_json_atomic(path: Path, value: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
+    temporary.replace(path)
+
+
+def write_scoped_reports(
+    selected_section: str,
+    checks: dict[str, dict[str, Any]],
+    results: Path = RESULTS,
+) -> dict[str, Path]:
+    """Persist reports without allowing single-section runs to clobber peers.
+
+    ``all`` refreshes the historical aggregate and every method report. A
+    single section writes only that method's report; it deliberately leaves
+    the aggregate and all peer reports untouched.
+    """
+
+    report = build_report(selected_section, checks)
+    written: dict[str, Path] = {}
+    if selected_section == "all":
+        aggregate_path = results / AGGREGATE_OUTPUT_NAME
+        _write_json_atomic(aggregate_path, report)
+        written["all"] = aggregate_path
+        for method, check in checks.items():
+            method_path = results / METHOD_OUTPUT_NAMES[method]
+            _write_json_atomic(method_path, build_report(method, {method: check}))
+            written[method] = method_path
+    else:
+        method_path = results / METHOD_OUTPUT_NAMES[selected_section]
+        _write_json_atomic(method_path, report)
+        written[selected_section] = method_path
+    return written
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--section", choices=[*CHECKS.keys(), "all"], default="all")
@@ -311,16 +554,8 @@ def main():
     write_dataset()
     selected = CHECKS.keys() if args.section == "all" else [args.section]
     checks = {name: CHECKS[name]() for name in selected}
-    report = {
-        "passed": all(item["passed"] for item in checks.values()),
-        "schema_version": 1,
-        "target": "v0.8 extended methods experimental preview",
-        "selected_section": args.section,
-        "tolerance": TOL,
-        "checks": checks,
-        "note": "v0.8 methods are experimental and watermarked; this is bounded reference evidence, not publication validation.",
-    }
-    OUTPUT.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    report = build_report(args.section, checks)
+    write_scoped_reports(args.section, checks)
     print(json.dumps(report, indent=2))
     if not report["passed"]:
         raise SystemExit(1)

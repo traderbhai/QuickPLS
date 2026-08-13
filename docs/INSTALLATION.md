@@ -1,26 +1,28 @@
 # QuickPLS Installation
 
-Current release: `v1.8.1`.
+Current development release: `v2.46.0`.
 
 ## Choose An Install Type
 
-Use one of the release assets:
+Use one of the release assets from the latest GitHub Release, or use the versioned local artifacts from `target/release/artifacts/` after a production build:
 
-- `QuickPLS_1.8.1_v1_8_1_method_applicability_guided_setup_20260729-140437_x64_setup.exe` for a normal Windows installation.
-- `QuickPLS_1.8.1_v1_8_1_method_applicability_guided_setup_20260729-140437_x64_portable.exe` for a portable launch without installing.
+- `QuickPLS_<version>_<milestone>_<timestamp>_x64_setup.exe` for a normal Windows installation.
+- `QuickPLS_<version>_<milestone>_<timestamp>_x64_portable.exe` for a portable launch without installing.
+- `QuickPLS_<version>_<milestone>_<timestamp>_x64_cli.exe` for offline command-line and batch recipe execution.
 
-Both run fully offline after download.
+All three executables run fully offline after download.
 
 ## Verify The Download
 
 From PowerShell:
 
 ```powershell
-Get-FileHash .\QuickPLS_1.8.1_v1_8_1_method_applicability_guided_setup_20260729-140437_x64_setup.exe -Algorithm SHA256
-Get-FileHash .\QuickPLS_1.8.1_v1_8_1_method_applicability_guided_setup_20260729-140437_x64_portable.exe -Algorithm SHA256
+Get-FileHash .\QuickPLS_<version>_<milestone>_<timestamp>_x64_setup.exe -Algorithm SHA256
+Get-FileHash .\QuickPLS_<version>_<milestone>_<timestamp>_x64_portable.exe -Algorithm SHA256
+Get-FileHash .\QuickPLS_<version>_<milestone>_<timestamp>_x64_cli.exe -Algorithm SHA256
 ```
 
-Compare the hashes with [RELEASE_CHECKSUMS_V1_8_1.txt](RELEASE_CHECKSUMS_V1_8_1.txt).
+Compare the hashes with the matching `QuickPLS_<version>_<milestone>_<timestamp>_x64_checksums.txt` file.
 
 ## Windows SmartScreen
 
