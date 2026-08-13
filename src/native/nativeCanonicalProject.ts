@@ -24,6 +24,18 @@ import {
 } from "./nativeCalculationMode";
 import { isStandaloneNativeAnalysis } from "./nativeStandaloneAnalysis";
 import { isNativeRegressionBootstrapValidationWitness } from "./nativeRegressionBootstrapWitness";
+import {
+  NATIVE_PROCESS_BOOTSTRAP_METHOD_VERSION,
+  NATIVE_PROCESS_METHOD_VERSION,
+  nativeProcessGraphAssessment,
+  parseNativeProcessGraph,
+} from "./nativeProcess";
+import { nativeProcessResultProjection } from "./nativeProcessResults";
+import {
+  isStructuralPathRandomizationIdentityPresent,
+  nativeStructuralPathRandomizationProjection,
+  nativeStructuralPathRandomizationRecipeMatches,
+} from "./nativeStructuralPathRandomization";
 
 export interface NativeCanonicalProjectState {
   activeModelId: string | null;
@@ -262,6 +274,10 @@ export function nativeRunFromCanonicalResult(
 ): AnalysisRun | null {
   if (envelope.status !== "completed" || envelope.payload.kind === "legacy") return null;
   const canonicalRegression = envelope.payload.estimation.regression;
+  const processV2 = envelope.provenance.method_version === NATIVE_PROCESS_METHOD_VERSION
+    || envelope.provenance.method_version
+      === `${NATIVE_PROCESS_METHOD_VERSION}+${NATIVE_PROCESS_BOOTSTRAP_METHOD_VERSION}`;
+  if (processV2 && !nativeProcessRecipeMatchesEnvelope(recipe, envelope)) return null;
   const regressionBootstrapPayload = canonicalRegression?.bootstrap;
   const regressionBootstrap = envelope.provenance.method_version.endsWith("+regression_bootstrap_v1");
   if (!regressionBootstrap && regressionBootstrapPayload) return null;
@@ -378,7 +394,7 @@ export function nativeRunFromCanonicalResult(
     .filter((diagnostic) => diagnostic.level === "warning")
     .map((diagnostic) => diagnostic.message);
 
-  return {
+  const run: AnalysisRun = {
     id: envelope.id,
     modelId: standalone ? null : recipe.model.id,
     name: `${method} run`,
@@ -402,6 +418,12 @@ export function nativeRunFromCanonicalResult(
     permutation,
     provenance: envelope.provenance,
   };
+  if (isStructuralPathRandomizationIdentityPresent(recipe, envelope)) {
+    const projection = nativeStructuralPathRandomizationProjection(run);
+    if (!projection || !nativeStructuralPathRandomizationRecipeMatches(recipe, envelope, projection)) return null;
+  }
+  if (processV2 && !nativeProcessResultProjection(run)) return null;
+  return run;
 }
 
 export function compactNativeWorkspaceRuns(
@@ -446,6 +468,9 @@ function canonicalMethodLabel(
   }
   if (recipe.settings.method === "regression") {
     const version = envelope.provenance.method_version;
+    if (version === `${NATIVE_PROCESS_METHOD_VERSION}+${NATIVE_PROCESS_BOOTSTRAP_METHOD_VERSION}`) return "Graph-Defined Path Analysis with Bootstrap";
+    if (version === NATIVE_PROCESS_METHOD_VERSION) return "Graph-Defined Path Analysis";
+    if (version === "regression_process_v1") return "Historical PROCESS-style regression (v1)";
     if (version === "regression_ols_v1+regression_bootstrap_v1") return "Ordinary Least Squares Regression with Bootstrap";
     if (version === "regression_logistic_v2+regression_bootstrap_v1") return "Binary Logistic Regression with Bootstrap";
     if (version === "regression_logistic_v2") return "Binary Logistic Regression";
@@ -460,6 +485,100 @@ function canonicalMethodLabel(
     candidate.engineMethod === recipe.settings.method
   ));
   return descriptor?.label ?? envelope.provenance.method.replaceAll("_", " ");
+}
+
+function nativeProcessRecipeMatchesEnvelope(
+  recipe: NativeCanonicalAnalysisRecipe,
+  envelope: AnalysisResultEnvelope,
+): boolean {
+  if (recipe.schema_version !== 3
+    || recipe.settings.method !== "regression"
+    || recipe.settings.weighting_scheme !== "path"
+    || recipe.settings.preprocessing !== "unstandardized"
+    || recipe.settings.missing_data !== "listwise_deletion"
+    || recipe.settings.case_weight_column !== null
+    || recipe.settings.studentized_inner_samples !== 0
+    || recipe.settings.permutation_samples !== 0
+    || recipe.settings.confidence_level !== 0.95
+    || recipe.settings.seed !== envelope.provenance.seed
+    || envelope.provenance.method !== "regression"
+    || envelope.provenance.settings.method !== "regression"
+    || envelope.provenance.settings.seed !== recipe.settings.seed
+    || envelope.provenance.settings.preprocessing !== "unstandardized"
+    || envelope.provenance.settings.missing_data !== "listwise_deletion"
+    || envelope.provenance.settings.case_weight_column !== null
+    || envelope.provenance.settings.studentized_inner_samples !== 0
+    || envelope.provenance.settings.permutation_samples !== 0
+    || envelope.provenance.settings.confidence_level !== 0.95
+    || envelope.payload.kind !== "pls_pm_v1") return false;
+  const config = recipe.method_config;
+  if (config?.kind !== "regression"
+    || config.model?.type !== "process"
+    || !Array.isArray(config.predictors)
+    || config.predictors.length < 1
+    || config.predictors.some((value) => typeof value !== "string" || !value.trim())
+    || (config.controls !== undefined
+      && (!Array.isArray(config.controls)
+        || config.controls.some((value) => typeof value !== "string" || !value.trim())))) return false;
+  const graph = parseNativeProcessGraph(config.model.relationship);
+  if (!graph) return false;
+  const controls = config.controls ?? [];
+  const assessment = nativeProcessGraphAssessment({
+    regressionOutcome: config.outcome,
+    regressionPredictors: config.predictors.join(","),
+    regressionControls: controls.join(",") || null,
+    processGraph: graph,
+  } as Parameters<typeof nativeProcessGraphAssessment>[0]);
+  const bootstrap = envelope.provenance.method_version
+    === `${NATIVE_PROCESS_METHOD_VERSION}+${NATIVE_PROCESS_BOOTSTRAP_METHOD_VERSION}`;
+  const regression = envelope.payload.estimation.regression;
+  const nestedGraph = regression?.process?.graph_v2;
+  const recipePathKeys = new Set(graph.paths.map((path) => `${path.from}\u0000${path.to}`));
+  const resultPathKeys = new Set(nestedGraph?.paths.map((path) => `${path.from}\u0000${path.to}`) ?? []);
+  const moderationKey = (row: { from: string; to: string; moderator: string; conditioning_moderator?: string }) => (
+    `${row.from}\u0000${row.to}\u0000${row.moderator}\u0000${row.conditioning_moderator ?? ""}`
+  );
+  const recipeModerationKeys = new Set(graph.moderations.map(moderationKey));
+  const resultModerationKeys = new Set(nestedGraph?.moderations.map(moderationKey) ?? []);
+  return assessment.canRun
+    && Boolean(assessment.graph)
+    && assessment.outcome === config.outcome
+    && assessment.predictors.length === config.predictors.length
+    && assessment.predictors.every((value, index) => value === config.predictors[index])
+    && assessment.controls.length === controls.length
+    && assessment.controls.every((value, index) => value === controls[index])
+    && regression?.outcome === config.outcome
+    && regression.predictors.length === config.predictors.length
+    && regression.predictors.every((value, index) => value === config.predictors[index])
+    && regression.controls.length === controls.length
+    && regression.controls.every((value, index) => value === controls[index])
+    && recipePathKeys.size === graph.paths.length
+    && resultPathKeys.size === recipePathKeys.size
+    && [...recipePathKeys].every((key) => resultPathKeys.has(key))
+    && recipeModerationKeys.size === graph.moderations.length
+    && resultModerationKeys.size === recipeModerationKeys.size
+    && [...recipeModerationKeys].every((key) => resultModerationKeys.has(key))
+    && graph.moderators.every((moderator) => nestedGraph?.variable_profiles.some((profile) => (
+      profile.variable === moderator.variable
+      && profile.role === "moderator"
+      && profile.scale === moderator.scale
+    )))
+    && recipe.settings.bootstrap_samples === (bootstrap ? nestedGraph?.bootstrap?.requested_replicates : 0)
+    && recipe.settings.workers === (bootstrap ? nestedGraph?.bootstrap?.workers : 1)
+    && envelope.provenance.settings.bootstrap_samples === recipe.settings.bootstrap_samples
+    && envelope.provenance.settings.workers === recipe.settings.workers
+    && (bootstrap
+      ? config.bootstrap?.algorithm === "case_resampling"
+        && Array.isArray(config.bootstrap.intervals)
+        && config.bootstrap.intervals.length === 2
+        && config.bootstrap.intervals[0] === "percentile"
+        && config.bootstrap.intervals[1] === "bca"
+      : config.bootstrap === undefined)
+    && envelope.payload.estimation.method_version === NATIVE_PROCESS_METHOD_VERSION
+    && envelope.payload.estimation.regression?.method_version === NATIVE_PROCESS_METHOD_VERSION
+    && envelope.payload.estimation.regression?.regression_type === "process"
+    && envelope.payload.estimation.regression?.bootstrap == null
+    && nestedGraph != null;
 }
 
 function uniqueModels(models: readonly NativeCanonicalModelSpec[]) {

@@ -5,6 +5,11 @@ import type { AnalysisRun, AssessmentResult, HtmtAssessment, PlsResult, ResultWo
 import { findBcaParameter, findBootstrapParameter, findStudentizedParameter, formatParameterIdentity } from "../domain/inference";
 import { analysisReadiness } from "../domain/analysisReadiness";
 import { buildResultInterpretation, copyableInterpretationText, findingsByGroup, findingsForTab, rowSpecificInterpretation, type InterpretationFinding, type ResultInterpretation, type SemDiagramEdgeLike, type SemDiagramNodeLike } from "../domain/resultInterpretation";
+import {
+  NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING,
+  nativeStructuralPathRandomizationProjection,
+  type NativeStructuralPathRandomizationProjection,
+} from "../native/nativeStructuralPathRandomization";
 import { isNativeDesktop } from "../services/projectService";
 import { ReadinessPanel } from "./ReadinessPanel";
 import { EmptyState, MethodConfidencePanel, MetricCard, PageHeader, Panel, ReportabilityChecklist, StatusBadge, WorkspacePage, type ReportabilityItem } from "./Ui";
@@ -64,7 +69,11 @@ export function RunHistory() {
     return body.includes(search);
   });
   const selectedRun = visibleRuns.find((run) => run.id === resultState.selectedRunId) ?? visibleRuns[0];
-  const significantWarningCount = selectedRun?.warnings.filter((warning) => !warning.toLowerCase().includes("validated")).length ?? 0;
+  const selectedStructuralPathRandomization = nativeStructuralPathRandomizationProjection(selectedRun);
+  const significantWarningCount = [
+    ...(selectedStructuralPathRandomization ? [NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING] : []),
+    ...(selectedRun?.warnings ?? []),
+  ].filter((warning) => !warning.toLowerCase().includes("validated")).length;
   const bestR2 = selectedRun?.result ? Object.entries(selectedRun.result.r_squared).sort((a, b) => b[1] - a[1])[0] : null;
   const selectedInterpretation = selectedRun?.result ? buildResultInterpretation({ run: selectedRun, nodes, edges }) : null;
   const selectedComparisonRuns = resultState.comparisonRunIds
@@ -203,7 +212,7 @@ export function RunHistory() {
         <span>{selectedRun.result?.used_observations ?? "N/A"} observations</span>
         <span>seed {selectedRun.seed}</span>
         <span>fingerprint {selectedRun.fingerprint.slice(0, 10)}</span>
-        <StatusBadge status="validated">Validated scope</StatusBadge>
+        <StatusBadge status={selectedStructuralPathRandomization ? "warning" : "validated"}>{selectedStructuralPathRandomization ? "Candidate scope" : "Validated scope"}</StatusBadge>
         <span className={significantWarningCount ? "run-warning-chip warning" : "run-warning-chip"}>{significantWarningCount ? `${significantWarningCount} warning(s)` : "No extra warnings"}</span>
         <button className="secondary-button" type="button" onClick={() => setView("reports")}>Prepare report</button>
         <details className="run-confidence-details">
@@ -230,10 +239,10 @@ export function RunHistory() {
         </Panel> : null}
         <div className={`run-list results-v2-selected-run-list result-tab-${resultState.selectedTab} table-density-${resultState.tableDensity}`}>{selectedRun ? [selectedRun].map((run) => <article key={run.id} className="run-row researcher-result-card results-v2-selected-run-card">
           <div className="run-icon"><FlaskConical size={18} /></div>
-          <div className="run-content"><strong>{run.name}</strong><p>{new Date(run.createdAt).toLocaleString()} | seed {run.seed} | fingerprint {run.fingerprint}</p><span><AlertTriangle size={13} />{scopeCopy(run.warnings[0])}</span>
+          <div className="run-content"><strong>{run.name}</strong><p>{new Date(run.createdAt).toLocaleString()} | seed {run.seed} | fingerprint {run.fingerprint}</p><span><AlertTriangle size={13} />{scopeCopyForRun(run)}</span>
             {run.result ? <RunResultSections run={run} tab={resultState.selectedTab} focusPath={focusPath} activePath={activePath} comparisonRuns={selectedComparisonRuns} allRuns={runs} nodes={nodes} edges={edges} /> : <SectionEmpty title="No result payload" detail="This saved run does not contain a completed result payload." />}
           </div>
-          <div className="run-status"><StatusBadge status="validated">Scope checked</StatusBadge></div>
+          <div className="run-status"><StatusBadge status={nativeStructuralPathRandomizationProjection(run) ? "warning" : "validated"}>{nativeStructuralPathRandomizationProjection(run) ? "Candidate scope" : "Scope checked"}</StatusBadge></div>
         </article>) : null}</div>
       </main>
       {selectedRun && selectedInterpretation ? <ResultsV228DetailPane run={selectedRun} tab={resultState.selectedTab} interpretation={selectedInterpretation} bestR2={bestR2} warningCount={significantWarningCount} onOpenTab={(tab) => setResultState({ selectedTab: tab })} onPrepareReport={() => setView("reports")} /> : null}
@@ -283,7 +292,7 @@ function ResultsV228DetailPane({ run, tab, interpretation, bestR2, warningCount,
     <section className="results-v228-pane-section">
       <div className="results-v228-pane-title">
         <span>Method confidence</span>
-        <StatusBadge status="validated">Scope checked</StatusBadge>
+        <StatusBadge status={nativeStructuralPathRandomizationProjection(run) ? "warning" : "validated"}>{nativeStructuralPathRandomizationProjection(run) ? "Candidate scope" : "Scope checked"}</StatusBadge>
       </div>
       <dl className="results-v228-confidence-grid">
         <div><dt>Method</dt><dd>{run.method}</dd></div>
@@ -345,6 +354,7 @@ function ResultsV228ProvenanceFooter({ run, warningCount }: { run: AnalysisRun; 
 function resultsTabSummary(tab: ResultWorkspaceTab, run: AnalysisRun, interpretation: ResultInterpretation, bestR2: [string, number] | null | undefined, warningCount: number) {
   const result = run.result;
   const assessment = run.assessment;
+  const structuralPathRandomization = nativeStructuralPathRandomizationProjection(run);
   const base = {
     question: "What should I report from this run?",
     detail: "Use the tab-specific tables and findings below before moving to the publication report.",
@@ -363,7 +373,7 @@ function resultsTabSummary(tab: ResultWorkspaceTab, run: AnalysisRun, interpreta
     case "validity":
       return { question: "Can constructs be interpreted as reliable and distinct?", detail: "Use reliability, AVE, Fornell-Larcker, HTMT, and cross-loading checks as methodological guidance rather than automatic pass/fail law.", evidence: `${assessment?.construct_quality.length ?? 0} constructs`, evidenceDetail: assessment?.htmt_plus ? "HTMT+ available" : "HTMT unavailable", reportAction: "Report validity" };
     case "inference":
-      return { question: "Can I make p-value or confidence-interval claims?", detail: "Inference is available only when bootstrap or permutation was run. Estimate-only runs should not be reported as significance evidence.", evidence: run.bootstrap ? `${run.bootstrap.usable_replicates} bootstrap` : run.permutation ? `${run.permutation.plan.permutations} permutations` : "Not run", evidenceDetail: run.bootstrap || run.permutation ? "Resampling payload available" : "Enable in Setup and rerun", reportAction: run.bootstrap || run.permutation ? "Report inference" : "Rerun with inference" };
+      return { question: "Can I make p-value or confidence-interval claims?", detail: "Inference is available only when bootstrap or current structural path randomization passed its scientific contract. Estimate-only runs should not be reported as significance evidence.", evidence: run.bootstrap ? `${run.bootstrap.usable_replicates} bootstrap` : structuralPathRandomization ? `${structuralPathRandomization.permutations} path permutations` : "Not run", evidenceDetail: run.bootstrap || structuralPathRandomization ? "Current inference payload available" : "Enable in Setup and rerun", reportAction: run.bootstrap || structuralPathRandomization ? "Report inference" : "Rerun with inference" };
     case "prediction":
       return { question: "Did the model demonstrate predictive usefulness?", detail: "Prediction output is separate from explanatory fit; compare holdout or blindfolding evidence against the intended research objective.", evidence: result.predict ? "PLSpredict available" : assessment?.blindfolding ? "Q² available" : "Not run", evidenceDetail: result.predict?.targets.length ? `${result.predict.targets.length} target(s)` : "Configure prediction first", reportAction: result.predict || assessment?.blindfolding ? "Report prediction" : "Configure prediction" };
     case "groups":
@@ -397,7 +407,11 @@ function RunResultSections({ run, tab, focusPath, activePath, comparisonRuns, al
 
 function SummaryResults({ run, focusPath, activePath, interpretation }: { run: AnalysisRun; focusPath: (source: string, target: string) => void; activePath: { source: string; target: string } | null; interpretation: ResultInterpretation }) {
   const result = run.result!;
-  const warningCount = [...run.warnings, ...result.warnings].filter((warning) => !warning.toLowerCase().includes("validated")).length;
+  const warningCount = [
+    ...(nativeStructuralPathRandomizationProjection(run) ? [NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING] : []),
+    ...run.warnings,
+    ...result.warnings,
+  ].filter((warning) => !warning.toLowerCase().includes("validated")).length;
   const setResultState = useWorkspace((state) => state.setResultWorkspaceState);
   const checklist = reportabilityItems(run, interpretation);
   return <div className="result-sections result-summary" tabIndex={0} role="region" aria-label={`${run.name} result summary`}>
@@ -432,7 +446,8 @@ function reportabilityItems(run: AnalysisRun, interpretation: ResultInterpretati
   const htmtReviewCount = assessment?.htmt_plus?.cells.flat().filter((cell) => (cell.value ?? 0) >= 0.85 && (cell.value ?? 0) < 0.9).length ?? 0;
   const highVif = assessment?.structural_vif.filter((row) => (row.vif ?? 0) >= 5).length ?? 0;
   const reviewVif = assessment?.structural_vif.filter((row) => (row.vif ?? 0) >= 3.3 && (row.vif ?? 0) < 5).length ?? 0;
-  const hasInference = Boolean(run.bootstrap || run.permutation);
+  const structuralPathRandomization = nativeStructuralPathRandomizationProjection(run);
+  const hasInference = Boolean(run.bootstrap || structuralPathRandomization);
   const warnings = [...run.warnings, ...result.warnings].filter((warning) => !warning.toLowerCase().includes("validated"));
   const shapeRecommendations = interpretation.diagramAdvice;
 
@@ -509,7 +524,7 @@ function reportabilityItems(run: AnalysisRun, interpretation: ResultInterpretati
       id: "inference",
       label: "Inference availability",
       status: hasInference ? "ready" : "unavailable",
-      evidence: hasInference ? `${run.bootstrap ? "Bootstrap" : ""}${run.bootstrap && run.permutation ? " and " : ""}${run.permutation ? "permutation" : ""} output available.` : "No bootstrap or permutation output.",
+      evidence: hasInference ? `${run.bootstrap ? "Bootstrap" : ""}${run.bootstrap && structuralPathRandomization ? " and " : ""}${structuralPathRandomization ? "current structural path randomization" : ""} output available.` : "No current bootstrap or structural path randomization output.",
       action: hasInference ? undefined : "Do not report p values or confidence intervals from this run.",
     },
     {
@@ -682,14 +697,15 @@ function QualityResults({ assessment, interpretation }: { assessment?: Assessmen
 }
 
 function InferenceResults({ run, interpretation }: { run: AnalysisRun; interpretation: ResultInterpretation }) {
-  if (!run.bootstrap && !run.permutation) return <div className="result-sections" tabIndex={0} role="region" aria-label="Inference results">
+  const structuralPathRandomization = nativeStructuralPathRandomizationProjection(run);
+  if (!run.bootstrap && !structuralPathRandomization) return <div className="result-sections" tabIndex={0} role="region" aria-label="Inference results">
     <FindingCards findings={findingsForTab(interpretation, "inference")} title="Inference findings" />
     <SectionEmpty title="Inference not run" detail="Enable bootstrap or permutation in Setup, rerun the model, then return here for t values, p values, and confidence intervals." />
   </div>;
   return <div className="result-sections" tabIndex={0} role="region" aria-label="Inference results">
     <FindingCards findings={findingsForTab(interpretation, "inference")} title="Inference findings" />
     {run.bootstrap ? <BootstrapSection run={run} /> : null}
-    {run.permutation ? <PermutationSection run={run} /> : null}
+    {structuralPathRandomization ? <PermutationSection projection={structuralPathRandomization} /> : null}
   </div>;
 }
 
@@ -718,10 +734,11 @@ function GroupResults({ result, interpretation }: { result: PlsResult; interpret
 function DiagnosticsResults({ run, interpretation }: { run: AnalysisRun; interpretation: ResultInterpretation }) {
   const result = run.result!;
   const assessment = run.assessment;
+  const structuralPathRandomization = nativeStructuralPathRandomizationProjection(run);
   return <div className="result-sections" tabIndex={0} role="region" aria-label="Diagnostics results">
     <FindingCards findings={findingsForTab(interpretation, "diagnostics")} title="Method-specific findings" />
     <SectionTable title="Run provenance" columns={["Field", "Value"]} rows={[["Method", run.method], ["Created", new Date(run.createdAt).toLocaleString()], ["Seed", String(run.seed)], ["Fingerprint", run.fingerprint], ["Converged", result.converged ? "yes" : "no"], ["Iterations", String(result.iterations)], ["Used observations", String(result.used_observations)], ["Omitted observations", String(result.omitted_observations)]]} />
-    <SectionTable title="Warnings and scope status" columns={["Message"]} rows={[...run.warnings, ...result.warnings, ...(assessment?.warnings ?? [])].map((warning) => [scopeCopy(warning)])} />
+    <SectionTable title="Warnings and scope status" columns={["Message"]} rows={[...(structuralPathRandomization ? [NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING] : []), ...run.warnings, ...result.warnings, ...(assessment?.warnings ?? [])].map((warning) => [scopeCopy(warning)])} />
     {assessment?.model_fit ? <SectionTable title="Correlation-residual fit" note="PLS-SEM approximate fit diagnostics should be interpreted within the documented QuickPLS scope." columns={["Model", "SRMR", "d_ULS"]} rows={[["Saturated", assessment.model_fit.saturated.srmr.toFixed(4), assessment.model_fit.saturated.d_uls.toFixed(6)], ["Estimated", assessment.model_fit.estimated.srmr.toFixed(4), assessment.model_fit.estimated.d_uls.toFixed(6)]]} /> : null}
     {result.plsc || result.wpls || result.cca || result.cta_pls || result.endogeneity || result.nonlinear_effects || result.moderated_mediation || result.cbsem || result.gsca || result.regression || result.nca || result.pca ? <MethodPayloadSections result={result} /> : null}
   </div>;
@@ -732,6 +749,7 @@ function InterpretationResults({ run, interpretation }: { run: AnalysisRun; inte
   const grouped = findingsByGroup(interpretation.findings);
   const setResultState = useWorkspace((state) => state.setResultWorkspaceState);
   const checklist = reportabilityItems(run, interpretation);
+  const structuralPathRandomization = nativeStructuralPathRandomizationProjection(run);
   return <div className="result-sections interpretation-workspace" tabIndex={0} role="region" aria-label="Interpretation and report wording">
     <ReportabilityAssistantPanel run={run} interpretation={interpretation} items={checklist} onOpenTab={(tab) => setResultState({ selectedTab: tab })} />
     <FindingChecklist title="Must address before reporting" findings={grouped.must} />
@@ -741,7 +759,7 @@ function InterpretationResults({ run, interpretation }: { run: AnalysisRun; inte
     <SectionTable title="Result availability map" columns={["Area", "Status"]} rows={[
       ["Measurement", result.outer_estimates.length ? "available" : "not available"],
       ["Validity", run.assessment ? "available" : "not available"],
-      ["Inference", run.bootstrap || run.permutation ? "available" : "not run"],
+      ["Inference", run.bootstrap || structuralPathRandomization ? "available" : "not run"],
       ["Prediction", result.predict || run.assessment?.blindfolding ? "available" : "not run"],
       ["Groups", result.mga || result.micom || result.mga_permutation || result.fimix || result.segmentation || result.ipma ? "available" : "not run"],
       ["Extended methods", result.cbsem || result.gsca || result.regression || result.nca || result.pca ? "available" : "not run"],
@@ -822,11 +840,10 @@ function BootstrapSection({ run }: { run: AnalysisRun }) {
   </div>;
 }
 
-function PermutationSection({ run }: { run: AnalysisRun }) {
-  const permutation = run.permutation!;
+function PermutationSection({ projection }: { projection: NativeStructuralPathRandomizationProjection }) {
   return <div className="bootstrap-summary">
-    <div className="bootstrap-meta"><strong>Freedman-Lane permutation</strong><span>{permutation.plan.permutations} samples</span><span>two-sided finite-sample corrected p-values</span></div>
-    <SectionTable title="permutation parameter table" columns={["Path", "Original coefficient", "Exceedances", "p"]} rows={permutation.parameters.map((parameter) => [formatParameterIdentity(parameter.parameter), parameter.original.toFixed(6), `${parameter.exceedances} / ${parameter.permutations}`, formatPValue(parameter.p_value_two_sided)])} />
+    <div className="bootstrap-meta"><strong>Candidate Freedman-Lane structural path randomization</strong><span>{projection.permutations} permutations</span><span>fixed original PLS construct scores; raw unadjusted pathwise two-sided plus-one p values</span></div>
+    <SectionTable title="Structural path randomization" note={NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING} columns={["Path", "Original", "Exceedances", "Permutations", "Raw two-sided p"]} rows={projection.parameters.map((parameter) => [pathLabel(parameter.source, parameter.target), parameter.original.toFixed(6), String(parameter.exceedances), String(parameter.permutations), String(parameter.pValueTwoSided)])} />
   </div>;
 }
 
@@ -1252,14 +1269,16 @@ function MethodPayloadSections({ result }: { result: PlsResult }) {
       {result.pca.loadings.slice(0, 100).map((row) => <tr key={`${row.variable}-${row.component}`}><td>{row.variable}</td><td>{row.component}</td><td>{row.loading.toFixed(6)}</td><td>{row.weight.toFixed(6)}</td></tr>)}
     </tbody></table></div></>}
 
-    {result.regression && <><strong>{result.regression.regression_type === "process" ? "PROCESS-style workflow" : result.regression.regression_type === "logistic" ? "Logistic regression" : "OLS regression"}</strong><MethodWarnings warnings={result.regression.warnings} /><div className="method-metric"><span>Model fit</span><b>{result.regression.outcome} | n {result.regression.observations} | R2 {formatOptional(result.regression.fit.r_squared ?? result.regression.fit.pseudo_r_squared, 4)} | AIC {result.regression.fit.aic.toFixed(4)}</b></div><table><thead><tr><th>Term</th><th>Estimate</th><th>SE</th><th>t/z</th><th>p</th><th>CI</th><th>Odds ratio</th></tr></thead><tbody>
+    {result.regression && <><strong>{result.regression.regression_type === "process" ? "PROCESS-style workflow" : result.regression.regression_type === "logistic" ? "Logistic regression" : "OLS regression"}</strong><MethodWarnings warnings={result.regression.warnings} />{result.regression.fit ? <div className="method-metric"><span>Model fit</span><b>{result.regression.outcome} | n {result.regression.observations} | R2 {formatOptional(result.regression.fit.r_squared ?? result.regression.fit.pseudo_r_squared, 4)} | AIC {result.regression.fit.aic.toFixed(4)}</b></div> : null}{result.regression.coefficients.length ? <table><thead><tr><th>Term</th><th>Estimate</th><th>SE</th><th>t/z</th><th>p</th><th>CI</th><th>Odds ratio</th></tr></thead><tbody>
       {result.regression.coefficients.map((row) => <tr key={row.term}><td>{row.term}</td><td>{row.estimate.toFixed(6)}</td><td>{row.standard_error.toFixed(6)}</td><td>{row.statistic.toFixed(4)}</td><td>{formatPValue(row.p_value_two_sided)}</td><td>{formatInterval(row.confidence_interval_lower, row.confidence_interval_upper)}</td><td>{formatOptional(row.odds_ratio, 6)}</td></tr>)}
-    </tbody></table>
-    {result.regression.process && <><strong>PROCESS effects</strong><MethodWarnings warnings={result.regression.process.warnings} /><table><thead><tr><th>Effect</th><th>Estimate</th><th>Bootstrap CI</th></tr></thead><tbody>
+    </tbody></table> : null}
+    {result.regression.process?.graph_v2 ? <><strong>Graph-defined equations</strong><MethodWarnings warnings={result.regression.process.warnings} /><div className="method-metric"><span>Analysis sample</span><b>{result.regression.process.graph_v2.complete_cases} complete | {result.regression.process.graph_v2.omitted_cases} omitted | {result.regression.process.graph_v2.equations.length} equations</b></div><table><thead><tr><th>Equation</th><th>Term</th><th>Estimate</th><th>SE</th><th>t</th><th>p</th><th>CI</th></tr></thead><tbody>
+      {result.regression.process.graph_v2.equations.flatMap((equation) => equation.coefficients.map((row) => <tr key={`${equation.equation_id}-${row.term_id}`}><td>{equation.outcome}</td><td>{row.term_id}</td><td>{row.estimate.toFixed(6)}</td><td>{row.standard_error.toFixed(6)}</td><td>{row.statistic.toFixed(4)}</td><td>{formatPValue(row.p_value_two_sided)}</td><td>{formatInterval(row.confidence_interval_lower, row.confidence_interval_upper)}</td></tr>))}
+    </tbody></table></> : result.regression.process ? <><strong>PROCESS effects</strong><MethodWarnings warnings={result.regression.process.warnings} /><table><thead><tr><th>Effect</th><th>Estimate</th><th>Bootstrap CI</th></tr></thead><tbody>
       {result.regression.process.effects.map((row) => <tr key={row.effect}><td>{formatDiagnosticCode(row.effect)}</td><td>{row.estimate.toFixed(6)}</td><td>{formatInterval(row.lower_percentile, row.upper_percentile)}</td></tr>)}
     </tbody></table>{result.regression.process.simple_slopes.length > 0 && <table><thead><tr><th>Moderator value</th><th>Simple slope</th></tr></thead><tbody>
       {result.regression.process.simple_slopes.map((row) => <tr key={row.moderator_value}><td>{row.moderator_value.toFixed(4)}</td><td>{row.slope.toFixed(6)}</td></tr>)}
-    </tbody></table>}</>}
+    </tbody></table>}</> : null}
     </>}
 
     {result.nca && <><strong>NCA ceilings</strong><MethodWarnings warnings={result.nca.warnings} /><div className="method-metric"><span>Variables</span><b>{result.nca.x} &gt; {result.nca.y} | {result.nca.observations} observations | {result.nca.usable_permutations}/{result.nca.permutation_samples} permutations</b></div><table><thead><tr><th>Ceiling</th><th>Effect size</th><th>Permutation p</th></tr></thead><tbody>
@@ -1404,7 +1423,7 @@ function interpretationNextSteps(run: AnalysisRun) {
   if (highVif) steps.push({ reason: `${highVif} structural VIF value(s) need collinearity review.`, target: "Structural" });
   const weakR2 = Object.entries(result.r_squared).filter(([, value]) => value < 0.25).map(([construct]) => construct);
   if (weakR2.length) steps.push({ reason: `Weak R² for ${weakR2.join(", ")}; review theory, predictors, and prediction diagnostics.`, target: "Structural / Prediction" });
-  if (!run.bootstrap && !run.permutation) steps.push({ reason: "Inference was not run, so p values and confidence intervals are unavailable.", target: "Inference / Setup" });
+  if (!run.bootstrap && !nativeStructuralPathRandomizationProjection(run)) steps.push({ reason: "Current inference was not run, so p values and confidence intervals are unavailable.", target: "Inference / Setup" });
   if (!steps.length) steps.push({ reason: "No immediate interpretation blockers were detected from common guidance checks.", target: "Report" });
   return steps;
 }
@@ -1414,12 +1433,13 @@ function reportWording(run: AnalysisRun) {
   const bestR2 = Object.entries(result.r_squared).sort((a, b) => b[1] - a[1])[0];
   const loadingRange = result.outer_estimates.length ? rangeText(result.outer_estimates.map((row) => Math.abs(row.loading))) : "not available";
   const pathRange = result.paths.length ? rangeText(result.paths.map((row) => row.coefficient)) : "not available";
+  const structuralPathRandomization = nativeStructuralPathRandomizationProjection(run);
   return [
     { section: "Model and provenance", text: `${run.name} was estimated with ${run.method} using seed ${run.seed}, ${result.used_observations} observations, and fingerprint ${run.fingerprint}.` },
     { section: "Measurement model", text: `Outer loading magnitudes ranged from ${loadingRange}. Reliability and validity were reviewed using the documented QuickPLS assessment outputs.` },
     { section: "Structural model", text: `Path coefficients ranged from ${pathRange}${bestR2 ? `, and the strongest R² was ${bestR2[1].toFixed(4)} for ${bestR2[0]}` : ""}.` },
-    { section: "Inference caveat", text: run.bootstrap || run.permutation ? "Inference should be reported with the selected resampling procedure, confidence level, seed, and any failed or unavailable intervals." : "This run does not include bootstrap or permutation inference; avoid p-value or confidence-interval claims from this run." },
-    { section: "Scope status", text: scopeCopy(run.warnings[0]) },
+    { section: "Inference caveat", text: structuralPathRandomization ? NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING : run.bootstrap ? "Inference should be reported with the selected bootstrap procedure, confidence level, seed, and any failed or unavailable intervals." : "This run does not include bootstrap or current structural path randomization inference; avoid p-value or confidence-interval claims from this run." },
+    { section: "Scope status", text: scopeCopyForRun(run) },
   ];
 }
 
@@ -1575,10 +1595,17 @@ function scopeCopy(warning: string | undefined) {
   return warning.replace(/QuickPLS v\d+\.\d+\.\d+ supported scope/g, "documented QuickPLS supported scope");
 }
 
+function scopeCopyForRun(run: AnalysisRun): string {
+  return nativeStructuralPathRandomizationProjection(run)
+    ? NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING
+    : scopeCopy(run.warnings[0]);
+}
+
 function csvForCurrentResultTab(run: AnalysisRun, tab: ResultWorkspaceTab) {
   const result = run.result;
   const assessment = run.assessment;
   const rows: string[][] = [];
+  const structuralPathRandomization = nativeStructuralPathRandomizationProjection(run);
   if (!result) return "message\nNo result payload";
   if (tab === "measurement") {
     rows.push(["construct", "indicator", "loading", "weight"], ...result.outer_estimates.map((row) => [row.construct, row.indicator, row.loading.toString(), row.weight.toString()]));
@@ -1588,6 +1615,17 @@ function csvForCurrentResultTab(run: AnalysisRun, tab: ResultWorkspaceTab) {
     rows.push(["path", "coefficient"], ...result.paths.map((path) => [pathLabel(path.source, path.target), path.coefficient.toString()]));
   } else if (tab === "inference" && run.bootstrap) {
     rows.push(["parameter", "original", "mean", "bias", "se", "p"], ...run.bootstrap.percentile.parameters.map((parameter) => [formatParameterIdentity(parameter.parameter), String(parameter.original), String(parameter.bootstrap_mean), String(parameter.bias), String(parameter.standard_error), String(parameter.p_value_two_sided ?? "")]));
+  } else if (tab === "inference" && structuralPathRandomization) {
+    rows.push(
+      ["path", "original", "exceedances", "permutations", "raw_two_sided_p"],
+      ...structuralPathRandomization.parameters.map((parameter) => [
+        pathLabel(parameter.source, parameter.target),
+        String(parameter.original),
+        String(parameter.exceedances),
+        String(parameter.permutations),
+        String(parameter.pValueTwoSided),
+      ]),
+    );
   } else if (tab === "prediction" && assessment?.blindfolding) {
     rows.push(["construct", "q2", "press", "sso"], ...assessment.blindfolding.constructs.map((row) => [row.construct, String(row.q_squared ?? ""), String(row.prediction_error_sum_squares ?? ""), String(row.observation_sum_squares ?? "")]));
   } else if (tab === "diagnostics") {

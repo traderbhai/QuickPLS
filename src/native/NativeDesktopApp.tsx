@@ -62,6 +62,7 @@ import {
 } from "./nativeAnalysisCatalog";
 import { createNativeCalculationRequest } from "./nativeCalculationRequest";
 import type { NativeLogisticProfile } from "./nativeLogistic";
+import type { NativeProcessProfile } from "./nativeProcess";
 import { nativeCalculationPhaseLabel } from "./nativeCalculationLifecycle";
 import { nativeRunSettingApplicability } from "./nativeExportTables";
 import type { NativeDataImportRequest } from "./nativeDataImport";
@@ -126,6 +127,7 @@ declare global {
       loadNcaFixture: () => { variables: number; models: number };
       loadPcaFixture: () => { variables: number; models: number };
       loadOlsFixture: () => { variables: number; models: number };
+      loadProcessV2Fixture: () => { variables: number; models: number };
       loadHocFixture: () => { variables: number; models: number };
       loadDiagramFixture: (fixture: string) => unknown | Promise<unknown>;
       setView: (nextView: string) => void;
@@ -651,6 +653,69 @@ export function NativeDesktopApp() {
         navigate("data");
         return { variables: 5, models: 0 };
       },
+      loadProcessV2Fixture: () => {
+        const columns = ["X", "M1", "M2", "M3", "M4", "W", "B", "C", "Y"];
+        const rows = Array.from({ length: 64 }, (_, index) => {
+          const x = (index - 31.5) / 8;
+          const w = ((index * 5) % 17 - 8) / 4;
+          const b = index % 2;
+          const c = ((index * 3) % 13 - 6) / 5;
+          const m1 = 0.55 * x + 0.18 * c + ((index % 5) - 2) * 0.04;
+          const m2 = 0.62 * m1 + 0.12 * c + ((index % 7) - 3) * 0.035;
+          const m3 = 0.45 * x + 0.28 * w + 0.32 * x * w + 0.15 * c + ((index % 4) - 1.5) * 0.05;
+          const m4 = 0.50 * x + 0.12 * c + ((index % 6) - 2.5) * 0.045;
+          const y = 0.25 * x + 0.42 * m2 + 0.36 * m3 + 0.33 * m4 + 0.16 * w + 0.11 * b
+            + 0.21 * x * w + 0.13 * x * b + 0.10 * w * b + 0.18 * x * w * b
+            + 0.24 * m4 * b + 0.14 * c + ((index % 9) - 4) * 0.03;
+          return {
+            X: x,
+            M1: m1,
+            M2: index === 7 ? null : m2,
+            M3: m3,
+            M4: m4,
+            W: index === 29 ? null : w,
+            B: b,
+            C: c,
+            Y: y,
+          };
+        });
+        const missingByColumn = Object.fromEntries(columns.map((column) => [
+          column,
+          rows.filter((row) => row[column as keyof typeof row] == null).length,
+        ]));
+        loadProject({
+          nodes: [],
+          edges: [],
+          dataset: {
+            id: "native-process-v2-smoke",
+            name: "PROCESS v2 graph-defined fixture",
+            columns,
+            rows,
+            rowCount: rows.length,
+            missing: Object.values(missingByColumn).reduce((sum, count) => sum + count, 0),
+            missingByColumn,
+            fingerprint: "sha256:native-process-v2-smoke-v1",
+            kind: "raw",
+            columnMetadata: columns.map((name) => ({
+              name,
+              label: null,
+              column_type: "numeric" as const,
+              scale_type: name === "B" ? "binary" as const : "continuous" as const,
+              missing_markers: [],
+              theoretical_min: null,
+              theoretical_max: null,
+              value_labels: (name === "B" ? { "0": "Class 0", "1": "Class 1" } : {}) as Record<string, string>,
+            })),
+          },
+          projectModels: [],
+          activeModelId: null,
+          runs: [],
+          diagramMode: "sem",
+        });
+        setProjectMeta("PROCESS v2 standalone acceptance fixture", null);
+        navigate("data");
+        return { variables: 9, models: 0 };
+      },
       loadHocFixture: () => {
         const rows = Array.from({ length: 36 }, (_, index) => {
           const capability = (index % 9) - 4;
@@ -709,10 +774,10 @@ export function NativeDesktopApp() {
     return () => { delete window.__QUICKPLS_SMOKE__; };
   }, [addRun, completedRuns.length, loadProject, navigate, setProjectMeta]);
 
-  const startCalculation = (logisticProfile?: NativeLogisticProfile) => {
+  const startCalculation = (dataProfile?: NativeLogisticProfile | NativeProcessProfile) => {
     if (!calculationReadiness.canRun || ["queued", "validating", "running", "cancelling"].includes(runMonitor.status)) return;
     setAnalysisSettings(calculationSettings);
-    commandEvent("run-analysis", createNativeCalculationRequest(calculationKind, calculationSettings, logisticProfile));
+    commandEvent("run-analysis", createNativeCalculationRequest(calculationKind, calculationSettings, dataProfile));
   };
 
   const createProject = () => {

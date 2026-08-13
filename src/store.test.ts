@@ -38,6 +38,7 @@ describe("model editor state", () => {
     expect(methods.find((method) => method.id === "nca")?.status).toBe("validated");
     expect(methods.find((method) => method.id === "cbsem")?.status).toBe("validated");
     expect(methods.find((method) => method.id === "gsca")?.status).toBe("validated");
+    expect(methods.find((method) => method.id === "permutation")?.status).toBe("experimental");
   });
 
   it("supports undo and redo for construct creation", () => {
@@ -473,6 +474,13 @@ describe("model editor state", () => {
     useWorkspace.getState().setAnalysisSettings({ method: "wpls", caseWeightColumn: "COMP1" });
     expect(useWorkspace.getState().analysisSettings.method).toBe("wpls");
     expect(useWorkspace.getState().analysisSettings.caseWeightColumn).toBe("COMP1");
+    useWorkspace.getState().loadProject({
+      nodes: useWorkspace.getState().nodes,
+      edges: useWorkspace.getState().edges,
+      dataset: useWorkspace.getState().dataset,
+      analysisSettings: { ...useWorkspace.getState().analysisSettings, method: "permutation", permutationSamples: 999 },
+    });
+    expect(useWorkspace.getState().analysisSettings).toMatchObject({ method: "permutation", permutationSamples: 999 });
     useWorkspace.getState().loadProject({
       nodes: useWorkspace.getState().nodes,
       edges: useWorkspace.getState().edges,

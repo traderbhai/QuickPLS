@@ -6,11 +6,11 @@ import {
   FolderOpen,
   Maximize2,
 } from "lucide-react";
-import { useMemo, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
+import { useId, useMemo, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { publicationDiagramSvg } from "../domain/publicationDiagram";
 import type { ResultTable } from "../domain/resultTables";
 import { useWorkspace } from "../store";
-import type { AnalysisRun } from "../types";
+import type { AnalysisRun, ProcessConditionalPlot, ProcessJohnsonNeymanAnalysis } from "../types";
 import type {
   NativeResultNavigation,
   NativeResultNavigationGroup,
@@ -30,6 +30,7 @@ import {
   nativeNcaCeilingLabel,
   nativeNcaPlot,
   nativeNcaResultProjection,
+  nativeProcessResultProjection,
   type NativeIpmaPlot,
   type NativeModerationPlot,
   type NativeNcaPlot,
@@ -157,6 +158,7 @@ export default function NativeResultsSurface({
     && selectedRun.result.predict.repeated_kfold.cvpat_benchmark_assessments.every((row) => row.method_version === CURRENT_CVPAT_METHOD_VERSION)
     ? selectedRun.result.predict.repeated_kfold
     : null;
+  const processResult = selectedRun ? nativeProcessResultProjection(selectedRun) : null;
 
   const toggleGroup = (groupId: string) => {
     setCollapsedGroupIds((current) => {
@@ -208,7 +210,17 @@ export default function NativeResultsSurface({
     </section>
     {propertiesOpen ? <aside className="nd-properties" aria-label="Result properties">
       <PaneTitle title="Run information" />
-      {ncaResult ? <dl className="nd-property-list">
+      {processResult ? <dl className="nd-property-list">
+        <div><dt>Method</dt><dd>Graph-defined Path Analysis / PROCESS</dd></div>
+        <div><dt>Status</dt><dd>Completed</dd></div>
+        <div><dt>Outcome</dt><dd>{processResult.outcome}</dd></div>
+        <div><dt>Complete cases</dt><dd>{processResult.observations}</dd></div>
+        <div><dt>Omitted cases</dt><dd>{processResult.omittedObservations}</dd></div>
+        <div><dt>Equations</dt><dd>{processResult.graph.equations.length}</dd></div>
+        <div><dt>Bootstrap</dt><dd>{processResult.bootstrap ? `${processResult.bootstrap.usable_replicates} / ${processResult.bootstrap.requested_replicates} usable` : "Off"}</dd></div>
+        <div><dt>Recorded seed</dt><dd>{selectedRun!.provenance?.seed ?? selectedRun!.seed}</dd></div>
+        <div><dt>Completed</dt><dd>{new Date(selectedRun!.createdAt).toLocaleString()}</dd></div>
+      </dl> : ncaResult ? <dl className="nd-property-list">
         <div><dt>Method</dt><dd>Necessary Condition Analysis</dd></div>
         <div><dt>Status</dt><dd>Completed</dd></div>
         <div><dt>Condition (X)</dt><dd>{ncaResult.x}</dd></div>
@@ -294,6 +306,11 @@ function ResultTableView({ table, run }: { table: ResultTable; run: AnalysisRun 
   const moderationPlot = table.id === "moderation_simple_slopes" ? nativeModerationPlot(run) : null;
   const ipmaPlot = table.id === "ipma_constructs" ? nativeIpmaPlot(run) : null;
   const ncaPlot = table.id === "nca_ceiling_effects" ? nativeNcaPlot(run) : null;
+  const process = nativeProcessResultProjection(run);
+  const processConditionalPlots = table.id === "process_simple_slopes" ? process?.graph.plots ?? [] : [];
+  const processJohnsonNeyman = table.id === "process_johnson_neyman"
+    ? process?.graph.johnson_neyman.filter((row) => row.status === "available") ?? []
+    : [];
   const grid = useNativeScientificGrid({
     gridKey: `${run.id}:${table.id}`,
     rowCount: table.rows.length,
@@ -308,6 +325,8 @@ function ResultTableView({ table, run }: { table: ResultTable; run: AnalysisRun 
     {moderationPlot ? <ModerationSlopePlot plot={moderationPlot} /> : null}
     {ipmaPlot ? <IpmaScatterPlot plot={ipmaPlot} /> : null}
     {ncaPlot ? <NcaCeilingPlot plot={ncaPlot} /> : null}
+    {processConditionalPlots.map((plot) => <ProcessConditionalPlotView key={plot.plot_id} plot={plot} outcome={process?.outcome ?? "Outcome"} />)}
+    {processJohnsonNeyman.map((plot) => <ProcessJohnsonNeymanPlot key={`${plot.moderation_id}:${plot.solved_moderator}:${plot.conditioning_values.map((value) => value.raw_value).join(":")}`} plot={plot} />)}
     <div className="nd-table-scroll" role="region" aria-labelledby={headingId}>
       <table
         ref={grid.tableRef}
@@ -333,6 +352,144 @@ function ResultTableView({ table, run }: { table: ResultTable; run: AnalysisRun 
     <span className="nd-sr-only" id={instructionsId}>Use the arrow keys to move between cells. Press Control+C to copy the selected cell.</span>
     <span className="nd-sr-only" role="status" aria-live="polite">{grid.announcement}</span>
   </section>;
+}
+
+function processProbeLabel(values: readonly { variable: string; raw_value: number }[]): string {
+  return values.length
+    ? values.map((value) => `${value.variable} = ${formatPlotNumber(value.raw_value)}`).join(", ")
+    : "Reference probe";
+}
+
+export function ProcessConditionalPlotView({
+  plot,
+  outcome,
+}: {
+  plot: ProcessConditionalPlot;
+  outcome: string;
+}) {
+  const width = 680;
+  const height = 290;
+  const left = 66;
+  const right = 24;
+  const top = 35;
+  const bottom = 52;
+  const plotWidth = width - left - right;
+  const plotHeight = height - top - bottom;
+  const points = plot.series.flatMap((series) => series.points);
+  const minimumX = Math.min(...points.map((point) => point.predictor_raw));
+  const maximumX = Math.max(...points.map((point) => point.predictor_raw));
+  const minimumY = Math.min(...points.flatMap((point) => [point.predicted_raw, point.confidence_interval_lower]));
+  const maximumY = Math.max(...points.flatMap((point) => [point.predicted_raw, point.confidence_interval_upper]));
+  const yPadding = Math.max(1e-9, (maximumY - minimumY) * 0.08);
+  const x = (value: number) => left + ((value - minimumX) / Math.max(Number.EPSILON, maximumX - minimumX)) * plotWidth;
+  const y = (value: number) => top + ((maximumY + yPadding - value) / Math.max(Number.EPSILON, maximumY - minimumY + 2 * yPadding)) * plotHeight;
+  const palette = ["#1f62b7", "#bf4b42", "#2b8a5a", "#8455a8", "#bb751c", "#2b7c85"];
+  const seriesStyles = [
+    { dash: undefined, marker: "circle", width: 2.4 },
+    { dash: "8 3", marker: "square", width: 2.4 },
+    { dash: "2 3", marker: "triangle", width: 2.4 },
+    { dash: "10 3 2 3", marker: "circle", width: 2.8 },
+    { dash: "6 2 1 2", marker: "square", width: 2.8 },
+    { dash: "1 2", marker: "triangle", width: 2.8 },
+    { dash: "12 3", marker: "circle", width: 3.2 },
+    { dash: "4 2 1 2", marker: "square", width: 3.2 },
+    { dash: "2 2 8 2", marker: "triangle", width: 3.2 },
+  ] as const;
+  const instanceId = useId();
+  const titleId = `nd-process-conditional-title-${instanceId}`;
+  const descriptionId = `nd-process-conditional-description-${instanceId}`;
+  const description = `Engine-persisted conditional outcome data for ${plot.moderation_id}. ${plot.series.map((series) => {
+    const first = series.points[0];
+    const last = series.points.at(-1)!;
+    return `${processProbeLabel(series.moderator_values)}: ${series.points.length} points from predictor ${formatPlotNumber(first.predictor_raw)}, predicted ${formatPlotNumber(first.predicted_raw)}, to predictor ${formatPlotNumber(last.predictor_raw)}, predicted ${formatPlotNumber(last.predicted_raw)}.`;
+  }).join(" ")} Exact predicted values and confidence intervals are available in the adjacent conditional outcome plot data table.`;
+  return <figure className="nd-process-result-plot" data-process-plot-id={plot.plot_id}>
+    <figcaption><strong>Persisted conditional outcome plot</strong><span>{plot.moderation_id}</span></figcaption>
+    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby={`${titleId} ${descriptionId}`}>
+      <title id={titleId}>{`Conditional outcome plot for ${plot.moderation_id}`}</title>
+      <desc id={descriptionId}>{description}</desc>
+      <line className="axis" x1={left} y1={height - bottom} x2={width - right} y2={height - bottom} />
+      <line className="axis" x1={left} y1={top} x2={left} y2={height - bottom} />
+      {[minimumX, (minimumX + maximumX) / 2, maximumX].map((tick) => <g key={`x-${tick}`}><line className="tick" x1={x(tick)} y1={height - bottom} x2={x(tick)} y2={height - bottom + 5} /><text x={x(tick)} y={height - bottom + 18} textAnchor="middle">{formatPlotNumber(tick)}</text></g>)}
+      {[minimumY, (minimumY + maximumY) / 2, maximumY].map((tick) => <g key={`y-${tick}`}><line className="tick" x1={left - 5} y1={y(tick)} x2={left} y2={y(tick)} /><text x={left - 9} y={y(tick) + 4} textAnchor="end">{formatPlotNumber(tick)}</text></g>)}
+      {plot.series.map((series, index) => {
+        const color = palette[index % palette.length];
+        const seriesStyle = seriesStyles[index % seriesStyles.length];
+        const styleSignature = `${seriesStyle.dash ?? "solid"}|${seriesStyle.marker}|${seriesStyle.width}`;
+        const mean = series.points.map((point) => `${x(point.predictor_raw)},${y(point.predicted_raw)}`).join(" ");
+        const lower = series.points.map((point) => `${x(point.predictor_raw)},${y(point.confidence_interval_lower)}`).join(" ");
+        const upper = series.points.map((point) => `${x(point.predictor_raw)},${y(point.confidence_interval_upper)}`).join(" ");
+        return <g key={series.series_id} style={{ color }} data-process-series-style={styleSignature}>
+          <polyline className="process-ci" points={lower} />
+          <polyline className="process-ci" points={upper} />
+          <polyline className="process-estimate" strokeDasharray={seriesStyle.dash} strokeWidth={seriesStyle.width} points={mean} />
+          {series.points.map((point, pointIndex) => seriesStyle.marker === "square"
+            ? <rect key={pointIndex} x={x(point.predictor_raw) - 2} y={y(point.predicted_raw) - 2} width={4} height={4}><title>{`${processProbeLabel(series.moderator_values)}; predictor ${formatPlotNumber(point.predictor_raw)}; predicted ${outcome} ${formatPlotNumber(point.predicted_raw)}; 95% CI ${formatPlotNumber(point.confidence_interval_lower)} to ${formatPlotNumber(point.confidence_interval_upper)}`}</title></rect>
+            : seriesStyle.marker === "triangle"
+              ? <path key={pointIndex} d={`M ${x(point.predictor_raw)} ${y(point.predicted_raw) - 3} l 3 6 h -6 z`}><title>{`${processProbeLabel(series.moderator_values)}; predictor ${formatPlotNumber(point.predictor_raw)}; predicted ${outcome} ${formatPlotNumber(point.predicted_raw)}; 95% CI ${formatPlotNumber(point.confidence_interval_lower)} to ${formatPlotNumber(point.confidence_interval_upper)}`}</title></path>
+              : <circle key={pointIndex} cx={x(point.predictor_raw)} cy={y(point.predicted_raw)} r={2.2}><title>{`${processProbeLabel(series.moderator_values)}; predictor ${formatPlotNumber(point.predictor_raw)}; predicted ${outcome} ${formatPlotNumber(point.predicted_raw)}; 95% CI ${formatPlotNumber(point.confidence_interval_lower)} to ${formatPlotNumber(point.confidence_interval_upper)}`}</title></circle>)}
+        </g>;
+      })}
+      <text className="axis-label" x={left + plotWidth / 2} y={height - 8} textAnchor="middle">Focal predictor (raw value)</text>
+      <text className="axis-label" transform={`translate(14 ${top + plotHeight / 2}) rotate(-90)`} textAnchor="middle">Predicted {outcome} (raw value)</text>
+    </svg>
+    <ul className="nd-process-plot-legend" aria-label={`Series legend for ${plot.moderation_id}`}>
+      {plot.series.map((series, index) => {
+        const seriesStyle = seriesStyles[index % seriesStyles.length];
+        const signature = `${seriesStyle.dash ?? "solid"}|${seriesStyle.marker}|${seriesStyle.width}`;
+        return <li key={series.series_id} data-process-legend-style={signature}>
+          <svg viewBox="0 0 28 8" aria-hidden="true"><line className="process-estimate" style={{ color: palette[index % palette.length] }} strokeDasharray={seriesStyle.dash} strokeWidth={seriesStyle.width} x1={1} y1={4} x2={27} y2={4} /></svg>
+          <span>{processProbeLabel(series.moderator_values)}; {seriesStyle.marker} markers; {seriesStyle.dash ?? "solid"} line; width {seriesStyle.width}</span>
+        </li>;
+      })}
+    </ul>
+    <p>All 25 points per series and their intervals were produced by the engine at original-sample raw moderator probes.</p>
+  </figure>;
+}
+
+export function ProcessJohnsonNeymanPlot({
+  plot,
+}: {
+  plot: Extract<ProcessJohnsonNeymanAnalysis, { status: "available" }>;
+}) {
+  const width = 680;
+  const height = 280;
+  const left = 66;
+  const right = 24;
+  const top = 30;
+  const bottom = 50;
+  const plotWidth = width - left - right;
+  const plotHeight = height - top - bottom;
+  const minimumY = Math.min(0, ...plot.curve_points.map((point) => point.confidence_interval_lower));
+  const maximumY = Math.max(0, ...plot.curve_points.map((point) => point.confidence_interval_upper));
+  const padding = Math.max(1e-9, (maximumY - minimumY) * 0.08);
+  const x = (value: number) => left + ((value - plot.raw_min) / Math.max(Number.EPSILON, plot.raw_max - plot.raw_min)) * plotWidth;
+  const y = (value: number) => top + ((maximumY + padding - value) / Math.max(Number.EPSILON, maximumY - minimumY + 2 * padding)) * plotHeight;
+  const estimate = plot.curve_points.map((point) => `${x(point.moderator_raw)},${y(point.effect)}`).join(" ");
+  const lower = plot.curve_points.map((point) => `${x(point.moderator_raw)},${y(point.confidence_interval_lower)}`).join(" ");
+  const upper = plot.curve_points.map((point) => `${x(point.moderator_raw)},${y(point.confidence_interval_upper)}`).join(" ");
+  const instanceId = useId();
+  const titleId = `nd-process-jn-title-${instanceId}`;
+  const descriptionId = `nd-process-jn-description-${instanceId}`;
+  const description = `Engine-persisted Johnson-Neyman curve for ${plot.moderation_id}, solved moderator ${plot.solved_moderator}${plot.conditioning_values.length ? `, conditioned at ${processProbeLabel(plot.conditioning_values)}` : ""}. ${plot.curve_points.length} curve points span raw ${formatPlotNumber(plot.raw_min)} to ${formatPlotNumber(plot.raw_max)}. Roots: ${plot.roots.length ? plot.roots.map(formatPlotNumber).join(", ") : "none"}. Regions: ${plot.regions.map((region) => `${formatPlotNumber(region.lower)} to ${formatPlotNumber(region.upper)} ${region.status.replaceAll("_", " ")}`).join("; ")}. Exact effect, SE, and confidence bounds are available in the adjacent Johnson-Neyman curve data table.`;
+  return <figure className="nd-process-result-plot" data-process-jn-moderation={plot.moderation_id}>
+    <figcaption><strong>Persisted Johnson-Neyman curve</strong><span>{plot.solved_moderator}{plot.conditioning_values.length ? ` at ${processProbeLabel(plot.conditioning_values)}` : ""}</span></figcaption>
+    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby={`${titleId} ${descriptionId}`}>
+      <title id={titleId}>{`Johnson-Neyman curve for ${plot.moderation_id}`}</title>
+      <desc id={descriptionId}>{description}</desc>
+      <line className="axis" x1={left} y1={y(0)} x2={width - right} y2={y(0)} />
+      <line className="axis" x1={left} y1={top} x2={left} y2={height - bottom} />
+      {[plot.raw_min, (plot.raw_min + plot.raw_max) / 2, plot.raw_max].map((tick) => <g key={`x-${tick}`}><line className="tick" x1={x(tick)} y1={height - bottom} x2={x(tick)} y2={height - bottom + 5} /><text x={x(tick)} y={height - bottom + 18} textAnchor="middle">{formatPlotNumber(tick)}</text></g>)}
+      {plot.roots.map((root) => <line key={root} className="process-root" x1={x(root)} y1={top} x2={x(root)} y2={height - bottom}><title>{`Johnson-Neyman root ${formatPlotNumber(root)}`}</title></line>)}
+      <polyline className="process-ci" points={lower} />
+      <polyline className="process-ci" points={upper} />
+      <polyline className="process-estimate" points={estimate} />
+      {plot.curve_points.map((point, index) => <circle key={index} cx={x(point.moderator_raw)} cy={y(point.effect)} r={1.8}><title>{`${plot.solved_moderator} ${formatPlotNumber(point.moderator_raw)}; effect ${formatPlotNumber(point.effect)}; SE ${formatPlotNumber(point.standard_error)}; 95% CI ${formatPlotNumber(point.confidence_interval_lower)} to ${formatPlotNumber(point.confidence_interval_upper)}`}</title></circle>)}
+      <text className="axis-label" x={left + plotWidth / 2} y={height - 7} textAnchor="middle">{plot.solved_moderator} (original raw range)</text>
+      <text className="axis-label" transform={`translate(14 ${top + plotHeight / 2}) rotate(-90)`} textAnchor="middle">Conditional effect</text>
+    </svg>
+    <p>All 101 curve points, intervals, roots, and regions were persisted by the engine; the UI only scales them for display.</p>
+  </figure>;
 }
 
 export function NcaCeilingPlot({ plot }: { plot: NativeNcaPlot }) {
@@ -361,7 +518,7 @@ export function NcaCeilingPlot({ plot }: { plot: NativeNcaPlot }) {
     : "";
   const description = `Observed-range necessary condition ceiling plot for ${plot.xLabel} as X and ${plot.yLabel} as Y. ${plot.ceFdhPeers.map((peer) => `CE-FDH peer ${formatPlotNumber(peer.x)}, ${formatPlotNumber(peer.y)}.`).join(" ")}${crDescription} Exact effect sizes and permutation p-values are listed in the table.`;
   return <figure className="nd-nca-plot">
-    <figcaption><strong>Necessary condition ceiling plot</strong><span>{plot.xLabel} → {plot.yLabel}</span></figcaption>
+    <figcaption><strong>Necessary condition ceiling plot</strong><span>{plot.xLabel} -&gt; {plot.yLabel}</span></figcaption>
     <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby={`${titleId} ${descriptionId}`}>
       <title id={titleId}>{`Necessary condition ceiling plot for ${plot.xLabel} and ${plot.yLabel}`}</title>
       <desc id={descriptionId}>{description}</desc>
@@ -429,7 +586,7 @@ function IpmaScatterPlot({ plot }: { plot: NativeIpmaPlot }) {
         <text className="point-label" x={x(point.importance) + 7} y={y(point.performance) - 6}>{point.constructLabel}</text>
       </g>)}
       <text className="axis-label" x={left + plotWidth / 2} y={height - 7} textAnchor="middle">Total importance for {plot.targetLabel}</text>
-      <text className="axis-label" transform={`translate(14 ${top + plotHeight / 2}) rotate(-90)`} textAnchor="middle">Performance (0–100)</text>
+      <text className="axis-label" transform={`translate(14 ${top + plotHeight / 2}) rotate(-90)`} textAnchor="middle">Performance (0-100)</text>
     </svg>
     <p>{plot.scopeNote}</p>
   </figure>;
@@ -468,7 +625,7 @@ function ModerationSlopePlot({ plot }: { plot: NativeModerationPlot }) {
       {plot.slopes.map((slope) => <g key={`x-${slope.moderatorScore}`}><line className="tick" x1={x(slope.moderatorScore)} y1={height - bottom} x2={x(slope.moderatorScore)} y2={height - bottom + 5} /><text x={x(slope.moderatorScore)} y={height - bottom + 18} textAnchor="middle">{slope.moderatorScore > 0 ? `+${slope.moderatorScore}` : String(slope.moderatorScore)}</text></g>)}
       {[rawMinimumEffect, 0, rawMaximumEffect].filter((tick, index, all) => all.findIndex((candidate) => Math.abs(candidate - tick) < 1e-12) === index).map((tick) => <g key={`y-${tick}`}><line className="tick" x1={left - 5} y1={y(tick)} x2={left} y2={y(tick)} /><text x={left - 9} y={y(tick) + 4} textAnchor="end">{tick.toFixed(2)}</text></g>)}
       <polyline className="slope" points={points} />
-      {plot.slopes.map((slope) => <circle key={`${slope.moderatorScore}-${slope.effect}`} cx={x(slope.moderatorScore)} cy={y(slope.effect)} r={3.5}><title>{slope.label}: conditional effect {slope.effect.toFixed(6)}</title></circle>)}
+      {plot.slopes.map((slope) => <circle key={`${slope.moderatorScore}-${slope.effect}`} cx={x(slope.moderatorScore)} cy={y(slope.effect)} r={3.5}><title>{`${slope.label}: conditional effect ${slope.effect.toFixed(6)}`}</title></circle>)}
       <text className="axis-label" x={left + plotWidth / 2} y={height - 7} textAnchor="middle">{plot.moderatorLabel} (standardized score)</text>
       <text className="axis-label" transform={`translate(14 ${top + plotHeight / 2}) rotate(-90)`} textAnchor="middle">Effect of {plot.predictorLabel} on {plot.outcomeLabel}</text>
     </svg>

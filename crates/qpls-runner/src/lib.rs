@@ -15,13 +15,14 @@ use qpls_estimation::{
     PLS_PREDICT_METHOD_VERSION, PLS_SEGMENTATION_METHOD_VERSION,
     PLS_TWO_STAGE_MODERATION_METHOD_VERSION, REGRESSION_LOGISTIC_METHOD_VERSION,
     REGRESSION_OLS_METHOD_VERSION, REGRESSION_PROCESS_METHOD_VERSION,
-    estimate_pls_validated_with_control,
+    REGRESSION_PROCESS_METHOD_VERSION_V1, estimate_pls_validated_with_control,
 };
 use qpls_resampling::{
-    PERMUTATION_METHOD_VERSION, PlsBootstrapError, PlsPermutationError,
-    REGRESSION_BOOTSTRAP_METHOD_VERSION, REGRESSION_BOOTSTRAP_MINIMUM_USABLE_FRACTION,
-    RESAMPLING_METHOD_VERSION, RegressionBootstrapError, ResamplingError, bootstrap_pls_validated,
-    bootstrap_regression_validated, permutation_pls_validated,
+    PERMUTATION_METHOD_VERSION, PROCESS_BOOTSTRAP_METHOD_VERSION, PlsBootstrapError,
+    PlsPermutationError, REGRESSION_BOOTSTRAP_METHOD_VERSION,
+    REGRESSION_BOOTSTRAP_MINIMUM_USABLE_FRACTION, RESAMPLING_METHOD_VERSION,
+    RegressionBootstrapError, ResamplingError, bootstrap_pls_validated,
+    bootstrap_process_validated, bootstrap_regression_validated, permutation_pls_validated,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -79,9 +80,20 @@ pub fn run_pls_analysis(
         other => RunnerError::Estimation(other.to_string()),
     })?;
 
+    let process_bootstrap_requested = matches!(
+        effective_recipe.method_config.as_ref(),
+        Some(qpls_core::MethodConfig::Regression {
+            model: qpls_core::RegressionModelConfig::Process {
+                relationship: qpls_core::ProcessRelationshipConfig::Graph { .. }
+            },
+            bootstrap: Some(_),
+            ..
+        })
+    );
     let regression_bootstrap_performed = if effective_recipe.settings.method
         == qpls_core::AnalysisMethod::Regression
         && effective_recipe.settings.bootstrap_samples > 0
+        && !process_bootstrap_requested
     {
         let bootstrap = bootstrap_regression_validated(
             dataset,
@@ -104,6 +116,41 @@ pub fn run_pls_analysis(
             )
         })?;
         regression.bootstrap = Some(bootstrap);
+        true
+    } else {
+        false
+    };
+    let process_bootstrap_performed = if effective_recipe.settings.method
+        == qpls_core::AnalysisMethod::Regression
+        && effective_recipe.settings.bootstrap_samples > 0
+        && process_bootstrap_requested
+    {
+        let bootstrap = bootstrap_process_validated(
+            dataset,
+            &execution,
+            &estimation,
+            effective_recipe.settings.workers,
+            &should_cancel,
+            |update| {
+                progress(RunnerProgress {
+                    phase: update.phase.as_str().into(),
+                    completed_units: update.completed_replicates as u64,
+                    total_units: update.total_replicates as u64,
+                });
+            },
+        )
+        .map_err(map_regression_bootstrap_error)?;
+        let graph = estimation
+            .regression
+            .as_mut()
+            .and_then(|regression| regression.process.as_mut())
+            .and_then(|process| process.graph_v2.as_mut())
+            .ok_or_else(|| {
+                RunnerError::Bootstrap(
+                    "PROCESS bootstrap completed without a PROCESS v2 graph payload".into(),
+                )
+            })?;
+        graph.bootstrap = Some(bootstrap);
         true
     } else {
         false
@@ -287,11 +334,28 @@ pub fn run_pls_analysis(
             .unwrap_or("ols")
         {
             "logistic" => REGRESSION_LOGISTIC_METHOD_VERSION,
-            "process" => REGRESSION_PROCESS_METHOD_VERSION,
+            "process" => {
+                if matches!(
+                    effective_recipe.method_config.as_ref(),
+                    Some(qpls_core::MethodConfig::Regression {
+                        model: qpls_core::RegressionModelConfig::Process {
+                            relationship: qpls_core::ProcessRelationshipConfig::Graph { .. }
+                        },
+                        ..
+                    })
+                ) {
+                    REGRESSION_PROCESS_METHOD_VERSION
+                } else {
+                    REGRESSION_PROCESS_METHOD_VERSION_V1
+                }
+            }
             _ => REGRESSION_OLS_METHOD_VERSION,
         }];
         if regression_bootstrap_performed {
             base_versions.push(REGRESSION_BOOTSTRAP_METHOD_VERSION);
+        }
+        if process_bootstrap_performed {
+            base_versions.push(PROCESS_BOOTSTRAP_METHOD_VERSION);
         }
     }
     if effective_recipe.settings.method == qpls_core::AnalysisMethod::Nca {
@@ -395,10 +459,12 @@ fn map_permutation_error(error: PlsPermutationError) -> RunnerError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use chrono::Utc;
     use qpls_core::{
-        AnalysisMethod, AnalysisPayload, MethodConfig, Preprocessing, RegressionBootstrapAlgorithm,
-        RegressionBootstrapConfig, RegressionBootstrapInterval, RegressionModelConfig,
-        RobustStandardError,
+        AnalysisMethod, AnalysisPayload, MethodConfig, Preprocessing, ProcessContinuousCentering,
+        ProcessModerationConfig, ProcessModeratorConfig, ProcessModeratorScale, ProcessPathConfig,
+        ProcessRelationshipConfig, RegressionBootstrapAlgorithm, RegressionBootstrapConfig,
+        RegressionBootstrapInterval, RegressionModelConfig, RobustStandardError,
     };
     use qpls_data::{ImportOptions, import_delimited_bytes};
     use std::sync::{
@@ -436,6 +502,90 @@ mod tests {
         ));
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         recipe.settings.preprocessing = Preprocessing::Unstandardized;
+        (dataset, recipe)
+    }
+
+    fn process_graph_fixture(with_bootstrap: bool) -> (Dataset, AnalysisRecipe) {
+        let mut csv = String::from("X,M,W,Y\n");
+        for index in 0..80 {
+            let x = index as f64 / 5.0 - 8.0;
+            let w = ((index * 7) % 17) as f64 / 4.0 - 2.0;
+            let m = 0.55 * x + 0.2 * x * w + ((index * 3) % 11) as f64 / 50.0;
+            let y = 0.3 * x + 0.75 * m + ((index * 5) % 13) as f64 / 60.0;
+            csv.push_str(&format!("{x},{m},{w},{y}\n"));
+        }
+        let dataset = import_delimited_bytes(
+            csv.as_bytes(),
+            "process-runner-v2.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut settings = qpls_core::AnalysisSettings::default();
+        settings.method = AnalysisMethod::Regression;
+        settings.preprocessing = Preprocessing::Unstandardized;
+        settings.bootstrap_samples = if with_bootstrap { 99 } else { 0 };
+        settings.workers = if with_bootstrap { 2 } else { 1 };
+        let recipe = AnalysisRecipe {
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
+            id: serde_json::from_str("\"7e5a1a09-75a8-49ee-9b40-e70a50ab40f4\"").unwrap(),
+            created_at: Utc::now(),
+            dataset_fingerprint: dataset.fingerprint.0.clone(),
+            model: qpls_core::ModelSpec {
+                id: serde_json::from_str("\"31b2648a-00b1-4fe2-bf2f-b292da00195a\"").unwrap(),
+                name: "PROCESS runner v2".into(),
+                constructs: Vec::new(),
+                paths: Vec::new(),
+                controls: Vec::new(),
+                higher_order_constructs: Vec::new(),
+                interactions: Vec::new(),
+            },
+            settings,
+            method_config: Some(MethodConfig::Regression {
+                outcome: "Y".into(),
+                predictors: vec!["X".into(), "M".into(), "W".into()],
+                controls: Vec::new(),
+                model: RegressionModelConfig::Process {
+                    relationship: ProcessRelationshipConfig::Graph {
+                        focal_predictor: "X".into(),
+                        paths: vec![
+                            ProcessPathConfig {
+                                from: "X".into(),
+                                to: "M".into(),
+                            },
+                            ProcessPathConfig {
+                                from: "M".into(),
+                                to: "Y".into(),
+                            },
+                            ProcessPathConfig {
+                                from: "X".into(),
+                                to: "Y".into(),
+                            },
+                        ],
+                        moderators: vec![ProcessModeratorConfig {
+                            variable: "W".into(),
+                            scale: ProcessModeratorScale::Continuous,
+                        }],
+                        moderations: vec![ProcessModerationConfig {
+                            from: "X".into(),
+                            to: "M".into(),
+                            moderator: "W".into(),
+                            conditioning_moderator: None,
+                        }],
+                        continuous_product_centering:
+                            ProcessContinuousCentering::EquationCompleteCaseMeanV1,
+                    },
+                },
+                bootstrap: with_bootstrap.then_some(RegressionBootstrapConfig {
+                    algorithm: RegressionBootstrapAlgorithm::CaseResampling,
+                    intervals: vec![
+                        RegressionBootstrapInterval::Percentile,
+                        RegressionBootstrapInterval::Bca,
+                    ],
+                }),
+            }),
+            metadata: std::collections::BTreeMap::new(),
+        };
         (dataset, recipe)
     }
 
@@ -514,6 +664,18 @@ mod tests {
             )
         );
         assert_estimator_version_is_in_provenance(&left, PLS_METHOD_VERSION);
+        let AnalysisPayload::PlsPmV1 { estimation, .. } = &left.payload else {
+            panic!("direct-only PLS must use the point-estimation envelope")
+        };
+        assert_eq!(
+            estimation["mediation"]["method_version"],
+            PLS_MEDIATION_METHOD_VERSION
+        );
+        assert_eq!(
+            estimation["mediation"]["estimates"][0]["classification"],
+            "direct_only"
+        );
+        assert!(estimation.get("moderation").is_none());
     }
 
     #[test]
@@ -589,6 +751,123 @@ mod tests {
         .to_string();
         assert!(message.contains("logistic regression did not converge"));
         assert!(!message.contains("PLS weights"));
+    }
+
+    #[test]
+    fn process_v1_current_job_is_rejected_before_estimation() {
+        let (dataset, mut recipe) = logistic_fixture();
+        recipe.settings.bootstrap_samples = 0;
+        recipe.settings.workers = 1;
+        recipe.method_config = Some(MethodConfig::Regression {
+            outcome: "y".into(),
+            predictors: vec!["x".into(), "m".into()],
+            controls: Vec::new(),
+            model: RegressionModelConfig::Process {
+                relationship: ProcessRelationshipConfig::Mediation {
+                    x: "x".into(),
+                    mediator: "m".into(),
+                },
+            },
+            bootstrap: None,
+        });
+        assert!(matches!(
+            run_pls_analysis(&dataset, &recipe, || false, |_| {}),
+            Err(RunnerError::Recipe(message))
+                if message.contains("archive-readable only")
+                    && message.contains("regression_process_v2")
+        ));
+    }
+
+    #[test]
+    fn process_v2_point_progress_completes_and_base_fit_cancellation_returns_no_result() {
+        let (dataset, point_recipe) = process_graph_fixture(false);
+        let progress = Mutex::new(Vec::new());
+        let point = run_pls_analysis(
+            &dataset,
+            &point_recipe,
+            || false,
+            |update| progress.lock().unwrap().push(update),
+        )
+        .unwrap();
+        assert_eq!(
+            point.provenance.method_version,
+            REGRESSION_PROCESS_METHOD_VERSION
+        );
+        let AnalysisPayload::PlsPmV1 { estimation, .. } = &point.payload else {
+            panic!("point PROCESS v2 must use the point-estimation envelope")
+        };
+        assert!(estimation.get("mediation").is_none());
+        assert!(estimation.get("moderation").is_none());
+        let progress = progress.into_inner().unwrap();
+        for phase in [
+            "preparing_rows",
+            "preparing_indicators",
+            "iterating",
+            "computing_effects",
+            "assembling",
+        ] {
+            assert!(
+                progress.iter().any(|update| {
+                    update.phase == phase
+                        && update.total_units > 0
+                        && update.completed_units == update.total_units
+                }),
+                "missing completed PROCESS runner progress for {phase}: {progress:?}"
+            );
+        }
+
+        let (_, bootstrap_recipe) = process_graph_fixture(true);
+        let cancel = std::sync::atomic::AtomicBool::new(false);
+        let cancelled = run_pls_analysis(
+            &dataset,
+            &bootstrap_recipe,
+            || cancel.load(Ordering::SeqCst),
+            |update| {
+                if update.phase == "preparing_rows" && update.completed_units > 0 {
+                    cancel.store(true, Ordering::SeqCst);
+                }
+            },
+        );
+        assert!(matches!(cancelled, Err(RunnerError::Cancelled)));
+        assert!(cancel.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn process_v2_runner_rejects_exact_binary_endogenous_original_profiles() {
+        for binary_variable in ["M", "Y"] {
+            let mut csv = String::from("X,M,W,Y\n");
+            for index in 0..80 {
+                let x = index as f64 / 5.0 - 8.0;
+                let w = ((index * 7) % 17) as f64 / 4.0 - 2.0;
+                let binary = (index % 2) as f64;
+                let m = if binary_variable == "M" {
+                    binary
+                } else {
+                    0.55 * x + 0.2 * x * w + ((index * 3) % 11) as f64 / 50.0
+                };
+                let y = if binary_variable == "Y" {
+                    binary
+                } else {
+                    0.3 * x + 0.75 * m + ((index * 5) % 13) as f64 / 60.0
+                };
+                csv.push_str(&format!("{x},{m},{w},{y}\n"));
+            }
+            let dataset = import_delimited_bytes(
+                csv.as_bytes(),
+                &format!("process-runner-binary-{binary_variable}.csv"),
+                b',',
+                &ImportOptions::default(),
+            )
+            .unwrap();
+            let (_, mut recipe) = process_graph_fixture(false);
+            recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+            assert!(matches!(
+                run_pls_analysis(&dataset, &recipe, || false, |_| {}),
+                Err(RunnerError::Estimation(message))
+                    if message.contains("binary_process_equation_outcome")
+                        && message.contains(binary_variable)
+            ));
+        }
     }
 
     #[test]

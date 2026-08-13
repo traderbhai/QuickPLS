@@ -15,6 +15,10 @@ import {
 } from "./nativeCalculationMode";
 import { nativeIpmaTargetOptions } from "./nativeIpma";
 import { NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS } from "./nativeRegressionBootstrapWitness";
+import {
+  NATIVE_PROCESS_MAX_EQUATION_TERMS,
+  nativeProcessGraphAssessment,
+} from "./nativeProcess";
 
 /**
  * Wire-level recipe contract consumed by the Tauri `start_pls_job` command.
@@ -23,7 +27,7 @@ import { NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS } from "./nativeRegressi
  * dependencies so callers can construct and test recipes deterministically.
  */
 
-export type NativeEngineAnalysisMethod = Exclude<AnalysisMethodId, "bootstrap">;
+export type NativeEngineAnalysisMethod = Exclude<AnalysisMethodId, "bootstrap" | "permutation">;
 export type NativeAdvancedAnalysisMethod = Exclude<NativeEngineAnalysisMethod, "pls_pm">;
 export type NativeAnalysisRecipeKind =
   | "pls_algorithm"
@@ -45,7 +49,7 @@ export interface NativeAnalysisRecipeDescriptor {
 export const NATIVE_ANALYSIS_RECIPE_DESCRIPTORS = [
   { kind: "pls_algorithm", engineMethod: "pls_pm", family: "PLS-SEM", label: "PLS-SEM Algorithm", scopeStatus: "validated", scopeMetadata: "validated_v1_0_supported_pls_scope" },
   { kind: "pls_bootstrap", engineMethod: "pls_pm", family: "PLS-SEM", label: "PLS-SEM Bootstrapping", scopeStatus: "validated", scopeMetadata: "validated_v1_0_supported_pls_scope" },
-  { kind: "pls_permutation", engineMethod: "pls_pm", family: "Inference", label: "Structural Path Randomization", scopeStatus: "validated", scopeMetadata: "validated_v1_0_freedman_lane_path_randomization_scope" },
+  { kind: "pls_permutation", engineMethod: "pls_pm", family: "Inference", label: "Structural Path Randomization", scopeStatus: "experimental", scopeMetadata: "candidate_freedman_lane_path_randomization_scope" },
   { kind: "plsc", engineMethod: "plsc", family: "PLS-SEM", label: "Consistent PLS", scopeStatus: "validated", scopeMetadata: "validated_v1_2_1_plsc_bounded_scope" },
   { kind: "wpls", engineMethod: "wpls", family: "PLS-SEM", label: "Weighted PLS", scopeStatus: "validated", scopeMetadata: "validated_v1_2_1_wpls_bounded_scope" },
   { kind: "cca", engineMethod: "cca", family: "Assessment", label: "CCA composite residual diagnostics", scopeStatus: "validated", scopeMetadata: "validated_v1_2_3_cca_bounded_scope" },
@@ -190,6 +194,7 @@ export function nativeAnalysisRecipeDescriptor(kind: NativeAnalysisRecipeKind): 
 }
 
 export function nativeAnalysisRecipeKindForSettings(settings: Readonly<AnalysisUiSettings>): NativeAnalysisRecipeKind {
+  if (settings.method === "permutation") return "pls_permutation";
   if (settings.method !== "pls_pm" && settings.method !== "bootstrap") return settings.method;
   return nativeAnalysisRecipeKindForCalculationMode(nativeCalculationModeForSettings(settings));
 }
@@ -369,10 +374,12 @@ function buildMetadata(
 ): Record<string, string> {
   const status = methodConfig.kind !== "regression"
     ? scopeMetadata
+    : methodConfig.model.type === "process"
+      ? methodConfig.bootstrap
+        ? "candidate_regression_process_v2_plus_bootstrap_v1_bounded_scope"
+        : "candidate_regression_process_v2_bounded_scope"
     : methodConfig.bootstrap
       ? "validated_regression_bootstrap_v1_bounded_scope"
-    : methodConfig.model.type === "process"
-      ? `validated_v1_2_2_process_${methodConfig.model.relationship.model}_bounded_scope`
       : methodConfig.model.type === "logistic"
         ? "validated_regression_logistic_v2_bounded_scope"
         : scopeMetadata;
@@ -447,29 +454,33 @@ function buildMethodConfig(
       return { kind, variables: values.pca_variables.split(","), retention };
     }
     case "regression": {
+      if (settings.regressionType === "process") {
+        const assessment = nativeProcessGraphAssessment(settings);
+        if (!assessment.canRun || !assessment.graph) {
+          fail("processGraph", assessment.blockers[0] ?? "Define a supported graph-based PROCESS relationship.");
+        }
+        if (assessment.equationTermCounts.some((equation) => equation.terms > NATIVE_PROCESS_MAX_EQUATION_TERMS)) {
+          fail("processGraph", `Each PROCESS equation supports at most ${NATIVE_PROCESS_MAX_EQUATION_TERMS} non-intercept terms.`);
+        }
+        return {
+          kind,
+          outcome: assessment.outcome,
+          predictors: assessment.predictors,
+          ...(assessment.controls.length ? { controls: assessment.controls } : {}),
+          model: { type: "process", relationship: assessment.graph },
+          ...(settings.regressionBootstrap === true ? {
+            bootstrap: {
+              algorithm: "case_resampling",
+              intervals: ["percentile", "bca"],
+            } as const,
+          } : {}),
+        };
+      }
       const values = regressionMetadata(settings);
-      const regressionType = values.regression_type as "ols" | "logistic" | "process";
+      const regressionType = values.regression_type as "ols" | "logistic";
       const model = regressionType === "ols"
         ? { type: "ols", robust_se: "hc3" } as const
-        : regressionType === "logistic"
-          ? { type: "logistic" } as const
-          : values.process_model === "moderation"
-            ? {
-                type: "process",
-                relationship: {
-                  model: "moderation",
-                  x: values.process_x,
-                  moderator: values.process_w,
-                },
-              } as const
-            : {
-                type: "process",
-                relationship: {
-                  model: "mediation",
-                  x: values.process_x,
-                  mediator: values.process_m,
-                },
-              } as const;
+        : { type: "logistic" } as const;
       return {
         kind,
         outcome: values.regression_outcome,
@@ -642,6 +653,9 @@ function pcaMetadata(settings: Readonly<AnalysisUiSettings>): Record<string, str
 function regressionMetadata(settings: Readonly<AnalysisUiSettings>): Record<string, string> {
   const regressionType = settings.regressionType ?? "ols";
   assertEnum("regressionType", regressionType, ["ols", "logistic", "process"] as const);
+  if (regressionType === "process") {
+    fail("processGraph", "Graph-defined PROCESS configuration must be serialized through its typed relationship contract.");
+  }
   const outcome = requiredText("regressionOutcome", settings.regressionOutcome);
   const predictors = requiredCsv("regressionPredictors", settings.regressionPredictors);
   const controls = optionalCsv(settings.regressionControls);
@@ -656,10 +670,7 @@ function regressionMetadata(settings: Readonly<AnalysisUiSettings>): Record<stri
   if (regressionType === "ols" && settings.robustSe && settings.robustSe !== "hc3") {
     fail("robustSe", "The validated native OLS scope computes HC3 standard errors; the selected alternative is not implemented.");
   }
-  if (regressionType === "process" && settings.regressionBootstrap === true) {
-    fail("regressionBootstrap", "The current regression bootstrap slice applies only to OLS and binary logistic regression.");
-  }
-  if (settings.regressionBootstrap === true && regressionType !== "process") {
+  if (settings.regressionBootstrap === true) {
     const selectedTermCount = predictors.split(",").length + (controls?.split(",").length ?? 0);
     if (selectedTermCount > NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS) {
       fail(
@@ -668,18 +679,6 @@ function regressionMetadata(settings: Readonly<AnalysisUiSettings>): Record<stri
       );
     }
   }
-  if (regressionType !== "process") return metadata;
-
-  const processModel = settings.processModel ?? "mediation";
-  assertEnum("processModel", processModel, ["mediation", "moderation", "moderated_mediation"] as const);
-  if (processModel === "moderated_mediation") {
-    fail("processModel", "PROCESS-style moderated mediation remains outside the validated native regression scope.");
-  }
-  metadata.process_model = processModel;
-  metadata.process_x = requiredText("processX", settings.processX);
-  if (processModel === "mediation") metadata.process_m = requiredText("processM", settings.processM);
-  if (processModel === "moderation") metadata.process_w = requiredText("processW", settings.processW);
-  metadata.status = `validated_v1_2_2_process_${processModel}_bounded_scope`;
   return metadata;
 }
 

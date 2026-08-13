@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { completedSamplePlsRun } from "../data/smokeRun";
 import { tablesToCsv } from "../domain/resultTables";
+import { buildResultInterpretation } from "../domain/resultInterpretation";
 import type { AnalysisResultEnvelope, AnalysisRun, NativeCanonicalAnalysisRecipe } from "../types";
 import { NATIVE_NCA_ENGINE_SCOPE_WARNING, NATIVE_STANDALONE_ASSESSMENT_WARNING } from "./nativeNca";
 import { NATIVE_PCA_ENGINE_SCOPE_WARNING } from "./nativePca";
@@ -10,6 +11,10 @@ import {
   NATIVE_LOGISTIC_ENGINE_SCOPE_WARNING,
 } from "./nativeLogistic";
 import { nativeRunProvenanceTable } from "./nativeExportTables";
+import {
+  NATIVE_STRUCTURAL_PATH_RANDOMIZATION_METHOD_VERSION,
+  NATIVE_STRUCTURAL_PATH_RANDOMIZATION_OPERATION,
+} from "./nativeStructuralPathRandomization";
 import { completedCbsemRun } from "./nativeCbsem.testFixture";
 import { completedGscaRun } from "./nativeGsca.testFixture";
 import { nativeRunFromCanonicalResult } from "./nativeCanonicalProject";
@@ -764,7 +769,7 @@ function canonicalRegressionBootstrapReopen(run: AnalysisRun): AnalysisRun {
     metadata: { status: "validated_regression_bootstrap_v1_bounded_scope" },
   };
   const envelope: AnalysisResultEnvelope = {
-    schema_version: 4,
+    schema_version: 1,
     id: run.id,
     status: "completed",
     provenance,
@@ -1009,6 +1014,19 @@ describe("native result navigation", () => {
     expect(nativeRegressionBootstrapResultProjection(overflowingLogisticWitness)).toBeNull();
   });
 
+  it("reports embedded OLS and logistic regression bootstrap inference instead of point-only", () => {
+    for (const logistic of [false, true]) {
+      const interpretation = buildResultInterpretation({ run: completedRegressionBootstrapRun(logistic) });
+      const ids = interpretation.findings.map((finding) => finding.id);
+      expect(ids).toContain("inference.regression_bootstrap");
+      expect(ids).not.toContain("inference.missing");
+      expect(interpretation.findings.find((finding) => finding.id === "inference.regression_bootstrap")?.value)
+        .toBe("98 of 99 usable");
+      expect(interpretation.reportParagraphs.find((paragraph) => paragraph.section === "Inference caveat")?.text)
+        .toContain("98 usable indexed case-bootstrap replicates of 99 requested");
+    }
+  });
+
   it("selects explicit point and bootstrap regression defaults from validated projections", () => {
     expect(buildNativeResultNavigation(completedOlsRun()).defaultItemId).toBe("ols_coefficients");
     expect(buildNativeResultNavigation(completedLogisticRun()).defaultItemId).toBe("logistic_coefficients");
@@ -1117,7 +1135,7 @@ describe("native result navigation", () => {
     expect(nativeResultTables(badClassification)).toEqual([]);
 
     const coherentlyTamperedFit = completedLogisticRun();
-    const fit = coherentlyTamperedFit.result!.regression!.fit;
+    const fit = coherentlyTamperedFit.result!.regression!.fit!;
     fit.log_likelihood = -3.2;
     fit.deviance = 6.4;
     fit.pseudo_r_squared = 1 - fit.log_likelihood / fit.null_log_likelihood!;
@@ -1132,7 +1150,7 @@ describe("native result navigation", () => {
     expect(nativeLogisticResultProjection(badWaldInference)).toBeNull();
 
     const badLikelihoodRatioInference = completedLogisticRun();
-    badLikelihoodRatioInference.result!.regression!.fit.likelihood_ratio_p_value = 0.25;
+    badLikelihoodRatioInference.result!.regression!.fit!.likelihood_ratio_p_value = 0.25;
     expect(nativeLogisticResultProjection(badLikelihoodRatioInference)).toBeNull();
 
     const badOddsRatioInterval = completedLogisticRun();
@@ -2449,6 +2467,7 @@ describe("native result navigation", () => {
     const productKey = JSON.stringify(["path", ["xm", "y"]]);
     const controlKey = JSON.stringify(["path", ["age", "y"]]);
     const ordinaryKey = JSON.stringify(["path", ["x", "y"]]);
+    const moderatorKey = JSON.stringify(["path", ["m", "y"]]);
     const percentile = (parameter: string, original: number) => ({ parameter, original, bootstrap_mean: original + 0.01, bias: 0.01, standard_error: 0.04, lower: original - 0.08, upper: original + 0.08, usable_replicates: 999, t_statistic: Math.abs(original / 0.04), p_value_two_sided: 0.01 });
     const bca = (parameter: string) => ({ parameter, bias_correction: 0.01, acceleration: 0.02, lower: 0.1, upper: 0.4, unavailable_reason: null });
     const studentized = (parameter: string, original: number) => ({ parameter, original, outer_standard_error: 0.04, outer_scale: 0.04, usable_primary_replicates: 999, lower_pivot: -1.96, upper_pivot: 1.96, lower: original - 0.08, upper: original + 0.08, unavailable_reason: null });
@@ -2517,11 +2536,6 @@ describe("native result navigation", () => {
         bca: base.bootstrap.bca ? { ...base.bootstrap.bca, parameters: [bca(productKey), bca(controlKey), bca(ordinaryKey)] } : null,
         studentized: base.bootstrap.studentized ? { ...base.bootstrap.studentized, parameters: [studentized(productKey, 0.27), studentized(controlKey, -0.08), studentized(ordinaryKey, 0.31)] } : null,
       } : undefined,
-      permutation: {
-        method_version: "qpls-permutation-v1",
-        plan: { permutations: 999, master_seed: 7, operation: "pls_permutation" },
-        parameters: [randomization(productKey, 0.27), randomization(controlKey, -0.08), randomization(ordinaryKey, 0.31)],
-      },
     };
 
     const navigation = buildNativeResultNavigation(run);
@@ -2532,16 +2546,73 @@ describe("native result navigation", () => {
       "moderation_bootstrap",
       "moderation_bca",
       "moderation_studentized",
-      "moderation_randomization",
     ]);
-    expect(ids).toEqual(expect.arrayContaining(["control_effects", "control_bootstrap", "control_bca", "control_studentized", "control_randomization"]));
-    for (const genericId of ["bootstrap_percentile", "bootstrap_bca", "bootstrap_studentized", "permutation"]) {
+    expect(ids).toEqual(expect.arrayContaining(["control_effects", "control_bootstrap", "control_bca", "control_studentized"]));
+    for (const genericId of ["bootstrap_percentile", "bootstrap_bca", "bootstrap_studentized"]) {
       const generic = navigation.tables.find((table) => table.id === genericId)!;
       expect(generic.rows).toHaveLength(1);
       expect(generic.rows.flat().join(" ")).toContain("Predictor");
       expect(generic.rows.flat().join(" ")).not.toMatch(/X by M|Age covariate/);
     }
+
+    const randomizationRun: AnalysisRun = {
+      ...run,
+      seed: 7,
+      bootstrap: undefined,
+      result: { ...run.result!, method_version: "pls_pm_v1" },
+      permutation: {
+        method_version: NATIVE_STRUCTURAL_PATH_RANDOMIZATION_METHOD_VERSION,
+        plan: { permutations: 999, master_seed: 7, operation: NATIVE_STRUCTURAL_PATH_RANDOMIZATION_OPERATION },
+        parameters: [
+          randomization(ordinaryKey, 0.31),
+          randomization(moderatorKey, 0.22),
+          randomization(productKey, 0.27),
+          randomization(controlKey, -0.08),
+        ],
+      },
+      provenance: {
+        recipe_id: "moderation-randomization-recipe",
+        dataset_fingerprint: "sha256:moderation-randomization-fixture",
+        method: "pls_pm",
+        method_version: `pls_pm_v1+pls_mediation_v1+pls_two_stage_moderation_v1+pls_assessment_v7+${NATIVE_STRUCTURAL_PATH_RANDOMIZATION_METHOD_VERSION}`,
+        engine_version: "test",
+        seed: 7,
+        settings: {
+          method: "pls_pm",
+          weighting_scheme: "path",
+          tolerance: 1e-7,
+          max_iterations: 3000,
+          bootstrap_samples: 0,
+          studentized_inner_samples: 0,
+          permutation_samples: 999,
+          seed: 7,
+          workers: 2,
+          confidence_level: 0.95,
+          preprocessing: "standardized",
+          missing_data: "listwise_deletion",
+          case_weight_column: null,
+        },
+        started_at: "2026-08-13T00:00:00.000Z",
+        completed_at: "2026-08-13T00:00:01.000Z",
+      },
+    };
+    const randomizationNavigation = buildNativeResultNavigation(randomizationRun);
+    expect(randomizationNavigation.groups.find((group) => group.id === "moderation")?.items.map((item) => item.id)).toEqual([
+      "moderation_effects",
+      "moderation_simple_slopes",
+      "moderation_randomization",
+    ]);
+    expect(randomizationNavigation.tables.map((table) => table.id)).toEqual(expect.arrayContaining([
+      "control_randomization",
+      "permutation",
+    ]));
+    expect(randomizationNavigation.tables.find((table) => table.id === "moderation_randomization")?.columns).toEqual([
+      "Interaction", "Original", "Exceedances", "Permutations", "Raw two-sided p",
+    ]);
+    expect(randomizationNavigation.tables.find((table) => table.id === "control_randomization")?.rows).toHaveLength(1);
+    expect(randomizationNavigation.tables.find((table) => table.id === "permutation")?.rows).toHaveLength(2);
     expect(navigation.tables.flatMap((table) => table.rows).flat().join(" ")).not.toContain("__qpls_interaction_");
+    expect(randomizationNavigation.tables.flatMap((table) => table.rows).flat().join(" ")).not.toContain("__qpls_interaction_");
     expect(navigation.tables.flatMap((table) => table.rows).flat()).not.toContain("N/A");
     expect(nativeModerationPlot(run)).toEqual(expect.objectContaining({
       title: "Predictor × Moderator → Outcome",

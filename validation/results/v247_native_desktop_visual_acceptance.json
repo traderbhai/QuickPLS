@@ -1,5 +1,6 @@
 {
   "schemaVersion": 2,
+  "generatedAt": "2026-08-13T06:44:33.228Z",
   "passed": true,
   "harness": {
     "runtime": "Chromium via Vite production preview",
@@ -30,580 +31,697 @@
   ],
   "screenshots": [
     {
-      "state": "launcher",
+      "path": "validation/results/screens/v247-native-desktop-visual/01-launcher-1024x700.png",
+      "size": 33436,
+      "sha256": "7a4a39a3a72d6f28d13c58e31d387f3e277c384644123be1276540f090a50081",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\01-launcher-1024x700.png"
+      "state": "launcher"
     },
     {
-      "state": "workspace-explorer",
+      "path": "validation/results/screens/v247-native-desktop-visual/1a-workspace-explorer-1024x700.png",
+      "size": 27991,
+      "sha256": "0482fe7355a2ef47e624ef2cd371e948df6b2400c1191d5fd3f44d3821df5599",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\1a-workspace-explorer-1024x700.png"
+      "state": "workspace-explorer"
     },
     {
-      "state": "workspace-explorer-context-menu",
+      "path": "validation/results/screens/v247-native-desktop-visual/1b-workspace-explorer-context-menu-1024x700.png",
+      "size": 40362,
+      "sha256": "790ea7c794a027335d8c60bcdd3313e48d1f6fe90ba9d2f32325e9cd144e6c08",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\1b-workspace-explorer-context-menu-1024x700.png"
+      "state": "workspace-explorer-context-menu"
     },
     {
-      "state": "workspace-explorer-rename-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/1c-workspace-explorer-rename-dialog-1024x700.png",
+      "size": 41024,
+      "sha256": "d8fa1cd7b4060ee83f63f79b9592297cebe60d31047b43ef7d76657886034bf6",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\1c-workspace-explorer-rename-dialog-1024x700.png"
+      "state": "workspace-explorer-rename-dialog"
     },
     {
-      "state": "data",
+      "path": "validation/results/screens/v247-native-desktop-visual/02-data-1024x700.png",
+      "size": 46288,
+      "sha256": "3d75c0d3233fa7316a3e9576d0f883d08e2f22adfd514afaaab23bb5cc53a80f",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\02-data-1024x700.png"
+      "state": "data"
     },
     {
-      "state": "recode-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/03-recode-dialog-1024x700.png",
+      "size": 71656,
+      "sha256": "e2bb8f61f0699e1b87e2885aebe27c12047f899492b5d76cfdeae44ad4bbfa99",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\03-recode-dialog-1024x700.png"
+      "state": "recode-dialog"
     },
     {
-      "state": "import-data-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/04-import-data-dialog-1024x700.png",
+      "size": 72487,
+      "sha256": "7c11834111057b7cc6912842277a875705f3ec1e2df87678480e0b9d2efd868f",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\04-import-data-dialog-1024x700.png"
+      "state": "import-data-dialog"
     },
     {
-      "state": "model",
+      "path": "validation/results/screens/v247-native-desktop-visual/05-model-1024x700.png",
+      "size": 70616,
+      "sha256": "c7078f6c71dd41a1a76bd2b15fc1d8b4d10577fa19d8e0a7f9d9bd731398e1fe",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\05-model-1024x700.png"
+      "state": "model"
     },
     {
-      "state": "moderating-effect-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/06-moderating-effect-dialog-1024x700.png",
+      "size": 70638,
+      "sha256": "0438bbb3f97eb9d51104ae06d8d672570289b89828a3e2cba59cd309c87ee96d",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\06-moderating-effect-dialog-1024x700.png"
+      "state": "moderating-effect-dialog"
     },
     {
-      "state": "higher-order-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/06-higher-order-dialog-1024x700.png",
+      "size": 64717,
+      "sha256": "90eaf2aab0579665a2adcf4c7f3799e7402b6c4ff2209987de61ffb52cabfd79",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\06-higher-order-dialog-1024x700.png"
+      "state": "higher-order-dialog"
     },
     {
-      "state": "calculation-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/06-calculation-dialog-1024x700.png",
+      "size": 94351,
+      "sha256": "1ea4d0e06552449d6abfb66506f8a990b3d76353d270513337961713de9746f0",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\06-calculation-dialog-1024x700.png"
+      "state": "calculation-dialog"
     },
     {
-      "state": "plsc-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/07-plsc-dialog-1024x700.png",
+      "size": 94891,
+      "sha256": "67f3f12f7294b923d04a2293ba14ac170d998ebcbac0e5ad66e0c61abf7d5f6b",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\07-plsc-dialog-1024x700.png"
+      "state": "plsc-dialog"
     },
     {
-      "state": "wpls-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/08-wpls-dialog-1024x700.png",
+      "size": 99279,
+      "sha256": "f6439bedac196bad105e37688e85f62f84f040a201ccae982f3a00f4058f10a8",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\08-wpls-dialog-1024x700.png"
+      "state": "wpls-dialog"
     },
     {
-      "state": "gsca-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/09-gsca-dialog-1024x700.png",
+      "size": 107121,
+      "sha256": "61580ff6c3e04f6b39d84eb692877aefbe1a006f6be13b065f14e966db7b3c55",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\09-gsca-dialog-1024x700.png"
+      "state": "gsca-dialog"
     },
     {
-      "state": "cca-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/09-cca-dialog-1024x700.png",
+      "size": 98737,
+      "sha256": "b026e7b75fe49f14f55a064c6c48645909ef574dfeae1868ab041e1b84706226",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\09-cca-dialog-1024x700.png"
+      "state": "cca-dialog"
     },
     {
-      "state": "cbsem-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/10-cbsem-dialog-1024x700.png",
+      "size": 111953,
+      "sha256": "ce9bb81c1e55d0a6b6a8517ad67aa226ea2e5bc3f78bb2fde06be1c2c6f0c1b5",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\10-cbsem-dialog-1024x700.png"
+      "state": "cbsem-dialog"
     },
     {
-      "state": "ipma-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/10-ipma-dialog-1024x700.png",
+      "size": 106705,
+      "sha256": "c8148ab5c75f1b5b4aa2f767c685c7d49b3a99da81a4ace7e9e9d7eaff47ff47",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\10-ipma-dialog-1024x700.png"
+      "state": "ipma-dialog"
     },
     {
-      "state": "structural-path-randomization-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/11-structural-path-randomization-dialog-1024x700.png",
+      "size": 114818,
+      "sha256": "9cfbd9f6849f6ca0a4d5699749def4fa87c17bd818c1af40a147d9919e17697f",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\11-structural-path-randomization-dialog-1024x700.png"
+      "state": "structural-path-randomization-dialog"
     },
     {
-      "state": "prediction-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/12-prediction-dialog-1024x700.png",
+      "size": 118550,
+      "sha256": "dde9caf369d5a4074e0a06f4a6c521d71bee1bb8c1b7a95b5c4ffaa22ae3a156",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\12-prediction-dialog-1024x700.png"
+      "state": "prediction-dialog"
     },
     {
-      "state": "mga-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/13-mga-dialog-1024x700.png",
+      "size": 116011,
+      "sha256": "0f538f878f5f63f9c33f0f885282a8a29a888a8bcb58f7887f7bbfb9b6b353e5",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\13-mga-dialog-1024x700.png"
+      "state": "mga-dialog"
     },
     {
-      "state": "nca-standalone-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/14-nca-standalone-dialog-1024x700.png",
+      "size": 105503,
+      "sha256": "87e4536b77d3880363c040d419ed46bed1095007fdf930fd5a3b717853ca496d",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\14-nca-standalone-dialog-1024x700.png"
+      "state": "nca-standalone-dialog"
     },
     {
-      "state": "nca-empty-results",
+      "path": "validation/results/screens/v247-native-desktop-visual/15-nca-empty-results-1024x700.png",
+      "size": 25088,
+      "sha256": "1d50b32ef90b8a92aeab148348edba3d2d7c0ed779bdb7c3867c93e09405267a",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\15-nca-empty-results-1024x700.png"
+      "state": "nca-empty-results"
     },
     {
-      "state": "pca-standalone-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/16-pca-standalone-dialog-1024x700.png",
+      "size": 110844,
+      "sha256": "4bd9eaca91cf7f8098fea9b0de471b9e4bc65fbe427178f3721f5874cfe24510",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\16-pca-standalone-dialog-1024x700.png"
+      "state": "pca-standalone-dialog"
     },
     {
-      "state": "ols-standalone-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/17-ols-standalone-dialog-1024x700.png",
+      "size": 120136,
+      "sha256": "07e5ce5166291eb9d62621a0d897086fd125af7fe66160f264f0a11ee9d9c867",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\17-ols-standalone-dialog-1024x700.png"
+      "state": "ols-standalone-dialog"
     },
     {
-      "state": "logistic-standalone-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/18-logistic-standalone-dialog-1024x700.png",
+      "size": 114095,
+      "sha256": "f54eaa3643cd4b723482c842d8dcf092269588084c27eceb1650fa405765d718",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\18-logistic-standalone-dialog-1024x700.png"
+      "state": "logistic-standalone-dialog"
     },
     {
-      "state": "regression-bootstrap-ols-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1024x700.png",
+      "size": 117350,
+      "sha256": "d492fa27838ee0808cffdcc1390f29e0a0c9ac22ec801f36c6660d67d0b9892c",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\19-regression-bootstrap-ols-dialog-1024x700.png"
+      "state": "regression-bootstrap-ols-dialog"
     },
     {
-      "state": "regression-bootstrap-logistic-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1024x700.png",
+      "size": 113650,
+      "sha256": "8dc649213c9a67748ee39442c4241ed0142eee6708bd77b33febf801971f8904",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\20-regression-bootstrap-logistic-dialog-1024x700.png"
+      "state": "regression-bootstrap-logistic-dialog"
     },
     {
-      "state": "empty-results",
+      "path": "validation/results/screens/v247-native-desktop-visual/21-process-v2-dialog-1024x700.png",
+      "size": 132564,
+      "sha256": "1295b687ddf70e050725218e04cd21f046c3cdc4257a9d900acde232d6272a3a",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\18-empty-results-1024x700.png"
+      "state": "process-v2-dialog"
     },
     {
-      "state": "completed-results",
+      "path": "validation/results/screens/v247-native-desktop-visual/18-empty-results-1024x700.png",
+      "size": 22080,
+      "sha256": "99c9ae8d3aa5cf1987f6b0a0b22bd7ea62fbcaa0ea5fb8ec24867e4d6ec6e962",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\17-completed-results-1024x700.png"
+      "state": "empty-results"
     },
     {
-      "state": "mediation-results",
+      "path": "validation/results/screens/v247-native-desktop-visual/17-completed-results-1024x700.png",
+      "size": 68142,
+      "sha256": "715e80669bd9b3f3fe82598ebe8a97b7b21f67f8550eb7161458749d6535b12d",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\18-mediation-results-1024x700.png"
+      "state": "completed-results"
     },
     {
-      "state": "mediation-bootstrap-inference",
+      "path": "validation/results/screens/v247-native-desktop-visual/18-mediation-results-1024x700.png",
+      "size": 49826,
+      "sha256": "1066e291c40dc37bb8279664ff573ceb525a4a123518a96f0fd9f00fea43647b",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\19-mediation-bootstrap-inference-1024x700.png"
+      "state": "mediation-results"
     },
     {
-      "state": "export-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/19-mediation-bootstrap-inference-1024x700.png",
+      "size": 55150,
+      "sha256": "7d9b586fcbeeddcf42f8ca750c9fc0d90d01f36122fbc4b5451d982ea4d69ffd",
       "viewport": "1024x700",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\18-export-dialog-1024x700.png"
+      "state": "mediation-bootstrap-inference"
     },
     {
-      "state": "launcher",
+      "path": "validation/results/screens/v247-native-desktop-visual/18-export-dialog-1024x700.png",
+      "size": 61662,
+      "sha256": "08864ffbe3744d4df2622dc8d4aaf07f8668c928b07c0fc9fb613bcbb97f0d79",
+      "viewport": "1024x700",
+      "state": "export-dialog"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-visual/01-launcher-1280x720.png",
+      "size": 34671,
+      "sha256": "af063c5c757e29dc8f0bc3c97cbd2d7d7bcd543036da5fc4848d399f8f3ae64c",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\01-launcher-1280x720.png"
+      "state": "launcher"
     },
     {
-      "state": "workspace-explorer",
+      "path": "validation/results/screens/v247-native-desktop-visual/1a-workspace-explorer-1280x720.png",
+      "size": 29202,
+      "sha256": "3d6a77ae8e0654717c85769ed90167b96164e9ffd444ad9d250a962d9e8f7f4a",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\1a-workspace-explorer-1280x720.png"
+      "state": "workspace-explorer"
     },
     {
-      "state": "workspace-explorer-context-menu",
+      "path": "validation/results/screens/v247-native-desktop-visual/1b-workspace-explorer-context-menu-1280x720.png",
+      "size": 41327,
+      "sha256": "7b510a2472ff27b83bb63e2e7ecf158bb93266321ef6f52db2d5aba91eb51ed8",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\1b-workspace-explorer-context-menu-1280x720.png"
+      "state": "workspace-explorer-context-menu"
     },
     {
-      "state": "workspace-explorer-rename-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/1c-workspace-explorer-rename-dialog-1280x720.png",
+      "size": 42059,
+      "sha256": "2f75e910f743ea1f95eb558d6212d7bf91aed6d3a74e31e8e70248e7231ed558",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\1c-workspace-explorer-rename-dialog-1280x720.png"
+      "state": "workspace-explorer-rename-dialog"
     },
     {
-      "state": "data",
+      "path": "validation/results/screens/v247-native-desktop-visual/02-data-1280x720.png",
+      "size": 59502,
+      "sha256": "af8598f49481845f0ae3cfa761acc5f0ecc2ffeba6ecae560c96c961b38f531a",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\02-data-1280x720.png"
+      "state": "data"
     },
     {
-      "state": "recode-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/03-recode-dialog-1280x720.png",
+      "size": 85361,
+      "sha256": "c5a6e61522e7db85c689bd9c2aa75b531104bbd7504f379bd8ac0dbeaa26a80a",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\03-recode-dialog-1280x720.png"
+      "state": "recode-dialog"
     },
     {
-      "state": "import-data-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/04-import-data-dialog-1280x720.png",
+      "size": 87636,
+      "sha256": "2a44ee12357e030be691423e957617d9e1de5500a7c50f3e9cbd83751e151186",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\04-import-data-dialog-1280x720.png"
+      "state": "import-data-dialog"
     },
     {
-      "state": "model",
+      "path": "validation/results/screens/v247-native-desktop-visual/05-model-1280x720.png",
+      "size": 92313,
+      "sha256": "7e47a038077ac95fbc3e8617a179981ce1a68e8fa0d3c9cf4fa7efdffbaaf0cc",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\05-model-1280x720.png"
+      "state": "model"
     },
     {
-      "state": "moderating-effect-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/06-moderating-effect-dialog-1280x720.png",
+      "size": 87450,
+      "sha256": "9354ccf0c50668045b07df13ebba666391532d5006d44440c1c12f7fbf595d95",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\06-moderating-effect-dialog-1280x720.png"
+      "state": "moderating-effect-dialog"
     },
     {
-      "state": "higher-order-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/06-higher-order-dialog-1280x720.png",
+      "size": 79299,
+      "sha256": "6e4b3158b8c0803874aae1f508957992e4f1d163a9813b5674127ea40e0ee6c3",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\06-higher-order-dialog-1280x720.png"
+      "state": "higher-order-dialog"
     },
     {
-      "state": "calculation-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/06-calculation-dialog-1280x720.png",
+      "size": 101958,
+      "sha256": "33851a01016ab5506c8a6156159e5fff32719f05fa21056c8372855b17d0faa6",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\06-calculation-dialog-1280x720.png"
+      "state": "calculation-dialog"
     },
     {
-      "state": "plsc-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/07-plsc-dialog-1280x720.png",
+      "size": 102488,
+      "sha256": "3d051cc327e45ab209ad00608bdfb82823319a12d7aa3441e9dd08d7be6de38d",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\07-plsc-dialog-1280x720.png"
+      "state": "plsc-dialog"
     },
     {
-      "state": "wpls-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/08-wpls-dialog-1280x720.png",
+      "size": 107024,
+      "sha256": "fb60d109ad946427fe8f16a2ade31080c36c2067c6d3a1d90c07ae6328ba5102",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\08-wpls-dialog-1280x720.png"
+      "state": "wpls-dialog"
     },
     {
-      "state": "gsca-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/09-gsca-dialog-1280x720.png",
+      "size": 115428,
+      "sha256": "79f369eb8ee00dc8fa7b82fb3879904df50bef8e9f83058ee357df0d164eca0b",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\09-gsca-dialog-1280x720.png"
+      "state": "gsca-dialog"
     },
     {
-      "state": "cca-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/09-cca-dialog-1280x720.png",
+      "size": 106477,
+      "sha256": "00b10cb1240509aa9d5adc2ab3504919f1608750bec444d7a9949802f05478c0",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\09-cca-dialog-1280x720.png"
+      "state": "cca-dialog"
     },
     {
-      "state": "cbsem-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/10-cbsem-dialog-1280x720.png",
+      "size": 122214,
+      "sha256": "91e4e60f09f94fc66ff78463f1ab951aafd5fa2616f6cecd55395714515e4f15",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\10-cbsem-dialog-1280x720.png"
+      "state": "cbsem-dialog"
     },
     {
-      "state": "ipma-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/10-ipma-dialog-1280x720.png",
+      "size": 115076,
+      "sha256": "be8e595b834085792d253640bf0016d9b8930c8111bdd0ac1b0621c7ca26dc15",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\10-ipma-dialog-1280x720.png"
+      "state": "ipma-dialog"
     },
     {
-      "state": "structural-path-randomization-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/11-structural-path-randomization-dialog-1280x720.png",
+      "size": 123100,
+      "sha256": "b2d5cdbf0c481c8cd58147725980db9484cce69ec27d6ba5426e95f61a5b5183",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\11-structural-path-randomization-dialog-1280x720.png"
+      "state": "structural-path-randomization-dialog"
     },
     {
-      "state": "prediction-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/12-prediction-dialog-1280x720.png",
+      "size": 129169,
+      "sha256": "37e9de20a391311a0c99bb29be6f586e665ee9b7edeccd6ad7de6a5205d5cde2",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\12-prediction-dialog-1280x720.png"
+      "state": "prediction-dialog"
     },
     {
-      "state": "mga-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/13-mga-dialog-1280x720.png",
+      "size": 120232,
+      "sha256": "2583e2de3fde722a0a23711b8be59780c6f4b2a508fc0aa3d86f670dc8379d36",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\13-mga-dialog-1280x720.png"
+      "state": "mga-dialog"
     },
     {
-      "state": "nca-standalone-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/14-nca-standalone-dialog-1280x720.png",
+      "size": 123063,
+      "sha256": "182cc27f01585104418b696866742485471fd6ecb97998aea1ed9c4eb7abfd3f",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\14-nca-standalone-dialog-1280x720.png"
+      "state": "nca-standalone-dialog"
     },
     {
-      "state": "nca-empty-results",
+      "path": "validation/results/screens/v247-native-desktop-visual/15-nca-empty-results-1280x720.png",
+      "size": 28060,
+      "sha256": "2f2ed27b1f37ef4118d391ea008e8ee6922e36c84b3038516709d522325ec2f4",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\15-nca-empty-results-1280x720.png"
+      "state": "nca-empty-results"
     },
     {
-      "state": "pca-standalone-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/16-pca-standalone-dialog-1280x720.png",
+      "size": 126315,
+      "sha256": "8eabfe7a6712d040b2d196d2363c3901d8c9e4400c7146a5f43bf0ad20eb831c",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\16-pca-standalone-dialog-1280x720.png"
+      "state": "pca-standalone-dialog"
     },
     {
-      "state": "ols-standalone-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/17-ols-standalone-dialog-1280x720.png",
+      "size": 137548,
+      "sha256": "9bc84a95e8f028709c05b5b77b0785fc1f98d7564f1aaf90b9ee88bf80603dbb",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\17-ols-standalone-dialog-1280x720.png"
+      "state": "ols-standalone-dialog"
     },
     {
-      "state": "logistic-standalone-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/18-logistic-standalone-dialog-1280x720.png",
+      "size": 133067,
+      "sha256": "29d85988aee264b8680488428b507811b68189d9267a65afb0a589cb570dcecf",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\18-logistic-standalone-dialog-1280x720.png"
+      "state": "logistic-standalone-dialog"
     },
     {
-      "state": "regression-bootstrap-ols-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1280x720.png",
+      "size": 137052,
+      "sha256": "8078d5a3aee909ff36a002de7a08ae214e1f5692251ac9f7ef00989c39fbe60a",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\19-regression-bootstrap-ols-dialog-1280x720.png"
+      "state": "regression-bootstrap-ols-dialog"
     },
     {
-      "state": "regression-bootstrap-logistic-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1280x720.png",
+      "size": 133544,
+      "sha256": "f6a76dd2433e61971b08a0c018df8202f2a468b98849973be213f17a5a7fb05f",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\20-regression-bootstrap-logistic-dialog-1280x720.png"
+      "state": "regression-bootstrap-logistic-dialog"
     },
     {
-      "state": "empty-results",
+      "path": "validation/results/screens/v247-native-desktop-visual/21-process-v2-dialog-1280x720.png",
+      "size": 145404,
+      "sha256": "8decd2ab6929a29c9bc88cd12a6cdf3ca6fa63b86e502a66e1e78a2d32901d06",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\18-empty-results-1280x720.png"
+      "state": "process-v2-dialog"
     },
     {
-      "state": "completed-results",
+      "path": "validation/results/screens/v247-native-desktop-visual/18-empty-results-1280x720.png",
+      "size": 25033,
+      "sha256": "6b9e249ec52da92e57b807fd672aaf1e60a42e6394c2198b0305588b03deed94",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\17-completed-results-1280x720.png"
+      "state": "empty-results"
     },
     {
-      "state": "mediation-results",
+      "path": "validation/results/screens/v247-native-desktop-visual/17-completed-results-1280x720.png",
+      "size": 79380,
+      "sha256": "37ba2f384f2dba373f8c8e1df96fce9aae02b2b632e9f5d80a651b88b576c454",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\18-mediation-results-1280x720.png"
+      "state": "completed-results"
     },
     {
-      "state": "export-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/18-mediation-results-1280x720.png",
+      "size": 59727,
+      "sha256": "1744c0e28b738a702398bc03ed90eacd536befb6abfc84f181fd6d287884ebc9",
       "viewport": "1280x720",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\18-export-dialog-1280x720.png"
+      "state": "mediation-results"
     },
     {
-      "state": "launcher",
+      "path": "validation/results/screens/v247-native-desktop-visual/18-export-dialog-1280x720.png",
+      "size": 65471,
+      "sha256": "04c7d2f7868cc6f018f37ed7dfaa657015a6a48cc13d0bd9ac709438ae87fdbc",
+      "viewport": "1280x720",
+      "state": "export-dialog"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-visual/01-launcher-1440x900.png",
+      "size": 36929,
+      "sha256": "70f831b388ba68a552ffb8a8ad58a369d9cc99cead9cd3dc192d081be14a079e",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\01-launcher-1440x900.png"
+      "state": "launcher"
     },
     {
-      "state": "workspace-explorer",
+      "path": "validation/results/screens/v247-native-desktop-visual/1a-workspace-explorer-1440x900.png",
+      "size": 31030,
+      "sha256": "3788316d97b3a7561d011280f5ac5d5c2d0faae12ba6bdb8080bdfd27d15d6c1",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\1a-workspace-explorer-1440x900.png"
+      "state": "workspace-explorer"
     },
     {
-      "state": "workspace-explorer-context-menu",
+      "path": "validation/results/screens/v247-native-desktop-visual/1b-workspace-explorer-context-menu-1440x900.png",
+      "size": 43615,
+      "sha256": "c251f9c3e910e826534cb84b36052cfd3e7d1f48fe9affc7be3896ac93d8fb95",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\1b-workspace-explorer-context-menu-1440x900.png"
+      "state": "workspace-explorer-context-menu"
     },
     {
-      "state": "workspace-explorer-rename-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/1c-workspace-explorer-rename-dialog-1440x900.png",
+      "size": 44322,
+      "sha256": "eb42ab17216775a7c3d2c7c8644faab2d6f5f4531953d0092b9ec45bb9c51cd1",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\1c-workspace-explorer-rename-dialog-1440x900.png"
+      "state": "workspace-explorer-rename-dialog"
     },
     {
-      "state": "data",
+      "path": "validation/results/screens/v247-native-desktop-visual/02-data-1440x900.png",
+      "size": 62022,
+      "sha256": "3902a9ee9282103f1aec73b65836eebd0efa9b9f4be2b54f8a37caea102b311f",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\02-data-1440x900.png"
+      "state": "data"
     },
     {
-      "state": "recode-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/03-recode-dialog-1440x900.png",
+      "size": 90913,
+      "sha256": "c2dc85fc00000b6b62bc8188d18e9f48d2df9fdc7852871d5fd25055c97ca12f",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\03-recode-dialog-1440x900.png"
+      "state": "recode-dialog"
     },
     {
-      "state": "import-data-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/04-import-data-dialog-1440x900.png",
+      "size": 92916,
+      "sha256": "56a5c0dc72dadb875103a86d624f0fbc9da8d93a743eb1138f63a70dc322ffa6",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\04-import-data-dialog-1440x900.png"
+      "state": "import-data-dialog"
     },
     {
-      "state": "model",
+      "path": "validation/results/screens/v247-native-desktop-visual/05-model-1440x900.png",
+      "size": 100173,
+      "sha256": "3163472361bfc9ac16ac156c709a9592251093881eef4786e36e73dedfad05bb",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\05-model-1440x900.png"
+      "state": "model"
     },
     {
-      "state": "moderating-effect-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/06-moderating-effect-dialog-1440x900.png",
+      "size": 94951,
+      "sha256": "c499a132deb0f84a0eb36a8a35f68c05ebf85c0d6b6431eb33526ba7cb23568c",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\06-moderating-effect-dialog-1440x900.png"
+      "state": "moderating-effect-dialog"
     },
     {
-      "state": "higher-order-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/06-higher-order-dialog-1440x900.png",
+      "size": 90122,
+      "sha256": "536d656cc6fb4abea7126d7243cf9bc7c3e2f9782f191566fde51affbdd6b85e",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\06-higher-order-dialog-1440x900.png"
+      "state": "higher-order-dialog"
     },
     {
-      "state": "calculation-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/06-calculation-dialog-1440x900.png",
+      "size": 128522,
+      "sha256": "99197d8549f64fd196b6a7e1a0fb358d36d65237340b0a9d8f67ee8b4ae6d7bd",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\06-calculation-dialog-1440x900.png"
+      "state": "calculation-dialog"
     },
     {
-      "state": "plsc-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/07-plsc-dialog-1440x900.png",
+      "size": 129297,
+      "sha256": "32d7d1c9a7d4f0f2a1a810fa9073c06496ed6d6936b2ec7559f4d56b3fdaf6e1",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\07-plsc-dialog-1440x900.png"
+      "state": "plsc-dialog"
     },
     {
-      "state": "wpls-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/08-wpls-dialog-1440x900.png",
+      "size": 133294,
+      "sha256": "c0f0b1e724618ca91305519a3d13b399fa78a23d9dde9bf7bc8667383f2ad62d",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\08-wpls-dialog-1440x900.png"
+      "state": "wpls-dialog"
     },
     {
-      "state": "gsca-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/09-gsca-dialog-1440x900.png",
+      "size": 142148,
+      "sha256": "e6b9b7ff2fe1890827e8e9cca62476736d8174ceb5ae0fa9a7370292c26f57fc",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\09-gsca-dialog-1440x900.png"
+      "state": "gsca-dialog"
     },
     {
-      "state": "cca-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/09-cca-dialog-1440x900.png",
+      "size": 133441,
+      "sha256": "384fec26c2cad35d886cfb476bd2f88c077639321c6bbf2f77d7a591bdf2d7cc",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\09-cca-dialog-1440x900.png"
+      "state": "cca-dialog"
     },
     {
-      "state": "cbsem-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/10-cbsem-dialog-1440x900.png",
+      "size": 146245,
+      "sha256": "fa0bbbcb1bf829fca8deb85d7db997b735c9119d0deb0ece3c7760e0dc874715",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\10-cbsem-dialog-1440x900.png"
+      "state": "cbsem-dialog"
     },
     {
-      "state": "ipma-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/10-ipma-dialog-1440x900.png",
+      "size": 141925,
+      "sha256": "235f5d38f9f6d08e8d9c3557e4e40d0121f11622c070c8da2f992aa86a04f11f",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\10-ipma-dialog-1440x900.png"
+      "state": "ipma-dialog"
     },
     {
-      "state": "structural-path-randomization-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/11-structural-path-randomization-dialog-1440x900.png",
+      "size": 150143,
+      "sha256": "21f163acebac7d03e07b280354b9a766afd81b633431d9f9a82bc08526a5f83e",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\11-structural-path-randomization-dialog-1440x900.png"
+      "state": "structural-path-randomization-dialog"
     },
     {
-      "state": "prediction-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/12-prediction-dialog-1440x900.png",
+      "size": 157349,
+      "sha256": "7b3d51e56f1746c0485f9a980abc98f015e7cffb3e21a10aa3a57f3f68ef90fd",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\12-prediction-dialog-1440x900.png"
+      "state": "prediction-dialog"
     },
     {
-      "state": "mga-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/13-mga-dialog-1440x900.png",
+      "size": 155301,
+      "sha256": "cf8b0e75dbc736c1ecb62143777cc7d16bae0b75d0efdd67fb3fdb2d78e8077b",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\13-mga-dialog-1440x900.png"
+      "state": "mga-dialog"
     },
     {
-      "state": "nca-standalone-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/14-nca-standalone-dialog-1440x900.png",
+      "size": 143116,
+      "sha256": "33e585c11310a0c4e2c36857da64ede032ae0c8d26cf0dcf15a528d2ad5e56f0",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\14-nca-standalone-dialog-1440x900.png"
+      "state": "nca-standalone-dialog"
     },
     {
-      "state": "nca-empty-results",
+      "path": "validation/results/screens/v247-native-desktop-visual/15-nca-empty-results-1440x900.png",
+      "size": 29734,
+      "sha256": "c17a69ca24cfb8dd60b58da97474bdb5aa81e9300a901f7d0790ebc112b9f6fb",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\15-nca-empty-results-1440x900.png"
+      "state": "nca-empty-results"
     },
     {
-      "state": "pca-standalone-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/16-pca-standalone-dialog-1440x900.png",
+      "size": 152389,
+      "sha256": "97baa4eb0902a75d476490aa1e2cbf46da0b6e7aeff117561629be8c34b5de52",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\16-pca-standalone-dialog-1440x900.png"
+      "state": "pca-standalone-dialog"
     },
     {
-      "state": "ols-standalone-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/17-ols-standalone-dialog-1440x900.png",
+      "size": 172200,
+      "sha256": "1f5a2030d21965c3f9f2e1599be213fcef92b5a68c48ab5edc656aa225ee109e",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\17-ols-standalone-dialog-1440x900.png"
+      "state": "ols-standalone-dialog"
     },
     {
-      "state": "logistic-standalone-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/18-logistic-standalone-dialog-1440x900.png",
+      "size": 179212,
+      "sha256": "c60486f52c79aa3c8a81819add4975db5119a1606a97667116705705b01841cb",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\18-logistic-standalone-dialog-1440x900.png"
+      "state": "logistic-standalone-dialog"
     },
     {
-      "state": "regression-bootstrap-ols-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/19-regression-bootstrap-ols-dialog-1440x900.png",
+      "size": 179382,
+      "sha256": "da12dcd5dac3e457283222bf46fec71fa68d4386d3a3f9a0ee7258c8a6d77387",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\19-regression-bootstrap-ols-dialog-1440x900.png"
+      "state": "regression-bootstrap-ols-dialog"
     },
     {
-      "state": "regression-bootstrap-logistic-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/20-regression-bootstrap-logistic-dialog-1440x900.png",
+      "size": 177689,
+      "sha256": "0d7c5d56108a91d628164983f721b4ed6c624ac0fd0b07f3ae383b8cb143cff8",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\20-regression-bootstrap-logistic-dialog-1440x900.png"
+      "state": "regression-bootstrap-logistic-dialog"
     },
     {
-      "state": "empty-results",
+      "path": "validation/results/screens/v247-native-desktop-visual/21-process-v2-dialog-1440x900.png",
+      "size": 192999,
+      "sha256": "4bd85db55be7658334694c73a5252ead19e1f116b9d2a197520b5d52378a56a1",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\18-empty-results-1440x900.png"
+      "state": "process-v2-dialog"
     },
     {
-      "state": "completed-results",
+      "path": "validation/results/screens/v247-native-desktop-visual/18-empty-results-1440x900.png",
+      "size": 26774,
+      "sha256": "def2527682596b92af96aeaefb0854eeaa181ab37fbf3beec84956dbbabf2b77",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\17-completed-results-1440x900.png"
+      "state": "empty-results"
     },
     {
-      "state": "mediation-results",
+      "path": "validation/results/screens/v247-native-desktop-visual/17-completed-results-1440x900.png",
+      "size": 93521,
+      "sha256": "7c270980ed43872b703ea847399065d2176fd58bfb6afe4d4d998964ce8832ad",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\18-mediation-results-1440x900.png"
+      "state": "completed-results"
     },
     {
-      "state": "export-dialog",
+      "path": "validation/results/screens/v247-native-desktop-visual/18-mediation-results-1440x900.png",
+      "size": 68430,
+      "sha256": "d50ae670df6c6cb7a56e9c6b37621bde285c940a10c7f2c3e9aa939831590a41",
       "viewport": "1440x900",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\18-export-dialog-1440x900.png"
+      "state": "mediation-results"
     },
     {
-      "state": "model-200pct-scale",
+      "path": "validation/results/screens/v247-native-desktop-visual/18-export-dialog-1440x900.png",
+      "size": 75315,
+      "sha256": "8f2d88a8f1abd8f8cf61a887621767f4b0f0511bbd85b574d59092e2263eb588",
+      "viewport": "1440x900",
+      "state": "export-dialog"
+    },
+    {
+      "path": "validation/results/screens/v247-native-desktop-visual/10-model-200pct-scale-1024x700@200pct-device-scale.png",
+      "size": 190877,
+      "sha256": "142894cd63522abc74d18c8f8a221e3adbee12b9100d6ad4d001c517a364e3c5",
       "viewport": "1024x700@200pct-device-scale",
-      "runtime": "chromium-preview-device-scale-2",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\10-model-200pct-scale-1024x700@200pct-device-scale.png"
+      "state": "model-200pct-scale"
     },
     {
-      "state": "large-model-20c-80i",
+      "path": "validation/results/screens/v247-native-desktop-visual/11-large-model-20c-80i-1440x900-large-model.png",
+      "size": 161805,
+      "sha256": "4f0fe4f28cc89542741802dc64b4483129c7666c8e29ba584487f7b7b9789ec6",
       "viewport": "1440x900-large-model",
-      "runtime": "chromium-preview",
-      "path": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\11-large-model-20c-80i-1440x900-large-model.png"
+      "state": "large-model-20c-80i"
     }
   ],
   "checks": {
@@ -940,6 +1058,18 @@
       },
       {
         "state": "regression-bootstrap-logistic-dialog",
+        "viewport": "1024x700",
+        "documentWidth": 1024,
+        "bodyWidth": 1008,
+        "viewportWidth": 1024,
+        "horizontalOverflow": false,
+        "visibleHtmlTitlebars": 0,
+        "visibleLegacyRibbons": 0,
+        "obsoleteVisibleStrings": [],
+        "fabricatedIterationRows": 0
+      },
+      {
+        "state": "process-v2-dialog",
         "viewport": "1024x700",
         "documentWidth": 1024,
         "bodyWidth": 1008,
@@ -1335,6 +1465,18 @@
         "fabricatedIterationRows": 0
       },
       {
+        "state": "process-v2-dialog",
+        "viewport": "1280x720",
+        "documentWidth": 1280,
+        "bodyWidth": 1264,
+        "viewportWidth": 1280,
+        "horizontalOverflow": false,
+        "visibleHtmlTitlebars": 0,
+        "visibleLegacyRibbons": 0,
+        "obsoleteVisibleStrings": [],
+        "fabricatedIterationRows": 0
+      },
+      {
         "state": "empty-results",
         "viewport": "1280x720",
         "documentWidth": 1280,
@@ -1707,6 +1849,18 @@
         "fabricatedIterationRows": 0
       },
       {
+        "state": "process-v2-dialog",
+        "viewport": "1440x900",
+        "documentWidth": 1440,
+        "bodyWidth": 1424,
+        "viewportWidth": 1440,
+        "horizontalOverflow": false,
+        "visibleHtmlTitlebars": 0,
+        "visibleLegacyRibbons": 0,
+        "obsoleteVisibleStrings": [],
+        "fabricatedIterationRows": 0
+      },
+      {
         "state": "empty-results",
         "viewport": "1440x900",
         "documentWidth": 1440,
@@ -1985,6 +2139,14 @@
         "accessibleName": "Calculate"
       },
       {
+        "dialog": "calculation",
+        "viewport": "1024x700",
+        "count": 1,
+        "ariaModal": "true",
+        "labelledBy": "nd-dialog-title",
+        "accessibleName": "Calculate"
+      },
+      {
         "dialog": "export",
         "viewport": "1024x700",
         "count": 1,
@@ -2161,6 +2323,14 @@
         "accessibleName": "Calculate"
       },
       {
+        "dialog": "calculation",
+        "viewport": "1280x720",
+        "count": 1,
+        "ariaModal": "true",
+        "labelledBy": "nd-dialog-title",
+        "accessibleName": "Calculate"
+      },
+      {
         "dialog": "export",
         "viewport": "1280x720",
         "count": 1,
@@ -2207,6 +2377,14 @@
         "ariaModal": "true",
         "labelledBy": "nd-dialog-title",
         "accessibleName": "Create Higher-Order Construct"
+      },
+      {
+        "dialog": "calculation",
+        "viewport": "1440x900",
+        "count": 1,
+        "ariaModal": "true",
+        "labelledBy": "nd-dialog-title",
+        "accessibleName": "Calculate"
       },
       {
         "dialog": "calculation",
@@ -2725,6 +2903,20 @@
         "namedCommandToolbarPresent": true
       },
       {
+        "state": "process-v2-dialog",
+        "viewport": "1024x700",
+        "visibleInteractiveCount": 119,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
         "state": "empty-results",
         "viewport": "1024x700",
         "visibleInteractiveCount": 11,
@@ -3173,6 +3365,20 @@
         "namedCommandToolbarPresent": true
       },
       {
+        "state": "process-v2-dialog",
+        "viewport": "1280x720",
+        "visibleInteractiveCount": 124,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
         "state": "empty-results",
         "viewport": "1280x720",
         "visibleInteractiveCount": 11,
@@ -3596,6 +3802,20 @@
         "state": "regression-bootstrap-logistic-dialog",
         "viewport": "1440x900",
         "visibleInteractiveCount": 69,
+        "unnamedInteractive": [],
+        "brokenLabelledBy": [],
+        "duplicateIds": [],
+        "positiveTabIndexes": [],
+        "skipLinkPresent": true,
+        "workspaceTargetPresent": true,
+        "workspaceIsMainLandmark": true,
+        "namedApplicationMenuPresent": true,
+        "namedCommandToolbarPresent": true
+      },
+      {
+        "state": "process-v2-dialog",
+        "viewport": "1440x900",
+        "visibleInteractiveCount": 124,
         "unnamedInteractive": [],
         "brokenLabelledBy": [],
         "duplicateIds": [],
@@ -6356,7 +6576,7 @@
         "resultDataDetail": "Standardized (fixed)",
         "missingDataDetail": "Listwise deletion",
         "reportedConstructsDetail": "Direct and indirect structural predecessors only; the target and unrelated constructs are omitted",
-        "performanceScopeDetail": "0–100 observed-range scaling of standardized composite scores; no theoretical-range correction",
+        "performanceScopeDetail": "0-100 observed-range scaling of standardized composite scores; no theoretical-range correction",
         "maximumIterationsCount": 1,
         "toleranceCount": 1,
         "unsupportedControlCount": 0,
@@ -6430,7 +6650,7 @@
         "resultDataDetail": "Standardized (fixed)",
         "missingDataDetail": "Listwise deletion",
         "reportedConstructsDetail": "Direct and indirect structural predecessors only; the target and unrelated constructs are omitted",
-        "performanceScopeDetail": "0–100 observed-range scaling of standardized composite scores; no theoretical-range correction",
+        "performanceScopeDetail": "0-100 observed-range scaling of standardized composite scores; no theoretical-range correction",
         "maximumIterationsCount": 1,
         "toleranceCount": 1,
         "unsupportedControlCount": 0,
@@ -6504,7 +6724,7 @@
         "resultDataDetail": "Standardized (fixed)",
         "missingDataDetail": "Listwise deletion",
         "reportedConstructsDetail": "Direct and indirect structural predecessors only; the target and unrelated constructs are omitted",
-        "performanceScopeDetail": "0–100 observed-range scaling of standardized composite scores; no theoretical-range correction",
+        "performanceScopeDetail": "0-100 observed-range scaling of standardized composite scores; no theoretical-range correction",
         "maximumIterationsCount": 1,
         "toleranceCount": 1,
         "unsupportedControlCount": 0,
@@ -7931,6 +8151,10 @@
           {
             "value": "logistic",
             "label": "Binary logistic (outcome coded 0/1)"
+          },
+          {
+            "value": "process",
+            "label": "Graph-defined Path Analysis / PROCESS"
           }
         ],
         "regressionType": "logistic",
@@ -8019,6 +8243,10 @@
           {
             "value": "logistic",
             "label": "Binary logistic (outcome coded 0/1)"
+          },
+          {
+            "value": "process",
+            "label": "Graph-defined Path Analysis / PROCESS"
           }
         ],
         "regressionType": "logistic",
@@ -8107,6 +8335,10 @@
           {
             "value": "logistic",
             "label": "Binary logistic (outcome coded 0/1)"
+          },
+          {
+            "value": "process",
+            "label": "Graph-defined Path Analysis / PROCESS"
           }
         ],
         "regressionType": "logistic",
@@ -8197,6 +8429,10 @@
           {
             "value": "logistic",
             "label": "Binary logistic (outcome coded 0/1)"
+          },
+          {
+            "value": "process",
+            "label": "Graph-defined Path Analysis / PROCESS"
           }
         ],
         "outcome": "outcome",
@@ -8605,6 +8841,10 @@
           {
             "value": "logistic",
             "label": "Binary logistic (outcome coded 0/1)"
+          },
+          {
+            "value": "process",
+            "label": "Graph-defined Path Analysis / PROCESS"
           }
         ],
         "outcome": "outcome",
@@ -9013,6 +9253,10 @@
           {
             "value": "logistic",
             "label": "Binary logistic (outcome coded 0/1)"
+          },
+          {
+            "value": "process",
+            "label": "Graph-defined Path Analysis / PROCESS"
           }
         ],
         "outcome": "outcome",
@@ -9386,6 +9630,1961 @@
         }
       }
     ],
+    "processV2": [
+      {
+        "viewport": "1024x700",
+        "fixtureApiPresent": true,
+        "fixture": {
+          "variables": 9,
+          "models": 0
+        },
+        "fixtureImport": {
+          "mechanism": "query-gated production smoke API",
+          "loader": "loadProcessV2Fixture"
+        },
+        "dataSurface": true,
+        "dialogOpened": true,
+        "regressionTypeOptions": [
+          {
+            "value": "ols",
+            "label": "Ordinary least squares"
+          },
+          {
+            "value": "logistic",
+            "label": "Binary logistic (outcome coded 0/1)"
+          },
+          {
+            "value": "process",
+            "label": "Graph-defined Path Analysis / PROCESS"
+          }
+        ],
+        "regressionType": "process",
+        "setup": {
+          "outcome": "Y",
+          "focal": "X",
+          "pathRows": 8,
+          "paths": [
+            {
+              "from": "X",
+              "to": "Y"
+            },
+            {
+              "from": "X",
+              "to": "M1"
+            },
+            {
+              "from": "M1",
+              "to": "M2"
+            },
+            {
+              "from": "M2",
+              "to": "Y"
+            },
+            {
+              "from": "X",
+              "to": "M3"
+            },
+            {
+              "from": "M3",
+              "to": "Y"
+            },
+            {
+              "from": "X",
+              "to": "M4"
+            },
+            {
+              "from": "M4",
+              "to": "Y"
+            }
+          ],
+          "pathsExact": true,
+          "moderatorRows": 2,
+          "moderators": [
+            {
+              "variable": "W",
+              "scale": "continuous"
+            },
+            {
+              "variable": "B",
+              "scale": "binary_0_1"
+            }
+          ],
+          "moderatorsExact": true,
+          "moderationRows": 3,
+          "moderations": [
+            {
+              "edge": "X -> Y",
+              "primary": "W",
+              "conditioning": "B"
+            },
+            {
+              "edge": "X -> M3",
+              "primary": "W",
+              "conditioning": ""
+            },
+            {
+              "edge": "M4 -> Y",
+              "primary": "B",
+              "conditioning": ""
+            }
+          ],
+          "moderationsExact": true,
+          "stableRowIdentity": {
+            "paths": {
+              "initialRowOrder": [
+                [
+                  "nd-process-path-from-0",
+                  "nd-process-path-to-0"
+                ],
+                [
+                  "nd-process-path-from-1",
+                  "nd-process-path-to-1"
+                ],
+                [
+                  "nd-process-path-from-2",
+                  "nd-process-path-to-2"
+                ],
+                [
+                  "nd-process-path-from-3",
+                  "nd-process-path-to-3"
+                ],
+                [
+                  "nd-process-path-from-4",
+                  "nd-process-path-to-4"
+                ],
+                [
+                  "nd-process-path-from-5",
+                  "nd-process-path-to-5"
+                ],
+                [
+                  "nd-process-path-from-6",
+                  "nd-process-path-to-6"
+                ],
+                [
+                  "nd-process-path-from-7",
+                  "nd-process-path-to-7"
+                ]
+              ],
+              "finalRowOrder": [
+                [
+                  "nd-process-path-from-0",
+                  "nd-process-path-to-0"
+                ],
+                [
+                  "nd-process-path-from-1",
+                  "nd-process-path-to-1"
+                ],
+                [
+                  "nd-process-path-from-2",
+                  "nd-process-path-to-2"
+                ],
+                [
+                  "nd-process-path-from-3",
+                  "nd-process-path-to-3"
+                ],
+                [
+                  "nd-process-path-from-4",
+                  "nd-process-path-to-4"
+                ],
+                [
+                  "nd-process-path-from-5",
+                  "nd-process-path-to-5"
+                ],
+                [
+                  "nd-process-path-from-6",
+                  "nd-process-path-to-6"
+                ],
+                [
+                  "nd-process-path-from-7",
+                  "nd-process-path-to-7"
+                ]
+              ],
+              "rowCount": 8,
+              "selectCount": 16,
+              "enabledSelectCount": 16,
+              "disabledSelectCount": 0,
+              "changedSelectCount": 16,
+              "mutations": [
+                {
+                  "id": "nd-process-path-from-0",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-0",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-from-1",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-1",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-from-2",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-2",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-from-3",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-3",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-from-4",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-4",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-from-5",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-5",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-from-6",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-6",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-from-7",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-7",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                }
+              ],
+              "passed": true
+            },
+            "moderators": {
+              "initialRowOrder": [
+                [
+                  "nd-process-moderator-variable-0",
+                  "nd-process-moderator-scale-0"
+                ],
+                [
+                  "nd-process-moderator-variable-1",
+                  "nd-process-moderator-scale-1"
+                ]
+              ],
+              "finalRowOrder": [
+                [
+                  "nd-process-moderator-variable-0",
+                  "nd-process-moderator-scale-0"
+                ],
+                [
+                  "nd-process-moderator-variable-1",
+                  "nd-process-moderator-scale-1"
+                ]
+              ],
+              "rowCount": 2,
+              "selectCount": 4,
+              "enabledSelectCount": 4,
+              "disabledSelectCount": 0,
+              "changedSelectCount": 4,
+              "mutations": [
+                {
+                  "id": "nd-process-moderator-variable-0",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderator-scale-0",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderator-variable-1",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderator-scale-1",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                }
+              ],
+              "passed": true
+            },
+            "moderations": {
+              "initialRowOrder": [
+                [
+                  "nd-process-moderation-edge-0",
+                  "nd-process-moderation-primary-0",
+                  "nd-process-moderation-conditioning-0"
+                ],
+                [
+                  "nd-process-moderation-edge-1",
+                  "nd-process-moderation-primary-1",
+                  "nd-process-moderation-conditioning-1"
+                ],
+                [
+                  "nd-process-moderation-edge-2",
+                  "nd-process-moderation-primary-2",
+                  "nd-process-moderation-conditioning-2"
+                ]
+              ],
+              "finalRowOrder": [
+                [
+                  "nd-process-moderation-edge-0",
+                  "nd-process-moderation-primary-0",
+                  "nd-process-moderation-conditioning-0"
+                ],
+                [
+                  "nd-process-moderation-edge-1",
+                  "nd-process-moderation-primary-1",
+                  "nd-process-moderation-conditioning-1"
+                ],
+                [
+                  "nd-process-moderation-edge-2",
+                  "nd-process-moderation-primary-2",
+                  "nd-process-moderation-conditioning-2"
+                ]
+              ],
+              "rowCount": 3,
+              "selectCount": 9,
+              "enabledSelectCount": 7,
+              "disabledSelectCount": 2,
+              "changedSelectCount": 7,
+              "mutations": [
+                {
+                  "id": "nd-process-moderation-edge-0",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-primary-0",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-conditioning-0",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-edge-1",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-primary-1",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-conditioning-1",
+                  "disabled": true,
+                  "changed": false,
+                  "focusedBefore": false,
+                  "focusedAfterChange": false,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-edge-2",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-primary-2",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-conditioning-2",
+                  "disabled": true,
+                  "changed": false,
+                  "focusedBefore": false,
+                  "focusedAfterChange": false,
+                  "rowOrderUnchanged": true
+                }
+              ],
+              "passed": true
+            },
+            "passed": true
+          },
+          "selectedControls": [
+            "C"
+          ],
+          "capacity": {
+            "topLevelPredictors": 7,
+            "topLevelPredictorsMaximum": 8,
+            "controls": 1,
+            "controlsMaximum": 1,
+            "equationNonInterceptTermsMaximum": 50
+          },
+          "bootstrap": "enabled",
+          "samples": "10000",
+          "samplesBounds": {
+            "min": "99",
+            "max": "10000",
+            "step": "1"
+          },
+          "workers": "1",
+          "workersBounds": {
+            "min": "1",
+            "max": "64",
+            "step": null
+          },
+          "seed": "20260718",
+          "seedBounds": {
+            "min": "0",
+            "max": "4294967295",
+            "step": null
+          },
+          "startLabel": "Start graph-defined path analysis with bootstrap",
+          "startDisabledInBrowserPreview": true,
+          "runtimeBlockers": [
+            "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
+          ],
+          "unexpectedBlockers": [],
+          "profileReady": true,
+          "profileText": "62 global listwise-complete cases; 2 rows omitted; 5 OLS equations verified",
+          "scopeExact": true,
+          "scope": "Graph-defined observed-variable path analysis with raw listwise-complete OLS equations, HC3 covariance, fixed two-sided 95% Student-t inference, parallel and serial mediation, continuous or exact 0/1 moderation, mixed two-moderator interactions, first- or second-stage moderated mediation, simple slopes, and Johnson-Neyman regions where applicable. This release supports up to 8 selected predictors in graph-role order and one control entered in every equation; the 50-term ceiling is an equation-design safety bound. Continuous product participants are centered within each equation sample. Numbered macros, binary outcomes, weights, clusters, custom alpha or tails, studentized intervals, multiple moderated stages on one indirect path, and three-way interactions on mediated paths are excluded. Continuous simple-slope and plot probes use the original sample raw mean - SD, mean, and mean + SD; binary probes use original raw 0/1. Resamples and delete-one fits re-center their equations internally while retaining that original raw probe grid.",
+          "bootstrapScopeExact": true,
+          "bootstrapScope": "10,000 complete-case resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa requires every delete-one PROCESS fit; unavailable intervals retain an explicit reason. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Indexed seeded streams are deterministic and worker-invariant.",
+          "previewExact": true,
+          "previewAccessible": true,
+          "preview": {
+            "title": "Graph-defined path analysis preview",
+            "description": "X -> Y moderated by W and B; X -> M1; M1 -> M2; M2 -> Y; X -> M3 moderated by W; M3 -> Y; X -> M4; M4 -> Y moderated by B",
+            "expectedDescription": "X -> Y moderated by W and B; X -> M1; M1 -> M2; M2 -> Y; X -> M3 moderated by W; M3 -> Y; X -> M4; M4 -> Y moderated by B"
+          },
+          "previewAccessibility": {
+            "count": 1,
+            "role": "img",
+            "ariaLabelledBy": "nd-process-preview-title nd-process-preview-description",
+            "ids": [
+              "nd-process-preview-title",
+              "nd-process-preview-description"
+            ],
+            "references": [
+              {
+                "id": "nd-process-preview-title",
+                "exists": true,
+                "withinDialog": true,
+                "tagName": "title",
+                "text": "Graph-defined path analysis preview"
+              },
+              {
+                "id": "nd-process-preview-description",
+                "exists": true,
+                "withinDialog": true,
+                "tagName": "desc",
+                "text": "X -> Y moderated by W and B; X -> M1; M1 -> M2; M2 -> Y; X -> M3 moderated by W; M3 -> Y; X -> M4; M4 -> Y moderated by B"
+              }
+            ],
+            "passed": true
+          },
+          "focusChecks": [
+            {
+              "selector": "#nd-calculation-regression-type",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            },
+            {
+              "selector": "#nd-process-outcome",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            },
+            {
+              "selector": "#nd-process-add-path",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            },
+            {
+              "selector": "#nd-process-moderator-variable-0",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            },
+            {
+              "selector": "#nd-calculation-regression-bootstrap",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            },
+            {
+              "selector": "#nd-calculation-regression-bootstrap-samples",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            },
+            {
+              "selector": "#nd-calculation-regression-bootstrap-workers",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            },
+            {
+              "selector": "#nd-calculation-seed",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            }
+          ]
+        },
+        "accessibility": {
+          "controlsLabeled": true,
+          "groupsNamed": true,
+          "keyboardReachable": true,
+          "focusRestored": true
+        },
+        "truthAndOverflow": {
+          "fabricatedRunState": {
+            "statusSections": 0,
+            "progressElements": 0,
+            "calculationLogs": 0,
+            "iterationRows": 0
+          },
+          "noFabricatedRunState": true,
+          "horizontalOverflow": {
+            "dialogScrollWidth": 848,
+            "dialogClientWidth": 848,
+            "dialogOutsideViewport": false,
+            "dialogContentOverflow": false,
+            "pageOverflow": false
+          },
+          "noHorizontalOverflow": true
+        },
+        "dialogBounds": {
+          "withinHorizontalViewport": true,
+          "pageHorizontalOverflow": false
+        },
+        "completedResult": {
+          "available": false,
+          "synthesizedByHarness": false,
+          "packagedFollowUp": "Run, cancel, verify accessible non-color conditional/JN plots plus their complete point tables, export, save, inspect the archive witness, and reopen the genuine 10,000-resample PROCESS v2 result in packaged Tauri."
+        }
+      },
+      {
+        "viewport": "1280x720",
+        "fixtureApiPresent": true,
+        "fixture": {
+          "variables": 9,
+          "models": 0
+        },
+        "fixtureImport": {
+          "mechanism": "query-gated production smoke API",
+          "loader": "loadProcessV2Fixture"
+        },
+        "dataSurface": true,
+        "dialogOpened": true,
+        "regressionTypeOptions": [
+          {
+            "value": "ols",
+            "label": "Ordinary least squares"
+          },
+          {
+            "value": "logistic",
+            "label": "Binary logistic (outcome coded 0/1)"
+          },
+          {
+            "value": "process",
+            "label": "Graph-defined Path Analysis / PROCESS"
+          }
+        ],
+        "regressionType": "process",
+        "setup": {
+          "outcome": "Y",
+          "focal": "X",
+          "pathRows": 8,
+          "paths": [
+            {
+              "from": "X",
+              "to": "Y"
+            },
+            {
+              "from": "X",
+              "to": "M1"
+            },
+            {
+              "from": "M1",
+              "to": "M2"
+            },
+            {
+              "from": "M2",
+              "to": "Y"
+            },
+            {
+              "from": "X",
+              "to": "M3"
+            },
+            {
+              "from": "M3",
+              "to": "Y"
+            },
+            {
+              "from": "X",
+              "to": "M4"
+            },
+            {
+              "from": "M4",
+              "to": "Y"
+            }
+          ],
+          "pathsExact": true,
+          "moderatorRows": 2,
+          "moderators": [
+            {
+              "variable": "W",
+              "scale": "continuous"
+            },
+            {
+              "variable": "B",
+              "scale": "binary_0_1"
+            }
+          ],
+          "moderatorsExact": true,
+          "moderationRows": 3,
+          "moderations": [
+            {
+              "edge": "X -> Y",
+              "primary": "W",
+              "conditioning": "B"
+            },
+            {
+              "edge": "X -> M3",
+              "primary": "W",
+              "conditioning": ""
+            },
+            {
+              "edge": "M4 -> Y",
+              "primary": "B",
+              "conditioning": ""
+            }
+          ],
+          "moderationsExact": true,
+          "stableRowIdentity": {
+            "paths": {
+              "initialRowOrder": [
+                [
+                  "nd-process-path-from-0",
+                  "nd-process-path-to-0"
+                ],
+                [
+                  "nd-process-path-from-1",
+                  "nd-process-path-to-1"
+                ],
+                [
+                  "nd-process-path-from-2",
+                  "nd-process-path-to-2"
+                ],
+                [
+                  "nd-process-path-from-3",
+                  "nd-process-path-to-3"
+                ],
+                [
+                  "nd-process-path-from-4",
+                  "nd-process-path-to-4"
+                ],
+                [
+                  "nd-process-path-from-5",
+                  "nd-process-path-to-5"
+                ],
+                [
+                  "nd-process-path-from-6",
+                  "nd-process-path-to-6"
+                ],
+                [
+                  "nd-process-path-from-7",
+                  "nd-process-path-to-7"
+                ]
+              ],
+              "finalRowOrder": [
+                [
+                  "nd-process-path-from-0",
+                  "nd-process-path-to-0"
+                ],
+                [
+                  "nd-process-path-from-1",
+                  "nd-process-path-to-1"
+                ],
+                [
+                  "nd-process-path-from-2",
+                  "nd-process-path-to-2"
+                ],
+                [
+                  "nd-process-path-from-3",
+                  "nd-process-path-to-3"
+                ],
+                [
+                  "nd-process-path-from-4",
+                  "nd-process-path-to-4"
+                ],
+                [
+                  "nd-process-path-from-5",
+                  "nd-process-path-to-5"
+                ],
+                [
+                  "nd-process-path-from-6",
+                  "nd-process-path-to-6"
+                ],
+                [
+                  "nd-process-path-from-7",
+                  "nd-process-path-to-7"
+                ]
+              ],
+              "rowCount": 8,
+              "selectCount": 16,
+              "enabledSelectCount": 16,
+              "disabledSelectCount": 0,
+              "changedSelectCount": 16,
+              "mutations": [
+                {
+                  "id": "nd-process-path-from-0",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-0",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-from-1",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-1",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-from-2",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-2",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-from-3",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-3",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-from-4",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-4",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-from-5",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-5",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-from-6",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-6",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-from-7",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-7",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                }
+              ],
+              "passed": true
+            },
+            "moderators": {
+              "initialRowOrder": [
+                [
+                  "nd-process-moderator-variable-0",
+                  "nd-process-moderator-scale-0"
+                ],
+                [
+                  "nd-process-moderator-variable-1",
+                  "nd-process-moderator-scale-1"
+                ]
+              ],
+              "finalRowOrder": [
+                [
+                  "nd-process-moderator-variable-0",
+                  "nd-process-moderator-scale-0"
+                ],
+                [
+                  "nd-process-moderator-variable-1",
+                  "nd-process-moderator-scale-1"
+                ]
+              ],
+              "rowCount": 2,
+              "selectCount": 4,
+              "enabledSelectCount": 4,
+              "disabledSelectCount": 0,
+              "changedSelectCount": 4,
+              "mutations": [
+                {
+                  "id": "nd-process-moderator-variable-0",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderator-scale-0",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderator-variable-1",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderator-scale-1",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                }
+              ],
+              "passed": true
+            },
+            "moderations": {
+              "initialRowOrder": [
+                [
+                  "nd-process-moderation-edge-0",
+                  "nd-process-moderation-primary-0",
+                  "nd-process-moderation-conditioning-0"
+                ],
+                [
+                  "nd-process-moderation-edge-1",
+                  "nd-process-moderation-primary-1",
+                  "nd-process-moderation-conditioning-1"
+                ],
+                [
+                  "nd-process-moderation-edge-2",
+                  "nd-process-moderation-primary-2",
+                  "nd-process-moderation-conditioning-2"
+                ]
+              ],
+              "finalRowOrder": [
+                [
+                  "nd-process-moderation-edge-0",
+                  "nd-process-moderation-primary-0",
+                  "nd-process-moderation-conditioning-0"
+                ],
+                [
+                  "nd-process-moderation-edge-1",
+                  "nd-process-moderation-primary-1",
+                  "nd-process-moderation-conditioning-1"
+                ],
+                [
+                  "nd-process-moderation-edge-2",
+                  "nd-process-moderation-primary-2",
+                  "nd-process-moderation-conditioning-2"
+                ]
+              ],
+              "rowCount": 3,
+              "selectCount": 9,
+              "enabledSelectCount": 7,
+              "disabledSelectCount": 2,
+              "changedSelectCount": 7,
+              "mutations": [
+                {
+                  "id": "nd-process-moderation-edge-0",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-primary-0",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-conditioning-0",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-edge-1",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-primary-1",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-conditioning-1",
+                  "disabled": true,
+                  "changed": false,
+                  "focusedBefore": false,
+                  "focusedAfterChange": false,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-edge-2",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-primary-2",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-conditioning-2",
+                  "disabled": true,
+                  "changed": false,
+                  "focusedBefore": false,
+                  "focusedAfterChange": false,
+                  "rowOrderUnchanged": true
+                }
+              ],
+              "passed": true
+            },
+            "passed": true
+          },
+          "selectedControls": [
+            "C"
+          ],
+          "capacity": {
+            "topLevelPredictors": 7,
+            "topLevelPredictorsMaximum": 8,
+            "controls": 1,
+            "controlsMaximum": 1,
+            "equationNonInterceptTermsMaximum": 50
+          },
+          "bootstrap": "enabled",
+          "samples": "10000",
+          "samplesBounds": {
+            "min": "99",
+            "max": "10000",
+            "step": "1"
+          },
+          "workers": "1",
+          "workersBounds": {
+            "min": "1",
+            "max": "64",
+            "step": null
+          },
+          "seed": "20260718",
+          "seedBounds": {
+            "min": "0",
+            "max": "4294967295",
+            "step": null
+          },
+          "startLabel": "Start graph-defined path analysis with bootstrap",
+          "startDisabledInBrowserPreview": true,
+          "runtimeBlockers": [
+            "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
+          ],
+          "unexpectedBlockers": [],
+          "profileReady": true,
+          "profileText": "62 global listwise-complete cases; 2 rows omitted; 5 OLS equations verified",
+          "scopeExact": true,
+          "scope": "Graph-defined observed-variable path analysis with raw listwise-complete OLS equations, HC3 covariance, fixed two-sided 95% Student-t inference, parallel and serial mediation, continuous or exact 0/1 moderation, mixed two-moderator interactions, first- or second-stage moderated mediation, simple slopes, and Johnson-Neyman regions where applicable. This release supports up to 8 selected predictors in graph-role order and one control entered in every equation; the 50-term ceiling is an equation-design safety bound. Continuous product participants are centered within each equation sample. Numbered macros, binary outcomes, weights, clusters, custom alpha or tails, studentized intervals, multiple moderated stages on one indirect path, and three-way interactions on mediated paths are excluded. Continuous simple-slope and plot probes use the original sample raw mean - SD, mean, and mean + SD; binary probes use original raw 0/1. Resamples and delete-one fits re-center their equations internally while retaining that original raw probe grid.",
+          "bootstrapScopeExact": true,
+          "bootstrapScope": "10,000 complete-case resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa requires every delete-one PROCESS fit; unavailable intervals retain an explicit reason. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Indexed seeded streams are deterministic and worker-invariant.",
+          "previewExact": true,
+          "previewAccessible": true,
+          "preview": {
+            "title": "Graph-defined path analysis preview",
+            "description": "X -> Y moderated by W and B; X -> M1; M1 -> M2; M2 -> Y; X -> M3 moderated by W; M3 -> Y; X -> M4; M4 -> Y moderated by B",
+            "expectedDescription": "X -> Y moderated by W and B; X -> M1; M1 -> M2; M2 -> Y; X -> M3 moderated by W; M3 -> Y; X -> M4; M4 -> Y moderated by B"
+          },
+          "previewAccessibility": {
+            "count": 1,
+            "role": "img",
+            "ariaLabelledBy": "nd-process-preview-title nd-process-preview-description",
+            "ids": [
+              "nd-process-preview-title",
+              "nd-process-preview-description"
+            ],
+            "references": [
+              {
+                "id": "nd-process-preview-title",
+                "exists": true,
+                "withinDialog": true,
+                "tagName": "title",
+                "text": "Graph-defined path analysis preview"
+              },
+              {
+                "id": "nd-process-preview-description",
+                "exists": true,
+                "withinDialog": true,
+                "tagName": "desc",
+                "text": "X -> Y moderated by W and B; X -> M1; M1 -> M2; M2 -> Y; X -> M3 moderated by W; M3 -> Y; X -> M4; M4 -> Y moderated by B"
+              }
+            ],
+            "passed": true
+          },
+          "focusChecks": [
+            {
+              "selector": "#nd-calculation-regression-type",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            },
+            {
+              "selector": "#nd-process-outcome",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            },
+            {
+              "selector": "#nd-process-add-path",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            },
+            {
+              "selector": "#nd-process-moderator-variable-0",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            },
+            {
+              "selector": "#nd-calculation-regression-bootstrap",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            },
+            {
+              "selector": "#nd-calculation-regression-bootstrap-samples",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            },
+            {
+              "selector": "#nd-calculation-regression-bootstrap-workers",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            },
+            {
+              "selector": "#nd-calculation-seed",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            }
+          ]
+        },
+        "accessibility": {
+          "controlsLabeled": true,
+          "groupsNamed": true,
+          "keyboardReachable": true,
+          "focusRestored": true
+        },
+        "truthAndOverflow": {
+          "fabricatedRunState": {
+            "statusSections": 0,
+            "progressElements": 0,
+            "calculationLogs": 0,
+            "iterationRows": 0
+          },
+          "noFabricatedRunState": true,
+          "horizontalOverflow": {
+            "dialogScrollWidth": 848,
+            "dialogClientWidth": 848,
+            "dialogOutsideViewport": false,
+            "dialogContentOverflow": false,
+            "pageOverflow": false
+          },
+          "noHorizontalOverflow": true
+        },
+        "dialogBounds": {
+          "withinHorizontalViewport": true,
+          "pageHorizontalOverflow": false
+        },
+        "completedResult": {
+          "available": false,
+          "synthesizedByHarness": false,
+          "packagedFollowUp": "Run, cancel, verify accessible non-color conditional/JN plots plus their complete point tables, export, save, inspect the archive witness, and reopen the genuine 10,000-resample PROCESS v2 result in packaged Tauri."
+        }
+      },
+      {
+        "viewport": "1440x900",
+        "fixtureApiPresent": true,
+        "fixture": {
+          "variables": 9,
+          "models": 0
+        },
+        "fixtureImport": {
+          "mechanism": "query-gated production smoke API",
+          "loader": "loadProcessV2Fixture"
+        },
+        "dataSurface": true,
+        "dialogOpened": true,
+        "regressionTypeOptions": [
+          {
+            "value": "ols",
+            "label": "Ordinary least squares"
+          },
+          {
+            "value": "logistic",
+            "label": "Binary logistic (outcome coded 0/1)"
+          },
+          {
+            "value": "process",
+            "label": "Graph-defined Path Analysis / PROCESS"
+          }
+        ],
+        "regressionType": "process",
+        "setup": {
+          "outcome": "Y",
+          "focal": "X",
+          "pathRows": 8,
+          "paths": [
+            {
+              "from": "X",
+              "to": "Y"
+            },
+            {
+              "from": "X",
+              "to": "M1"
+            },
+            {
+              "from": "M1",
+              "to": "M2"
+            },
+            {
+              "from": "M2",
+              "to": "Y"
+            },
+            {
+              "from": "X",
+              "to": "M3"
+            },
+            {
+              "from": "M3",
+              "to": "Y"
+            },
+            {
+              "from": "X",
+              "to": "M4"
+            },
+            {
+              "from": "M4",
+              "to": "Y"
+            }
+          ],
+          "pathsExact": true,
+          "moderatorRows": 2,
+          "moderators": [
+            {
+              "variable": "W",
+              "scale": "continuous"
+            },
+            {
+              "variable": "B",
+              "scale": "binary_0_1"
+            }
+          ],
+          "moderatorsExact": true,
+          "moderationRows": 3,
+          "moderations": [
+            {
+              "edge": "X -> Y",
+              "primary": "W",
+              "conditioning": "B"
+            },
+            {
+              "edge": "X -> M3",
+              "primary": "W",
+              "conditioning": ""
+            },
+            {
+              "edge": "M4 -> Y",
+              "primary": "B",
+              "conditioning": ""
+            }
+          ],
+          "moderationsExact": true,
+          "stableRowIdentity": {
+            "paths": {
+              "initialRowOrder": [
+                [
+                  "nd-process-path-from-0",
+                  "nd-process-path-to-0"
+                ],
+                [
+                  "nd-process-path-from-1",
+                  "nd-process-path-to-1"
+                ],
+                [
+                  "nd-process-path-from-2",
+                  "nd-process-path-to-2"
+                ],
+                [
+                  "nd-process-path-from-3",
+                  "nd-process-path-to-3"
+                ],
+                [
+                  "nd-process-path-from-4",
+                  "nd-process-path-to-4"
+                ],
+                [
+                  "nd-process-path-from-5",
+                  "nd-process-path-to-5"
+                ],
+                [
+                  "nd-process-path-from-6",
+                  "nd-process-path-to-6"
+                ],
+                [
+                  "nd-process-path-from-7",
+                  "nd-process-path-to-7"
+                ]
+              ],
+              "finalRowOrder": [
+                [
+                  "nd-process-path-from-0",
+                  "nd-process-path-to-0"
+                ],
+                [
+                  "nd-process-path-from-1",
+                  "nd-process-path-to-1"
+                ],
+                [
+                  "nd-process-path-from-2",
+                  "nd-process-path-to-2"
+                ],
+                [
+                  "nd-process-path-from-3",
+                  "nd-process-path-to-3"
+                ],
+                [
+                  "nd-process-path-from-4",
+                  "nd-process-path-to-4"
+                ],
+                [
+                  "nd-process-path-from-5",
+                  "nd-process-path-to-5"
+                ],
+                [
+                  "nd-process-path-from-6",
+                  "nd-process-path-to-6"
+                ],
+                [
+                  "nd-process-path-from-7",
+                  "nd-process-path-to-7"
+                ]
+              ],
+              "rowCount": 8,
+              "selectCount": 16,
+              "enabledSelectCount": 16,
+              "disabledSelectCount": 0,
+              "changedSelectCount": 16,
+              "mutations": [
+                {
+                  "id": "nd-process-path-from-0",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-0",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-from-1",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-1",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-from-2",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-2",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-from-3",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-3",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-from-4",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-4",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-from-5",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-5",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-from-6",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-6",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-from-7",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-path-to-7",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                }
+              ],
+              "passed": true
+            },
+            "moderators": {
+              "initialRowOrder": [
+                [
+                  "nd-process-moderator-variable-0",
+                  "nd-process-moderator-scale-0"
+                ],
+                [
+                  "nd-process-moderator-variable-1",
+                  "nd-process-moderator-scale-1"
+                ]
+              ],
+              "finalRowOrder": [
+                [
+                  "nd-process-moderator-variable-0",
+                  "nd-process-moderator-scale-0"
+                ],
+                [
+                  "nd-process-moderator-variable-1",
+                  "nd-process-moderator-scale-1"
+                ]
+              ],
+              "rowCount": 2,
+              "selectCount": 4,
+              "enabledSelectCount": 4,
+              "disabledSelectCount": 0,
+              "changedSelectCount": 4,
+              "mutations": [
+                {
+                  "id": "nd-process-moderator-variable-0",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderator-scale-0",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderator-variable-1",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderator-scale-1",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                }
+              ],
+              "passed": true
+            },
+            "moderations": {
+              "initialRowOrder": [
+                [
+                  "nd-process-moderation-edge-0",
+                  "nd-process-moderation-primary-0",
+                  "nd-process-moderation-conditioning-0"
+                ],
+                [
+                  "nd-process-moderation-edge-1",
+                  "nd-process-moderation-primary-1",
+                  "nd-process-moderation-conditioning-1"
+                ],
+                [
+                  "nd-process-moderation-edge-2",
+                  "nd-process-moderation-primary-2",
+                  "nd-process-moderation-conditioning-2"
+                ]
+              ],
+              "finalRowOrder": [
+                [
+                  "nd-process-moderation-edge-0",
+                  "nd-process-moderation-primary-0",
+                  "nd-process-moderation-conditioning-0"
+                ],
+                [
+                  "nd-process-moderation-edge-1",
+                  "nd-process-moderation-primary-1",
+                  "nd-process-moderation-conditioning-1"
+                ],
+                [
+                  "nd-process-moderation-edge-2",
+                  "nd-process-moderation-primary-2",
+                  "nd-process-moderation-conditioning-2"
+                ]
+              ],
+              "rowCount": 3,
+              "selectCount": 9,
+              "enabledSelectCount": 7,
+              "disabledSelectCount": 2,
+              "changedSelectCount": 7,
+              "mutations": [
+                {
+                  "id": "nd-process-moderation-edge-0",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-primary-0",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-conditioning-0",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-edge-1",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-primary-1",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-conditioning-1",
+                  "disabled": true,
+                  "changed": false,
+                  "focusedBefore": false,
+                  "focusedAfterChange": false,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-edge-2",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-primary-2",
+                  "disabled": false,
+                  "changed": true,
+                  "focusedBefore": true,
+                  "focusedAfterChange": true,
+                  "rowOrderUnchanged": true
+                },
+                {
+                  "id": "nd-process-moderation-conditioning-2",
+                  "disabled": true,
+                  "changed": false,
+                  "focusedBefore": false,
+                  "focusedAfterChange": false,
+                  "rowOrderUnchanged": true
+                }
+              ],
+              "passed": true
+            },
+            "passed": true
+          },
+          "selectedControls": [
+            "C"
+          ],
+          "capacity": {
+            "topLevelPredictors": 7,
+            "topLevelPredictorsMaximum": 8,
+            "controls": 1,
+            "controlsMaximum": 1,
+            "equationNonInterceptTermsMaximum": 50
+          },
+          "bootstrap": "enabled",
+          "samples": "10000",
+          "samplesBounds": {
+            "min": "99",
+            "max": "10000",
+            "step": "1"
+          },
+          "workers": "1",
+          "workersBounds": {
+            "min": "1",
+            "max": "64",
+            "step": null
+          },
+          "seed": "20260718",
+          "seedBounds": {
+            "min": "0",
+            "max": "4294967295",
+            "step": null
+          },
+          "startLabel": "Start graph-defined path analysis with bootstrap",
+          "startDisabledInBrowserPreview": true,
+          "runtimeBlockers": [
+            "Calculations require the offline QuickPLS desktop runtime. This preview can inspect models but cannot run them."
+          ],
+          "unexpectedBlockers": [],
+          "profileReady": true,
+          "profileText": "62 global listwise-complete cases; 2 rows omitted; 5 OLS equations verified",
+          "scopeExact": true,
+          "scope": "Graph-defined observed-variable path analysis with raw listwise-complete OLS equations, HC3 covariance, fixed two-sided 95% Student-t inference, parallel and serial mediation, continuous or exact 0/1 moderation, mixed two-moderator interactions, first- or second-stage moderated mediation, simple slopes, and Johnson-Neyman regions where applicable. This release supports up to 8 selected predictors in graph-role order and one control entered in every equation; the 50-term ceiling is an equation-design safety bound. Continuous product participants are centered within each equation sample. Numbered macros, binary outcomes, weights, clusters, custom alpha or tails, studentized intervals, multiple moderated stages on one indirect path, and three-way interactions on mediated paths are excluded. Continuous simple-slope and plot probes use the original sample raw mean - SD, mean, and mean + SD; binary probes use original raw 0/1. Resamples and delete-one fits re-center their equations internally while retaining that original raw probe grid.",
+          "bootstrapScopeExact": true,
+          "bootstrapScope": "10,000 complete-case resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa requires every delete-one PROCESS fit; unavailable intervals retain an explicit reason. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Indexed seeded streams are deterministic and worker-invariant.",
+          "previewExact": true,
+          "previewAccessible": true,
+          "preview": {
+            "title": "Graph-defined path analysis preview",
+            "description": "X -> Y moderated by W and B; X -> M1; M1 -> M2; M2 -> Y; X -> M3 moderated by W; M3 -> Y; X -> M4; M4 -> Y moderated by B",
+            "expectedDescription": "X -> Y moderated by W and B; X -> M1; M1 -> M2; M2 -> Y; X -> M3 moderated by W; M3 -> Y; X -> M4; M4 -> Y moderated by B"
+          },
+          "previewAccessibility": {
+            "count": 1,
+            "role": "img",
+            "ariaLabelledBy": "nd-process-preview-title nd-process-preview-description",
+            "ids": [
+              "nd-process-preview-title",
+              "nd-process-preview-description"
+            ],
+            "references": [
+              {
+                "id": "nd-process-preview-title",
+                "exists": true,
+                "withinDialog": true,
+                "tagName": "title",
+                "text": "Graph-defined path analysis preview"
+              },
+              {
+                "id": "nd-process-preview-description",
+                "exists": true,
+                "withinDialog": true,
+                "tagName": "desc",
+                "text": "X -> Y moderated by W and B; X -> M1; M1 -> M2; M2 -> Y; X -> M3 moderated by W; M3 -> Y; X -> M4; M4 -> Y moderated by B"
+              }
+            ],
+            "passed": true
+          },
+          "focusChecks": [
+            {
+              "selector": "#nd-calculation-regression-type",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            },
+            {
+              "selector": "#nd-process-outcome",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            },
+            {
+              "selector": "#nd-process-add-path",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            },
+            {
+              "selector": "#nd-process-moderator-variable-0",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            },
+            {
+              "selector": "#nd-calculation-regression-bootstrap",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            },
+            {
+              "selector": "#nd-calculation-regression-bootstrap-samples",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            },
+            {
+              "selector": "#nd-calculation-regression-bootstrap-workers",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            },
+            {
+              "selector": "#nd-calculation-seed",
+              "count": 1,
+              "disabled": false,
+              "visible": true,
+              "focused": true
+            }
+          ]
+        },
+        "accessibility": {
+          "controlsLabeled": true,
+          "groupsNamed": true,
+          "keyboardReachable": true,
+          "focusRestored": true
+        },
+        "truthAndOverflow": {
+          "fabricatedRunState": {
+            "statusSections": 0,
+            "progressElements": 0,
+            "calculationLogs": 0,
+            "iterationRows": 0
+          },
+          "noFabricatedRunState": true,
+          "horizontalOverflow": {
+            "dialogScrollWidth": 848,
+            "dialogClientWidth": 848,
+            "dialogOutsideViewport": false,
+            "dialogContentOverflow": false,
+            "pageOverflow": false
+          },
+          "noHorizontalOverflow": true
+        },
+        "dialogBounds": {
+          "withinHorizontalViewport": true,
+          "pageHorizontalOverflow": false
+        },
+        "completedResult": {
+          "available": false,
+          "synthesizedByHarness": false,
+          "packagedFollowUp": "Run, cancel, verify accessible non-color conditional/JN plots plus their complete point tables, export, save, inspect the archive witness, and reopen the genuine 10,000-resample PROCESS v2 result in packaged Tauri."
+        }
+      }
+    ],
     "structuralPathRandomization": [
       {
         "viewport": "1024x700",
@@ -9411,7 +11610,7 @@
         "expectedDefaultPermutations": "999",
         "bootstrapSamplesInputCount": 0,
         "mutuallyExclusive": true,
-        "methodDescription": "Structural Path RandomizationRun single-model Freedman–Lane randomization inference for structural path coefficients.",
+        "methodDescription": "Structural Path RandomizationRun candidate single-model Freedman-Lane randomization for structural paths using fixed original PLS construct scores and unadjusted pathwise p values.",
         "distinctFromMgaAndMicom": true,
         "truthAndOverflow": {
           "fabricatedRunState": {
@@ -9460,7 +11659,7 @@
         "expectedDefaultPermutations": "999",
         "bootstrapSamplesInputCount": 0,
         "mutuallyExclusive": true,
-        "methodDescription": "Structural Path RandomizationRun single-model Freedman–Lane randomization inference for structural path coefficients.",
+        "methodDescription": "Structural Path RandomizationRun candidate single-model Freedman-Lane randomization for structural paths using fixed original PLS construct scores and unadjusted pathwise p values.",
         "distinctFromMgaAndMicom": true,
         "truthAndOverflow": {
           "fabricatedRunState": {
@@ -9509,7 +11708,7 @@
         "expectedDefaultPermutations": "999",
         "bootstrapSamplesInputCount": 0,
         "mutuallyExclusive": true,
-        "methodDescription": "Structural Path RandomizationRun single-model Freedman–Lane randomization inference for structural path coefficients.",
+        "methodDescription": "Structural Path RandomizationRun candidate single-model Freedman-Lane randomization for structural paths using fixed original PLS construct scores and unadjusted pathwise p values.",
         "distinctFromMgaAndMicom": true,
         "truthAndOverflow": {
           "fabricatedRunState": {
@@ -10432,12 +12631,12 @@
         "indicators": 80
       },
       "metrics": {
-        "fixtureRenderMs": 113.3,
-        "selectionMs": 319.4,
-        "dragMs": 507.3,
-        "panMs": 225.6,
-        "zoomMs": 331.1,
-        "workspaceRoundTripMs": 348.7
+        "fixtureRenderMs": 117.9,
+        "selectionMs": 354.4,
+        "dragMs": 518.9,
+        "panMs": 241.1,
+        "zoomMs": 298.8,
+        "workspaceRoundTripMs": 353.9
       },
       "budgetsMs": {
         "fixtureRender": 5000,
@@ -10527,6 +12726,12 @@
       "requiredPackagedFollowUp": "Run genuine OLS and binary-logistic case-resampling jobs through packaged Tauri; inspect summary/coefficient/percentile/conditional-BCa tables, conditional failures, logistic odds ratios, XLSX, save, archive witness, and same-run reopen."
     },
     {
+      "id": "process-v2-completed-results-browser",
+      "reason": "The imported project provides genuine PROCESS setup data but no completed PROCESS v2 run. The visual harness did not synthesize a run, equation, effect, interval, plot, failure, or Johnson-Neyman row.",
+      "viewport": "1024x700",
+      "requiredPackagedFollowUp": "Run, cancel, verify accessible non-color conditional/JN plots plus their complete point tables, export, save, inspect the archive witness, and reopen the genuine 10,000-resample PROCESS v2 result in packaged Tauri."
+    },
+    {
       "id": "completed-moderation-browser-fixture",
       "reason": "The production browser smoke API exposes the checked-in Corporate Reputation mediation/bootstrap run, which has no moderation payload.",
       "viewport": "1024x700",
@@ -10599,6 +12804,12 @@
       "requiredPackagedFollowUp": "Run genuine OLS and binary-logistic case-resampling jobs through packaged Tauri; inspect summary/coefficient/percentile/conditional-BCa tables, conditional failures, logistic odds ratios, XLSX, save, archive witness, and same-run reopen."
     },
     {
+      "id": "process-v2-completed-results-browser",
+      "reason": "The imported project provides genuine PROCESS setup data but no completed PROCESS v2 run. The visual harness did not synthesize a run, equation, effect, interval, plot, failure, or Johnson-Neyman row.",
+      "viewport": "1280x720",
+      "requiredPackagedFollowUp": "Run, cancel, verify accessible non-color conditional/JN plots plus their complete point tables, export, save, inspect the archive witness, and reopen the genuine 10,000-resample PROCESS v2 result in packaged Tauri."
+    },
+    {
       "id": "completed-moderation-browser-fixture",
       "reason": "The production browser smoke API exposes the checked-in Corporate Reputation mediation/bootstrap run, which has no moderation payload.",
       "viewport": "1280x720",
@@ -10671,6 +12882,12 @@
       "requiredPackagedFollowUp": "Run genuine OLS and binary-logistic case-resampling jobs through packaged Tauri; inspect summary/coefficient/percentile/conditional-BCa tables, conditional failures, logistic odds ratios, XLSX, save, archive witness, and same-run reopen."
     },
     {
+      "id": "process-v2-completed-results-browser",
+      "reason": "The imported project provides genuine PROCESS setup data but no completed PROCESS v2 run. The visual harness did not synthesize a run, equation, effect, interval, plot, failure, or Johnson-Neyman row.",
+      "viewport": "1440x900",
+      "requiredPackagedFollowUp": "Run, cancel, verify accessible non-color conditional/JN plots plus their complete point tables, export, save, inspect the archive witness, and reopen the genuine 10,000-resample PROCESS v2 result in packaged Tauri."
+    },
+    {
       "id": "completed-moderation-browser-fixture",
       "reason": "The production browser smoke API exposes the checked-in Corporate Reputation mediation/bootstrap run, which has no moderation payload.",
       "viewport": "1440x900",
@@ -10712,6 +12929,7 @@
       "logistic-standalone-dialog",
       "regression-bootstrap-ols-dialog",
       "regression-bootstrap-logistic-dialog",
+      "process-v2-dialog",
       "empty-results",
       "completed-results",
       "mediation-results",
@@ -10728,10 +12946,24 @@
       "1280x720",
       "1440x900"
     ],
-    "expectedRegularScreenshotCount": 85,
-    "capturedRegularScreenshotCount": 85,
+    "expectedRegularScreenshotCount": 88,
+    "capturedRegularScreenshotCount": 88,
     "missingMatrix": [],
     "missingFiles": [],
+    "screenshotIntegrity": {
+      "exactDescriptorKeys": [
+        "path",
+        "size",
+        "sha256",
+        "viewport",
+        "state"
+      ],
+      "pathPrefix": "validation/results/screens/v247-native-desktop-visual/",
+      "descriptorCount": 99,
+      "uniquePathCount": 99,
+      "errors": [],
+      "passed": true
+    },
     "runningCapture": {
       "captured": false,
       "explicitSkips": 3,
@@ -10739,7 +12971,7 @@
     },
     "artifacts": {
       "resultPath": "D:\\QuickPLS\\validation\\results\\v247_native_desktop_visual_acceptance.json",
-      "screenshotDir": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance"
+      "screenshotDir": "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-visual"
     }
   }
 }

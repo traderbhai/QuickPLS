@@ -265,6 +265,40 @@ describe("native analysis catalog", () => {
       studentizedInnerSamples: 0,
       permutationSamples: 0,
     });
+
+    const process = nativeAnalysisSettingsForWorkbenchKind({
+      ...settings,
+      regressionType: "process",
+      regressionOutcome: "y",
+      regressionPredictors: "stale,order",
+      regressionControls: " c ",
+      regressionBootstrap: true,
+      bootstrapSamples: 999,
+      workers: 3,
+      processGraph: {
+        model: "graph",
+        focal_predictor: "x",
+        paths: [{ from: "x", to: "m" }, { from: "m", to: "y" }],
+        moderators: [{ variable: "w", scale: "continuous" }],
+        moderations: [{ from: "x", to: "m", moderator: "w" }],
+        continuous_product_centering: "equation_complete_case_mean_v1",
+      },
+    }, "regression");
+    expect(process).toMatchObject({
+      method: "regression",
+      regressionType: "process",
+      regressionOutcome: "y",
+      regressionPredictors: "x,m,w",
+      regressionControls: "c",
+      regressionBootstrap: true,
+      bootstrapSamples: 999,
+      workers: 3,
+      robustSe: "hc3",
+      processGraph: {
+        model: "graph",
+        continuous_product_centering: "equation_complete_case_mean_v1",
+      },
+    });
   });
 
   it("normalizes hidden common fields so CCA readiness and recipe construction cannot disagree", () => {

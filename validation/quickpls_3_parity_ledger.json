@@ -577,10 +577,11 @@
       "official_family": "Permutation testing",
       "quickpls_scope": "Single-model Freedman-Lane structural path randomization under documented fixed-score linear nuisance assumptions.",
       "method_version": "freedman_lane_permutation_v1",
-      "state": "engine_only",
+      "state": "release_qualified",
       "known_differences": [
-        "This is single-model path randomization, not multigroup analysis.",
-        "Current evidence proves the engine and responsive native setup, but the current packaged acceptance report does not contain a completed result, export, and same-run reopen for this workflow."
+        "This is single-model structural-score path randomization, not multigroup analysis, MGA, or MICOM.",
+        "The original converged PLS construct scores and measurement solution remain fixed; the measurement model is not re-estimated for each permutation.",
+        "Pathwise plus-one probabilities are unadjusted for multiplicity and assume exchangeable reduced-model residuals; qualification calibration is limited to paired homoscedastic Gaussian constant-variance scenarios and does not establish heteroskedastic or broader non-Gaussian validity."
       ],
       "evidence": {
         "engine": [
@@ -590,22 +591,57 @@
             "contains": "pub const PERMUTATION_METHOD_VERSION: &str = \"freedman_lane_permutation_v1\";"
           },
           {
-            "description": "Current scoped inference audit passed.",
-            "path": "validation/results/inference_method_promotion_audit.json",
-            "pointer": "/passed",
+            "description": "The current method-specific promotion audit binds the exact structural-path-randomization method identity.",
+            "path": "validation/results/structural_path_randomization_method_promotion_audit.json",
+            "pointer": "/method_version",
+            "equals": "freedman_lane_permutation_v1"
+          }
+        ],
+        "archive": [
+          {
+            "description": "The genuine packaged Structural Path Randomization archive passed strict inspection.",
+            "path": "validation/results/structural_path_randomization_v1_packaged_acceptance.json",
+            "pointer": "/checks/structuralPathRandomizationArchive/passed",
             "equals": true
           },
           {
-            "description": "The audit explicitly promotes Freedman-Lane permutation.",
-            "path": "validation/results/inference_method_promotion_audit.json",
-            "pointer": "/scope_decision/promoted_procedures",
-            "contains": "freedman_lane_permutation"
+            "description": "The same packaged Structural Path Randomization run saved and reopened.",
+            "path": "validation/results/structural_path_randomization_v1_packaged_acceptance.json",
+            "pointer": "/checks/structuralPathRandomizationSaveReopen/passed",
+            "equals": true
           }
         ],
-        "archive": [],
-        "native": []
+        "native": [
+          {
+            "description": "The packaged Structural Path Randomization results workflow passed.",
+            "path": "validation/results/structural_path_randomization_v1_packaged_acceptance.json",
+            "pointer": "/checks/structuralPathRandomizationResults/passed",
+            "equals": true
+          },
+          {
+            "description": "The packaged Structural Path Randomization export workflow passed.",
+            "path": "validation/results/structural_path_randomization_v1_packaged_acceptance.json",
+            "pointer": "/checks/structuralPathRandomizationExport/passed",
+            "equals": true
+          }
+        ]
       },
-      "release_evidence": null
+      "release_evidence": {
+        "current_scoped_method_audit": {
+          "path": "validation/results/structural_path_randomization_method_promotion_audit.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        },
+        "packaged_acceptance": {
+          "path": "validation/results/structural_path_randomization_v1_packaged_acceptance.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        }
+      }
     },
     {
       "id": "qpls3.groups.micom_permutation_mga",
@@ -1072,39 +1108,61 @@
       "catalog_kind": "regression",
       "label": "Graph-defined Path Analysis and PROCESS",
       "official_family": "PROCESS",
-      "quickpls_scope": "Planned Wave 1 graph-defined multiple-equation path analysis, mediation, moderation, moderated mediation, conditional effects, simple slopes, Johnson-Neyman regions, and bootstrap inference without copied numbered macros.",
+      "quickpls_scope": "Independently implemented graph-defined continuous-outcome OLS path analysis with parallel and serial mediation, continuous or exact-0/1 moderation, bounded moderated mediation, conditional effects, HC3 and Student-t inference, simple slopes, Johnson-Neyman regions, and optional dedicated percentile and conditional-BCa case bootstrap without copied numbered macros.",
       "method_version": "regression_process_v2",
-      "state": "absent",
+      "state": "release_qualified",
       "known_differences": [
-        "The current historical regression_process_v1 preview is not the Wave 1 multiple-equation or bootstrap-qualified workflow and is not current evidence.",
-        "QuickPLS will author equivalent relationships visually and will not copy proprietary numbered PROCESS templates or SmartPLS project files."
+        "Historical regression_process_v1 output is archive-readable only and is not accepted as current v2 execution or qualification evidence.",
+        "QuickPLS authors equivalent relationships visually and does not copy proprietary numbered PROCESS templates, source code, or SmartPLS project files.",
+        "The bounded v2 contract excludes binary endogenous equations, weights and clusters, broader categorical coding, intermediate or multiple moderated stages on one indirect path, studentized intervals, custom tails or alpha levels, and graphs beyond the documented caps."
       ],
       "evidence": {
         "engine": [
           {
-            "description": "The future PROCESS v2 method version must exist before promotion.",
+            "description": "The current PROCESS v2 method version is defined in source.",
             "path": "crates/qpls-estimation/src/pls.rs",
             "contains": "pub const REGRESSION_PROCESS_METHOD_VERSION: &str = \"regression_process_v2\";"
+          },
+          {
+            "description": "The scoped PROCESS v2 promotion audit binds the current method identity.",
+            "path": "validation/results/process_v2_method_promotion_audit.json",
+            "pointer": "/method_version",
+            "equals": "regression_process_v2"
           }
         ],
         "archive": [
           {
             "description": "A genuine packaged PROCESS v2 run must save and reopen.",
-            "path": "validation/results/v246_tauri_native_acceptance.json",
-            "pointer": "/checks/processSaveReopen/sameRunRestored",
+            "path": "validation/results/process_v2_packaged_acceptance.json",
+            "pointer": "/checks/save_reopen/passed",
             "equals": true
           }
         ],
         "native": [
           {
             "description": "The packaged PROCESS workflow must pass.",
-            "path": "validation/results/v246_tauri_native_acceptance.json",
-            "pointer": "/checks/processWorkflow/passed",
+            "path": "validation/results/process_v2_packaged_acceptance.json",
+            "pointer": "/checks/workflow/passed",
             "equals": true
           }
         ]
       },
-      "release_evidence": null
+      "release_evidence": {
+        "current_scoped_method_audit": {
+          "path": "validation/results/process_v2_method_promotion_audit.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        },
+        "packaged_acceptance": {
+          "path": "validation/results/process_v2_packaged_acceptance.json",
+          "passed_pointer": "/passed",
+          "feature_id_pointer": "/feature_id",
+          "method_version_pointer": "/method_version",
+          "catalogue_snapshot_date_pointer": "/catalogue_snapshot_date"
+        }
+      }
     }
   ]
 }

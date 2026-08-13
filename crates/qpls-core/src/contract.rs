@@ -332,6 +332,51 @@ pub enum ProcessRelationshipConfig {
         mediator: String,
         moderator: String,
     },
+    Graph {
+        focal_predictor: String,
+        paths: Vec<ProcessPathConfig>,
+        moderators: Vec<ProcessModeratorConfig>,
+        moderations: Vec<ProcessModerationConfig>,
+        continuous_product_centering: ProcessContinuousCentering,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessPathConfig {
+    pub from: String,
+    pub to: String,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ProcessModeratorScale {
+    #[serde(rename = "continuous")]
+    Continuous,
+    #[serde(rename = "binary_0_1")]
+    Binary01,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessModeratorConfig {
+    pub variable: String,
+    pub scale: ProcessModeratorScale,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessModerationConfig {
+    pub from: String,
+    pub to: String,
+    pub moderator: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub conditioning_moderator: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ProcessContinuousCentering {
+    #[serde(rename = "equation_complete_case_mean_v1")]
+    EquationCompleteCaseMeanV1,
 }
 
 impl ProcessRelationshipConfig {
@@ -340,6 +385,7 @@ impl ProcessRelationshipConfig {
             Self::Mediation { .. } => "mediation",
             Self::Moderation { .. } => "moderation",
             Self::ModeratedMediation { .. } => "moderated_mediation",
+            Self::Graph { .. } => "graph",
         }
     }
 }
@@ -982,6 +1028,11 @@ impl MethodConfig {
                                 metadata.insert("process_m".into(), mediator.clone());
                                 metadata.insert("process_w".into(), moderator.clone());
                             }
+                            ProcessRelationshipConfig::Graph { .. } => {
+                                // Graph PROCESS v2 is consumed directly from the typed
+                                // capability. It is intentionally not projected into the
+                                // lossy v1 metadata keys.
+                            }
                         }
                     }
                 }
@@ -1106,6 +1157,10 @@ pub enum AnalysisRecipeMigrationError {
     InvalidMetadata { key: &'static str, value: String },
     #[error("legacy executable metadata key {key} is not valid for method {method}")]
     MetadataMethodMismatch { key: String, method: AnalysisMethod },
+    #[error(
+        "historical PROCESS v1 recipes are archive-readable only and cannot be migrated into executable schema-v3 recipes; author a graph-defined PROCESS v2 recipe"
+    )]
+    ArchiveOnlyProcessV1,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
@@ -1421,6 +1476,91 @@ mod contract_tests {
                         "mediator": "m",
                         "moderator": "w"
                     }
+                }
+            })
+        );
+        assert_eq!(
+            serde_json::to_value(MethodConfig::Regression {
+                outcome: "y".into(),
+                predictors: vec!["x".into(), "m".into(), "w".into(), "b".into()],
+                controls: vec!["c".into()],
+                model: RegressionModelConfig::Process {
+                    relationship: ProcessRelationshipConfig::Graph {
+                        focal_predictor: "x".into(),
+                        paths: vec![
+                            ProcessPathConfig {
+                                from: "x".into(),
+                                to: "m".into()
+                            },
+                            ProcessPathConfig {
+                                from: "m".into(),
+                                to: "y".into()
+                            },
+                            ProcessPathConfig {
+                                from: "x".into(),
+                                to: "y".into()
+                            },
+                        ],
+                        moderators: vec![
+                            ProcessModeratorConfig {
+                                variable: "w".into(),
+                                scale: ProcessModeratorScale::Continuous
+                            },
+                            ProcessModeratorConfig {
+                                variable: "b".into(),
+                                scale: ProcessModeratorScale::Binary01
+                            },
+                        ],
+                        moderations: vec![ProcessModerationConfig {
+                            from: "x".into(),
+                            to: "y".into(),
+                            moderator: "w".into(),
+                            conditioning_moderator: Some("b".into()),
+                        }],
+                        continuous_product_centering:
+                            ProcessContinuousCentering::EquationCompleteCaseMeanV1,
+                    },
+                },
+                bootstrap: Some(RegressionBootstrapConfig {
+                    algorithm: RegressionBootstrapAlgorithm::CaseResampling,
+                    intervals: vec![
+                        RegressionBootstrapInterval::Percentile,
+                        RegressionBootstrapInterval::Bca
+                    ],
+                }),
+            })
+            .unwrap(),
+            serde_json::json!({
+                "kind": "regression",
+                "outcome": "y",
+                "predictors": ["x", "m", "w", "b"],
+                "controls": ["c"],
+                "model": {
+                    "type": "process",
+                    "relationship": {
+                        "model": "graph",
+                        "focal_predictor": "x",
+                        "paths": [
+                            {"from": "x", "to": "m"},
+                            {"from": "m", "to": "y"},
+                            {"from": "x", "to": "y"}
+                        ],
+                        "moderators": [
+                            {"variable": "w", "scale": "continuous"},
+                            {"variable": "b", "scale": "binary_0_1"}
+                        ],
+                        "moderations": [{
+                            "from": "x",
+                            "to": "y",
+                            "moderator": "w",
+                            "conditioning_moderator": "b"
+                        }],
+                        "continuous_product_centering": "equation_complete_case_mean_v1"
+                    }
+                },
+                "bootstrap": {
+                    "algorithm": "case_resampling",
+                    "intervals": ["percentile", "bca"]
                 }
             })
         );
@@ -1831,6 +1971,30 @@ mod contract_tests {
             "validated_regression_ols_v1_bounded_scope"
         );
         assert_eq!(source.migrated_v3().unwrap(), migrated);
+    }
+
+    #[test]
+    fn historical_process_v1_migration_fails_closed_instead_of_creating_an_executable_recipe() {
+        let mut settings = AnalysisSettings::default();
+        settings.method = AnalysisMethod::Regression;
+        let source = fixture_recipe(
+            LEGACY_ANALYSIS_RECIPE_SCHEMA_VERSION,
+            settings,
+            BTreeMap::from([
+                ("regression_type".into(), "process".into()),
+                ("regression_outcome".into(), "y".into()),
+                ("regression_predictors".into(), "x,m".into()),
+                ("process_model".into(), "mediation".into()),
+                ("process_x".into(), "x".into()),
+                ("process_m".into(), "m".into()),
+            ]),
+        );
+        assert_eq!(
+            source.migrated_v3().unwrap_err(),
+            AnalysisRecipeMigrationError::ArchiveOnlyProcessV1
+        );
+        assert_eq!(source.schema_version, LEGACY_ANALYSIS_RECIPE_SCHEMA_VERSION);
+        assert!(source.method_config.is_none());
     }
 
     #[test]
@@ -2828,7 +2992,11 @@ fn legacy_regression_config(
         ));
     }
     let controls = legacy_list(metadata, &["regression_controls", "regression.controls"])?;
-    let model = match legacy_alias_value(metadata, &["regression_type"])?.as_deref() {
+    let regression_type = legacy_alias_value(metadata, &["regression_type"])?;
+    if regression_type.as_deref() == Some("process") {
+        return Err(AnalysisRecipeMigrationError::ArchiveOnlyProcessV1);
+    }
+    let model = match regression_type.as_deref() {
         None | Some("ols") => match legacy_required(metadata, &["robust_se"])?.as_str() {
             "hc3" => RegressionModelConfig::Ols {
                 robust_se: RobustStandardError::Hc3,

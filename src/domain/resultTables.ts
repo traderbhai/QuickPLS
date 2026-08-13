@@ -1,4 +1,15 @@
 import type { AnalysisRun, PlsResult } from "../types";
+import {
+  nativeLegacyProcessResultProjection,
+  nativeLegacyProcessResultTables,
+  nativeProcessResultProjection,
+  nativeProcessResultTables,
+} from "../native/nativeProcessResults";
+import {
+  NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING,
+  nativeStructuralPathRandomizationProjection,
+  nativeStructuralPathRandomizationTable,
+} from "../native/nativeStructuralPathRandomization";
 
 export interface ResultTable {
   id: string;
@@ -189,36 +200,74 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
   }
 
   if (result.regression) {
-    const regressionStatus = regressionScopeStatus(result.regression);
+    const regressionStatus = regressionScopeStatus(result.regression, result.method_version);
     const regressionWarning = regressionStatus === "validated"
       ? scopeWarnings(result.regression.warnings)
       : experimentalWarnings(result.regression.warnings);
-    tables.push({
-      id: "regression_coefficients",
-      title: "Regression coefficients",
-      status: regressionStatus,
-      warning: regressionWarning,
-      columns: ["Term", "Estimate", "SE", "Statistic", "p", "Lower", "Upper", "Odds ratio"],
-      rows: result.regression.coefficients.map((row) => [row.term, formatNumber(row.estimate, 6), formatNumber(row.standard_error, 6), formatNumber(row.statistic, 4), formatPValue(row.p_value_two_sided), formatNumber(row.confidence_interval_lower, 6), formatNumber(row.confidence_interval_upper, 6), row.odds_ratio == null ? "N/A" : formatNumber(row.odds_ratio, 6)]),
-    });
-    tables.push({
-      id: "regression_fit",
-      title: "Regression fit",
-      status: regressionStatus,
-      warning: regressionWarning,
-      columns: ["Metric", "Value"],
-      rows: [
-        ["Type", formatLabel(result.regression.regression_type)],
-        ["Outcome", result.regression.outcome],
-        ["Observations", String(result.regression.observations)],
-        ["R2", result.regression.fit.r_squared == null ? "N/A" : formatNumber(result.regression.fit.r_squared, 6)],
-        ["Adjusted R2", result.regression.fit.adjusted_r_squared == null ? "N/A" : formatNumber(result.regression.fit.adjusted_r_squared, 6)],
-        ["Pseudo R2", result.regression.fit.pseudo_r_squared == null ? "N/A" : formatNumber(result.regression.fit.pseudo_r_squared, 6)],
-        ["AIC", formatNumber(result.regression.fit.aic, 6)],
-        ["BIC", formatNumber(result.regression.fit.bic, 6)],
-      ],
-    });
-    if (result.regression.process) {
+    if (result.regression.coefficients.length) {
+      tables.push({
+        id: "regression_coefficients",
+        title: "Regression coefficients",
+        status: regressionStatus,
+        warning: regressionWarning,
+        columns: ["Term", "Estimate", "SE", "Statistic", "p", "Lower", "Upper", "Odds ratio"],
+        rows: result.regression.coefficients.map((row) => [row.term, formatNumber(row.estimate, 6), formatNumber(row.standard_error, 6), formatNumber(row.statistic, 4), formatPValue(row.p_value_two_sided), formatNumber(row.confidence_interval_lower, 6), formatNumber(row.confidence_interval_upper, 6), row.odds_ratio == null ? "N/A" : formatNumber(row.odds_ratio, 6)]),
+      });
+    }
+    if (result.regression.fit) {
+      tables.push({
+        id: "regression_fit",
+        title: "Regression fit",
+        status: regressionStatus,
+        warning: regressionWarning,
+        columns: ["Metric", "Value"],
+        rows: [
+          ["Type", formatLabel(result.regression.regression_type)],
+          ["Outcome", result.regression.outcome],
+          ["Observations", String(result.regression.observations)],
+          ["R2", result.regression.fit.r_squared == null ? "N/A" : formatNumber(result.regression.fit.r_squared, 6)],
+          ["Adjusted R2", result.regression.fit.adjusted_r_squared == null ? "N/A" : formatNumber(result.regression.fit.adjusted_r_squared, 6)],
+          ["Pseudo R2", result.regression.fit.pseudo_r_squared == null ? "N/A" : formatNumber(result.regression.fit.pseudo_r_squared, 6)],
+          ["AIC", formatNumber(result.regression.fit.aic, 6)],
+          ["BIC", formatNumber(result.regression.fit.bic, 6)],
+        ],
+      });
+    }
+    const graph = result.regression.process?.graph_v2;
+    if (graph) {
+      tables.push({
+        id: "process_model_summary",
+        title: "Graph-defined path analysis",
+        status: regressionStatus,
+        warning: regressionWarning,
+        columns: ["Field", "Value"],
+        rows: [
+          ["Outcome", result.regression.outcome],
+          ["Complete cases", String(graph.complete_cases)],
+          ["Omitted cases", String(graph.omitted_cases)],
+          ["Equations", String(graph.equations.length)],
+          ["Directed paths", String(graph.paths.length)],
+          ["Moderated paths", String(graph.moderations.length)],
+        ],
+      });
+      tables.push({
+        id: "process_equation_coefficients",
+        title: "PROCESS equation coefficients",
+        status: regressionStatus,
+        warning: scopeWarnings(result.regression.process!.warnings),
+        columns: ["Equation", "Term", "Estimate", "SE", "Statistic", "p", "Lower", "Upper"],
+        rows: graph.equations.flatMap((equation) => equation.coefficients.map((row) => [
+          equation.outcome,
+          row.term_id,
+          formatNumber(row.estimate, 6),
+          formatNumber(row.standard_error, 6),
+          formatNumber(row.statistic, 4),
+          formatPValue(row.p_value_two_sided),
+          formatNumber(row.confidence_interval_lower, 6),
+          formatNumber(row.confidence_interval_upper, 6),
+        ])),
+      });
+    } else if (result.regression.process) {
       tables.push({
         id: "process_effects",
         title: "PROCESS-style effects",
@@ -624,25 +673,54 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
 }
 
 export function runExportTables(run: AnalysisRun): ResultTable[] {
-  if (!run.result) return [];
-  const runStatus = resultScopeStatus(run.result);
+  if (run.status !== "completed" || !run.result) return [];
+  const structuralPathRandomization = nativeStructuralPathRandomizationProjection(run);
+  const runStatus = structuralPathRandomization ? "experimental" : resultScopeStatus(run.result);
+  const processProjection = nativeProcessResultProjection(run);
+  const legacyProcessProjection = nativeLegacyProcessResultProjection(run);
+  const scientificTables = processProjection
+    ? nativeProcessResultTables(processProjection)
+    : legacyProcessProjection
+      ? nativeLegacyProcessResultTables(legacyProcessProjection)
+      : [
+          ...methodResultTables(run.result),
+          ...(structuralPathRandomization
+            ? [nativeStructuralPathRandomizationTable(structuralPathRandomization)]
+            : []),
+        ];
+  const provenanceRows = [
+    ["Run", run.name],
+    ["Method", run.method],
+    ["Created at", run.createdAt],
+    ["Seed", String(run.seed)],
+    ["Dataset fingerprint", run.fingerprint],
+    ["Method version", run.result.method_version],
+  ];
+  if (structuralPathRandomization) {
+    provenanceRows.push(
+      ["Randomization method", structuralPathRandomization.methodVersion],
+      ["Randomization operation", structuralPathRandomization.operation],
+      ["Randomized structural paths", String(structuralPathRandomization.parameters.length)],
+      ["Requested path permutations", String(structuralPathRandomization.permutations)],
+      ["Randomization estimand", "Structural path coefficients conditional on fixed original PLS construct scores"],
+      ["Pathwise probability", "Conditional/approximate two-sided plus-one probability under exchangeable reduced-model residuals; no multiplicity adjustment"],
+      ["Qualification status", "Internal candidate/experimental product label; method-specific qualification evidence is tracked separately"],
+    );
+  }
   return [
     {
       id: "run_provenance",
       title: "Run provenance",
       status: runStatus,
-      warning: runStatus === "validated" ? null : EXPERIMENTAL_WARNING,
+      warning: legacyProcessProjection
+        ? "Historical read-only regression_process_v1 archive; no current execution, parity, or validation claim is made."
+        : structuralPathRandomization
+          ? NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING
+          : runStatus === "validated" ? null : EXPERIMENTAL_WARNING,
       columns: ["Field", "Value"],
-      rows: [
-        ["Run", run.name],
-        ["Method", run.method],
-        ["Created at", run.createdAt],
-        ["Seed", String(run.seed)],
-        ["Dataset fingerprint", run.fingerprint],
-        ["Method version", run.result.method_version],
-      ],
+      rows: provenanceRows,
     },
-    ...methodResultTables(run.result),
+    ...scientificTables,
   ];
 }
 
@@ -681,26 +759,38 @@ function experimentalWarnings(values: string[]) {
   return values.length ? `${EXPERIMENTAL_WARNING} ${values.join(" ")}` : EXPERIMENTAL_WARNING;
 }
 
-function regressionScopeStatus(regression: NonNullable<PlsResult["regression"]>): ResultTable["status"] {
+function regressionScopeStatus(
+  regression: NonNullable<PlsResult["regression"]>,
+  resultMethodVersion: string,
+): ResultTable["status"] {
   if (regression.regression_type === "ols") return "validated";
   if (regression.regression_type === "logistic") {
     return regression.method_version === "regression_logistic_v2" ? "validated" : "experimental";
   }
-  if (regression.regression_type === "process" && regression.process?.model !== "moderated_mediation") return "validated";
+  if (regression.regression_type === "process") {
+    const process = regression.process;
+    if (resultMethodVersion === "regression_process_v1"
+      && regression.method_version === "regression_process_v1"
+      && process?.method_version === "regression_process_v1"
+      && process.graph_v2 == null) return "experimental";
+    // PROCESS v2 remains an implemented release candidate until its current
+    // native/package promotion evidence passes. Exact identities are still
+    // projected fail-closed by the dedicated native PROCESS projector.
+  }
   return "experimental";
 }
 
-function resultScopeStatus(result: PlsResult): ResultTable["status"] {
+export function resultScopeStatus(result: PlsResult): ResultTable["status"] {
   if (
     (result.segmentation && result.segmentation.method_version !== "pls_pos_v1") ||
     (result.cbsem && (result.cbsem.bootstrap || result.cbsem.multigroup)) ||
-    (result.regression && regressionScopeStatus(result.regression) !== "validated")
+    (result.regression && regressionScopeStatus(result.regression, result.method_version) !== "validated")
   ) {
     return "experimental";
   }
-  if (result.method_version.startsWith("pls_pm_v1") || result.method_version === "pca_v1" || result.method_version === "plsc_v2" || result.method_version === "wpls_case_weighted_v1" || result.method_version === "plspredict_holdout_v1" || result.method_version === "ipma_v1" || result.method_version === "nca_v2" || result.method_version === "regression_logistic_v2" || result.method_version === "regression_process_v1" || result.method_version === "cca_composite_residual_v1" || result.method_version === "cta_pls_tetrad_v1" || result.method_version === "gaussian_copula_endogeneity_v1" || result.method_version === "pls_quadratic_nonlinear_effects_v1" || result.method_version === "pls_moderated_mediation_v1" || result.method_version === "cbsem_ml_v1" || result.method_version === "cfa_ml_v1" || result.method_version === "gsca_v1") return "validated";
+  if (result.method_version.startsWith("pls_pm_v1") || result.method_version === "pca_v1" || result.method_version === "plsc_v2" || result.method_version === "wpls_case_weighted_v1" || result.method_version === "plspredict_holdout_v1" || result.method_version === "ipma_v1" || result.method_version === "nca_v2" || result.method_version === "regression_logistic_v2" || result.method_version === "cca_composite_residual_v1" || result.method_version === "cta_pls_tetrad_v1" || result.method_version === "gaussian_copula_endogeneity_v1" || result.method_version === "pls_quadratic_nonlinear_effects_v1" || result.method_version === "pls_moderated_mediation_v1" || result.method_version === "cbsem_ml_v1" || result.method_version === "cfa_ml_v1" || result.method_version === "gsca_v1") return "validated";
   if (result.mga || result.micom || result.mga_permutation || result.fimix || result.segmentation) return "validated";
-  if (result.regression && regressionScopeStatus(result.regression) === "validated") return "validated";
+  if (result.regression && regressionScopeStatus(result.regression, result.method_version) === "validated") return "validated";
   return "experimental";
 }
 

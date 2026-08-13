@@ -60,7 +60,7 @@ export interface RunMonitorState {
   logs: RunMonitorLogEntry[];
 }
 
-export type AnalysisMethodId = "pls_pm" | "bootstrap" | "plsc" | "wpls" | "cca" | "cta_pls" | "endogeneity" | "nonlinear_effects" | "moderated_mediation" | "predict" | "mga" | "ipma" | "cbsem" | "pca" | "gsca" | "regression" | "nca";
+export type AnalysisMethodId = "pls_pm" | "bootstrap" | "permutation" | "plsc" | "wpls" | "cca" | "cta_pls" | "endogeneity" | "nonlinear_effects" | "moderated_mediation" | "predict" | "mga" | "ipma" | "cbsem" | "pca" | "gsca" | "regression" | "nca";
 export type DiagramMode = "compact" | "sem" | "publication" | "smartpls_result";
 export type DiagramOverlayMode = "model" | "loadings" | "paths_r2" | "significance" | "quality" | "cbsem_standardized" | "cbsem_residuals" | "modification_indices";
 export type DiagramToolMode = "select" | "pan" | "construct" | "indicator" | "path" | "covariance" | "residual" | "caption" | "measurement" | "interaction" | "higher_order";
@@ -206,6 +206,7 @@ export interface AnalysisUiSettings {
   processX?: string | null;
   processM?: string | null;
   processW?: string | null;
+  processGraph?: NativeProcessGraphRelationshipConfig | null;
   ncaX?: string | null;
   ncaY?: string | null;
   ncaCeiling?: "ce_fdh" | "cr_fdh" | "both";
@@ -586,7 +587,34 @@ export interface NativeRegressionBootstrapConfig {
 export type NativeProcessRelationshipConfig =
   | { model: "mediation"; x: string; mediator: string }
   | { model: "moderation"; x: string; moderator: string }
-  | { model: "moderated_mediation"; x: string; mediator: string; moderator: string };
+  | { model: "moderated_mediation"; x: string; mediator: string; moderator: string }
+  | NativeProcessGraphRelationshipConfig;
+
+export interface NativeProcessGraphRelationshipConfig {
+  model: "graph";
+  focal_predictor: string;
+  paths: NativeProcessPathConfig[];
+  moderators: NativeProcessModeratorConfig[];
+  moderations: NativeProcessModerationConfig[];
+  continuous_product_centering: "equation_complete_case_mean_v1";
+}
+
+export interface NativeProcessPathConfig {
+  from: string;
+  to: string;
+}
+
+export interface NativeProcessModeratorConfig {
+  variable: string;
+  scale: "continuous" | "binary_0_1";
+}
+
+export interface NativeProcessModerationConfig {
+  from: string;
+  to: string;
+  moderator: string;
+  conditioning_moderator?: string;
+}
 
 export interface AnalysisRun {
   id: string;
@@ -673,12 +701,278 @@ export interface RegressionAnalysis {
   controls: string[];
   observations: number;
   coefficients: Array<{ term: string; estimate: number; standard_error: number; statistic: number; p_value_two_sided: number; confidence_interval_lower: number; confidence_interval_upper: number; odds_ratio?: number | null; odds_ratio_confidence_interval_lower?: number | null; odds_ratio_confidence_interval_upper?: number | null }>;
-  fit: { r_squared?: number | null; adjusted_r_squared?: number | null; f_statistic?: number | null; log_likelihood?: number | null; pseudo_r_squared?: number | null; aic: number; bic: number; rmse?: number | null; null_log_likelihood?: number | null; deviance?: number | null; null_deviance?: number | null; likelihood_ratio_chi_square?: number | null; likelihood_ratio_degrees_of_freedom?: number | null; likelihood_ratio_p_value?: number | null; pseudo_r_squared_method?: string | null };
+  /** PROCESS v2 stores equation-specific fit inside process.graph_v2 and leaves this generic shell field null. */
+  fit: { r_squared?: number | null; adjusted_r_squared?: number | null; f_statistic?: number | null; log_likelihood?: number | null; pseudo_r_squared?: number | null; aic: number; bic: number; rmse?: number | null; null_log_likelihood?: number | null; deviance?: number | null; null_deviance?: number | null; likelihood_ratio_chi_square?: number | null; likelihood_ratio_degrees_of_freedom?: number | null; likelihood_ratio_p_value?: number | null; pseudo_r_squared_method?: string | null } | null;
   predictions: Array<{ observation: number; fitted: number; residual?: number | null; probability?: number | null }>;
   logistic?: LogisticRegressionDiagnostics | null;
   bootstrap?: RegressionBootstrapAnalysis | null;
-  process?: { method_version: string; model: string; effects: Array<{ effect: string; estimate: number; lower_percentile?: number | null; upper_percentile?: number | null }>; simple_slopes: Array<{ moderator_value: number; slope: number }>; warnings: string[] } | null;
+  process?: ProcessAnalysis | null;
   warnings: string[];
+}
+
+export interface ProcessAnalysis {
+  method_version: string;
+  model: string;
+  /** Historical regression_process_v1 rows; current graph output is graph_v2. */
+  effects: Array<{
+    effect: string;
+    estimate: number;
+    lower_percentile?: number | null;
+    upper_percentile?: number | null;
+  }>;
+  /** Historical regression_process_v1 rows; current graph output is graph_v2. */
+  simple_slopes: Array<{ moderator_value: number; slope: number }>;
+  warnings: string[];
+  graph_v2?: ProcessGraphAnalysis | null;
+}
+
+export type ProcessVariableRole = "focal_predictor" | "mediator" | "moderator" | "outcome" | "control";
+export type ProcessVariableScale = "continuous" | "binary_0_1";
+
+export interface ProcessVariableProfile {
+  variable: string;
+  role: ProcessVariableRole;
+  scale: ProcessVariableScale;
+  raw_mean: number;
+  raw_sample_sd: number;
+  raw_min: number;
+  raw_max: number;
+  levels: number[];
+}
+
+export interface ProcessGraphPath {
+  path_id: string;
+  from: string;
+  to: string;
+}
+
+export interface ProcessGraphModeration {
+  moderation_id: string;
+  from: string;
+  to: string;
+  moderator: string;
+  conditioning_moderator?: string;
+}
+
+export type ProcessEquationCoefficientKind = "intercept" | "path" | "moderator_main" | "interaction" | "control";
+
+export interface ProcessEquationCoefficient {
+  term_id: string;
+  kind: ProcessEquationCoefficientKind;
+  variables: string[];
+  estimate: number;
+  standard_error: number;
+  statistic: number;
+  p_value_two_sided: number;
+  confidence_interval_lower: number;
+  confidence_interval_upper: number;
+}
+
+export interface ProcessEquationFit {
+  observations: number;
+  parameter_count: number;
+  residual_sum_squares: number;
+  total_sum_squares: number;
+  r_squared: number;
+  adjusted_r_squared: number;
+  f_statistic: number;
+  aic: number;
+  bic: number;
+  rmse: number;
+}
+
+export interface ProcessEquationAnalysis {
+  equation_id: string;
+  outcome: string;
+  term_ids: string[];
+  coefficients: ProcessEquationCoefficient[];
+  coefficient_covariance: number[][];
+  residual_degrees_of_freedom: number;
+  fit: ProcessEquationFit;
+}
+
+export type ProcessReferenceEffectKind = "direct" | "indirect" | "total_indirect" | "total";
+
+export interface ProcessReferenceEffect {
+  effect_id: string;
+  kind: ProcessReferenceEffectKind;
+  path: string[];
+  estimate: number;
+}
+
+export interface ProcessModeratorValue {
+  variable: string;
+  raw_value: number;
+  coded_value: number;
+}
+
+export interface ProcessConditionalIndirectEffect {
+  effect_id: string;
+  path_id: string;
+  moderator_values: ProcessModeratorValue[];
+  estimate: number;
+}
+
+export interface ProcessModeratedMediationIndex {
+  effect_id: string;
+  path_id: string;
+  moderated_edge: string;
+  moderator: string;
+  estimate: number;
+}
+
+export interface ProcessSimpleSlope {
+  effect_id: string;
+  moderation_id: string;
+  moderator_values: ProcessModeratorValue[];
+  estimate: number;
+  standard_error: number;
+  statistic: number;
+  p_value_two_sided: number;
+  confidence_interval_lower: number;
+  confidence_interval_upper: number;
+}
+
+export interface ProcessPlotPoint {
+  predictor_raw: number;
+  predicted_raw: number;
+  confidence_interval_lower: number;
+  confidence_interval_upper: number;
+}
+
+export interface ProcessPlotSeries {
+  series_id: string;
+  moderator_values: ProcessModeratorValue[];
+  points: ProcessPlotPoint[];
+}
+
+export interface ProcessConditionalPlot {
+  plot_id: string;
+  moderation_id: string;
+  series: ProcessPlotSeries[];
+}
+
+export interface ProcessJohnsonNeymanRegion {
+  lower: number;
+  upper: number;
+  status: "significant_negative" | "not_significant" | "significant_positive";
+}
+
+export interface ProcessJohnsonNeymanCurvePoint {
+  moderator_raw: number;
+  effect: number;
+  standard_error: number;
+  confidence_interval_lower: number;
+  confidence_interval_upper: number;
+}
+
+interface ProcessJohnsonNeymanIdentity {
+  moderation_id: string;
+  solved_moderator: string;
+  conditioning_values: ProcessModeratorValue[];
+}
+
+export type ProcessJohnsonNeymanAnalysis =
+  | ProcessJohnsonNeymanIdentity & {
+      status: "available";
+      raw_min: number;
+      raw_max: number;
+      roots: number[];
+      regions: ProcessJohnsonNeymanRegion[];
+      curve_points: ProcessJohnsonNeymanCurvePoint[];
+    }
+  | ProcessJohnsonNeymanIdentity & {
+      status: "unavailable";
+      reason_code:
+        | "binary_solved_moderator"
+        | "invalid_hc3_covariance";
+      message: string;
+    };
+
+export type ProcessBootstrapTest =
+  | { status: "available"; statistic: number; p_value_two_sided: number }
+  | { status: "unavailable"; reason_code: "zero_bootstrap_standard_error"; message: string };
+
+export type ProcessBootstrapBcaInterval =
+  | { status: "available"; bias_correction: number; acceleration: number; lower: number; upper: number }
+  | {
+      status: "unavailable";
+      reason_code: "incomplete_jackknife" | "zero_jackknife_variance" | "nonfinite_adjusted_probability";
+      message: string;
+    };
+
+export interface ProcessBootstrapEstimand {
+  effect_id: string;
+  original: number;
+  bootstrap_mean: number;
+  bias: number;
+  standard_error: number;
+  test: ProcessBootstrapTest;
+  percentile_lower: number;
+  percentile_upper: number;
+  bca: ProcessBootstrapBcaInterval;
+  usable_replicates: number;
+}
+
+export interface ProcessBootstrapFailure {
+  replicate_index: number;
+  reason_code:
+    | "rank_deficient_equation"
+    | "nonfinite_estimate"
+    | "invalid_binary_profile"
+    | "high_leverage_hc3_instability"
+    | "invalid_hc3_covariance"
+    | "degenerate_simple_slope_variance";
+  message: string;
+}
+
+export interface ProcessBootstrapValidationWitness {
+  method_version: "regression_process_bootstrap_validation_witness_v1";
+  estimand_ids: string[];
+  successful_bootstrap: Array<{ replicate_index: number; estimates: number[] }>;
+  successful_jackknife: Array<{ omitted_case: number; estimates: number[] }>;
+  failed_jackknife: Array<{ omitted_case: number; reason_code: string; message: string }>;
+}
+
+export interface ProcessBootstrapAnalysis {
+  method_version: "regression_process_bootstrap_v1";
+  algorithm: "indexed_case_resampling_v1";
+  interval_policy: "percentile_primary_bca_conditional_v1";
+  test_reference: "standard_normal_bootstrap_ratio_v1";
+  requested_replicates: number;
+  usable_replicates: number;
+  minimum_usable_fraction: 0.9;
+  jackknife_cases: number;
+  usable_jackknife_cases: number;
+  seed: number;
+  workers: number;
+  stream_token: "process_indexed_case_stream_v1";
+  failed_replicates: ProcessBootstrapFailure[];
+  estimands: ProcessBootstrapEstimand[];
+  validation_witness: ProcessBootstrapValidationWitness;
+  warnings: string[];
+}
+
+export interface ProcessGraphAnalysis {
+  policies: {
+    centering: "equation_complete_case_mean_v1";
+    covariance: "hc3_v1";
+    inference_reference: "student_t_residual_df_v1";
+    confidence_level: 0.95;
+  };
+  complete_cases: number;
+  omitted_cases: number;
+  variable_profiles: ProcessVariableProfile[];
+  paths: ProcessGraphPath[];
+  moderations: ProcessGraphModeration[];
+  equations: ProcessEquationAnalysis[];
+  reference_effects: ProcessReferenceEffect[];
+  conditional_indirect_effects: ProcessConditionalIndirectEffect[];
+  moderated_mediation_indices: ProcessModeratedMediationIndex[];
+  simple_slopes: ProcessSimpleSlope[];
+  plots: ProcessConditionalPlot[];
+  johnson_neyman: ProcessJohnsonNeymanAnalysis[];
+  bootstrap?: ProcessBootstrapAnalysis | null;
 }
 
 export type RegressionBootstrapBcaInterval =

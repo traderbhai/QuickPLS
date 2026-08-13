@@ -18,7 +18,7 @@ if ([string]::IsNullOrWhiteSpace($ExportPath)) {
 
 $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=9222"
 $env:QUICKPLS_CDP_ENDPOINT = "http://127.0.0.1:9222"
-$env:QUICKPLS_CLI_PATH = Join-Path $repositoryRoot "target\debug\qpls.exe"
+$env:QUICKPLS_CLI_PATH = Join-Path $repositoryRoot "target\release\qpls.exe"
 $env:QUICKPLS_PYTHON = "C:\Python313\python.exe"
 $env:QUICKPLS_ACCEPTANCE_SCOPE = "gsca"
 $env:QUICKPLS_GSCA_NATIVE_EXPORT_PATH = $ExportPath

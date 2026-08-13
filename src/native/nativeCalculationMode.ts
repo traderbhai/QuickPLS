@@ -30,7 +30,7 @@ function boundedSamples(value: number, fallback: number, minimum: number): numbe
 
 export function nativeCalculationModeForSettings(settings: Readonly<AnalysisUiSettings>): NativeCalculationMode {
   if (settings.method === "predict") return "predict";
-  if (settings.permutationSamples > 0) return "permutation";
+  if (settings.method === "permutation" || settings.permutationSamples > 0) return "permutation";
   if (settings.method === "bootstrap" || settings.bootstrapSamples > 0) return "bootstrap";
   return "pls";
 }

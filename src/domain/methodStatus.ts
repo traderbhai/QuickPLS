@@ -3,6 +3,7 @@ import type { AnalysisMethodId, AnalysisUiSettings, MethodDefinition, MethodStat
 export const selectableAnalysisMethodIds = new Set<AnalysisMethodId>([
   "pls_pm",
   "bootstrap",
+  "permutation",
   "plsc",
   "wpls",
   "cca",
@@ -41,7 +42,7 @@ export const effectiveMethodStatus = (method: MethodDefinition | undefined, sett
   if (method.id === "regression") {
     const regressionType = settings?.regressionType ?? "ols";
     if (regressionType === "ols" || regressionType === "logistic") return "validated";
-    if (regressionType === "process" && (settings?.processModel ?? "mediation") !== "moderated_mediation") return "validated";
+    if (regressionType === "process") return "experimental";
     return "experimental";
   }
   return method.status;
@@ -55,8 +56,9 @@ export const methodStatusDescription = (method: MethodDefinition, settings?: Ana
   const status = effectiveMethodStatus(method, settings);
   if (method.id === "mga" && status === "validated") return "MICOM and permutation MGA are validated for the documented QuickPLS v1.2.2 two-group scope.";
   if (method.id === "mga") return "Unsupported group workflows remain experimental or blocked.";
-  if (method.id === "regression" && status === "validated") return "OLS, binary logistic, and bounded PROCESS mediation/moderation are validated for documented QuickPLS scopes; moderated mediation remains experimental.";
-  if (method.id === "regression") return "PROCESS moderated mediation and broader regression workflows remain experimental.";
+  if (method.id === "regression" && status === "validated") return "OLS and binary logistic regression are validated for documented QuickPLS scopes.";
+  if (method.id === "regression") return "Graph-defined PROCESS v2 is an implemented bounded candidate pending current promotion evidence; historical PROCESS v1 is archive-only.";
+  if (method.id === "permutation") return "Candidate fixed-score path inference assumes exchangeable reduced-model residuals and reports raw unadjusted pathwise plus-one p values; current calibration covers homoscedastic Gaussian errors only.";
   if (["cca", "cta_pls", "endogeneity", "nonlinear_effects", "moderated_mediation"].includes(method.id)) return "Validated for the documented QuickPLS v1.2.3 bounded diagnostic scope; broader variants remain unsupported.";
   if (method.id === "cbsem") return "Validated for raw-data single-group reflective CFA/SEM ML; bootstrap, unrestricted multigroup/invariance, robust, ordinal, and FIML estimators remain experimental or unsupported.";
   if (method.id === "gsca") return "Validated for the documented QuickPLS v1.2.4 bounded deterministic component-model scope; unrestricted GSCA variants remain unsupported.";

@@ -8,6 +8,7 @@ import {
   NATIVE_PREDICTION_SCOPE_DESCRIPTION,
   nativeCalculationSettingsForMode,
 } from "./nativeCalculationMode";
+import { nativeProcessGraphAssessment, parseNativeProcessGraph } from "./nativeProcess";
 
 export type NativeWorkbenchAnalysisKind =
   | "pls_algorithm"
@@ -130,7 +131,7 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     kind: "pls_permutation",
     categoryId: "inference",
     categoryLabel: "Inference",
-    description: "Run single-model Freedman–Lane randomization inference for structural path coefficients.",
+    description: "Run candidate single-model Freedman-Lane randomization for structural paths using fixed original PLS construct scores and unadjusted pathwise p values.",
     keywords: ["freedman lane", "permutation", "randomization", "path significance", "inference"],
     capabilityIds: ["qpls3.inference.structural_path_randomization"],
   },
@@ -170,8 +171,8 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     kind: "regression",
     categoryId: "standalone",
     categoryLabel: "Standalone analysis",
-    description: "Fit raw numeric OLS or strict 0/1 binary logistic regression, with optional case-resampling inference, as a model-free observed-variable analysis.",
-    keywords: ["ols", "ordinary least squares", "linear regression", "logistic", "binary", "odds ratio", "wald", "probability", "hc3", "case bootstrap", "percentile", "bca", "observed variable"],
+    description: "Fit raw numeric OLS, strict 0/1 binary logistic regression, or graph-defined path analysis with mediation and moderation as a model-free observed-variable analysis.",
+    keywords: ["ols", "ordinary least squares", "linear regression", "logistic", "binary", "odds ratio", "wald", "probability", "hc3", "case bootstrap", "percentile", "bca", "inference", "path analysis", "process", "mediation", "moderation", "johnson neyman", "observed variable"],
     capabilityIds: ["qpls3.standalone.ols", "qpls3.standalone.logistic", "qpls3.standalone.regression_bootstrap", "qpls3.standalone.process"],
   },
 ] as const;
@@ -435,6 +436,20 @@ export function nativeAnalysisSettingsForWorkbenchKind(
       .map((item) => item.trim())
       .filter(Boolean)
       .join(",");
+    const regressionType = normalized.regressionType === "logistic"
+      ? "logistic"
+      : normalized.regressionType === "process"
+        ? "process"
+        : "ols";
+    const processGraph = regressionType === "process" ? parseNativeProcessGraph(normalized.processGraph) : null;
+    const processAssessment = processGraph
+      ? nativeProcessGraphAssessment({
+          ...normalized,
+          regressionType: "process",
+          processGraph,
+          regressionPredictors: null,
+        })
+      : null;
     const bootstrapEnabled = normalized.regressionBootstrap === true;
     return {
       ...normalized,
@@ -456,15 +471,18 @@ export function nativeAnalysisSettingsForWorkbenchKind(
         : 1,
       confidenceLevel: 0.95,
       caseWeightColumn: null,
-      regressionType: normalized.regressionType === "logistic" ? "logistic" : "ols",
+      regressionType,
       regressionOutcome: normalized.regressionOutcome?.trim() || null,
-      regressionPredictors: normalizeCsv(normalized.regressionPredictors) || null,
+      regressionPredictors: regressionType === "process"
+        ? processAssessment?.predictors.join(",") || null
+        : normalizeCsv(normalized.regressionPredictors) || null,
       regressionControls: normalizeCsv(normalized.regressionControls) || null,
       regressionBootstrap: bootstrapEnabled,
-      robustSe: normalized.regressionType === "logistic" ? "none" : "hc3",
+      robustSe: regressionType === "logistic" ? "none" : "hc3",
       processX: null,
       processM: null,
       processW: null,
+      processGraph,
     };
   }
 
@@ -500,6 +518,10 @@ export function nativeAnalysisStartLabel(
   if (kind === "gsca") return `${verb} GSCA`;
   if (kind === "nca") return `${verb} necessary condition analysis`;
   if (kind === "pca") return `${verb} principal component analysis`;
-  if (kind === "regression") return `${verb} ${regressionType === "logistic" ? "binary logistic regression" : "OLS regression"}${regressionBootstrap ? " with bootstrap" : ""}`;
+  if (kind === "regression") return `${verb} ${regressionType === "logistic"
+    ? "binary logistic regression"
+    : regressionType === "process"
+      ? "graph-defined path analysis"
+      : "OLS regression"}${regressionBootstrap ? " with bootstrap" : ""}`;
   return `${verb} calculation`;
 }

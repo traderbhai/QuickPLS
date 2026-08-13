@@ -1756,4 +1756,27 @@ No statistical engines, formulas, result schemas, recipes, project format, valid
 - Accepted scope is an exactly coded numeric 0/1 outcome with both classes in the listwise-complete sample, deterministic single-worker Newton IRLS, fixed 95% Wald inference, odds-ratio intervals, likelihood diagnostics, fitted probabilities, convergence evidence, and explicitly in-sample descriptive classification.
 - Independent Python and validation-only R `glm` arithmetic, strict archive-v5 append/save/reopen/tamper gates, browser setup at 1024×700, 1280×720, and 1440×900, real packaged Tauri execution, native XLSX, strict-profile failure recovery, explicit save, and same-run reopen pass.
 - Evidence: `validation/results/logistic_v2_reference_report.json`, `validation/results/logistic_method_promotion_audit.json`, and `validation/results/logistic_v2_packaged_acceptance.json`.
-- This checkpoint does not change the package/release version. Wave 1 remains open for regression bootstrapping and the full graph-defined PROCESS workflow; no new installer is claimed.
+- This checkpoint did not change the package/release version. At the time of this logistic checkpoint, Wave 1 remained open for regression bootstrapping and the full graph-defined PROCESS workflow; no new installer was claimed.
+
+## QuickPLS 3.0 parity program - Wave 1 regression-bootstrap checkpoint
+
+- `qpls3.standalone.regression_bootstrap` reached `release_qualified` evidence status for the bounded `regression_bootstrap_v1` OLS and binary-logistic coefficient-inference scope.
+- Independent Python/R reference checks, exact scientific and archive-tamper boundaries, three-viewport browser acceptance, genuine packaged 10,000-resample OLS and logistic execution, cancellation, native XLSX export, explicit save, and same-run reopen pass.
+- Evidence: `validation/results/regression_bootstrap_v1_reference_report.json`, `validation/results/regression_bootstrap_v1_boundary_test_report.json`, `validation/results/regression_bootstrap_v1_packaged_acceptance.json`, and `validation/results/regression_bootstrap_method_promotion_audit.json`.
+- This checkpoint did not change the package/release version or publish an installer. PROCESS v2 and the coordinated Wave 1 2.46.0 release transition remained open at this point.
+
+## QuickPLS 3.0 parity program - Wave 1 PROCESS capability checkpoint
+
+- `qpls3.standalone.process` reached `release_qualified` evidence status for its documented bounded `regression_process_v2` scope.
+- Independent Python/R reference checks, exact scientific and archive-tamper boundaries, the focused frontend/type gate, three-viewport browser acceptance, genuine packaged 10,000-resample execution, cancellation/retry, accessible result and plot-data tables, native XLSX export, explicit save/reopen, repeated completion identity, and clean process/resource lifecycle evidence pass.
+- Evidence: `validation/results/process_v2_reference_report.json`, `validation/results/process_v2_boundary_test_report.json`, `validation/results/process_v2_frontend_gate_report.json`, `validation/results/v247_native_desktop_visual_acceptance.json`, `validation/results/process_v2_packaged_acceptance.json`, and `validation/results/process_v2_method_promotion_audit.json`.
+- This checkpoint does not change package version or publish an installer. The repository remains on the 2.45.0 recovery/candidate version; Wave 1 2.46.0 remains open for coordinated version metadata, public status-label transition, rebuilt artifacts, and release gates.
+
+## QuickPLS 2.46.0 Wave 1 capability qualification
+
+- The QuickPLS 3 parity ledger now records 17 in-scope capabilities: 13 remain `native_qualified`, while Structural Path Randomization v1, Binary Logistic Regression v2, Regression Bootstrapping v1, and Graph-defined PROCESS v2 are `release_qualified` through their own current method-specific and packaged evidence.
+- `qpls3.inference.structural_path_randomization` reached `release_qualified` evidence status for bounded `freedman_lane_permutation_v1`: single-model direct structural-score paths using fixed original converged PLS scores, intercept nuisance equations, deterministic path-specific streams, two-sided unadjusted plus-one probabilities, and exchangeable reduced-model residuals.
+- Independent Python/R recomputation, exact deterministic-index and worker-invariance boundaries, calibrated paired homoscedastic Gaussian null/power scenarios, strict archive/tamper validation, focused frontend/type checks, three-viewport visual acceptance, genuine packaged cancellation/retry/completion, native XLSX export, explicit save/reopen, and clean process/resource evidence pass.
+- Evidence: `validation/results/structural_path_randomization_reference_report.json`, `validation/results/structural_path_randomization_boundary_test_report.json`, `validation/results/structural_path_randomization_frontend_gate_report.json`, `validation/results/v247_native_desktop_visual_acceptance.json`, `validation/results/structural_path_randomization_v1_packaged_acceptance.json`, and `validation/results/structural_path_randomization_method_promotion_audit.json`.
+- This qualification does not cover measurement-model re-estimation, multiplicity adjustment, heteroskedastic or broader non-Gaussian validity, MGA, MICOM, causal proof, or numerical identity with another product. The explicit conditional/approximate interpretation warning remains required.
+- The coordinated QuickPLS 2.46.0 Wave 1 release records these capability qualifications. Installer construction, checksum publication, and signing remain governed by their separate release-artifact gates and are not implied by this evidence checkpoint.

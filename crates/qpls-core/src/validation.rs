@@ -44,6 +44,10 @@ pub enum ExecutionRecipeError {
     CurrentSchemaRequired { found: u32, required: u32 },
     #[error("analysis recipe dataset fingerprint does not match the execution dataset")]
     DatasetFingerprintMismatch,
+    #[error(
+        "historical regression_process_v1 relationships are archive-readable only; author a graph-defined regression_process_v2 recipe for new execution"
+    )]
+    ArchiveOnlyProcessV1,
     #[error("analysis recipe is not executable: {summary}")]
     Invalid {
         summary: String,
@@ -79,6 +83,19 @@ impl ValidatedExecutionRecipe {
                 found: source.schema_version,
                 required: ANALYSIS_RECIPE_SCHEMA_VERSION,
             });
+        }
+        if matches!(
+            source.method_config.as_ref(),
+            Some(MethodConfig::Regression {
+                model: crate::RegressionModelConfig::Process {
+                    relationship: crate::ProcessRelationshipConfig::Mediation { .. }
+                        | crate::ProcessRelationshipConfig::Moderation { .. }
+                        | crate::ProcessRelationshipConfig::ModeratedMediation { .. },
+                },
+                ..
+            })
+        ) {
+            return Err(ExecutionRecipeError::ArchiveOnlyProcessV1);
         }
         let issues = validate_recipe(&source)
             .into_iter()
@@ -224,7 +241,7 @@ fn validate_v3_method_config(
                     issues.push(issue(
                         "regression.bootstrap_terms_bound",
                         Severity::Error,
-                        "Regression bootstrap v1 supports at most 50 predictors and controls plus the intercept",
+                        "Typed standalone regression case resampling supports at most 50 predictors and controls plus the intercept",
                         Some((predictors.len() + controls.len() + 1).to_string()),
                     ));
                 }
@@ -232,11 +249,14 @@ fn validate_v3_method_config(
                     model,
                     crate::RegressionModelConfig::Ols { .. }
                         | crate::RegressionModelConfig::Logistic
+                        | crate::RegressionModelConfig::Process {
+                            relationship: crate::ProcessRelationshipConfig::Graph { .. }
+                        }
                 ) {
                     issues.push(issue(
                         "regression.bootstrap_model_unsupported",
                         Severity::Error,
-                        "Regression bootstrap v1 supports OLS and binary logistic regression only",
+                        "Typed case resampling supports OLS, binary logistic regression, and graph-defined PROCESS v2 only",
                         None,
                     ));
                 }
@@ -244,7 +264,7 @@ fn validate_v3_method_config(
                     issues.push(issue(
                         "regression.bootstrap_samples",
                         Severity::Error,
-                        "Regression bootstrap requires 99 to 10000 case-resampling replicates",
+                        "Typed standalone regression bootstrap requires 99 to 10000 case-resampling replicates",
                         Some(requested.to_string()),
                     ));
                 }
@@ -258,7 +278,7 @@ fn validate_v3_method_config(
                     issues.push(issue(
                         "regression.bootstrap_contract",
                         Severity::Error,
-                        "Regression bootstrap v1 requires case resampling with percentile primary and conditional BCa intervals",
+                        "Typed standalone regression bootstrap requires case resampling with percentile primary and conditional BCa intervals",
                         None,
                     ));
                 }
@@ -276,8 +296,30 @@ fn validate_v3_method_config(
             issues.push(issue(
                 "regression.bootstrap_inference_unsupported",
                 Severity::Error,
-                "Regression bootstrap v1 excludes studentized intervals and permutation inference",
+                "Standalone regression bootstrap excludes studentized intervals and permutation inference",
                 None,
+            ));
+        }
+        if let crate::RegressionModelConfig::Process {
+            relationship:
+                crate::ProcessRelationshipConfig::Graph {
+                    focal_predictor,
+                    paths,
+                    moderators,
+                    moderations,
+                    continuous_product_centering,
+                },
+        } = model
+        {
+            issues.extend(validate_process_graph_config(
+                recipe,
+                focal_predictor,
+                paths,
+                moderators,
+                moderations,
+                *continuous_product_centering,
+                predictors,
+                controls,
             ));
         }
     }
@@ -315,6 +357,400 @@ fn validate_v3_method_config(
         }
     }
     issues
+}
+
+fn validate_process_graph_config(
+    recipe: &AnalysisRecipe,
+    focal_predictor: &str,
+    paths: &[crate::ProcessPathConfig],
+    moderators: &[crate::ProcessModeratorConfig],
+    moderations: &[crate::ProcessModerationConfig],
+    centering: crate::ProcessContinuousCentering,
+    predictors: &[String],
+    controls: &[String],
+) -> Vec<ValidationIssue> {
+    use std::collections::{BTreeMap, BTreeSet};
+
+    let mut issues = Vec::new();
+    let outcome = match &recipe.method_config {
+        Some(crate::MethodConfig::Regression { outcome, .. }) => outcome.as_str(),
+        _ => "",
+    };
+    let names_trimmed = !focal_predictor.trim().is_empty()
+        && paths
+            .iter()
+            .all(|path| !path.from.trim().is_empty() && !path.to.trim().is_empty())
+        && moderators
+            .iter()
+            .all(|moderator| !moderator.variable.trim().is_empty())
+        && moderations.iter().all(|moderation| {
+            !moderation.from.trim().is_empty()
+                && !moderation.to.trim().is_empty()
+                && !moderation.moderator.trim().is_empty()
+                && moderation
+                    .conditioning_moderator
+                    .as_ref()
+                    .is_none_or(|value| !value.trim().is_empty())
+        });
+    if !names_trimmed {
+        issues.push(issue(
+            "process.graph_names_nonempty",
+            Severity::Error,
+            "PROCESS graph variable names must be non-empty",
+            None,
+        ));
+    }
+    let role_names = std::iter::once(outcome)
+        .chain(predictors.iter().map(String::as_str))
+        .chain(controls.iter().map(String::as_str))
+        .collect::<Vec<_>>();
+    let has_reserved_delimiter = |name: &str| {
+        name.contains("->")
+            || name
+                .chars()
+                .any(|character| character.is_control() || "@|*,=".contains(character))
+    };
+    if role_names.iter().any(|name| has_reserved_delimiter(name)) {
+        issues.push(issue(
+            "process.graph_reserved_delimiters",
+            Severity::Error,
+            "PROCESS v2 variable names cannot contain control characters, ->, @, |, *, comma, or equals because these tokens are reserved for stable scientific identities",
+            None,
+        ));
+    }
+    if !matches!(
+        centering,
+        crate::ProcessContinuousCentering::EquationCompleteCaseMeanV1
+    ) {
+        issues.push(issue(
+            "process.centering_policy",
+            Severity::Error,
+            "PROCESS v2 requires equation_complete_case_mean_v1 product centering",
+            None,
+        ));
+    }
+    if paths.is_empty() || paths.len() > 16 {
+        issues.push(issue(
+            "process.paths_bound",
+            Severity::Error,
+            "PROCESS v2 requires 1 to 16 unique directed paths",
+            Some(paths.len().to_string()),
+        ));
+    }
+    if moderators.len() > 2 || moderations.len() > 4 {
+        issues.push(issue(
+            "process.moderation_bounds",
+            Severity::Error,
+            "PROCESS v2 supports at most two declared moderators and four moderated paths",
+            Some(format!(
+                "{} moderators; {} moderated paths",
+                moderators.len(),
+                moderations.len()
+            )),
+        ));
+    }
+    if controls.len() > 1 || predictors.len() > 8 {
+        issues.push(issue(
+            "process.variables_bound",
+            Severity::Error,
+            "PROCESS v2 supports at most eight predictors and one control",
+            Some(format!(
+                "{} predictors; {} controls",
+                predictors.len(),
+                controls.len()
+            )),
+        ));
+    }
+
+    let path_pairs = paths
+        .iter()
+        .map(|path| (path.from.as_str(), path.to.as_str()))
+        .collect::<BTreeSet<_>>();
+    if path_pairs.len() != paths.len()
+        || paths.iter().any(|path| path.from == path.to)
+        || paths.iter().any(|path| path.from == outcome)
+    {
+        issues.push(issue(
+            "process.paths_unique_directed",
+            Severity::Error,
+            "PROCESS paths must be unique, non-self directed edges and the terminal outcome cannot be a source",
+            None,
+        ));
+    }
+
+    let moderator_names = moderators
+        .iter()
+        .map(|moderator| moderator.variable.as_str())
+        .collect::<BTreeSet<_>>();
+    if moderator_names.len() != moderators.len()
+        || moderators
+            .iter()
+            .any(|moderator| moderator.variable == focal_predictor || moderator.variable == outcome)
+    {
+        issues.push(issue(
+            "process.moderators_distinct",
+            Severity::Error,
+            "PROCESS moderators must be unique exogenous variables distinct from the focal predictor and outcome",
+            None,
+        ));
+    }
+
+    let graph_nodes = paths
+        .iter()
+        .flat_map(|path| [path.from.as_str(), path.to.as_str()])
+        .collect::<BTreeSet<_>>();
+    if focal_predictor.trim().is_empty()
+        || !graph_nodes.contains(focal_predictor)
+        || !graph_nodes.contains(outcome)
+        || paths.iter().any(|path| {
+            moderator_names.contains(path.from.as_str())
+                || moderator_names.contains(path.to.as_str())
+        })
+    {
+        issues.push(issue(
+            "process.graph_roles",
+            Severity::Error,
+            "The graph must contain the focal predictor and terminal outcome; moderators are equation terms, not graph nodes",
+            None,
+        ));
+    }
+
+    let mut indegree = graph_nodes
+        .iter()
+        .map(|node| (*node, 0usize))
+        .collect::<BTreeMap<_, _>>();
+    for path in paths {
+        if let Some(value) = indegree.get_mut(path.to.as_str()) {
+            *value += 1;
+        }
+    }
+    let mut ready = indegree
+        .iter()
+        .filter_map(|(node, degree)| (*degree == 0).then_some(*node))
+        .collect::<BTreeSet<_>>();
+    let mut visited = Vec::new();
+    while let Some(node) = ready.pop_first() {
+        visited.push(node);
+        for path in paths.iter().filter(|path| path.from == node) {
+            if let Some(degree) = indegree.get_mut(path.to.as_str()) {
+                *degree -= 1;
+                if *degree == 0 {
+                    ready.insert(path.to.as_str());
+                }
+            }
+        }
+    }
+    if visited.len() != graph_nodes.len() {
+        issues.push(issue(
+            "process.graph_acyclic",
+            Severity::Error,
+            "PROCESS v2 requires a directed acyclic graph",
+            None,
+        ));
+    }
+
+    let mut reachable = BTreeSet::from([focal_predictor]);
+    loop {
+        let before = reachable.len();
+        for path in paths {
+            if reachable.contains(path.from.as_str()) {
+                reachable.insert(path.to.as_str());
+            }
+        }
+        if reachable.len() == before {
+            break;
+        }
+    }
+    if !reachable.contains(outcome) {
+        issues.push(issue(
+            "process.outcome_reachable",
+            Severity::Error,
+            "The focal predictor must reach the terminal outcome",
+            None,
+        ));
+    }
+
+    let mediators = visited
+        .iter()
+        .copied()
+        .filter(|node| *node != focal_predictor && *node != outcome)
+        .collect::<Vec<_>>();
+    let mediator_set = mediators.iter().copied().collect::<BTreeSet<_>>();
+    let mut reaches_outcome = BTreeSet::from([outcome]);
+    loop {
+        let before = reaches_outcome.len();
+        for path in paths {
+            if reaches_outcome.contains(path.to.as_str()) {
+                reaches_outcome.insert(path.from.as_str());
+            }
+        }
+        if reaches_outcome.len() == before {
+            break;
+        }
+    }
+    if mediators
+        .iter()
+        .any(|mediator| !reachable.contains(mediator) || !reaches_outcome.contains(mediator))
+    {
+        issues.push(issue(
+            "process.mediators_on_paths",
+            Severity::Error,
+            "Every mediator must lie on a directed focal-predictor to outcome path",
+            None,
+        ));
+    }
+    if mediators.len() > 4 {
+        issues.push(issue(
+            "process.mediators_bound",
+            Severity::Error,
+            "PROCESS v2 supports at most four mediators",
+            Some(mediators.len().to_string()),
+        ));
+    }
+    let expected_predictors = std::iter::once(focal_predictor)
+        .chain(mediators.iter().copied())
+        .chain(
+            moderators
+                .iter()
+                .map(|moderator| moderator.variable.as_str()),
+        )
+        .collect::<Vec<_>>();
+    if predictors.iter().map(String::as_str).collect::<Vec<_>>() != expected_predictors {
+        issues.push(issue(
+            "process.predictor_order",
+            Severity::Error,
+            "PROCESS predictors must be focal X, mediators in topological/lexical order, then moderators in declaration order",
+            None,
+        ));
+    }
+
+    let moderation_pairs = moderations
+        .iter()
+        .map(|moderation| (moderation.from.as_str(), moderation.to.as_str()))
+        .collect::<BTreeSet<_>>();
+    if moderation_pairs.len() != moderations.len()
+        || moderations.iter().any(|moderation| {
+            !path_pairs.contains(&(moderation.from.as_str(), moderation.to.as_str()))
+                || !moderator_names.contains(moderation.moderator.as_str())
+                || moderation
+                    .conditioning_moderator
+                    .as_ref()
+                    .is_some_and(|value| {
+                        value == &moderation.moderator || !moderator_names.contains(value.as_str())
+                    })
+        })
+    {
+        issues.push(issue(
+            "process.moderations_bound",
+            Severity::Error,
+            "Every moderated edge must be a unique graph path and reference one or two distinct declared moderators",
+            None,
+        ));
+    }
+    let used_moderators = moderations
+        .iter()
+        .flat_map(|moderation| {
+            std::iter::once(moderation.moderator.as_str())
+                .chain(moderation.conditioning_moderator.as_deref())
+        })
+        .collect::<BTreeSet<_>>();
+    if moderator_names != used_moderators {
+        issues.push(issue(
+            "process.moderators_used",
+            Severity::Error,
+            "Every declared PROCESS moderator must be used as a primary or conditioning moderator",
+            None,
+        ));
+    }
+    for moderation in moderations {
+        if moderation.conditioning_moderator.is_some()
+            && !(moderation.from == focal_predictor && moderation.to == outcome)
+        {
+            issues.push(issue(
+                "process.three_way_direct_only",
+                Severity::Error,
+                "Two-moderator three-way effects are supported only on the direct focal-predictor to outcome path",
+                Some(format!("{}->{}", moderation.from, moderation.to)),
+            ));
+        }
+        if moderation.conditioning_moderator.is_none() {
+            let mediated_edge = mediator_set.contains(moderation.from.as_str())
+                || mediator_set.contains(moderation.to.as_str());
+            if mediated_edge {
+                let first_stage = moderation.from == focal_predictor
+                    && mediator_set.contains(moderation.to.as_str());
+                let second_stage =
+                    mediator_set.contains(moderation.from.as_str()) && moderation.to == outcome;
+                if !first_stage && !second_stage {
+                    issues.push(issue(
+                        "process.moderated_mediation_stage",
+                        Severity::Error,
+                        "Mediated paths may be moderated only on the first focal-to-mediator or final mediator-to-outcome edge",
+                        Some(format!("{}->{}", moderation.from, moderation.to)),
+                    ));
+                }
+            }
+        }
+    }
+    for mediator_path in enumerate_process_paths(paths, focal_predictor, outcome, 32) {
+        let moderated = mediator_path
+            .windows(2)
+            .filter(|edge| moderation_pairs.contains(&(edge[0], edge[1])))
+            .count();
+        if moderated > 1 {
+            issues.push(issue(
+                "process.one_moderated_stage_per_indirect",
+                Severity::Error,
+                "Each mediated path may contain at most one moderated first- or second-stage edge",
+                Some(mediator_path.join("->")),
+            ));
+        }
+    }
+
+    if role_names.iter().copied().collect::<BTreeSet<_>>().len() != role_names.len() {
+        issues.push(issue(
+            "process.roles_distinct",
+            Severity::Error,
+            "Outcome, predictors, moderators, mediators, and controls must be distinct variables",
+            None,
+        ));
+    }
+
+    issues
+}
+
+fn enumerate_process_paths<'a>(
+    paths: &'a [crate::ProcessPathConfig],
+    source: &'a str,
+    target: &'a str,
+    limit: usize,
+) -> Vec<Vec<&'a str>> {
+    fn visit<'a>(
+        paths: &'a [crate::ProcessPathConfig],
+        current: &'a str,
+        target: &'a str,
+        limit: usize,
+        stack: &mut Vec<&'a str>,
+        output: &mut Vec<Vec<&'a str>>,
+    ) {
+        if output.len() >= limit {
+            return;
+        }
+        stack.push(current);
+        if current == target {
+            output.push(stack.clone());
+        } else {
+            for path in paths.iter().filter(|path| path.from == current) {
+                if !stack.contains(&path.to.as_str()) {
+                    visit(paths, path.to.as_str(), target, limit, stack, output);
+                }
+            }
+        }
+        stack.pop();
+    }
+    let mut output = Vec::new();
+    visit(paths, source, target, limit, &mut Vec::new(), &mut output);
+    output
 }
 
 /// Resolves the bounded IPMA target list once for validation, estimation, and
@@ -1539,6 +1975,15 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
             .get("process_model")
             .map(|value| value.trim())
             .unwrap_or("mediation");
+        let typed_process_graph = matches!(
+            &recipe.method_config,
+            Some(crate::MethodConfig::Regression {
+                model: crate::RegressionModelConfig::Process {
+                    relationship: crate::ProcessRelationshipConfig::Graph { .. },
+                },
+                ..
+            })
+        );
         if regression_type == "process" && process_model == "moderated_mediation" {
             issues.push(issue(
                 "process.moderated_mediation.experimental",
@@ -1618,17 +2063,19 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
             ));
         }
         if regression_type == "process" {
-            if !matches!(
-                process_model,
-                "mediation" | "moderation" | "moderated_mediation"
-            ) {
+            if !typed_process_graph
+                && !matches!(
+                    process_model,
+                    "mediation" | "moderation" | "moderated_mediation"
+                )
+            {
                 issues.push(issue(
                     "process.model",
                     Severity::Error,
                     "PROCESS relationship must be mediation, moderation, or moderated_mediation",
                     Some(process_model.to_owned()),
                 ));
-            } else {
+            } else if !typed_process_graph {
                 let typed_relationship_variables = match &recipe.method_config {
                     Some(crate::MethodConfig::Regression {
                         model: crate::RegressionModelConfig::Process { relationship },
@@ -1645,6 +2092,7 @@ pub fn validate_recipe(recipe: &AnalysisRecipe) -> Vec<ValidationIssue> {
                             mediator,
                             moderator,
                         } => vec![x.clone(), mediator.clone(), moderator.clone()],
+                        crate::ProcessRelationshipConfig::Graph { .. } => Vec::new(),
                     }),
                     _ => None,
                 };
@@ -3459,6 +3907,225 @@ mod tests {
                 .iter()
                 .any(|issue| issue.code == "process.variables_bound")
         );
+    }
+
+    #[test]
+    fn process_v1_relationships_are_readable_but_rejected_at_the_execution_capability_boundary() {
+        for relationship in [
+            crate::ProcessRelationshipConfig::Mediation {
+                x: "x".into(),
+                mediator: "m".into(),
+            },
+            crate::ProcessRelationshipConfig::Moderation {
+                x: "x".into(),
+                moderator: "m".into(),
+            },
+            crate::ProcessRelationshipConfig::ModeratedMediation {
+                x: "x".into(),
+                mediator: "m".into(),
+                moderator: "w".into(),
+            },
+        ] {
+            let predictors = match &relationship {
+                crate::ProcessRelationshipConfig::ModeratedMediation { .. } => vec!["x", "m", "w"],
+                _ => vec!["x", "m"],
+            };
+            let recipe = valid_v3_regression_recipe(
+                crate::RegressionModelConfig::Process { relationship },
+                &predictors,
+            );
+            assert!(matches!(
+                ValidatedExecutionRecipe::for_dataset(&recipe, &recipe.dataset_fingerprint),
+                Err(ExecutionRecipeError::ArchiveOnlyProcessV1)
+            ));
+        }
+    }
+
+    fn graph_process_recipe() -> AnalysisRecipe {
+        let model = crate::RegressionModelConfig::Process {
+            relationship: crate::ProcessRelationshipConfig::Graph {
+                focal_predictor: "x".into(),
+                paths: vec![
+                    crate::ProcessPathConfig {
+                        from: "x".into(),
+                        to: "m".into(),
+                    },
+                    crate::ProcessPathConfig {
+                        from: "m".into(),
+                        to: "y".into(),
+                    },
+                    crate::ProcessPathConfig {
+                        from: "x".into(),
+                        to: "y".into(),
+                    },
+                ],
+                moderators: vec![
+                    crate::ProcessModeratorConfig {
+                        variable: "w".into(),
+                        scale: crate::ProcessModeratorScale::Continuous,
+                    },
+                    crate::ProcessModeratorConfig {
+                        variable: "b".into(),
+                        scale: crate::ProcessModeratorScale::Binary01,
+                    },
+                ],
+                moderations: vec![crate::ProcessModerationConfig {
+                    from: "x".into(),
+                    to: "y".into(),
+                    moderator: "w".into(),
+                    conditioning_moderator: Some("b".into()),
+                }],
+                continuous_product_centering:
+                    crate::ProcessContinuousCentering::EquationCompleteCaseMeanV1,
+            },
+        };
+        let mut recipe = valid_v3_regression_recipe(model, &["x", "m", "w", "b"]);
+        if let Some(crate::MethodConfig::Regression { controls, .. }) =
+            recipe.method_config.as_mut()
+        {
+            controls.push("c".into());
+        }
+        recipe
+    }
+
+    #[test]
+    fn process_graph_v2_accepts_typed_dag_and_rejects_cycles_role_and_order_drift() {
+        let recipe = graph_process_recipe();
+        assert!(
+            validate_recipe(&recipe)
+                .iter()
+                .all(|issue| issue.severity != Severity::Error),
+            "valid graph PROCESS recipe rejected: {:#?}",
+            validate_recipe(&recipe)
+        );
+
+        let mut cycle = recipe.clone();
+        if let Some(crate::MethodConfig::Regression {
+            model:
+                crate::RegressionModelConfig::Process {
+                    relationship: crate::ProcessRelationshipConfig::Graph { paths, .. },
+                },
+            ..
+        }) = cycle.method_config.as_mut()
+        {
+            paths.push(crate::ProcessPathConfig {
+                from: "m".into(),
+                to: "x".into(),
+            });
+        }
+        assert!(
+            validate_recipe(&cycle)
+                .iter()
+                .any(|issue| issue.code == "process.graph_acyclic")
+        );
+
+        let mut order = recipe.clone();
+        if let Some(crate::MethodConfig::Regression { predictors, .. }) =
+            order.method_config.as_mut()
+        {
+            predictors.swap(1, 2);
+        }
+        assert!(
+            validate_recipe(&order)
+                .iter()
+                .any(|issue| issue.code == "process.predictor_order")
+        );
+
+        let mut moderator_path = recipe;
+        if let Some(crate::MethodConfig::Regression {
+            model:
+                crate::RegressionModelConfig::Process {
+                    relationship: crate::ProcessRelationshipConfig::Graph { paths, .. },
+                },
+            ..
+        }) = moderator_path.method_config.as_mut()
+        {
+            paths.push(crate::ProcessPathConfig {
+                from: "w".into(),
+                to: "y".into(),
+            });
+        }
+        assert!(
+            validate_recipe(&moderator_path)
+                .iter()
+                .any(|issue| issue.code == "process.graph_roles")
+        );
+
+        let mut unused_moderator = graph_process_recipe();
+        if let Some(crate::MethodConfig::Regression {
+            model:
+                crate::RegressionModelConfig::Process {
+                    relationship: crate::ProcessRelationshipConfig::Graph { moderations, .. },
+                },
+            ..
+        }) = unused_moderator.method_config.as_mut()
+        {
+            moderations[0].conditioning_moderator = None;
+        }
+        assert!(
+            validate_recipe(&unused_moderator)
+                .iter()
+                .any(|issue| issue.code == "process.moderators_used")
+        );
+
+        for reserved in [
+            "A->B",
+            "W@1",
+            "X*Z",
+            "A,B",
+            "A=B",
+            "A|B",
+            "A\0B",
+            "A\u{0085}B",
+        ] {
+            let mut recipe = graph_process_recipe();
+            if let Some(crate::MethodConfig::Regression { outcome, .. }) =
+                recipe.method_config.as_mut()
+            {
+                *outcome = reserved.into();
+            }
+            assert!(
+                validate_recipe(&recipe)
+                    .iter()
+                    .any(|issue| issue.code == "process.graph_reserved_delimiters"),
+                "reserved PROCESS identity token was accepted in {reserved}"
+            );
+        }
+    }
+
+    #[test]
+    fn process_graph_v2_bootstrap_is_typed_and_stage_bounded() {
+        let mut recipe = graph_process_recipe();
+        recipe.settings.bootstrap_samples = 999;
+        recipe.settings.workers = 4;
+        if let Some(crate::MethodConfig::Regression {
+            model:
+                crate::RegressionModelConfig::Process {
+                    relationship: crate::ProcessRelationshipConfig::Graph { .. },
+                },
+            bootstrap,
+            ..
+        }) = recipe.method_config.as_mut()
+        {
+            *bootstrap = Some(crate::RegressionBootstrapConfig {
+                algorithm: crate::RegressionBootstrapAlgorithm::CaseResampling,
+                intervals: vec![
+                    crate::RegressionBootstrapInterval::Percentile,
+                    crate::RegressionBootstrapInterval::Bca,
+                ],
+            });
+        }
+        assert!(
+            validate_recipe(&recipe)
+                .iter()
+                .all(|issue| issue.severity != Severity::Error),
+            "valid PROCESS bootstrap recipe rejected: {:#?}",
+            validate_recipe(&recipe)
+        );
+        let execution = ValidatedExecutionRecipe::from_current_source(recipe).unwrap();
+        let point = execution.without_outer_resampling().unwrap();
+        assert_eq!(point.source().settings.bootstrap_samples, 0);
+        assert_eq!(point.source().settings.workers, 1);
     }
 
     #[test]

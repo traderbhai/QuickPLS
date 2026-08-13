@@ -193,7 +193,7 @@ describe("nativePlsReadiness", () => {
     for (const permutationSamples of [100, 999, 4_321]) {
       const permutation = readiness({ settings: { ...settings, permutationSamples } });
       expect(permutation.canRun, `${permutationSamples} permutations`).toBe(true);
-      expect(permutation.items.find((item) => item.id === "calculation")?.detail).toContain("Freedman–Lane");
+      expect(permutation.items.find((item) => item.id === "calculation")?.detail).toContain("candidate single-model Freedman-Lane");
     }
 
     const mixed = readiness({ settings: { ...settings, bootstrapSamples: 500, permutationSamples: 999 } });
@@ -789,5 +789,68 @@ describe("nativePlsReadiness", () => {
     });
     expect(legacyPointLimit.canRun).toBe(false);
     expect(legacyPointLimit.blockers.find((item) => item.id === "calculation")?.detail).toContain("no more than 25 predictors and controls");
+  });
+
+  it("routes graph-defined PROCESS through graph, global-sample, and bootstrap readiness", () => {
+    const processColumns = ["y", "x", "m", "w", "b", "c"];
+    const processDataset: Dataset = {
+      id: "process-data",
+      name: "process.csv",
+      columns: processColumns,
+      rows: Array.from({ length: 40 }, (_, index) => ({
+        y: index + (index % 3),
+        x: index / 2,
+        m: index / 3 + (index % 5),
+        w: (index % 9) - 4,
+        b: index % 2,
+        c: index % 7,
+      })),
+      rowCount: 40,
+      missing: 0,
+      fingerprint: "sha256:process",
+      kind: "raw",
+      columnMetadata: processColumns.map(numericMetadata),
+    };
+    const processSettings: AnalysisUiSettings = {
+      ...settings,
+      method: "regression",
+      preprocessing: "unstandardized",
+      regressionType: "process",
+      regressionOutcome: "y",
+      regressionPredictors: "x,m,w,b",
+      regressionControls: "c",
+      regressionBootstrap: true,
+      bootstrapSamples: 999,
+      workers: 3,
+      processGraph: {
+        model: "graph",
+        focal_predictor: "x",
+        paths: [{ from: "x", to: "y" }, { from: "x", to: "m" }, { from: "m", to: "y" }],
+        moderators: [{ variable: "w", scale: "continuous" }, { variable: "b", scale: "binary_0_1" }],
+        moderations: [
+          { from: "x", to: "y", moderator: "w", conditioning_moderator: "b" },
+          { from: "x", to: "m", moderator: "w" },
+        ],
+        continuous_product_centering: "equation_complete_case_mean_v1",
+      },
+    };
+    const ready = readiness({ dataset: processDataset, nodes: [], edges: [], settings: processSettings });
+    expect(ready.canRun).toBe(true);
+    expect(ready.items.map((item) => item.id)).toEqual(["runtime", "data", "calculation", "process-bootstrap"]);
+    expect(ready.items[2]).toMatchObject({ label: "Graph-defined path analysis", status: "ready" });
+    expect(ready.items[2].detail).toContain("global listwise-complete cases");
+    expect(ready.items[3].detail).toContain("percentile intervals primary and BCa conditional");
+
+    const invalidBinary = readiness({
+      dataset: {
+        ...processDataset,
+        rows: processDataset.rows.map((row, index) => index === 5 ? { ...row, b: 2 } : row),
+      },
+      nodes: [],
+      edges: [],
+      settings: processSettings,
+    });
+    expect(invalidBinary.canRun).toBe(false);
+    expect(invalidBinary.blockers.find((item) => item.id === "calculation")?.detail).toContain("outside exact 0/1 coding");
   });
 });

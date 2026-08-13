@@ -44,9 +44,16 @@ import {
 } from "./nativeCalculationLifecycle";
 import { nativePlsReadiness } from "./nativePlsReadiness";
 import { nativeLogisticReadiness } from "./nativeLogistic";
+import { nativeProcessReadiness } from "./nativeProcess";
 import { createAnalysisModelSnapshot } from "./nativeRunModelSnapshot";
+import {
+  isStructuralPathRandomizationIdentityPresent,
+  nativeStructuralPathRandomizationProjection,
+  nativeStructuralPathRandomizationRecipeMatches,
+} from "./nativeStructuralPathRandomization";
 import { useWorkspace } from "../store";
 import type {
+  AnalysisRun,
   AnalysisUiSettings,
   Dataset,
   DiagramLayoutState,
@@ -697,8 +704,19 @@ export function NativeDesktopController() {
         : !logisticAssessment?.canRun || logisticAssessment.profileRequired
           ? logisticAssessment?.blockers[0] ?? logisticAssessment?.detail ?? "The verified binary logistic profile is no longer current."
           : null;
-    if (!readiness.canRun || logisticDispatchError) {
-      const message = logisticDispatchError ?? readiness.blockers[0]?.detail ?? readiness.summary;
+    const processDispatch = request.kind === "regression" && submittedSettings.regressionType === "process";
+    const processAssessment = processDispatch
+      ? nativeProcessReadiness(dataset, submittedSettings, request.processProfile ?? null)
+      : null;
+    const processDispatchError = !processDispatch
+      ? null
+      : !request.processProfile
+        ? "Return to Calculate and profile every dataset row before starting graph-defined path analysis."
+        : !processAssessment?.canRun || processAssessment.profileRequired
+          ? processAssessment?.blockers[0] ?? processAssessment?.detail ?? "The verified PROCESS data profile is no longer current."
+          : null;
+    if (!readiness.canRun || logisticDispatchError || processDispatchError) {
+      const message = logisticDispatchError ?? processDispatchError ?? readiness.blockers[0]?.detail ?? readiness.summary;
       transitionRunMonitor({
         status: "blocked",
         phase: "Blocked",
@@ -715,8 +733,12 @@ export function NativeDesktopController() {
 
     const standalone = isStandaloneNativeAnalysis(request.kind);
     const modelSnapshot = standalone ? undefined : createAnalysisModelSnapshot(nodes, edges, diagramLayout);
-    const regressionMethodName = request.kind === "regression" && submittedSettings.regressionType === "logistic"
-      ? "Binary Logistic Regression"
+    const regressionMethodName = request.kind === "regression"
+      ? submittedSettings.regressionType === "logistic"
+        ? "Binary Logistic Regression"
+        : submittedSettings.regressionType === "process"
+          ? "Graph-Defined Path Analysis"
+          : nativeAnalysisRecipeDescriptor(request.kind).label
       : nativeAnalysisRecipeDescriptor(request.kind).label;
     const methodName = request.kind === "regression" && submittedSettings.regressionBootstrap === true
       ? `${regressionMethodName} with Bootstrap`
@@ -838,7 +860,7 @@ export function NativeDesktopController() {
         : undefined;
     const permutation = envelope.payload.kind === "pls_pm_v3" ? envelope.payload.permutation ?? undefined : undefined;
 
-    addRun({
+    const completedRun: AnalysisRun = {
       id: envelope.id,
       modelId: standalone ? null : modelId,
       name: methodName + " run",
@@ -864,7 +886,14 @@ export function NativeDesktopController() {
       bootstrap,
       permutation,
       provenance: envelope.provenance,
-    });
+    };
+    if (isStructuralPathRandomizationIdentityPresent(recipe, envelope)) {
+      const projection = nativeStructuralPathRandomizationProjection(completedRun);
+      if (!projection || !nativeStructuralPathRandomizationRecipeMatches(recipe, envelope, projection)) {
+        throw new Error("The completed structural path randomization result failed its current scientific contract.");
+      }
+    }
+    addRun(completedRun);
     transitionRunMonitor({
       status: "completed",
       phase: "Completed",

@@ -1,5 +1,4 @@
 import json
-import re
 from pathlib import Path
 
 
@@ -19,6 +18,7 @@ REQUIRED = {
     "csem_corporate_reference": "validation/results/pls_bootstrap_corporate_csem_reference.json",
     "plspm_bootstrap_reference": "validation/results/pls_bootstrap_plspm_external_reference.json",
     "quick_qualification": "validation/results/v04_inference_qualification_quick.json",
+    "structural_randomization_promotion": "validation/results/structural_path_randomization_method_promotion_audit.json",
     "resampling_spec": "docs/methods/RESAMPLING_ENGINE_V4.md",
     "jackknife_spec": "docs/methods/JACKKNIFE_ENGINE_V1.md",
     "permutation_spec": "docs/methods/PERMUTATION_ENGINE_V1.md",
@@ -35,6 +35,36 @@ PROMOTED_PROCEDURES = {
     "jackknife",
     "freedman_lane_permutation",
 }
+
+
+METHOD_COMPATIBILITY_ROW_PREFIX = "| PLS-SEM | Inference/resampling |"
+METHOD_COMPATIBILITY_REQUIRED_FRAGMENTS = (
+    "validated for the documented bounded scope",
+    "Structural Path Randomization v1 is separately release-qualified",
+    "fixed original converged PLS scores",
+    "exchangeable reduced-model residuals",
+    "unadjusted pathwise plus-one probabilities",
+    "paired homoscedastic Gaussian constant-variance calibration scenarios",
+    "heteroskedastic or broader non-Gaussian validity",
+    "release-qualified bounded v1 evidence",
+    "explicit conditional/approximate interpretation warning",
+)
+
+
+def method_compatibility_matches_current_scope(text: str) -> bool:
+    row = next(
+        (
+            line
+            for line in text.splitlines()
+            if line.startswith(METHOD_COMPATIBILITY_ROW_PREFIX)
+        ),
+        "",
+    )
+    normalized = row.casefold()
+    return bool(row) and all(
+        fragment.casefold() in normalized
+        for fragment in METHOD_COMPATIBILITY_REQUIRED_FRAGMENTS
+    )
 
 
 def load_json(path: str) -> dict:
@@ -70,33 +100,36 @@ def main():
     missing_procedures = sorted(PROMOTED_PROCEDURES - complete_procedures)
     incomplete_rows = [row.get("procedure") for row in rows if row.get("complete") is not True]
     method_compat = (ROOT / REQUIRED["method_compatibility"]).read_text(encoding="utf-8")
-    compatibility_updated = bool(
-        re.search(
-            r"Inference/resampling.*Validated for documented PLS resampling scope",
-            method_compat,
-            re.IGNORECASE,
-        )
-    )
+    compatibility_updated = method_compatibility_matches_current_scope(method_compat)
     scope_decision = {
-        "stable_output_scope": "documented PLS resampling and inference procedures",
+        "stable_output_scope": (
+            "documented PLS bootstrap/jackknife procedures plus the separately "
+            "release-qualified bounded Structural Path Randomization v1 scope"
+        ),
         "promoted_procedures": sorted(PROMOTED_PROCEDURES),
         "included_claims": [
             "fixed-seed reproducibility",
             "worker-count invariant analytical payloads where audited",
             "percentile, BCa, and studentized/bootstrap-t intervals under documented settings",
             "jackknife support for BCa and diagnostics",
-            "Freedman-Lane path permutation under documented fixed-score linear nuisance assumptions",
+            (
+                "Structural Path Randomization v1 under fixed original converged PLS scores, "
+                "exchangeable reduced-model residuals, and unadjusted pathwise plus-one probabilities"
+            ),
+            "paired homoscedastic Gaussian constant-variance calibration scenarios",
         ],
         "excluded_from_this_promotion": [
             "unqualified small-sample performance claims outside audited scenarios",
             "unqualified non-normal claims outside audited normal/heavy-tail qualification cells",
+            "heteroskedastic or broader non-Gaussian Structural Path Randomization validity",
+            "multiplicity-adjusted Structural Path Randomization inference",
             "resampling support for unsupported model shapes or failed-fit cases beyond documented diagnostics",
             "publication claims for methods whose base estimator remains experimental",
         ],
     }
     checks = {
         "all_required_files_present": all(presence.values()),
-        "all_result_artifacts_pass": all(artifact_status.values()) and len(artifact_status) >= 11,
+        "all_result_artifacts_pass": all(artifact_status.values()) and len(artifact_status) >= 12,
         "inference_matrix_passed": matrix.get("passed") is True,
         "promoted_procedures_complete": not missing_procedures,
         "no_incomplete_rows": not incomplete_rows,

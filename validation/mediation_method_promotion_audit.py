@@ -3,7 +3,7 @@ from second_batch_promotion_common import audit_method
 
 raise SystemExit(audit_method(
     "mediation",
-    "PLS mediation direct, indirect, total, VAF, classification, and validated bootstrap/permutation indirect-effect interpretation.",
+    "PLS mediation direct, indirect, total, VAF, classification, and validated bootstrap interpretation; historical bounded indirect-effect randomization evidence does not qualify Structural Path Randomization.",
     [
         "mediation_reference_report.json",
         "mediation_r_reference_report.json",

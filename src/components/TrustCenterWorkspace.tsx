@@ -11,7 +11,7 @@ import { Card, MetricCard, PageHeader, Panel, ResearchTable, StatusBadge, Worksp
 const methodDocs: Record<string, string> = {
   pls_pm: "docs/methods/PLS_PM_V1.md",
   bootstrap: "docs/methods/RESAMPLING_ENGINE_V4.md",
-  permutation: "docs/methods/FREEDMAN_LANE_PERMUTATION_V1.md",
+  permutation: "docs/methods/PERMUTATION_ENGINE_V1.md",
   plsc: "docs/methods/PLSC_V2.md",
   wpls: "docs/methods/PLS_WPLS_V1.md",
   cca: "docs/methods/PLS_CCA_V1.md",
@@ -152,7 +152,7 @@ export function TrustCenterWorkspace() {
     <PageHeader
       title="Trust Center"
       description="Inspect the evidence, method boundaries, runtime assumptions, and non-claims behind QuickPLS results before using them in research."
-      actions={<StatusBadge status="validated">Validated scope transparency</StatusBadge>}
+      actions={<StatusBadge status="experimental">Scope transparency</StatusBadge>}
     />
 
     <section className="trust-v2-hero" aria-label="Trust Center overview">

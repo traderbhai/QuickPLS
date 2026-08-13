@@ -32,7 +32,7 @@ function TrustDialog() {
       <div><dt>CCA composite residual diagnostics</dt><dd>Validated standardized reflective composite path-model scope; descriptive residuals only, without fit thresholds or inference</dd></div>
       <div><dt>Importance-Performance Map Analysis</dt><dd>Validated single-target predecessor map with 0-100 observed-range performance from listwise-standardized scores; no theoretical-range correction</dd></div>
       <div><dt>Bootstrapping</dt><dd>Validated inference add-on</dd></div>
-      <div><dt>Structural Path Randomization</dt><dd>Validated single-model Freedman-Lane inference; not a group comparison</dd></div>
+      <div><dt>Structural Path Randomization</dt><dd>Candidate single-model Freedman-Lane fixed-score inference under exchangeable reduced-model residuals, with unadjusted pathwise p values; current calibration covers homoscedastic Gaussian errors only and this is not a group comparison</dd></div>
       <div><dt>MICOM and Two-Group Permutation MGA</dt><dd>Validated bounded v2 scope with explicit ordered groups, 5,000–10,000 usable permutations, path/loading/weight comparisons, and MICOM Steps 1–3</dd></div>
       <div><dt>{NATIVE_PREDICTION_METHOD_LABEL}</dt><dd>Validated bounded indicator-level scope with seeded 10-fold × 10-repeat cross-validation, IA/LM benchmarks, and one-sided 95% CVPAT benchmark assessment; construct scores and the deterministic holdout are supplementary</dd></div>
       <div><dt>Necessary Condition Analysis</dt><dd>{NATIVE_NCA_SCOPE_NOTE}</dd></div>

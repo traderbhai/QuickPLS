@@ -1,5 +1,15 @@
 ﻿import type { AnalysisRun, AssessmentResult, MeasurementMode, PlsResult, ResultWorkspaceTab } from "../types";
 
+import { nativeRegressionBootstrapResultProjection } from "../native/nativeResults";
+import {
+  nativeLegacyProcessResultProjection,
+  nativeProcessResultProjection,
+} from "../native/nativeProcessResults";
+import {
+  NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING,
+  nativeStructuralPathRandomizationProjection,
+} from "../native/nativeStructuralPathRandomization";
+
 export type InterpretationSeverity = "good" | "caution" | "issue" | "info" | "unavailable";
 export type InterpretationGroup = "must" | "recommended" | "optional" | "report";
 
@@ -72,17 +82,28 @@ export function buildResultInterpretation(context: ResultInterpretationContext):
     };
   }
 
-  const findings = dedupeFindings([
-    ...pathFindings(run, result),
-    ...measurementFindings(result, run.assessment),
-    ...validityFindings(run.assessment),
-    ...structuralDiagnosticFindings(result, run.assessment),
-    ...inferenceFindings(run),
-    ...mediationModerationFindings(result),
-    ...predictionFindings(result, run.assessment),
-    ...methodPayloadFindings(result),
-  ]);
-  const diagramAdvice = dedupeFindings(diagramAdvisorFindings(context, result));
+  const process = nativeProcessResultProjection(run);
+  const legacyProcess = nativeLegacyProcessResultProjection(run);
+  const regressionBootstrap = nativeRegressionBootstrapResultProjection(run);
+  const findings = process
+    ? dedupeFindings(inferenceFindings(run))
+    : legacyProcess
+      ? [historicalProcessFinding(legacyProcess)]
+      : regressionBootstrap
+        ? dedupeFindings(inferenceFindings(run))
+    : dedupeFindings([
+      ...pathFindings(run, result),
+      ...measurementFindings(result, run.assessment),
+      ...validityFindings(run.assessment),
+      ...structuralDiagnosticFindings(result, run.assessment),
+      ...inferenceFindings(run),
+      ...mediationModerationFindings(result),
+      ...predictionFindings(result, run.assessment),
+      ...methodPayloadFindings(result),
+    ]);
+  const diagramAdvice = process || legacyProcess || regressionBootstrap
+    ? []
+    : dedupeFindings(diagramAdvisorFindings(context, result));
   const allFindings = sortFindings(dedupeFindings([...findings, ...diagramAdvice]));
   return {
     findings: allFindings,
@@ -108,6 +129,10 @@ export function findingsByGroup(findings: InterpretationFinding[]) {
 
 export function rowSpecificInterpretation(title: string, columns: string[], row: string[]): string {
   const values = Object.fromEntries(columns.map((column, index) => [column.toLowerCase(), row[index] ?? ""]));
+  if (/structural path randomization/i.test(title)) {
+    const probability = Number(values["raw two-sided p"]);
+    return `${values.path || "This structural path"} has raw pathwise two-sided plus-one p ${Number.isFinite(probability) ? probability.toFixed(4) : "unavailable"}. This candidate Freedman-Lane result conditions on fixed original PLS construct scores, assumes exchangeable reduced-model residuals, and is unadjusted for multiplicity.`;
+  }
   if (/path coefficients/i.test(title)) {
     const coefficient = Number(values.coefficient);
     if (Number.isFinite(coefficient)) {
@@ -146,6 +171,7 @@ export function copyableInterpretationText(findings: InterpretationFinding[]) {
 function pathFindings(run: AnalysisRun, result: PlsResult): InterpretationFinding[] {
   const findings: InterpretationFinding[] = [];
   if (!result.paths.length) return findings;
+  const structuralPathRandomization = nativeStructuralPathRandomizationProjection(run);
   const sorted = [...result.paths].sort((a, b) => Math.abs(b.coefficient) - Math.abs(a.coefficient));
   const strongest = sorted[0];
   findings.push(finding({
@@ -158,7 +184,11 @@ function pathFindings(run: AnalysisRun, result: PlsResult): InterpretationFindin
     thresholdGuide: "Rank paths by absolute coefficient, then evaluate theory and inference.",
     path: { source: strongest.source, target: strongest.target },
     interpretation: `${pathName(strongest.source, strongest.target)} is the strongest direct path in this run by absolute coefficient (${strongest.coefficient.toFixed(4)}).`,
-    recommendedAction: run.bootstrap || run.permutation ? "Review the corresponding inference interval before reporting the direction as supported." : "Enable bootstrap or permutation before reporting significance for this path.",
+    recommendedAction: structuralPathRandomization
+      ? "Review the corresponding raw pathwise randomization p value and candidate fixed-score disclosure before reporting inference."
+      : run.bootstrap
+        ? "Review the corresponding inference interval before reporting the direction as supported."
+        : "Enable bootstrap or structural path randomization before reporting significance for this path.",
     reportSentence: `The strongest direct path was ${pathName(strongest.source, strongest.target)} (beta = ${strongest.coefficient.toFixed(4)}).`,
     linkedObject: pathObject(strongest.source, strongest.target),
   }));
@@ -403,7 +433,56 @@ function structuralDiagnosticFindings(result: PlsResult, assessment?: Assessment
 
 function inferenceFindings(run: AnalysisRun): InterpretationFinding[] {
   const result: InterpretationFinding[] = [];
-  if (!run.bootstrap && !run.permutation) {
+  const processProjection = nativeProcessResultProjection(run);
+  const processBootstrap = processProjection?.bootstrap ?? null;
+  if (processBootstrap) {
+    result.push(finding({
+      id: "inference.process_bootstrap",
+      severity: "info",
+      group: "report",
+      tab: "inference",
+      metric: "PROCESS bootstrap inference",
+      value: `${processBootstrap.usable_replicates} of ${processBootstrap.requested_replicates} usable`,
+      thresholdGuide: "Report PROCESS percentile and available BCa intervals with the exact seed, workers, failed-replicate disclosures, and original raw probe grid.",
+      interpretation: `This graph-defined PROCESS run includes ${processBootstrap.usable_replicates} usable indexed case-bootstrap replicates of ${processBootstrap.requested_replicates} requested; it is not a point-estimates-only run.`,
+      recommendedAction: "Report effect-specific PROCESS bootstrap intervals and any tagged unavailable test or BCa state from the dedicated tables.",
+      reportSentence: `Graph-defined PROCESS inference used ${processBootstrap.usable_replicates} usable indexed case-bootstrap replicates of ${processBootstrap.requested_replicates} requested with seed ${processBootstrap.seed}.`,
+    }));
+    return result;
+  }
+  if (processProjection) {
+    result.push(finding({
+      id: "inference.process_bootstrap_missing",
+      severity: "unavailable",
+      group: "must",
+      tab: "inference",
+      metric: "PROCESS case-bootstrap intervals",
+      value: "not run",
+      thresholdGuide: "PROCESS v2 coefficient rows retain HC3 Student-t inference, while effect-specific percentile or BCa intervals require the dedicated PROCESS case-bootstrap layer.",
+      interpretation: "This graph-defined PROCESS run has no PROCESS case-bootstrap intervals; it is not reinterpreted through generic PLS bootstrap or permutation output.",
+      recommendedAction: "Enable PROCESS case bootstrapping and rerun before making bootstrap interval claims for direct, indirect, conditional, or moderated-mediation effects.",
+      reportSentence: "No PROCESS case-bootstrap layer was run, so effect-specific percentile or BCa interval claims were not made.",
+    }));
+    return result;
+  }
+  const regressionBootstrap = nativeRegressionBootstrapResultProjection(run);
+  if (regressionBootstrap) {
+    result.push(finding({
+      id: "inference.regression_bootstrap",
+      severity: "info",
+      group: "report",
+      tab: "inference",
+      metric: "Regression bootstrap inference",
+      value: `${regressionBootstrap.usable_replicates} of ${regressionBootstrap.requested_replicates} usable`,
+      thresholdGuide: "Report coefficient percentile and available BCa intervals with the exact regression-bootstrap seed, workers, and failed-replicate disclosures.",
+      interpretation: `This standalone regression run includes ${regressionBootstrap.usable_replicates} usable indexed case-bootstrap replicates of ${regressionBootstrap.requested_replicates} requested; it is not a point-estimates-only run.`,
+      recommendedAction: "Report coefficient-specific regression-bootstrap intervals and any tagged unavailable test or BCa state from the dedicated tables.",
+      reportSentence: `Standalone regression inference used ${regressionBootstrap.usable_replicates} usable indexed case-bootstrap replicates of ${regressionBootstrap.requested_replicates} requested with seed ${regressionBootstrap.seed}.`,
+    }));
+    return result;
+  }
+  const structuralPathRandomization = nativeStructuralPathRandomizationProjection(run);
+  if (!run.bootstrap && !structuralPathRandomization) {
     result.push(finding({
       id: "inference.missing",
       severity: "unavailable",
@@ -433,20 +512,22 @@ function inferenceFindings(run: AnalysisRun): InterpretationFinding[] {
       reportSentence: `${parameter.parameter} percentile bootstrap CI was [${parameter.lower.toFixed(4)}, ${parameter.upper.toFixed(4)}].`,
     }));
   }
-  if (run.permutation) {
-    const smallest = [...run.permutation.parameters].sort((a, b) => a.p_value_two_sided - b.p_value_two_sided)[0];
+  if (structuralPathRandomization) {
+    const smallest = [...structuralPathRandomization.parameters].sort((a, b) => a.pValueTwoSided - b.pValueTwoSided)[0];
     if (smallest) {
       result.push(finding({
         id: `permutation.${smallest.parameter}`,
-        severity: smallest.p_value_two_sided < 0.05 ? "good" : "info",
+        severity: "caution",
         group: "report",
         tab: "inference",
-        metric: "Permutation p value",
-        value: smallest.p_value_two_sided.toFixed(4),
-        thresholdGuide: "Permutation p values should be interpreted with the configured permutation count and design.",
-        interpretation: `${smallest.parameter} has the smallest permutation p value in this run (${smallest.p_value_two_sided.toFixed(4)}).`,
-        recommendedAction: "Report the permutation count, seed, and whether the test was planned for the research question.",
-        reportSentence: `${smallest.parameter} had permutation p = ${smallest.p_value_two_sided.toFixed(4)}.`,
+        metric: "Raw two-sided structural path randomization p",
+        value: smallest.pValueTwoSided.toFixed(4),
+        thresholdGuide: NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING,
+        path: { source: smallest.source, target: smallest.target },
+        interpretation: `${pathName(smallest.source, smallest.target)} has the smallest raw pathwise two-sided plus-one p value in this run (${smallest.pValueTwoSided.toFixed(4)} across ${smallest.permutations} permutations). The candidate test conditions on fixed original PLS construct scores, assumes exchangeable reduced-model residuals, and is unadjusted for multiplicity.`,
+        recommendedAction: "Report the path, exceedance count, permutation count, seed, fixed-score estimand, residual-exchangeability assumption, and lack of multiplicity adjustment; do not describe this as measurement-model re-estimation or a group comparison.",
+        reportSentence: `${pathName(smallest.source, smallest.target)} had raw pathwise two-sided randomization p = ${smallest.pValueTwoSided.toFixed(4)} (${smallest.exceedances} exceedances in ${smallest.permutations} permutations), conditional on fixed original PLS construct scores and exchangeable reduced-model residuals, without multiplicity adjustment.`,
+        linkedObject: pathObject(smallest.source, smallest.target),
       }));
     }
   }
@@ -645,6 +726,13 @@ function diagramAdvisorFindings(context: ResultInterpretationContext, result: Pl
 }
 
 function reportParagraphs(run: AnalysisRun, result: PlsResult, findings: InterpretationFinding[]) {
+  const process = nativeProcessResultProjection(run);
+  if (process) return processReportParagraphs(run, process, findings);
+  const legacyProcess = nativeLegacyProcessResultProjection(run);
+  if (legacyProcess) return historicalProcessReportParagraphs(run, legacyProcess);
+  const regressionBootstrap = nativeRegressionBootstrapResultProjection(run);
+  if (regressionBootstrap) return regressionBootstrapReportParagraphs(run, regressionBootstrap, findings);
+  const structuralPathRandomization = nativeStructuralPathRandomizationProjection(run);
   const strongestPath = [...result.paths].sort((a, b) => Math.abs(b.coefficient) - Math.abs(a.coefficient))[0];
   const r2Rows = Object.entries(result.r_squared).sort((a, b) => b[1] - a[1]);
   const loadingValues = result.outer_estimates.map((row) => Math.abs(row.loading));
@@ -670,9 +758,11 @@ function reportParagraphs(run: AnalysisRun, result: PlsResult, findings: Interpr
     },
     {
       section: "Inference caveat",
-      text: run.bootstrap || run.permutation
-        ? "Inference should be reported with the configured resampling procedure, confidence level, seed, and any failed or unavailable intervals."
-        : "This run does not include bootstrap or permutation inference; avoid p-value or confidence-interval claims from this run.",
+      text: structuralPathRandomization
+        ? `${NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING} Report each raw p value with its exceedance count, ${structuralPathRandomization.permutations} permutations, and seed ${structuralPathRandomization.masterSeed}.`
+        : run.bootstrap
+          ? "Inference should be reported with the configured bootstrap procedure, confidence level, seed, and any failed or unavailable intervals."
+          : "This run does not include bootstrap or current structural path randomization inference; avoid p-value or confidence-interval claims from this run.",
       sourceFindingIds: findings.filter((item) => item.tab === "inference").map((item) => item.id),
     },
     {
@@ -680,6 +770,109 @@ function reportParagraphs(run: AnalysisRun, result: PlsResult, findings: Interpr
       text: issues.length || cautions.length
         ? `Before reporting, address ${issues.length} issue(s) and review ${cautions.length} caution/unavailable finding(s).`
         : "No issue-level findings were detected by the deterministic interpretation rules; report exact values and study-specific justification.",
+      sourceFindingIds: [...issues, ...cautions].map((item) => item.id),
+    },
+  ];
+}
+
+function regressionBootstrapReportParagraphs(
+  run: AnalysisRun,
+  bootstrap: NonNullable<ReturnType<typeof nativeRegressionBootstrapResultProjection>>,
+  findings: InterpretationFinding[],
+) {
+  const regression = run.result!.regression!;
+  const nonIntercept = regression.coefficients.filter((coefficient) => coefficient.term !== "intercept");
+  const strongest = [...nonIntercept].sort((left, right) => Math.abs(right.estimate) - Math.abs(left.estimate))[0];
+  const fitDisclosure = regression.regression_type === "logistic"
+    ? `McFadden pseudo-R-squared ${regression.fit?.pseudo_r_squared?.toFixed(4) ?? "not available"}`
+    : `R-squared ${regression.fit?.r_squared?.toFixed(4) ?? "not available"}`;
+  return [
+    {
+      section: "Model and provenance",
+      text: `${run.name} used standalone ${regression.regression_type === "logistic" ? "binary logistic" : "OLS"} regression for outcome ${regression.outcome} with ${regression.observations} observations, seed ${run.seed}, and fingerprint ${run.fingerprint}.`,
+      sourceFindingIds: [],
+    },
+    {
+      section: "Regression model",
+      text: `${fitDisclosure}.${strongest ? ` The largest non-intercept coefficient by absolute value was ${strongest.term} (${strongest.estimate.toFixed(4)}).` : ""}`,
+      sourceFindingIds: [],
+    },
+    {
+      section: "Inference caveat",
+      text: `This standalone regression run includes ${bootstrap.usable_replicates} usable indexed case-bootstrap replicates of ${bootstrap.requested_replicates} requested. Report coefficient percentile and available BCa intervals with seed ${bootstrap.seed}, worker count ${bootstrap.workers}, and ${bootstrap.failed_replicates.length} failed replicate(s).`,
+      sourceFindingIds: findings.filter((item) => item.tab === "inference").map((item) => item.id),
+    },
+    {
+      section: "Reporting checks",
+      text: "Report the regression type, coefficient scale, fit statistic, resampling settings, and all tagged unavailable intervals; do not reinterpret standalone regression through PLS measurement-model rules.",
+      sourceFindingIds: findings.map((item) => item.id),
+    },
+  ];
+}
+
+function historicalProcessFinding(
+  process: NonNullable<ReturnType<typeof nativeLegacyProcessResultProjection>>,
+): InterpretationFinding {
+  return finding({
+    id: "process_v1.historical_read_only",
+    severity: "unavailable",
+    group: "must",
+    tab: "overview",
+    metric: "Historical PROCESS v1 interpretation",
+    value: "read-only",
+    thresholdGuide: "Historical regression_process_v1 output remains readable under its original label and is never reinterpreted as current graph-defined PROCESS evidence.",
+    interpretation: `This ${process.model.replaceAll("_", " ")} result is a historical PROCESS v1 archive. QuickPLS displays its recorded values without applying generic PLS or current PROCESS v2 interpretation rules.`,
+    recommendedAction: "Create and run a graph-defined PROCESS v2 recipe when current evidence or interpretation is required.",
+    reportSentence: "Historical PROCESS v1 output was retained as readable, read-only archive evidence and was not reinterpreted under current methods.",
+  });
+}
+
+function historicalProcessReportParagraphs(
+  run: AnalysisRun,
+  process: NonNullable<ReturnType<typeof nativeLegacyProcessResultProjection>>,
+) {
+  return [{
+    section: "Historical archive disclosure",
+    text: `${run.name} contains historical ${process.methodVersion} ${process.model.replaceAll("_", " ")} output. Recorded effect and slope rows remain readable under their original version label, but no generic PLS, current PROCESS v2, parity, or fresh validation claim is made.`,
+    sourceFindingIds: ["process_v1.historical_read_only"],
+  }];
+}
+
+function processReportParagraphs(
+  run: AnalysisRun,
+  process: NonNullable<ReturnType<typeof nativeProcessResultProjection>>,
+  findings: InterpretationFinding[],
+) {
+  const issues = findings.filter((item) => item.severity === "issue");
+  const cautions = findings.filter((item) => item.severity === "caution" || item.severity === "unavailable");
+  const equationSummary = process.graph.equations
+    .map((equation) => `${equation.outcome} R-squared ${equation.fit.r_squared.toFixed(4)}`)
+    .join("; ");
+  const direct = process.graph.reference_effects.find((effect) => effect.kind === "direct");
+  const totalIndirect = process.graph.reference_effects.find((effect) => effect.kind === "total_indirect");
+  return [
+    {
+      section: "Model and provenance",
+      text: `${run.name} used graph-defined PROCESS v2 with ${process.observations} global complete cases, ${process.omittedObservations} omitted rows, ${process.graph.equations.length} OLS equation(s), HC3 covariance, seed ${run.seed}, and fingerprint ${run.fingerprint}. Scope status: candidate graph-defined PROCESS evidence.`,
+      sourceFindingIds: [],
+    },
+    {
+      section: "Graph-defined path analysis",
+      text: `${equationSummary || "No validated equation-fit rows were available."}${direct ? ` Reference direct effect ${direct.effect_id} was ${direct.estimate.toFixed(4)}.` : ""}${totalIndirect ? ` Reference total indirect effect was ${totalIndirect.estimate.toFixed(4)}.` : ""} Reference effects are evaluated at the persisted original-sample moderator conditions disclosed in the result tables.`,
+      sourceFindingIds: findings.filter((item) => item.tab === "structural").map((item) => item.id),
+    },
+    {
+      section: "Inference caveat",
+      text: process.bootstrap
+        ? `This graph-defined PROCESS run includes ${process.bootstrap.usable_replicates} usable indexed case-bootstrap replicates of ${process.bootstrap.requested_replicates} requested. Report dedicated percentile and available BCa intervals with seed ${process.bootstrap.seed}, worker count ${process.bootstrap.workers}, and any failed or unavailable states.`
+        : "This graph-defined PROCESS run includes equation-specific HC3 Student-t coefficient inference and persisted simple-slope or Johnson-Neyman diagnostics where applicable, but no PROCESS case-bootstrap intervals.",
+      sourceFindingIds: findings.filter((item) => item.tab === "inference").map((item) => item.id),
+    },
+    {
+      section: "Reporting checks",
+      text: issues.length || cautions.length
+        ? `Before reporting, address ${issues.length} issue(s) and review ${cautions.length} caution/unavailable finding(s).`
+        : "No issue-level findings were detected by the deterministic PROCESS interpretation rules; report exact values, reference conditions, and study-specific justification.",
       sourceFindingIds: [...issues, ...cautions].map((item) => item.id),
     },
   ];
@@ -857,6 +1050,9 @@ function formatCode(code: string) {
 }
 
 function scopeText(run: AnalysisRun) {
+  if (nativeStructuralPathRandomizationProjection(run)) {
+    return "candidate single-model fixed-score structural path randomization with conditional, approximate inference under exchangeable reduced-model residuals; method-specific qualification evidence is tracked separately";
+  }
   return (run.warnings[0] ?? "Validated for documented QuickPLS scope.").replace(/QuickPLS v\d+\.\d+\.\d+ supported scope/g, "documented QuickPLS supported scope");
 }
 

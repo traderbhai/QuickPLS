@@ -26,6 +26,18 @@ describe("NativeUtilityDialog", () => {
     expect(html).not.toContain("measurement invariance is not assessed");
   });
 
+  it("labels Structural Path Randomization as candidate fixed-score inference, never validated", () => {
+    vi.stubGlobal("window", {});
+    const html = renderToStaticMarkup(<NativeUtilityDialog kind="trust" close={() => undefined} />);
+    vi.unstubAllGlobals();
+
+    expect(html).toContain("Structural Path Randomization");
+    expect(html).toContain("Candidate single-model Freedman-Lane fixed-score inference");
+    expect(html).toContain("exchangeable reduced-model residuals");
+    expect(html).toContain("not a group comparison");
+    expect(html).not.toContain("Structural Path Randomization</dt><dd>Validated");
+  });
+
   it("describes indicator PLSpredict / CVPAT without a saved-model comparison claim", () => {
     vi.stubGlobal("window", {});
     const html = renderToStaticMarkup(<NativeUtilityDialog kind="trust" close={() => undefined} />);

@@ -1,13 +1,13 @@
 {
   "schema_version": 2,
   "target": "v1_2_method_promotion_program",
-  "passed": true,
+  "passed": false,
   "first_batch_rows": 5,
-  "first_batch_promotion_ready": 5,
+  "first_batch_promotion_ready": 3,
   "second_batch_rows": 7,
-  "second_batch_promotion_ready": 7,
+  "second_batch_promotion_ready": 6,
   "third_batch_rows": 6,
-  "third_batch_promotion_ready": 6,
+  "third_batch_promotion_ready": 4,
   "fourth_batch_rows": 6,
   "fourth_batch_promotion_ready": 6,
   "fifth_batch_rows": 2,
@@ -234,11 +234,11 @@
     {
       "id": "inference_resampling",
       "family": "Inference",
-      "method": "Bootstrap, BCa, studentized bootstrap, jackknife, and permutation",
+      "method": "Bootstrap, BCa, studentized bootstrap, and jackknife",
       "current_status": "experimental_family_label",
       "target_status": "validated",
       "promotion_batch": 1,
-      "candidate_scope": "Documented PLS resampling settings with indexed ChaCha streams, percentile, BCa, studentized intervals, jackknife, and Freedman-Lane permutation where audited.",
+      "candidate_scope": "Documented PLS resampling settings with indexed ChaCha streams, percentile, BCa, studentized intervals, and jackknife where audited.",
       "required_evidence": [
         "fixed-seed reproducibility",
         "worker-count invariance",
@@ -324,7 +324,8 @@
       ],
       "blocking_questions": [],
       "scope_decisions": [
-        "Percentile bootstrap, BCa, studentized/bootstrap-t, jackknife support, and Freedman-Lane path permutation are promoted together for documented PLS inference settings.",
+        "Percentile bootstrap, BCa, studentized/bootstrap-t, and jackknife support are promoted for documented PLS inference settings.",
+        "Structural Path Randomization is release-qualified only through validation/results/structural_path_randomization_method_promotion_audit.json; generic bootstrap evidence is not reusable for this scope.",
         "Small-sample and non-normal claims are limited to the audited Monte Carlo qualification cells and documented diagnostics.",
         "Inference does not promote experimental base estimators or unsupported model shapes."
       ],
@@ -371,10 +372,10 @@
           "passed": null
         },
         {
-          "path": "validation/results/v08_extended_methods_reference_report.json",
-          "purpose": "integrated NumPy/Python reference",
+          "path": "validation/results/v08_pca_reference_report.json",
+          "purpose": "method-specific NumPy/Python reference",
           "required": true,
-          "present": true,
+          "present": false,
           "require_passed": false,
           "passed": null
         },
@@ -419,11 +420,13 @@
       ],
       "artifact_summary": {
         "required": 7,
-        "present": 7,
-        "missing": [],
+        "present": 6,
+        "missing": [
+          "validation/results/v08_pca_reference_report.json"
+        ],
         "failed": []
       },
-      "promotion_ready": true
+      "promotion_ready": false
     },
     {
       "id": "ols_regression",
@@ -460,10 +463,10 @@
           "passed": true
         },
         {
-          "path": "validation/results/v08_extended_methods_reference_report.json",
-          "purpose": "integrated Python reference",
+          "path": "validation/results/v08_ols_reference_report.json",
+          "purpose": "method-specific Python reference",
           "required": true,
-          "present": true,
+          "present": false,
           "require_passed": false,
           "passed": null
         },
@@ -500,11 +503,13 @@
       ],
       "artifact_summary": {
         "required": 6,
-        "present": 6,
-        "missing": [],
+        "present": 5,
+        "missing": [
+          "validation/results/v08_ols_reference_report.json"
+        ],
         "failed": []
       },
-      "promotion_ready": true
+      "promotion_ready": false
     },
     {
       "id": "mediation",
@@ -998,10 +1003,10 @@
           "passed": true
         },
         {
-          "path": "validation/results/v08_extended_methods_reference_report.json",
-          "purpose": "integrated independent CE-FDH/CR-FDH reference",
+          "path": "validation/results/v08_nca_reference_report.json",
+          "purpose": "method-specific independent CE-FDH/CR-FDH reference",
           "required": true,
-          "present": true,
+          "present": false,
           "require_passed": false,
           "passed": null
         },
@@ -1023,11 +1028,13 @@
       ],
       "artifact_summary": {
         "required": 5,
-        "present": 5,
-        "missing": [],
+        "present": 4,
+        "missing": [
+          "validation/results/v08_nca_reference_report.json"
+        ],
         "failed": []
       },
-      "promotion_ready": true
+      "promotion_ready": false
     },
     {
       "id": "micom",
@@ -1309,10 +1316,10 @@
           "passed": null
         },
         {
-          "path": "validation/results/v08_extended_methods_reference_report.json",
-          "purpose": "integrated Python reference",
+          "path": "validation/results/v08_logistic_reference_report.json",
+          "purpose": "method-specific Python reference",
           "required": true,
-          "present": true,
+          "present": false,
           "require_passed": false,
           "passed": null
         },
@@ -1339,11 +1346,13 @@
       ],
       "artifact_summary": {
         "required": 4,
-        "present": 4,
-        "missing": [],
+        "present": 3,
+        "missing": [
+          "validation/results/v08_logistic_reference_report.json"
+        ],
         "failed": []
       },
-      "promotion_ready": true
+      "promotion_ready": false
     },
     {
       "id": "process",
@@ -1370,10 +1379,10 @@
           "passed": null
         },
         {
-          "path": "validation/results/v08_extended_methods_reference_report.json",
-          "purpose": "integrated Python reference",
+          "path": "validation/results/v08_process_reference_report.json",
+          "purpose": "method-specific Python reference",
           "required": true,
-          "present": true,
+          "present": false,
           "require_passed": false,
           "passed": null
         },
@@ -1408,11 +1417,13 @@
       ],
       "artifact_summary": {
         "required": 5,
-        "present": 5,
-        "missing": [],
+        "present": 4,
+        "missing": [
+          "validation/results/v08_process_reference_report.json"
+        ],
         "failed": []
       },
-      "promotion_ready": true
+      "promotion_ready": false
     },
     {
       "id": "higher_order",
@@ -1884,16 +1895,24 @@
       "current_status": "validated_bounded_scope",
       "target_status": "validated",
       "promotion_batch": 5,
-      "candidate_scope": "Bounded deterministic GSCA component model with reflective/formative blocks, recursive paths, FIT/AFIT/GFI diagnostics, weights, loadings, scores, and R2.",
+      "candidate_scope": "Bounded gsca_als_v2 joint global least-squares ALS with standardized raw data, disjoint reflective/formative blocks, recursive paths, weights, loadings, paths, R2, objective, FIT/AFIT/local FIT, GFI, SRMR, and convergence.",
       "required_evidence": [
-        "independent reference",
-        "publication audit",
-        "product/export enforcement"
+        "independent global-criterion reference",
+        "strict persistence",
+        "packaged native lifecycle/export/reopen"
       ],
       "artifacts": [
         {
+          "path": "docs/methods/GSCA_ALS_V2.md",
+          "purpose": "current method specification",
+          "required": true,
+          "present": true,
+          "require_passed": false,
+          "passed": null
+        },
+        {
           "path": "docs/methods/GSCA_V1.md",
-          "purpose": "method specification",
+          "purpose": "legacy preview boundary",
           "required": true,
           "present": true,
           "require_passed": false,
@@ -1901,23 +1920,31 @@
         },
         {
           "path": "validation/results/gsca_method_promotion_audit.json",
-          "purpose": "v1.2.4 GSCA promotion audit",
+          "purpose": "GSCA ALS v2 promotion audit",
           "required": true,
           "present": true,
           "require_passed": false,
           "passed": null
         },
         {
-          "path": "validation/results/v08_extended_methods_reference_report.json",
-          "purpose": "integrated reference",
+          "path": "validation/results/gsca_als_v2_reference_report.json",
+          "purpose": "independent global-criterion reference",
           "required": true,
           "present": true,
           "require_passed": false,
           "passed": null
         },
         {
-          "path": "validation/results/extended_methods_publication_audit.json",
-          "purpose": "publication audit",
+          "path": "validation/results/v247_native_desktop_visual_acceptance.json",
+          "purpose": "browser setup and viewport acceptance",
+          "required": true,
+          "present": true,
+          "require_passed": false,
+          "passed": null
+        },
+        {
+          "path": "validation/results/v247_tauri_native_acceptance_gsca.json",
+          "purpose": "genuine packaged workflow evidence",
           "required": true,
           "present": true,
           "require_passed": false,
@@ -1926,11 +1953,11 @@
       ],
       "blocking_questions": [],
       "scope_decisions": [
-        "Unrestricted GSCA variants and GSCA bootstrap claims remain unsupported unless separately audited."
+        "Historical gsca_v1 is legacy preview-only; score export, inference, multigroup, and unrestricted GSCA variants remain unsupported unless separately audited."
       ],
       "artifact_summary": {
-        "required": 4,
-        "present": 4,
+        "required": 6,
+        "present": 6,
         "missing": [],
         "failed": []
       },

@@ -86,14 +86,28 @@ describe("native controller release contracts", () => {
     expect(resultConsumption).toMatch(/getNativePlsJobResult\(job\.id\);[\s\S]*setActiveJob\(null\);[\s\S]*transitionRunMonitor\(\{[\s\S]*activeJobId: null,[\s\S]*\}\);/);
   });
 
+  it("fails current structural path randomization closed before adding the completed run", () => {
+    const completion = controller.slice(
+      controller.indexOf("const envelope = await getNativePlsJobResult(job.id)"),
+      controller.indexOf("transitionRunMonitor({", controller.indexOf("addRun(completedRun);")),
+    );
+
+    expect(completion).toContain("const completedRun: AnalysisRun = {");
+    expect(completion).toContain("isStructuralPathRandomizationIdentityPresent(recipe, envelope)");
+    expect(completion).toContain("nativeStructuralPathRandomizationProjection(completedRun)");
+    expect(completion).toContain("nativeStructuralPathRandomizationRecipeMatches(recipe, envelope, projection)");
+    expect(completion).toContain("failed its current scientific contract");
+    expect(completion.indexOf("nativeStructuralPathRandomizationProjection(completedRun)"))
+      .toBeLessThan(completion.indexOf("addRun(completedRun);"));
+  });
+
   it("uses the consumed native result id for both the saved run and completion selection", () => {
     const completion = controller.slice(
       controller.indexOf("const envelope = await getNativePlsJobResult(job.id);"),
       controller.indexOf('pushToast({ tone: "success", title: "Calculation completed"'),
     );
 
-    expect(completion).toMatch(/addRun\(\{[\s\S]*id: envelope\.id,[\s\S]*\}\);/);
-    expect(completion).toMatch(/addRun\(\{[\s\S]*modelId,[\s\S]*\}\);/);
+    expect(completion).toMatch(/const completedRun: AnalysisRun = \{[\s\S]*id: envelope\.id,[\s\S]*modelId:[\s\S]*\};[\s\S]*addRun\(completedRun\);/);
     expect(completion).toMatch(/transitionRunMonitor\(\{[\s\S]*status: "completed",[\s\S]*lastRunId: envelope\.id,/);
     expect(app).toContain("resolveSelectedCompletedRun(completedRuns, selectedResultRunId)");
     expect(app).toContain("setSelectedRunId={setSelectedResultRun}");
@@ -107,16 +121,16 @@ describe("native controller release contracts", () => {
       'if (!envelope || envelope.payload.kind === "legacy") throw new Error("The completed job did not return a compatible result.");',
       resultFetch,
     );
-    const completedRunAppend = controller.indexOf("addRun({", compatibilityGate);
+    const completedRunAppend = controller.indexOf("addRun(completedRun);", compatibilityGate);
     const runEnd = controller.indexOf("const executeRun = async", completedRunAppend);
 
     expect(runStart).toBeGreaterThan(-1);
     expect(resultFetch).toBeGreaterThan(runStart);
     expect(compatibilityGate).toBeGreaterThan(resultFetch);
     expect(completedRunAppend).toBeGreaterThan(compatibilityGate);
-    expect(controller.slice(runStart, resultFetch)).not.toContain("addRun({");
+    expect(controller.slice(runStart, resultFetch)).not.toContain("addRun(completedRun);");
     expect(controller.slice(completedRunAppend, runEnd)).toContain('status: "completed"');
-    expect(controller.slice(completedRunAppend, runEnd).match(/addRun\(\{/g)).toHaveLength(1);
+    expect(controller.slice(completedRunAppend, runEnd).match(/addRun\(completedRun\);/g)).toHaveLength(1);
     expect(app).toContain("const completedRuns = useMemo(() => completedResultRuns(runs), [runs]);");
   });
 
@@ -161,7 +175,7 @@ describe("native controller release contracts", () => {
     const expected: Array<[NativeCalculationMode, "pls_pm" | "predict", [number, number, number], string]> = [
       ["pls", "pls_pm", [0, 0, 0], "validated_v1_0_supported_pls_scope"],
       ["bootstrap", "pls_pm", [5_000, 0, 0], "validated_v1_0_supported_pls_scope"],
-      ["permutation", "pls_pm", [0, 0, 999], "validated_v1_0_freedman_lane_path_randomization_scope"],
+      ["permutation", "pls_pm", [0, 0, 999], "candidate_freedman_lane_path_randomization_scope"],
       ["predict", "predict", [0, 0, 0], "validated_plspredict_indicator_v2_and_cvpat_indicator_benchmarks_v2_bounded_scope"],
     ];
 
@@ -193,13 +207,13 @@ describe("native controller release contracts", () => {
   });
 
   it("submits an immutable catalog request and stores native inference output", () => {
-    expect(app).toContain("createNativeCalculationRequest(calculationKind, calculationSettings, logisticProfile)");
+    expect(app).toContain("createNativeCalculationRequest(calculationKind, calculationSettings, dataProfile)");
     expect(controller).toContain("parseNativeCalculationRequest");
     expect(controller).toContain("nativeAnalysisRecipeDescriptor(request.kind).label");
     expect(calculationDialog).toContain('role="listbox"');
     expect(analysisCatalog).toContain("NATIVE_PREDICTION_SCOPE_DESCRIPTION");
     expect(controller).toContain('const permutation = envelope.payload.kind === "pls_pm_v3"');
-    expect(controller).toMatch(/addRun\(\{[\s\S]*permutation,[\s\S]*\}\);/);
+    expect(controller).toMatch(/const completedRun: AnalysisRun = \{[\s\S]*permutation,[\s\S]*\};[\s\S]*addRun\(completedRun\);/);
     expect(controller).toContain("provenance: envelope.provenance");
   });
 
@@ -274,13 +288,13 @@ describe("native controller release contracts", () => {
     expect(app).toContain("const [calculationDraft, setCalculationDraft]");
     expect(app).toContain("setCalculationDraft(nativeAnalysisSettingsForWorkbenchKind(analysisSettings, preferredKind))");
     expect(app).toContain("setSettings={(patch) => setCalculationDraft");
-    expect(app).toMatch(/const startCalculation = \(logisticProfile\?: NativeLogisticProfile\) => \{[\s\S]*setAnalysisSettings\(calculationSettings\);[\s\S]*createNativeCalculationRequest\(calculationKind, calculationSettings, logisticProfile\)/);
+    expect(app).toMatch(/const startCalculation = \(dataProfile\?: NativeLogisticProfile \| NativeProcessProfile\) => \{[\s\S]*setAnalysisSettings\(calculationSettings\);[\s\S]*createNativeCalculationRequest\(calculationKind, calculationSettings, dataProfile\)/);
     expect(calculationDialog).toContain('<button type="button" onClick={close}>Close</button>');
   });
 
   it("carries a full-data logistic proof through dispatch and revalidates it before job creation", () => {
-    expect(calculationDialog).toContain("start(verifiedLogisticProfile)");
-    expect(app).toContain("createNativeCalculationRequest(calculationKind, calculationSettings, logisticProfile)");
+    expect(calculationDialog).toContain("start(verifiedLogisticProfile ?? verifiedProcessProfile)");
+    expect(app).toContain("createNativeCalculationRequest(calculationKind, calculationSettings, dataProfile)");
     expect(controller).toContain("nativeLogisticReadiness(dataset, submittedSettings, request.logisticProfile ?? null)");
     expect(controller).toContain("!request.logisticProfile");
     expect(controller.indexOf("const logisticDispatchError")).toBeLessThan(controller.indexOf("const recipeId = crypto.randomUUID();"));

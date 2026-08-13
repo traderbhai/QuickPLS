@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { chromium } from "playwright";
 import {
   RESULTS,
@@ -25,7 +26,8 @@ import {
 
 const port = 57_647;
 const baseUrl = `http://127.0.0.1:${port}/`;
-const screenshotDir = path.join(RESULTS, "screens", "v247-native-desktop-acceptance");
+const screenshotDir = path.join(RESULTS, "screens", "v247-native-desktop-visual");
+const screenshotPathPrefix = "validation/results/screens/v247-native-desktop-visual/";
 const resultPath = path.join(RESULTS, "v247_native_desktop_visual_acceptance.json");
 
 const viewports = [
@@ -40,6 +42,11 @@ const scale200Viewport = {
   height: 700,
   deviceScaleFactor: 2,
 };
+const screenshotViewportIds = new Set([
+  ...viewports.map((viewport) => viewport.id),
+  scale200Viewport.id,
+  "1440x900-large-model",
+]);
 
 const largeModelTarget = { constructs: 20, indicators: 80 };
 const interactionBudgetsMs = {
@@ -73,6 +80,9 @@ const nativePcaScopeNote = "Correlation-matrix PCA of 2 to 50 selected numeric v
 const nativeOlsScopeNote = "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa inference. Categorical encoding, weights, clusters, generic PLS resampling, logistic regression, and PROCESS models are not included.";
 const nativeLogisticScopeNote = "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa coefficient and odds-ratio inference. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, generic PLS resampling, and Firth-corrected models are not included.";
 const nativeRegressionBootstrapScopeNote = "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.";
+const nativeProcessV2ScopeNote = "Graph-defined observed-variable path analysis with raw listwise-complete OLS equations, HC3 covariance, fixed two-sided 95% Student-t inference, parallel and serial mediation, continuous or exact 0/1 moderation, mixed two-moderator interactions, first- or second-stage moderated mediation, simple slopes, and Johnson-Neyman regions where applicable. This release supports up to 8 selected predictors in graph-role order and one control entered in every equation; the 50-term ceiling is an equation-design safety bound. Continuous product participants are centered within each equation sample. Numbered macros, binary outcomes, weights, clusters, custom alpha or tails, studentized intervals, multiple moderated stages on one indirect path, and three-way interactions on mediated paths are excluded.";
+const nativeProcessV2ProbeDisclosure = "Continuous simple-slope and plot probes use the original sample raw mean - SD, mean, and mean + SD; binary probes use original raw 0/1. Resamples and delete-one fits re-center their equations internally while retaining that original raw probe grid.";
+const nativeProcessV2BootstrapScopeNote = "10,000 complete-case resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa requires every delete-one PROCESS fit; unavailable intervals retain an explicit reason. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Indexed seeded streams are deterministic and worker-invariant.";
 
 const obsoleteRibbonStrings = [
   "Open Setup",
@@ -100,6 +110,7 @@ const legacyRibbonSelector = [
 
 const evidence = {
   schemaVersion: 2,
+  generatedAt: new Date().toISOString(),
   passed: false,
   harness: {
     runtime: "Chromium via Vite production preview",
@@ -135,6 +146,7 @@ const evidence = {
     ols: [],
     logistic: [],
     regressionBootstrap: [],
+    processV2: [],
     structuralPathRandomization: [],
     mga: [],
     prediction: [],
@@ -621,14 +633,32 @@ async function auditRecodeDialog(page, viewport, sequence) {
   }
 }
 
-async function capture(page, state, sequence, viewport, { dialog = null, runtime = "chromium-preview" } = {}) {
+async function capture(page, state, sequence, viewport, { dialog = null } = {}) {
+  if (typeof state !== "string" || !/^[a-z0-9][a-z0-9-]*$/.test(state)
+    || !screenshotViewportIds.has(viewport?.id)) {
+    throw new Error(`Invalid screenshot viewport/state identity: ${JSON.stringify({ viewport: viewport?.id, state })}`);
+  }
   await inspectShellState(page, state, viewport);
   await inspectAccessibility(page, state, viewport);
   if (dialog) await inspectDialog(page, dialog, viewport);
   const filename = `${String(sequence).padStart(2, "0")}-${state}-${viewport.id}.png`;
   const screenshot = path.join(screenshotDir, filename);
   await page.screenshot({ path: screenshot, fullPage: false, animations: "disabled" });
-  evidence.screenshots.push({ state, viewport: viewport.id, runtime, path: screenshot });
+  const [stat, bytes] = await Promise.all([fs.stat(screenshot), fs.readFile(screenshot)]);
+  if (!stat.isFile() || stat.size <= 0 || stat.size !== bytes.byteLength) {
+    throw new Error(`Screenshot write did not produce a stable non-empty file: ${screenshot}`);
+  }
+  const relativePath = path.relative(ROOT, screenshot).replaceAll("\\", "/");
+  if (!relativePath.startsWith(screenshotPathPrefix) || path.basename(relativePath) !== filename) {
+    throw new Error(`Screenshot escaped the dedicated visual evidence directory: ${relativePath}`);
+  }
+  evidence.screenshots.push({
+    path: relativePath,
+    size: stat.size,
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+    viewport: viewport.id,
+    state,
+  });
 }
 
 const mediationResultTitles = [
@@ -1447,7 +1477,7 @@ function compactCalculationText(value) {
 }
 
 function normalizeCalculationPlan(value) {
-  return compactCalculationText(value).replace(/\u00d7/g, "x").replace(/Ã—/g, "x");
+  return compactCalculationText(value).replace(/\u00d7/g, "x");
 }
 
 function normalizeGroupDifference(value) {
@@ -3044,12 +3074,24 @@ async function auditLogisticStandaloneDialogFromData(page, viewport, sequence) {
     const outcome = dialog.locator("#nd-calculation-regression-outcome");
     await outcome.selectOption("outcome");
     check.outcome = await outcome.inputValue();
-    const roleFieldsets = dialog.locator(".nd-ols-settings fieldset.nd-pca-variables");
+    const predictorFieldset = dialog.getByRole("group", { name: /^Predictors \(\d+ selected\)$/ });
+    const controlFieldset = dialog.getByRole("group", { name: /^Controls \(\d+ selected, optional\)$/ });
+    const predictorInput = predictorFieldset.locator("label").filter({ hasText: /^predictor$/ }).locator('input[type="checkbox"]');
+    if (!await predictorInput.isChecked()) await predictorInput.check();
+    for (const selectedControl of await controlFieldset.locator('input[type="checkbox"]:checked').all()) {
+      await selectedControl.uncheck();
+    }
+    await page.waitForFunction(() => {
+      const fields = Array.from(document.querySelectorAll(".nd-ols-settings fieldset.nd-pca-variables"));
+      const selectedPredictors = fields[0]?.querySelectorAll('input[type="checkbox"]:checked').length ?? -1;
+      const selectedControls = fields[1]?.querySelectorAll('input[type="checkbox"]:checked').length ?? -1;
+      return selectedPredictors === 1 && selectedControls === 0;
+    }, null, { timeout: 1_000 });
     const inspectRoles = async (fieldset) => fieldset.locator("label").evaluateAll((labels) => labels.filter((label) => (
       label.querySelector('input[type="checkbox"]')?.checked
     )).map((label) => label.querySelector("span")?.textContent?.replace(/\s+/g, " ").trim() ?? ""));
-    check.predictors = await inspectRoles(roleFieldsets.nth(0));
-    check.controls = await inspectRoles(roleFieldsets.nth(1));
+    check.predictors = await inspectRoles(predictorFieldset);
+    check.controls = await inspectRoles(controlFieldset);
     const noteValue = async (label) => compactCalculationText(await dialog.locator(".nd-setting-note")
       .filter({ hasText: label }).locator("strong").textContent().catch(() => ""));
     check.calculationBasis = await noteValue("Calculation basis");
@@ -3090,6 +3132,7 @@ async function auditLogisticStandaloneDialogFromData(page, viewport, sequence) {
   const expectedTypeOptions = [
     { value: "ols", label: "Ordinary least squares" },
     { value: "logistic", label: "Binary logistic (outcome coded 0/1)" },
+    { value: "process", label: "Graph-defined Path Analysis / PROCESS" },
   ];
   if (JSON.stringify(check.fixture) !== JSON.stringify({ variables: 5, models: 0 })
     || !check.dataSurface || check.visibleModelNodes !== 0) {
@@ -3389,6 +3432,7 @@ async function auditRegressionBootstrapDialogFromData(page, viewport, olsSequenc
   const expectedRegressionTypes = [
     { value: "ols", label: "Ordinary least squares" },
     { value: "logistic", label: "Binary logistic (outcome coded 0/1)" },
+    { value: "process", label: "Graph-defined Path Analysis / PROCESS" },
   ];
   const expectedBootstrapOptions = [
     { value: "off", label: "Off" },
@@ -3464,6 +3508,424 @@ async function auditRegressionBootstrapDialogFromData(page, viewport, olsSequenc
   }
 }
 
+async function auditProcessV2DialogFromImportedProject(page, viewport, sequence) {
+  const check = {
+    viewport: viewport.id,
+    fixtureApiPresent: false,
+    fixture: null,
+    fixtureImport: { mechanism: "query-gated production smoke API", loader: "loadProcessV2Fixture" },
+    dataSurface: false,
+    dialogOpened: false,
+    regressionTypeOptions: [],
+    regressionType: "",
+    setup: null,
+    accessibility: null,
+    truthAndOverflow: null,
+    dialogBounds: null,
+    completedResult: {
+      available: false,
+      synthesizedByHarness: false,
+      packagedFollowUp: "Run, cancel, verify accessible non-color conditional/JN plots plus their complete point tables, export, save, inspect the archive witness, and reopen the genuine 10,000-resample PROCESS v2 result in packaged Tauri.",
+    },
+  };
+  const dialog = page.locator('.nd-dialog-calculation[role="dialog"]');
+  let trigger = null;
+  const desiredPaths = [
+    ["X", "Y"], ["X", "M1"], ["M1", "M2"], ["M2", "Y"],
+    ["X", "M3"], ["M3", "Y"], ["X", "M4"], ["M4", "Y"],
+  ];
+
+  const waitForCount = async (selector, count) => {
+    await page.waitForFunction(({ selector: value, count: expected }) => (
+      document.querySelectorAll(value).length === expected
+    ), { selector, count }, { timeout: 2_000 });
+  };
+  const setPath = async (index, from, to) => {
+    await dialog.locator(`#nd-process-path-to-${index}`).selectOption(to);
+    await dialog.locator(`#nd-process-path-from-${index}`).selectOption(from);
+    await page.waitForFunction(({ index: row, from: source, to: target }) => (
+      document.querySelector(`#nd-process-path-from-${row}`)?.value === source
+      && document.querySelector(`#nd-process-path-to-${row}`)?.value === target
+    ), { index, from, to }, { timeout: 2_000 });
+  };
+  const inspectFocusable = async (selector) => {
+    const control = dialog.locator(selector);
+    const count = await control.count();
+    const disabled = count === 1 ? await control.isDisabled().catch(() => true) : null;
+    const visible = count === 1 ? await control.isVisible().catch(() => false) : false;
+    if (count !== 1 || disabled || !visible) {
+      return { selector, count, disabled, visible, focused: false };
+    }
+    await control.focus();
+    return {
+      selector,
+      count,
+      disabled,
+      visible,
+      focused: await control.evaluate((node) => document.activeElement === node),
+    };
+  };
+  const exerciseStableRowSelects = async (rowSelector) => {
+    const rowOrder = async () => dialog.locator(rowSelector).evaluateAll((rows) => rows.map((row) => (
+      Array.from(row.querySelectorAll("select")).map((select) => select.id)
+    )));
+    const initialRowOrder = await rowOrder();
+    const selectIds = initialRowOrder.flat();
+    const mutations = [];
+    for (const id of selectIds) {
+      const select = dialog.locator(`#${id}`);
+      const state = await select.evaluate((node) => ({
+        value: node.value,
+        disabled: node.disabled,
+        alternative: Array.from(node.options).find((option) => !option.disabled && option.value !== node.value)?.value ?? null,
+      }));
+      if (state.disabled) {
+        mutations.push({ id, disabled: true, changed: false, focusedBefore: false, focusedAfterChange: false, rowOrderUnchanged: true });
+        continue;
+      }
+      await select.focus();
+      const focusedBefore = await select.evaluate((node) => document.activeElement === node);
+      if (state.alternative === null) {
+        mutations.push({ id, disabled: false, changed: false, focusedBefore, focusedAfterChange: false, rowOrderUnchanged: false });
+        continue;
+      }
+      await select.selectOption(state.alternative);
+      const focusedAfterChange = await page.waitForFunction(({ id: controlId, value }) => {
+        const node = document.getElementById(controlId);
+        return node instanceof HTMLSelectElement
+          && node.value === value
+          && document.activeElement?.id === controlId;
+      }, { id, value: state.alternative }, { timeout: 1_000 }).then(() => true).catch(() => false);
+      const afterChangeOrder = await rowOrder();
+      const rowOrderUnchanged = JSON.stringify(afterChangeOrder) === JSON.stringify(initialRowOrder);
+      await dialog.locator(`#${id}`).selectOption(state.value).catch(() => null);
+      mutations.push({
+        id, disabled: false, changed: true, focusedBefore, focusedAfterChange,
+        rowOrderUnchanged,
+      });
+    }
+    const finalRowOrder = await rowOrder();
+    const enabledMutations = mutations.filter((row) => !row.disabled);
+    return {
+      initialRowOrder,
+      finalRowOrder,
+      rowCount: initialRowOrder.length,
+      selectCount: selectIds.length,
+      enabledSelectCount: enabledMutations.length,
+      disabledSelectCount: mutations.length - enabledMutations.length,
+      changedSelectCount: enabledMutations.filter((row) => row.changed).length,
+      mutations,
+      passed: selectIds.length > 0
+        && enabledMutations.length > 0
+        && enabledMutations.every((row) => row.changed && row.focusedBefore && row.focusedAfterChange && row.rowOrderUnchanged)
+        && JSON.stringify(finalRowOrder) === JSON.stringify(initialRowOrder),
+    };
+  };
+
+  try {
+    check.fixtureApiPresent = await page.evaluate(() => typeof window.__QUICKPLS_SMOKE__?.loadProcessV2Fixture === "function");
+    if (!check.fixtureApiPresent) throw new Error("loadProcessV2Fixture is not exposed by the production smoke API.");
+    check.fixture = await page.evaluate(() => window.__QUICKPLS_SMOKE__?.loadProcessV2Fixture());
+    await page.locator('.nd-app[data-surface="data"]').waitFor({ state: "visible", timeout: 2_000 });
+    await page.getByLabel("Project data navigator").getByRole("button", { name: "X", exact: true })
+      .waitFor({ state: "visible", timeout: 2_000 });
+    check.dataSurface = await page.locator('.nd-app[data-surface="data"]').count() === 1;
+    trigger = page.locator('.nd-commandbar[role="toolbar"] button').filter({ hasText: /^Analyze(?:\u2026|\.\.\.)?$/i });
+    if (await trigger.count() !== 1) throw new Error(`PROCESS v2 requires exactly one model-free Analyze command at ${viewport.id}.`);
+    await trigger.focus();
+    await trigger.click();
+    await dialog.waitFor({ state: "visible", timeout: 2_000 });
+    check.dialogOpened = true;
+    await selectCalculationMethod(dialog, "regression");
+
+    const regressionType = dialog.locator("#nd-calculation-regression-type");
+    check.regressionTypeOptions = await regressionType.locator("option").evaluateAll((options) => options.map((option) => ({
+      value: option.value,
+      label: option.textContent?.replace(/\s+/g, " ").trim() ?? "",
+    })));
+    await regressionType.selectOption("process");
+    check.regressionType = await regressionType.inputValue();
+    await dialog.locator("#nd-calculation-process-graph").waitFor({ state: "visible", timeout: 2_000 });
+    await dialog.locator("#nd-process-outcome").selectOption("Y");
+    await dialog.locator("#nd-process-focal").selectOption("X");
+    await waitForCount("[data-process-path-row]", 1);
+    await setPath(0, "X", "Y");
+    for (let index = 1; index < desiredPaths.length; index += 1) {
+      await dialog.locator("#nd-process-add-path").click();
+      await waitForCount("[data-process-path-row]", index + 1);
+      await setPath(index, desiredPaths[index][0], desiredPaths[index][1]);
+    }
+    const stablePathRows = await exerciseStableRowSelects("[data-process-path-row]");
+    for (let index = 0; index < desiredPaths.length; index += 1) {
+      await setPath(index, desiredPaths[index][0], desiredPaths[index][1]);
+    }
+
+    for (let index = 0; index < 2; index += 1) {
+      await dialog.locator("#nd-process-add-moderator").click();
+      await waitForCount("[data-process-moderator-row]", index + 1);
+    }
+    await dialog.locator("#nd-process-moderator-variable-0").selectOption("W");
+    await dialog.locator("#nd-process-moderator-scale-0").selectOption("continuous");
+    await dialog.locator("#nd-process-moderator-variable-1").selectOption("B");
+    await dialog.locator("#nd-process-moderator-scale-1").selectOption("binary_0_1");
+    const stableModeratorRows = await exerciseStableRowSelects("[data-process-moderator-row]");
+    await dialog.locator("#nd-process-moderator-variable-0").selectOption("W");
+    await dialog.locator("#nd-process-moderator-scale-0").selectOption("continuous");
+    await dialog.locator("#nd-process-moderator-variable-1").selectOption("B");
+    await dialog.locator("#nd-process-moderator-scale-1").selectOption("binary_0_1");
+
+    const desiredModerations = [
+      { edge: "X -> Y", primary: "W", conditioning: "B" },
+      { edge: "X -> M3", primary: "W", conditioning: "" },
+      { edge: "M4 -> Y", primary: "B", conditioning: "" },
+    ];
+    for (let index = 0; index < desiredModerations.length; index += 1) {
+      await dialog.locator("#nd-process-add-moderation").click();
+      await waitForCount("[data-process-moderation-row]", index + 1);
+      const expected = desiredModerations[index];
+      await dialog.locator(`#nd-process-moderation-edge-${index}`).selectOption({ label: expected.edge });
+      await dialog.locator(`#nd-process-moderation-primary-${index}`).selectOption(expected.primary);
+      const conditioning = dialog.locator(`#nd-process-moderation-conditioning-${index}`);
+      if (!await conditioning.isDisabled()) await conditioning.selectOption(expected.conditioning);
+    }
+    const stableModerationRows = await exerciseStableRowSelects("[data-process-moderation-row]");
+    for (let index = 0; index < desiredModerations.length; index += 1) {
+      const expected = desiredModerations[index];
+      await dialog.locator(`#nd-process-moderation-edge-${index}`).selectOption({ label: expected.edge });
+      await dialog.locator(`#nd-process-moderation-primary-${index}`).selectOption(expected.primary);
+      const conditioning = dialog.locator(`#nd-process-moderation-conditioning-${index}`);
+      if (!await conditioning.isDisabled()) await conditioning.selectOption(expected.conditioning);
+    }
+
+    const control = dialog.locator(".nd-process-controls label").filter({ hasText: /^C$/ }).locator('[data-process-control]');
+    if (await control.count() !== 1) throw new Error("PROCESS v2 fixture did not expose C as one eligible control.");
+    await control.check();
+
+    const bootstrap = dialog.locator("#nd-calculation-regression-bootstrap");
+    await bootstrap.selectOption("enabled");
+    const samples = dialog.locator("#nd-calculation-regression-bootstrap-samples");
+    const workers = dialog.locator("#nd-calculation-regression-bootstrap-workers");
+    const seed = dialog.locator("#nd-calculation-seed");
+    await samples.waitFor({ state: "visible", timeout: 2_000 });
+    await page.waitForFunction(() => (
+      document.querySelector("#nd-calculation-process-profile")?.textContent?.includes("5 OLS equations verified")
+    ), null, { timeout: 2_000 }).catch(() => null);
+
+    const paths = await dialog.locator("[data-process-path-row]").evaluateAll((rows) => rows.map((row) => ({
+      from: row.querySelector("select[id^='nd-process-path-from-']")?.value ?? "",
+      to: row.querySelector("select[id^='nd-process-path-to-']")?.value ?? "",
+    })));
+    const moderators = await dialog.locator("[data-process-moderator-row]").evaluateAll((rows) => rows.map((row) => ({
+      variable: row.querySelector("select[id^='nd-process-moderator-variable-']")?.value ?? "",
+      scale: row.querySelector("select[id^='nd-process-moderator-scale-']")?.value ?? "",
+    })));
+    const moderations = await dialog.locator("[data-process-moderation-row]").evaluateAll((rows) => rows.map((row) => ({
+      edge: row.querySelector("select[id^='nd-process-moderation-edge-']")?.selectedOptions[0]?.textContent?.replace(/\s+/g, " ").trim() ?? "",
+      primary: row.querySelector("select[id^='nd-process-moderation-primary-']")?.value ?? "",
+      conditioning: row.querySelector("select[id^='nd-process-moderation-conditioning-']")?.value ?? "",
+    })));
+    const scope = compactCalculationText(await dialog.locator("#nd-calculation-process-scope strong").textContent().catch(() => ""));
+    const expectedScope = compactCalculationText(`${nativeProcessV2ScopeNote} ${nativeProcessV2ProbeDisclosure}`);
+    const bootstrapScope = compactCalculationText(await dialog.locator("#nd-calculation-regression-bootstrap-scope strong").textContent().catch(() => ""));
+    const profile = dialog.locator("#nd-calculation-process-profile");
+    const profileText = compactCalculationText(await profile.locator("strong").textContent().catch(() => ""));
+    const previewTitle = compactCalculationText(await dialog.locator("#nd-process-preview-title").textContent().catch(() => ""));
+    const previewDescription = compactCalculationText(await dialog.locator("#nd-process-preview-description").textContent().catch(() => ""));
+    const previewSvg = dialog.locator('#nd-process-graph-preview svg[role="img"]');
+    const previewSvgCount = await previewSvg.count();
+    const previewAccessibility = previewSvgCount === 1
+      ? await previewSvg.evaluate((svg) => {
+        const ids = svg.getAttribute("aria-labelledby")?.split(/\s+/).filter(Boolean) ?? [];
+        const dialogNode = svg.closest('.nd-dialog-calculation[role="dialog"]');
+        const references = ids.map((id) => {
+          const node = document.getElementById(id);
+          return {
+            id,
+            exists: Boolean(node),
+            withinDialog: Boolean(node && dialogNode?.contains(node)),
+            tagName: node?.tagName.toLowerCase() ?? null,
+            text: node?.textContent?.replace(/\s+/g, " ").trim() ?? "",
+          };
+        });
+        return {
+          count: 1,
+          role: svg.getAttribute("role"),
+          ariaLabelledBy: svg.getAttribute("aria-labelledby"),
+          ids,
+          references,
+          passed: svg.getAttribute("role") === "img"
+            && ids.length === 2
+            && references.every((reference) => reference.exists && reference.withinDialog)
+            && references[0]?.tagName === "title"
+            && references[1]?.tagName === "desc",
+        };
+      })
+      : {
+        count: previewSvgCount,
+        role: null,
+        ariaLabelledBy: null,
+        ids: [],
+        references: [],
+        passed: false,
+      };
+    const previewAccessible = previewAccessibility.passed;
+    const expectedPreview = "X -> Y moderated by W and B; X -> M1; M1 -> M2; M2 -> Y; X -> M3 moderated by W; M3 -> Y; X -> M4; M4 -> Y moderated by B";
+    const blockerMessages = (await dialog.locator(".nd-blocker li").allTextContents()).map(compactCalculationText);
+    const runtimeBlockers = blockerMessages.filter((message) => /offline QuickPLS desktop runtime/i.test(message));
+    const unexpectedBlockers = blockerMessages.filter((message) => !/offline QuickPLS desktop runtime/i.test(message));
+    const selectedControls = await dialog.locator('[data-process-control]:checked').evaluateAll((inputs) => (
+      inputs.map((input) => input.closest("label")?.querySelector("span")?.textContent?.trim() ?? "")
+    ));
+    const pathLegend = compactCalculationText(await dialog.locator("#nd-calculation-process-graph fieldset").nth(0).locator("legend").textContent());
+    const controlLegend = compactCalculationText(await dialog.locator(".nd-process-controls legend").textContent());
+    const predictorCapacity = pathLegend.match(/(\d+)\/(\d+) graph predictors/i);
+    const controlCapacity = controlLegend.match(/Controls \((\d+)\/(\d+)/i);
+    const equationTermCapacity = scope.match(/the (\d+)-term ceiling/i);
+    const startButton = dialog.locator("footer button.primary");
+    const labels = [
+      "#nd-calculation-regression-type", "#nd-process-outcome", "#nd-process-focal",
+      ...desiredPaths.flatMap((_, index) => [`#nd-process-path-from-${index}`, `#nd-process-path-to-${index}`]),
+      "#nd-process-moderator-variable-0", "#nd-process-moderator-scale-0",
+      "#nd-process-moderator-variable-1", "#nd-process-moderator-scale-1",
+      ...desiredModerations.flatMap((_, index) => [
+        `#nd-process-moderation-edge-${index}`, `#nd-process-moderation-primary-${index}`,
+        `#nd-process-moderation-conditioning-${index}`,
+      ]),
+      "#nd-calculation-regression-bootstrap", "#nd-calculation-regression-bootstrap-samples",
+      "#nd-calculation-regression-bootstrap-workers", "#nd-calculation-seed",
+    ];
+    const controlsLabeled = await dialog.evaluate((dialogNode, selectors) => selectors.every((selector) => {
+      const node = dialogNode.querySelector(selector);
+      return node instanceof HTMLInputElement || node instanceof HTMLSelectElement
+        ? Array.from(node.labels ?? []).some((label) => label.htmlFor === node.id)
+        : false;
+    }), labels);
+    const groupsNamed = await dialog.locator("#nd-calculation-process-graph fieldset").evaluateAll((fieldsets) => (
+      fieldsets.length === 4 && fieldsets.every((fieldset) => Boolean(fieldset.querySelector("legend")?.textContent?.trim()))
+    ));
+    const focusSelectors = [
+      "#nd-calculation-regression-type", "#nd-process-outcome",
+      "#nd-process-add-path", "#nd-process-moderator-variable-0",
+      "#nd-calculation-regression-bootstrap", "#nd-calculation-regression-bootstrap-samples",
+      "#nd-calculation-regression-bootstrap-workers", "#nd-calculation-seed",
+    ];
+    const focusChecks = [];
+    for (const selector of focusSelectors) focusChecks.push(await inspectFocusable(selector));
+    const keyboardReachable = focusChecks.every((row) => row.focused);
+
+    check.setup = {
+      outcome: await dialog.locator("#nd-process-outcome").inputValue(),
+      focal: await dialog.locator("#nd-process-focal").inputValue(),
+      pathRows: paths.length,
+      paths,
+      pathsExact: JSON.stringify(paths) === JSON.stringify(desiredPaths.map(([from, to]) => ({ from, to }))),
+      moderatorRows: moderators.length,
+      moderators,
+      moderatorsExact: JSON.stringify(moderators) === JSON.stringify([
+        { variable: "W", scale: "continuous" }, { variable: "B", scale: "binary_0_1" },
+      ]),
+      moderationRows: moderations.length,
+      moderations,
+      moderationsExact: JSON.stringify(moderations) === JSON.stringify(desiredModerations),
+      stableRowIdentity: {
+        paths: stablePathRows,
+        moderators: stableModeratorRows,
+        moderations: stableModerationRows,
+        passed: stablePathRows.passed && stableModeratorRows.passed && stableModerationRows.passed,
+      },
+      selectedControls,
+      capacity: {
+        topLevelPredictors: predictorCapacity ? Number(predictorCapacity[1]) : null,
+        topLevelPredictorsMaximum: predictorCapacity ? Number(predictorCapacity[2]) : null,
+        controls: controlCapacity ? Number(controlCapacity[1]) : null,
+        controlsMaximum: controlCapacity ? Number(controlCapacity[2]) : null,
+        equationNonInterceptTermsMaximum: equationTermCapacity ? Number(equationTermCapacity[1]) : null,
+      },
+      bootstrap: await bootstrap.inputValue(),
+      samples: await samples.inputValue(),
+      samplesBounds: { min: await samples.getAttribute("min"), max: await samples.getAttribute("max"), step: await samples.getAttribute("step") },
+      workers: await workers.inputValue(),
+      workersBounds: { min: await workers.getAttribute("min"), max: await workers.getAttribute("max"), step: await workers.getAttribute("step") },
+      seed: await seed.inputValue(),
+      seedBounds: { min: await seed.getAttribute("min"), max: await seed.getAttribute("max"), step: await seed.getAttribute("step") },
+      startLabel: compactCalculationText(await startButton.textContent().catch(() => "")),
+      startDisabledInBrowserPreview: await startButton.isDisabled(),
+      runtimeBlockers,
+      unexpectedBlockers,
+      profileReady: await profile.getAttribute("aria-busy") === "false" && profileText === "62 global listwise-complete cases; 2 rows omitted; 5 OLS equations verified",
+      profileText,
+      scopeExact: scope === expectedScope,
+      scope,
+      bootstrapScopeExact: bootstrapScope === nativeProcessV2BootstrapScopeNote,
+      bootstrapScope,
+      previewExact: previewTitle === "Graph-defined path analysis preview" && previewDescription === expectedPreview,
+      previewAccessible,
+      preview: { title: previewTitle, description: previewDescription, expectedDescription: expectedPreview },
+      previewAccessibility,
+      focusChecks,
+    };
+    check.truthAndOverflow = await inspectCalculationTruthAndOverflow(dialog);
+    check.dialogBounds = await dialog.evaluate((node) => {
+      const rect = node.getBoundingClientRect();
+      return {
+        withinHorizontalViewport: rect.left >= -2 && rect.right <= window.innerWidth + 2,
+        pageHorizontalOverflow: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) > document.documentElement.clientWidth + 2,
+      };
+    });
+    check.completedResult.available = await page.locator(".nd-result-tree").count() > 0;
+    await capture(page, "process-v2-dialog", sequence, viewport, { dialog: "calculation" });
+    const closeFocus = await closeCalculationAndCheckFocus(page, dialog, trigger);
+    check.accessibility = {
+      controlsLabeled,
+      groupsNamed,
+      keyboardReachable,
+      focusRestored: closeFocus.dialogClosed && closeFocus.focusRestored,
+    };
+    recordSkip("process-v2-completed-results-browser", "The imported project provides genuine PROCESS setup data but no completed PROCESS v2 run. The visual harness did not synthesize a run, equation, effect, interval, plot, failure, or Johnson-Neyman row.", {
+      viewport: viewport.id,
+      requiredPackagedFollowUp: check.completedResult.packagedFollowUp,
+    });
+  } catch (error) {
+    recordFailure("process-v2-visual-harness", `PROCESS v2 setup acceptance failed at ${viewport.id}: ${String(error?.message ?? error)}`, check);
+  } finally {
+    if (await dialog.isVisible().catch(() => false)) {
+      check.accessibility = {
+        ...(check.accessibility ?? { controlsLabeled: false, groupsNamed: false, keyboardReachable: false }),
+        focusRestored: (await closeCalculationAndCheckFocus(page, dialog, trigger).catch(() => ({ focusRestored: false }))).focusRestored,
+      };
+    }
+    evidence.checks.processV2.push(check);
+  }
+
+  const expectedTypeOptions = [
+    { value: "ols", label: "Ordinary least squares" },
+    { value: "logistic", label: "Binary logistic (outcome coded 0/1)" },
+    { value: "process", label: "Graph-defined Path Analysis / PROCESS" },
+  ];
+  if (!check.fixtureApiPresent || JSON.stringify(check.fixture) !== JSON.stringify({ variables: 9, models: 0 })
+    || !check.dataSurface || !check.dialogOpened || check.regressionType !== "process"
+    || JSON.stringify(check.regressionTypeOptions) !== JSON.stringify(expectedTypeOptions)
+    || !check.setup?.pathsExact || !check.setup?.moderatorsExact || !check.setup?.moderationsExact
+    || !check.setup?.stableRowIdentity?.passed
+    || JSON.stringify(check.setup?.selectedControls) !== JSON.stringify(["C"])
+    || JSON.stringify(check.setup?.capacity) !== JSON.stringify({
+      topLevelPredictors: 7, topLevelPredictorsMaximum: 8, controls: 1,
+      controlsMaximum: 1, equationNonInterceptTermsMaximum: 50,
+    })
+    || check.setup?.bootstrap !== "enabled" || check.setup?.samples !== "10000"
+    || !check.setup?.profileReady || !check.setup?.scopeExact || !check.setup?.bootstrapScopeExact
+    || !check.setup?.previewExact || !check.setup?.previewAccessible
+    || check.setup?.unexpectedBlockers?.length !== 0) {
+    recordFailure("process-v2-setup-contract", `PROCESS v2 did not preserve its exact graph, profile, bootstrap, scope, and no-unexpected-blocker contract at ${viewport.id}.`, check);
+  }
+  if (!check.accessibility || !Object.values(check.accessibility).every(Boolean)
+    || !check.truthAndOverflow?.noFabricatedRunState || !check.truthAndOverflow?.noHorizontalOverflow
+    || !check.dialogBounds?.withinHorizontalViewport || check.dialogBounds?.pageHorizontalOverflow
+    || check.completedResult?.available || check.completedResult?.synthesizedByHarness) {
+    recordFailure("process-v2-accessibility-truth-layout", `PROCESS v2 exposed an accessibility, focus, overflow, or fabricated-result defect at ${viewport.id}.`, check);
+  }
+}
+
 async function auditStructuralPathRandomizationDialog(page, viewport, sequence, trigger) {
   const dialog = page.locator('.nd-dialog-calculation[role="dialog"]');
   const check = {
@@ -3489,7 +3951,10 @@ async function auditStructuralPathRandomizationDialog(page, viewport, sequence, 
     check.pointerSelected = selection.pointerSelected;
     check.linkage = selection.linkage;
     check.methodDescription = compactCalculationText(await calculationOption(dialog, "pls_permutation").textContent());
-    check.distinctFromMgaAndMicom = /single-model Freedman(?:\u2013|-|\s)Lane randomization inference/i.test(check.methodDescription)
+    check.distinctFromMgaAndMicom = /single-model Freedman(?:\u2013|-|\s)Lane randomization/i.test(check.methodDescription)
+      && /structural paths/i.test(check.methodDescription)
+      && /fixed original PLS construct scores/i.test(check.methodDescription)
+      && /unadjusted pathwise p values/i.test(check.methodDescription)
       && !/\bMGA\b|\bMICOM\b/i.test(check.methodDescription);
     const permutationsInput = dialog.getByLabel("Permutations", { exact: true });
     check.permutationsInputCount = await permutationsInput.count();
@@ -3512,7 +3977,7 @@ async function auditStructuralPathRandomizationDialog(page, viewport, sequence, 
     recordFailure("structural-path-randomization-option-contract", "The calculation catalog did not select and link the Structural Path Randomization option at " + viewport.id + ".", check);
   }
   if (!check.distinctFromMgaAndMicom) {
-    recordFailure("structural-path-randomization-scope-contract", "Structural Path Randomization was not explicitly presented as single-model Freedman-Lane path inference distinct from group-analysis MGA and MICOM at " + viewport.id + ".", check);
+    recordFailure("structural-path-randomization-scope-contract", "Structural Path Randomization did not preserve its required single-model Freedman-Lane structural-path, fixed-score, unadjusted pathwise scope, or it introduced MGA/MICOM group-analysis terminology at " + viewport.id + ".", check);
   }
   if (check.permutationsInputCount !== 1 || check.permutationsInputType !== "number"
     || check.permutationsInputValue !== check.expectedDefaultPermutations) {
@@ -3998,6 +4463,7 @@ async function exerciseViewport(browser, viewport) {
     await auditOlsStandaloneDialogFromData(page, viewport, 17);
     await auditLogisticStandaloneDialogFromData(page, viewport, 18);
     await auditRegressionBootstrapDialogFromData(page, viewport, 19, 20);
+    await auditProcessV2DialogFromImportedProject(page, viewport, 21);
 
     await page.evaluate(() => window.__QUICKPLS_SMOKE__?.loadEmptyProject());
     await setSurface(page, "results");
@@ -4049,7 +4515,7 @@ async function exercise200PercentScale(browser) {
     for (const surface of ["launcher", "data", "model"]) {
       await setSurface(page, surface);
       if (surface === "model") {
-        await capture(page, "model-200pct-scale", 10, scale200Viewport, { runtime: "chromium-preview-device-scale-2" });
+        await capture(page, "model-200pct-scale", 10, scale200Viewport);
       } else {
         await inspectShellState(page, `${surface}-200pct-scale`, scale200Viewport);
         await inspectAccessibility(page, `${surface}-200pct-scale`, scale200Viewport);
@@ -4248,7 +4714,7 @@ async function exerciseLargeModelFixture(browser) {
   }
 }
 async function finalizeCoverage() {
-  const requiredStates = ["launcher", "workspace-explorer", "workspace-explorer-context-menu", "workspace-explorer-rename-dialog", "data", "recode-dialog", "import-data-dialog", "model", "moderating-effect-dialog", "higher-order-dialog", "calculation-dialog", "plsc-dialog", "wpls-dialog", "gsca-dialog", "cca-dialog", "cbsem-dialog", "structural-path-randomization-dialog", "prediction-dialog", "mga-dialog", "pca-standalone-dialog", "ols-standalone-dialog", "logistic-standalone-dialog", "regression-bootstrap-ols-dialog", "regression-bootstrap-logistic-dialog", "empty-results", "completed-results", "mediation-results", "export-dialog"];
+  const requiredStates = ["launcher", "workspace-explorer", "workspace-explorer-context-menu", "workspace-explorer-rename-dialog", "data", "recode-dialog", "import-data-dialog", "model", "moderating-effect-dialog", "higher-order-dialog", "calculation-dialog", "plsc-dialog", "wpls-dialog", "gsca-dialog", "cca-dialog", "cbsem-dialog", "structural-path-randomization-dialog", "prediction-dialog", "mga-dialog", "pca-standalone-dialog", "ols-standalone-dialog", "logistic-standalone-dialog", "regression-bootstrap-ols-dialog", "regression-bootstrap-logistic-dialog", "process-v2-dialog", "empty-results", "completed-results", "mediation-results", "export-dialog"];
   const requiredCompactStates = [{ viewport: "1024x700", state: "mediation-bootstrap-inference" }];
   const expectedMatrix = [
     ...viewports.flatMap((viewport) => requiredStates.map((state) => ({ viewport: viewport.id, state }))),
@@ -4258,12 +4724,44 @@ async function finalizeCoverage() {
     screenshot.viewport === expected.viewport && screenshot.state === expected.state
   )));
   const missingFiles = [];
+  const screenshotIntegrityErrors = [];
+  const observedScreenshotPaths = new Set();
   for (const screenshot of evidence.screenshots) {
+    const exactKeys = JSON.stringify(Object.keys(screenshot).sort())
+      === JSON.stringify(["path", "sha256", "size", "state", "viewport"]);
+    const exactPathIdentity = typeof screenshot.path === "string"
+      && screenshot.path.startsWith(screenshotPathPrefix)
+      && screenshot.path.endsWith(`-${screenshot.state}-${screenshot.viewport}.png`)
+      && path.resolve(ROOT, screenshot.path).startsWith(`${screenshotDir}${path.sep}`);
+    const exactDescriptorTypes = Number.isInteger(screenshot.size) && screenshot.size > 0
+      && typeof screenshot.sha256 === "string" && /^[0-9a-f]{64}$/.test(screenshot.sha256)
+      && screenshotViewportIds.has(screenshot.viewport)
+      && typeof screenshot.state === "string" && /^[a-z0-9][a-z0-9-]*$/.test(screenshot.state);
+    const duplicatePath = observedScreenshotPaths.has(screenshot.path);
+    observedScreenshotPaths.add(screenshot.path);
     try {
-      const stat = await fs.stat(screenshot.path);
+      const absolutePath = path.resolve(ROOT, screenshot.path);
+      const [stat, bytes] = await Promise.all([fs.stat(absolutePath), fs.readFile(absolutePath)]);
+      const actualSha256 = createHash("sha256").update(bytes).digest("hex");
       if (!stat.isFile() || stat.size === 0) missingFiles.push(screenshot.path);
+      if (!exactKeys || !exactPathIdentity || !exactDescriptorTypes || duplicatePath
+        || stat.size !== screenshot.size || bytes.byteLength !== screenshot.size
+        || actualSha256 !== screenshot.sha256) {
+        screenshotIntegrityErrors.push({
+          path: screenshot.path,
+          exactKeys,
+          exactPathIdentity,
+          exactDescriptorTypes,
+          duplicatePath,
+          reportedSize: screenshot.size,
+          actualSize: stat.size,
+          reportedSha256: screenshot.sha256,
+          actualSha256,
+        });
+      }
     } catch {
       missingFiles.push(screenshot.path);
+      screenshotIntegrityErrors.push({ path: screenshot.path, unreadable: true });
     }
   }
   const runningScreenshots = evidence.screenshots.filter((screenshot) => screenshot.state === "running-calculation");
@@ -4278,6 +4776,14 @@ async function finalizeCoverage() {
     ))).length,
     missingMatrix,
     missingFiles,
+    screenshotIntegrity: {
+      exactDescriptorKeys: ["path", "size", "sha256", "viewport", "state"],
+      pathPrefix: screenshotPathPrefix,
+      descriptorCount: evidence.screenshots.length,
+      uniquePathCount: observedScreenshotPaths.size,
+      errors: screenshotIntegrityErrors,
+      passed: screenshotIntegrityErrors.length === 0,
+    },
     runningCapture: runningScreenshots.length > 0
       ? { captured: true, count: runningScreenshots.length, source: "smoke API produced a visible running lifecycle state" }
       : { captured: false, explicitSkips: runningSkips.length, nativeFollowUpRequired: true },
@@ -4285,6 +4791,7 @@ async function finalizeCoverage() {
   };
   if (missingMatrix.length > 0) recordFailure("screenshot-matrix-incomplete", `${missingMatrix.length} required viewport/state screenshot(s) are missing.`, { missingMatrix });
   if (missingFiles.length > 0) recordFailure("screenshot-file-missing", `${missingFiles.length} screenshot artifact(s) are missing or empty.`, { missingFiles });
+  if (screenshotIntegrityErrors.length > 0) recordFailure("screenshot-integrity", `${screenshotIntegrityErrors.length} screenshot descriptor(s) failed exact path, size, digest, viewport/state, or uniqueness validation.`, { screenshotIntegrityErrors });
   if (runningScreenshots.length === 0 && runningSkips.length !== viewports.length) {
     recordFailure("running-capture-not-accounted", "Running calculation evidence was neither truthfully captured nor explicitly skipped for every viewport.", { runningSkips: runningSkips.length, expected: viewports.length });
   }

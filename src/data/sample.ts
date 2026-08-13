@@ -36,7 +36,7 @@ export const initialEdges: Edge[] = [
 export const methods: MethodDefinition[] = [
   { id: "pls_pm", family: "PLS-SEM", name: "PLS path modeling core", status: "validated" },
   { id: "bootstrap", family: "PLS-SEM", name: "Bootstrapping", status: "validated" },
-  { id: "permutation", family: "PLS-SEM", name: "Freedman-Lane permutation", status: "validated" },
+  { id: "permutation", family: "PLS-SEM", name: "Freedman-Lane permutation", status: "experimental" },
   { id: "plsc", family: "PLS-SEM", name: "Consistent PLS", status: "validated" },
   { id: "wpls", family: "PLS-SEM", name: "Weighted PLS", status: "validated" },
   { id: "cca", family: "PLS-SEM", name: "Confirmatory composite analysis", status: "validated" },

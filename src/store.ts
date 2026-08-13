@@ -18,7 +18,7 @@ import { layoutModel } from "./domain/modelLayout";
 import { buildNativeRecipeModel } from "./native/nativeAnalysisRecipe";
 import { currentNativeModelPresentation, nativeModelSnapshotFromCanonical } from "./native/nativeCanonicalProject";
 import { nativeHigherOrderCreationBlocker, nativeHigherOrderDraftProblems, type NativeHigherOrderDraft } from "./native/nativeHigherOrder";
-import type { AnalysisMethodId, AnalysisRun, AnalysisUiSettings, ConstructData, Dataset, DatasetVersionMutation, DatasetVersionRecord, DesktopCommandStatus, DesktopDialogId, DesktopMenuId, DiagramLayoutState, DiagramMode, DiagramOverlaySettings, DiagramToolMode, ExplorerTab, IndicatorSide, LargeModelViewState, MethodPresetId, MethodSetupState, NativeCanonicalModelSpec, NativeExplorerSelection, NativeModelPresentation, NativeSavedReport, OnboardingState, PublicationDiagramSettings, ResultWorkspaceState, RunMonitorLogEntry, RunMonitorState, ToastNotification, UiPreferences, WorkflowCommandContext, WorkflowDestinationContext, WorkspaceView } from "./types";
+import type { AnalysisMethodId, AnalysisRun, AnalysisUiSettings, ConstructData, Dataset, DatasetVersionMutation, DatasetVersionRecord, DesktopCommandStatus, DesktopDialogId, DesktopMenuId, DiagramLayoutState, DiagramMode, DiagramOverlaySettings, DiagramToolMode, ExplorerTab, IndicatorSide, LargeModelViewState, MethodPresetId, MethodSetupState, NativeCanonicalModelSpec, NativeExplorerSelection, NativeModelPresentation, NativeProcessGraphRelationshipConfig, NativeSavedReport, OnboardingState, PublicationDiagramSettings, ResultWorkspaceState, RunMonitorLogEntry, RunMonitorState, ToastNotification, UiPreferences, WorkflowCommandContext, WorkflowDestinationContext, WorkspaceView } from "./types";
 
 type AlignTarget = "left" | "centerX" | "right" | "top" | "centerY" | "bottom";
 type DistributeAxis = "horizontal" | "vertical";
@@ -187,9 +187,9 @@ interface WorkspaceState {
   loadProject: (project: { nodes: Array<Node<ConstructData>>; edges: Edge[]; dataset: Dataset; datasets?: Dataset[]; datasetVersions?: DatasetVersionRecord[]; projectModels?: NativeCanonicalModelSpec[]; activeModelId?: string | null; modelPresentations?: Record<string, NativeModelPresentation>; savedReports?: NativeSavedReport[]; explorerSelection?: NativeExplorerSelection; runs?: AnalysisRun[]; analysisSettings?: AnalysisUiSettings; diagramMode?: DiagramMode; diagramOverlaySettings?: Partial<DiagramOverlaySettings>; publicationDiagramSettings?: Partial<PublicationDiagramSettings>; diagramLayout?: Partial<DiagramLayoutState> }) => void;
 }
 
-const supportedAnalysisMethods = new Set<AnalysisMethodId>(["pls_pm", "bootstrap", "plsc", "wpls", "cca", "cta_pls", "endogeneity", "nonlinear_effects", "moderated_mediation", "predict", "mga", "ipma", "cbsem", "pca", "gsca", "regression", "nca"]);
+const supportedAnalysisMethods = new Set<AnalysisMethodId>(["pls_pm", "bootstrap", "permutation", "plsc", "wpls", "cca", "cta_pls", "endogeneity", "nonlinear_effects", "moderated_mediation", "predict", "mga", "ipma", "cbsem", "pca", "gsca", "regression", "nca"]);
 
-const defaultAnalysisSettings: AnalysisUiSettings = { method: "pls_pm", bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 0, seed: 20260718, workers: 1, confidenceLevel: 0.95, caseWeightColumn: null, groupColumn: null, groupAValue: null, groupBValue: null, ipmaTargets: null, groupMethods: "micom,mga_permutation", groupPermutationSamples: 5_000, micomConfiguralConfirmed: false, segmentCount: 2, segmentStarts: 10, minimumSegmentShare: 0.10, cbsemModelType: "sem", cbsemMeanStructure: false, cbsemStandardization: "std_all", cbsemGroupColumn: null, cbsemInvarianceSteps: "configural,metric,scalar", cbsemBootstrapSamples: 0, pcaVariables: null, pcaComponentRule: "kaiser", pcaComponents: 2, pcaVarianceThreshold: 0.80, regressionType: "ols", regressionOutcome: null, regressionPredictors: null, regressionControls: null, regressionBootstrap: false, robustSe: "hc3", processModel: "mediation", processX: null, processM: null, processW: null, ncaX: null, ncaY: null, ncaCeiling: "both", ncaPermutationSamples: 999 };
+const defaultAnalysisSettings: AnalysisUiSettings = { method: "pls_pm", bootstrapSamples: 0, studentizedInnerSamples: 0, permutationSamples: 0, seed: 20260718, workers: 1, confidenceLevel: 0.95, caseWeightColumn: null, groupColumn: null, groupAValue: null, groupBValue: null, ipmaTargets: null, groupMethods: "micom,mga_permutation", groupPermutationSamples: 5_000, micomConfiguralConfirmed: false, segmentCount: 2, segmentStarts: 10, minimumSegmentShare: 0.10, cbsemModelType: "sem", cbsemMeanStructure: false, cbsemStandardization: "std_all", cbsemGroupColumn: null, cbsemInvarianceSteps: "configural,metric,scalar", cbsemBootstrapSamples: 0, pcaVariables: null, pcaComponentRule: "kaiser", pcaComponents: 2, pcaVarianceThreshold: 0.80, regressionType: "ols", regressionOutcome: null, regressionPredictors: null, regressionControls: null, regressionBootstrap: false, robustSe: "hc3", processModel: "mediation", processX: null, processM: null, processW: null, processGraph: null, ncaX: null, ncaY: null, ncaCeiling: "both", ncaPermutationSamples: 999 };
 const defaultDiagramOverlaySettings: DiagramOverlaySettings = { selectedRunId: null, mode: "model", precision: 3, showLoadings: true, showPathCoefficients: true, showPValues: false, showTValues: false, showRSquared: true, showWarnings: true, showWatermark: true };
 const defaultPublicationDiagramSettings: PublicationDiagramSettings = { mode: "smartpls_result", precision: 3, overlayMode: "paths_r2", aspectRatio: "wide", palette: "grayscale", layoutSource: "current_canvas", showLoadings: true, showPathCoefficients: true, showRSquared: true, showValidationWatermark: true, showUnsupportedWarning: true, showRunProvenance: true };
 const defaultUiPreferences: UiPreferences = {
@@ -290,6 +290,35 @@ const normalizePublicationDiagramSettings = (settings?: Partial<PublicationDiagr
   precision: Math.min(6, Math.max(0, Math.trunc(settings?.precision ?? defaultPublicationDiagramSettings.precision))),
 });
 
+function clonedProcessGraph(
+  value: AnalysisUiSettings["processGraph"],
+): NativeProcessGraphRelationshipConfig | null {
+  if (!value || value.model !== "graph"
+    || typeof value.focal_predictor !== "string"
+    || !Array.isArray(value.paths)
+    || !Array.isArray(value.moderators)
+    || !Array.isArray(value.moderations)
+    || value.continuous_product_centering !== "equation_complete_case_mean_v1") return null;
+  return {
+    model: "graph",
+    focal_predictor: value.focal_predictor.trim(),
+    paths: value.paths.map((path) => ({ from: path.from.trim(), to: path.to.trim() })),
+    moderators: value.moderators.map((moderator) => ({
+      variable: moderator.variable.trim(),
+      scale: moderator.scale,
+    })),
+    moderations: value.moderations.map((moderation) => ({
+      from: moderation.from.trim(),
+      to: moderation.to.trim(),
+      moderator: moderation.moderator.trim(),
+      ...(moderation.conditioning_moderator?.trim()
+        ? { conditioning_moderator: moderation.conditioning_moderator.trim() }
+        : {}),
+    })),
+    continuous_product_centering: "equation_complete_case_mean_v1",
+  };
+}
+
 const normalizeAnalysisSettings = (settings: Partial<AnalysisUiSettings>): AnalysisUiSettings => {
   const weightingScheme = settings.weightingScheme === "factor" || settings.weightingScheme === "pca" ? settings.weightingScheme : "path";
   const tolerance = Number.isFinite(settings.tolerance) ? settings.tolerance! : 1e-7;
@@ -332,6 +361,7 @@ const normalizeAnalysisSettings = (settings: Partial<AnalysisUiSettings>): Analy
   const processX = typeof settings.processX === "string" && settings.processX.trim() ? settings.processX.trim() : null;
   const processM = typeof settings.processM === "string" && settings.processM.trim() ? settings.processM.trim() : null;
   const processW = typeof settings.processW === "string" && settings.processW.trim() ? settings.processW.trim() : null;
+  const processGraph = clonedProcessGraph(settings.processGraph);
   const ncaX = typeof settings.ncaX === "string" && settings.ncaX.trim() ? settings.ncaX.trim() : null;
   const ncaY = typeof settings.ncaY === "string" && settings.ncaY.trim() ? settings.ncaY.trim() : null;
   const ncaCeiling = settings.ncaCeiling === "ce_fdh" || settings.ncaCeiling === "cr_fdh" ? settings.ncaCeiling : defaultAnalysisSettings.ncaCeiling!;
@@ -383,6 +413,7 @@ const normalizeAnalysisSettings = (settings: Partial<AnalysisUiSettings>): Analy
     processX,
     processM,
     processW,
+    processGraph,
     ncaX,
     ncaY,
     ncaCeiling,

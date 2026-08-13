@@ -114,13 +114,13 @@ FIRST_BATCH = [
     {
         "id": "inference_resampling",
         "family": "Inference",
-        "method": "Bootstrap, BCa, studentized bootstrap, jackknife, and permutation",
+        "method": "Bootstrap, BCa, studentized bootstrap, and jackknife",
         "current_status": "experimental_family_label",
         "target_status": "validated",
         "promotion_batch": 1,
         "candidate_scope": (
             "Documented PLS resampling settings with indexed ChaCha streams, percentile, BCa, "
-            "studentized intervals, jackknife, and Freedman-Lane permutation where audited."
+            "studentized intervals, and jackknife where audited."
         ),
         "required_evidence": [
             "fixed-seed reproducibility",
@@ -144,7 +144,8 @@ FIRST_BATCH = [
         ],
         "blocking_questions": [],
         "scope_decisions": [
-            "Percentile bootstrap, BCa, studentized/bootstrap-t, jackknife support, and Freedman-Lane path permutation are promoted together for documented PLS inference settings.",
+            "Percentile bootstrap, BCa, studentized/bootstrap-t, and jackknife support are promoted for documented PLS inference settings.",
+            "Structural Path Randomization is release-qualified only through validation/results/structural_path_randomization_method_promotion_audit.json; generic bootstrap evidence is not reusable for this scope.",
             "Small-sample and non-normal claims are limited to the audited Monte Carlo qualification cells and documented diagnostics.",
             "Inference does not promote experimental base estimators or unsupported model shapes.",
         ],

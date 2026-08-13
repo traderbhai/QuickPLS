@@ -8,8 +8,9 @@ import {
   isNativeDesktop,
 } from "../services/projectService";
 import { useWorkspace } from "../store";
-import type { AnalysisRun } from "../types";
+import type { AnalysisRun, DiagramLayoutState } from "../types";
 import { nativeCbsemDiagramRun } from "./nativeResults";
+import { nativeStructuralPathRandomizationProjection } from "./nativeStructuralPathRandomization";
 import { resolveAnalysisModel } from "./nativeRunModelSnapshot";
 import { nativeOlsPredictionExportTable, nativePcaScoreExportTable, nativeRunProvenanceTable } from "./nativeExportTables";
 import { isStandaloneNativeAnalysis } from "./nativeStandaloneAnalysis";
@@ -55,6 +56,21 @@ export function nativeReviewerPackHtml(tablesHtml: string, modelSvg: string | nu
   return tablesHtml.replace("</body>", `<section><h2>Model estimates</h2>${modelSvg}</section></body>`);
 }
 
+export function nativeExportDiagramSvg(
+  run: AnalysisRun,
+  nodes: Parameters<typeof publicationDiagramSvg>[0],
+  edges: Parameters<typeof publicationDiagramSvg>[1],
+  settings: Parameters<typeof publicationDiagramSvg>[3],
+  layout: DiagramLayoutState,
+): string | null {
+  if (!nativeExportScope(run).includeModelDiagram) return null;
+  const model = resolveAnalysisModel(run, nodes, edges, layout);
+  return publicationDiagramSvg(model.nodes, model.edges, nativeCbsemDiagramRun(run), {
+    ...settings,
+    ...(nativeStructuralPathRandomizationProjection(run) ? { showValidationWatermark: true } : {}),
+  }, model.diagramLayout);
+}
+
 function readableError(error: unknown) {
   if (error instanceof Error && error.message) return error.message;
   if (typeof error === "string" && error.trim()) return error;
@@ -81,9 +97,7 @@ export default function NativeExportDialog({ run, tables, close }: NativeExportD
   const layout = useWorkspace((state) => state.diagramLayout);
   const exportScope = nativeExportScope(run);
   const svg = useMemo(() => {
-    if (!exportScope.includeModelDiagram) return null;
-    const model = resolveAnalysisModel(run, nodes, edges, layout);
-    return publicationDiagramSvg(model.nodes, model.edges, nativeCbsemDiagramRun(run), settings, model.diagramLayout);
+    return nativeExportDiagramSvg(run, nodes, edges, settings, layout);
   }, [edges, exportScope.includeModelDiagram, layout, nodes, run, settings]);
   const nativeDesktop = isNativeDesktop();
   const busyRef = useRef(false);

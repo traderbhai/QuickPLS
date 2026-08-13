@@ -1,6 +1,6 @@
 # QuickPLS Installation
 
-Current development release: `v2.45.0`.
+Current development release: `v2.46.0`.
 
 ## Choose An Install Type
 
@@ -8,8 +8,9 @@ Use one of the release assets from the latest GitHub Release, or use the version
 
 - `QuickPLS_<version>_<milestone>_<timestamp>_x64_setup.exe` for a normal Windows installation.
 - `QuickPLS_<version>_<milestone>_<timestamp>_x64_portable.exe` for a portable launch without installing.
+- `QuickPLS_<version>_<milestone>_<timestamp>_x64_cli.exe` for offline command-line and batch recipe execution.
 
-Both run fully offline after download.
+All three executables run fully offline after download.
 
 ## Verify The Download
 
@@ -18,6 +19,7 @@ From PowerShell:
 ```powershell
 Get-FileHash .\QuickPLS_<version>_<milestone>_<timestamp>_x64_setup.exe -Algorithm SHA256
 Get-FileHash .\QuickPLS_<version>_<milestone>_<timestamp>_x64_portable.exe -Algorithm SHA256
+Get-FileHash .\QuickPLS_<version>_<milestone>_<timestamp>_x64_cli.exe -Algorithm SHA256
 ```
 
 Compare the hashes with the matching `QuickPLS_<version>_<milestone>_<timestamp>_x64_checksums.txt` file.

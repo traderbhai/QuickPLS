@@ -37,6 +37,7 @@ import {
 } from "./nativeCalculationMode";
 import { NATIVE_ANALYSIS_RECIPE_BOUNDS } from "./nativeAnalysisRecipe";
 import { nativeCalculationPhaseLabel } from "./nativeCalculationLifecycle";
+import { NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING } from "./nativeStructuralPathRandomization";
 import type { NativePlsReadiness } from "./nativePlsReadiness";
 import {
   nativeEligibleGroupColumns,
@@ -76,6 +77,15 @@ import {
 } from "./nativeLogistic";
 import { NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS } from "./nativeRegressionBootstrapWitness";
 import { NATIVE_GSCA_SCOPE_NOTE } from "./nativeGsca";
+import NativeProcessSetup from "./NativeProcessSetup";
+import {
+  nativeProcessReadiness,
+  nativeProcessSelectionToken,
+  profileNativeProcessDataset,
+  residentNativeProcessProfile,
+  type NativeProcessProfile,
+  type NativeProcessReadinessAssessment,
+} from "./nativeProcess";
 
 export interface NativeCalculationDialogProps {
   kind: NativeWorkbenchAnalysisKind;
@@ -88,7 +98,7 @@ export interface NativeCalculationDialogProps {
   analysisColumns: string[];
   nodes: readonly Node<ConstructData>[];
   edges: readonly Edge[];
-  start: (logisticProfile?: NativeLogisticProfile) => void;
+  start: (dataProfile?: NativeLogisticProfile | NativeProcessProfile) => void;
   cancel: () => void;
   close: () => void;
 }
@@ -143,6 +153,26 @@ type LogisticProfileState =
   | { status: "ready"; key: string; profile: NativeLogisticProfile; error: null }
   | { status: "failed"; key: string; profile: null; error: string };
 
+type ProcessProfileState =
+  | { status: "idle" | "loading"; key: string; profile: null; error: null }
+  | { status: "ready"; key: string; profile: NativeProcessProfile; error: null }
+  | { status: "failed"; key: string; profile: null; error: string };
+
+export function shouldStartNativeProcessProfile(
+  selected: boolean,
+  residentProfile: NativeProcessProfile | null,
+  assessmentCanRun: boolean | undefined,
+  profileKey: string,
+  state: Pick<ProcessProfileState, "status" | "key">,
+): boolean {
+  if (!selected || residentProfile || !assessmentCanRun) return false;
+  return state.key !== profileKey || state.status === "idle";
+}
+
+export function retryNativeProcessProfileState(profileKey: string): ProcessProfileState {
+  return { status: "idle", key: profileKey, profile: null, error: null };
+}
+
 export const NATIVE_RESAMPLING_SAMPLE_INPUT_CONSTRAINTS = {
   bootstrap: {
     min: NATIVE_ANALYSIS_RECIPE_BOUNDS.bootstrapSamples.minimum,
@@ -155,6 +185,20 @@ export const NATIVE_RESAMPLING_SAMPLE_INPUT_CONSTRAINTS = {
     step: 1,
   },
 } as const;
+
+export function nativeRegressionTypeSettingsPatch(
+  regressionType: "ols" | "logistic" | "process",
+): Partial<AnalysisUiSettings> {
+  return {
+    regressionType,
+    robustSe: regressionType === "logistic" ? "none" : "hc3",
+    ...(regressionType === "process" ? { regressionPredictors: null } : {}),
+    preprocessing: "unstandardized",
+    confidenceLevel: 0.95,
+    studentizedInnerSamples: 0,
+    permutationSamples: 0,
+  };
+}
 
 const optionId = (kind: NativeWorkbenchAnalysisKind) => `nd-calculation-method-${kind}`;
 const optionDescriptionId = (kind: NativeWorkbenchAnalysisKind) => `${optionId(kind)}-description`;
@@ -203,6 +247,8 @@ export default function NativeCalculationDialog({
   const [focusedKind, setFocusedKind] = useState<NativeWorkbenchAnalysisKind>(kind);
   const [groupProfileState, setGroupProfileState] = useState<GroupProfileState>({ status: "idle", profile: null, error: null });
   const [logisticProfileState, setLogisticProfileState] = useState<LogisticProfileState>({ status: "idle", key: "", profile: null, error: null });
+  const [processProfileState, setProcessProfileState] = useState<ProcessProfileState>({ status: "idle", key: "", profile: null, error: null });
+  const [processProfileRetryNonce, setProcessProfileRetryNonce] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
   const optionRefs = useRef<Partial<Record<NativeWorkbenchAnalysisKind, HTMLButtonElement | null>>>({});
   const filteredMethods = useMemo(() => filterNativeAnalysisCatalog(query), [query]);
@@ -229,6 +275,7 @@ export default function NativeCalculationDialog({
     [groupProfileState.profile, settings],
   );
   const logisticSelected = kind === "regression" && settings.regressionType === "logistic";
+  const processSelected = kind === "regression" && settings.regressionType === "process";
   const logisticProfileKey = useMemo(() => [
     dataset.id,
     dataset.fingerprint ?? "",
@@ -260,6 +307,36 @@ export default function NativeCalculationDialog({
       : null,
     [currentLogisticProfileState, dataset, logisticSelected, settings],
   );
+  const processProfileKey = useMemo(() => {
+    if (!processSelected) return "";
+    const structure = nativeProcessReadiness(dataset, settings);
+    return [
+      dataset.id,
+      dataset.fingerprint ?? "",
+      String(dataset.rowCount ?? dataset.rows.length),
+      nativeProcessSelectionToken(settings, structure),
+    ].join("\u0000");
+  }, [dataset, processSelected, settings]);
+  // Runtime-only settings such as seed, workers, and bootstrap samples do not
+  // affect the complete-case/binary profile. Retain the exact settings object
+  // associated with the scientific selection key so those edits cannot cause
+  // another full paged scan.
+  const processProfileSettings = useMemo(() => settings, [processProfileKey]);
+  const residentProcessProfile = useMemo(
+    () => processSelected ? residentNativeProcessProfile(dataset, processProfileSettings) : null,
+    [dataset, processProfileKey, processSelected, processProfileSettings],
+  );
+  const currentProcessProfileState: ProcessProfileState = residentProcessProfile
+    ? { status: "ready", key: processProfileKey, profile: residentProcessProfile, error: null }
+    : processProfileState.key === processProfileKey
+      ? processProfileState
+      : { status: "idle", key: processProfileKey, profile: null, error: null };
+  const processProfileAssessment = useMemo(
+    () => processSelected
+      ? nativeProcessReadiness(dataset, processProfileSettings, currentProcessProfileState.status === "ready" ? currentProcessProfileState.profile : null)
+      : null,
+    [currentProcessProfileState, dataset, processSelected, processProfileSettings],
+  );
   const groupProfileBlockers = kind !== "mga"
     ? []
     : groupProfileState.status === "loading"
@@ -278,16 +355,36 @@ export default function NativeCalculationDialog({
       : currentLogisticProfileState.status !== "ready"
         ? ["Profile all dataset rows before starting binary logistic regression."]
         : [];
-  const methodProfileBlockers = [...new Set([...groupProfileBlockers, ...logisticProfileBlockers])];
+  const processProfileBlockers = !processSelected
+    ? []
+    : processProfileAssessment && !processProfileAssessment.canRun
+      ? processProfileAssessment.blockers
+      : currentProcessProfileState.status === "failed"
+        ? [currentProcessProfileState.error]
+        : currentProcessProfileState.status !== "ready"
+          ? ["Profile all dataset rows before starting graph-defined path analysis."]
+          : [];
+  const methodProfileBlockers = [...new Set([...groupProfileBlockers, ...logisticProfileBlockers, ...processProfileBlockers])];
   const canStart = readiness.canRun
     && (kind !== "mga" || (groupProfileState.status === "ready" && groupProfileAssessment.canRun))
-    && logisticProfileBlockers.length === 0;
+    && logisticProfileBlockers.length === 0
+    && processProfileBlockers.length === 0;
   const verifiedLogisticProfile = logisticSelected
     && currentLogisticProfileState.status === "ready"
     && logisticProfileAssessment?.canRun
     && !logisticProfileAssessment.profileRequired
     ? currentLogisticProfileState.profile
     : undefined;
+  const verifiedProcessProfile = processSelected
+    && currentProcessProfileState.status === "ready"
+    && processProfileAssessment?.canRun
+    && !processProfileAssessment.profileRequired
+    ? currentProcessProfileState.profile
+    : undefined;
+  const retryProcessProfile = () => {
+    setProcessProfileState(retryNativeProcessProfileState(processProfileKey));
+    setProcessProfileRetryNonce((value) => value + 1);
+  };
 
   useEffect(() => {
     if (kind !== "mga" || !groupColumn) {
@@ -357,6 +454,41 @@ export default function NativeCalculationDialog({
       });
     return () => { cancelled = true; };
   }, [dataset, logisticProfileAssessment?.canRun, logisticProfileKey, logisticSelected, residentLogisticProfile, settings]);
+
+  useEffect(() => {
+    if (!shouldStartNativeProcessProfile(
+      processSelected,
+      residentProcessProfile,
+      processProfileAssessment?.canRun,
+      processProfileKey,
+      processProfileState,
+    )) return;
+    if (!isNativeDesktop()) {
+      setProcessProfileState({
+        status: "failed",
+        key: processProfileKey,
+        profile: null,
+        error: "Open the installed desktop app to profile every row for graph-defined path analysis.",
+      });
+      return;
+    }
+    let cancelled = false;
+    setProcessProfileState({ status: "loading", key: processProfileKey, profile: null, error: null });
+    void profileNativeProcessDataset(dataset, processProfileSettings, undefined, () => cancelled)
+      .then((profile) => {
+        if (!cancelled) setProcessProfileState({ status: "ready", key: processProfileKey, profile, error: null });
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setProcessProfileState({
+          status: "failed",
+          key: processProfileKey,
+          profile: null,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      });
+    return () => { cancelled = true; };
+  }, [dataset, processProfileAssessment?.canRun, processProfileKey, processProfileRetryNonce, processProfileSettings, processSelected, residentProcessProfile]);
 
   useEffect(() => {
     if (kind !== "mga" || groupProfileState.status !== "ready") return;
@@ -450,7 +582,7 @@ export default function NativeCalculationDialog({
       className="nd-calculation-dialog"
       onSubmit={(event) => {
         event.preventDefault();
-        if (!running && canStart) start(verifiedLogisticProfile);
+        if (!running && canStart) start(verifiedLogisticProfile ?? verifiedProcessProfile);
       }}
     >
       <aside className="nd-dialog-sidebar" aria-label="Analysis methods">
@@ -519,7 +651,7 @@ export default function NativeCalculationDialog({
             );
           })}
           {filteredMethods.length === 0 ? (
-            <p className="nd-method-empty">No methods match “{query.trim()}”.</p>
+            <p className="nd-method-empty">No methods match "{query.trim()}".</p>
           ) : null}
         </div>
       </aside>
@@ -549,8 +681,11 @@ export default function NativeCalculationDialog({
                 edges={edges}
                 groupProfileState={groupProfileState}
                 groupProfileAssessment={groupProfileAssessment}
-                logisticProfileState={currentLogisticProfileState}
-                logisticProfileAssessment={logisticProfileAssessment}
+            logisticProfileState={currentLogisticProfileState}
+            logisticProfileAssessment={logisticProfileAssessment}
+            processProfileState={currentProcessProfileState}
+            processProfileAssessment={processProfileAssessment}
+            retryProcessProfile={retryProcessProfile}
               />
             </section>
 
@@ -576,7 +711,7 @@ export default function NativeCalculationDialog({
       <footer>
         {running ? (
           <button type="button" onClick={cancel} disabled={runMonitor.status === "cancelling"}>
-            {runMonitor.status === "cancelling" ? "Cancelling…" : "Cancel calculation"}
+            {runMonitor.status === "cancelling" ? "Cancelling..." : "Cancel calculation"}
           </button>
         ) : (
           <>
@@ -602,6 +737,9 @@ function MethodSettings({
   groupProfileAssessment,
   logisticProfileState,
   logisticProfileAssessment,
+  processProfileState,
+  processProfileAssessment,
+  retryProcessProfile,
   nodes,
   edges,
 }: Pick<NativeCalculationDialogProps, "kind" | "settings" | "setSettings" | "dataset" | "analysisColumns" | "nodes" | "edges"> & {
@@ -609,6 +747,9 @@ function MethodSettings({
   groupProfileAssessment: NativeMgaProfileAssessment;
   logisticProfileState: LogisticProfileState;
   logisticProfileAssessment: NativeLogisticReadinessAssessment | null;
+  processProfileState: ProcessProfileState;
+  processProfileAssessment: NativeProcessReadinessAssessment | null;
+  retryProcessProfile: () => void;
 }) {
   const numericColumns = useMemo(() => nativeNumericCaseWeightColumns(dataset), [dataset]);
   const ncaNumericColumns = useMemo(() => nativeNcaNumericColumns(dataset), [dataset]);
@@ -637,6 +778,7 @@ function MethodSettings({
   const selectedOlsPredictorSet = new Set(selectedOlsPredictors);
   const selectedOlsControlSet = new Set(selectedOlsControls);
   const logisticRegression = settings.regressionType === "logistic";
+  const processRegression = settings.regressionType === "process";
   const regressionTermLimit = regressionBootstrap
     ? NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS
     : logisticRegression
@@ -652,7 +794,7 @@ function MethodSettings({
     }
   }, [kind, pcaNumericColumns, selectedPcaVariables.length, setSettings]);
   useEffect(() => {
-    if (kind !== "regression" || initializedOlsSelection.current) return;
+    if (kind !== "regression" || processRegression || initializedOlsSelection.current) return;
     initializedOlsSelection.current = true;
     if (!selectedOlsOutcome && !selectedOlsPredictors.length && olsNumericColumns.length >= 2) {
       setSettings({
@@ -663,7 +805,7 @@ function MethodSettings({
         robustSe: logisticRegression ? "none" : "hc3",
       });
     }
-  }, [kind, logisticRegression, olsNumericColumns, selectedOlsOutcome, selectedOlsPredictors.length, setSettings]);
+  }, [kind, logisticRegression, olsNumericColumns, processRegression, selectedOlsOutcome, selectedOlsPredictors.length, setSettings]);
 
   const setPcaVariableSelected = (variable: string, selected: boolean) => {
     const next = selected
@@ -686,7 +828,15 @@ function MethodSettings({
         {kind === "nca" || kind === "pca" || kind === "regression" ? (
           <div className="nd-setting-note">
             <span>Calculation basis</span>
-            <strong>{kind === "pca" ? "Correlation matrix (fixed)" : kind === "regression" ? logisticRegression ? "Binary logistic maximum likelihood with intercept (fixed)" : "Raw-value OLS with intercept (fixed)" : "Observed variables (fixed)"}</strong>
+            <strong>{kind === "pca"
+              ? "Correlation matrix (fixed)"
+              : kind === "regression"
+                ? processRegression
+                  ? "Graph-defined raw-value OLS equations with HC3 covariance (fixed)"
+                  : logisticRegression
+                    ? "Binary logistic maximum likelihood with intercept (fixed)"
+                    : "Raw-value OLS with intercept (fixed)"
+                : "Observed variables (fixed)"}</strong>
           </div>
         ) : kind === "ipma" || kind === "mga" || kind === "cbsem" || kind === "gsca" ? (
           <div className="nd-setting-note">
@@ -805,17 +955,23 @@ function MethodSettings({
         ) : null}
 
         {kind === "pls_permutation" ? (
-          <label htmlFor="nd-calculation-permutations">Permutations
-            <input
-              id="nd-calculation-permutations"
-              type="number"
-              min={NATIVE_RESAMPLING_SAMPLE_INPUT_CONSTRAINTS.permutation.min}
-              max={NATIVE_RESAMPLING_SAMPLE_INPUT_CONSTRAINTS.permutation.max}
-              step={NATIVE_RESAMPLING_SAMPLE_INPUT_CONSTRAINTS.permutation.step}
-              value={settings.permutationSamples}
-              onChange={(event) => setSettings({ permutationSamples: Number(event.target.value) })}
-            />
-          </label>
+          <>
+            <label htmlFor="nd-calculation-permutations">Permutations
+              <input
+                id="nd-calculation-permutations"
+                type="number"
+                min={NATIVE_RESAMPLING_SAMPLE_INPUT_CONSTRAINTS.permutation.min}
+                max={NATIVE_RESAMPLING_SAMPLE_INPUT_CONSTRAINTS.permutation.max}
+                step={NATIVE_RESAMPLING_SAMPLE_INPUT_CONSTRAINTS.permutation.step}
+                value={settings.permutationSamples}
+                onChange={(event) => setSettings({ permutationSamples: Number(event.target.value) })}
+              />
+            </label>
+            <div className="nd-setting-note wide" id="nd-calculation-permutation-scope">
+              <span>Candidate scope</span>
+              <strong>{NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING}</strong>
+            </div>
+          </>
         ) : null}
 
         {kind === "mga" ? (
@@ -838,7 +994,7 @@ function MethodSettings({
               </select>
             </label>
 
-            {groupProfileState.status === "loading" ? <p role="status">Reading complete-dataset group counts…</p> : null}
+            {groupProfileState.status === "loading" ? <p role="status">Reading complete-dataset group counts...</p> : null}
             {groupProfileState.status === "ready" ? (
               <div className="nd-mga-group-grid">
                 <label htmlFor="nd-calculation-group-a">Group A
@@ -896,7 +1052,7 @@ function MethodSettings({
             </label>
             <div className="nd-setting-note">
               <span>Test</span>
-              <strong>Two-tailed; Group A − Group B</strong>
+              <strong>Two-tailed; Group A - Group B</strong>
             </div>
             {groupProfileAssessment.warnings.length ? (
               <ul className="nd-setting-warnings" aria-label="Excluded group rows">
@@ -1098,17 +1254,24 @@ function MethodSettings({
             <label htmlFor="nd-calculation-regression-type">Regression type
               <select
                 id="nd-calculation-regression-type"
-                value={logisticRegression ? "logistic" : "ols"}
-                onChange={(event) => setSettings({
-                  regressionType: event.target.value as "ols" | "logistic",
-                  robustSe: event.target.value === "ols" ? "hc3" : "none",
-                })}
+                value={processRegression ? "process" : logisticRegression ? "logistic" : "ols"}
+                onChange={(event) => {
+                  const regressionType = event.target.value as "ols" | "logistic" | "process";
+                  setSettings(nativeRegressionTypeSettingsPatch(regressionType));
+                }}
               >
                 <option value="ols">Ordinary least squares</option>
                 <option value="logistic">Binary logistic (outcome coded 0/1)</option>
+                <option value="process">Graph-defined Path Analysis / PROCESS</option>
               </select>
             </label>
-            <label htmlFor="nd-calculation-regression-outcome">Outcome variable
+            {processRegression ? (
+              <NativeProcessSetup
+                settings={settings}
+                setSettings={setSettings}
+                numericColumns={olsNumericColumns}
+              />
+            ) : <><label htmlFor="nd-calculation-regression-outcome">Outcome variable
               <select
                 id="nd-calculation-regression-outcome"
                 required
@@ -1158,11 +1321,14 @@ function MethodSettings({
                 ))}
               </div>
             </fieldset>
+            </>}
             <div className="nd-setting-note">
               <span>Uncertainty</span>
-              <strong>{logisticRegression
-                ? "Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)"
-                : "HC3 robust SE; two-sided 95% CI (fixed)"}</strong>
+              <strong>{processRegression
+                ? "Equation-specific HC3 SE, Student-t residual df, two-sided 95% CI; persisted simple slopes and Johnson-Neyman diagnostics"
+                : logisticRegression
+                  ? "Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)"
+                  : "HC3 robust SE; two-sided 95% CI (fixed)"}</strong>
             </div>
             <label className="wide" htmlFor="nd-calculation-regression-bootstrap">
               <span>Bootstrap inference</span>
@@ -1208,7 +1374,9 @@ function MethodSettings({
                 </label>
                 <div className="nd-setting-note wide" id="nd-calculation-regression-bootstrap-scope">
                   <span>Bootstrap scope</span>
-                  <strong>10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant.</strong>
+                  <strong>{processRegression
+                    ? "10,000 complete-case resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa requires every delete-one PROCESS fit; unavailable intervals retain an explicit reason. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Indexed seeded streams are deterministic and worker-invariant."
+                    : "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant."}</strong>
                 </div>
               </>
             ) : null}
@@ -1225,16 +1393,48 @@ function MethodSettings({
                   {logisticProfileState.status === "ready" && logisticProfileAssessment?.profile
                     ? `${logisticProfileAssessment.profile.completeCases} complete cases: ${logisticProfileAssessment.profile.zeroCases} class 0 and ${logisticProfileAssessment.profile.oneCases} class 1; ${logisticProfileAssessment.profile.omittedRows} omitted by listwise deletion`
                     : logisticProfileState.status === "loading"
-                      ? <><LoaderCircle className="nd-spin" size={14} aria-hidden="true" /> Profiling bounded row pages…</>
+                      ? <><LoaderCircle className="nd-spin" size={14} aria-hidden="true" /> Profiling bounded row pages...</>
                       : logisticProfileState.status === "failed"
                         ? "Profile unavailable; review the blocking message below."
                         : "Choose a numeric outcome and predictors to verify exact 0/1 coding across every row."}
                 </strong>
               </div>
             ) : null}
+            {processRegression ? (
+              <>
+              <div
+                id="nd-calculation-process-profile"
+                className="nd-setting-note wide"
+                role="status"
+                aria-live="polite"
+                aria-busy={processProfileState.status === "loading"}
+              >
+                <span>Complete-dataset PROCESS profile</span>
+                <strong>
+                  {processProfileState.status === "ready" && processProfileAssessment?.profile
+                    ? `${processProfileAssessment.profile.completeCases} global listwise-complete cases; ${processProfileAssessment.profile.omittedRows} rows omitted; ${processProfileAssessment.equationTermCounts.length} OLS equations verified`
+                    : processProfileState.status === "loading"
+                      ? <><LoaderCircle className="nd-spin" size={14} aria-hidden="true" /> Profiling bounded row pages...</>
+                      : processProfileState.status === "failed"
+                        ? "Profile unavailable; review the blocking message below."
+                        : "Complete the graph to verify numeric roles, exact 0/1 moderator coding, constants, and equation sample size across every row."}
+                </strong>
+              </div>
+              {processProfileState.status === "failed" ? (
+                <button
+                  id="nd-calculation-process-profile-retry"
+                  type="button"
+                  aria-describedby="nd-calculation-process-profile"
+                  onClick={retryProcessProfile}
+                >Retry PROCESS data profile</button>
+              ) : null}
+              </>
+            ) : null}
             <div className="nd-setting-note wide">
-              <span>Validated scope</span>
-              <strong>{logisticRegression ? NATIVE_LOGISTIC_SCOPE_NOTE : NATIVE_OLS_SCOPE_NOTE}</strong>
+              <span>{processRegression ? "Candidate scope" : "Validated scope"}</span>
+              <strong>{processRegression
+                ? "Graph-defined PROCESS v2 scope and exclusions are disclosed above; unsupported graph shapes fail closed before dispatch."
+                : logisticRegression ? NATIVE_LOGISTIC_SCOPE_NOTE : NATIVE_OLS_SCOPE_NOTE}</strong>
             </div>
           </div>
         ) : null}
@@ -1319,7 +1519,7 @@ function MethodSettings({
             </div>
             <div className="nd-setting-note wide">
               <span>Performance scope</span>
-              <strong>0–100 observed-range scaling of standardized composite scores; no theoretical-range correction</strong>
+              <strong>0-100 observed-range scaling of standardized composite scores; no theoretical-range correction</strong>
             </div>
           </>
         ) : null}

@@ -19,7 +19,7 @@ describe("desktop accessibility contracts", () => {
       "result summary",
       "measurement quality tables",
       "bootstrap parameter table",
-      "permutation parameter table",
+      "Structural path randomization",
     ]) {
       expect(results).toContain(label);
     }

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { completedSamplePlsRun } from "../data/smokeRun";
 import type { AnalysisRun } from "../types";
 import { buildNativeResultNavigation, completedResultRuns, nativeResultTables } from "./nativeResults";
+import { completedStructuralPathRandomizationRun } from "./nativeStructuralPathRandomization.testFixture";
 
 describe("native desktop result contracts", () => {
   it("shows only completed runs with a real result payload", () => {
@@ -34,21 +35,17 @@ describe("native desktop result contracts", () => {
   });
 
   it("opens truthful permutation output in the inference result group", () => {
-    const run: AnalysisRun = {
-      ...completedSamplePlsRun(),
-      bootstrap: undefined,
-      permutation: {
-        method_version: "qpls-permutation-v1",
-        plan: { permutations: 999, master_seed: 7, operation: "pls_permutation" },
-        parameters: [{ parameter: "path:X->Y", original: 0.42, exceedances: 31, p_value_two_sided: 0.032, permutations: 999 }],
-      },
-    };
+    const run = completedStructuralPathRandomizationRun();
     const navigation = buildNativeResultNavigation(run);
     const table = navigation.tables.find((item) => item.id === "permutation");
 
-    expect(table).toMatchObject({ title: "Structural path randomization", columns: ["Parameter", "Original", "p", "Permutations"] });
-    expect(table?.rows).toHaveLength(1);
-    expect(table?.rows[0]?.slice(1)).toEqual(["0.420000", "0.0320", "999"]);
+    expect(table).toMatchObject({
+      title: "Structural path randomization",
+      status: "experimental",
+      columns: ["Path", "Original", "Exceedances", "Permutations", "Raw two-sided p"],
+    });
+    expect(table?.rows).toHaveLength(5);
+    expect(table?.rows[0]).toEqual(["competence -> satisfaction", "0.403000", "9", "999", "0.01"]);
     expect(navigation.groups.find((group) => group.id === "inference")?.items.map((item) => item.id)).toContain("permutation");
   });
 });
@@ -74,6 +71,23 @@ describe("native desktop multi-model shell contracts", () => {
     expect(source).toContain('projectModels: []');
     expect(source).toContain('activeModelId: null');
     expect(source).toContain('navigate("data")');
+  });
+
+  it("exposes a query-gated resident PROCESS v2 setup fixture without runs or models", () => {
+    const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
+    const start = source.lastIndexOf("loadProcessV2Fixture: () => {");
+    const end = source.indexOf("loadHocFixture: () => {", start);
+    const fixtureLoader = source.slice(start, end);
+
+    expect(start).toBeGreaterThan(0);
+    expect(end).toBeGreaterThan(start);
+    expect(fixtureLoader).toContain('const columns = ["X", "M1", "M2", "M3", "M4", "W", "B", "C", "Y"]');
+    expect(fixtureLoader).toContain('id: "native-process-v2-smoke"');
+    expect(fixtureLoader).toContain('fingerprint: "sha256:native-process-v2-smoke-v1"');
+    expect(fixtureLoader).toContain("projectModels: []");
+    expect(fixtureLoader).toContain("runs: []");
+    expect(fixtureLoader).toContain('navigate("data")');
+    expect(fixtureLoader).toContain("return { variables: 9, models: 0 }");
   });
 
   it("routes Data grouping through the typed command and focus-trapped dialog host", () => {

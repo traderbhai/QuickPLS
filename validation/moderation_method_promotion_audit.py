@@ -3,7 +3,7 @@ from second_batch_promotion_common import audit_method
 
 raise SystemExit(audit_method(
     "moderation",
-    "Two-stage PLS moderation with one generated product-score interaction, simple slopes at -1/0/+1, and validated bootstrap/permutation interpretation.",
+    "Two-stage PLS moderation with one generated product-score interaction, simple slopes at -1/0/+1, and validated bootstrap interpretation; historical bounded product-path permutation evidence does not qualify Structural Path Randomization.",
     [
         "moderation_reference_report.json",
         "moderation_r_reference_report.json",

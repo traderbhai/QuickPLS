@@ -12,6 +12,7 @@ import { nativeNcaReadiness } from "./nativeNca";
 import { nativePcaReadiness } from "./nativePca";
 import { nativeOlsReadiness } from "./nativeOls";
 import { nativeLogisticReadiness } from "./nativeLogistic";
+import { nativeProcessReadiness } from "./nativeProcess";
 import { NATIVE_HIGHER_ORDER_SCOPE_LABEL, nativeHigherOrderScopeProblems } from "./nativeHigherOrder";
 import { NATIVE_ANALYSIS_RECIPE_BOUNDS } from "./nativeAnalysisRecipe";
 
@@ -76,6 +77,38 @@ export function nativePlsReadiness(input: NativePlsReadinessInput): NativePlsRea
     ]);
   }
   if (settings.method === "regression") {
+    if (settings.regressionType === "process") {
+      const assessment = nativeProcessReadiness(dataset, settings);
+      const bootstrap = settings.regressionBootstrap === true;
+      const bootstrapProblems = !bootstrap ? [] : [
+        !Number.isInteger(settings.bootstrapSamples)
+          || settings.bootstrapSamples < NATIVE_ANALYSIS_RECIPE_BOUNDS.regressionBootstrapSamples.minimum
+          || settings.bootstrapSamples > NATIVE_ANALYSIS_RECIPE_BOUNDS.regressionBootstrapSamples.maximum
+          ? `Choose ${NATIVE_ANALYSIS_RECIPE_BOUNDS.regressionBootstrapSamples.minimum} to ${NATIVE_ANALYSIS_RECIPE_BOUNDS.regressionBootstrapSamples.maximum} whole-number bootstrap samples`
+          : null,
+        !Number.isInteger(settings.workers) || settings.workers < 1 || settings.workers > 64
+          ? "Choose 1 to 64 PROCESS bootstrap workers"
+          : null,
+      ].filter((problem): problem is string => Boolean(problem));
+      return readinessFromItems([
+        runtimeItem(nativeDesktop),
+        dataItem(dataset),
+        {
+          id: "calculation",
+          label: "Graph-defined path analysis",
+          detail: assessment.detail,
+          status: assessment.canRun ? "ready" : "blocked",
+        },
+        ...(bootstrap ? [{
+          id: "process-bootstrap",
+          label: "PROCESS bootstrap",
+          detail: bootstrapProblems.length
+            ? `${bootstrapProblems.join("; ")}.`
+            : `${settings.bootstrapSamples} seeded case resamples; percentile intervals primary and BCa conditional; fixed two-sided 95% normal-reference bootstrap-ratio tests; deterministic indexed streams.`,
+          status: bootstrapProblems.length ? "blocked" as const : "ready" as const,
+        }] : []),
+      ]);
+    }
     const logistic = settings.regressionType === "logistic";
     const assessment = logistic
       ? nativeLogisticReadiness(dataset, settings)
@@ -735,7 +768,7 @@ function calculationItem(
     detail: bootstrapping
       ? `PLS-SEM estimation${moderationSuffix} and bootstrapping is selected.`
       : permutation
-        ? `PLS-SEM estimation${moderationSuffix} with single-model Freedman–Lane structural path randomization is selected.`
+        ? `PLS-SEM estimation${moderationSuffix} with candidate single-model Freedman-Lane structural path randomization on fixed original construct scores is selected.`
         : `PLS-SEM Algorithm estimation${moderationSuffix} is selected.`,
     status: "ready",
   };

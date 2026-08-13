@@ -2,10 +2,13 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { completedSamplePlsRun } from "../data/smokeRun";
+import { defaultDiagramLayout } from "../domain/diagramGraph";
 import type { AnalysisRun, PlsMgaAnalysis } from "../types";
-import NativeExportDialog, { nativeExportScope, nativeReviewerPackHtml } from "./NativeExportDialog";
+import NativeExportDialog, { nativeExportDiagramSvg, nativeExportScope, nativeReviewerPackHtml } from "./NativeExportDialog";
 import { completedCbsemRun } from "./nativeCbsem.testFixture";
 import { completedGscaRun } from "./nativeGsca.testFixture";
+import { completedStructuralPathRandomizationRun } from "./nativeStructuralPathRandomization.testFixture";
+import { NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING } from "./nativeStructuralPathRandomization";
 
 function completedMgaRun(): AnalysisRun {
   const run = completedSamplePlsRun();
@@ -106,6 +109,21 @@ describe("NativeExportDialog export scope", () => {
       includeModelDiagram: true,
       reviewerPackDetail: "Diagram, results, and run provenance",
     });
+  });
+
+  it("keeps candidate Structural Path Randomization model exports visibly scoped", () => {
+    vi.stubGlobal("window", {});
+    const run = completedStructuralPathRandomizationRun();
+    const markup = renderToStaticMarkup(createElement(NativeExportDialog, {
+      run,
+      tables: [],
+      close: () => undefined,
+    }));
+    const svg = nativeExportDiagramSvg(run, [], [], { showValidationWatermark: false }, defaultDiagramLayout([], []));
+    expect(nativeExportScope(run).includeModelDiagram).toBe(true);
+    expect(markup).toContain("Model diagram");
+    expect(svg).toContain(NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING);
+    expect(svg).not.toContain("Validated for documented QuickPLS supported scope");
   });
 
   it("makes completed MGA exports table-only and never injects a pooled model diagram", () => {

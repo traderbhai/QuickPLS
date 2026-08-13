@@ -44,11 +44,11 @@
     {
       "procedure": "freedman_lane_permutation",
       "contract": "Freedman-Lane path permutation",
-      "reference_evidence": "validation/results/v04_inference_qualification_quick.json",
-      "worker_invariance_evidence": "validation/results/studentized_worker_matrix.json",
-      "coverage_type_i_evidence": "validation/results/monte_carlo_qualification.json",
-      "performance_evidence": "validation/results/v04_inference_qualification_quick.json",
-      "unsupported_cases": "linear nuisance model assumptions documented",
+      "reference_evidence": "validation/results/structural_path_randomization_reference_report.json",
+      "worker_invariance_evidence": "validation/results/structural_path_randomization_boundary_test_report.json",
+      "coverage_type_i_evidence": "validation/results/structural_path_randomization_reference_report.json",
+      "performance_evidence": "validation/results/structural_path_randomization_v1_packaged_acceptance.json",
+      "unsupported_cases": "fixed converged construct scores; intercept nuisance equations; no measurement-model re-estimation inside permutations",
       "complete": true
     }
   ],

@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "source": "validation/process_v2_reference.py:reference_graph",
+  "counts": {
+    "completeCases": 175,
+    "omittedCases": 5,
+    "equations": 5,
+    "paths": 8,
+    "moderations": 3,
+    "referenceEffects": 6,
+    "conditionalIndirectEffects": 5,
+    "moderatedMediationIndices": 2,
+    "simpleSlopes": 11,
+    "plots": 3,
+    "conditionalPlotPoints": 275,
+    "johnsonNeyman": 4,
+    "johnsonNeymanRegionRows": 7,
+    "availableJohnsonNeyman": 3,
+    "johnsonNeymanCurvePoints": 303,
+    "estimands": 24
+  },
+  "johnson_neyman_analysis_keys": [
+    [
+      "moderation:X->M3@W",
+      "W",
+      ""
+    ],
+    [
+      "moderation:X->Y@W|B",
+      "W",
+      "B = 0.0000 (coded 0.0000)"
+    ],
+    [
+      "moderation:X->Y@W|B",
+      "W",
+      "B = 1.0000 (coded 1.0000)"
+    ],
+    [
+      "moderation:M4->Y@B",
+      "B",
+      ""
+    ]
+  ]
+}

@@ -4,7 +4,16 @@ use arrow::{
     datatypes::{DataType, Field, Schema},
     record_batch::RecordBatch,
 };
-use faer::{Mat, prelude::*};
+use faer::{
+    Accum, Conj, Mat, Par,
+    diag::Diag,
+    dyn_stack::{MemBuffer, MemStack},
+    linalg::{
+        matmul::matmul_with_conj,
+        svd::{ComputeSvdVectors, svd, svd_scratch},
+    },
+    prelude::*,
+};
 use qpls_core::{
     AnalysisMethod, AnalysisRecipe, DIJKSTRA_HENSELER_RHO_A_METHOD_VERSION, HigherOrderMethod,
     InteractionMethod, MeasurementMode, MethodConfig, MissingDataPolicy, ModelSpec, Preprocessing,
@@ -18,7 +27,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use statrs::distribution::{ChiSquared, ContinuousCDF, Normal, StudentsT};
 use std::{
-    collections::{BTreeMap, HashMap, HashSet},
+    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     sync::Arc,
 };
 use thiserror::Error;
@@ -64,7 +73,13 @@ pub const GSCA_ALGORITHM_VERSION: &str = "alternating_least_squares_v1";
 pub const REGRESSION_OLS_METHOD_VERSION: &str = "regression_ols_v1";
 pub const REGRESSION_LOGISTIC_METHOD_VERSION_V1: &str = "regression_logistic_v1";
 pub const REGRESSION_LOGISTIC_METHOD_VERSION: &str = "regression_logistic_v2";
-pub const REGRESSION_PROCESS_METHOD_VERSION: &str = "regression_process_v1";
+pub const REGRESSION_PROCESS_METHOD_VERSION_V1: &str = "regression_process_v1";
+pub const REGRESSION_PROCESS_METHOD_VERSION: &str = "regression_process_v2";
+pub const PROCESS_JN_INVALID_COVARIANCE_REASON: &str = "invalid_hc3_covariance";
+pub const PROCESS_JN_INVALID_COVARIANCE_MESSAGE: &str = "Johnson-Neyman conditional-effect variance must be finite and strictly positive across the tested moderator range.";
+const PROCESS_RELATIVE_RANK_TOLERANCE_MULTIPLIER: f64 = 100.0;
+const PROCESS_JN_COEFFICIENT_TOLERANCE_MULTIPLIER: f64 = 64.0;
+const PROCESS_JN_ROOT_DEDUP_TOLERANCE_MULTIPLIER: f64 = 128.0;
 pub const NCA_METHOD_VERSION_V1: &str = "nca_v1";
 pub const NCA_METHOD_VERSION: &str = "nca_v2";
 
@@ -225,6 +240,12 @@ impl Default for MediationAnalysis {
     }
 }
 
+impl MediationAnalysis {
+    fn is_default_shell(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ModerationSimpleSlope {
     pub moderator_score: f64,
@@ -261,6 +282,12 @@ impl Default for ModerationAnalysis {
             estimates: Vec::new(),
             warnings: Vec::new(),
         }
+    }
+}
+
+impl ModerationAnalysis {
+    fn is_default_shell(&self) -> bool {
+        self == &Self::default()
     }
 }
 
@@ -1051,6 +1078,7 @@ pub struct PcaScore {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct RegressionAnalysis {
     pub method_version: String,
     pub regression_type: String,
@@ -1059,7 +1087,7 @@ pub struct RegressionAnalysis {
     pub controls: Vec<String>,
     pub observations: usize,
     pub coefficients: Vec<RegressionCoefficient>,
-    pub fit: RegressionFit,
+    pub fit: Option<RegressionFit>,
     pub predictions: Vec<RegressionPrediction>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub logistic: Option<LogisticRegressionDiagnostics>,
@@ -1294,11 +1322,14 @@ pub struct LogisticRegressionDiagnostics {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct ProcessAnalysis {
     pub method_version: String,
     pub model: String,
     pub effects: Vec<ProcessEffect>,
     pub simple_slopes: Vec<ProcessSimpleSlope>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub graph_v2: Option<ProcessGraphAnalysis>,
     pub warnings: Vec<String>,
 }
 
@@ -1316,6 +1347,608 @@ pub struct ProcessEffect {
 pub struct ProcessSimpleSlope {
     pub moderator_value: f64,
     pub slope: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessGraphAnalysis {
+    pub policies: ProcessPolicies,
+    pub complete_cases: usize,
+    pub omitted_cases: usize,
+    pub variable_profiles: Vec<ProcessVariableProfile>,
+    pub paths: Vec<ProcessPath>,
+    pub moderations: Vec<ProcessModeration>,
+    pub equations: Vec<ProcessEquation>,
+    pub reference_effects: Vec<ProcessReferenceEffect>,
+    pub conditional_indirect_effects: Vec<ProcessConditionalIndirectEffect>,
+    pub moderated_mediation_indices: Vec<ProcessModeratedMediationIndex>,
+    pub simple_slopes: Vec<ProcessGraphSimpleSlope>,
+    pub plots: Vec<ProcessPlot>,
+    pub johnson_neyman: Vec<ProcessJohnsonNeyman>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bootstrap: Option<ProcessBootstrapAnalysis>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessPolicies {
+    pub centering: String,
+    pub covariance: String,
+    pub inference_reference: String,
+    pub confidence_level: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessVariableProfile {
+    pub variable: String,
+    pub role: String,
+    pub scale: String,
+    pub raw_mean: f64,
+    pub raw_sample_sd: f64,
+    pub raw_min: f64,
+    pub raw_max: f64,
+    pub levels: Vec<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessPath {
+    pub path_id: String,
+    pub from: String,
+    pub to: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessModeration {
+    pub moderation_id: String,
+    pub from: String,
+    pub to: String,
+    pub moderator: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub conditioning_moderator: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessEquation {
+    pub equation_id: String,
+    pub outcome: String,
+    pub term_ids: Vec<String>,
+    pub coefficients: Vec<ProcessEquationCoefficient>,
+    pub coefficient_covariance: Vec<Vec<f64>>,
+    pub residual_degrees_of_freedom: usize,
+    pub fit: ProcessEquationFit,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessEquationCoefficient {
+    pub term_id: String,
+    pub kind: String,
+    pub variables: Vec<String>,
+    pub estimate: f64,
+    pub standard_error: f64,
+    pub statistic: f64,
+    pub p_value_two_sided: f64,
+    pub confidence_interval_lower: f64,
+    pub confidence_interval_upper: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessEquationFit {
+    pub observations: usize,
+    pub parameter_count: usize,
+    pub residual_sum_squares: f64,
+    pub total_sum_squares: f64,
+    pub r_squared: f64,
+    pub adjusted_r_squared: f64,
+    pub f_statistic: f64,
+    pub aic: f64,
+    pub bic: f64,
+    pub rmse: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessReferenceEffect {
+    pub effect_id: String,
+    pub kind: String,
+    pub path: Vec<String>,
+    pub estimate: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessModeratorValue {
+    pub variable: String,
+    pub raw_value: f64,
+    pub coded_value: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessConditionalIndirectEffect {
+    pub effect_id: String,
+    pub path_id: String,
+    pub moderator_values: Vec<ProcessModeratorValue>,
+    pub estimate: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessModeratedMediationIndex {
+    pub effect_id: String,
+    pub path_id: String,
+    pub moderated_edge: String,
+    pub moderator: String,
+    pub estimate: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessGraphSimpleSlope {
+    pub effect_id: String,
+    pub moderation_id: String,
+    pub moderator_values: Vec<ProcessModeratorValue>,
+    pub estimate: f64,
+    pub standard_error: f64,
+    pub statistic: f64,
+    pub p_value_two_sided: f64,
+    pub confidence_interval_lower: f64,
+    pub confidence_interval_upper: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessPlot {
+    pub plot_id: String,
+    pub moderation_id: String,
+    pub series: Vec<ProcessPlotSeries>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessPlotSeries {
+    pub series_id: String,
+    pub moderator_values: Vec<ProcessModeratorValue>,
+    pub points: Vec<ProcessPlotPoint>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessPlotPoint {
+    pub predictor_raw: f64,
+    pub predicted_raw: f64,
+    pub confidence_interval_lower: f64,
+    pub confidence_interval_upper: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "status", rename_all = "snake_case", deny_unknown_fields)]
+pub enum ProcessJohnsonNeyman {
+    Available {
+        moderation_id: String,
+        solved_moderator: String,
+        conditioning_values: Vec<ProcessModeratorValue>,
+        raw_min: f64,
+        raw_max: f64,
+        roots: Vec<f64>,
+        regions: Vec<ProcessJohnsonNeymanRegion>,
+        curve_points: Vec<ProcessJohnsonNeymanPoint>,
+    },
+    Unavailable {
+        moderation_id: String,
+        solved_moderator: String,
+        conditioning_values: Vec<ProcessModeratorValue>,
+        reason_code: String,
+        message: String,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessJohnsonNeymanRegion {
+    pub lower: f64,
+    pub upper: f64,
+    pub status: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessJohnsonNeymanPoint {
+    pub moderator_raw: f64,
+    pub effect: f64,
+    pub standard_error: f64,
+    pub confidence_interval_lower: f64,
+    pub confidence_interval_upper: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessBootstrapAnalysis {
+    pub method_version: String,
+    pub algorithm: String,
+    pub interval_policy: String,
+    pub test_reference: String,
+    pub requested_replicates: u32,
+    pub usable_replicates: u32,
+    pub minimum_usable_fraction: f64,
+    pub jackknife_cases: usize,
+    pub usable_jackknife_cases: usize,
+    pub seed: u64,
+    pub workers: usize,
+    pub stream_token: String,
+    pub failed_replicates: Vec<ProcessBootstrapFailedReplicate>,
+    pub estimands: Vec<ProcessBootstrapEstimand>,
+    pub validation_witness: ProcessBootstrapValidationWitness,
+    pub warnings: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessBootstrapFailedReplicate {
+    pub replicate_index: u32,
+    pub reason_code: String,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessBootstrapEstimand {
+    pub effect_id: String,
+    pub original: f64,
+    pub bootstrap_mean: f64,
+    pub bias: f64,
+    pub standard_error: f64,
+    pub test: RegressionBootstrapTest,
+    pub percentile_lower: f64,
+    pub percentile_upper: f64,
+    pub bca: RegressionBootstrapBcaInterval,
+    pub usable_replicates: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessBootstrapValidationWitness {
+    pub method_version: String,
+    pub estimand_ids: Vec<String>,
+    pub successful_bootstrap: Vec<ProcessBootstrapWitnessBootstrapRow>,
+    pub successful_jackknife: Vec<ProcessBootstrapWitnessJackknifeRow>,
+    pub failed_jackknife: Vec<RegressionBootstrapFailedJackknife>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessBootstrapWitnessBootstrapRow {
+    pub replicate_index: u32,
+    pub estimates: Vec<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ProcessBootstrapWitnessJackknifeRow {
+    pub omitted_case: usize,
+    pub estimates: Vec<f64>,
+}
+
+/// Stable PROCESS v2 bootstrap estimand order. Plot and Johnson-Neyman rows are
+/// deliberately excluded because they are equation-covariance diagnostics,
+/// not bootstrap estimands.
+pub fn process_bootstrap_estimands(graph: &ProcessGraphAnalysis) -> Vec<(String, f64)> {
+    graph
+        .reference_effects
+        .iter()
+        .map(|effect| (effect.effect_id.clone(), effect.estimate))
+        .chain(
+            graph
+                .conditional_indirect_effects
+                .iter()
+                .map(|effect| (effect.effect_id.clone(), effect.estimate)),
+        )
+        .chain(
+            graph
+                .moderated_mediation_indices
+                .iter()
+                .map(|effect| (effect.effect_id.clone(), effect.estimate)),
+        )
+        .chain(
+            graph
+                .simple_slopes
+                .iter()
+                .map(|effect| (effect.effect_id.clone(), effect.estimate)),
+        )
+        .collect()
+}
+
+/// Evaluates a resampled/delete-one PROCESS coefficient system at the original
+/// complete-sample raw probe grid. Product centering is still taken from the
+/// fitted sample's profiles; only the reported raw probe values and stable
+/// estimand identities come from `reference`.
+pub fn process_bootstrap_estimands_at_reference(
+    fitted: &ProcessGraphAnalysis,
+    reference: &ProcessGraphAnalysis,
+) -> Result<Vec<(String, f64)>, String> {
+    let fitted_profiles = fitted
+        .variable_profiles
+        .iter()
+        .map(|profile| (profile.variable.as_str(), profile))
+        .collect::<BTreeMap<_, _>>();
+    let fitted_moderations = fitted
+        .moderations
+        .iter()
+        .map(|moderation| (moderation.moderation_id.as_str(), moderation))
+        .collect::<BTreeMap<_, _>>();
+    let reference_profile_by_variable = reference
+        .variable_profiles
+        .iter()
+        .map(|profile| (profile.variable.as_str(), profile))
+        .collect::<BTreeMap<_, _>>();
+    let reference_values = reference
+        .moderations
+        .iter()
+        .flat_map(|moderation| {
+            std::iter::once(moderation.moderator.as_str())
+                .chain(moderation.conditioning_moderator.as_deref())
+        })
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .map(|variable| {
+            let profile = reference_profile_by_variable
+                .get(variable)
+                .ok_or_else(|| format!("missing reference profile {variable}"))?;
+            Ok(ProcessModeratorValue {
+                variable: variable.to_string(),
+                raw_value: if profile.scale == "binary_0_1" {
+                    0.0
+                } else {
+                    profile.raw_mean
+                },
+                coded_value: 0.0,
+            })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let reference_codes = process_reference_probe_codes(&reference_values, &fitted_profiles)?;
+    let mut output = Vec::new();
+    for effect in &reference.reference_effects {
+        let estimate = match effect.kind.as_str() {
+            "direct" => {
+                if fitted
+                    .paths
+                    .iter()
+                    .any(|path| path.from == effect.path[0] && path.to == effect.path[1])
+                {
+                    process_serialized_path_effect(
+                        &effect.path,
+                        &reference_codes,
+                        fitted,
+                        &fitted_moderations,
+                    )?
+                } else {
+                    0.0
+                }
+            }
+            "indirect" => process_serialized_path_effect(
+                &effect.path,
+                &reference_codes,
+                fitted,
+                &fitted_moderations,
+            )?,
+            "total_indirect" => reference
+                .reference_effects
+                .iter()
+                .filter(|row| row.kind == "indirect")
+                .try_fold(0.0, |sum, row| {
+                    Ok::<_, String>(
+                        sum + process_serialized_path_effect(
+                            &row.path,
+                            &reference_codes,
+                            fitted,
+                            &fitted_moderations,
+                        )?,
+                    )
+                })?,
+            "total" => {
+                let direct = reference
+                    .reference_effects
+                    .iter()
+                    .find(|row| row.kind == "direct")
+                    .ok_or_else(|| "reference direct effect is missing".to_string())?;
+                let direct = if fitted
+                    .paths
+                    .iter()
+                    .any(|path| path.from == direct.path[0] && path.to == direct.path[1])
+                {
+                    process_serialized_path_effect(
+                        &direct.path,
+                        &reference_codes,
+                        fitted,
+                        &fitted_moderations,
+                    )?
+                } else {
+                    0.0
+                };
+                let indirect = reference
+                    .reference_effects
+                    .iter()
+                    .filter(|row| row.kind == "indirect")
+                    .try_fold(0.0, |sum, row| {
+                        Ok::<_, String>(
+                            sum + process_serialized_path_effect(
+                                &row.path,
+                                &reference_codes,
+                                fitted,
+                                &fitted_moderations,
+                            )?,
+                        )
+                    })?;
+                direct + indirect
+            }
+            _ => return Err(format!("unsupported PROCESS estimand kind {}", effect.kind)),
+        };
+        output.push((effect.effect_id.clone(), estimate));
+    }
+    for effect in &reference.conditional_indirect_effects {
+        let probes = process_reference_probe_codes(&effect.moderator_values, &fitted_profiles)?;
+        let path = effect
+            .path_id
+            .split("->")
+            .map(str::to_string)
+            .collect::<Vec<_>>();
+        output.push((
+            effect.effect_id.clone(),
+            process_serialized_path_effect(&path, &probes, fitted, &fitted_moderations)?,
+        ));
+    }
+    for effect in &reference.moderated_mediation_indices {
+        let moderation = fitted
+            .moderations
+            .iter()
+            .find(|row| {
+                effect.moderated_edge == format!("{}->{}", row.from, row.to)
+                    && effect.moderator == row.moderator
+            })
+            .ok_or_else(|| format!("missing fitted moderation for {}", effect.effect_id))?;
+        let interaction = process_serialized_coefficient(
+            fitted,
+            &moderation.to,
+            &[moderation.from.clone(), moderation.moderator.clone()],
+        )?;
+        let path = effect
+            .path_id
+            .split("->")
+            .map(str::to_string)
+            .collect::<Vec<_>>();
+        let mut other_product = 1.0;
+        for edge in path.windows(2) {
+            if edge[0] == moderation.from && edge[1] == moderation.to {
+                continue;
+            }
+            other_product *= process_serialized_edge_slope(
+                &edge[0],
+                &edge[1],
+                &reference_codes,
+                fitted,
+                &fitted_moderations,
+            )?;
+        }
+        output.push((effect.effect_id.clone(), interaction * other_product));
+    }
+    for effect in &reference.simple_slopes {
+        let moderation = fitted_moderations
+            .get(effect.moderation_id.as_str())
+            .ok_or_else(|| format!("missing fitted moderation {}", effect.moderation_id))?;
+        let probes = process_reference_probe_codes(&effect.moderator_values, &fitted_profiles)?;
+        output.push((
+            effect.effect_id.clone(),
+            process_serialized_edge_slope(
+                &moderation.from,
+                &moderation.to,
+                &probes,
+                fitted,
+                &fitted_moderations,
+            )?,
+        ));
+    }
+    Ok(output)
+}
+
+fn process_reference_probe_codes(
+    values: &[ProcessModeratorValue],
+    profiles: &BTreeMap<&str, &ProcessVariableProfile>,
+) -> Result<BTreeMap<String, f64>, String> {
+    values
+        .iter()
+        .map(|value| {
+            let profile = profiles
+                .get(value.variable.as_str())
+                .ok_or_else(|| format!("missing fitted profile {}", value.variable))?;
+            Ok((
+                value.variable.clone(),
+                if profile.scale == "binary_0_1" {
+                    value.raw_value
+                } else {
+                    value.raw_value - profile.raw_mean
+                },
+            ))
+        })
+        .collect()
+}
+
+fn process_serialized_coefficient(
+    graph: &ProcessGraphAnalysis,
+    outcome: &str,
+    variables: &[String],
+) -> Result<f64, String> {
+    graph
+        .equations
+        .iter()
+        .find(|equation| equation.outcome == outcome)
+        .and_then(|equation| {
+            equation
+                .coefficients
+                .iter()
+                .find(|coefficient| coefficient.variables == variables)
+        })
+        .map(|coefficient| coefficient.estimate)
+        .ok_or_else(|| {
+            format!(
+                "missing fitted coefficient {} in {outcome}",
+                variables.join("*")
+            )
+        })
+}
+
+fn process_serialized_edge_slope(
+    from: &str,
+    to: &str,
+    probes: &BTreeMap<String, f64>,
+    graph: &ProcessGraphAnalysis,
+    moderations: &BTreeMap<&str, &ProcessModeration>,
+) -> Result<f64, String> {
+    let mut slope = process_serialized_coefficient(graph, to, &[from.to_string()])?;
+    let Some(moderation) = moderations
+        .values()
+        .find(|moderation| moderation.from == from && moderation.to == to)
+    else {
+        return Ok(slope);
+    };
+    let primary = probes.get(&moderation.moderator).copied().unwrap_or(0.0);
+    slope += process_serialized_coefficient(
+        graph,
+        to,
+        &[from.to_string(), moderation.moderator.clone()],
+    )? * primary;
+    if let Some(conditioning) = &moderation.conditioning_moderator {
+        let conditioned = probes.get(conditioning).copied().unwrap_or(0.0);
+        slope +=
+            process_serialized_coefficient(graph, to, &[from.to_string(), conditioning.clone()])?
+                * conditioned;
+        slope += process_serialized_coefficient(
+            graph,
+            to,
+            &[
+                from.to_string(),
+                moderation.moderator.clone(),
+                conditioning.clone(),
+            ],
+        )? * primary
+            * conditioned;
+    }
+    Ok(slope)
+}
+
+fn process_serialized_path_effect(
+    path: &[String],
+    probes: &BTreeMap<String, f64>,
+    graph: &ProcessGraphAnalysis,
+    moderations: &BTreeMap<&str, &ProcessModeration>,
+) -> Result<f64, String> {
+    path.windows(2).try_fold(1.0, |effect, edge| {
+        Ok(effect * process_serialized_edge_slope(&edge[0], &edge[1], probes, graph, moderations)?)
+    })
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -1433,9 +2066,9 @@ pub struct PlsResult {
     #[serde(default)]
     pub control_estimates: Vec<ControlEstimate>,
     pub effects: Vec<EffectEstimate>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "MediationAnalysis::is_default_shell")]
     pub mediation: MediationAnalysis,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "ModerationAnalysis::is_default_shell")]
     pub moderation: ModerationAnalysis,
     #[serde(default)]
     pub plsc: Option<PlscAnalysis>,
@@ -1517,12 +2150,12 @@ pub fn estimate_pls_validated_with_control(
     let effective = recipe
         .effective_for_dataset(&dataset.fingerprint.0)
         .map_err(|error| EstimationError::UnsupportedMethod(error.to_string()))?;
-    estimate_pls_internal(dataset, effective, false, &mut control)
+    estimate_pls_internal(dataset, effective, false, true, &mut control)
 }
 
 /// Trusted boundary for outer regression case resampling. It first binds the
 /// opaque point-only capability to the original dataset, validates the exact
-/// typed OLS/logistic contract and row indices, creates the sample internally,
+/// typed OLS/logistic/PROCESS contract and row indices, creates the sample internally,
 /// and only then enters the private estimator. A caller cannot use this API to
 /// rebind a capability to arbitrary dataset bytes or mutate its configuration.
 pub fn estimate_regression_case_resample_validated_with_control(
@@ -1565,11 +2198,15 @@ pub fn estimate_regression_case_resample_validated_with_control(
         || point_only_recipe.source().settings.workers != 1
         || !matches!(
             model,
-            RegressionModelConfig::Ols { .. } | RegressionModelConfig::Logistic
+            RegressionModelConfig::Ols { .. }
+                | RegressionModelConfig::Logistic
+                | RegressionModelConfig::Process {
+                    relationship: qpls_core::ProcessRelationshipConfig::Graph { .. }
+                }
         )
     {
         return Err(EstimationError::UnsupportedMethod(
-            "regression case resampling requires a point-only OLS or binary logistic capability"
+            "regression case resampling requires a point-only OLS, binary logistic, or PROCESS v2 capability"
                 .into(),
         ));
     }
@@ -1636,7 +2273,7 @@ pub fn estimate_regression_case_resample_validated_with_control(
         batch,
         fingerprint: DataFingerprint(format!("resample:v1:{:x}", digest.finalize())),
     };
-    estimate_pls_internal(&sampled, effective, false, &mut control)
+    estimate_pls_internal(&sampled, effective, false, false, &mut control)
 }
 
 #[cfg(test)]
@@ -1645,7 +2282,7 @@ fn estimate_pls_with_effective_recipe_control(
     recipe: &AnalysisRecipe,
     mut control: impl FnMut(EstimationProgress) -> bool,
 ) -> Result<PlsResult, EstimationError> {
-    estimate_pls_internal(dataset, recipe, false, &mut control)
+    estimate_pls_internal(dataset, recipe, false, true, &mut control)
 }
 
 pub fn analyze_mediation(result: &PlsResult) -> MediationAnalysis {
@@ -1717,13 +2354,14 @@ fn estimate_pls_reduced_with_control(
     recipe: &AnalysisRecipe,
     mut control: impl FnMut(EstimationProgress) -> bool,
 ) -> Result<PlsResult, EstimationError> {
-    estimate_pls_internal(dataset, recipe, true, &mut control)
+    estimate_pls_internal(dataset, recipe, true, true, &mut control)
 }
 
 fn estimate_pls_internal(
     dataset: &Dataset,
     recipe: &AnalysisRecipe,
     allow_isolated_constructs: bool,
+    enforce_process_outcome_scope: bool,
     control: &mut dyn FnMut(EstimationProgress) -> bool,
 ) -> Result<PlsResult, EstimationError> {
     checkpoint(control, EstimationPhase::Validating, 0, 1)?;
@@ -1735,7 +2373,7 @@ fn estimate_pls_internal(
         return estimate_standalone_pca(dataset, recipe, control);
     }
     if recipe.settings.method == AnalysisMethod::Regression {
-        return estimate_regression_method(dataset, recipe, control);
+        return estimate_regression_method(dataset, recipe, enforce_process_outcome_scope, control);
     }
     if recipe.settings.method == AnalysisMethod::Nca {
         return estimate_nca_method(dataset, recipe, control);
@@ -2103,6 +2741,7 @@ fn estimate_standalone_pca(
 fn estimate_regression_method(
     dataset: &Dataset,
     recipe: &AnalysisRecipe,
+    enforce_process_outcome_scope: bool,
     control: &mut dyn FnMut(EstimationProgress) -> bool,
 ) -> Result<PlsResult, EstimationError> {
     let regression_type = recipe
@@ -2119,6 +2758,48 @@ fn estimate_regression_method(
     let controls = metadata_list(recipe, "regression_controls")
         .or_else(|| metadata_list(recipe, "regression.controls"))
         .unwrap_or_default();
+    let process_graph = matches!(
+        recipe.method_config.as_ref(),
+        Some(MethodConfig::Regression {
+            model: RegressionModelConfig::Process {
+                relationship: qpls_core::ProcessRelationshipConfig::Graph { .. }
+            },
+            ..
+        })
+    );
+    if process_graph {
+        let process = process_analysis(dataset, recipe, enforce_process_outcome_scope, control)?;
+        let graph = process
+            .graph_v2
+            .as_ref()
+            .ok_or_else(|| EstimationError::Numerical("PROCESS v2 graph output missing".into()))?;
+        let warnings = vec![
+            "PROCESS v2 is an independently implemented graph-defined observed-variable path-analysis workflow; it does not execute copied numbered templates.".into(),
+            "PROCESS v2 uses raw listwise-complete OLS equations with HC3 covariance and fixed two-sided 95% Student-t inference; unsupported shapes are rejected.".into(),
+        ];
+        let mut result = empty_method_result(
+            REGRESSION_PROCESS_METHOD_VERSION,
+            graph.complete_cases,
+            graph.omitted_cases,
+            warnings.clone(),
+        );
+        result.regression = Some(RegressionAnalysis {
+            method_version: REGRESSION_PROCESS_METHOD_VERSION.into(),
+            regression_type,
+            outcome,
+            predictors,
+            controls,
+            observations: graph.complete_cases,
+            coefficients: Vec::new(),
+            fit: None,
+            predictions: Vec::new(),
+            logistic: None,
+            process: Some(process),
+            bootstrap: None,
+            warnings,
+        });
+        return Ok(result);
+    }
     let mut variables = vec![outcome.clone()];
     variables.extend(predictors.iter().cloned());
     variables.extend(controls.iter().cloned());
@@ -2158,12 +2839,14 @@ fn estimate_regression_method(
         (coefficients, fit, predictions, None)
     };
     let process = (regression_type == "process")
-        .then(|| process_analysis(dataset, recipe))
+        .then(|| process_analysis(dataset, recipe, enforce_process_outcome_scope, control))
         .transpose()?;
     let status_warning = if regression_type == "ols" {
         "OLS regression v1 is validated for the documented QuickPLS v1.2 OLS scope; unsupported shapes remain blocked."
     } else if regression_type == "logistic" {
         "Logistic regression v2 is validated for the documented QuickPLS binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, categorical auto-encoding, and Firth-corrected models remain unsupported."
+    } else if process_graph {
+        "PROCESS v2 is an independently implemented graph-defined observed-variable path-analysis workflow; it does not execute copied numbered templates."
     } else {
         "PROCESS-style regression v1 is validated for the documented QuickPLS v1.2.2 bounded mediation/moderation workflow scope; moderated mediation and the full Hayes model catalogue remain experimental."
     };
@@ -2171,13 +2854,20 @@ fn estimate_regression_method(
         if regression_type == "logistic" {
             REGRESSION_LOGISTIC_METHOD_VERSION
         } else if regression_type == "process" {
-            REGRESSION_PROCESS_METHOD_VERSION
+            REGRESSION_PROCESS_METHOD_VERSION_V1
         } else {
             REGRESSION_OLS_METHOD_VERSION
         },
         prepared.used,
         prepared.omitted,
-        vec![status_warning.into()],
+        if process_graph {
+            vec![
+                status_warning.into(),
+                "PROCESS v2 uses raw listwise-complete OLS equations with HC3 covariance and fixed two-sided 95% Student-t inference; unsupported shapes are rejected.".into(),
+            ]
+        } else {
+            vec![status_warning.into()]
+        },
     );
     result.regression = Some(RegressionAnalysis {
         method_version: result.method_version.clone(),
@@ -2187,7 +2877,7 @@ fn estimate_regression_method(
         controls,
         observations: prepared.used,
         coefficients,
-        fit,
+        fit: Some(fit),
         predictions,
         logistic,
         process,
@@ -2435,14 +3125,20 @@ fn estimate_pls_two_stage_moderation(
         None,
         control,
     )?;
-    let stage1 =
-        estimate_pls_internal(dataset, &stage1_recipe, allow_isolated_constructs, control)?;
+    let stage1 = estimate_pls_internal(
+        dataset,
+        &stage1_recipe,
+        allow_isolated_constructs,
+        true,
+        control,
+    )?;
     let (expanded_dataset, stage2_recipe) =
         expand_two_stage_moderation_dataset(dataset, recipe, &stage1, &stage1_prepared.used_rows)?;
     let mut result = estimate_pls_internal(
         &expanded_dataset,
         &stage2_recipe,
         allow_isolated_constructs,
+        true,
         control,
     )?;
     result.used_observations = stage1.used_observations;
@@ -2500,14 +3196,14 @@ fn estimate_pls_two_stage_higher_order(
         None,
         control,
     )?;
-    let stage1 = estimate_pls_internal(dataset, &stage1_recipe, true, control)?;
+    let stage1 = estimate_pls_internal(dataset, &stage1_recipe, true, true, control)?;
     let (expanded_dataset, stage2_recipe) = expand_two_stage_higher_order_dataset(
         dataset,
         recipe,
         &stage1,
         &stage1_prepared.used_rows,
     )?;
-    let mut result = estimate_pls_internal(&expanded_dataset, &stage2_recipe, true, control)?;
+    let mut result = estimate_pls_internal(&expanded_dataset, &stage2_recipe, true, true, control)?;
     result.used_observations = stage1.used_observations;
     result.omitted_observations = stage1.omitted_observations;
     if stage1.omitted_observations > 0 {
@@ -4780,6 +5476,112 @@ fn prepare_raw_numeric_data(
         case_weights: None,
         used,
         omitted: dataset.batch.num_rows().saturating_sub(used),
+    })
+}
+
+fn prepare_process_raw_numeric_data(
+    dataset: &Dataset,
+    variables: &[String],
+    control: &mut dyn FnMut(EstimationProgress) -> bool,
+) -> Result<PreparedData, EstimationError> {
+    let schema = dataset.batch.schema();
+    let arrays = variables
+        .iter()
+        .map(|name| {
+            schema
+                .index_of(name)
+                .map_err(|_| EstimationError::InvalidIndicator(name.clone()))
+                .map(|position| dataset.batch.column(position).clone())
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    for (name, array) in variables.iter().zip(&arrays) {
+        if array.as_any().downcast_ref::<Float64Array>().is_none()
+            && array.as_any().downcast_ref::<Int64Array>().is_none()
+        {
+            return Err(EstimationError::InvalidIndicator(name.clone()));
+        }
+    }
+    let total_rows = dataset.batch.num_rows();
+    checkpoint(
+        control,
+        EstimationPhase::PreparingRows,
+        0,
+        total_rows as u64,
+    )?;
+    let mut columns = vec![Vec::new(); variables.len()];
+    let mut used_rows = Vec::new();
+    for row in 0..total_rows {
+        if row > 0 && row % 64 == 0 {
+            checkpoint(
+                control,
+                EstimationPhase::PreparingRows,
+                row as u64,
+                total_rows as u64,
+            )?;
+        }
+        let mut row_values = Vec::with_capacity(variables.len());
+        let mut complete = true;
+        for array in &arrays {
+            if array.is_null(row) {
+                complete = false;
+                break;
+            }
+            let value = raw_numeric_value(array.as_ref(), row)?;
+            if !value.is_finite() {
+                complete = false;
+                break;
+            }
+            row_values.push(value);
+        }
+        if complete {
+            used_rows.push(row);
+            for (column, value) in columns.iter_mut().zip(row_values) {
+                column.push(value);
+            }
+        }
+    }
+    checkpoint(
+        control,
+        EstimationPhase::PreparingRows,
+        total_rows as u64,
+        total_rows as u64,
+    )?;
+    if used_rows.len() < 3 {
+        return Err(EstimationError::InsufficientObservations);
+    }
+    checkpoint(
+        control,
+        EstimationPhase::PreparingIndicators,
+        0,
+        variables.len() as u64,
+    )?;
+    let mut transforms = Vec::with_capacity(variables.len());
+    for (index, (name, column)) in variables.iter().zip(&columns).enumerate() {
+        let mean = vector_mean(column);
+        let scale = sample_sd(column);
+        if scale <= f64::EPSILON || !scale.is_finite() {
+            return Err(EstimationError::ConstantIndicator(name.clone()));
+        }
+        transforms.push(IndicatorTransform {
+            indicator: name.clone(),
+            mean,
+            scale,
+        });
+        checkpoint(
+            control,
+            EstimationPhase::PreparingIndicators,
+            (index + 1) as u64,
+            variables.len() as u64,
+        )?;
+    }
+    let used = used_rows.len();
+    Ok(PreparedData {
+        columns,
+        transforms,
+        used_rows,
+        case_weights: None,
+        used,
+        omitted: total_rows.saturating_sub(used),
     })
 }
 
@@ -9178,6 +9980,45 @@ fn robust_covariance_hc3(
     multiply_matrices(&multiply_matrices(xtx_inv, &meat), xtx_inv)
 }
 
+const PROCESS_HC3_LEVERAGE_TOLERANCE: f64 = 1.0e-12;
+
+fn process_robust_covariance_hc3(
+    design: &[Vec<f64>],
+    residuals: &[f64],
+    xtx_inv: &[Vec<f64>],
+    outcome: &str,
+) -> Result<Vec<Vec<f64>>, EstimationError> {
+    let columns = xtx_inv.len();
+    let mut meat = vec![vec![0.0; columns]; columns];
+    for (row_index, row) in design.iter().enumerate() {
+        let leverage = dot(row, &matrix_vector_product(xtx_inv, row));
+        let denominator = 1.0 - leverage;
+        if !denominator.is_finite() || denominator <= PROCESS_HC3_LEVERAGE_TOLERANCE {
+            return Err(EstimationError::UnsupportedMethod(format!(
+                "high_leverage_hc3_instability|PROCESS equation {outcome} has 1-h={denominator:.17e} at complete-case row {row_index}; exact HC3 requires 1-h greater than {PROCESS_HC3_LEVERAGE_TOLERANCE:.1e}"
+            )));
+        }
+        let scaled = residuals[row_index] / denominator;
+        if !scaled.is_finite() {
+            return Err(EstimationError::UnsupportedMethod(format!(
+                "high_leverage_hc3_instability|PROCESS equation {outcome} produced a nonfinite HC3 residual at complete-case row {row_index}"
+            )));
+        }
+        for left in 0..columns {
+            for right in 0..columns {
+                meat[left][right] += row[left] * scaled * scaled * row[right];
+            }
+        }
+    }
+    let covariance = multiply_matrices(&multiply_matrices(xtx_inv, &meat), xtx_inv);
+    if covariance.iter().flatten().any(|value| !value.is_finite()) {
+        return Err(EstimationError::UnsupportedMethod(format!(
+            "high_leverage_hc3_instability|PROCESS equation {outcome} produced a nonfinite exact HC3 covariance"
+        )));
+    }
+    Ok(covariance)
+}
+
 fn logistic(value: f64) -> f64 {
     if value >= 0.0 {
         let z = (-value).exp();
@@ -9191,7 +10032,41 @@ fn logistic(value: f64) -> f64 {
 fn process_analysis(
     dataset: &Dataset,
     recipe: &AnalysisRecipe,
+    enforce_outcome_scope: bool,
+    control: &mut dyn FnMut(EstimationProgress) -> bool,
 ) -> Result<ProcessAnalysis, EstimationError> {
+    if let Some(MethodConfig::Regression {
+        model:
+            RegressionModelConfig::Process {
+                relationship:
+                    qpls_core::ProcessRelationshipConfig::Graph {
+                        focal_predictor,
+                        paths,
+                        moderators,
+                        moderations,
+                        ..
+                    },
+            },
+        outcome,
+        predictors,
+        controls,
+        ..
+    }) = recipe.method_config.as_ref()
+    {
+        return process_graph_analysis(
+            dataset,
+            recipe,
+            focal_predictor,
+            outcome,
+            predictors,
+            controls,
+            paths,
+            moderators,
+            moderations,
+            enforce_outcome_scope,
+            control,
+        );
+    }
     let model = recipe
         .metadata
         .get("process_model")
@@ -9290,12 +10165,1670 @@ fn process_analysis(
         });
     }
     Ok(ProcessAnalysis {
-        method_version: REGRESSION_PROCESS_METHOD_VERSION.into(),
+        method_version: REGRESSION_PROCESS_METHOD_VERSION_V1.into(),
         model,
         effects,
         simple_slopes,
+        graph_v2: None,
         warnings: vec!["PROCESS v1 reports bounded deterministic mediation/moderation effects validated for the documented QuickPLS v1.2.2 scope; moderated mediation remains experimental.".into()],
     })
+}
+
+#[derive(Debug, Clone)]
+struct ProcessTermSpec {
+    id: String,
+    kind: String,
+    variables: Vec<String>,
+}
+
+fn process_graph_analysis(
+    dataset: &Dataset,
+    recipe: &AnalysisRecipe,
+    focal: &str,
+    outcome: &str,
+    predictors: &[String],
+    controls: &[String],
+    paths: &[qpls_core::ProcessPathConfig],
+    moderators: &[qpls_core::ProcessModeratorConfig],
+    moderations: &[qpls_core::ProcessModerationConfig],
+    enforce_outcome_scope: bool,
+    control: &mut dyn FnMut(EstimationProgress) -> bool,
+) -> Result<ProcessAnalysis, EstimationError> {
+    let mut variables = predictors.to_vec();
+    variables.extend(controls.iter().cloned());
+    variables.push(outcome.to_string());
+    let prepared = prepare_process_raw_numeric_data(dataset, &variables, control)?;
+    let columns = variables
+        .iter()
+        .cloned()
+        .zip(prepared.columns.iter().cloned())
+        .collect::<BTreeMap<_, _>>();
+    let scale_by_variable = moderators
+        .iter()
+        .map(|moderator| {
+            let scale = match moderator.scale {
+                qpls_core::ProcessModeratorScale::Continuous => "continuous",
+                qpls_core::ProcessModeratorScale::Binary01 => "binary_0_1",
+            };
+            (moderator.variable.clone(), scale)
+        })
+        .collect::<BTreeMap<_, _>>();
+    for moderator in moderators {
+        if matches!(moderator.scale, qpls_core::ProcessModeratorScale::Binary01)
+            && columns[&moderator.variable]
+                .iter()
+                .any(|value| *value != 0.0 && *value != 1.0)
+        {
+            return Err(EstimationError::UnsupportedMethod(format!(
+                "invalid_binary_profile|PROCESS binary moderator {} must be coded exactly 0/1 in the complete sample",
+                moderator.variable
+            )));
+        }
+    }
+    if enforce_outcome_scope {
+        let equation_outcomes = paths
+            .iter()
+            .map(|path| path.to.as_str())
+            .collect::<BTreeSet<_>>();
+        for equation_outcome in equation_outcomes {
+            let values = &columns[equation_outcome];
+            let has_zero = values.iter().any(|value| *value == 0.0);
+            let has_one = values.iter().any(|value| *value == 1.0);
+            if has_zero && has_one && values.iter().all(|value| *value == 0.0 || *value == 1.0) {
+                return Err(EstimationError::UnsupportedMethod(format!(
+                    "binary_process_equation_outcome|PROCESS v2 requires every endogenous equation outcome to be continuous; {equation_outcome} is exactly coded 0/1 in the original complete sample"
+                )));
+            }
+        }
+    }
+    let profiles = variables
+        .iter()
+        .map(|variable| {
+            let values = &columns[variable];
+            let mean = vector_mean(values);
+            let sample_sd = if values.len() > 1 {
+                (values
+                    .iter()
+                    .map(|value| (value - mean).powi(2))
+                    .sum::<f64>()
+                    / (values.len() - 1) as f64)
+                    .sqrt()
+            } else {
+                0.0
+            };
+            let role = if variable == focal {
+                "focal_predictor"
+            } else if variable == outcome {
+                "outcome"
+            } else if controls.contains(variable) {
+                "control"
+            } else if scale_by_variable.contains_key(variable) {
+                "moderator"
+            } else {
+                "mediator"
+            };
+            let scale = scale_by_variable
+                .get(variable)
+                .copied()
+                .unwrap_or("continuous");
+            let levels = if scale == "binary_0_1" {
+                vec![0.0, 1.0]
+            } else {
+                Vec::new()
+            };
+            ProcessVariableProfile {
+                variable: variable.clone(),
+                role: role.into(),
+                scale: scale.into(),
+                raw_mean: mean,
+                raw_sample_sd: sample_sd,
+                raw_min: values.iter().copied().fold(f64::INFINITY, f64::min),
+                raw_max: values.iter().copied().fold(f64::NEG_INFINITY, f64::max),
+                levels,
+            }
+        })
+        .collect::<Vec<_>>();
+    let profile_by_variable = profiles
+        .iter()
+        .map(|profile| (profile.variable.as_str(), profile))
+        .collect::<BTreeMap<_, _>>();
+    let mut node_order = predictors
+        .iter()
+        .enumerate()
+        .map(|(index, variable)| (variable.clone(), index))
+        .collect::<BTreeMap<_, _>>();
+    node_order.insert(outcome.to_string(), predictors.len());
+    let mut ordered_paths = paths.iter().collect::<Vec<_>>();
+    ordered_paths.sort_by(|left, right| {
+        (
+            node_order[&left.to],
+            node_order[&left.from],
+            &left.from,
+            &left.to,
+        )
+            .cmp(&(
+                node_order[&right.to],
+                node_order[&right.from],
+                &right.from,
+                &right.to,
+            ))
+    });
+    let mut ordered_moderations = moderations.iter().collect::<Vec<_>>();
+    ordered_moderations.sort_by(|left, right| {
+        (
+            node_order[&left.to],
+            node_order[&left.from],
+            &left.moderator,
+            &left.conditioning_moderator,
+        )
+            .cmp(&(
+                node_order[&right.to],
+                node_order[&right.from],
+                &right.moderator,
+                &right.conditioning_moderator,
+            ))
+    });
+    let process_paths = ordered_paths
+        .iter()
+        .map(|path| ProcessPath {
+            path_id: format!("{}->{}", path.from, path.to),
+            from: path.from.clone(),
+            to: path.to.clone(),
+        })
+        .collect::<Vec<_>>();
+    let process_moderations = ordered_moderations
+        .iter()
+        .map(|moderation| ProcessModeration {
+            moderation_id: process_moderation_id(
+                &moderation.from,
+                &moderation.to,
+                &moderation.moderator,
+                moderation.conditioning_moderator.as_deref(),
+            ),
+            from: moderation.from.clone(),
+            to: moderation.to.clone(),
+            moderator: moderation.moderator.clone(),
+            conditioning_moderator: moderation.conditioning_moderator.clone(),
+        })
+        .collect::<Vec<_>>();
+    let mut equation_outcomes = predictors
+        .iter()
+        .filter(|variable| {
+            *variable != focal
+                && !scale_by_variable.contains_key(*variable)
+                && paths.iter().any(|path| path.to == **variable)
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    if paths.iter().any(|path| path.to == outcome) {
+        equation_outcomes.push(outcome.to_string());
+    }
+    let mut equations = Vec::new();
+    let equation_total = equation_outcomes.len() as u64;
+    checkpoint(control, EstimationPhase::Iterating, 0, equation_total)?;
+    for (equation_index, equation_outcome) in equation_outcomes.into_iter().enumerate() {
+        let mut terms = ordered_paths
+            .iter()
+            .filter(|path| path.to == equation_outcome)
+            .map(|path| ProcessTermSpec {
+                id: format!("path:{}->{}", path.from, path.to),
+                kind: "path".into(),
+                variables: vec![path.from.clone()],
+            })
+            .collect::<Vec<_>>();
+        let relevant_moderations = ordered_moderations
+            .iter()
+            .copied()
+            .filter(|item| item.to == equation_outcome)
+            .collect::<Vec<_>>();
+        for moderator in moderators {
+            if relevant_moderations.iter().any(|moderation| {
+                moderation.moderator == moderator.variable
+                    || moderation.conditioning_moderator.as_ref() == Some(&moderator.variable)
+            }) && !terms
+                .iter()
+                .any(|term| term.variables == [moderator.variable.clone()])
+            {
+                terms.push(ProcessTermSpec {
+                    id: format!("moderator:{}", moderator.variable),
+                    kind: "moderator_main".into(),
+                    variables: vec![moderator.variable.clone()],
+                });
+            }
+        }
+        let mut interaction_terms = Vec::new();
+        for moderation in relevant_moderations {
+            let primary = vec![moderation.from.clone(), moderation.moderator.clone()];
+            if !interaction_terms
+                .iter()
+                .any(|term: &ProcessTermSpec| term.variables == primary)
+            {
+                interaction_terms.push(ProcessTermSpec {
+                    id: format!("interaction:{}*{}", moderation.from, moderation.moderator),
+                    kind: "interaction".into(),
+                    variables: primary,
+                });
+            }
+            if let Some(conditioning) = &moderation.conditioning_moderator {
+                for pair in [
+                    vec![moderation.from.clone(), conditioning.clone()],
+                    vec![moderation.moderator.clone(), conditioning.clone()],
+                ] {
+                    if !interaction_terms.iter().any(|term| term.variables == pair) {
+                        interaction_terms.push(ProcessTermSpec {
+                            id: format!("interaction:{}*{}", pair[0], pair[1]),
+                            kind: "interaction".into(),
+                            variables: pair,
+                        });
+                    }
+                }
+                interaction_terms.push(ProcessTermSpec {
+                    id: format!(
+                        "interaction:{}*{}*{}",
+                        moderation.from, moderation.moderator, conditioning
+                    ),
+                    kind: "interaction".into(),
+                    variables: vec![
+                        moderation.from.clone(),
+                        moderation.moderator.clone(),
+                        conditioning.clone(),
+                    ],
+                });
+            }
+        }
+        interaction_terms.sort_by(|left, right| {
+            (left.variables.len(), left.id.as_str())
+                .cmp(&(right.variables.len(), right.id.as_str()))
+        });
+        interaction_terms.dedup_by(|left, right| left.variables == right.variables);
+        terms.extend(interaction_terms);
+        terms.extend(controls.iter().map(|control| ProcessTermSpec {
+            id: format!("control:{control}"),
+            kind: "control".into(),
+            variables: vec![control.clone()],
+        }));
+        equations.push(fit_process_equation(
+            &equation_outcome,
+            &terms,
+            &columns,
+            &profile_by_variable,
+            recipe.settings.confidence_level,
+            equation_index as u64,
+            equation_total,
+            control,
+        )?);
+        checkpoint(
+            control,
+            EstimationPhase::Iterating,
+            (equation_index + 1) as u64,
+            equation_total,
+        )?;
+    }
+    let simple_paths = enumerate_process_paths(focal, outcome, paths);
+    let mut reference_effects = Vec::new();
+    let direct_path = vec![focal.to_string(), outcome.to_string()];
+    let direct = if simple_paths.iter().any(|path| path == &direct_path) {
+        process_path_effect(
+            &direct_path,
+            &[],
+            &equations,
+            moderations,
+            &profile_by_variable,
+        )?
+    } else {
+        0.0
+    };
+    reference_effects.push(ProcessReferenceEffect {
+        effect_id: format!("direct:{focal}->{outcome}"),
+        kind: "direct".into(),
+        path: direct_path.clone(),
+        estimate: direct,
+    });
+    let mut total_indirect = 0.0;
+    for path in simple_paths.iter().filter(|path| path.len() > 2) {
+        let estimate =
+            process_path_effect(path, &[], &equations, moderations, &profile_by_variable)?;
+        total_indirect += estimate;
+        reference_effects.push(ProcessReferenceEffect {
+            effect_id: format!("indirect:{}", path.join("->")),
+            kind: "indirect".into(),
+            path: path.clone(),
+            estimate,
+        });
+    }
+    reference_effects.push(ProcessReferenceEffect {
+        effect_id: format!("total_indirect:{focal}->{outcome}"),
+        kind: "total_indirect".into(),
+        path: vec![focal.to_string(), outcome.to_string()],
+        estimate: total_indirect,
+    });
+    reference_effects.push(ProcessReferenceEffect {
+        effect_id: format!("total:{focal}->{outcome}"),
+        kind: "total".into(),
+        path: vec![focal.to_string(), outcome.to_string()],
+        estimate: direct + total_indirect,
+    });
+    let mut conditional_indirect_effects = Vec::new();
+    let mut moderated_mediation_indices = Vec::new();
+    for path in simple_paths.iter().filter(|path| path.len() > 2) {
+        let path_id = path.join("->");
+        if let Some(moderation) = path.windows(2).find_map(|edge| {
+            moderations
+                .iter()
+                .find(|item| item.from == edge[0] && item.to == edge[1])
+        }) {
+            let probes = process_probe_grid(moderation, &profile_by_variable)?;
+            for probe in probes {
+                let estimate = process_path_effect(
+                    path,
+                    &probe.values,
+                    &equations,
+                    moderations,
+                    &profile_by_variable,
+                )?;
+                conditional_indirect_effects.push(ProcessConditionalIndirectEffect {
+                    effect_id: format!("indirect:{}@{}", path_id, probe.suffix),
+                    path_id: path_id.clone(),
+                    moderator_values: probe.values,
+                    estimate,
+                });
+            }
+            let reference_other_edges = process_path_other_edge_product(
+                path,
+                &moderation.from,
+                &moderation.to,
+                &equations,
+                moderations,
+                &profile_by_variable,
+            )?;
+            let interaction = process_equation_coefficient(
+                &equations,
+                &moderation.to,
+                &[moderation.from.clone(), moderation.moderator.clone()],
+            )?;
+            moderated_mediation_indices.push(ProcessModeratedMediationIndex {
+                effect_id: format!(
+                    "index:{}:{}->{}:{}",
+                    path_id, moderation.from, moderation.to, moderation.moderator
+                ),
+                path_id,
+                moderated_edge: format!("{}->{}", moderation.from, moderation.to),
+                moderator: moderation.moderator.clone(),
+                estimate: interaction.estimate * reference_other_edges,
+            });
+        }
+    }
+    let mut simple_slopes = Vec::new();
+    let mut plots = Vec::new();
+    let mut johnson_neyman = Vec::new();
+    let diagnostic_total = ordered_moderations.len().max(1) as u64;
+    checkpoint(
+        control,
+        EstimationPhase::ComputingEffects,
+        0,
+        diagnostic_total,
+    )?;
+    for (diagnostic_index, moderation) in ordered_moderations.iter().copied().enumerate() {
+        let moderation_id = process_moderation_id(
+            &moderation.from,
+            &moderation.to,
+            &moderation.moderator,
+            moderation.conditioning_moderator.as_deref(),
+        );
+        let probes = process_probe_grid(moderation, &profile_by_variable)?;
+        for probe in &probes {
+            simple_slopes.push(process_simple_slope(
+                &moderation_id,
+                moderation,
+                &probe.values,
+                &probe.suffix,
+                &equations,
+                recipe.settings.confidence_level,
+            )?);
+        }
+        plots.push(process_plot(
+            &moderation_id,
+            moderation,
+            &probes,
+            &equations,
+            &profile_by_variable,
+            recipe.settings.confidence_level,
+        )?);
+        johnson_neyman.extend(process_johnson_neyman(
+            &moderation_id,
+            moderation,
+            &equations,
+            &profile_by_variable,
+            recipe.settings.confidence_level,
+        )?);
+        checkpoint(
+            control,
+            EstimationPhase::ComputingEffects,
+            (diagnostic_index + 1) as u64,
+            diagnostic_total,
+        )?;
+    }
+    if ordered_moderations.is_empty() {
+        checkpoint(
+            control,
+            EstimationPhase::ComputingEffects,
+            1,
+            diagnostic_total,
+        )?;
+    }
+    let graph_v2 = ProcessGraphAnalysis {
+        policies: ProcessPolicies {
+            centering: "equation_complete_case_mean_v1".into(),
+            covariance: "hc3_v1".into(),
+            inference_reference: "student_t_residual_df_v1".into(),
+            confidence_level: recipe.settings.confidence_level,
+        },
+        complete_cases: prepared.used,
+        omitted_cases: prepared.omitted,
+        variable_profiles: profiles,
+        paths: process_paths,
+        moderations: process_moderations,
+        equations,
+        reference_effects,
+        conditional_indirect_effects,
+        moderated_mediation_indices,
+        simple_slopes,
+        plots,
+        johnson_neyman,
+        bootstrap: None,
+    };
+    checkpoint(control, EstimationPhase::Assembling, 1, 1)?;
+    Ok(ProcessAnalysis {
+        method_version: REGRESSION_PROCESS_METHOD_VERSION.into(),
+        model: "graph".into(),
+        effects: Vec::new(),
+        simple_slopes: Vec::new(),
+        graph_v2: Some(graph_v2),
+        warnings: vec![
+            "PROCESS v2 is an independently implemented graph-defined observed-variable path-analysis workflow; it does not execute copied numbered templates.".into(),
+            "PROCESS v2 uses raw listwise-complete OLS equations with HC3 covariance and fixed two-sided 95% Student-t inference; unsupported shapes are rejected.".into(),
+        ],
+    })
+}
+
+fn process_moderation_id(
+    from: &str,
+    to: &str,
+    moderator: &str,
+    conditioning: Option<&str>,
+) -> String {
+    match conditioning {
+        Some(conditioning) => format!("moderation:{from}->{to}@{moderator}|{conditioning}"),
+        None => format!("moderation:{from}->{to}@{moderator}"),
+    }
+}
+
+fn process_centered_value(variable: &str, value: f64, profile: &ProcessVariableProfile) -> f64 {
+    if profile.scale == "binary_0_1" {
+        value
+    } else if variable == profile.variable {
+        value - profile.raw_mean
+    } else {
+        value
+    }
+}
+
+fn process_standard_error_from_variance(
+    variance: f64,
+    outcome: &str,
+    term_id: &str,
+) -> Result<f64, EstimationError> {
+    if !variance.is_finite() || variance <= 0.0 {
+        return Err(EstimationError::Numerical(format!(
+            "invalid_hc3_covariance|PROCESS equation {outcome} term {term_id} has nonpositive HC3 variance {variance:.17e}"
+        )));
+    }
+    let standard_error = variance.sqrt();
+    if !standard_error.is_finite() {
+        return Err(EstimationError::Numerical(format!(
+            "invalid_hc3_covariance|PROCESS equation {outcome} term {term_id} has a nonfinite HC3 standard error"
+        )));
+    }
+    Ok(standard_error)
+}
+
+struct ProcessScaleAwareFit {
+    coefficients: Vec<f64>,
+    residuals: Vec<f64>,
+    covariance: Vec<Vec<f64>>,
+}
+
+fn process_column_location_scale(values: &[f64]) -> Option<(f64, f64)> {
+    let mut mean = 0.0;
+    let mut centered_sum_squares = 0.0;
+    for (index, value) in values.iter().copied().enumerate() {
+        if !value.is_finite() {
+            return None;
+        }
+        let count = (index + 1) as f64;
+        let delta = value - mean;
+        mean += delta / count;
+        centered_sum_squares += delta * (value - mean);
+    }
+    let scale = (centered_sum_squares / values.len() as f64).sqrt();
+    (mean.is_finite() && scale.is_finite() && scale > 0.0).then_some((mean, scale))
+}
+
+fn process_scale_aware_ols(
+    design: &[Vec<f64>],
+    outcome_values: &[f64],
+    outcome: &str,
+) -> Result<ProcessScaleAwareFit, EstimationError> {
+    let rows = design.len();
+    let columns = design.first().map(Vec::len).unwrap_or_default();
+    if rows != outcome_values.len()
+        || rows <= columns
+        || columns == 0
+        || design.iter().any(|row| row.len() != columns)
+        || outcome_values.iter().any(|value| !value.is_finite())
+    {
+        return Err(EstimationError::RankDeficient(outcome.into()));
+    }
+
+    let mut centers = vec![0.0; columns];
+    let mut scales = vec![1.0; columns];
+    for column in 1..columns {
+        let values = design.iter().map(|row| row[column]).collect::<Vec<_>>();
+        let Some((center, scale)) = process_column_location_scale(&values) else {
+            return Err(EstimationError::RankDeficient(outcome.into()));
+        };
+        centers[column] = center;
+        scales[column] = scale;
+    }
+    let normalized_design = (0..rows)
+        .map(|row| {
+            (0..columns)
+                .map(|column| {
+                    if column == 0 {
+                        1.0
+                    } else {
+                        (design[row][column] - centers[column]) / scales[column]
+                    }
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>();
+    if normalized_design
+        .iter()
+        .flatten()
+        .any(|value| !value.is_finite())
+    {
+        return Err(EstimationError::RankDeficient(outcome.into()));
+    }
+
+    let matrix = Mat::from_fn(rows, columns, |row, column| normalized_design[row][column]);
+    // PROCESS resampling owns parallelism at the replicate/delete-one level.  faer's
+    // high-level SVD and least-squares APIs inherit the surrounding Rayon pool,
+    // which changes floating-point reduction order when the requested worker count
+    // changes.  Keep each equation fit explicitly sequential so indexed outer work
+    // remains bitwise worker-invariant.
+    let parallelism = Par::Seq;
+    let compute_vectors = ComputeSvdVectors::Thin;
+    let mut left_singular_vectors = Mat::<f64>::zeros(rows, columns);
+    let mut right_singular_vectors = Mat::<f64>::zeros(columns, columns);
+    let mut singular_values = Diag::<f64>::zeros(columns);
+    let mut svd_memory = MemBuffer::new(svd_scratch::<f64>(
+        rows,
+        columns,
+        compute_vectors,
+        compute_vectors,
+        parallelism,
+        Default::default(),
+    ));
+    svd(
+        matrix.as_ref(),
+        singular_values.as_mut(),
+        Some(left_singular_vectors.as_mut()),
+        Some(right_singular_vectors.as_mut()),
+        parallelism,
+        MemStack::new(&mut svd_memory),
+        Default::default(),
+    )
+    .map_err(|_| EstimationError::RankDeficient(outcome.into()))?;
+    let maximum_singular_value = singular_values[0];
+    let minimum_singular_value = singular_values[columns - 1];
+    let rank_tolerance = maximum_singular_value
+        * rows.max(columns) as f64
+        * f64::EPSILON
+        * PROCESS_RELATIVE_RANK_TOLERANCE_MULTIPLIER;
+    if !maximum_singular_value.is_finite()
+        || !minimum_singular_value.is_finite()
+        || maximum_singular_value <= 0.0
+        || minimum_singular_value <= rank_tolerance
+    {
+        return Err(EstimationError::RankDeficient(outcome.into()));
+    }
+
+    let right_hand_side = Mat::from_fn(rows, 1, |row, _| outcome_values[row]);
+    let mut projected_outcome = Mat::<f64>::zeros(columns, 1);
+    matmul_with_conj(
+        projected_outcome.as_mut(),
+        Accum::Replace,
+        left_singular_vectors.as_ref().transpose(),
+        Conj::Yes,
+        right_hand_side.as_ref(),
+        Conj::No,
+        1.0,
+        parallelism,
+    );
+    for index in 0..columns {
+        projected_outcome[(index, 0)] /= singular_values[index];
+    }
+    let mut solution = Mat::<f64>::zeros(columns, 1);
+    matmul_with_conj(
+        solution.as_mut(),
+        Accum::Replace,
+        right_singular_vectors.as_ref(),
+        Conj::No,
+        projected_outcome.as_ref(),
+        Conj::No,
+        1.0,
+        parallelism,
+    );
+    let normalized_coefficients = (0..columns)
+        .map(|index| solution[(index, 0)])
+        .collect::<Vec<_>>();
+    if normalized_coefficients
+        .iter()
+        .any(|value| !value.is_finite())
+    {
+        return Err(EstimationError::Numerical(format!(
+            "nonfinite_estimate|PROCESS equation {outcome} produced an invalid coefficient"
+        )));
+    }
+    let fitted = normalized_design
+        .iter()
+        .map(|row| dot(row, &normalized_coefficients))
+        .collect::<Vec<_>>();
+    let residuals = outcome_values
+        .iter()
+        .zip(&fitted)
+        .map(|(actual, fitted)| actual - fitted)
+        .collect::<Vec<_>>();
+
+    let mut normalized_xtx_inverse = vec![vec![0.0; columns]; columns];
+    for row in 0..columns {
+        for column in 0..columns {
+            normalized_xtx_inverse[row][column] = (0..columns)
+                .map(|index| {
+                    right_singular_vectors[(row, index)] * right_singular_vectors[(column, index)]
+                        / singular_values[index].powi(2)
+                })
+                .sum();
+        }
+    }
+    let normalized_covariance = process_robust_covariance_hc3(
+        &normalized_design,
+        &residuals,
+        &normalized_xtx_inverse,
+        outcome,
+    )?;
+
+    let mut raw_transform = vec![vec![0.0; columns]; columns];
+    raw_transform[0][0] = 1.0;
+    for column in 1..columns {
+        raw_transform[0][column] = -centers[column] / scales[column];
+        raw_transform[column][column] = 1.0 / scales[column];
+    }
+    if raw_transform
+        .iter()
+        .flatten()
+        .any(|value| !value.is_finite())
+    {
+        return Err(EstimationError::Numerical(format!(
+            "nonfinite_estimate|PROCESS equation {outcome} could not back-transform normalized coefficients"
+        )));
+    }
+    let coefficients = matrix_vector_product(&raw_transform, &normalized_coefficients);
+    let mut covariance = vec![vec![0.0; columns]; columns];
+    for row in 0..columns {
+        for column in 0..columns {
+            for left in 0..columns {
+                for right in 0..columns {
+                    covariance[row][column] += raw_transform[row][left]
+                        * normalized_covariance[left][right]
+                        * raw_transform[column][right];
+                }
+            }
+        }
+    }
+    for row in 0..columns {
+        for column in 0..row {
+            let symmetric = (covariance[row][column] + covariance[column][row]) / 2.0;
+            covariance[row][column] = symmetric;
+            covariance[column][row] = symmetric;
+        }
+    }
+    if coefficients.iter().any(|value| !value.is_finite())
+        || covariance.iter().flatten().any(|value| !value.is_finite())
+    {
+        return Err(EstimationError::Numerical(format!(
+            "nonfinite_estimate|PROCESS equation {outcome} produced a nonfinite back-transform"
+        )));
+    }
+    Ok(ProcessScaleAwareFit {
+        coefficients,
+        residuals,
+        covariance,
+    })
+}
+
+fn fit_process_equation(
+    outcome: &str,
+    terms: &[ProcessTermSpec],
+    columns: &BTreeMap<String, Vec<f64>>,
+    profiles: &BTreeMap<&str, &ProcessVariableProfile>,
+    confidence_level: f64,
+    completed_equations: u64,
+    equation_total: u64,
+    control: &mut dyn FnMut(EstimationProgress) -> bool,
+) -> Result<ProcessEquation, EstimationError> {
+    let y = &columns[outcome];
+    let mut term_columns = Vec::with_capacity(terms.len());
+    for term in terms {
+        let mut values = Vec::with_capacity(y.len());
+        for row in 0..y.len() {
+            if row > 0 && row % 256 == 0 {
+                checkpoint(
+                    control,
+                    EstimationPhase::Iterating,
+                    completed_equations,
+                    equation_total,
+                )?;
+            }
+            values.push(term.variables.iter().try_fold(1.0, |product, variable| {
+                let profile = profiles
+                    .get(variable.as_str())
+                    .ok_or_else(|| EstimationError::InvalidIndicator(variable.clone()))?;
+                let raw = columns[variable][row];
+                let value = if term.variables.len() > 1 {
+                    process_centered_value(variable, raw, profile)
+                } else {
+                    raw
+                };
+                Ok(product * value)
+            })?);
+        }
+        term_columns.push(values);
+    }
+    let n = y.len();
+    let p = term_columns.len() + 1;
+    if n <= p {
+        return Err(EstimationError::RankDeficient(outcome.into()));
+    }
+    let design = regression_design_matrix(&term_columns);
+    let fit = process_scale_aware_ols(&design, y, outcome)?;
+    let beta = fit.coefficients;
+    let residuals = fit.residuals;
+    let rss = residuals.iter().map(|value| value.powi(2)).sum::<f64>();
+    let mean = vector_mean(y);
+    let tss = y.iter().map(|value| (value - mean).powi(2)).sum::<f64>();
+    let r_squared = if tss > f64::EPSILON {
+        1.0 - rss / tss
+    } else {
+        0.0
+    };
+    let residual_df = n - p;
+    let covariance = fit.covariance;
+    let distribution = StudentsT::new(0.0, 1.0, residual_df as f64)
+        .map_err(|error| EstimationError::Numerical(error.to_string()))?;
+    let critical = distribution.inverse_cdf(0.5 + confidence_level / 2.0);
+    let intercept = ProcessTermSpec {
+        id: "intercept".into(),
+        kind: "intercept".into(),
+        variables: Vec::new(),
+    };
+    let all_terms = std::iter::once(&intercept).chain(terms).collect::<Vec<_>>();
+    let coefficients = beta
+        .iter()
+        .zip(all_terms)
+        .enumerate()
+        .map(|(index, (estimate, term))| {
+            let standard_error =
+                process_standard_error_from_variance(covariance[index][index], outcome, &term.id)?;
+            if !estimate.is_finite() {
+                return Err(EstimationError::Numerical(format!(
+                    "nonfinite_estimate|PROCESS equation {outcome} produced an invalid coefficient"
+                )));
+            }
+            let statistic = estimate / standard_error;
+            Ok(ProcessEquationCoefficient {
+                term_id: term.id.clone(),
+                kind: term.kind.clone(),
+                variables: term.variables.clone(),
+                estimate: *estimate,
+                standard_error,
+                statistic,
+                p_value_two_sided: (2.0 * (1.0 - distribution.cdf(statistic.abs())))
+                    .clamp(0.0, 1.0),
+                confidence_interval_lower: estimate - critical * standard_error,
+                confidence_interval_upper: estimate + critical * standard_error,
+            })
+        })
+        .collect::<Result<Vec<_>, EstimationError>>()?;
+    let sigma2 = (rss / n as f64).max(f64::MIN_POSITIVE);
+    let f_statistic = if p > 1 && residual_df > 0 && r_squared < 1.0 {
+        (r_squared / (p - 1) as f64) / ((1.0 - r_squared) / residual_df as f64)
+    } else {
+        0.0
+    };
+    Ok(ProcessEquation {
+        equation_id: format!("equation:{outcome}"),
+        outcome: outcome.into(),
+        term_ids: coefficients.iter().map(|row| row.term_id.clone()).collect(),
+        coefficients,
+        coefficient_covariance: covariance,
+        residual_degrees_of_freedom: residual_df,
+        fit: ProcessEquationFit {
+            observations: n,
+            parameter_count: p,
+            residual_sum_squares: rss,
+            total_sum_squares: tss,
+            r_squared,
+            adjusted_r_squared: 1.0 - (1.0 - r_squared) * (n - 1) as f64 / residual_df as f64,
+            f_statistic,
+            aic: n as f64 * sigma2.ln() + 2.0 * p as f64,
+            bic: n as f64 * sigma2.ln() + (n as f64).ln() * p as f64,
+            rmse: (rss / n as f64).sqrt(),
+        },
+    })
+}
+
+fn enumerate_process_paths(
+    focal: &str,
+    outcome: &str,
+    paths: &[qpls_core::ProcessPathConfig],
+) -> Vec<Vec<String>> {
+    fn visit(
+        node: &str,
+        outcome: &str,
+        paths: &[qpls_core::ProcessPathConfig],
+        current: &mut Vec<String>,
+        result: &mut Vec<Vec<String>>,
+    ) {
+        if node == outcome {
+            result.push(current.clone());
+            return;
+        }
+        let mut outgoing = paths
+            .iter()
+            .filter(|path| path.from == node)
+            .collect::<Vec<_>>();
+        outgoing.sort_by(|left, right| left.to.cmp(&right.to));
+        for path in outgoing {
+            if !current.contains(&path.to) {
+                current.push(path.to.clone());
+                visit(&path.to, outcome, paths, current, result);
+                current.pop();
+            }
+        }
+    }
+    let mut result = Vec::new();
+    visit(
+        focal,
+        outcome,
+        paths,
+        &mut vec![focal.to_string()],
+        &mut result,
+    );
+    result.sort();
+    result
+}
+
+fn process_equation<'a>(
+    equations: &'a [ProcessEquation],
+    outcome: &str,
+) -> Result<&'a ProcessEquation, EstimationError> {
+    equations
+        .iter()
+        .find(|equation| equation.outcome == outcome)
+        .ok_or_else(|| EstimationError::Numerical(format!("missing PROCESS equation {outcome}")))
+}
+
+fn process_equation_coefficient<'a>(
+    equations: &'a [ProcessEquation],
+    outcome: &str,
+    variables: &[String],
+) -> Result<&'a ProcessEquationCoefficient, EstimationError> {
+    process_equation(equations, outcome)?
+        .coefficients
+        .iter()
+        .find(|coefficient| coefficient.variables == variables)
+        .ok_or_else(|| {
+            EstimationError::Numerical(format!(
+                "missing PROCESS coefficient {} in {outcome}",
+                variables.join("*")
+            ))
+        })
+}
+
+fn process_raw_to_coded(
+    variable: &str,
+    raw: f64,
+    profiles: &BTreeMap<&str, &ProcessVariableProfile>,
+) -> f64 {
+    let profile = profiles[variable];
+    if profile.scale == "binary_0_1" {
+        raw
+    } else {
+        raw - profile.raw_mean
+    }
+}
+
+struct ProcessSemanticProbe {
+    values: Vec<ProcessModeratorValue>,
+    suffix: String,
+}
+
+fn process_semantic_probe_levels(
+    profile: &ProcessVariableProfile,
+) -> Result<Vec<(f64, &'static str)>, EstimationError> {
+    if profile.scale == "binary_0_1" {
+        return Ok(vec![(0.0, "binary_0"), (1.0, "binary_1")]);
+    }
+    let levels = [
+        profile.raw_mean - profile.raw_sample_sd,
+        profile.raw_mean,
+        profile.raw_mean + profile.raw_sample_sd,
+    ];
+    if !levels.iter().all(|value| value.is_finite())
+        || !(levels[0] < levels[1] && levels[1] < levels[2])
+    {
+        return Err(EstimationError::Numerical(format!(
+            "collapsed_process_probe_grid|PROCESS continuous moderator {} does not have three distinct finite mean-minus-SD, mean, and mean-plus-SD probes in f64",
+            profile.variable
+        )));
+    }
+    Ok(vec![
+        (levels[0], "minus_1sd"),
+        (levels[1], "mean"),
+        (levels[2], "plus_1sd"),
+    ])
+}
+
+fn process_probe_grid(
+    moderation: &qpls_core::ProcessModerationConfig,
+    profiles: &BTreeMap<&str, &ProcessVariableProfile>,
+) -> Result<Vec<ProcessSemanticProbe>, EstimationError> {
+    let primary = profiles[moderation.moderator.as_str()];
+    let primary_values = process_semantic_probe_levels(primary)?;
+    let conditioning_values = moderation
+        .conditioning_moderator
+        .as_deref()
+        .map(|variable| process_semantic_probe_levels(profiles[variable]))
+        .transpose()?
+        .unwrap_or_else(|| vec![(0.0, "")]);
+    let mut result = Vec::new();
+    for (raw_primary, primary_token) in primary_values {
+        for (raw_conditioning, conditioning_token) in &conditioning_values {
+            let mut values = vec![ProcessModeratorValue {
+                variable: moderation.moderator.clone(),
+                raw_value: raw_primary,
+                coded_value: process_raw_to_coded(&moderation.moderator, raw_primary, profiles),
+            }];
+            let mut suffix = format!("{}={primary_token}", moderation.moderator);
+            if let Some(conditioning) = &moderation.conditioning_moderator {
+                values.push(ProcessModeratorValue {
+                    variable: conditioning.clone(),
+                    raw_value: *raw_conditioning,
+                    coded_value: process_raw_to_coded(conditioning, *raw_conditioning, profiles),
+                });
+                suffix.push_str(&format!(",{conditioning}={conditioning_token}"));
+            }
+            result.push(ProcessSemanticProbe { values, suffix });
+        }
+    }
+    Ok(result)
+}
+
+fn process_edge_slope(
+    from: &str,
+    to: &str,
+    probes: &[ProcessModeratorValue],
+    equations: &[ProcessEquation],
+    moderations: &[qpls_core::ProcessModerationConfig],
+) -> Result<f64, EstimationError> {
+    let coefficient = process_equation_coefficient(equations, to, &[from.to_string()])?;
+    let Some(moderation) = moderations
+        .iter()
+        .find(|moderation| moderation.from == from && moderation.to == to)
+    else {
+        return Ok(coefficient.estimate);
+    };
+    let primary = probes
+        .iter()
+        .find(|value| value.variable == moderation.moderator)
+        .map(|value| value.coded_value)
+        .unwrap_or(0.0);
+    let primary_interaction = process_equation_coefficient(
+        equations,
+        to,
+        &[from.to_string(), moderation.moderator.clone()],
+    )?;
+    let mut slope = coefficient.estimate + primary_interaction.estimate * primary;
+    if let Some(conditioning) = &moderation.conditioning_moderator {
+        let conditioning_value = probes
+            .iter()
+            .find(|value| value.variable == *conditioning)
+            .map(|value| value.coded_value)
+            .unwrap_or(0.0);
+        slope +=
+            process_equation_coefficient(equations, to, &[from.to_string(), conditioning.clone()])?
+                .estimate
+                * conditioning_value;
+        slope += process_equation_coefficient(
+            equations,
+            to,
+            &[
+                from.to_string(),
+                moderation.moderator.clone(),
+                conditioning.clone(),
+            ],
+        )?
+        .estimate
+            * primary
+            * conditioning_value;
+    }
+    Ok(slope)
+}
+
+fn process_path_effect(
+    path: &[String],
+    probes: &[ProcessModeratorValue],
+    equations: &[ProcessEquation],
+    moderations: &[qpls_core::ProcessModerationConfig],
+    _profiles: &BTreeMap<&str, &ProcessVariableProfile>,
+) -> Result<f64, EstimationError> {
+    path.windows(2).try_fold(1.0, |effect, edge| {
+        Ok(effect * process_edge_slope(&edge[0], &edge[1], probes, equations, moderations)?)
+    })
+}
+
+fn process_path_other_edge_product(
+    path: &[String],
+    excluded_from: &str,
+    excluded_to: &str,
+    equations: &[ProcessEquation],
+    moderations: &[qpls_core::ProcessModerationConfig],
+    _profiles: &BTreeMap<&str, &ProcessVariableProfile>,
+) -> Result<f64, EstimationError> {
+    path.windows(2).try_fold(1.0, |effect, edge| {
+        if edge[0] == excluded_from && edge[1] == excluded_to {
+            Ok(effect)
+        } else {
+            Ok(effect * process_edge_slope(&edge[0], &edge[1], &[], equations, moderations)?)
+        }
+    })
+}
+
+fn process_slope_weights(
+    equation: &ProcessEquation,
+    moderation: &qpls_core::ProcessModerationConfig,
+    probes: &[ProcessModeratorValue],
+) -> Result<Vec<f64>, EstimationError> {
+    let primary = probes
+        .iter()
+        .find(|value| value.variable == moderation.moderator)
+        .map(|value| value.coded_value)
+        .unwrap_or(0.0);
+    let conditioning = moderation
+        .conditioning_moderator
+        .as_ref()
+        .map(|variable| {
+            probes
+                .iter()
+                .find(|value| value.variable == *variable)
+                .map(|value| value.coded_value)
+                .unwrap_or(0.0)
+        })
+        .unwrap_or(0.0);
+    let mut weights = vec![0.0; equation.coefficients.len()];
+    for (index, coefficient) in equation.coefficients.iter().enumerate() {
+        weights[index] = if coefficient.variables == [moderation.from.clone()] {
+            1.0
+        } else if coefficient.variables == [moderation.from.clone(), moderation.moderator.clone()] {
+            primary
+        } else if moderation
+            .conditioning_moderator
+            .as_ref()
+            .is_some_and(|variable| {
+                coefficient.variables == [moderation.from.clone(), variable.clone()]
+            })
+        {
+            conditioning
+        } else if moderation
+            .conditioning_moderator
+            .as_ref()
+            .is_some_and(|variable| {
+                coefficient.variables
+                    == [
+                        moderation.from.clone(),
+                        moderation.moderator.clone(),
+                        variable.clone(),
+                    ]
+            })
+        {
+            primary * conditioning
+        } else {
+            0.0
+        };
+    }
+    if weights.iter().all(|weight| *weight == 0.0) {
+        return Err(EstimationError::Numerical(format!(
+            "missing PROCESS slope terms for {}->{}",
+            moderation.from, moderation.to
+        )));
+    }
+    Ok(weights)
+}
+
+fn process_linear_combination(
+    equation: &ProcessEquation,
+    weights: &[f64],
+) -> Result<(f64, f64), EstimationError> {
+    let estimate = equation
+        .coefficients
+        .iter()
+        .zip(weights)
+        .map(|(coefficient, weight)| coefficient.estimate * weight)
+        .sum::<f64>();
+    let variance = weights
+        .iter()
+        .enumerate()
+        .map(|(left, left_weight)| {
+            weights
+                .iter()
+                .enumerate()
+                .map(|(right, right_weight)| {
+                    left_weight * equation.coefficient_covariance[left][right] * right_weight
+                })
+                .sum::<f64>()
+        })
+        .sum::<f64>();
+    if !estimate.is_finite() || !variance.is_finite() || variance < 0.0 {
+        return Err(EstimationError::Numerical(
+            "nonfinite_covariance|PROCESS linear combination is not finite".into(),
+        ));
+    }
+    Ok((estimate, variance.sqrt()))
+}
+
+fn process_simple_slope(
+    moderation_id: &str,
+    moderation: &qpls_core::ProcessModerationConfig,
+    probes: &[ProcessModeratorValue],
+    probe_suffix: &str,
+    equations: &[ProcessEquation],
+    confidence_level: f64,
+) -> Result<ProcessGraphSimpleSlope, EstimationError> {
+    let equation = process_equation(equations, &moderation.to)?;
+    let weights = process_slope_weights(equation, moderation, probes)?;
+    let (estimate, standard_error) = process_linear_combination(equation, &weights)?;
+    if !standard_error.is_finite() || standard_error <= 0.0 {
+        return Err(EstimationError::Numerical(format!(
+            "degenerate_simple_slope_variance|PROCESS moderation {moderation_id} has nonpositive conditional-slope variance at the requested probe"
+        )));
+    }
+    let distribution = StudentsT::new(0.0, 1.0, equation.residual_degrees_of_freedom as f64)
+        .map_err(|error| EstimationError::Numerical(error.to_string()))?;
+    let critical = distribution.inverse_cdf(0.5 + confidence_level / 2.0);
+    let statistic = estimate / standard_error;
+    Ok(ProcessGraphSimpleSlope {
+        effect_id: format!("slope:{moderation_id}@{probe_suffix}"),
+        moderation_id: moderation_id.into(),
+        moderator_values: probes.to_vec(),
+        estimate,
+        standard_error,
+        statistic,
+        p_value_two_sided: (2.0 * (1.0 - distribution.cdf(statistic.abs()))).clamp(0.0, 1.0),
+        confidence_interval_lower: estimate - critical * standard_error,
+        confidence_interval_upper: estimate + critical * standard_error,
+    })
+}
+
+fn process_term_value(
+    variables: &[String],
+    raw_values: &BTreeMap<String, f64>,
+    profiles: &BTreeMap<&str, &ProcessVariableProfile>,
+) -> f64 {
+    variables.iter().fold(1.0, |product, variable| {
+        let raw = raw_values[variable];
+        let profile = profiles[variable.as_str()];
+        let value = if variables.len() > 1 {
+            process_centered_value(variable, raw, profile)
+        } else {
+            raw
+        };
+        product * value
+    })
+}
+
+fn process_plot(
+    moderation_id: &str,
+    moderation: &qpls_core::ProcessModerationConfig,
+    probes: &[ProcessSemanticProbe],
+    equations: &[ProcessEquation],
+    profiles: &BTreeMap<&str, &ProcessVariableProfile>,
+    confidence_level: f64,
+) -> Result<ProcessPlot, EstimationError> {
+    let equation = process_equation(equations, &moderation.to)?;
+    let focal_profile = profiles[moderation.from.as_str()];
+    let distribution = StudentsT::new(0.0, 1.0, equation.residual_degrees_of_freedom as f64)
+        .map_err(|error| EstimationError::Numerical(error.to_string()))?;
+    let critical = distribution.inverse_cdf(0.5 + confidence_level / 2.0);
+    let mut series = Vec::new();
+    for (series_index, probe) in probes.iter().enumerate() {
+        let mut points = Vec::new();
+        for point_index in 0..25 {
+            let x = focal_profile.raw_min
+                + (focal_profile.raw_max - focal_profile.raw_min) * point_index as f64 / 24.0;
+            let mut raw_values = profiles
+                .values()
+                .map(|profile| {
+                    (
+                        profile.variable.clone(),
+                        if profile.scale == "binary_0_1" {
+                            0.0
+                        } else {
+                            profile.raw_mean
+                        },
+                    )
+                })
+                .collect::<BTreeMap<_, _>>();
+            raw_values.insert(moderation.from.clone(), x);
+            for value in &probe.values {
+                raw_values.insert(value.variable.clone(), value.raw_value);
+            }
+            let design = equation
+                .coefficients
+                .iter()
+                .map(|coefficient| {
+                    if coefficient.kind == "intercept" {
+                        1.0
+                    } else {
+                        process_term_value(&coefficient.variables, &raw_values, profiles)
+                    }
+                })
+                .collect::<Vec<_>>();
+            let (predicted, standard_error) = process_linear_combination(equation, &design)?;
+            points.push(ProcessPlotPoint {
+                predictor_raw: x,
+                predicted_raw: predicted,
+                confidence_interval_lower: predicted - critical * standard_error,
+                confidence_interval_upper: predicted + critical * standard_error,
+            });
+        }
+        series.push(ProcessPlotSeries {
+            series_id: format!("series:{series_index}:{}", probe.suffix),
+            moderator_values: probe.values.clone(),
+            points,
+        });
+    }
+    Ok(ProcessPlot {
+        plot_id: format!("plot:{moderation_id}"),
+        moderation_id: moderation_id.into(),
+        series,
+    })
+}
+
+pub fn process_johnson_neyman_coded_roots(
+    quadratic: f64,
+    linear: f64,
+    constant: f64,
+    coded_min: f64,
+    coded_max: f64,
+) -> Vec<f64> {
+    if ![quadratic, linear, constant, coded_min, coded_max]
+        .iter()
+        .all(|value| value.is_finite())
+        || coded_min > coded_max
+    {
+        return Vec::new();
+    }
+    let midpoint = coded_min / 2.0 + coded_max / 2.0;
+    let half_range = coded_max / 2.0 - coded_min / 2.0;
+    if !midpoint.is_finite() || !half_range.is_finite() || half_range <= 0.0 {
+        return Vec::new();
+    }
+    let domain_quadratic = quadratic * half_range * half_range;
+    let domain_linear = half_range * (2.0 * quadratic * midpoint + linear);
+    let domain_constant = quadratic * midpoint * midpoint + linear * midpoint + constant;
+    if ![domain_quadratic, domain_linear, domain_constant]
+        .iter()
+        .all(|value| value.is_finite())
+    {
+        return Vec::new();
+    }
+    let coefficient_scale = domain_quadratic
+        .abs()
+        .max(domain_linear.abs())
+        .max(domain_constant.abs());
+    if coefficient_scale == 0.0 {
+        return Vec::new();
+    }
+    let a = domain_quadratic / coefficient_scale;
+    let b = domain_linear / coefficient_scale;
+    let c = domain_constant / coefficient_scale;
+    let coefficient_tolerance = PROCESS_JN_COEFFICIENT_TOLERANCE_MULTIPLIER * f64::EPSILON;
+    let mut roots = Vec::new();
+    if a.abs() <= coefficient_tolerance {
+        if b.abs() > coefficient_tolerance {
+            roots.push(-c / b);
+        }
+    } else {
+        let discriminant_left = b * b;
+        let discriminant_right = 4.0 * a * c;
+        let discriminant = discriminant_left - discriminant_right;
+        let discriminant_scale = discriminant_left
+            .abs()
+            .max(discriminant_right.abs())
+            .max(f64::MIN_POSITIVE);
+        let discriminant_tolerance =
+            PROCESS_JN_COEFFICIENT_TOLERANCE_MULTIPLIER * f64::EPSILON * discriminant_scale;
+        if discriminant >= -discriminant_tolerance {
+            let square_root = if discriminant.abs() <= discriminant_tolerance {
+                0.0
+            } else {
+                discriminant.sqrt()
+            };
+            if square_root == 0.0 {
+                roots.push(-b / (2.0 * a));
+            } else {
+                let q = -0.5 * (b + square_root.copysign(b));
+                if q == 0.0 {
+                    roots.push(-b / (2.0 * a));
+                } else {
+                    roots.push(q / a);
+                    roots.push(c / q);
+                }
+            }
+        }
+    }
+    let domain_tolerance = PROCESS_JN_ROOT_DEDUP_TOLERANCE_MULTIPLIER * f64::EPSILON;
+    roots.retain(|root| {
+        root.is_finite() && *root >= -1.0 - domain_tolerance && *root <= 1.0 + domain_tolerance
+    });
+    for root in &mut roots {
+        *root = root.clamp(-1.0, 1.0);
+    }
+    roots.sort_by(f64::total_cmp);
+    roots.dedup_by(|left, right| {
+        let root_scale = left.abs().max(right.abs()).max(1.0);
+        (*left - *right).abs()
+            <= PROCESS_JN_ROOT_DEDUP_TOLERANCE_MULTIPLIER * f64::EPSILON * root_scale
+    });
+    roots.iter_mut().for_each(|root| {
+        *root = if *root <= 0.0 {
+            coded_min + half_range * (*root + 1.0)
+        } else {
+            coded_max - half_range * (1.0 - *root)
+        };
+    });
+    let range_scale = coded_min
+        .abs()
+        .max(coded_max.abs())
+        .max((coded_max - coded_min).abs())
+        .max(f64::MIN_POSITIVE);
+    let range_tolerance = PROCESS_JN_ROOT_DEDUP_TOLERANCE_MULTIPLIER * f64::EPSILON * range_scale;
+    if roots.len() == 2 && quadratic != 0.0 {
+        let mapped = roots.clone();
+        for target in 0..2 {
+            let other = mapped[1 - target];
+            let denominator = quadratic * other;
+            if denominator.is_finite() && denominator != 0.0 {
+                let companion = constant / denominator;
+                let at_boundary = roots[target].to_bits() == coded_min.to_bits()
+                    || roots[target].to_bits() == coded_max.to_bits();
+                if at_boundary
+                    && companion.is_finite()
+                    && companion >= coded_min - range_tolerance
+                    && companion <= coded_max + range_tolerance
+                {
+                    roots[target] = companion.clamp(coded_min, coded_max);
+                }
+            }
+        }
+    }
+    roots.retain(|root| {
+        root.is_finite()
+            && *root >= coded_min - range_tolerance
+            && *root <= coded_max + range_tolerance
+    });
+    roots.sort_by(f64::total_cmp);
+    roots.dedup_by(|left, right| left.to_bits() == right.to_bits());
+    roots
+}
+
+fn process_jn_variance(v0: f64, v1: f64, v2: f64, coded: f64) -> Option<f64> {
+    let variance = v0 + 2.0 * v1 * coded + v2 * coded * coded;
+    (variance.is_finite() && variance > 0.0).then_some(variance)
+}
+
+fn process_jn_variance_is_positive_across_range(
+    v0: f64,
+    v1: f64,
+    v2: f64,
+    coded_min: f64,
+    coded_max: f64,
+) -> bool {
+    if process_jn_variance(v0, v1, v2, coded_min).is_none()
+        || process_jn_variance(v0, v1, v2, coded_max).is_none()
+    {
+        return false;
+    }
+    if v2 > 0.0 {
+        let vertex = -v1 / v2;
+        if vertex > coded_min
+            && vertex < coded_max
+            && process_jn_variance(v0, v1, v2, vertex).is_none()
+        {
+            return false;
+        }
+    }
+    true
+}
+
+fn process_johnson_neyman(
+    moderation_id: &str,
+    moderation: &qpls_core::ProcessModerationConfig,
+    equations: &[ProcessEquation],
+    profiles: &BTreeMap<&str, &ProcessVariableProfile>,
+    confidence_level: f64,
+) -> Result<Vec<ProcessJohnsonNeyman>, EstimationError> {
+    let solved_profile = profiles[moderation.moderator.as_str()];
+    let conditioning_grids = moderation
+        .conditioning_moderator
+        .as_ref()
+        .map(|variable| {
+            process_semantic_probe_levels(profiles[variable.as_str()]).map(|levels| {
+                levels
+                    .into_iter()
+                    .map(|(raw, _)| {
+                        vec![ProcessModeratorValue {
+                            variable: variable.clone(),
+                            raw_value: raw,
+                            coded_value: process_raw_to_coded(variable, raw, profiles),
+                        }]
+                    })
+                    .collect::<Vec<_>>()
+            })
+        })
+        .transpose()?
+        .unwrap_or_else(|| vec![Vec::new()]);
+    if solved_profile.scale == "binary_0_1" {
+        return Ok(conditioning_grids
+            .into_iter()
+            .map(|conditioning_values| ProcessJohnsonNeyman::Unavailable {
+                moderation_id: moderation_id.into(),
+                solved_moderator: moderation.moderator.clone(),
+                conditioning_values,
+                reason_code: "binary_solved_moderator".into(),
+                message: "Johnson-Neyman regions require a continuous solved moderator.".into(),
+            })
+            .collect());
+    }
+    let equation = process_equation(equations, &moderation.to)?;
+    let distribution = StudentsT::new(0.0, 1.0, equation.residual_degrees_of_freedom as f64)
+        .map_err(|error| EstimationError::Numerical(error.to_string()))?;
+    let critical = distribution.inverse_cdf(0.5 + confidence_level / 2.0);
+    let coded_min = solved_profile.raw_min - solved_profile.raw_mean;
+    let coded_max = solved_profile.raw_max - solved_profile.raw_mean;
+    let mut results = Vec::new();
+    for conditioning_values in conditioning_grids {
+        let mut at_zero = conditioning_values.clone();
+        at_zero.push(ProcessModeratorValue {
+            variable: moderation.moderator.clone(),
+            raw_value: solved_profile.raw_mean,
+            coded_value: 0.0,
+        });
+        let mut at_one = conditioning_values.clone();
+        at_one.push(ProcessModeratorValue {
+            variable: moderation.moderator.clone(),
+            raw_value: solved_profile.raw_mean + 1.0,
+            coded_value: 1.0,
+        });
+        let weights_zero = process_slope_weights(equation, moderation, &at_zero)?;
+        let weights_one = process_slope_weights(equation, moderation, &at_one)?;
+        let weights_delta = weights_one
+            .iter()
+            .zip(&weights_zero)
+            .map(|(one, zero)| one - zero)
+            .collect::<Vec<_>>();
+        let a = equation
+            .coefficients
+            .iter()
+            .zip(&weights_zero)
+            .map(|(coefficient, weight)| coefficient.estimate * weight)
+            .sum::<f64>();
+        let b = equation
+            .coefficients
+            .iter()
+            .zip(&weights_delta)
+            .map(|(coefficient, weight)| coefficient.estimate * weight)
+            .sum::<f64>();
+        let covariance_form = |left: &[f64], right: &[f64]| {
+            left.iter()
+                .enumerate()
+                .map(|(i, left_weight)| {
+                    right
+                        .iter()
+                        .enumerate()
+                        .map(|(j, right_weight)| {
+                            left_weight * equation.coefficient_covariance[i][j] * right_weight
+                        })
+                        .sum::<f64>()
+                })
+                .sum::<f64>()
+        };
+        let v0 = covariance_form(&weights_zero, &weights_zero);
+        let v1 = covariance_form(&weights_zero, &weights_delta);
+        let v2 = covariance_form(&weights_delta, &weights_delta);
+        if ![a, b, v0, v1, v2].iter().all(|value| value.is_finite()) {
+            results.push(ProcessJohnsonNeyman::Unavailable {
+                moderation_id: moderation_id.into(),
+                solved_moderator: moderation.moderator.clone(),
+                conditioning_values,
+                reason_code: PROCESS_JN_INVALID_COVARIANCE_REASON.into(),
+                message: PROCESS_JN_INVALID_COVARIANCE_MESSAGE.into(),
+            });
+            continue;
+        }
+        if !process_jn_variance_is_positive_across_range(v0, v1, v2, coded_min, coded_max) {
+            results.push(ProcessJohnsonNeyman::Unavailable {
+                moderation_id: moderation_id.into(),
+                solved_moderator: moderation.moderator.clone(),
+                conditioning_values,
+                reason_code: PROCESS_JN_INVALID_COVARIANCE_REASON.into(),
+                message: PROCESS_JN_INVALID_COVARIANCE_MESSAGE.into(),
+            });
+            continue;
+        }
+        let qa = b * b - critical * critical * v2;
+        let qb = 2.0 * (a * b - critical * critical * v1);
+        let qc = a * a - critical * critical * v0;
+        let coded_roots = process_johnson_neyman_coded_roots(qa, qb, qc, coded_min, coded_max);
+        let roots = coded_roots
+            .iter()
+            .map(|root| root + solved_profile.raw_mean)
+            .collect::<Vec<_>>();
+        let mut boundaries = vec![solved_profile.raw_min];
+        boundaries.extend(roots.iter().copied());
+        boundaries.push(solved_profile.raw_max);
+        let regions = boundaries
+            .windows(2)
+            .map(|region| {
+                let raw = (region[0] + region[1]) / 2.0;
+                let coded = raw - solved_profile.raw_mean;
+                let effect = a + b * coded;
+                let variance = process_jn_variance(v0, v1, v2, coded)?;
+                let margin = critical * variance.sqrt();
+                let status = if effect + margin < 0.0 {
+                    "significant_negative"
+                } else if effect - margin > 0.0 {
+                    "significant_positive"
+                } else {
+                    "not_significant"
+                };
+                Some(ProcessJohnsonNeymanRegion {
+                    lower: region[0],
+                    upper: region[1],
+                    status: status.into(),
+                })
+            })
+            .collect::<Option<Vec<_>>>();
+        let Some(regions) = regions else {
+            results.push(ProcessJohnsonNeyman::Unavailable {
+                moderation_id: moderation_id.into(),
+                solved_moderator: moderation.moderator.clone(),
+                conditioning_values,
+                reason_code: PROCESS_JN_INVALID_COVARIANCE_REASON.into(),
+                message: PROCESS_JN_INVALID_COVARIANCE_MESSAGE.into(),
+            });
+            continue;
+        };
+        let curve_points = (0..101)
+            .map(|index| {
+                let raw = solved_profile.raw_min
+                    + (solved_profile.raw_max - solved_profile.raw_min) * index as f64 / 100.0;
+                let coded = raw - solved_profile.raw_mean;
+                let effect = a + b * coded;
+                let standard_error = process_jn_variance(v0, v1, v2, coded)?.sqrt();
+                Some(ProcessJohnsonNeymanPoint {
+                    moderator_raw: raw,
+                    effect,
+                    standard_error,
+                    confidence_interval_lower: effect - critical * standard_error,
+                    confidence_interval_upper: effect + critical * standard_error,
+                })
+            })
+            .collect::<Option<Vec<_>>>();
+        let Some(curve_points) = curve_points else {
+            results.push(ProcessJohnsonNeyman::Unavailable {
+                moderation_id: moderation_id.into(),
+                solved_moderator: moderation.moderator.clone(),
+                conditioning_values,
+                reason_code: PROCESS_JN_INVALID_COVARIANCE_REASON.into(),
+                message: PROCESS_JN_INVALID_COVARIANCE_MESSAGE.into(),
+            });
+            continue;
+        };
+        results.push(ProcessJohnsonNeyman::Available {
+            moderation_id: moderation_id.into(),
+            solved_moderator: moderation.moderator.clone(),
+            conditioning_values,
+            raw_min: solved_profile.raw_min,
+            raw_max: solved_profile.raw_max,
+            roots,
+            regions,
+            curve_points,
+        });
+    }
+    Ok(results)
 }
 
 fn nca_scope(x: &[f64], y: &[f64]) -> NcaScope {
@@ -12234,6 +14767,7 @@ fn multiply_square(left: &[Vec<f64>], right: &[Vec<f64>]) -> Vec<Vec<f64>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use approx::assert_relative_eq;
     use arrow::{
         array::Float64Array,
         datatypes::{DataType, Field, Schema},
@@ -12243,8 +14777,10 @@ mod tests {
     use qpls_core::{
         ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisSettings, Construct, ControlPath,
         HigherOrderConstruct, HigherOrderMethod, InteractionMethod, InteractionTerm, MethodConfig,
-        ModelSpec, NcaCeiling, PcaRetentionConfig, RegressionBootstrapAlgorithm,
-        RegressionBootstrapConfig, RegressionBootstrapInterval, StructuralPath,
+        ModelSpec, NcaCeiling, PcaRetentionConfig, ProcessContinuousCentering,
+        ProcessModerationConfig, ProcessModeratorConfig, ProcessModeratorScale, ProcessPathConfig,
+        ProcessRelationshipConfig, RegressionBootstrapAlgorithm, RegressionBootstrapConfig,
+        RegressionBootstrapInterval, StructuralPath,
     };
     use qpls_data::{
         ColumnMetadata, ColumnType, DataFingerprint, DataKind, DatasetSchema, ImportOptions,
@@ -12284,6 +14820,864 @@ mod tests {
             }),
             metadata: BTreeMap::new(),
         }
+    }
+
+    fn process_graph_csv(
+        row_indices: impl IntoIterator<Item = usize>,
+        include_irrelevant: bool,
+    ) -> String {
+        let mut csv = if include_irrelevant {
+            String::from("X,M,W,B,C,Y,Unused\n")
+        } else {
+            String::from("X,M,W,B,C,Y\n")
+        };
+        for index in row_indices {
+            let x = index as f64 / 10.0 - 4.0;
+            let w = ((index * 7) % 19) as f64 / 5.0 - 1.8;
+            let b = (index % 2) as f64;
+            let c = ((index * 11) % 23) as f64 / 7.0 - 1.5;
+            let noise_m = ((index * 13) % 17) as f64 / 100.0 - 0.08;
+            let noise_y = ((index * 5) % 29) as f64 / 120.0 - 0.12;
+            let m = 0.5 * x + 0.25 * x * w + 0.1 * c + noise_m;
+            let y = 0.2 * x
+                + 0.7 * m
+                + 0.3 * x * w
+                + 0.15 * x * b
+                + 0.12 * x * w * b
+                + 0.08 * c
+                + noise_y;
+            csv.push_str(&format!("{x},{m},{w},{b},{c},{y}"));
+            if include_irrelevant {
+                csv.push_str(&format!(",{}", (index * 31 % 47) as f64 / 9.0));
+            }
+            csv.push('\n');
+        }
+        csv
+    }
+
+    fn process_graph_fixture() -> (Dataset, AnalysisRecipe) {
+        let csv = process_graph_csv(0..80, false);
+        let dataset = import_delimited_bytes(
+            csv.as_bytes(),
+            "process-graph-v2.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut settings = AnalysisSettings::default();
+        settings.method = AnalysisMethod::Regression;
+        settings.preprocessing = Preprocessing::Unstandardized;
+        settings.confidence_level = 0.95;
+        let recipe = AnalysisRecipe {
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
+            id: Uuid::new_v4(),
+            created_at: Utc::now(),
+            dataset_fingerprint: dataset.fingerprint.0.clone(),
+            model: ModelSpec {
+                id: Uuid::new_v4(),
+                name: "PROCESS graph v2".into(),
+                constructs: Vec::new(),
+                paths: Vec::new(),
+                controls: Vec::new(),
+                higher_order_constructs: Vec::new(),
+                interactions: Vec::new(),
+            },
+            settings,
+            method_config: Some(MethodConfig::Regression {
+                outcome: "Y".into(),
+                predictors: vec!["X".into(), "M".into(), "W".into(), "B".into()],
+                controls: vec!["C".into()],
+                model: RegressionModelConfig::Process {
+                    relationship: ProcessRelationshipConfig::Graph {
+                        focal_predictor: "X".into(),
+                        paths: vec![
+                            ProcessPathConfig {
+                                from: "M".into(),
+                                to: "Y".into(),
+                            },
+                            ProcessPathConfig {
+                                from: "X".into(),
+                                to: "Y".into(),
+                            },
+                            ProcessPathConfig {
+                                from: "X".into(),
+                                to: "M".into(),
+                            },
+                        ],
+                        moderators: vec![
+                            ProcessModeratorConfig {
+                                variable: "W".into(),
+                                scale: ProcessModeratorScale::Continuous,
+                            },
+                            ProcessModeratorConfig {
+                                variable: "B".into(),
+                                scale: ProcessModeratorScale::Binary01,
+                            },
+                        ],
+                        moderations: vec![
+                            ProcessModerationConfig {
+                                from: "X".into(),
+                                to: "Y".into(),
+                                moderator: "W".into(),
+                                conditioning_moderator: Some("B".into()),
+                            },
+                            ProcessModerationConfig {
+                                from: "X".into(),
+                                to: "M".into(),
+                                moderator: "W".into(),
+                                conditioning_moderator: None,
+                            },
+                        ],
+                        continuous_product_centering:
+                            ProcessContinuousCentering::EquationCompleteCaseMeanV1,
+                    },
+                },
+                bootstrap: None,
+            }),
+            metadata: BTreeMap::new(),
+        };
+        (dataset, recipe)
+    }
+
+    #[test]
+    fn process_graph_v2_parallel_serial_moderation_and_effect_arithmetic() {
+        let (dataset, recipe) = process_graph_fixture();
+        let result = estimate_pls(&dataset, &recipe).unwrap();
+        assert_eq!(result.method_version, REGRESSION_PROCESS_METHOD_VERSION);
+        let process = result.regression.unwrap().process.unwrap();
+        assert_eq!(process.model, "graph");
+        let graph = process.graph_v2.unwrap();
+        assert_eq!(graph.complete_cases, 80);
+        assert_eq!(
+            graph
+                .paths
+                .iter()
+                .map(|path| path.path_id.as_str())
+                .collect::<Vec<_>>(),
+            vec!["X->M", "X->Y", "M->Y"]
+        );
+        assert_eq!(
+            graph
+                .equations
+                .iter()
+                .map(|equation| equation.outcome.as_str())
+                .collect::<Vec<_>>(),
+            vec!["M", "Y"]
+        );
+        let effects = graph
+            .reference_effects
+            .iter()
+            .map(|effect| (effect.kind.as_str(), effect.estimate))
+            .collect::<BTreeMap<_, _>>();
+        assert!((effects["total"] - effects["direct"] - effects["total_indirect"]).abs() < 1e-10);
+        assert_eq!(graph.moderated_mediation_indices.len(), 1);
+        assert_eq!(graph.conditional_indirect_effects.len(), 3);
+        assert_eq!(graph.plots.len(), 2);
+        let effect_ids = graph
+            .reference_effects
+            .iter()
+            .map(|row| row.effect_id.as_str())
+            .chain(
+                graph
+                    .conditional_indirect_effects
+                    .iter()
+                    .map(|row| row.effect_id.as_str()),
+            )
+            .chain(
+                graph
+                    .moderated_mediation_indices
+                    .iter()
+                    .map(|row| row.effect_id.as_str()),
+            )
+            .chain(graph.simple_slopes.iter().map(|row| row.effect_id.as_str()))
+            .collect::<Vec<_>>();
+        assert_eq!(
+            effect_ids.iter().copied().collect::<HashSet<_>>().len(),
+            effect_ids.len()
+        );
+        assert!(
+            graph
+                .simple_slopes
+                .iter()
+                .any(|row| { row.effect_id.starts_with("slope:moderation:X->M@W@W=") })
+        );
+        assert!(
+            graph
+                .simple_slopes
+                .iter()
+                .any(|row| { row.effect_id.starts_with("slope:moderation:X->Y@W|B@W=") })
+        );
+        assert!(
+            graph
+                .plots
+                .iter()
+                .all(|plot| plot.series.iter().all(|series| series.points.len() == 25))
+        );
+    }
+
+    #[test]
+    fn process_graph_v2_serialization_omits_only_default_legacy_pls_shells() {
+        let (dataset, recipe) = process_graph_fixture();
+        let result = estimate_pls(&dataset, &recipe).unwrap();
+        assert_eq!(result.mediation, MediationAnalysis::default());
+        assert_eq!(result.moderation, ModerationAnalysis::default());
+
+        let serialized = serde_json::to_value(&result).unwrap();
+        assert!(serialized.get("mediation").is_none());
+        assert!(serialized.get("moderation").is_none());
+        let decoded: PlsResult = serde_json::from_value(serialized).unwrap();
+        assert_eq!(decoded.mediation, MediationAnalysis::default());
+        assert_eq!(decoded.moderation, ModerationAnalysis::default());
+
+        let (pls_dataset, pls_recipe) = fixture();
+        let pls = estimate_pls(&pls_dataset, &pls_recipe).unwrap();
+        assert!(!pls.mediation.estimates.is_empty());
+        assert!(
+            serde_json::to_value(&pls)
+                .unwrap()
+                .get("mediation")
+                .is_some()
+        );
+
+        let mut populated = result;
+        populated
+            .moderation
+            .warnings
+            .push("non-default moderation shell".into());
+        assert!(
+            serde_json::to_value(&populated)
+                .unwrap()
+                .get("moderation")
+                .is_some()
+        );
+    }
+
+    #[test]
+    fn process_graph_v2_point_is_row_irrelevant_column_and_recipe_order_invariant() {
+        fn assert_close(left: &serde_json::Value, right: &serde_json::Value, location: &str) {
+            match (left, right) {
+                (serde_json::Value::Number(left), serde_json::Value::Number(right)) => {
+                    let left = left.as_f64().unwrap();
+                    let right = right.as_f64().unwrap();
+                    let tolerance = 1.0e-10 * 1.0_f64.max(left.abs()).max(right.abs());
+                    assert!(
+                        (left - right).abs() <= tolerance,
+                        "PROCESS metamorphic numeric mismatch at {location}: {left:.17e} vs {right:.17e}"
+                    );
+                }
+                (serde_json::Value::Array(left), serde_json::Value::Array(right)) => {
+                    assert_eq!(
+                        left.len(),
+                        right.len(),
+                        "array length mismatch at {location}"
+                    );
+                    for (index, (left, right)) in left.iter().zip(right).enumerate() {
+                        assert_close(left, right, &format!("{location}[{index}]"));
+                    }
+                }
+                (serde_json::Value::Object(left), serde_json::Value::Object(right)) => {
+                    assert_eq!(
+                        left.keys().collect::<BTreeSet<_>>(),
+                        right.keys().collect::<BTreeSet<_>>(),
+                        "object keys mismatch at {location}"
+                    );
+                    for (key, left) in left {
+                        assert_close(left, &right[key], &format!("{location}.{key}"));
+                    }
+                }
+                _ => assert_eq!(left, right, "PROCESS metamorphic mismatch at {location}"),
+            }
+        }
+
+        let (base_dataset, base_recipe) = process_graph_fixture();
+        let base_graph = estimate_pls(&base_dataset, &base_recipe)
+            .unwrap()
+            .regression
+            .unwrap()
+            .process
+            .unwrap()
+            .graph_v2
+            .unwrap();
+
+        let reversed_dataset = import_delimited_bytes(
+            process_graph_csv((0..80).rev(), false).as_bytes(),
+            "process-graph-v2-reversed.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut reversed_recipe = base_recipe.clone();
+        reversed_recipe.dataset_fingerprint = reversed_dataset.fingerprint.0.clone();
+        let reversed_graph = estimate_pls(&reversed_dataset, &reversed_recipe)
+            .unwrap()
+            .regression
+            .unwrap()
+            .process
+            .unwrap()
+            .graph_v2
+            .unwrap();
+        assert_close(
+            &serde_json::to_value(&base_graph).unwrap(),
+            &serde_json::to_value(&reversed_graph).unwrap(),
+            "row_order",
+        );
+
+        let irrelevant_dataset = import_delimited_bytes(
+            process_graph_csv(0..80, true).as_bytes(),
+            "process-graph-v2-irrelevant.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut irrelevant_recipe = base_recipe.clone();
+        irrelevant_recipe.dataset_fingerprint = irrelevant_dataset.fingerprint.0.clone();
+        let irrelevant_graph = estimate_pls(&irrelevant_dataset, &irrelevant_recipe)
+            .unwrap()
+            .regression
+            .unwrap()
+            .process
+            .unwrap()
+            .graph_v2
+            .unwrap();
+        assert_eq!(base_graph, irrelevant_graph);
+
+        let mut permuted_recipe = base_recipe;
+        if let Some(MethodConfig::Regression {
+            model:
+                RegressionModelConfig::Process {
+                    relationship:
+                        ProcessRelationshipConfig::Graph {
+                            paths, moderations, ..
+                        },
+                },
+            ..
+        }) = permuted_recipe.method_config.as_mut()
+        {
+            paths.reverse();
+            moderations.reverse();
+        } else {
+            panic!("PROCESS graph fixture lost its typed relationship");
+        }
+        let permuted_graph = estimate_pls(&base_dataset, &permuted_recipe)
+            .unwrap()
+            .regression
+            .unwrap()
+            .process
+            .unwrap()
+            .graph_v2
+            .unwrap();
+        assert_eq!(base_graph, permuted_graph);
+    }
+
+    #[test]
+    fn process_graph_v2_hc3_simple_slopes_and_johnson_neyman() {
+        let (dataset, recipe) = process_graph_fixture();
+        let result = estimate_pls(&dataset, &recipe).unwrap();
+        let graph = result
+            .regression
+            .unwrap()
+            .process
+            .unwrap()
+            .graph_v2
+            .unwrap();
+        assert_eq!(graph.policies.covariance, "hc3_v1");
+        assert_eq!(graph.simple_slopes.len(), 9);
+        assert!(
+            graph
+                .simple_slopes
+                .iter()
+                .all(|slope| slope.standard_error > 0.0 && slope.statistic.is_finite())
+        );
+        assert_eq!(graph.johnson_neyman.len(), 3);
+        assert!(graph.johnson_neyman.iter().all(|row| match row {
+            ProcessJohnsonNeyman::Available { curve_points, .. } => curve_points.len() == 101,
+            ProcessJohnsonNeyman::Unavailable { reason_code, .. } =>
+                reason_code == "binary_solved_moderator",
+        }));
+    }
+
+    #[test]
+    fn process_graph_v2_rejects_exact_binary_endogenous_outcomes_in_original_sample() {
+        for binary_variable in ["M", "Y"] {
+            let mut csv = String::from("X,M,W,B,C,Y\n");
+            for index in 0..80 {
+                let x = index as f64 / 10.0 - 4.0;
+                let w = ((index * 7) % 19) as f64 / 5.0 - 1.8;
+                let b = (index % 2) as f64;
+                let target_binary = (((index * 13) % 7) < 3) as u8 as f64;
+                let c = ((index * 11) % 23) as f64 / 7.0 - 1.5;
+                let m = if binary_variable == "M" {
+                    target_binary
+                } else {
+                    0.5 * x + 0.25 * x * w + 0.1 * c + ((index * 5 % 17) as f64 - 8.0) / 100.0
+                };
+                let y = if binary_variable == "Y" {
+                    target_binary
+                } else {
+                    0.2 * x
+                        + 0.7 * m
+                        + 0.3 * x * w
+                        + 0.08 * c
+                        + ((index * 9 % 19) as f64 - 9.0) / 120.0
+                };
+                csv.push_str(&format!("{x},{m},{w},{b},{c},{y}\n"));
+            }
+            let dataset = import_delimited_bytes(
+                csv.as_bytes(),
+                &format!("process-binary-{binary_variable}.csv"),
+                b',',
+                &ImportOptions::default(),
+            )
+            .unwrap();
+            let (_, mut recipe) = process_graph_fixture();
+            recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+            assert!(matches!(
+                estimate_pls(&dataset, &recipe),
+                Err(EstimationError::UnsupportedMethod(message))
+                    if message.starts_with("binary_process_equation_outcome|")
+                        && message.contains(binary_variable)
+            ));
+            let mut uninterrupted = |_| true;
+            let resample_fit =
+                process_analysis(&dataset, &recipe, false, &mut uninterrupted).unwrap();
+            assert!(resample_fit.graph_v2.is_some());
+        }
+    }
+
+    #[test]
+    fn process_graph_v2_scale_aware_svd_is_affine_unit_invariant_and_rejects_relative_collinearity()
+    {
+        let rows = 80;
+        let base_design = (0..rows)
+            .map(|index| {
+                let x = index as f64 / 9.0 - 4.0;
+                vec![1.0, x]
+            })
+            .collect::<Vec<_>>();
+        let outcome = base_design
+            .iter()
+            .enumerate()
+            .map(|(index, row)| 1.25 + 0.75 * row[1] + ((index * 7 % 13) as f64 - 6.0) / 100.0)
+            .collect::<Vec<_>>();
+        let base = process_scale_aware_ols(&base_design, &outcome, "Y").unwrap();
+        let unit_scale = 1.0e-9;
+        let shift = 4.5;
+        let transformed_design = base_design
+            .iter()
+            .map(|row| vec![1.0, unit_scale * (row[1] + shift)])
+            .collect::<Vec<_>>();
+        let transformed = process_scale_aware_ols(&transformed_design, &outcome, "Y").unwrap();
+        let base_fitted = outcome
+            .iter()
+            .zip(&base.residuals)
+            .map(|(actual, residual)| actual - residual)
+            .collect::<Vec<_>>();
+        let transformed_fitted = outcome
+            .iter()
+            .zip(&transformed.residuals)
+            .map(|(actual, residual)| actual - residual)
+            .collect::<Vec<_>>();
+        for (left, right) in base_fitted.iter().zip(&transformed_fitted) {
+            assert_relative_eq!(left, right, epsilon = 1.0e-10, max_relative = 1.0e-10);
+        }
+        assert_relative_eq!(
+            transformed.coefficients[1] * unit_scale,
+            base.coefficients[1],
+            epsilon = 1.0e-10,
+            max_relative = 1.0e-10
+        );
+        assert_relative_eq!(
+            transformed.coefficients[0],
+            base.coefficients[0] - base.coefficients[1] * shift,
+            epsilon = 1.0e-9,
+            max_relative = 1.0e-9
+        );
+        assert_relative_eq!(
+            transformed.covariance[1][1] * unit_scale.powi(2),
+            base.covariance[1][1],
+            epsilon = 1.0e-10,
+            max_relative = 1.0e-9
+        );
+        assert_relative_eq!(
+            transformed.coefficients[1] / transformed.covariance[1][1].sqrt(),
+            base.coefficients[1] / base.covariance[1][1].sqrt(),
+            epsilon = 1.0e-9,
+            max_relative = 1.0e-9
+        );
+
+        let near_collinear = (0..rows)
+            .map(|index| {
+                let x = index as f64 / 9.0 - 4.0;
+                let perturbation = ((index * 11 % 17) as f64 - 8.0) * 1.0e-14;
+                vec![1.0, x, x + perturbation]
+            })
+            .collect::<Vec<_>>();
+        assert!(matches!(
+            process_scale_aware_ols(&near_collinear, &outcome, "Y"),
+            Err(EstimationError::RankDeficient(subject)) if subject == "Y"
+        ));
+    }
+
+    #[test]
+    fn process_graph_v2_jn_root_solver_is_affine_stable_and_deduplicates_near_double_roots() {
+        let roots = process_johnson_neyman_coded_roots(1.0, -1.0, -2.0, -3.0, 3.0);
+        assert_eq!(roots.len(), 2);
+        assert_relative_eq!(roots[0], -1.0, epsilon = 1.0e-12);
+        assert_relative_eq!(roots[1], 2.0, epsilon = 1.0e-12);
+
+        for scale in [1.0e-10_f64, 1.0e10_f64] {
+            let shift = 7.0 * scale;
+            let transformed_quadratic = 1.0 / scale.powi(2);
+            let transformed_linear = -1.0 / scale - 2.0 * shift / scale.powi(2);
+            let transformed_constant = -2.0 + shift / scale + shift.powi(2) / scale.powi(2);
+            let transformed = process_johnson_neyman_coded_roots(
+                transformed_quadratic,
+                transformed_linear,
+                transformed_constant,
+                shift - 3.0 * scale,
+                shift + 3.0 * scale,
+            );
+            assert_eq!(transformed.len(), 2);
+            assert_relative_eq!(
+                transformed[0],
+                shift - scale,
+                epsilon = scale.abs() * 1.0e-12,
+                max_relative = 1.0e-12
+            );
+            assert_relative_eq!(
+                transformed[1],
+                shift + 2.0 * scale,
+                epsilon = scale.abs() * 1.0e-12,
+                max_relative = 1.0e-12
+            );
+        }
+
+        let exact_double = process_johnson_neyman_coded_roots(1.0, -2.0, 1.0, 0.0, 2.0);
+        assert_eq!(exact_double.len(), 1);
+        assert_relative_eq!(exact_double[0], 1.0, epsilon = 1.0e-12);
+        let resolvable_near_double =
+            process_johnson_neyman_coded_roots(1.0, -(2.0 + 1.0e-12), 1.0 + 1.0e-12, 0.0, 2.0);
+        assert_eq!(resolvable_near_double.len(), 2);
+        assert_relative_eq!(resolvable_near_double[0], 1.0, epsilon = 1.0e-12);
+        assert_relative_eq!(resolvable_near_double[1], 1.0 + 1.0e-12, epsilon = 1.0e-12);
+
+        let imbalanced =
+            process_johnson_neyman_coded_roots(1.0, -(1.0e12 + 1.0e-12), 1.0, 0.0, 2.0e12);
+        assert_eq!(imbalanced.len(), 2);
+        assert_relative_eq!(imbalanced[0], 1.0e-12, epsilon = 1.0e-24);
+        assert_relative_eq!(imbalanced[1], 1.0e12, epsilon = 1.0e-3);
+    }
+
+    #[test]
+    fn process_graph_v2_jn_nonpositive_contrast_variance_is_tagged_unavailable() {
+        assert!(!process_jn_variance_is_positive_across_range(
+            0.0, 0.0, 1.0, -1.0, 1.0
+        ));
+        assert!(!process_jn_variance_is_positive_across_range(
+            1.0, 1.1, 1.0, -2.0, 2.0
+        ));
+
+        let (dataset, recipe) = process_graph_fixture();
+        let mut graph = estimate_pls(&dataset, &recipe)
+            .unwrap()
+            .regression
+            .unwrap()
+            .process
+            .unwrap()
+            .graph_v2
+            .unwrap();
+        let moderation = ProcessModerationConfig {
+            from: "X".into(),
+            to: "M".into(),
+            moderator: "W".into(),
+            conditioning_moderator: None,
+        };
+        let equation = graph
+            .equations
+            .iter_mut()
+            .find(|equation| equation.outcome == "M")
+            .unwrap();
+        let path_index = equation
+            .coefficients
+            .iter()
+            .position(|coefficient| coefficient.variables == ["X"])
+            .unwrap();
+        let interaction_index = equation
+            .coefficients
+            .iter()
+            .position(|coefficient| coefficient.variables == ["X", "W"])
+            .unwrap();
+        equation
+            .coefficient_covariance
+            .iter_mut()
+            .for_each(|row| row.fill(0.0));
+        equation.coefficient_covariance[path_index][path_index] = 1.0;
+        equation.coefficient_covariance[interaction_index][interaction_index] = 1.0;
+        equation.coefficient_covariance[path_index][interaction_index] = 1.1;
+        equation.coefficient_covariance[interaction_index][path_index] = 1.1;
+        let profiles = graph
+            .variable_profiles
+            .iter()
+            .map(|profile| (profile.variable.as_str(), profile))
+            .collect::<BTreeMap<_, _>>();
+        let diagnostics = process_johnson_neyman(
+            "moderation:X->M@W",
+            &moderation,
+            &graph.equations,
+            &profiles,
+            0.95,
+        )
+        .unwrap();
+        assert!(matches!(
+            diagnostics.as_slice(),
+            [ProcessJohnsonNeyman::Unavailable { reason_code, message, .. }]
+                if reason_code == PROCESS_JN_INVALID_COVARIANCE_REASON
+                    && message == PROCESS_JN_INVALID_COVARIANCE_MESSAGE
+        ));
+    }
+
+    #[test]
+    fn process_graph_v2_rejects_high_leverage_hc3_instability_without_clamping() {
+        let design = vec![vec![1.0, 0.0], vec![0.0, 1.0]];
+        let residuals = vec![0.5, -0.5];
+        let identity = vec![vec![1.0, 0.0], vec![0.0, 1.0]];
+        assert!(matches!(
+            process_robust_covariance_hc3(&design, &residuals, &identity, "Y"),
+            Err(EstimationError::UnsupportedMethod(message))
+                if message.starts_with("high_leverage_hc3_instability|")
+                    && message.contains("complete-case row 0")
+        ));
+    }
+
+    #[test]
+    fn process_graph_v2_rejects_nonpositive_hc3_variance_without_absolute_value() {
+        assert!(matches!(
+            process_standard_error_from_variance(-f64::EPSILON, "Y", "path:X->Y"),
+            Err(EstimationError::Numerical(message))
+                if message.starts_with("invalid_hc3_covariance|")
+                    && message.contains("path:X->Y")
+        ));
+        assert!(matches!(
+            process_standard_error_from_variance(0.0, "Y", "intercept"),
+            Err(EstimationError::Numerical(message))
+                if message.starts_with("invalid_hc3_covariance|")
+        ));
+    }
+
+    #[test]
+    fn process_graph_v2_rejects_degenerate_simple_slope_variance() {
+        let (dataset, recipe) = process_graph_fixture();
+        let mut graph = estimate_pls(&dataset, &recipe)
+            .unwrap()
+            .regression
+            .unwrap()
+            .process
+            .unwrap()
+            .graph_v2
+            .unwrap();
+        let moderation_id = "moderation:X->M@W";
+        let probes = graph
+            .simple_slopes
+            .iter()
+            .find(|slope| slope.moderation_id == moderation_id)
+            .unwrap()
+            .moderator_values
+            .clone();
+        let probe_suffix = graph
+            .simple_slopes
+            .iter()
+            .find(|slope| slope.moderation_id == moderation_id)
+            .unwrap()
+            .effect_id
+            .split_once('@')
+            .unwrap()
+            .1
+            .to_string();
+        let equation = graph
+            .equations
+            .iter_mut()
+            .find(|equation| equation.outcome == "M")
+            .unwrap();
+        equation
+            .coefficient_covariance
+            .iter_mut()
+            .for_each(|row| row.fill(0.0));
+        let moderation = ProcessModerationConfig {
+            from: "X".into(),
+            to: "M".into(),
+            moderator: "W".into(),
+            conditioning_moderator: None,
+        };
+        assert!(matches!(
+            process_simple_slope(
+                moderation_id,
+                &moderation,
+                &probes,
+                &probe_suffix,
+                &graph.equations,
+                0.95,
+            ),
+            Err(EstimationError::Numerical(message))
+                if message.starts_with("degenerate_simple_slope_variance|")
+        ));
+    }
+
+    #[test]
+    fn process_graph_v2_semantic_probe_grid_rejects_collapsed_f64_levels() {
+        let profile = ProcessVariableProfile {
+            variable: "W".into(),
+            role: "moderator".into(),
+            scale: "continuous".into(),
+            raw_mean: 9_007_199_254_740_992.0,
+            raw_sample_sd: 0.25,
+            raw_min: 9_007_199_254_740_990.0,
+            raw_max: 9_007_199_254_740_994.0,
+            levels: Vec::new(),
+        };
+        let profiles = BTreeMap::from([("W", &profile)]);
+        let moderation = ProcessModerationConfig {
+            from: "X".into(),
+            to: "Y".into(),
+            moderator: "W".into(),
+            conditioning_moderator: None,
+        };
+        assert!(matches!(
+            process_probe_grid(&moderation, &profiles),
+            Err(EstimationError::Numerical(message))
+                if message.starts_with("collapsed_process_probe_grid|")
+        ));
+    }
+
+    #[test]
+    fn process_graph_v2_point_progress_completes_and_cancellation_returns_no_result() {
+        let (dataset, recipe) = process_graph_fixture();
+        let mut updates = Vec::new();
+        let completed = estimate_pls_with_control(&dataset, &recipe, |update| {
+            updates.push(update);
+            true
+        })
+        .unwrap();
+        assert_eq!(completed.method_version, REGRESSION_PROCESS_METHOD_VERSION);
+        for phase in [
+            EstimationPhase::PreparingRows,
+            EstimationPhase::PreparingIndicators,
+            EstimationPhase::Iterating,
+            EstimationPhase::ComputingEffects,
+            EstimationPhase::Assembling,
+        ] {
+            assert!(
+                updates.iter().any(|update| {
+                    update.phase == phase
+                        && update.total_units > 0
+                        && update.completed_units == update.total_units
+                }),
+                "missing completed PROCESS point progress for {phase:?}: {updates:?}"
+            );
+        }
+
+        let mut saw_row_scan = false;
+        let cancelled = estimate_pls_with_control(&dataset, &recipe, |update| {
+            if update.phase == EstimationPhase::PreparingRows && update.completed_units > 0 {
+                saw_row_scan = true;
+                return false;
+            }
+            true
+        });
+        assert!(saw_row_scan);
+        assert_eq!(cancelled, Err(EstimationError::Cancelled));
+    }
+
+    #[test]
+    fn process_graph_v2_frozen_raw_probes_survive_resample_recentering() {
+        let (dataset, recipe) = process_graph_fixture();
+        let graph = estimate_pls(&dataset, &recipe)
+            .unwrap()
+            .regression
+            .unwrap()
+            .process
+            .unwrap()
+            .graph_v2
+            .unwrap();
+        let mut shifted_fit = graph.clone();
+        let original_w_mean = graph
+            .variable_profiles
+            .iter()
+            .find(|profile| profile.variable == "W")
+            .unwrap()
+            .raw_mean;
+        shifted_fit
+            .variable_profiles
+            .iter_mut()
+            .find(|profile| profile.variable == "W")
+            .unwrap()
+            .raw_mean += 1.0;
+
+        let evaluated = process_bootstrap_estimands_at_reference(&shifted_fit, &graph).unwrap();
+        assert_eq!(
+            evaluated
+                .iter()
+                .map(|(effect_id, _)| effect_id)
+                .collect::<Vec<_>>(),
+            process_bootstrap_estimands(&graph)
+                .iter()
+                .map(|(effect_id, _)| effect_id)
+                .collect::<Vec<_>>()
+        );
+
+        let x_to_m = process_serialized_coefficient(&shifted_fit, "M", &["X".into()]).unwrap()
+            + process_serialized_coefficient(&shifted_fit, "M", &["X".into(), "W".into()]).unwrap()
+                * (original_w_mean
+                    - shifted_fit
+                        .variable_profiles
+                        .iter()
+                        .find(|profile| profile.variable == "W")
+                        .unwrap()
+                        .raw_mean);
+        let m_to_y = process_serialized_coefficient(&shifted_fit, "Y", &["M".into()]).unwrap();
+        let indirect_id = &graph
+            .reference_effects
+            .iter()
+            .find(|effect| effect.kind == "indirect" && effect.path == ["X", "M", "Y"])
+            .unwrap()
+            .effect_id;
+        let evaluated_indirect = evaluated
+            .iter()
+            .find(|(effect_id, _)| effect_id == indirect_id)
+            .unwrap()
+            .1;
+        assert!((evaluated_indirect - x_to_m * m_to_y).abs() < 1e-10);
+        let stored_indirect = graph
+            .reference_effects
+            .iter()
+            .find(|effect| &effect.effect_id == indirect_id)
+            .unwrap()
+            .estimate;
+        assert!((evaluated_indirect - stored_indirect).abs() > 1e-8);
+
+        let moderation_id = graph
+            .moderations
+            .iter()
+            .find(|moderation| moderation.from == "X" && moderation.to == "M")
+            .unwrap()
+            .moderation_id
+            .clone();
+        let mean_slope_id = graph
+            .simple_slopes
+            .iter()
+            .find(|slope| {
+                slope.moderation_id == moderation_id
+                    && slope.moderator_values.len() == 1
+                    && (slope.moderator_values[0].raw_value - original_w_mean).abs() < 1e-12
+            })
+            .unwrap()
+            .effect_id
+            .clone();
+        let evaluated_slope = evaluated
+            .iter()
+            .find(|(effect_id, _)| effect_id == &mean_slope_id)
+            .unwrap()
+            .1;
+        assert!((evaluated_slope - x_to_m).abs() < 1e-10);
     }
 
     #[test]
@@ -13637,6 +17031,12 @@ mod tests {
             PLS_TWO_STAGE_MODERATION_METHOD_VERSION
         );
         assert_eq!(result.moderation.estimates.len(), 1);
+        assert!(
+            serde_json::to_value(&result)
+                .unwrap()
+                .get("moderation")
+                .is_some()
+        );
         let moderation = &result.moderation.estimates[0];
         assert_eq!(moderation.interaction, "x_by_m_to_y");
         assert_eq!(moderation.product_construct, "xm");

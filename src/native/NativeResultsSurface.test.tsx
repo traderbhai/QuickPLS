@@ -105,7 +105,7 @@ describe("native Results tree accessibility", () => {
 
     expect(markup).toContain('class="nd-nca-plot"');
     expect(markup).toContain("<strong>Necessary condition ceiling plot</strong>");
-    expect(markup).toContain("condition → outcome");
+    expect(markup).toContain("condition -&gt; outcome");
     expect(markup).toContain('role="img"');
     expect(markup).toContain('aria-labelledby="nd-nca-plot-title nd-nca-plot-description"');
     expect(markup).toContain("<title id=\"nd-nca-plot-title\">Necessary condition ceiling plot for condition and outcome</title>");

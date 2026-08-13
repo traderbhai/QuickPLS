@@ -3545,7 +3545,7 @@ dependencies = [
 
 [[package]]
 name = "qpls-assessment"
-version = "2.45.0"
+version = "2.46.0"
 dependencies = [
  "approx",
  "arrow",
@@ -3562,7 +3562,7 @@ dependencies = [
 
 [[package]]
 name = "qpls-cli"
-version = "2.45.0"
+version = "2.46.0"
 dependencies = [
  "anyhow",
  "calamine",
@@ -3582,7 +3582,7 @@ dependencies = [
 
 [[package]]
 name = "qpls-core"
-version = "2.45.0"
+version = "2.46.0"
 dependencies = [
  "chrono",
  "faer",
@@ -3598,7 +3598,7 @@ dependencies = [
 
 [[package]]
 name = "qpls-data"
-version = "2.45.0"
+version = "2.46.0"
 dependencies = [
  "ambers",
  "arrow",
@@ -3616,7 +3616,7 @@ dependencies = [
 
 [[package]]
 name = "qpls-estimation"
-version = "2.45.0"
+version = "2.46.0"
 dependencies = [
  "approx",
  "arrow",
@@ -3636,7 +3636,7 @@ dependencies = [
 
 [[package]]
 name = "qpls-project"
-version = "2.45.0"
+version = "2.46.0"
 dependencies = [
  "chrono",
  "qpls-assessment",
@@ -3657,7 +3657,7 @@ dependencies = [
 
 [[package]]
 name = "qpls-resampling"
-version = "2.45.0"
+version = "2.46.0"
 dependencies = [
  "arrow",
  "chrono",
@@ -3678,7 +3678,7 @@ dependencies = [
 
 [[package]]
 name = "qpls-runner"
-version = "2.45.0"
+version = "2.46.0"
 dependencies = [
  "chrono",
  "qpls-assessment",
@@ -3702,7 +3702,7 @@ dependencies = [
 
 [[package]]
 name = "quickpls-desktop"
-version = "2.45.0"
+version = "2.46.0"
 dependencies = [
  "arrow",
  "calamine",

@@ -2,29 +2,82 @@
   "schema_version": 1,
   "target": "QuickPLS release artifact preservation",
   "passed": true,
-  "version": "2.45.0",
-  "label": "native_desktop_integrated_milestone",
-  "timestamp_utc": "20260812-010931",
-  "artifact_directory": "target\\release\\artifacts",
+  "version": "2.46.0",
+  "version_contract": {
+    "package_json": "2.46.0",
+    "package_lock": {
+      "document": "2.46.0",
+      "root_package": "2.46.0"
+    },
+    "cargo_workspace": "2.46.0",
+    "cargo_members": {
+      "qpls-assessment": "2.46.0",
+      "qpls-cli": "2.46.0",
+      "qpls-core": "2.46.0",
+      "qpls-data": "2.46.0",
+      "qpls-estimation": "2.46.0",
+      "qpls-project": "2.46.0",
+      "qpls-resampling": "2.46.0",
+      "qpls-runner": "2.46.0",
+      "quickpls-desktop": "2.46.0"
+    },
+    "cargo_lock_quickpls_packages": {
+      "qpls-assessment": "2.46.0",
+      "qpls-cli": "2.46.0",
+      "qpls-core": "2.46.0",
+      "qpls-data": "2.46.0",
+      "qpls-estimation": "2.46.0",
+      "qpls-project": "2.46.0",
+      "qpls-resampling": "2.46.0",
+      "qpls-runner": "2.46.0",
+      "quickpls-desktop": "2.46.0"
+    },
+    "tauri": "2.46.0"
+  },
+  "label": "v2_46_0_quickpls_3_wave_1_regression_process",
+  "timestamp_utc": "20260813-070359",
+  "artifact_directory": "target/release/artifacts",
   "artifacts": [
     {
-      "source": "target\\release\\quickpls-desktop.exe",
-      "path": "target\\release\\artifacts\\QuickPLS_2.45.0_native_desktop_integrated_milestone_20260812-010931_x64_portable.exe",
-      "bytes": 25013248,
-      "sha256": "17C0D7D3735D959B001FA4A0058AA1A2E3367A52D87BE8D4372E9894AE845F54"
+      "role": "portable",
+      "source": "target/release/quickpls-desktop.exe",
+      "source_bytes": 28276736,
+      "source_sha256": "988A9006B9E63BD6A91C6D86B84A0449F9BC999E6B394C531320846D68EFCAA1",
+      "path": "target/release/artifacts/QuickPLS_2.46.0_v2_46_0_quickpls_3_wave_1_regression_process_20260813-070359_x64_portable.exe",
+      "bytes": 28276736,
+      "sha256": "988A9006B9E63BD6A91C6D86B84A0449F9BC999E6B394C531320846D68EFCAA1",
+      "copy_verified": true
     },
     {
-      "source": "target\\release\\bundle\\nsis\\QuickPLS_2.45.0_x64-setup.exe",
-      "path": "target\\release\\artifacts\\QuickPLS_2.45.0_native_desktop_integrated_milestone_20260812-010931_x64_setup.exe",
-      "bytes": 5386495,
-      "sha256": "0B6EE07AEACB74263F76AF8F9A8D791CA946F868B87F9FA5A1FE89E9B835B2B9"
+      "role": "cli",
+      "source": "target/release/qpls.exe",
+      "source_bytes": 20648448,
+      "source_sha256": "BD4E1780563055398729DC6D2C16CAB655BBDB17AF0B1C2133BD56283413879B",
+      "path": "target/release/artifacts/QuickPLS_2.46.0_v2_46_0_quickpls_3_wave_1_regression_process_20260813-070359_x64_cli.exe",
+      "bytes": 20648448,
+      "sha256": "BD4E1780563055398729DC6D2C16CAB655BBDB17AF0B1C2133BD56283413879B",
+      "copy_verified": true
     },
     {
+      "role": "setup",
+      "source": "target/release/bundle/nsis/QuickPLS_2.46.0_x64-setup.exe",
+      "source_bytes": 6072532,
+      "source_sha256": "CF829F0C25FB681C870591B1C35BE9DE1360BEBFFC4C1CD0B7DC76090E244E56",
+      "path": "target/release/artifacts/QuickPLS_2.46.0_v2_46_0_quickpls_3_wave_1_regression_process_20260813-070359_x64_setup.exe",
+      "bytes": 6072532,
+      "sha256": "CF829F0C25FB681C870591B1C35BE9DE1360BEBFFC4C1CD0B7DC76090E244E56",
+      "copy_verified": true
+    },
+    {
+      "role": "checksums",
       "source": null,
-      "path": "target\\release\\artifacts\\QuickPLS_2.45.0_native_desktop_integrated_milestone_20260812-010931_x64_checksums.txt",
-      "bytes": 301,
-      "sha256": "A9BB7913C009A11CA34E4787B98CF00421AFDD014AA6AC6B176819A59B7D2673"
+      "source_bytes": null,
+      "source_sha256": null,
+      "path": "target/release/artifacts/QuickPLS_2.46.0_v2_46_0_quickpls_3_wave_1_regression_process_20260813-070359_x64_checksums.txt",
+      "bytes": 472,
+      "sha256": "632B77D0BD4264E118663277EECBC97ED54BD79240A1E0D9A7D8702C5F680A1C",
+      "copy_verified": true
     }
   ],
-  "note": "Files are copied to unique names so repeated desktop builds do not overwrite prior user-testable artifacts."
+  "note": "Files are copied to unique names so repeated desktop builds do not overwrite prior user-testable artifacts; every copied binary is size- and SHA-256-identical to its stable source."
 }

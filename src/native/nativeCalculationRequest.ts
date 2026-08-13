@@ -10,25 +10,35 @@ import {
 } from "./nativeLogistic";
 import { nativeOlsCsvValues } from "./nativeOls";
 import { NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS } from "./nativeRegressionBootstrapWitness";
+import {
+  nativeProcessGraphAssessment,
+  parseNativeProcessProfile,
+  type NativeProcessProfile,
+} from "./nativeProcess";
 
 export interface NativeCalculationRequest {
   kind: NativeWorkbenchAnalysisKind;
   settings: AnalysisUiSettings;
   logisticProfile?: NativeLogisticProfile;
+  processProfile?: NativeProcessProfile;
 }
 
 export function createNativeCalculationRequest(
   kind: NativeWorkbenchAnalysisKind,
   settings: Readonly<AnalysisUiSettings>,
-  logisticProfile?: NativeLogisticProfile,
+  dataProfile?: NativeLogisticProfile | NativeProcessProfile,
 ): NativeCalculationRequest {
   const verifiedLogisticProfile = kind === "regression" && settings.regressionType === "logistic"
-    ? parseNativeLogisticProfile(logisticProfile)
+    ? parseNativeLogisticProfile(dataProfile)
+    : null;
+  const verifiedProcessProfile = kind === "regression" && settings.regressionType === "process"
+    ? parseNativeProcessProfile(dataProfile)
     : null;
   return {
     kind,
     settings: { ...settings },
     ...(verifiedLogisticProfile ? { logisticProfile: verifiedLogisticProfile } : {}),
+    ...(verifiedProcessProfile ? { processProfile: verifiedProcessProfile } : {}),
   };
 }
 
@@ -41,11 +51,38 @@ export function parseNativeCalculationRequest(value: unknown): NativeCalculation
   const kind = candidate.kind as NativeWorkbenchAnalysisKind;
   if (candidate.settings.method !== nativeAnalysisRecipeDescriptor(kind).engineMethod) return null;
   const settings = candidate.settings as AnalysisUiSettings;
+  if (kind === "pls_permutation" && (
+    !Number.isInteger(settings.permutationSamples)
+    || settings.permutationSamples < 99
+    || settings.permutationSamples > 10_000
+    || settings.bootstrapSamples !== 0
+    || settings.studentizedInnerSamples !== 0
+    || !Number.isInteger(settings.workers)
+    || settings.workers < 1
+    || settings.workers > 64
+  )) return null;
+  const process = kind === "regression" && settings.regressionType === "process";
+  if (process) {
+    const graph = nativeProcessGraphAssessment(settings);
+    if (!graph.canRun || !graph.graph
+      || settings.preprocessing !== "unstandardized"
+      || settings.confidenceLevel !== 0.95
+      || settings.studentizedInnerSamples !== 0
+      || settings.permutationSamples !== 0
+      || (settings.regressionBootstrap === true
+        ? !Number.isInteger(settings.bootstrapSamples)
+          || settings.bootstrapSamples < 99
+          || settings.bootstrapSamples > 10_000
+          || !Number.isInteger(settings.workers)
+          || settings.workers < 1
+          || settings.workers > 64
+        : settings.bootstrapSamples !== 0 || settings.workers !== 1)) return null;
+  }
   if (kind === "regression" && settings.regressionBootstrap === true) {
     const selectedTermCount = nativeOlsCsvValues(settings.regressionPredictors).length
       + nativeOlsCsvValues(settings.regressionControls).length;
-    if ((settings.regressionType !== "ols" && settings.regressionType !== "logistic")
-      || selectedTermCount > NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS
+    if ((settings.regressionType !== "ols" && settings.regressionType !== "logistic" && settings.regressionType !== "process")
+      || (settings.regressionType !== "process" && selectedTermCount > NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS)
       || !Number.isInteger(settings.bootstrapSamples)
       || settings.bootstrapSamples < 99
       || settings.bootstrapSamples > 10_000
@@ -59,5 +96,9 @@ export function parseNativeCalculationRequest(value: unknown): NativeCalculation
   const logistic = kind === "regression" && settings.regressionType === "logistic";
   const logisticProfile = logistic ? parseNativeLogisticProfile(candidate.logisticProfile) : null;
   if (logistic && candidate.logisticProfile !== undefined && !logisticProfile) return null;
-  return createNativeCalculationRequest(kind, settings, logisticProfile ?? undefined);
+  const processProfile = process ? parseNativeProcessProfile(candidate.processProfile) : null;
+  if (process && candidate.processProfile !== undefined && !processProfile) return null;
+  if ((!logistic && candidate.logisticProfile !== undefined)
+    || (!process && candidate.processProfile !== undefined)) return null;
+  return createNativeCalculationRequest(kind, settings, logisticProfile ?? processProfile ?? undefined);
 }

@@ -172,7 +172,7 @@ describe("native canonical IPMA frontend slice", () => {
     expect(markup).toContain("Importance-performance map");
     expect(markup).toContain("Target: Retention Intent");
     expect(markup).toContain("Importance-performance map for Retention Intent");
-    expect(markup).toContain("Performance (0–100)");
+    expect(markup).toContain("Performance (0-100)");
     expect(markup).toContain("No theoretical-range correction is applied");
     expect(markup).not.toContain("Recorded seed");
   });

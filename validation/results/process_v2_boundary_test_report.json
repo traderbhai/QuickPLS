@@ -1,0 +1,329 @@
+{
+  "schema_version": 1,
+  "target": "process_v2_focused_rust_boundary_tests",
+  "feature_id": "qpls3.standalone.process",
+  "method_version": "regression_process_v2",
+  "generated_at_utc": "2026-08-13T04:37:13.511913Z",
+  "passed": true,
+  "checks": {
+    "qpls_core": {
+      "process_graph_v2_accepts_typed_dag_and_rejects_cycles_role_and_order_drift": true,
+      "process_graph_v2_bootstrap_is_typed_and_stage_bounded": true
+    },
+    "qpls_estimation": {
+      "process_graph_v2_frozen_raw_probes_survive_resample_recentering": true,
+      "process_graph_v2_hc3_simple_slopes_and_johnson_neyman": true,
+      "process_graph_v2_jn_nonpositive_contrast_variance_is_tagged_unavailable": true,
+      "process_graph_v2_jn_root_solver_is_affine_stable_and_deduplicates_near_double_roots": true,
+      "process_graph_v2_parallel_serial_moderation_and_effect_arithmetic": true,
+      "process_graph_v2_point_is_row_irrelevant_column_and_recipe_order_invariant": true,
+      "process_graph_v2_point_progress_completes_and_cancellation_returns_no_result": true,
+      "process_graph_v2_rejects_degenerate_simple_slope_variance": true,
+      "process_graph_v2_rejects_exact_binary_endogenous_outcomes_in_original_sample": true,
+      "process_graph_v2_rejects_high_leverage_hc3_instability_without_clamping": true,
+      "process_graph_v2_rejects_nonpositive_hc3_variance_without_absolute_value": true,
+      "process_graph_v2_scale_aware_svd_is_affine_unit_invariant_and_rejects_relative_collinearity": true,
+      "process_graph_v2_semantic_probe_grid_rejects_collapsed_f64_levels": true
+    },
+    "qpls_resampling": {
+      "process_graph_v2_bootstrap_maps_degenerate_simple_slope_failure": true,
+      "process_graph_v2_bootstrap_maps_high_leverage_hc3_failure": true,
+      "process_graph_v2_bootstrap_maps_invalid_hc3_covariance_failure": true,
+      "process_graph_v2_case_bootstrap_is_worker_invariant_and_bca_conditional": true,
+      "process_graph_v2_unavailable_inference_uses_process_specific_tokens": true
+    },
+    "qpls_project": {
+      "process_graph_v2_append_save_reopen_and_tamper_are_atomic": true,
+      "process_graph_v2_unavailable_bootstrap_roundtrip_and_tamper_contract": true,
+      "process_v1_remains_archive_only": true
+    },
+    "qpls_runner": {
+      "process_v2_point_progress_completes_and_base_fit_cancellation_returns_no_result": true,
+      "process_v2_runner_rejects_exact_binary_endogenous_original_profiles": true
+    }
+  },
+  "environment": {
+    "CARGO_BUILD_JOBS": "1"
+  },
+  "build_commands": {
+    "qpls_core": [
+      "cargo",
+      "test",
+      "--release",
+      "-p",
+      "qpls-core",
+      "--lib",
+      "--no-run",
+      "--message-format=json"
+    ],
+    "qpls_estimation": [
+      "cargo",
+      "test",
+      "--release",
+      "-p",
+      "qpls-estimation",
+      "--lib",
+      "--no-run",
+      "--message-format=json"
+    ],
+    "qpls_resampling": [
+      "cargo",
+      "test",
+      "--release",
+      "-p",
+      "qpls-resampling",
+      "--lib",
+      "--no-run",
+      "--message-format=json"
+    ],
+    "qpls_project": [
+      "cargo",
+      "test",
+      "--release",
+      "-p",
+      "qpls-project",
+      "--lib",
+      "--no-run",
+      "--message-format=json"
+    ],
+    "qpls_runner": [
+      "cargo",
+      "test",
+      "--release",
+      "-p",
+      "qpls-runner",
+      "--lib",
+      "--no-run",
+      "--message-format=json"
+    ]
+  },
+  "test_executables": {
+    "qpls_core": {
+      "path": "target/release/deps/qpls_core-cb3e5442043aeb8c.exe",
+      "size": 2814464,
+      "sha256": "ec2752c459c3855e02d66f70e5e71a5020dae2ead0e67c4a41522bcfb4dc4f7c"
+    },
+    "qpls_estimation": {
+      "path": "target/release/deps/qpls_estimation-6761e14faabf875b.exe",
+      "size": 12000768,
+      "sha256": "0dd6d18870ef1c7fd80c475bb130f6896a1974effc9dc34f773225149f20758d"
+    },
+    "qpls_resampling": {
+      "path": "target/release/deps/qpls_resampling-b5bff3e7363d410e.exe",
+      "size": 11158528,
+      "sha256": "114c617e99e9f748d839495b0a9fa83a33ed0edc8210060626fed36f260457df"
+    },
+    "qpls_project": {
+      "path": "target/release/deps/qpls_project-f5d02c0d541c8f45.exe",
+      "size": 23628288,
+      "sha256": "bc4d033af028173075e3c26cff3b87eb00443cd66f9a2be16f23164d2aa4235a"
+    },
+    "qpls_runner": {
+      "path": "target/release/deps/qpls_runner-82b3a20590b24c6a.exe",
+      "size": 18933760,
+      "sha256": "9d5e658a190be32497d542687d08fec6fd983b05d5e3597ff59517e2f0956ccc"
+    }
+  },
+  "executions": {
+    "process_graph_v2_accepts_typed_dag_and_rejects_cycles_role_and_order_drift": {
+      "target": "qpls_core",
+      "full_name": "validation::tests::process_graph_v2_accepts_typed_dag_and_rejects_cycles_role_and_order_drift",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest validation::tests::process_graph_v2_accepts_typed_dag_and_rejects_cycles_role_and_order_drift ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 62 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": ""
+    },
+    "process_graph_v2_append_save_reopen_and_tamper_are_atomic": {
+      "target": "qpls_project",
+      "full_name": "tests::process_graph_v2_append_save_reopen_and_tamper_are_atomic",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest tests::process_graph_v2_append_save_reopen_and_tamper_are_atomic ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.25s\n\n",
+      "stderr_tail": ""
+    },
+    "process_graph_v2_bootstrap_is_typed_and_stage_bounded": {
+      "target": "qpls_core",
+      "full_name": "validation::tests::process_graph_v2_bootstrap_is_typed_and_stage_bounded",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest validation::tests::process_graph_v2_bootstrap_is_typed_and_stage_bounded ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 62 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": ""
+    },
+    "process_graph_v2_bootstrap_maps_degenerate_simple_slope_failure": {
+      "target": "qpls_resampling",
+      "full_name": "tests::process_graph_v2_bootstrap_maps_degenerate_simple_slope_failure",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest tests::process_graph_v2_bootstrap_maps_degenerate_simple_slope_failure ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": ""
+    },
+    "process_graph_v2_bootstrap_maps_high_leverage_hc3_failure": {
+      "target": "qpls_resampling",
+      "full_name": "tests::process_graph_v2_bootstrap_maps_high_leverage_hc3_failure",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest tests::process_graph_v2_bootstrap_maps_high_leverage_hc3_failure ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": ""
+    },
+    "process_graph_v2_bootstrap_maps_invalid_hc3_covariance_failure": {
+      "target": "qpls_resampling",
+      "full_name": "tests::process_graph_v2_bootstrap_maps_invalid_hc3_covariance_failure",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest tests::process_graph_v2_bootstrap_maps_invalid_hc3_covariance_failure ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": ""
+    },
+    "process_graph_v2_case_bootstrap_is_worker_invariant_and_bca_conditional": {
+      "target": "qpls_resampling",
+      "full_name": "tests::process_graph_v2_case_bootstrap_is_worker_invariant_and_bca_conditional",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest tests::process_graph_v2_case_bootstrap_is_worker_invariant_and_bca_conditional ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.51s\n\n",
+      "stderr_tail": ""
+    },
+    "process_graph_v2_frozen_raw_probes_survive_resample_recentering": {
+      "target": "qpls_estimation",
+      "full_name": "pls::tests::process_graph_v2_frozen_raw_probes_survive_resample_recentering",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_frozen_raw_probes_survive_resample_recentering ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": ""
+    },
+    "process_graph_v2_hc3_simple_slopes_and_johnson_neyman": {
+      "target": "qpls_estimation",
+      "full_name": "pls::tests::process_graph_v2_hc3_simple_slopes_and_johnson_neyman",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_hc3_simple_slopes_and_johnson_neyman ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": ""
+    },
+    "process_graph_v2_jn_nonpositive_contrast_variance_is_tagged_unavailable": {
+      "target": "qpls_estimation",
+      "full_name": "pls::tests::process_graph_v2_jn_nonpositive_contrast_variance_is_tagged_unavailable",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_jn_nonpositive_contrast_variance_is_tagged_unavailable ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": ""
+    },
+    "process_graph_v2_jn_root_solver_is_affine_stable_and_deduplicates_near_double_roots": {
+      "target": "qpls_estimation",
+      "full_name": "pls::tests::process_graph_v2_jn_root_solver_is_affine_stable_and_deduplicates_near_double_roots",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_jn_root_solver_is_affine_stable_and_deduplicates_near_double_roots ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": ""
+    },
+    "process_graph_v2_parallel_serial_moderation_and_effect_arithmetic": {
+      "target": "qpls_estimation",
+      "full_name": "pls::tests::process_graph_v2_parallel_serial_moderation_and_effect_arithmetic",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_parallel_serial_moderation_and_effect_arithmetic ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": ""
+    },
+    "process_graph_v2_point_is_row_irrelevant_column_and_recipe_order_invariant": {
+      "target": "qpls_estimation",
+      "full_name": "pls::tests::process_graph_v2_point_is_row_irrelevant_column_and_recipe_order_invariant",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_point_is_row_irrelevant_column_and_recipe_order_invariant ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.01s\n\n",
+      "stderr_tail": ""
+    },
+    "process_graph_v2_point_progress_completes_and_cancellation_returns_no_result": {
+      "target": "qpls_estimation",
+      "full_name": "pls::tests::process_graph_v2_point_progress_completes_and_cancellation_returns_no_result",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_point_progress_completes_and_cancellation_returns_no_result ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": ""
+    },
+    "process_graph_v2_rejects_degenerate_simple_slope_variance": {
+      "target": "qpls_estimation",
+      "full_name": "pls::tests::process_graph_v2_rejects_degenerate_simple_slope_variance",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_rejects_degenerate_simple_slope_variance ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": ""
+    },
+    "process_graph_v2_rejects_exact_binary_endogenous_outcomes_in_original_sample": {
+      "target": "qpls_estimation",
+      "full_name": "pls::tests::process_graph_v2_rejects_exact_binary_endogenous_outcomes_in_original_sample",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_rejects_exact_binary_endogenous_outcomes_in_original_sample ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": ""
+    },
+    "process_graph_v2_rejects_high_leverage_hc3_instability_without_clamping": {
+      "target": "qpls_estimation",
+      "full_name": "pls::tests::process_graph_v2_rejects_high_leverage_hc3_instability_without_clamping",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_rejects_high_leverage_hc3_instability_without_clamping ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": ""
+    },
+    "process_graph_v2_rejects_nonpositive_hc3_variance_without_absolute_value": {
+      "target": "qpls_estimation",
+      "full_name": "pls::tests::process_graph_v2_rejects_nonpositive_hc3_variance_without_absolute_value",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_rejects_nonpositive_hc3_variance_without_absolute_value ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": ""
+    },
+    "process_graph_v2_scale_aware_svd_is_affine_unit_invariant_and_rejects_relative_collinearity": {
+      "target": "qpls_estimation",
+      "full_name": "pls::tests::process_graph_v2_scale_aware_svd_is_affine_unit_invariant_and_rejects_relative_collinearity",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_scale_aware_svd_is_affine_unit_invariant_and_rejects_relative_collinearity ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": ""
+    },
+    "process_graph_v2_semantic_probe_grid_rejects_collapsed_f64_levels": {
+      "target": "qpls_estimation",
+      "full_name": "pls::tests::process_graph_v2_semantic_probe_grid_rejects_collapsed_f64_levels",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest pls::tests::process_graph_v2_semantic_probe_grid_rejects_collapsed_f64_levels ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": ""
+    },
+    "process_graph_v2_unavailable_bootstrap_roundtrip_and_tamper_contract": {
+      "target": "qpls_project",
+      "full_name": "tests::process_graph_v2_unavailable_bootstrap_roundtrip_and_tamper_contract",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest tests::process_graph_v2_unavailable_bootstrap_roundtrip_and_tamper_contract ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": ""
+    },
+    "process_graph_v2_unavailable_inference_uses_process_specific_tokens": {
+      "target": "qpls_resampling",
+      "full_name": "tests::process_graph_v2_unavailable_inference_uses_process_specific_tokens",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest tests::process_graph_v2_unavailable_inference_uses_process_specific_tokens ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": ""
+    },
+    "process_v1_remains_archive_only": {
+      "target": "qpls_project",
+      "full_name": "tests::process_v1_remains_archive_only",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest tests::process_v1_remains_archive_only ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.03s\n\n",
+      "stderr_tail": ""
+    },
+    "process_v2_point_progress_completes_and_base_fit_cancellation_returns_no_result": {
+      "target": "qpls_runner",
+      "full_name": "tests::process_v2_point_progress_completes_and_base_fit_cancellation_returns_no_result",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest tests::process_v2_point_progress_completes_and_base_fit_cancellation_returns_no_result ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": ""
+    },
+    "process_v2_runner_rejects_exact_binary_endogenous_original_profiles": {
+      "target": "qpls_runner",
+      "full_name": "tests::process_v2_runner_rejects_exact_binary_endogenous_original_profiles",
+      "exit_code": 0,
+      "passed": true,
+      "stdout_tail": "\nrunning 1 test\ntest tests::process_v2_runner_rejects_exact_binary_endogenous_original_profiles ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.00s\n\n",
+      "stderr_tail": ""
+    }
+  }
+}

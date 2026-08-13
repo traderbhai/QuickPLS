@@ -35,8 +35,26 @@ import {
   NATIVE_GSCA_METHOD_VERSION,
   NATIVE_GSCA_SCOPE_NOTE,
 } from "./nativeGsca";
+import {
+  NATIVE_LEGACY_PROCESS_RESULT_IDS,
+  NATIVE_PROCESS_RESULT_IDS,
+  nativeLegacyProcessResultProjection,
+  nativeLegacyProcessResultTables,
+  nativeProcessResultProjection,
+  nativeProcessResultTables,
+} from "./nativeProcessResults";
+import {
+  NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING,
+  nativeStructuralPathRandomizationProjection,
+  nativeStructuralPathRandomizationTable,
+} from "./nativeStructuralPathRandomization";
 
-export type NativeResultGroupId = "graphical" | "groups" | "assessment" | "covariance_sem" | "gsca_component_model" | "importance_performance" | "necessary_conditions" | "components" | "regression" | "higher_order" | "final_results" | "mediation" | "moderation" | "quality_criteria" | "prediction" | "inference";
+export {
+  nativeLegacyProcessResultProjection,
+  nativeProcessResultProjection,
+} from "./nativeProcessResults";
+
+export type NativeResultGroupId = "graphical" | "groups" | "assessment" | "covariance_sem" | "gsca_component_model" | "importance_performance" | "necessary_conditions" | "components" | "process" | "regression" | "higher_order" | "final_results" | "mediation" | "moderation" | "quality_criteria" | "prediction" | "inference";
 
 export type NativeResultNavigationItem =
   | {
@@ -128,7 +146,7 @@ export interface NativeOlsResultProjection {
   controls: string[];
   observations: number;
   coefficients: RegressionAnalysis["coefficients"];
-  fit: RegressionAnalysis["fit"];
+  fit: NonNullable<RegressionAnalysis["fit"]>;
   predictionsStored: number;
   bootstrap: RegressionBootstrapAnalysis | null;
   warnings: string[];
@@ -141,7 +159,7 @@ export interface NativeLogisticResultProjection {
   controls: string[];
   observations: number;
   coefficients: RegressionAnalysis["coefficients"];
-  fit: RegressionAnalysis["fit"];
+  fit: NonNullable<RegressionAnalysis["fit"]>;
   predictions: RegressionAnalysis["predictions"];
   diagnostics: NonNullable<RegressionAnalysis["logistic"]>;
   bootstrap: RegressionBootstrapAnalysis | null;
@@ -156,7 +174,7 @@ export interface NativeLegacyLogisticResultProjection {
   controls: string[];
   observations: number;
   coefficients: RegressionAnalysis["coefficients"];
-  fit: RegressionAnalysis["fit"];
+  fit: NonNullable<RegressionAnalysis["fit"]>;
   predictions: RegressionAnalysis["predictions"];
   warnings: string[];
 }
@@ -1111,7 +1129,8 @@ export function nativeOlsResultProjection(run: AnalysisRun | null | undefined): 
       || coefficient.odds_ratio_confidence_interval_upper != null) return null;
   }
   const fit = regression.fit;
-  if (!isFiniteNumber(fit.r_squared)
+  if (!fit
+    || !isFiniteNumber(fit.r_squared)
     || !isFiniteNumber(fit.adjusted_r_squared)
     || !isFiniteNumber(fit.f_statistic)
     || !isFiniteNumber(fit.aic)
@@ -1227,7 +1246,8 @@ export function nativeLogisticResultProjection(
 
   const fit = regression.fit;
   const parameterCount = expectedTerms.length;
-  if (fit.r_squared != null
+  if (!fit
+    || fit.r_squared != null
     || fit.adjusted_r_squared != null
     || fit.f_statistic != null
     || fit.rmse != null
@@ -1406,7 +1426,8 @@ export function nativeLegacyLogisticResultProjection(
     || row.odds_ratio_confidence_interval_lower != null
     || row.odds_ratio_confidence_interval_upper != null)) return null;
   const fit = regression.fit;
-  if (fit.r_squared != null
+  if (!fit
+    || fit.r_squared != null
     || fit.adjusted_r_squared != null
     || fit.f_statistic != null
     || fit.rmse != null
@@ -1523,6 +1544,10 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
 
   const tables: ResultTable[] = [];
   const result = run.result;
+  const structuralPathRandomization = nativeStructuralPathRandomizationProjection(run);
+  const inferenceRun = run.permutation && !structuralPathRandomization
+    ? { ...run, permutation: undefined }
+    : run;
   if (run.provenance?.method === "gsca" || result.gsca || result.method_version === NATIVE_GSCA_METHOD_VERSION) {
     addGscaResultTables(tables, run);
     return tables;
@@ -1536,7 +1561,11 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
     return tables;
   }
   if (run.provenance?.method === "regression" || result.regression || result.method_version.startsWith("regression_")) {
-    if (result.method_version === "regression_logistic_v2") addLogisticResultTables(tables, run);
+    const process = nativeProcessResultProjection(run);
+    const legacyProcess = nativeLegacyProcessResultProjection(run);
+    if (process) tables.push(...nativeProcessResultTables(process));
+    else if (legacyProcess) tables.push(...nativeLegacyProcessResultTables(legacyProcess));
+    else if (result.method_version === "regression_logistic_v2") addLogisticResultTables(tables, run);
     else if (result.method_version === "regression_logistic_v1") addLegacyLogisticResultTables(tables, run);
     else addOlsResultTables(tables, run);
     return tables;
@@ -2035,10 +2064,10 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
     ? addAggregateMediationBootstrapTable(tables, run, totalIndirectEffects, controlPairs, constructLabel)
     : new Set<string>();
   const moderationInferenceParameters = moderationEstimates.length
-    ? addModerationInferenceTables(tables, run, moderationEstimates, constructLabel)
+    ? addModerationInferenceTables(tables, inferenceRun, moderationEstimates, constructLabel)
     : new Set<string>();
   const controlInferenceParameters = controlPairs.size
-    ? addControlInferenceTables(tables, run, result.control_estimates ?? [], constructLabel)
+    ? addControlInferenceTables(tables, inferenceRun, result.control_estimates ?? [], constructLabel)
     : new Set<string>();
 
   if (run.bootstrap) {
@@ -2122,21 +2151,12 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
     }
   }
 
-  if (run.permutation) {
-    addTable(tables, {
-      id: "permutation",
-      title: "Structural path randomization",
-      warning: null,
-      columns: ["Parameter", "Original", "p", "Permutations"],
-      rows: run.permutation.parameters
-        .filter((row) => hasText(row.parameter)
-          && !moderationInferenceParameters.has(row.parameter)
-          && !controlInferenceParameters.has(row.parameter)
-          && isFiniteNumber(row.original)
-          && isFiniteNumber(row.p_value_two_sided)
-          && isFiniteNumber(row.permutations))
-        .map((row) => [parameterLabel(row.parameter, constructLabel), formatNumber(row.original), formatPValue(row.p_value_two_sided), String(row.permutations)]),
-    });
+  if (structuralPathRandomization) {
+    addTable(tables, nativeStructuralPathRandomizationTable(
+      structuralPathRandomization,
+      constructLabel,
+      new Set([...moderationInferenceParameters, ...controlInferenceParameters]),
+    ));
   }
 
   return tables;
@@ -2161,6 +2181,17 @@ export function buildNativeResultTree(run: AnalysisRun | null | undefined, table
   addTableGroup(groups, "importance_performance", "Importance-performance map", IPMA_RESULT_IDS, byId);
   addTableGroup(groups, "necessary_conditions", "Necessary conditions", NCA_RESULT_IDS, byId);
   addTableGroup(groups, "components", "Principal components", PCA_RESULT_IDS, byId);
+  const process = nativeProcessResultProjection(run);
+  const legacyProcess = nativeLegacyProcessResultProjection(run);
+  addTableGroup(
+    groups,
+    "process",
+    process
+      ? `Graph-defined path analysis${process.bootstrap ? " with bootstrap" : ""}`
+      : "Historical PROCESS v1",
+    process ? NATIVE_PROCESS_RESULT_IDS : NATIVE_LEGACY_PROCESS_RESULT_IDS,
+    byId,
+  );
   const logistic = nativeLogisticResultProjection(run);
   const legacyLogistic = nativeLegacyLogisticResultProjection(run);
   addTableGroup(
@@ -2207,6 +2238,9 @@ export function buildNativeResultNavigation(run: AnalysisRun | null | undefined)
   const ipmaDefault = IPMA_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
   const ncaDefault = NCA_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
   const pcaDefault = PCA_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
+  const processDefault = tables.some((table) => table.id === "process_model_summary")
+    ? "process_model_summary"
+    : NATIVE_LEGACY_PROCESS_RESULT_IDS.find((id) => tables.some((table) => table.id === id));
   const regressionBootstrapDefault = nativeRegressionBootstrapResultProjection(run)
     && tables.some((table) => table.id === "regression_bootstrap_summary")
     ? "regression_bootstrap_summary"
@@ -2221,7 +2255,7 @@ export function buildNativeResultNavigation(run: AnalysisRun | null | undefined)
   const fallbackDefault = run.result.mga || standalone ? tables[0]?.id ?? null : "model_estimates";
   return {
     runId: run.id,
-    defaultItemId: regressionBootstrapDefault ?? groupDefault ?? ipmaDefault ?? ncaDefault ?? pcaDefault ?? logisticDefault ?? legacyLogisticDefault ?? olsDefault ?? cbsemDefault ?? gscaDefault ?? ccaDefault ?? predictionDefault ?? higherOrderDefault ?? fallbackDefault,
+    defaultItemId: processDefault ?? regressionBootstrapDefault ?? groupDefault ?? ipmaDefault ?? ncaDefault ?? pcaDefault ?? logisticDefault ?? legacyLogisticDefault ?? olsDefault ?? cbsemDefault ?? gscaDefault ?? ccaDefault ?? predictionDefault ?? higherOrderDefault ?? fallbackDefault,
     groups: buildNativeResultTree(run, tables),
     tables,
   };
@@ -2483,9 +2517,16 @@ function addModerationInferenceTables(
     addTable(tables, {
       id: "moderation_randomization",
       title: "Interaction effect path randomization",
-      warning: null,
-      columns: ["Interaction", "Original", "p", "Permutations"],
-      rows: randomizationRows.map(({ estimate, parameter }) => [label(estimate), formatNumber(parameter.original), formatPValue(parameter.p_value_two_sided), String(parameter.permutations)]),
+      status: "experimental",
+      warning: NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING,
+      columns: ["Interaction", "Original", "Exceedances", "Permutations", "Raw two-sided p"],
+      rows: randomizationRows.map(({ estimate, parameter }) => [
+        label(estimate),
+        formatNumber(parameter.original),
+        String(parameter.exceedances),
+        String(parameter.permutations),
+        String(parameter.p_value_two_sided),
+      ]),
     });
   }
   return matchedParameters;
@@ -2563,9 +2604,16 @@ function addControlInferenceTables(
     addTable(tables, {
       id: "control_randomization",
       title: "Control effects path randomization",
-      warning: null,
-      columns: ["Control", "Original", "p", "Permutations"],
-      rows: randomizationRows.map(({ control, parameter }) => [label(control), formatNumber(parameter.original), formatPValue(parameter.p_value_two_sided), String(parameter.permutations)]),
+      status: "experimental",
+      warning: NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING,
+      columns: ["Control", "Original", "Exceedances", "Permutations", "Raw two-sided p"],
+      rows: randomizationRows.map(({ control, parameter }) => [
+        label(control),
+        formatNumber(parameter.original),
+        String(parameter.exceedances),
+        String(parameter.permutations),
+        String(parameter.p_value_two_sided),
+      ]),
     });
   }
   return matchedParameters;
@@ -4608,7 +4656,7 @@ function constructIdsInRun(run: AnalysisRun): ReadonlySet<string> {
   for (const row of run.bootstrap?.percentile.parameters ?? []) addParameterConstructs(row.parameter);
   for (const row of run.bootstrap?.bca?.parameters ?? []) addParameterConstructs(row.parameter);
   for (const row of run.bootstrap?.studentized?.parameters ?? []) addParameterConstructs(row.parameter);
-  for (const row of run.permutation?.parameters ?? []) addParameterConstructs(row.parameter);
+  for (const row of nativeStructuralPathRandomizationProjection(run)?.parameters ?? []) addParameterConstructs(row.parameter);
   return ids;
 }
 

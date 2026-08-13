@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import { constants as fsConstants } from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { execFile, spawn } from "node:child_process";
@@ -12,12 +13,20 @@ const screenshotDir = path.join(root, "validation", "results", "screens", "v247-
 const reportPath = path.join(root, "validation", "results", "v247_tauri_native_acceptance.json");
 const logisticPackagedReportPath = path.join(root, "validation", "results", "logistic_v2_packaged_acceptance.json");
 const regressionBootstrapPackagedReportPath = path.join(root, "validation", "results", "regression_bootstrap_v1_packaged_acceptance.json");
+const processV2PackagedReportPath = path.join(root, "validation", "results", "process_v2_packaged_acceptance.json");
+const structuralPathRandomizationPackagedReportPath = path.join(
+  root,
+  "validation",
+  "results",
+  "structural_path_randomization_v1_packaged_acceptance.json",
+);
 const validationResultsDir = path.join(root, "validation", "results");
 const windowsNativeSaveHelperPath = path.join(root, "validation", "windows_native_save_export.py");
 const endpoint = process.env.QUICKPLS_CDP_ENDPOINT ?? "http://127.0.0.1:9222";
+const packagedTauriOrigin = "http://tauri.localhost";
 const acceptanceScope = process.env.QUICKPLS_ACCEPTANCE_SCOPE?.trim().toLocaleLowerCase() || "full";
-if (!["full", "mga", "nca", "prediction", "hoc", "pca", "ols", "logistic", "regression_bootstrap", "cbsem", "gsca"].includes(acceptanceScope)) {
-  throw new Error(`QUICKPLS_ACCEPTANCE_SCOPE must be "full", "mga", "nca", "prediction", "hoc", "pca", "ols", "logistic", "regression_bootstrap", "cbsem", or "gsca"; received ${acceptanceScope}.`);
+if (!["full", "mga", "nca", "prediction", "hoc", "pca", "ols", "logistic", "regression_bootstrap", "process_v2", "structural_path_randomization", "cbsem", "gsca"].includes(acceptanceScope)) {
+  throw new Error(`QUICKPLS_ACCEPTANCE_SCOPE must be "full", "mga", "nca", "prediction", "hoc", "pca", "ols", "logistic", "regression_bootstrap", "process_v2", "structural_path_randomization", "cbsem", or "gsca"; received ${acceptanceScope}.`);
 }
 const ncaOnly = acceptanceScope === "nca";
 const mgaOnly = acceptanceScope === "mga";
@@ -27,9 +36,12 @@ const pcaOnly = acceptanceScope === "pca";
 const olsOnly = acceptanceScope === "ols";
 const logisticOnly = acceptanceScope === "logistic";
 const regressionBootstrapOnly = acceptanceScope === "regression_bootstrap";
+const processV2Only = acceptanceScope === "process_v2";
+const structuralPathRandomizationOnly = acceptanceScope === "structural_path_randomization";
 const cbsemOnly = acceptanceScope === "cbsem";
 const gscaOnly = acceptanceScope === "gsca";
-const focusedOnly = ncaOnly || mgaOnly || predictionOnly || hocOnly || pcaOnly || olsOnly || logisticOnly || regressionBootstrapOnly || cbsemOnly || gscaOnly;
+const focusedOnly = ncaOnly || mgaOnly || predictionOnly || hocOnly || pcaOnly || olsOnly || logisticOnly
+  || regressionBootstrapOnly || processV2Only || structuralPathRandomizationOnly || cbsemOnly || gscaOnly;
 const scopedReportPath = focusedOnly
   ? path.join(root, "validation", "results", `v247_tauri_native_acceptance_${acceptanceScope}.json`)
   : reportPath;
@@ -61,6 +73,44 @@ const mgaRuntimePermutationSamples = 5_000;
 const mgaMethodVersion = "pls_mga_two_group_v2";
 const mgaPermutationMethodVersion = "pls_mga_permutation_v2";
 const micomMethodVersion = "micom_v2";
+const structuralPathRandomizationProjectPath = path.join(
+  root,
+  "validation",
+  "results",
+  `v247-native-structural-path-randomization-${Date.now()}-${process.pid}.qpls`,
+);
+const structuralPathRandomizationCancellationSnapshotPrefix = structuralPathRandomizationProjectPath.replace(
+  /\.qpls$/,
+  "-cancellation",
+);
+const structuralPathRandomizationProjectName = "Native Structural Path Randomization Acceptance";
+const structuralPathRandomizationModelName = "Structural Path Randomization Model";
+const structuralPathRandomizationFeatureId = "qpls3.inference.structural_path_randomization";
+const structuralPathRandomizationMethodVersion = "freedman_lane_permutation_v1";
+const structuralPathRandomizationOperation = "pls_pm_freedman_lane_v1";
+const structuralPathRandomizationCatalogueSnapshotDate = "2026-08-12";
+const structuralPathRandomizationEvidenceKind = "quickpls3_scoped_tauri_structural_path_randomization_v1_acceptance";
+const structuralPathRandomizationPermutations = 10_000;
+const structuralPathRandomizationSeed = 20_260_718;
+const structuralPathRandomizationCancellationWorkers = 1;
+const structuralPathRandomizationWorkers = 4;
+const structuralPathRandomizationWarning = "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only.";
+const structuralPathRandomizationProbabilityDisclosure = "Conditional/approximate two-sided plus-one probability under exchangeable reduced-model residuals; no multiplicity adjustment";
+const structuralPathRandomizationQualificationDisclosure = "Internal candidate/experimental product label; method-specific qualification evidence is tracked separately";
+const structuralPathRandomizationExpectedColumns = ["Path", "Original", "Exceedances", "Permutations", "Raw two-sided p"];
+const structuralPathRandomizationExpectedPathLabels = ["X -> Y", "Z -> Y"];
+const structuralPathRandomizationExpectedCheckNames = [
+  "runtimePreflight",
+  "structuralPathRandomizationFixtureProvisioning",
+  "structuralPathRandomizationSetup",
+  "structuralPathRandomizationCancellation",
+  "structuralPathRandomizationResults",
+  "structuralPathRandomizationExport",
+  "structuralPathRandomizationArchive",
+  "structuralPathRandomizationSaveReopen",
+  "resources",
+  "cleanup",
+];
 const ccaProjectPath = path.join(root, "validation", "results", `v247-native-cca-${Date.now()}-${process.pid}.qpls`);
 const ccaProjectName = "Native CCA Acceptance";
 const ccaModelName = "CCA Residual Model";
@@ -124,6 +174,68 @@ const regressionBootstrapPredictors = ["x", "z"];
 const regressionBootstrapControls = ["w"];
 const regressionBootstrapTerms = ["intercept", ...regressionBootstrapPredictors, ...regressionBootstrapControls];
 const regressionBootstrapObservations = 140;
+const processV2FixtureCsvPath = path.join(root, "validation", "results", "process_v2_native_reference.csv");
+const processV2ReferenceContractPath = path.join(root, "validation", "results", "process_v2_native_reference_contract.json");
+let processV2ExpectedGraphCounts = null;
+let processV2ExpectedJohnsonNeymanAnalysisKeys = null;
+const processV2ProjectPath = path.join(root, "validation", "results", `v247-native-process-v2-${Date.now()}-${process.pid}.qpls`);
+const processV2ResetProjectPath = path.join(root, "validation", "results", `v247-native-process-v2-reset-${Date.now()}-${process.pid}.qpls`);
+const processV2ResourceSnapshotPrefix = path.join(
+  validationResultsDir,
+  `process-v2-resource-snapshot-${Date.now()}-${process.pid}`,
+);
+const processV2ProjectName = "Native Graph-Defined PROCESS v2 Acceptance";
+const processV2FeatureId = "qpls3.standalone.process";
+const processV2MethodVersion = "regression_process_v2";
+const processV2BootstrapMethodVersion = "regression_process_bootstrap_v1";
+const processV2WitnessVersion = "regression_process_bootstrap_validation_witness_v1";
+const processV2ReplicateFailureReasonCodes = new Set([
+  "rank_deficient_equation",
+  "invalid_binary_profile",
+  "high_leverage_hc3_instability",
+  "invalid_hc3_covariance",
+  "degenerate_simple_slope_variance",
+  "nonfinite_estimate",
+]);
+const processV2CatalogueSnapshotDate = "2026-08-12";
+const processV2EvidenceKind = "quickpls3_scoped_tauri_process_v2_acceptance";
+const processV2DefaultTableId = "process_model_summary";
+const processV2ReferenceColumns = ["Effect ID", "Kind", "Path", "Estimate", "Reference condition"];
+const processV2ReferenceCondition = "Continuous moderators are evaluated at their original complete-sample raw means (coded 0); binary moderators are evaluated at 0.";
+const processV2PolicyKeys = ["centering", "confidence_level", "covariance", "inference_reference"];
+const processV2PromotionPendingWarning = "Implemented bounded PROCESS v2 candidate; release qualification remains pending until the current independent-reference, native, packaged, and promotion evidence gates pass.";
+const processV2CurveWarningDisclosure = "Exact engine-persisted Johnson-Neyman curve points; bootstrap validation witnesses are never exported.";
+const processV2PrivateWitnessWireToken = /regression_process_bootstrap_validation_witness_v1|validation_witness|successful_bootstrap|successful_jackknife|failed_jackknife/i;
+const processV2Samples = 10_000;
+const processV2Seed = 20_260_812;
+const processV2Workers = 2;
+const processV2Observations = 175;
+const processV2Omitted = 5;
+const processV2ResourcePhasesPath = process.env.QUICKPLS_PROCESS_V2_RESOURCE_PHASES_PATH?.trim()
+  ? path.resolve(process.env.QUICKPLS_PROCESS_V2_RESOURCE_PHASES_PATH.trim())
+  : "";
+const processV2ResourcePhases = {};
+const processV2IdleSettleMilliseconds = 5_000;
+const processV2ResourceSampleCaptureMilliseconds = 500;
+const processV2ResourceSampleWindowMilliseconds = 5_000;
+const processV2ResourcePostMarkerHoldMilliseconds = processV2ResourceSampleCaptureMilliseconds
+  + processV2ResourceSampleWindowMilliseconds;
+const processV2ExpectedTableIds = [
+  "process_model_summary", "process_paths", "process_equation_coefficients", "process_equation_fit",
+  "process_reference_effects", "process_conditional_indirect_effects", "process_moderated_mediation_indices",
+  "process_simple_slopes", "process_conditional_plot_points", "process_johnson_neyman",
+  "process_johnson_neyman_curve_points", "process_bootstrap_summary",
+  "process_bootstrap_failures", "process_bootstrap_inference", "process_bootstrap_bca", "process_scope",
+];
+
+function processV2PoliciesExact(policies) {
+  if (policies === null || typeof policies !== "object" || Array.isArray(policies)) return false;
+  return JSON.stringify(Object.keys(policies).sort()) === JSON.stringify(processV2PolicyKeys)
+    && policies.centering === "equation_complete_case_mean_v1"
+    && policies.confidence_level === 0.95
+    && policies.covariance === "hc3_v1"
+    && policies.inference_reference === "student_t_residual_df_v1";
+}
 const testedDesktopExecutablePath = process.env.QUICKPLS_DESKTOP_EXE_PATH?.trim()
   ? path.resolve(process.env.QUICKPLS_DESKTOP_EXE_PATH.trim())
   : path.join(root, "target", "release", "quickpls-desktop.exe");
@@ -163,12 +275,16 @@ const requestedOlsNativeExportPath = process.env.QUICKPLS_OLS_NATIVE_EXPORT_PATH
 const requestedLogisticNativeExportPath = process.env.QUICKPLS_LOGISTIC_NATIVE_EXPORT_PATH?.trim() ?? "";
 const requestedRegressionBootstrapOlsExportPath = process.env.QUICKPLS_REGRESSION_BOOTSTRAP_OLS_EXPORT_PATH?.trim() ?? "";
 const requestedRegressionBootstrapLogisticExportPath = process.env.QUICKPLS_REGRESSION_BOOTSTRAP_LOGISTIC_EXPORT_PATH?.trim() ?? "";
+const requestedProcessV2ExportPath = process.env.QUICKPLS_PROCESS_V2_EXPORT_PATH?.trim() ?? "";
+const requestedStructuralPathRandomizationExportPath = process.env.QUICKPLS_STRUCTURAL_PATH_RANDOMIZATION_EXPORT_PATH?.trim() ?? "";
 const requestedCbsemNativeExportPath = process.env.QUICKPLS_CBSEM_NATIVE_EXPORT_PATH?.trim() ?? "";
 const requestedGscaNativeExportPath = process.env.QUICKPLS_GSCA_NATIVE_EXPORT_PATH?.trim() ?? "";
 const pythonExecutable = process.env.QUICKPLS_PYTHON?.trim() || "python";
 
+const isolatedFocusedOnly = processV2Only || structuralPathRandomizationOnly;
+const inheritPriorEvidence = focusedOnly && !isolatedFocusedOnly;
 let priorEvidence = null;
-if (focusedOnly) {
+if (inheritPriorEvidence) {
   try {
     priorEvidence = JSON.parse(await fs.readFile(reportPath, "utf8"));
   } catch {
@@ -187,6 +303,18 @@ const evidence = {
     feature_id: regressionBootstrapFeatureId,
     method_version: regressionBootstrapMethodVersion,
     catalogue_snapshot_date: regressionBootstrapCatalogueSnapshotDate,
+  } : processV2Only ? {
+    schema_version: "quickpls.packaged_acceptance.v1",
+    feature_id: processV2FeatureId,
+    method_version: processV2MethodVersion,
+    bootstrap_method_version: processV2BootstrapMethodVersion,
+    catalogue_snapshot_date: processV2CatalogueSnapshotDate,
+  } : structuralPathRandomizationOnly ? {
+    schema_version: "quickpls.packaged_acceptance.v1",
+    feature_id: structuralPathRandomizationFeatureId,
+    method_version: structuralPathRandomizationMethodVersion,
+    catalogue_snapshot_date: structuralPathRandomizationCatalogueSnapshotDate,
+    acceptance_scope: "structural_path_randomization",
   } : {}),
   passed: false,
   generatedAt: new Date().toISOString(),
@@ -197,8 +325,8 @@ const evidence = {
     priorGeneratedAt: priorEvidence?.generatedAt ?? null,
     completedAt: null,
   } : null,
-  checks: focusedOnly && priorEvidence?.checks ? { ...priorEvidence.checks } : {},
-  screenshots: focusedOnly && Array.isArray(priorEvidence?.screenshots)
+  checks: inheritPriorEvidence && priorEvidence?.checks ? { ...priorEvidence.checks } : {},
+  screenshots: inheritPriorEvidence && Array.isArray(priorEvidence?.screenshots)
     ? priorEvidence.screenshots.filter((file) => acceptanceScope === "nca"
       ? !/\\(?:84|85|86|87|88|89)-tauri-native-nca-/i.test(file)
       : acceptanceScope === "prediction"
@@ -213,6 +341,8 @@ const evidence = {
             ? !/\\15[0-9]-tauri-native-logistic-/i.test(file)
           : acceptanceScope === "regression_bootstrap"
             ? !/\\(?:16[0-9]|17[0-2])-tauri-native-regression-bootstrap-/i.test(file)
+          : acceptanceScope === "process_v2"
+            ? !/\\18[0-9]-tauri-native-process-v2-/i.test(file)
           : acceptanceScope === "cbsem"
             ? !/\\13[0-6]-tauri-native-cbsem-/i.test(file)
           : acceptanceScope === "gsca"
@@ -225,10 +355,16 @@ const evidence = {
 
 async function writeAcceptanceEvidence() {
   const serialized = JSON.stringify(evidence, null, 2) + "\n";
-  await fs.writeFile(reportPath, serialized, "utf8");
-  if (scopedReportPath !== reportPath) await fs.writeFile(scopedReportPath, serialized, "utf8");
+  if (isolatedFocusedOnly && scopedReportPath !== reportPath) {
+    await fs.writeFile(scopedReportPath, serialized, "utf8");
+  } else {
+    await fs.writeFile(reportPath, serialized, "utf8");
+    if (scopedReportPath !== reportPath) await fs.writeFile(scopedReportPath, serialized, "utf8");
+  }
   if (logisticOnly) await writeLogisticPackagedEvidence();
   if (regressionBootstrapOnly) await writeRegressionBootstrapPackagedEvidence();
+  if (processV2Only) await writeProcessV2PackagedEvidence();
+  if (structuralPathRandomizationOnly) await writeStructuralPathRandomizationPackagedEvidence();
 }
 
 async function artifactDigest(filePath) {
@@ -244,6 +380,125 @@ async function artifactDigest(filePath) {
   } catch {
     return null;
   }
+}
+
+async function processV2ResourceArtifactState(filePath) {
+  try {
+    const stat = await fs.stat(filePath);
+    return { path: path.relative(root, filePath).replaceAll("\\", "/"), bytes: stat.isFile() ? stat.size : null };
+  } catch {
+    return { path: path.relative(root, filePath).replaceAll("\\", "/"), bytes: 0 };
+  }
+}
+
+async function snapshotProcessV2ResourceArchive(name, sourcePath) {
+  if (!/^[a-z0-9_]+$/.test(name)) {
+    throw new Error(`Unsafe PROCESS v2 resource snapshot name: ${name}`);
+  }
+  const snapshotPath = `${processV2ResourceSnapshotPrefix}-${name}.qpls`;
+  const temporaryPath = `${snapshotPath}.copying`;
+  await fs.mkdir(path.dirname(snapshotPath), { recursive: true });
+  const existing = await Promise.all([
+    fs.stat(snapshotPath).then(() => true).catch(() => false),
+    fs.stat(temporaryPath).then(() => true).catch(() => false),
+  ]);
+  if (existing.some(Boolean)) {
+    throw new Error(`PROCESS v2 resource snapshot target was not exclusive: ${snapshotPath}`);
+  }
+  const sourceStatBefore = await fs.stat(sourcePath, { bigint: true });
+  const sourceDigestBefore = await artifactDigest(sourcePath);
+  if (!sourceStatBefore.isFile() || !sourceDigestBefore) {
+    throw new Error(`PROCESS v2 resource snapshot source was not a non-empty file: ${sourcePath}`);
+  }
+  try {
+    await fs.copyFile(sourcePath, temporaryPath, fsConstants.COPYFILE_EXCL);
+    const sourceStatAfter = await fs.stat(sourcePath, { bigint: true });
+    const sourceDigestAfter = await artifactDigest(sourcePath);
+    const temporaryDigest = await artifactDigest(temporaryPath);
+    const sourceStable = sourceStatAfter.isFile()
+      && sourceStatBefore.size === sourceStatAfter.size
+      && sourceStatBefore.mtimeNs === sourceStatAfter.mtimeNs
+      && sourceDigestAfter !== null
+      && sourceDigestBefore.size === sourceDigestAfter.size
+      && sourceDigestBefore.sha256 === sourceDigestAfter.sha256;
+    if (!sourceStable || !temporaryDigest
+      || temporaryDigest.size !== sourceDigestBefore.size
+      || temporaryDigest.sha256 !== sourceDigestBefore.sha256) {
+      throw new Error(`PROCESS v2 resource snapshot source changed during its exclusive copy: ${JSON.stringify({ sourceDigestBefore, sourceDigestAfter, temporaryDigest })}`);
+    }
+    await fs.link(temporaryPath, snapshotPath);
+    await fs.rm(temporaryPath, { force: true });
+    const snapshotDigest = await artifactDigest(snapshotPath);
+    if (!snapshotDigest || snapshotDigest.size !== sourceDigestBefore.size
+      || snapshotDigest.sha256 !== sourceDigestBefore.sha256) {
+      throw new Error(`PROCESS v2 resource snapshot identity changed after atomic publication: ${snapshotPath}`);
+    }
+    const logicalState = await inspectProcessV2LogicalArchiveState(snapshotPath);
+    return {
+      path: snapshotDigest.path,
+      bytes: snapshotDigest.size,
+      sha256: snapshotDigest.sha256,
+      source_path: sourceDigestBefore.path,
+      source_before: {
+        bytes: sourceDigestBefore.size,
+        sha256: sourceDigestBefore.sha256,
+        mtime_ns: sourceStatBefore.mtimeNs.toString(),
+      },
+      source_after: {
+        bytes: sourceDigestAfter.size,
+        sha256: sourceDigestAfter.sha256,
+        mtime_ns: sourceStatAfter.mtimeNs.toString(),
+      },
+      source_stable_during_copy: true,
+      exclusive_atomic_copy: true,
+      application_opened: false,
+      logical_state: logicalState,
+    };
+  } catch (error) {
+    await fs.rm(temporaryPath, { force: true });
+    await fs.rm(snapshotPath, { force: true });
+    throw error;
+  }
+}
+
+async function markProcessV2ResourcePhase(name, state, effectiveArchivePath) {
+  if (!processV2Only || !processV2ResourcePhasesPath) return;
+  const stateKeys = ["completed_result_count", "selected_run_id", "state_kind", "surface", "witness_count"];
+  if (!state || JSON.stringify(Object.keys(state).sort()) !== JSON.stringify(stateKeys)
+    || !["data", "results"].includes(state.surface)
+    || !Number.isInteger(state.completed_result_count) || state.completed_result_count < 0
+    || !Number.isInteger(state.witness_count) || state.witness_count < 0
+    || (state.selected_run_id !== null && (typeof state.selected_run_id !== "string" || !state.selected_run_id.trim()))
+    || typeof state.state_kind !== "string" || !state.state_kind.trim()) {
+    throw new Error(`Invalid PROCESS v2 resource logical state for ${name}: ${JSON.stringify(state)}`);
+  }
+  const effectiveArchive = await snapshotProcessV2ResourceArchive(name, effectiveArchivePath);
+  const archiveState = effectiveArchive.logical_state;
+  if (!archiveState.manifestValid
+    || archiveState.completedResultCount !== state.completed_result_count
+    || archiveState.witnessCount !== state.witness_count
+    || archiveState.selectedRunId !== state.selected_run_id) {
+    throw new Error(`PROCESS v2 phase ${name} logical state did not match its effective archive: ${JSON.stringify({ state, archiveState })}`);
+  }
+  processV2ResourcePhases[name] = {
+    recorded_at_utc: new Date().toISOString(),
+    idle_settle_milliseconds: processV2IdleSettleMilliseconds,
+    capture_delay_milliseconds: processV2ResourceSampleCaptureMilliseconds,
+    sample_window_milliseconds: processV2ResourceSampleWindowMilliseconds,
+    logical_state: state,
+    effective_archive: effectiveArchive,
+    primary_archive: await processV2ResourceArtifactState(processV2ProjectPath),
+    export: await processV2ResourceArtifactState(requestedProcessV2ExportPath),
+  };
+  const temporary = `${processV2ResourcePhasesPath}.${process.pid}.tmp`;
+  await fs.mkdir(path.dirname(processV2ResourcePhasesPath), { recursive: true });
+  await fs.writeFile(temporary, JSON.stringify({
+    schema_version: 2,
+    feature_id: processV2FeatureId,
+    method_version: processV2MethodVersion,
+    phases: processV2ResourcePhases,
+  }, null, 2) + "\n", "utf8");
+  await fs.rename(temporary, processV2ResourcePhasesPath);
 }
 
 async function directoryManifestDigest(directoryPath) {
@@ -507,6 +762,291 @@ async function writeRegressionBootstrapPackagedEvidence() {
   await fs.writeFile(regressionBootstrapPackagedReportPath, JSON.stringify(report, null, 2) + "\n", "utf8");
 }
 
+async function writeProcessV2PackagedEvidence() {
+  const source = evidence.checks;
+  const screenshotPaths = evidence.screenshots.filter((file) => /\\18[0-9]-tauri-native-process-v2-/i.test(file));
+  const [xlsx, projectArchive, testedCliExecutable, testedDesktopExecutable, testedDistBundle, ...screenshots] = await Promise.all([
+    artifactDigest(source.processV2Export?.nativeXlsx?.targetPath ?? ""),
+    artifactDigest(processV2ProjectPath),
+    artifactDigest(qplsCliPath),
+    artifactDigest(testedDesktopExecutablePath),
+    directoryManifestDigest(testedDistDirectory),
+    ...screenshotPaths.map(artifactDigest),
+  ]);
+  const workflow = source.processV2Workflow ?? {};
+  const setup = source.processV2Setup ?? {};
+  const results = source.processV2Results ?? {};
+  const exported = source.processV2Export ?? {};
+  const reopened = source.processV2SaveReopen ?? {};
+  const cancellation = source.processV2Cancellation ?? {};
+  const cancelledRetrySetup = source.processV2CancelledRetrySetup ?? {};
+  const witness = source.processV2WitnessBoundary ?? {};
+  const resetClone = source.processV2ResourceResetClone ?? {};
+  const runtimePreflight = source.runtimePreflight ?? {};
+  const packagedPageState = (state) => state && typeof state === "object" ? {
+    index: state.index ?? null,
+    url: state.url ?? null,
+    origin: state.origin ?? null,
+    title: state.title ?? null,
+    shell_visible: state.shellVisible === true,
+    tauri_runtime: state.tauriRuntime === true,
+  } : null;
+  const checks = {
+    runtime_preflight: {
+      passed: runtimePreflight.passed === true,
+      expected_origin: runtimePreflight.expectedOrigin ?? null,
+      enumerated_pages: Array.isArray(runtimePreflight.enumeratedPages)
+        ? runtimePreflight.enumeratedPages.map(packagedPageState)
+        : [],
+      qualifying_page_count: runtimePreflight.qualifyingPageCount ?? null,
+      pre_reload: packagedPageState(runtimePreflight.preReload),
+      reload_count: runtimePreflight.reloadCount ?? null,
+      post_reload: packagedPageState(runtimePreflight.postReload),
+      same_origin: runtimePreflight.sameOrigin === true,
+      source_check: "runtimePreflight",
+    },
+    workflow: {
+      passed: workflow.passed === true,
+      completed: workflow.completed === true,
+      active_lifecycle_captured: workflow.activeLifecycleCaptured === true,
+      model_free: workflow.modelFree === true,
+      graph_defined_without_numbered_templates: workflow.graphDefinedWithoutNumberedTemplates === true,
+      source_check: "processV2Workflow",
+    },
+    setup: {
+      passed: setup.passed === true,
+      outcome: setup.outcome ?? null,
+      focal_predictor: setup.focalPredictor ?? null,
+      top_level_predictors: setup.topLevelPredictors ?? null,
+      top_level_predictors_maximum: setup.topLevelPredictorsMaximum ?? null,
+      paths: setup.paths ?? null,
+      moderators: setup.moderators ?? null,
+      moderations: setup.moderations ?? null,
+      controls: setup.controls ?? null,
+      controls_maximum: setup.controlsMaximum ?? null,
+      equation_non_intercept_terms_maximum: setup.equationNonInterceptTermsMaximum ?? null,
+      bootstrap_replicates: setup.bootstrapReplicates ?? null,
+      workers: setup.workers ?? null,
+      seed: setup.seed ?? null,
+      source_check: "processV2Setup",
+    },
+    results: {
+      passed: results.passed === true,
+      initial_selected_table: results.initialSelectedTable ?? null,
+      table_ids: results.tableIds ?? [],
+      exact_table_ids: results.exactTableIds === true,
+      equation_count: results.equationCount ?? null,
+      reference_effect_rows: results.referenceEffectRows ?? null,
+      conditional_indirect_rows: results.conditionalIndirectRows ?? null,
+      moderated_mediation_index_rows: results.moderatedMediationIndexRows ?? null,
+      simple_slope_rows: results.simpleSlopeRows ?? null,
+      conditional_plot_point_rows: results.conditionalPlotPointRows ?? null,
+      johnson_neyman_rows: results.johnsonNeymanRows ?? null,
+      johnson_neyman_analysis_count: results.johnsonNeymanAnalysisCount ?? null,
+      johnson_neyman_analysis_keys: results.johnsonNeymanAnalysisKeys ?? [],
+      johnson_neyman_curve_point_rows: results.johnsonNeymanCurvePointRows ?? null,
+      bootstrap_estimand_rows: results.bootstrapEstimandRows ?? null,
+      accessible_non_color_plot_semantics: results.accessibleNonColorPlotSemantics === true,
+      reference_effect_columns_exact: results.referenceEffectColumnsExact === true,
+      reference_condition_rows_exact: results.referenceConditionRowsExact === true,
+      candidate_promotion_warnings_exact: results.candidatePromotionWarningsExact === true,
+      curve_warning_disclosure_exact: results.curveWarningDisclosureExact === true,
+      failure_disclosure_truthful: results.failureDisclosureTruthful === true,
+      validation_witness_not_rendered: results.validationWitnessNotRendered === true,
+      no_na_fabrication: results.noNaFabrication === true,
+      generic_regression_shell_not_applicable: results.genericRegressionShellNotApplicable === true,
+      expected_counts_source: results.expectedCountsSource ?? null,
+      expected_graph_counts: results.expectedGraphCounts ?? null,
+      source_check: "processV2Results",
+    },
+    export: {
+      passed: exported.passed === true && xlsx !== null,
+      workbook_sheets: exported.nativeXlsx?.workbookSheets ?? [],
+      validation_witness_excluded: exported.validationWitnessExcluded === true,
+      witness_scan: exported.nativeXlsx?.witnessScan ?? null,
+      process_table_contract: exported.nativeXlsx?.processTableContract ?? null,
+      artifact_sha256: xlsx?.sha256 ?? null,
+      source_check: "processV2Export",
+    },
+    save_reopen: {
+      passed: reopened.passed === true && projectArchive !== null,
+      same_run_restored: reopened.sameRunRestored === true,
+      initial_selected_table: reopened.initialSelectedTable ?? null,
+      project_checksum_matches: reopened.archive?.manifest?.projectChecksumMatches === true,
+      archive_witness_validated: reopened.archive?.witnessBoundary?.passed === true,
+      archive_sha256: projectArchive?.sha256 ?? null,
+      cycle_1_settled_autosave: reopened.settledAutosave ?? null,
+      cycle_1_autosave_after_checkpoint: reopened.autosaveAfterCheckpoint ?? null,
+      source_check: "processV2SaveReopen",
+    },
+    cancellation: {
+      passed: cancellation.passed === true,
+      active_lifecycle_captured: cancellation.activeLifecycleCaptured === true,
+      no_partial_result: cancellation.noPartialResult === true,
+      source_check: "processV2Cancellation",
+    },
+    cancelled_retry_setup: {
+      passed: cancelledRetrySetup.passed === true,
+      read_only: cancelledRetrySetup.readOnly === true,
+      exact_frozen_setup_match: cancelledRetrySetup.exactFrozenSetupMatch === true,
+      snapshot: cancelledRetrySetup.snapshot ?? null,
+      frozen_setup: cancelledRetrySetup.frozenSetup ?? null,
+      source_check: "processV2CancelledRetrySetup",
+    },
+    witness_boundary: {
+      passed: witness.passed === true,
+      archive_only: witness.archiveOnly === true,
+      witness_method_version: witness.witnessMethodVersion ?? null,
+      estimand_order_exact: witness.estimandOrderExact === true,
+      bootstrap_index_partition_exact: witness.bootstrapIndexPartitionExact === true,
+      jackknife_index_partition_exact: witness.jackknifeIndexPartitionExact === true,
+      excluded_from_results: witness.excludedFromResults === true,
+      excluded_from_exports: witness.excludedFromExports === true,
+      source_check: "processV2WitnessBoundary",
+    },
+    resource_reset: {
+      passed: resetClone.passed === true,
+      original_path: resetClone.originalPath ?? null,
+      reset_path: resetClone.resetPath ?? null,
+      distinct_path: resetClone.distinctPath === true,
+      original_archive: resetClone.originalArchive ?? null,
+      reset_archive: resetClone.resetArchive ?? null,
+      result_id: resetClone.identity?.resultId ?? null,
+      recipe_id: resetClone.identity?.recipeId ?? null,
+      run_id: resetClone.identity?.runId ?? null,
+      completed_result_count: resetClone.logicalState?.completedResultCount ?? null,
+      witness_count: resetClone.logicalState?.witnessCount ?? null,
+      no_sidecars_before_copy: resetClone.sidecarsBeforeCopy?.present?.length === 0,
+      no_sidecars_after_copy: resetClone.sidecarsAfterCopy?.present?.length === 0,
+      no_sidecars_before_open: resetClone.sidecarsBeforeOpen?.present?.length === 0,
+      settled_autosave_sidecars_exact: resetClone.settledAutosave?.exactAllowedIdentity === true,
+      autosave_sidecars_stable_after_checkpoint: resetClone.autosaveAfterCheckpoint?.exactAllowedIdentity === true
+        && JSON.stringify(resetClone.autosaveAfterCheckpoint?.artifacts ?? null)
+          === JSON.stringify(resetClone.settledAutosave?.artifacts ?? null),
+      recovery_disclosure_absent: resetClone.recoveryDisclosureAbsent === true,
+      table_ids: resetClone.resetTableIds ?? [],
+      selected_run_id: resetClone.selectedRunId ?? null,
+      selected_table_id: resetClone.selectedTableId ?? null,
+      source_check: "processV2ResourceResetClone",
+    },
+  };
+  const report = {
+    schema_version: "quickpls.packaged_acceptance.v1",
+    kind: processV2EvidenceKind,
+    passed: evidence.passed && Object.values(checks).every((check) => check.passed)
+      && testedDesktopExecutable !== null && testedDistBundle !== null
+      && xlsx !== null && projectArchive !== null && screenshots.filter(Boolean).length >= 5,
+    generated_at_utc: evidence.generatedAt,
+    completed_at_utc: evidence.focusedRun?.completedAt ?? null,
+    feature_id: processV2FeatureId,
+    method_version: processV2MethodVersion,
+    bootstrap_method_version: processV2BootstrapMethodVersion,
+    catalogue_snapshot_date: processV2CatalogueSnapshotDate,
+    target: "windows_10_11_x64_packaged_tauri",
+    runtime: evidence.runtime,
+    endpoint: evidence.endpoint,
+    generator: "validation/v247_tauri_native_acceptance.mjs",
+    tested_product: {
+      qpls_cli_exe: testedCliExecutable,
+      quickpls_desktop_exe: testedDesktopExecutable,
+      dist_bundle: testedDistBundle,
+    },
+    checks,
+    artifacts: {
+      xlsx,
+      project_archive: projectArchive,
+      screenshots: screenshots.filter(Boolean),
+    },
+    console_errors: evidence.consoleErrors,
+    failures: evidence.failures,
+    source_report: path.relative(root, scopedReportPath).replaceAll("\\", "/"),
+  };
+  await fs.writeFile(processV2PackagedReportPath, JSON.stringify(report, null, 2) + "\n", "utf8");
+}
+
+async function writeStructuralPathRandomizationPackagedEvidence() {
+  const source = evidence.checks;
+  const screenshotPaths = evidence.screenshots.filter((file) => /\\(?:19[0-9]|20[0-9])-tauri-native-structural-path-randomization-/i.test(file));
+  const cancellationBeforeReported = source.structuralPathRandomizationCancellation?.archiveBeforeSnapshot?.artifact ?? null;
+  const cancellationAfterReported = source.structuralPathRandomizationCancellation?.archiveAfterSnapshot?.artifact ?? null;
+  const [
+    xlsx,
+    projectArchive,
+    testedCliExecutable,
+    testedDesktopExecutable,
+    testedDistBundle,
+    cancellationArchiveBefore,
+    cancellationArchiveAfter,
+    ...screenshots
+  ] = await Promise.all([
+    artifactDigest(source.structuralPathRandomizationExport?.nativeXlsx?.targetPath ?? ""),
+    artifactDigest(structuralPathRandomizationProjectPath),
+    artifactDigest(qplsCliPath),
+    artifactDigest(testedDesktopExecutablePath),
+    directoryManifestDigest(testedDistDirectory),
+    artifactDigest(cancellationBeforeReported?.path ? path.resolve(root, cancellationBeforeReported.path) : ""),
+    artifactDigest(cancellationAfterReported?.path ? path.resolve(root, cancellationAfterReported.path) : ""),
+    ...screenshotPaths.map(artifactDigest),
+  ]);
+  const checks = {
+    runtimePreflight: source.runtimePreflight ?? { passed: false, pending: "harness" },
+    structuralPathRandomizationFixtureProvisioning: source.structuralPathRandomizationFixtureProvisioning ?? { passed: false, pending: "harness" },
+    structuralPathRandomizationSetup: source.structuralPathRandomizationSetup ?? { passed: false, pending: "harness" },
+    structuralPathRandomizationCancellation: source.structuralPathRandomizationCancellation ?? { passed: false, pending: "harness" },
+    structuralPathRandomizationResults: source.structuralPathRandomizationResults ?? { passed: false, pending: "harness" },
+    structuralPathRandomizationExport: source.structuralPathRandomizationExport ?? { passed: false, pending: "harness" },
+    structuralPathRandomizationArchive: source.structuralPathRandomizationArchive ?? { passed: false, pending: "harness" },
+    structuralPathRandomizationSaveReopen: source.structuralPathRandomizationSaveReopen ?? { passed: false, pending: "harness" },
+    resources: source.resources ?? { passed: false, pending: "wrapper" },
+    cleanup: source.cleanup ?? { passed: false, pending: "wrapper" },
+  };
+  const exactCheckNames = JSON.stringify(Object.keys(checks)) === JSON.stringify(structuralPathRandomizationExpectedCheckNames);
+  const cancellationArtifactsExact = cancellationArchiveBefore !== null
+    && cancellationArchiveAfter !== null
+    && JSON.stringify(cancellationArchiveBefore) === JSON.stringify(cancellationBeforeReported)
+    && JSON.stringify(cancellationArchiveAfter) === JSON.stringify(cancellationAfterReported);
+  const report = {
+    schema_version: "quickpls.packaged_acceptance.v1",
+    kind: structuralPathRandomizationEvidenceKind,
+    passed: evidence.passed && exactCheckNames
+      && Object.values(checks).every((check) => check?.passed === true)
+      && xlsx !== null && projectArchive !== null && testedCliExecutable !== null
+      && testedDesktopExecutable !== null && testedDistBundle !== null
+      && cancellationArtifactsExact
+      && screenshots.filter(Boolean).length >= 6,
+    generated_at_utc: evidence.generatedAt,
+    completed_at_utc: evidence.focusedRun?.completedAt ?? null,
+    feature_id: structuralPathRandomizationFeatureId,
+    method_version: structuralPathRandomizationMethodVersion,
+    catalogue_snapshot_date: structuralPathRandomizationCatalogueSnapshotDate,
+    target: "windows_10_11_x64_packaged_tauri",
+    runtime: evidence.runtime,
+    endpoint: evidence.endpoint,
+    generator: "validation/v247_tauri_native_acceptance.mjs",
+    acceptance_scope: "structural_path_randomization",
+    tested_product: {
+      qpls_cli_exe: testedCliExecutable,
+      quickpls_desktop_exe: testedDesktopExecutable,
+      dist_bundle: testedDistBundle,
+    },
+    checks,
+    artifacts: {
+      xlsx,
+      project_archive: projectArchive,
+      resource_samples: source.resources?.artifacts?.samples ?? null,
+      resource_report: source.resources?.artifacts?.report ?? null,
+      cleanup_report: source.cleanup?.artifact ?? null,
+      cancellation_archive_before: cancellationArchiveBefore,
+      cancellation_archive_after: cancellationArchiveAfter,
+      screenshots: screenshots.filter(Boolean),
+    },
+    console_errors: evidence.consoleErrors,
+    failures: evidence.failures,
+    source_report: path.relative(root, scopedReportPath).replaceAll("\\", "/"),
+  };
+  await fs.writeFile(structuralPathRandomizationPackagedReportPath, JSON.stringify(report, null, 2) + "\n", "utf8");
+}
+
 const expectedOptionLabels = [
   "PLS-SEM Algorithm",
   "Consistent PLS",
@@ -697,6 +1237,52 @@ async function provisionDisposableProject({ sourceCsv, projectPath, projectName 
   };
 }
 
+async function provisionProcessV2ReferenceFixture(filePath) {
+  const source = [
+    "from pathlib import Path",
+    "import json",
+    "import sys",
+    "sys.path.insert(0, str(Path.cwd() / 'validation'))",
+    "from process_v2_reference import write_fixture, complete_case_columns, variable_profiles, reference_graph, OUTCOME",
+    "write_fixture(Path(sys.argv[1]))",
+    "columns, total_rows = complete_case_columns(Path(sys.argv[1]))",
+    "graph = reference_graph(columns, raw_probe_profiles=variable_profiles(columns))",
+    "counts = {'completeCases': len(columns[OUTCOME]), 'omittedCases': total_rows - len(columns[OUTCOME]), 'equations': len(graph['equations']), 'paths': len(graph['paths']), 'moderations': len(graph['moderations']), 'referenceEffects': len(graph['reference_effects']), 'conditionalIndirectEffects': len(graph['conditional_indirect_effects']), 'moderatedMediationIndices': len(graph['moderated_mediation_indices']), 'simpleSlopes': len(graph['simple_slopes']), 'plots': len(graph['plots']), 'conditionalPlotPoints': sum(len(series['points']) for plot in graph['plots'] for series in plot['series']), 'johnsonNeyman': len(graph['johnson_neyman']), 'johnsonNeymanRegionRows': sum(len(row['regions']) if row['status'] == 'available' else 1 for row in graph['johnson_neyman']), 'availableJohnsonNeyman': sum(row['status'] == 'available' for row in graph['johnson_neyman']), 'johnsonNeymanCurvePoints': sum(len(row.get('curve_points', [])) for row in graph['johnson_neyman']), 'estimands': len(graph['reference_effects']) + len(graph['conditional_indirect_effects']) + len(graph['moderated_mediation_indices']) + len(graph['simple_slopes'])}",
+    "analysis_keys = [[row['moderation_id'], row['solved_moderator'], '; '.join(f\"{value['variable']} = {value['raw_value']:.4f} (coded {value['coded_value']:.4f})\" for value in row['conditioning_values'])] for row in graph['johnson_neyman']]",
+    "Path(sys.argv[2]).write_text(json.dumps({'schema_version': 1, 'source': 'validation/process_v2_reference.py:reference_graph', 'counts': counts, 'johnson_neyman_analysis_keys': analysis_keys}, indent=2) + '\\n', encoding='utf-8')",
+  ].join("; ");
+  const { stdout, stderr } = await execFileAsync(pythonExecutable, ["-c", source, filePath, processV2ReferenceContractPath], {
+    cwd: root,
+    windowsHide: true,
+    maxBuffer: 1024 * 1024,
+  });
+  const contents = await fs.readFile(filePath, "utf8");
+  const lines = contents.trimEnd().split(/\r?\n/);
+  const header = lines[0]?.split(",") ?? [];
+  if (lines.length !== 181 || JSON.stringify(header) !== JSON.stringify(["X", "M1", "M2", "M3", "M4", "W", "B", "C", "Y"])) {
+    throw new Error(`The PROCESS v2 reference fixture identity drifted: ${JSON.stringify({ rows: lines.length - 1, header })}`);
+  }
+  const expected = JSON.parse(await fs.readFile(processV2ReferenceContractPath, "utf8"));
+  if (expected?.schema_version !== 1 || expected?.source !== "validation/process_v2_reference.py:reference_graph"
+    || !expected?.counts || Object.values(expected.counts).some((value) => !Number.isInteger(value) || value < 0)
+    || expected.counts.johnsonNeyman !== 4 || expected.counts.johnsonNeymanRegionRows !== 7
+    || expected.counts.availableJohnsonNeyman !== 3
+    || !Array.isArray(expected.johnson_neyman_analysis_keys)
+    || expected.johnson_neyman_analysis_keys.length !== expected.counts.johnsonNeyman
+    || expected.johnson_neyman_analysis_keys.some((row) => (
+      !Array.isArray(row) || row.length !== 3 || row.some((value) => typeof value !== "string")
+    ))) {
+    throw new Error(`The independent PROCESS v2 expected-count contract was invalid: ${JSON.stringify(expected)}`);
+  }
+  processV2ExpectedGraphCounts = expected.counts;
+  processV2ExpectedJohnsonNeymanAnalysisKeys = expected.johnson_neyman_analysis_keys;
+  return {
+    path: filePath, rows: 180, columns: header, stdout: stdout.trim(), stderr: stderr.trim(),
+    expectedCountsSource: expected.source, expectedGraphCounts: expected.counts,
+    expectedJohnsonNeymanAnalysisKeys: expected.johnson_neyman_analysis_keys,
+  };
+}
+
 async function provisionMgaReferenceFixture(filePath) {
   const columns = ["group", "x1", "x2", "z1", "z2", "y1", "y2"];
   const rows = [];
@@ -782,6 +1368,12 @@ try {
       projectPath: regressionBootstrapProjectPath,
       projectName: regressionBootstrapProjectName,
     });
+  } else if (processV2Only) {
+    // PROCESS v2 provisioning is deferred until the packaged Tauri page passes
+    // its production-origin and reload preflight.
+  } else if (structuralPathRandomizationOnly) {
+    // Structural Path Randomization provisioning is deferred until the packaged
+    // Tauri page passes its production-origin and reload preflight.
   } else if (pcaOnly) {
     evidence.checks.pcaFixtureProvisioning = await provisionDisposableProject({
       sourceCsv: pcaFixtureCsvPath,
@@ -857,19 +1449,155 @@ try {
   process.exit(1);
 }
 
-const browser = await chromium.connectOverCDP(endpoint);
-const context = browser.contexts()[0];
-const page = context?.pages()[0];
-if (!page) throw new Error("No QuickPLS WebView2 page was available at the CDP endpoint.");
+async function inspectCdpPage(candidate, index) {
+  const fallbackUrl = candidate.url();
+  try {
+    const inspected = await candidate.evaluate(() => {
+      const shell = document.querySelector(".nd-app[data-native-desktop-shell='true']");
+      const shellStyle = shell ? getComputedStyle(shell) : null;
+      return {
+        title: document.title,
+        shellVisible: Boolean(shell
+          && shellStyle?.display !== "none"
+          && shellStyle?.visibility !== "hidden"
+          && shell.getClientRects().length > 0),
+        tauriRuntime: Boolean(window.__TAURI_INTERNALS__),
+      };
+    });
+    const url = candidate.url();
+    let origin = null;
+    try {
+      origin = new URL(url).origin;
+    } catch {
+      origin = null;
+    }
+    return { index, url, origin, ...inspected };
+  } catch {
+    let origin = null;
+    try {
+      origin = new URL(fallbackUrl).origin;
+    } catch {
+      origin = null;
+    }
+    return { index, url: fallbackUrl, origin, title: "", shellVisible: false, tauriRuntime: false };
+  }
+}
+
+async function enumerateCdpPages(browserInstance) {
+  const pages = browserInstance.contexts().flatMap((context) => context.pages());
+  const inspected = await Promise.all(pages.map((candidate, index) => inspectCdpPage(candidate, index)));
+  return pages.map((candidate, index) => ({ candidate, state: inspected[index] }));
+}
+
+let browser = null;
+let page = null;
+evidence.checks.runtimePreflight = {
+  passed: false,
+  expectedOrigin: packagedTauriOrigin,
+  enumeratedPages: [],
+  qualifyingPageCount: 0,
+  preReload: null,
+  reloadCount: 0,
+  postReload: null,
+  sameOrigin: false,
+};
+try {
+  browser = await chromium.connectOverCDP(endpoint);
+  let pageEntries = [];
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    pageEntries = await enumerateCdpPages(browser);
+    const qualifying = pageEntries.filter(({ state }) => state.shellVisible && state.tauriRuntime);
+    if (qualifying.length > 0) break;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  const qualifying = pageEntries.filter(({ state }) => state.shellVisible && state.tauriRuntime);
+  evidence.checks.runtimePreflight.enumeratedPages = pageEntries.map(({ state }) => state);
+  evidence.checks.runtimePreflight.qualifyingPageCount = qualifying.length;
+  if (qualifying.length !== 1) {
+    throw new Error(`Expected exactly one QuickPLS shell+Tauri CDP page; found ${qualifying.length}: ${JSON.stringify(evidence.checks.runtimePreflight.enumeratedPages)}`);
+  }
+  page = qualifying[0].candidate;
+  evidence.checks.runtimePreflight.preReload = qualifying[0].state;
+  if (qualifying[0].state.origin !== packagedTauriOrigin) {
+    throw new Error(`QuickPLS packaged preflight expected origin ${packagedTauriOrigin}; received ${qualifying[0].state.origin ?? "invalid"} at ${qualifying[0].state.url}.`);
+  }
+
+  page.on("pageerror", (error) => evidence.consoleErrors.push({ type: "pageerror", message: error.message }));
+  page.on("console", (message) => {
+    if (message.type() === "error") evidence.consoleErrors.push({ type: "console", message: message.text() });
+  });
+
+  let reloadFailure = null;
+  evidence.checks.runtimePreflight.reloadCount = 1;
+  try {
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 30_000 });
+    await page.locator(".nd-app[data-native-desktop-shell='true']").waitFor({ state: "visible", timeout: 15_000 });
+  } catch (error) {
+    reloadFailure = error instanceof Error ? error.message : String(error);
+  }
+  const postReload = await inspectCdpPage(page, qualifying[0].state.index);
+  evidence.checks.runtimePreflight.postReload = postReload;
+  evidence.checks.runtimePreflight.sameOrigin = postReload.origin === qualifying[0].state.origin;
+  evidence.checks.runtimePreflight.passed = reloadFailure === null
+    && postReload.origin === packagedTauriOrigin
+    && postReload.shellVisible
+    && postReload.tauriRuntime
+    && evidence.checks.runtimePreflight.sameOrigin;
+  if (!evidence.checks.runtimePreflight.passed) {
+    throw new Error(`QuickPLS packaged reload preflight failed: ${JSON.stringify({ reloadFailure, ...evidence.checks.runtimePreflight })}`);
+  }
+} catch (error) {
+  evidence.failures.push(error instanceof Error ? error.message : String(error));
+  await writeAcceptanceEvidence();
+  console.error(evidence.failures[0]);
+  process.exit(1);
+}
+
+if (processV2Only) {
+  try {
+    evidence.checks.processV2ReferenceFixture = await provisionProcessV2ReferenceFixture(processV2FixtureCsvPath);
+    evidence.checks.processV2FixtureProvisioning = await provisionDisposableProject({
+      sourceCsv: processV2FixtureCsvPath,
+      projectPath: processV2ProjectPath,
+      projectName: processV2ProjectName,
+    });
+  } catch (error) {
+    evidence.failures.push(error instanceof Error ? error.message : String(error));
+    await writeAcceptanceEvidence();
+    console.error(evidence.failures[0]);
+    process.exit(1);
+  }
+}
+
+if (structuralPathRandomizationOnly) {
+  try {
+    const fixture = await provisionMgaReferenceFixture(mgaFixtureCsvPath);
+    const project = await provisionDisposableProject({
+      sourceCsv: mgaFixtureCsvPath,
+      projectPath: structuralPathRandomizationProjectPath,
+      projectName: structuralPathRandomizationProjectName,
+    });
+    evidence.checks.structuralPathRandomizationFixtureProvisioning = {
+      passed: fixture.deterministic === true && fixture.rows === 180
+        && JSON.stringify(fixture.columns) === JSON.stringify(["group", "x1", "x2", "z1", "z2", "y1", "y2"]),
+      fixture,
+      project,
+      model_name: structuralPathRandomizationModelName,
+    };
+    if (!evidence.checks.structuralPathRandomizationFixtureProvisioning.passed) {
+      throw new Error(`Structural Path Randomization fixture identity drifted: ${JSON.stringify(evidence.checks.structuralPathRandomizationFixtureProvisioning)}`);
+    }
+  } catch (error) {
+    evidence.failures.push(error instanceof Error ? error.message : String(error));
+    await writeAcceptanceEvidence();
+    console.error(evidence.failures[0]);
+    process.exit(1);
+  }
+}
 
 let priorRecentProjectsRaw = null;
 let recentProjectsSeeded = false;
 let nativeViewportLabel = "current-viewport";
-
-page.on("pageerror", (error) => evidence.consoleErrors.push({ type: "pageerror", message: error.message }));
-page.on("console", (message) => {
-  if (message.type() === "error") evidence.consoleErrors.push({ type: "console", message: message.text() });
-});
 
 async function capture(name) {
   const file = path.join(screenshotDir, name);
@@ -887,10 +1615,21 @@ async function waitForSurface(surface, timeout = 15_000) {
   await page.locator(`.nd-app[data-surface="${surface}"]`).waitFor({ state: "visible", timeout });
 }
 
-async function captureActiveCalculation(dialog, name, methodLabel) {
-  const progress = dialog.locator(".nd-run-progress");
+async function captureActiveCalculation(
+  dialog,
+  name,
+  methodLabel,
+  { allowTerminalTransitionAfterCapture = false } = {},
+) {
+  const progress = dialog.locator(
+    '.nd-run-progress[aria-busy="true"]:is(.queued,.validating,.running,.cancelling)',
+  );
+  if (await progress.count() > 1) {
+    throw new Error(`${methodLabel} exposed more than one active calculation state.`);
+  }
   await progress.waitFor({ state: "visible", timeout: 5_000 });
   const state = await progress.evaluate((element) => ({
+    ariaBusy: element.getAttribute("aria-busy"),
     status: [...element.classList].find((className) => ["queued", "validating", "running", "cancelling"].includes(className)) ?? null,
     phase: element.querySelector("strong")?.textContent?.trim() ?? "",
     message: element.querySelector("p")?.textContent?.trim() ?? "",
@@ -898,9 +1637,25 @@ async function captureActiveCalculation(dialog, name, methodLabel) {
     progressMax: element.querySelector("progress")?.getAttribute("max") ?? null,
     logEntries: element.querySelectorAll("ol li").length,
   }));
-  if (!state.status) throw new Error(`${methodLabel} did not expose a genuine active calculation state.`);
+  if (state.ariaBusy !== "true" || !state.status) throw new Error(`${methodLabel} did not expose a genuine active calculation state.`);
   await capture(name);
-  return state;
+  const postCapture = await progress.evaluate((element) => ({
+    ariaBusy: element.getAttribute("aria-busy"),
+    status: [...element.classList].find((className) => ["queued", "validating", "running", "cancelling"].includes(className)) ?? null,
+  })).catch(() => ({ ariaBusy: null, status: null }));
+  const stillActive = postCapture.ariaBusy === "true" && Boolean(postCapture.status);
+  if (!stillActive && !allowTerminalTransitionAfterCapture) {
+    throw new Error(`${methodLabel} left its active lifecycle before the evidence snapshot completed.`);
+  }
+  return {
+    ...state,
+    postCapture: {
+      ...postCapture,
+      active: stillActive,
+      terminalTransitionObserved: !stillActive,
+      terminalTransitionAllowed: allowTerminalTransitionAfterCapture,
+    },
+  };
 }
 
 async function openResultTable(title) {
@@ -972,25 +1727,37 @@ async function reloadToLauncher() {
   await waitForSurface("launcher");
 }
 
-async function openRecentProject(projectName, projectPath = null) {
-  let row = page.locator(".nd-recent-projects .nd-project-row").filter({
-    has: page.locator("strong").filter({ hasText: exactVisibleText(projectName) }),
-  });
-  if (projectPath) {
-    row = row.filter({
-      has: page.locator("small").filter({ hasText: exactVisibleText(projectPath) }),
-    });
+function exactRecentProjectRow(projectName, projectPath) {
+  if (!projectPath) {
+    throw new Error(`Recent-project selection for ${projectName} requires an exact project path.`);
   }
+  return page.locator(".nd-recent-projects .nd-project-row").filter({
+    has: page.locator("strong").filter({ hasText: exactVisibleText(projectName) }),
+  }).filter({
+    has: page.locator("small").filter({ hasText: exactVisibleText(projectPath) }),
+  });
+}
+
+async function openRecentProject(projectName, projectPath) {
+  const row = exactRecentProjectRow(projectName, projectPath);
   await row.waitFor({ state: "visible", timeout: 10_000 });
   if (await row.count() !== 1) {
-    throw new Error(`${projectName}${projectPath ? ` at ${projectPath}` : ""} was not exposed as exactly one visible Recent Projects row.`);
+    throw new Error(`${projectName} at ${projectPath} was not exposed as exactly one visible Recent Projects row.`);
   }
   await row.click();
   await page.locator(".nd-window-project").filter({ hasText: projectName }).waitFor({ state: "visible", timeout: 15_000 });
 }
 
+async function openProjectAtExactPath(projectName, projectPath) {
+  await page.evaluate(({ path }) => {
+    window.dispatchEvent(new CustomEvent("quickpls:open-project-path", { detail: { path } }));
+  }, { path: projectPath });
+  await page.locator(".nd-window-project").filter({ hasText: projectName })
+    .waitFor({ state: "visible", timeout: 30_000 });
+}
+
 async function openDisposableRecentProject() {
-  await openRecentProject(disposableProjectName);
+  await openRecentProject(disposableProjectName, disposableProjectPath);
 }
 
 function exactVisibleText(value) {
@@ -1972,7 +2739,7 @@ async function inspectNcaResultTree() {
     || plotContract.figures !== 1 || plotContract.accessibleSvgs !== 1 || plotContract.namedImages !== 1
     || plotContract.labelledBy !== "nd-nca-plot-title nd-nca-plot-description" || plotContract.directTitleCount !== 1
     || plotContract.title !== "Necessary condition ceiling plot for x and y" || plotContract.descriptionCount !== 1
-    || plotContract.captionTitle !== "Necessary condition ceiling plot" || plotContract.captionPair !== "x \u2192 y"
+    || plotContract.captionTitle !== "Necessary condition ceiling plot" || plotContract.captionPair !== "x -> y"
     || plotContract.ceFdhPaths !== 2 || plotContract.crFdhLines !== 2 || plotContract.ceFdhPeers !== 3
     || !plotContract.description.includes("CE-FDH peer 0, 1")
     || !plotContract.description.includes("CE-FDH peer 1, 3")
@@ -2123,6 +2890,18 @@ async function inspectSavedMgaArchive(projectPath, runId) {
   const measurementComparisons = Array.isArray(mga?.measurement_comparisons) ? mga.measurement_comparisons : [];
   const permutationMeasurementComparisons = Array.isArray(permutation?.measurement_comparisons) ? permutation.measurement_comparisons : [];
   const micomConstructs = Array.isArray(micom?.constructs) ? micom.constructs : [];
+  const methodConfig = recipe?.method_config;
+  const exactMethodConfigKeys = methodConfig && JSON.stringify(Object.keys(methodConfig).sort()) === JSON.stringify([
+    "configural_invariance_confirmed",
+    "group_a",
+    "group_b",
+    "group_column",
+    "kind",
+    "methods",
+    "permutation_samples",
+  ]);
+  const exactGroupMethods = Array.isArray(methodConfig?.methods)
+    && JSON.stringify(methodConfig.methods) === JSON.stringify(["micom", "mga_permutation"]);
   const provenanceTokens = String(result.provenance?.method_version ?? "").split("+");
   const exactCurrentVersions = [mgaMethodVersion, mgaPermutationMethodVersion, micomMethodVersion]
     .every((version) => provenanceTokens.filter((token) => token === version).length === 1)
@@ -2187,13 +2966,17 @@ async function inspectSavedMgaArchive(projectPath, runId) {
     exactPermutationPayload,
     exactMicomPayload,
     recipe: recipe ? {
+      schemaVersion: recipe.schema_version ?? null,
       status: recipe.metadata?.status ?? null,
-      groupMethods: recipe.metadata?.group_methods ?? null,
-      groupPermutationSamples: recipe.metadata?.group_permutation_samples ?? null,
-      configuralConfirmed: recipe.metadata?.micom_configural_confirmed ?? null,
-      groupColumn: recipe.metadata?.mga_group_column ?? null,
-      groupA: recipe.metadata?.mga_group_a ?? null,
-      groupB: recipe.metadata?.mga_group_b ?? null,
+      exactMethodConfigKeys,
+      methodConfigKind: methodConfig?.kind ?? null,
+      groupMethods: methodConfig?.methods ?? null,
+      exactGroupMethods,
+      groupPermutationSamples: methodConfig?.permutation_samples ?? null,
+      configuralConfirmed: methodConfig?.configural_invariance_confirmed ?? null,
+      groupColumn: methodConfig?.group_column ?? null,
+      groupA: methodConfig?.group_a ?? null,
+      groupB: methodConfig?.group_b ?? null,
       method: recipe.settings?.method ?? null,
       weighting: recipe.settings?.weighting_scheme ?? null,
       preprocessing: recipe.settings?.preprocessing ?? null,
@@ -2209,10 +2992,11 @@ async function inspectSavedMgaArchive(projectPath, runId) {
     || !contract.exactCurrentVersions || contract.estimationMethodVersion !== mgaMethodVersion
     || contract.mgaMethodVersion !== mgaMethodVersion || !contract.exactGroupPayload
     || !contract.exactPermutationPayload || !contract.exactMicomPayload
+    || contract.recipe?.schemaVersion !== 3 || !contract.recipe?.exactMethodConfigKeys
+    || contract.recipe?.methodConfigKind !== "mga" || !contract.recipe?.exactGroupMethods
     || contract.recipe?.status !== "validated_micom_v2_and_permutation_mga_v2_bounded_scope"
-    || contract.recipe?.groupMethods !== "micom,mga_permutation"
-    || contract.recipe?.groupPermutationSamples !== String(mgaRuntimePermutationSamples)
-    || contract.recipe?.configuralConfirmed !== "true"
+    || contract.recipe?.groupPermutationSamples !== mgaRuntimePermutationSamples
+    || contract.recipe?.configuralConfirmed !== true
     || contract.recipe?.groupColumn !== "group" || contract.recipe?.groupA !== "A" || contract.recipe?.groupB !== "B"
     || contract.recipe?.method !== "mga" || contract.recipe?.weighting !== "path"
     || contract.recipe?.preprocessing !== "standardized" || contract.recipe?.missingData !== "listwise_deletion"
@@ -2221,6 +3005,168 @@ async function inspectSavedMgaArchive(projectPath, runId) {
     || contract.run?.method !== "MICOM and Two-Group Permutation MGA" || contract.run?.status !== "completed"
     || !Number.isInteger(contract.run?.logs) || contract.run.logs < 1) {
     throw new Error(`The saved group-analysis archive did not retain the exact current MICOM v2 and permutation MGA v2 contract: ${JSON.stringify(contract)}`);
+  }
+  return contract;
+}
+
+async function inspectSavedStructuralPathRandomizationArchive(projectPath, runId) {
+  const { project, manifest, projectText } = await readNcaArchive(projectPath);
+  const projectChecksum = createHash("sha256").update(Buffer.from(projectText, "utf8")).digest("hex");
+  const matchingResults = (project.results ?? []).filter((candidate) => candidate.id === runId);
+  if (matchingResults.length !== 1) {
+    throw new Error(`The saved Structural Path Randomization archive contained ${matchingResults.length} results for ${runId}.`);
+  }
+  const result = matchingResults[0];
+  const matchingRecipes = (project.recipes ?? []).filter((candidate) => candidate.id === result.provenance?.recipe_id);
+  if (matchingRecipes.length !== 1) {
+    throw new Error(`The saved Structural Path Randomization archive did not bind exactly one schema-v3 recipe to ${runId}.`);
+  }
+  const recipe = matchingRecipes[0];
+  const matchingRuns = (project.layouts?.workspace?.runs ?? []).filter((candidate) => candidate.id === runId);
+  const run = matchingRuns[0];
+  const estimation = result.payload?.estimation;
+  const permutation = result.payload?.permutation;
+  const constructs = Array.isArray(recipe.model?.constructs) ? recipe.model.constructs : [];
+  const constructLabels = new Map(constructs.map((construct) => [construct.id, construct.name]));
+  const canonicalRecipePaths = constructs.flatMap((construct) => (
+    (recipe.model?.paths ?? []).filter((candidate) => candidate.target === construct.id)
+  ));
+  const resultPaths = Array.isArray(estimation?.paths) ? estimation.paths : [];
+  const parameters = Array.isArray(permutation?.parameters) ? permutation.parameters : [];
+  const labelPath = (candidate) => [constructLabels.get(candidate?.source) ?? null, constructLabels.get(candidate?.target) ?? null];
+  const expectedLabelPairs = [["X", "Y"], ["Z", "Y"]];
+  const pathOrderExact = JSON.stringify(canonicalRecipePaths.map(labelPath)) === JSON.stringify(expectedLabelPairs)
+    && JSON.stringify(resultPaths.map(labelPath)) === JSON.stringify(expectedLabelPairs);
+  const parameterContract = parameters.length === resultPaths.length && parameters.every((parameter, index) => {
+    const resultPath = resultPaths[index];
+    const expectedIdentity = JSON.stringify(["path", [resultPath?.source, resultPath?.target]]);
+    const expectedP = (parameter?.exceedances + 1) / (structuralPathRandomizationPermutations + 1);
+    return parameter && JSON.stringify(Object.keys(parameter).sort()) === JSON.stringify([
+      "exceedances", "original", "p_value_two_sided", "parameter", "permutations",
+    ])
+      && parameter.parameter === expectedIdentity
+      && Number.isFinite(parameter.original) && Object.is(parameter.original, resultPath?.coefficient)
+      && Number.isInteger(parameter.exceedances) && parameter.exceedances >= 0
+      && parameter.exceedances <= structuralPathRandomizationPermutations
+      && parameter.permutations === structuralPathRandomizationPermutations
+      && Number.isFinite(parameter.p_value_two_sided)
+      && Object.is(parameter.p_value_two_sided, expectedP);
+  });
+  const settings = recipe.settings ?? {};
+  const provenanceSettings = result.provenance?.settings ?? {};
+  const sameSettings = [
+    "method", "weighting_scheme", "tolerance", "max_iterations", "bootstrap_samples",
+    "studentized_inner_samples", "permutation_samples", "seed", "workers", "confidence_level",
+    "preprocessing", "missing_data", "case_weight_column",
+  ].every((key) => Object.is(settings[key], provenanceSettings[key]));
+  const contract = {
+    manifest: {
+      schemaVersion: manifest.schema_version ?? null,
+      engineVersion: manifest.engine_version ?? null,
+      checksumAlgorithm: manifest.checksum_algorithm ?? null,
+      declaredProjectChecksum: manifest.checksums?.["project.json"] ?? null,
+      projectChecksum,
+      projectChecksumMatches: manifest.checksums?.["project.json"] === projectChecksum,
+    },
+    project: {
+      modelCount: project.models?.length ?? null,
+      recipeCount: project.recipes?.length ?? null,
+      resultCount: project.results?.length ?? null,
+      matchingRunCount: matchingRuns.length,
+    },
+    resultId: result.id ?? null,
+    resultSchemaVersion: result.schema_version ?? null,
+    resultStatus: result.status ?? null,
+    payloadKind: result.payload?.kind ?? null,
+    estimationMethodVersion: estimation?.method_version ?? null,
+    bootstrapAbsent: result.payload?.bootstrap == null,
+    provenanceMethod: result.provenance?.method ?? null,
+    provenanceMethodVersion: result.provenance?.method_version ?? null,
+    recipeId: recipe.id ?? null,
+    recipeSchemaVersion: recipe.schema_version ?? null,
+    recipeMethodConfig: recipe.method_config ?? null,
+    recipeMethodConfigExact: recipe.method_config?.kind === "pls_permutation"
+      && Object.keys(recipe.method_config).length === 1,
+    recipeStatus: recipe.metadata?.status ?? null,
+    settings: {
+      method: settings.method ?? null,
+      weightingScheme: settings.weighting_scheme ?? null,
+      preprocessing: settings.preprocessing ?? null,
+      missingData: settings.missing_data ?? null,
+      bootstrapSamples: settings.bootstrap_samples ?? null,
+      studentizedInnerSamples: settings.studentized_inner_samples ?? null,
+      permutationSamples: settings.permutation_samples ?? null,
+      seed: settings.seed ?? null,
+      workers: settings.workers ?? null,
+      confidenceLevel: settings.confidence_level ?? null,
+      caseWeightColumn: settings.case_weight_column ?? null,
+      exactProvenanceMatch: sameSettings,
+    },
+    constructs: constructs.map((construct) => ({ id: construct.id, name: construct.name, indicators: construct.indicators })),
+    recipePathIds: canonicalRecipePaths.map((candidate) => [candidate.source, candidate.target]),
+    resultPathIds: resultPaths.map((candidate) => [candidate.source, candidate.target]),
+    pathLabels: resultPaths.map((candidate) => `${constructLabels.get(candidate.source)} -> ${constructLabels.get(candidate.target)}`),
+    pathOrderExact,
+    permutation: permutation ? {
+      exactKeys: JSON.stringify(Object.keys(permutation).sort()) === JSON.stringify(["method_version", "parameters", "plan"]),
+      methodVersion: permutation.method_version ?? null,
+      planExactKeys: JSON.stringify(Object.keys(permutation.plan ?? {}).sort()) === JSON.stringify(["master_seed", "operation", "permutations"]),
+      permutations: permutation.plan?.permutations ?? null,
+      masterSeed: permutation.plan?.master_seed ?? null,
+      operation: permutation.plan?.operation ?? null,
+      parameterCount: parameters.length,
+      parameterIds: parameters.map((parameter) => parameter.parameter),
+      exceedances: parameters.map((parameter) => parameter.exceedances),
+      pValues: parameters.map((parameter) => parameter.p_value_two_sided),
+      parameterContract,
+    } : null,
+    run: run ? {
+      id: run.id ?? null,
+      method: run.method ?? null,
+      status: run.status ?? null,
+      modelId: run.modelId ?? null,
+      snapshotNodes: run.modelSnapshot?.nodes?.length ?? null,
+      snapshotEdges: run.modelSnapshot?.edges?.length ?? null,
+      logs: run.logs?.length ?? 0,
+    } : null,
+  };
+  const expectedProvenanceVersion = `pls_pm_v1+pls_mediation_v1+pls_assessment_v7+${structuralPathRandomizationMethodVersion}`;
+  const valid = contract.manifest.schemaVersion === 5
+    && contract.manifest.engineVersion === packageVersion
+    && contract.manifest.checksumAlgorithm === "sha256"
+    && contract.manifest.projectChecksumMatches
+    && contract.project.modelCount === 1 && contract.project.recipeCount === 1
+    && contract.project.resultCount === 1 && contract.project.matchingRunCount === 1
+    && contract.resultSchemaVersion === 1 && contract.resultStatus === "completed"
+    && contract.payloadKind === "pls_pm_v3" && contract.estimationMethodVersion === "pls_pm_v1"
+    && contract.bootstrapAbsent && contract.provenanceMethod === "pls_pm"
+    && contract.provenanceMethodVersion === expectedProvenanceVersion
+    && contract.recipeSchemaVersion === 3 && contract.recipeMethodConfigExact
+    && contract.recipeStatus === "candidate_freedman_lane_path_randomization_scope"
+    && contract.settings.method === "pls_pm" && contract.settings.weightingScheme === "path"
+    && contract.settings.preprocessing === "standardized" && contract.settings.missingData === "listwise_deletion"
+    && contract.settings.bootstrapSamples === 0 && contract.settings.studentizedInnerSamples === 0
+    && contract.settings.permutationSamples === structuralPathRandomizationPermutations
+    && contract.settings.seed === structuralPathRandomizationSeed
+    && contract.settings.workers === structuralPathRandomizationWorkers
+    && contract.settings.confidenceLevel === 0.95 && contract.settings.caseWeightColumn === null
+    && contract.settings.exactProvenanceMatch
+    && JSON.stringify(contract.constructs.map((construct) => construct.name)) === JSON.stringify(["X", "Z", "Y"])
+    && contract.pathOrderExact
+    && JSON.stringify(contract.pathLabels) === JSON.stringify(structuralPathRandomizationExpectedPathLabels)
+    && contract.permutation?.exactKeys && contract.permutation?.planExactKeys
+    && contract.permutation?.methodVersion === structuralPathRandomizationMethodVersion
+    && contract.permutation?.permutations === structuralPathRandomizationPermutations
+    && contract.permutation?.masterSeed === structuralPathRandomizationSeed
+    && contract.permutation?.operation === structuralPathRandomizationOperation
+    && contract.permutation?.parameterCount === 2 && contract.permutation?.parameterContract
+    && contract.run?.id === runId && contract.run?.method === "Structural Path Randomization"
+    && contract.run?.status === "completed" && Boolean(contract.run?.modelId)
+    && contract.run?.snapshotNodes === 3 && contract.run?.snapshotEdges === 2
+    && Number.isInteger(contract.run?.logs) && contract.run.logs >= 1;
+  contract.passed = valid;
+  if (!valid) {
+    throw new Error(`The saved Structural Path Randomization archive did not retain the exact schema-v3 recipe, schema-v4 payload, canonical path order, plus-one arithmetic, and no-bootstrap contract: ${JSON.stringify(contract)}`);
   }
   return contract;
 }
@@ -2311,6 +3257,8 @@ async function inspectSavedIpmaArchive(projectPath, runId, constructIds) {
   const result = project.results?.find((candidate) => candidate.id === runId);
   if (!result) throw new Error(`The saved IPMA archive did not contain result ${runId}.`);
   const recipe = project.recipes?.find((candidate) => candidate.id === result.provenance?.recipe_id);
+  const methodConfig = recipe?.method_config;
+  const exactMethodConfigKeys = methodConfig && JSON.stringify(Object.keys(methodConfig).sort()) === JSON.stringify(["kind", "targets"]);
   const estimation = result.payload?.estimation;
   const ipma = estimation?.ipma;
   const constructRows = Array.isArray(ipma?.constructs) ? ipma.constructs : [];
@@ -2350,6 +3298,9 @@ async function inspectSavedIpmaArchive(projectPath, runId, constructIds) {
       && excludedIndicators.every((indicator) => !indicatorRows.some((row) => row.indicator === indicator)),
     forbiddenNestedPayloads,
     recipe: recipe ? {
+      schemaVersion: recipe.schema_version ?? null,
+      exactMethodConfigKeys,
+      methodConfigKind: methodConfig?.kind ?? null,
       method: recipe.settings?.method ?? null,
       weightingScheme: recipe.settings?.weighting_scheme ?? null,
       preprocessing: recipe.settings?.preprocessing ?? null,
@@ -2358,7 +3309,7 @@ async function inspectSavedIpmaArchive(projectPath, runId, constructIds) {
       studentizedInnerSamples: recipe.settings?.studentized_inner_samples ?? null,
       permutationSamples: recipe.settings?.permutation_samples ?? null,
       caseWeightColumn: recipe.settings?.case_weight_column ?? null,
-      ipmaTargets: recipe.metadata?.ipma_targets ?? null,
+      ipmaTargets: methodConfig?.targets ?? null,
       constructs: recipe.model?.constructs?.length ?? null,
       paths: recipe.model?.paths?.length ?? null,
       controls: recipe.model?.controls?.length ?? null,
@@ -2380,6 +3331,8 @@ async function inspectSavedIpmaArchive(projectPath, runId, constructIds) {
     || JSON.stringify(contract.indicators) !== JSON.stringify(["m1", "x1", "z1"])
     || !finiteConstructRows || !finiteIndicatorRows || !contract.excludesTargetAndUnrelatedRows
     || forbiddenNestedPayloads.length !== 0
+    || contract.recipe?.schemaVersion !== 3 || !contract.recipe?.exactMethodConfigKeys
+    || contract.recipe?.methodConfigKind !== "ipma"
     || contract.recipe?.method !== "ipma"
     || contract.recipe?.weightingScheme !== "path"
     || contract.recipe?.preprocessing !== "standardized"
@@ -2388,7 +3341,7 @@ async function inspectSavedIpmaArchive(projectPath, runId, constructIds) {
     || contract.recipe?.studentizedInnerSamples !== 0
     || contract.recipe?.permutationSamples !== 0
     || contract.recipe?.caseWeightColumn !== null
-    || contract.recipe?.ipmaTargets !== constructIds.y
+    || JSON.stringify(contract.recipe?.ipmaTargets) !== JSON.stringify([constructIds.y])
     || contract.recipe?.constructs !== 6
     || contract.recipe?.paths !== 6
     || contract.recipe?.controls !== 0
@@ -2444,12 +3397,109 @@ async function inspectInitialNcaArchive(projectPath) {
   return contract;
 }
 
+async function inspectStructuralPathRandomizationCancellationArchive(projectPath) {
+  const [{ project }, artifact] = await Promise.all([
+    readNcaArchive(projectPath),
+    artifactDigest(projectPath),
+  ]);
+  const workspaceRuns = Array.isArray(project.layouts?.workspace?.runs)
+    ? project.layouts.workspace.runs
+    : [];
+  const recipes = Array.isArray(project.recipes) ? project.recipes : [];
+  const results = Array.isArray(project.results) ? project.results : [];
+  const datasets = Array.isArray(project.datasets) ? project.datasets : [];
+  const models = Array.isArray(project.models) ? project.models : [];
+  const model = models[0] ?? null;
+  const constructs = Array.isArray(model?.constructs) ? model.constructs : [];
+  const constructLabels = new Map(constructs.map((construct) => [construct?.id, construct?.name]));
+  const paths = Array.isArray(model?.paths) ? model.paths : [];
+  return {
+    artifact,
+    datasetCount: datasets.length,
+    modelCount: models.length,
+    modelName: model?.name ?? null,
+    constructLabels: constructs.map((construct) => construct?.name ?? null),
+    pathLabels: paths.map((candidate) => (
+      `${constructLabels.get(candidate?.source) ?? ""} -> ${constructLabels.get(candidate?.target) ?? ""}`
+    )),
+    recipeCount: recipes.length,
+    resultCount: results.length,
+    runCount: workspaceRuns.length,
+    recipeIds: recipes.map((row) => row?.id ?? null),
+    resultIds: results.map((row) => row?.id ?? null),
+    runIds: workspaceRuns.map((row) => row?.id ?? null),
+  };
+}
+
+async function snapshotStructuralPathRandomizationCancellationArchive(phase, sourcePath) {
+  if (!new Set(["before", "after"]).has(phase)) {
+    throw new Error(`Unsafe Structural Path Randomization cancellation snapshot phase: ${phase}`);
+  }
+  const snapshotPath = `${structuralPathRandomizationCancellationSnapshotPrefix}-${phase}.qpls`;
+  const temporaryPath = `${snapshotPath}.copying`;
+  const [snapshotExists, temporaryExists] = await Promise.all([
+    fs.stat(snapshotPath).then(() => true).catch(() => false),
+    fs.stat(temporaryPath).then(() => true).catch(() => false),
+  ]);
+  if (snapshotExists || temporaryExists) {
+    throw new Error(`Structural Path Randomization cancellation snapshot target was not exclusive: ${snapshotPath}`);
+  }
+  const sourceStatBefore = await fs.stat(sourcePath, { bigint: true });
+  const sourceDigestBefore = await artifactDigest(sourcePath);
+  if (!sourceStatBefore.isFile() || !sourceDigestBefore) {
+    throw new Error(`Structural Path Randomization cancellation snapshot source was not a non-empty file: ${sourcePath}`);
+  }
+  try {
+    await fs.copyFile(sourcePath, temporaryPath, fsConstants.COPYFILE_EXCL);
+    const sourceStatAfter = await fs.stat(sourcePath, { bigint: true });
+    const sourceDigestAfter = await artifactDigest(sourcePath);
+    const temporaryDigest = await artifactDigest(temporaryPath);
+    const sourceStableDuringCopy = sourceStatAfter.isFile()
+      && sourceStatBefore.size === sourceStatAfter.size
+      && sourceStatBefore.mtimeNs === sourceStatAfter.mtimeNs
+      && sourceDigestAfter !== null
+      && sourceDigestBefore.size === sourceDigestAfter.size
+      && sourceDigestBefore.sha256 === sourceDigestAfter.sha256;
+    const snapshotMatchesSource = temporaryDigest !== null
+      && temporaryDigest.size === sourceDigestBefore.size
+      && temporaryDigest.sha256 === sourceDigestBefore.sha256;
+    if (!sourceStableDuringCopy || !snapshotMatchesSource) {
+      throw new Error(`Structural Path Randomization cancellation snapshot source changed during copy: ${JSON.stringify({ sourceDigestBefore, sourceDigestAfter, temporaryDigest })}`);
+    }
+    await fs.link(temporaryPath, snapshotPath);
+    await fs.rm(temporaryPath, { force: true });
+    const snapshotDigest = await artifactDigest(snapshotPath);
+    if (!snapshotDigest || snapshotDigest.size !== sourceDigestBefore.size
+      || snapshotDigest.sha256 !== sourceDigestBefore.sha256) {
+      throw new Error(`Structural Path Randomization cancellation snapshot identity changed after publication: ${snapshotPath}`);
+    }
+    const logicalState = await inspectStructuralPathRandomizationCancellationArchive(snapshotPath);
+    return {
+      phase,
+      ...logicalState,
+      sourcePath: sourceDigestBefore.path,
+      sourceSize: sourceDigestBefore.size,
+      sourceSha256: sourceDigestBefore.sha256,
+      sourceMtimeNsBefore: sourceStatBefore.mtimeNs.toString(),
+      sourceMtimeNsAfter: sourceStatAfter.mtimeNs.toString(),
+      sourceStableDuringCopy,
+      snapshotMatchesSource,
+    };
+  } finally {
+    await fs.rm(temporaryPath, { force: true }).catch(() => {});
+  }
+}
+
 async function inspectSavedNcaArchive(projectPath, runId) {
   const { project, manifest } = await readNcaArchive(projectPath);
   const workspace = project.layouts?.workspace;
   const result = project.results?.find((candidate) => candidate.id === runId);
   if (!result) throw new Error(`The saved NCA archive did not contain result ${runId}.`);
   const recipe = project.recipes?.find((candidate) => candidate.id === result.provenance?.recipe_id);
+  const methodConfig = recipe?.method_config;
+  const exactMethodConfigKeys = methodConfig && JSON.stringify(Object.keys(methodConfig).sort()) === JSON.stringify([
+    "ceiling", "condition", "kind", "outcome", "permutation_samples",
+  ]);
   const run = workspace?.runs?.find((candidate) => candidate.id === runId);
   const estimation = result.payload?.estimation;
   const nca = estimation?.nca;
@@ -2557,6 +3607,9 @@ async function inspectSavedNcaArchive(projectPath, runId) {
     warnings: nca?.warnings ?? null,
     forbiddenNestedPayloads,
     recipe: recipe ? {
+      schemaVersion: recipe.schema_version ?? null,
+      exactMethodConfigKeys,
+      methodConfigKind: methodConfig?.kind ?? null,
       method: recipe.settings?.method ?? null,
       weightingScheme: recipe.settings?.weighting_scheme ?? null,
       preprocessing: recipe.settings?.preprocessing ?? null,
@@ -2566,10 +3619,10 @@ async function inspectSavedNcaArchive(projectPath, runId) {
       studentizedInnerSamples: recipe.settings?.studentized_inner_samples ?? null,
       permutationSamples: recipe.settings?.permutation_samples ?? null,
       caseWeightColumn: recipe.settings?.case_weight_column ?? null,
-      ncaX: recipe.metadata?.nca_x ?? null,
-      ncaY: recipe.metadata?.nca_y ?? null,
-      ncaCeiling: recipe.metadata?.nca_ceiling ?? null,
-      ncaPermutationSamples: recipe.metadata?.nca_permutation_samples ?? null,
+      ncaX: methodConfig?.condition ?? null,
+      ncaY: methodConfig?.outcome ?? null,
+      ncaCeiling: methodConfig?.ceiling ?? null,
+      ncaPermutationSamples: methodConfig?.permutation_samples ?? null,
       constructs: recipe.model?.constructs?.length ?? null,
       paths: recipe.model?.paths?.length ?? null,
       controls: recipe.model?.controls?.length ?? null,
@@ -2604,12 +3657,14 @@ async function inspectSavedNcaArchive(projectPath, runId) {
     || !Array.isArray(contract.warnings) || contract.warnings.length !== 1
     || !/numeric X\/Y CE-FDH and CR-FDH scope with observed-range bottlenecks/i.test(contract.warnings[0])
     || forbiddenNestedPayloads.length !== 0
+    || contract.recipe?.schemaVersion !== 3 || !contract.recipe?.exactMethodConfigKeys
+    || contract.recipe?.methodConfigKind !== "nca"
     || contract.recipe?.method !== "nca" || contract.recipe?.weightingScheme !== "path"
     || contract.recipe?.preprocessing !== "unstandardized" || contract.recipe?.missingData !== "listwise_deletion"
     || contract.recipe?.seed !== ncaSeed || contract.recipe?.bootstrapSamples !== 0
     || contract.recipe?.studentizedInnerSamples !== 0 || contract.recipe?.permutationSamples !== 0
     || contract.recipe?.caseWeightColumn !== null || contract.recipe?.ncaX !== "x" || contract.recipe?.ncaY !== "y"
-    || contract.recipe?.ncaCeiling !== "both" || contract.recipe?.ncaPermutationSamples !== String(ncaPermutationSamples)
+    || contract.recipe?.ncaCeiling !== "both" || contract.recipe?.ncaPermutationSamples !== ncaPermutationSamples
     || contract.recipe?.constructs !== 0 || contract.recipe?.paths !== 0 || contract.recipe?.controls !== 0
     || contract.recipe?.interactions !== 0 || contract.recipe?.higherOrderConstructs !== 0
     || contract.models !== 0 || contract.activeModelId !== null || contract.nodes !== 0 || contract.edges !== 0
@@ -2647,6 +3702,10 @@ async function inspectSavedPcaArchive(projectPath, runId) {
   const result = project.results?.find((candidate) => candidate.id === runId);
   if (!result) throw new Error(`The saved PCA archive did not contain result ${runId}.`);
   const recipe = project.recipes?.find((candidate) => candidate.id === result.provenance?.recipe_id);
+  const methodConfig = recipe?.method_config;
+  const retention = methodConfig?.retention;
+  const exactMethodConfigKeys = methodConfig && JSON.stringify(Object.keys(methodConfig).sort()) === JSON.stringify(["kind", "retention", "variables"]);
+  const exactRetentionKeys = retention && JSON.stringify(Object.keys(retention).sort()) === JSON.stringify(["rule", "threshold"]);
   const run = workspace?.runs?.find((candidate) => candidate.id === runId);
   const estimation = result.payload?.estimation;
   const pca = estimation?.pca;
@@ -2699,6 +3758,10 @@ async function inspectSavedPcaArchive(projectPath, runId) {
     warnings: pca?.warnings ?? null,
     unrelatedPayloads,
     recipe: recipe ? {
+      schemaVersion: recipe.schema_version ?? null,
+      exactMethodConfigKeys,
+      exactRetentionKeys,
+      methodConfigKind: methodConfig?.kind ?? null,
       method: recipe.settings?.method ?? null,
       weightingScheme: recipe.settings?.weighting_scheme ?? null,
       preprocessing: recipe.settings?.preprocessing ?? null,
@@ -2706,9 +3769,9 @@ async function inspectSavedPcaArchive(projectPath, runId) {
       bootstrapSamples: recipe.settings?.bootstrap_samples ?? null,
       permutationSamples: recipe.settings?.permutation_samples ?? null,
       caseWeightColumn: recipe.settings?.case_weight_column ?? null,
-      variables: recipe.metadata?.pca_variables ?? null,
-      componentRule: recipe.metadata?.pca_component_rule ?? null,
-      varianceThreshold: recipe.metadata?.pca_variance_threshold ?? null,
+      variables: methodConfig?.variables ?? null,
+      componentRule: retention?.rule ?? null,
+      varianceThreshold: retention?.threshold ?? null,
       constructs: recipe.model?.constructs?.length ?? null,
       paths: recipe.model?.paths?.length ?? null,
     } : null,
@@ -2734,12 +3797,14 @@ async function inspectSavedPcaArchive(projectPath, runId) {
     || !finiteComponents || !finiteLoadings || !finiteScores || !thresholdCrossing
     || !Array.isArray(contract.warnings) || contract.warnings.length !== 1
     || !/Standalone PCA v1 is validated/i.test(contract.warnings[0]) || unrelatedPayloads.length !== 0
+    || contract.recipe?.schemaVersion !== 3 || !contract.recipe?.exactMethodConfigKeys || !contract.recipe?.exactRetentionKeys
+    || contract.recipe?.methodConfigKind !== "pca"
     || contract.recipe?.method !== "pca" || contract.recipe?.weightingScheme !== "path"
     || contract.recipe?.preprocessing !== "standardized" || contract.recipe?.missingData !== "listwise_deletion"
     || contract.recipe?.bootstrapSamples !== 0 || contract.recipe?.permutationSamples !== 0
-    || contract.recipe?.caseWeightColumn !== null || contract.recipe?.variables !== pcaVariables.join(",")
+    || contract.recipe?.caseWeightColumn !== null || JSON.stringify(contract.recipe?.variables) !== JSON.stringify(pcaVariables)
     || contract.recipe?.componentRule !== "variance_threshold"
-    || Number(contract.recipe?.varianceThreshold) !== pcaVarianceThreshold
+    || contract.recipe?.varianceThreshold !== pcaVarianceThreshold
     || contract.recipe?.constructs !== 0 || contract.recipe?.paths !== 0
     || contract.models !== 0 || contract.activeModelId !== null || contract.nodes !== 0 || contract.edges !== 0
     || contract.runModelId !== null || contract.runModelSnapshot !== null) {
@@ -2870,7 +3935,7 @@ async function xlsxExcludesValidationWitness(filePath) {
       worksheetMembers,
     })}`);
   }
-  const forbidden = /validation[_ ]witness|regression_bootstrap_validation_witness_v1|successful_bootstrap|successful_jackknife|failed_jackknife/i;
+  const forbidden = /validation_witness|regression_(?:process_)?bootstrap_validation_witness_v1|successful_bootstrap|successful_jackknife|failed_jackknife/i;
   const forbiddenMatches = [];
   const worksheetRowCounts = {};
   const extractionRoot = await fs.mkdtemp(path.join(validationResultsDir, ".regression-bootstrap-xlsx-scan-"));
@@ -2974,6 +4039,12 @@ async function inspectSavedOlsArchive(projectPath, runId) {
   const result = project.results?.find((candidate) => candidate.id === runId);
   if (!result) throw new Error(`The saved OLS archive did not contain result ${runId}.`);
   const recipe = project.recipes?.find((candidate) => candidate.id === result.provenance?.recipe_id);
+  const methodConfig = recipe?.method_config;
+  const regressionModel = methodConfig?.model;
+  const exactMethodConfigKeys = methodConfig && JSON.stringify(Object.keys(methodConfig).sort()) === JSON.stringify([
+    "controls", "kind", "model", "outcome", "predictors",
+  ]);
+  const exactRegressionModelKeys = regressionModel && JSON.stringify(Object.keys(regressionModel).sort()) === JSON.stringify(["robust_se", "type"]);
   const run = workspace?.runs?.find((candidate) => candidate.id === runId);
   const estimation = result.payload?.estimation;
   const regression = estimation?.regression;
@@ -3027,7 +4098,11 @@ async function inspectSavedOlsArchive(projectPath, runId) {
     warnings: regression?.warnings ?? null,
     unrelatedPayloads,
     recipe: recipe ? {
+      schemaVersion: recipe.schema_version ?? null,
       status: recipe.metadata?.status ?? null,
+      exactMethodConfigKeys,
+      exactRegressionModelKeys,
+      methodConfigKind: methodConfig?.kind ?? null,
       method: recipe.settings?.method ?? null,
       weightingScheme: recipe.settings?.weighting_scheme ?? null,
       preprocessing: recipe.settings?.preprocessing ?? null,
@@ -3037,11 +4112,11 @@ async function inspectSavedOlsArchive(projectPath, runId) {
       studentizedInnerSamples: recipe.settings?.studentized_inner_samples ?? null,
       permutationSamples: recipe.settings?.permutation_samples ?? null,
       caseWeightColumn: recipe.settings?.case_weight_column ?? null,
-      regressionType: recipe.metadata?.regression_type ?? null,
-      outcome: recipe.metadata?.regression_outcome ?? null,
-      predictors: recipe.metadata?.regression_predictors ?? null,
-      controls: recipe.metadata?.regression_controls ?? null,
-      robustSe: recipe.metadata?.robust_se ?? null,
+      regressionType: regressionModel?.type ?? null,
+      outcome: methodConfig?.outcome ?? null,
+      predictors: methodConfig?.predictors ?? null,
+      controls: methodConfig?.controls ?? null,
+      robustSe: regressionModel?.robust_se ?? null,
       constructs: recipe.model?.constructs?.length ?? null,
       paths: recipe.model?.paths?.length ?? null,
       controlsCount: recipe.model?.controls?.length ?? null,
@@ -3069,14 +4144,16 @@ async function inspectSavedOlsArchive(projectPath, runId) {
     || !contract.coefficientContract || !contract.predictionContract || !contract.fitContract || contract.process !== null
     || !Array.isArray(contract.warnings) || contract.warnings.length !== 1 || !/OLS regression v1 is validated/i.test(contract.warnings[0])
     || contract.unrelatedPayloads.length !== 0
+    || contract.recipe?.schemaVersion !== 3 || !contract.recipe?.exactMethodConfigKeys || !contract.recipe?.exactRegressionModelKeys
+    || contract.recipe?.methodConfigKind !== "regression"
     || contract.recipe?.status !== "validated_regression_ols_v1_bounded_scope"
     || contract.recipe?.method !== "regression" || contract.recipe?.weightingScheme !== "path"
     || contract.recipe?.preprocessing !== "unstandardized" || contract.recipe?.missingData !== "listwise_deletion"
     || contract.recipe?.confidenceLevel !== 0.95 || contract.recipe?.bootstrapSamples !== 0
     || contract.recipe?.studentizedInnerSamples !== 0 || contract.recipe?.permutationSamples !== 0
     || contract.recipe?.caseWeightColumn !== null || contract.recipe?.regressionType !== "ols"
-    || contract.recipe?.outcome !== olsOutcome || contract.recipe?.predictors !== olsPredictors.join(",")
-    || contract.recipe?.controls !== olsControls.join(",") || contract.recipe?.robustSe !== "hc3"
+    || contract.recipe?.outcome !== olsOutcome || JSON.stringify(contract.recipe?.predictors) !== JSON.stringify(olsPredictors)
+    || JSON.stringify(contract.recipe?.controls) !== JSON.stringify(olsControls) || contract.recipe?.robustSe !== "hc3"
     || contract.recipe?.constructs !== 0 || contract.recipe?.paths !== 0 || contract.recipe?.controlsCount !== 0
     || contract.recipe?.interactions !== 0 || contract.recipe?.higherOrderConstructs !== 0
     || contract.models !== 0 || contract.activeModelId !== null || contract.nodes !== 0 || contract.edges !== 0
@@ -3288,6 +4365,7 @@ async function inspectSavedLogisticArchive(projectPath, runId) {
     warnings: regression?.warnings ?? null,
     unrelatedPayloads,
     recipe: recipe ? {
+      id: recipe.id ?? null,
       schemaVersion: recipe.schema_version ?? null,
       status: recipe.metadata?.status ?? null,
       methodConfig,
@@ -3307,6 +4385,13 @@ async function inspectSavedLogisticArchive(projectPath, runId) {
       interactions: recipe.model?.interactions?.length ?? null,
       higherOrderConstructs: recipe.model?.higher_order_constructs?.length ?? null,
     } : null,
+    identity: {
+      resultId: result.id ?? null,
+      recipeId: recipe?.id ?? null,
+      runId: run?.id ?? null,
+      resultCount: project.results?.length ?? null,
+      recipeCount: project.recipes?.length ?? null,
+    },
     project: {
       models: project.models?.length ?? null,
       activeModelId: workspace?.activeModelId ?? null,
@@ -3608,6 +4693,333 @@ async function inspectSavedRegressionBootstrapArchive(projectPath, runIds) {
   return contract;
 }
 
+async function inspectSavedProcessV2Archive(projectPath, runId) {
+  if (!processV2ExpectedGraphCounts) {
+    throw new Error("The independent PROCESS v2 expected-count contract was not provisioned before archive inspection.");
+  }
+  const { project, manifest, projectText } = await readNcaArchive(projectPath);
+  const workspace = project.layouts?.workspace;
+  const result = project.results?.find((candidate) => candidate.id === runId);
+  if (!result) throw new Error(`The saved PROCESS v2 archive did not contain result ${runId}.`);
+  const recipe = project.recipes?.find((candidate) => candidate.id === result.provenance?.recipe_id);
+  const run = workspace?.runs?.find((candidate) => candidate.id === runId);
+  const estimation = result.payload?.estimation;
+  const regression = estimation?.regression;
+  const process = regression?.process;
+  const graph = process?.graph_v2;
+  const bootstrap = graph?.bootstrap;
+  const witness = bootstrap?.validation_witness;
+  const reference = Array.isArray(graph?.reference_effects) ? graph.reference_effects : [];
+  const conditional = Array.isArray(graph?.conditional_indirect_effects) ? graph.conditional_indirect_effects : [];
+  const indices = Array.isArray(graph?.moderated_mediation_indices) ? graph.moderated_mediation_indices : [];
+  const slopes = Array.isArray(graph?.simple_slopes) ? graph.simple_slopes : [];
+  const estimandIds = [...reference, ...conditional, ...indices, ...slopes].map((row) => row.effect_id);
+  const successfulBootstrap = Array.isArray(witness?.successful_bootstrap) ? witness.successful_bootstrap : [];
+  const failedReplicates = Array.isArray(bootstrap?.failed_replicates) ? bootstrap.failed_replicates : [];
+  const successfulJackknife = Array.isArray(witness?.successful_jackknife) ? witness.successful_jackknife : [];
+  const failedJackknife = Array.isArray(witness?.failed_jackknife) ? witness.failed_jackknife : [];
+  const bootstrapPartitionExact = exactZeroBasedPartition(
+    successfulBootstrap, failedReplicates, processV2Samples, "replicate_index",
+  );
+  const jackknifePartitionExact = exactZeroBasedPartition(
+    successfulJackknife, failedJackknife, processV2Observations, "omitted_case",
+  );
+  const witnessVectorsValid = [...successfulBootstrap, ...successfulJackknife].every((row) => (
+    Array.isArray(row.estimates) && row.estimates.length === estimandIds.length && row.estimates.every(Number.isFinite)
+  ));
+  const reasonsValid = [...failedReplicates, ...failedJackknife].every((row) => (
+    processV2ReplicateFailureReasonCodes.has(row.reason_code)
+    && typeof row.message === "string" && row.message.trim()
+  ));
+  const methodConfig = recipe?.method_config;
+  const relationship = methodConfig?.model?.relationship;
+  const expectedPaths = [
+    { from: "X", to: "Y" }, { from: "X", to: "M1" }, { from: "M1", to: "M2" },
+    { from: "M2", to: "Y" }, { from: "X", to: "M3" }, { from: "M3", to: "Y" },
+    { from: "X", to: "M4" }, { from: "M4", to: "Y" },
+  ];
+  const expectedModerators = [
+    { variable: "W", scale: "continuous" }, { variable: "B", scale: "binary_0_1" },
+  ];
+  const expectedModerations = [
+    { from: "X", to: "Y", moderator: "W", conditioning_moderator: "B" },
+    { from: "X", to: "M3", moderator: "W" },
+    { from: "M4", to: "Y", moderator: "B" },
+  ];
+  const projectChecksum = createHash("sha256").update(projectText, "utf8").digest("hex");
+  const manifestContract = {
+    schemaVersion: manifest.schema_version ?? null,
+    engineVersion: manifest.engine_version ?? null,
+    checksumAlgorithm: manifest.checksum_algorithm ?? null,
+    declaredProjectChecksum: manifest.checksums?.["project.json"] ?? null,
+    calculatedProjectChecksum: projectChecksum,
+    projectChecksumMatches: manifest.checksums?.["project.json"] === projectChecksum,
+  };
+  const graphCounts = {
+    completeCases: graph?.complete_cases ?? null,
+    omittedCases: graph?.omitted_cases ?? null,
+    equations: graph?.equations?.length ?? null,
+    paths: graph?.paths?.length ?? null,
+    moderations: graph?.moderations?.length ?? null,
+    referenceEffects: reference.length,
+    conditionalIndirectEffects: conditional.length,
+    moderatedMediationIndices: indices.length,
+    simpleSlopes: slopes.length,
+    plots: graph?.plots?.length ?? null,
+    conditionalPlotPoints: Array.isArray(graph?.plots) ? graph.plots.reduce((total, plot) => (
+      total + (Array.isArray(plot.series) ? plot.series.reduce((seriesTotal, series) => (
+        seriesTotal + (Array.isArray(series.points) ? series.points.length : 0)
+      ), 0) : 0)
+    ), 0) : null,
+    johnsonNeyman: graph?.johnson_neyman?.length ?? null,
+    johnsonNeymanRegionRows: Array.isArray(graph?.johnson_neyman) ? graph.johnson_neyman.reduce((total, row) => (
+      total + (row.status === "available" && Array.isArray(row.regions) ? row.regions.length : 1)
+    ), 0) : null,
+    availableJohnsonNeyman: Array.isArray(graph?.johnson_neyman)
+      ? graph.johnson_neyman.filter((row) => row.status === "available").length : null,
+    johnsonNeymanCurvePoints: Array.isArray(graph?.johnson_neyman) ? graph.johnson_neyman.reduce((total, row) => (
+      total + (row.status === "available" && Array.isArray(row.curve_points) ? row.curve_points.length : 0)
+    ), 0) : null,
+    estimands: bootstrap?.estimands?.length ?? null,
+  };
+  const genericRegressionShellNotApplicable = regression?.method_version === processV2MethodVersion
+    && regression?.regression_type === "process"
+    && regression?.observations === graph?.complete_cases
+    && Array.isArray(regression?.coefficients) && regression.coefficients.length === 0
+    && regression?.fit === null
+    && Array.isArray(regression?.predictions) && regression.predictions.length === 0
+    && !("logistic" in regression)
+    && !("bootstrap" in regression)
+    && !("mediation" in estimation)
+    && !("moderation" in estimation);
+  const witnessBoundary = {
+    passed: witness?.method_version === processV2WitnessVersion
+      && estimandIds.length === 24 && new Set(estimandIds).size === 24
+      && JSON.stringify(witness?.estimand_ids) === JSON.stringify(estimandIds)
+      && JSON.stringify(bootstrap?.estimands?.map((row) => row.effect_id)) === JSON.stringify(estimandIds)
+      && bootstrapPartitionExact && jackknifePartitionExact && witnessVectorsValid && reasonsValid,
+    witnessMethodVersion: witness?.method_version ?? null,
+    estimandIds,
+    estimandOrderExact: JSON.stringify(witness?.estimand_ids) === JSON.stringify(estimandIds)
+      && JSON.stringify(bootstrap?.estimands?.map((row) => row.effect_id)) === JSON.stringify(estimandIds),
+    bootstrapIndexPartitionExact: bootstrapPartitionExact,
+    jackknifeIndexPartitionExact: jackknifePartitionExact,
+  };
+  const contract = {
+    manifest: manifestContract,
+    resultStatus: result.status ?? null,
+    runStatus: run?.status ?? null,
+    provenanceMethod: result.provenance?.method ?? null,
+    provenanceMethodVersion: result.provenance?.method_version ?? null,
+    estimationMethodVersion: result.payload?.estimation?.method_version ?? null,
+    processMethodVersion: process?.method_version ?? null,
+    model: process?.model ?? null,
+    outcome: regression?.outcome ?? null,
+    predictors: regression?.predictors ?? null,
+    controls: regression?.controls ?? null,
+    graphCounts,
+    genericRegressionShellNotApplicable,
+    policies: graph?.policies ?? null,
+    bootstrap: bootstrap ? {
+      methodVersion: bootstrap.method_version ?? null,
+      algorithm: bootstrap.algorithm ?? null,
+      intervalPolicy: bootstrap.interval_policy ?? null,
+      testReference: bootstrap.test_reference ?? null,
+      streamToken: bootstrap.stream_token ?? null,
+      requestedReplicates: bootstrap.requested_replicates ?? null,
+      usableReplicates: bootstrap.usable_replicates ?? null,
+      failedReplicates: failedReplicates.length,
+      jackknifeCases: bootstrap.jackknife_cases ?? null,
+      usableJackknifeCases: bootstrap.usable_jackknife_cases ?? null,
+      seed: bootstrap.seed ?? null,
+      workers: bootstrap.workers ?? null,
+    } : null,
+    witnessBoundary,
+    identity: {
+      resultId: result.id ?? null,
+      recipeId: recipe?.id ?? null,
+      runId: run?.id ?? null,
+      resultCount: project.results?.length ?? null,
+      recipeCount: project.recipes?.length ?? null,
+      witnessCount: witness ? 1 : 0,
+    },
+    recipe: recipe ? {
+      schemaVersion: recipe.schema_version ?? null,
+      status: recipe.metadata?.status ?? null,
+      settings: recipe.settings ?? null,
+      methodConfig,
+    } : null,
+    modelFree: project.models?.length === 0 && workspace?.activeModelId == null
+      && (workspace?.nodes?.length ?? 0) === 0 && (workspace?.edges?.length ?? 0) === 0
+      && run?.modelId == null && run?.modelSnapshot == null,
+  };
+  const valid = manifestContract.schemaVersion === 5 && manifestContract.engineVersion === packageVersion
+    && manifestContract.checksumAlgorithm === "sha256" && manifestContract.projectChecksumMatches
+    && project.results?.length === 1 && project.recipes?.length === 1 && project.models?.length === 0
+    && contract.resultStatus === "completed" && contract.runStatus === "completed"
+    && contract.provenanceMethod === "regression"
+    && contract.provenanceMethodVersion === `${processV2MethodVersion}+${processV2BootstrapMethodVersion}`
+    && contract.estimationMethodVersion === processV2MethodVersion
+    && contract.processMethodVersion === processV2MethodVersion && contract.model === "graph"
+    && contract.outcome === "Y"
+    && JSON.stringify(contract.predictors) === JSON.stringify(["X", "M1", "M2", "M3", "M4", "W", "B"])
+    && JSON.stringify(contract.controls) === JSON.stringify(["C"])
+    && contract.genericRegressionShellNotApplicable
+    && processV2PoliciesExact(contract.policies)
+    && JSON.stringify(graphCounts) === JSON.stringify(processV2ExpectedGraphCounts)
+    && contract.bootstrap?.methodVersion === processV2BootstrapMethodVersion
+    && contract.bootstrap?.algorithm === "indexed_case_resampling_v1"
+    && contract.bootstrap?.intervalPolicy === "percentile_primary_bca_conditional_v1"
+    && contract.bootstrap?.testReference === "standard_normal_bootstrap_ratio_v1"
+    && contract.bootstrap?.streamToken === "process_indexed_case_stream_v1"
+    && contract.bootstrap?.requestedReplicates === processV2Samples
+    && contract.bootstrap?.usableReplicates + contract.bootstrap?.failedReplicates === processV2Samples
+    && contract.bootstrap?.usableReplicates >= Math.ceil(0.9 * processV2Samples)
+    && contract.bootstrap?.jackknifeCases === processV2Observations
+    && contract.bootstrap?.usableJackknifeCases === successfulJackknife.length
+    && contract.bootstrap?.seed === processV2Seed && contract.bootstrap?.workers === processV2Workers
+    && witnessBoundary.passed
+    && contract.identity.resultId === runId
+    && contract.identity.recipeId === result.provenance?.recipe_id
+    && contract.identity.runId === runId
+    && contract.identity.resultCount === 1
+    && contract.identity.recipeCount === 1
+    && contract.identity.witnessCount === 1
+    && contract.recipe?.schemaVersion === 3
+    && contract.recipe?.status === "candidate_regression_process_v2_plus_bootstrap_v1_bounded_scope"
+    && !contract.recipe.status.includes("validated")
+    && contract.recipe?.settings?.bootstrap_samples === processV2Samples
+    && contract.recipe?.settings?.workers === processV2Workers && contract.recipe?.settings?.seed === processV2Seed
+    && contract.recipe?.settings?.preprocessing === "unstandardized"
+    && contract.recipe?.settings?.missing_data === "listwise_deletion"
+    && methodConfig?.kind === "regression" && methodConfig?.outcome === "Y"
+    && JSON.stringify(methodConfig?.predictors) === JSON.stringify(["X", "M1", "M2", "M3", "M4", "W", "B"])
+    && JSON.stringify(methodConfig?.controls) === JSON.stringify(["C"])
+    && methodConfig?.model?.type === "process" && relationship?.model === "graph"
+    && relationship?.focal_predictor === "X"
+    && JSON.stringify(relationship?.paths) === JSON.stringify(expectedPaths)
+    && JSON.stringify(relationship?.moderators) === JSON.stringify(expectedModerators)
+    && JSON.stringify(relationship?.moderations) === JSON.stringify(expectedModerations)
+    && relationship?.continuous_product_centering === "equation_complete_case_mean_v1"
+    && JSON.stringify(methodConfig?.bootstrap) === JSON.stringify({ algorithm: "case_resampling", intervals: ["percentile", "bca"] })
+    && contract.modelFree;
+  if (!valid) throw new Error(`The saved PROCESS v2 archive contract was invalid: ${JSON.stringify(contract)}`);
+  return contract;
+}
+
+async function inspectProcessV2LogicalArchiveState(projectPath) {
+  const { project, manifest, projectText } = await readNcaArchive(projectPath);
+  const workspace = project.layouts?.workspace;
+  const results = Array.isArray(project.results) ? project.results : [];
+  const recipes = Array.isArray(project.recipes) ? project.recipes : [];
+  const runs = Array.isArray(workspace?.runs) ? workspace.runs : [];
+  const completedResults = results.filter((result) => result?.status === "completed");
+  const completedRunIds = completedResults.map((result) => result.id);
+  const witnessRunIds = completedResults.filter((result) => (
+    result.payload?.estimation?.regression?.process?.graph_v2?.bootstrap?.validation_witness?.method_version
+      === processV2WitnessVersion
+  )).map((result) => result.id);
+  const recipeIds = completedResults.map((result) => result.provenance?.recipe_id ?? null);
+  const workspaceRunIds = runs.filter((run) => run?.status === "completed").map((run) => run.id);
+  const projectChecksum = createHash("sha256").update(projectText, "utf8").digest("hex");
+  return {
+    manifestValid: manifest.schema_version === 5
+      && manifest.checksum_algorithm === "sha256"
+      && manifest.checksums?.["project.json"] === projectChecksum,
+    completedResultCount: completedResults.length,
+    witnessCount: witnessRunIds.length,
+    completedRunIds,
+    witnessRunIds,
+    recipeIds,
+    recipeCount: recipes.length,
+    workspaceRunIds,
+    selectedRunId: workspace?.diagramOverlaySettings?.selectedRunId ?? null,
+  };
+}
+
+async function processV2SidecarState(projectPath) {
+  const directory = path.dirname(projectPath);
+  const basename = path.basename(projectPath);
+  const entries = await fs.readdir(directory, { withFileTypes: true });
+  const absolute = entries.filter((entry) => entry.isFile() && entry.name.startsWith(`${basename}.`))
+    .map((entry) => path.join(directory, entry.name))
+    .sort();
+  const artifacts = (await Promise.all(absolute.map(artifactDigest))).filter(Boolean);
+  const present = artifacts.map((entry) => entry.path);
+  return {
+    prefix: path.relative(root, projectPath).replaceAll("\\", "/"),
+    coversEverySiblingPrefix: true,
+    present,
+    artifacts,
+  };
+}
+
+async function processV2SettledAutosaveState(projectPath, { primaryDurability }) {
+  const relative = (candidate) => path.relative(root, candidate).replaceAll("\\", "/");
+  const autosavePath = `${projectPath}.autosave`;
+  const required = [relative(autosavePath), relative(`${autosavePath}.identity.json`)];
+  const allowed = [
+    ...required,
+    relative(`${autosavePath}.bak`),
+    ...(primaryDurability ? [relative(`${projectPath}.bak`), relative(`${projectPath}.identity.json`)] : []),
+  ].sort();
+  const sidecars = await processV2SidecarState(projectPath);
+  const missing = required.filter((entry) => !sidecars.present.includes(entry));
+  const forbidden = sidecars.present.filter((entry) => !allowed.includes(entry));
+  const logicalState = missing.length === 0
+    ? await inspectProcessV2LogicalArchiveState(autosavePath)
+    : null;
+  return {
+    ...sidecars,
+    required,
+    allowed,
+    missing,
+    forbidden,
+    exactAllowedIdentity: missing.length === 0 && forbidden.length === 0,
+    autosavePath: relative(autosavePath),
+    logicalState,
+  };
+}
+
+async function captureProcessV2SidecarEvidence(label, state) {
+  const captures = [];
+  for (const [index, source] of state.artifacts.entries()) {
+    const sourcePath = path.resolve(root, source.path);
+    const snapshotPath = `${processV2ResourceSnapshotPrefix}-sidecar-${label}-${index}.bin`;
+    const temporaryPath = `${snapshotPath}.copying`;
+    try {
+      await fs.copyFile(sourcePath, temporaryPath, fsConstants.COPYFILE_EXCL);
+      const temporary = await artifactDigest(temporaryPath);
+      if (!temporary || temporary.size !== source.size || temporary.sha256 !== source.sha256) {
+        throw new Error(`PROCESS v2 sidecar evidence copy drifted: ${JSON.stringify({ source, temporary })}`);
+      }
+      await fs.link(temporaryPath, snapshotPath);
+      await fs.rm(temporaryPath, { force: true });
+      const snapshot = await artifactDigest(snapshotPath);
+      if (!snapshot || snapshot.size !== source.size || snapshot.sha256 !== source.sha256) {
+        throw new Error(`PROCESS v2 sidecar evidence publication drifted: ${JSON.stringify({ source, snapshot })}`);
+      }
+      captures.push({ source_path: source.path, source_size: source.size, source_sha256: source.sha256, snapshot });
+    } catch (error) {
+      await fs.rm(temporaryPath, { force: true });
+      await fs.rm(snapshotPath, { force: true });
+      throw error;
+    }
+  }
+  return captures;
+}
+
+async function clearProcessV2ResetArtifacts(projectPath) {
+  const directory = path.dirname(projectPath);
+  const basename = path.basename(projectPath);
+  const entries = await fs.readdir(directory, { withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.isFile() && (entry.name === basename || entry.name.startsWith(`${basename}.`))) {
+      await fs.rm(path.join(directory, entry.name), { force: true });
+    }
+  }
+}
+
 async function inspectInitialCbsemArchive(projectPath) {
   const { project, manifest } = await readNcaArchive(projectPath);
   const workspace = project.layouts?.workspace;
@@ -3635,6 +5047,10 @@ async function inspectSavedCbsemArchive(projectPath, runId) {
   const result = project.results?.find((candidate) => candidate.id === runId);
   if (!result) throw new Error(`The saved CB-SEM archive did not contain result ${runId}.`);
   const recipe = project.recipes?.find((candidate) => candidate.id === result.provenance?.recipe_id);
+  const methodConfig = recipe?.method_config;
+  const exactMethodConfigKeys = methodConfig && JSON.stringify(Object.keys(methodConfig).sort()) === JSON.stringify([
+    "bootstrap_samples", "estimator", "input", "kind", "mean_structure", "model_type",
+  ]);
   const run = workspace?.runs?.find((candidate) => candidate.id === runId);
   const estimation = result.payload?.estimation;
   const cbsem = estimation?.cbsem;
@@ -3713,7 +5129,10 @@ async function inspectSavedCbsemArchive(projectPath, runId) {
     } : null,
     unrelatedPayloads,
     recipe: recipe ? {
+      schemaVersion: recipe.schema_version ?? null,
       status: recipe.metadata?.status ?? null,
+      exactMethodConfigKeys,
+      methodConfigKind: methodConfig?.kind ?? null,
       method: recipe.settings?.method ?? null,
       weightingScheme: recipe.settings?.weighting_scheme ?? null,
       preprocessing: recipe.settings?.preprocessing ?? null,
@@ -3723,10 +5142,11 @@ async function inspectSavedCbsemArchive(projectPath, runId) {
       studentizedInnerSamples: recipe.settings?.studentized_inner_samples ?? null,
       permutationSamples: recipe.settings?.permutation_samples ?? null,
       caseWeightColumn: recipe.settings?.case_weight_column ?? null,
-      modelType: recipe.metadata?.cbsem_model_type ?? null,
-      estimator: recipe.metadata?.cbsem_estimator ?? null,
-      input: recipe.metadata?.cbsem_input ?? null,
-      meanStructure: recipe.metadata?.cbsem_mean_structure ?? null,
+      modelType: methodConfig?.model_type ?? null,
+      estimator: methodConfig?.estimator ?? null,
+      input: methodConfig?.input ?? null,
+      meanStructure: methodConfig?.mean_structure ?? null,
+      methodBootstrapSamples: methodConfig?.bootstrap_samples ?? null,
       constructs: recipe.model?.constructs?.length ?? null,
       constructIndicators,
       paths: recipe.model?.paths?.length ?? null,
@@ -3756,13 +5176,16 @@ async function inspectSavedCbsemArchive(projectPath, runId) {
     || !contract.cbsem.matrixContract || contract.cbsem.modificationCount !== 50 || !contract.cbsem.modificationContract
     || !contract.cbsem.fitContract || !Array.isArray(contract.cbsem.diagnostics) || !Array.isArray(contract.cbsem.warnings)
     || contract.cbsem.bootstrap !== null || contract.cbsem.multigroup !== null || contract.unrelatedPayloads.length !== 0
+    || contract.recipe?.schemaVersion !== 3 || !contract.recipe?.exactMethodConfigKeys
+    || contract.recipe?.methodConfigKind !== "cbsem"
     || contract.recipe?.status !== "validated_v1_2_4_cbsem_single_group_bounded_scope"
     || contract.recipe?.method !== "cbsem" || contract.recipe?.weightingScheme !== "path"
     || contract.recipe?.preprocessing !== "standardized" || contract.recipe?.missingData !== "listwise_deletion"
     || contract.recipe?.workers !== 1 || contract.recipe?.bootstrapSamples !== 0
     || contract.recipe?.studentizedInnerSamples !== 0 || contract.recipe?.permutationSamples !== 0
     || contract.recipe?.caseWeightColumn !== null || contract.recipe?.modelType !== "sem"
-    || contract.recipe?.estimator !== "ml" || contract.recipe?.input !== "raw" || contract.recipe?.meanStructure !== "false"
+    || contract.recipe?.estimator !== "ml" || contract.recipe?.input !== "raw" || contract.recipe?.meanStructure !== false
+    || contract.recipe?.methodBootstrapSamples !== 0
     || contract.recipe?.constructs !== 3 || contract.recipe?.paths !== 2 || contract.recipe?.controls !== 0
     || contract.recipe?.interactions !== 0 || contract.recipe?.higherOrderConstructs !== 0
     || constructIndicators.length !== 3 || constructIndicators.some((construct) => construct.mode !== "reflective" || construct.indicators !== 3)
@@ -3899,8 +5322,10 @@ async function inspectSavedGscaArchive(projectPath, runId) {
     unrelatedPayloads,
     noPlsArtifacts: Array.isArray(estimation?.effects) && estimation.effects.length === 0
       && Array.isArray(estimation?.control_estimates) && estimation.control_estimates.length === 0
-      && (estimation?.mediation?.estimates?.length ?? -1) === 0
-      && (estimation?.moderation?.estimates?.length ?? -1) === 0,
+      && (estimation?.mediation == null
+        || (Array.isArray(estimation.mediation.estimates) && estimation.mediation.estimates.length === 0))
+      && (estimation?.moderation == null
+        || (Array.isArray(estimation.moderation.estimates) && estimation.moderation.estimates.length === 0)),
     recipe: recipe ? {
       status: recipe.metadata?.status ?? null,
       method: recipe.settings?.method ?? null,
@@ -3978,6 +5403,14 @@ function regressionBootstrapCaptureName(sequence, state) {
   return `${String(sequence).padStart(2, "0")}-tauri-native-regression-bootstrap-${state}-${nativeViewportLabel}.png`;
 }
 
+function processV2CaptureName(sequence, state) {
+  return `${String(sequence).padStart(2, "0")}-tauri-native-process-v2-${state}-${nativeViewportLabel}.png`;
+}
+
+function structuralPathRandomizationCaptureName(sequence, state) {
+  return `${String(sequence).padStart(2, "0")}-tauri-native-structural-path-randomization-${state}-${nativeViewportLabel}.png`;
+}
+
 function pcaCaptureName(sequence, state) {
   return `${String(sequence).padStart(2, "0")}-tauri-native-pca-${state}-${nativeViewportLabel}.png`;
 }
@@ -3990,6 +5423,562 @@ function gscaCaptureName(sequence, state) {
   return `${String(sequence).padStart(2, "0")}-tauri-native-gsca-${state}-${nativeViewportLabel}.png`;
 }
 
+async function runFocusedStructuralPathRandomizationAcceptance() {
+  if (!requestedStructuralPathRandomizationExportPath) {
+    throw new Error("QUICKPLS_STRUCTURAL_PATH_RANDOMIZATION_EXPORT_PATH is required; an enabled XLSX button is not packaged export evidence.");
+  }
+  const exportTargetPath = await validateRequestedNativeExportPath(
+    requestedStructuralPathRandomizationExportPath,
+    "QUICKPLS_STRUCTURAL_PATH_RANDOMIZATION_EXPORT_PATH",
+  );
+  const fixtureProvisioning = evidence.checks.structuralPathRandomizationFixtureProvisioning;
+  if (fixtureProvisioning?.passed !== true) {
+    throw new Error(`Structural Path Randomization fixture provisioning did not pass: ${JSON.stringify(fixtureProvisioning)}`);
+  }
+  await seedRecentProject({
+    name: structuralPathRandomizationProjectName,
+    path: structuralPathRandomizationProjectPath,
+    openedAt: "2026-08-13T00:00:00.000Z",
+  });
+  await reloadToLauncher();
+  await openRecentProject(structuralPathRandomizationProjectName, structuralPathRandomizationProjectPath);
+  await waitForSurface("data");
+  await page.locator(".nd-data-table").waitFor({ state: "visible", timeout: 15_000 });
+  const status = compactVisibleText(await page.locator(".nd-statusbar").textContent());
+  const columns = (await page.locator(".nd-data-table thead th").allTextContents()).map(compactVisibleText);
+  const initialArchive = await inspectInitialNcaArchive(structuralPathRandomizationProjectPath);
+  Object.assign(fixtureProvisioning, {
+    passed: fixtureProvisioning.passed === true
+      && status.includes("180 cases")
+      && JSON.stringify(columns) === JSON.stringify(["#", "group", "x1", "x2", "z1", "z2", "y1", "y2"])
+      && initialArchive.models === 0 && initialArchive.activeModelId === null,
+    status,
+    columns,
+    observations: 180,
+    initialArchive,
+  });
+  if (!fixtureProvisioning.passed) {
+    throw new Error(`The focused Structural Path Randomization fixture was not the exact 180-row data-only MGA reference project: ${JSON.stringify(fixtureProvisioning)}`);
+  }
+  await capture(structuralPathRandomizationCaptureName(190, "fixture-data"));
+
+  const modelCreation = await createInitialEditableModel(
+    structuralPathRandomizationProjectName,
+    structuralPathRandomizationModelName,
+  );
+  await buildThreeConstructMgaModel();
+  const model = {
+    creation: modelCreation,
+    constructs: await page.locator(".react-flow__node-latent").count(),
+    constructLabels: (await page.locator(".react-flow__node-latent").allTextContents()).map(compactVisibleText),
+    assignedIndicators: await page.locator(".nd-variable-item.assigned").count(),
+    structuralPaths: await structuralPaths().count(),
+    unassignedGroupColumn: await page.locator(".nd-variable-item").filter({ hasText: /^group$/ }).evaluate((element) => !element.classList.contains("assigned")),
+  };
+  if (model.constructs !== 3 || model.assignedIndicators !== 6 || model.structuralPaths !== 2
+    || !model.unassignedGroupColumn
+    || !["X", "Z", "Y"].every((name) => model.constructLabels.some((label) => label.includes(name)))) {
+    throw new Error(`The visible authoring flow did not produce the exact X -> Y and Z -> Y model: ${JSON.stringify(model)}`);
+  }
+  await capture(structuralPathRandomizationCaptureName(191, "model"));
+  await page.keyboard.press("Control+S");
+  await page.locator(".nd-toast").filter({ hasText: /Project saved/i }).last().waitFor({ state: "visible", timeout: 15_000 });
+  await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
+
+  const readSetup = async (dialog, action) => {
+    const listbox = dialog.getByRole("listbox", { name: "Available calculation methods", exact: true });
+    const permutations = dialog.locator("#nd-calculation-permutations");
+    const workers = dialog.locator("#nd-calculation-workers");
+    const seed = dialog.locator("#nd-calculation-seed");
+    return {
+      catalogCount: await listbox.getByRole("option").count(),
+      selectedMethod: compactVisibleText(await listbox.getByRole("option", { selected: true }).locator("strong").textContent()),
+      permutations: {
+        count: await permutations.count(),
+        type: await permutations.getAttribute("type"),
+        minimum: await permutations.getAttribute("min"),
+        maximum: await permutations.getAttribute("max"),
+        step: await permutations.getAttribute("step"),
+        value: await permutations.inputValue(),
+      },
+      workers: {
+        count: await workers.count(),
+        type: await workers.getAttribute("type"),
+        minimum: await workers.getAttribute("min"),
+        maximum: await workers.getAttribute("max"),
+        value: await workers.inputValue(),
+      },
+      seed: {
+        count: await seed.count(),
+        type: await seed.getAttribute("type"),
+        minimum: await seed.getAttribute("min"),
+        maximum: await seed.getAttribute("max"),
+        value: await seed.inputValue(),
+      },
+      bootstrapControls: await dialog.locator("#nd-calculation-bootstrap-samples, #nd-calculation-studentized").count(),
+      groupControls: await dialog.locator("#nd-calculation-group-column, #nd-calculation-group-a, #nd-calculation-group-b").count(),
+      scopeLabel: compactVisibleText(await dialog.locator("#nd-calculation-permutation-scope span").textContent()),
+      scope: compactVisibleText(await dialog.locator("#nd-calculation-permutation-scope strong").textContent()),
+      blockers: (await dialog.locator(".nd-blocker li").allTextContents()).map(compactVisibleText),
+      startLabel: compactVisibleText(await action.textContent()),
+      startEnabled: await action.isEnabled(),
+    };
+  };
+  const expectedSetupContract = (workerCount, startLabel) => ({
+    catalogCount: expectedOptionLabels.length,
+    selectedMethod: "Structural Path Randomization",
+    permutations: {
+      count: 1, type: "number", minimum: "99", maximum: "10000", step: "1", value: "10000",
+    },
+    workers: {
+      count: 1, type: "number", minimum: "1", maximum: "64", value: String(workerCount),
+    },
+    seed: {
+      count: 1, type: "number", minimum: "0", maximum: "4294967295", value: "20260718",
+    },
+    bootstrapControls: 0,
+    groupControls: 0,
+    scopeLabel: "Candidate scope",
+    scope: structuralPathRandomizationWarning,
+    blockers: [],
+    startLabel,
+    startEnabled: true,
+  });
+  const configure = async (workerCount) => {
+    const dialog = await openCalculationFromToolbar();
+    await dialog.locator("#nd-calculation-method-pls_permutation").click();
+    const permutations = dialog.locator("#nd-calculation-permutations");
+    const workers = dialog.locator("#nd-calculation-workers");
+    const seed = dialog.locator("#nd-calculation-seed");
+    await permutations.fill(String(structuralPathRandomizationPermutations));
+    await workers.fill(String(workerCount));
+    await seed.fill(String(structuralPathRandomizationSeed));
+    const start = dialog.getByRole("button", { name: "Start path randomization", exact: true });
+    const contract = await readSetup(dialog, start);
+    const valid = JSON.stringify(contract)
+      === JSON.stringify(expectedSetupContract(workerCount, "Start path randomization"));
+    if (!valid) throw new Error(`The Structural Path Randomization setup did not match the exact candidate 10,000-permutation/${workerCount}-worker contract: ${JSON.stringify(contract)}`);
+    return { dialog, start, contract };
+  };
+
+  const cancellationArchiveBeforeSnapshot = await snapshotStructuralPathRandomizationCancellationArchive(
+    "before",
+    structuralPathRandomizationProjectPath,
+  );
+  if (cancellationArchiveBeforeSnapshot.datasetCount !== 1
+    || cancellationArchiveBeforeSnapshot.modelCount !== 1
+    || cancellationArchiveBeforeSnapshot.modelName !== structuralPathRandomizationModelName
+    || JSON.stringify(cancellationArchiveBeforeSnapshot.constructLabels) !== JSON.stringify(["X", "Z", "Y"])
+    || JSON.stringify(cancellationArchiveBeforeSnapshot.pathLabels) !== JSON.stringify(structuralPathRandomizationExpectedPathLabels)
+    || cancellationArchiveBeforeSnapshot.recipeCount !== 0
+    || cancellationArchiveBeforeSnapshot.resultCount !== 0
+    || cancellationArchiveBeforeSnapshot.runCount !== 0) {
+    throw new Error(`Structural Path Randomization cancellation did not begin from an exact result-free saved archive snapshot: ${JSON.stringify(cancellationArchiveBeforeSnapshot)}`);
+  }
+  const cancelledSetup = await configure(structuralPathRandomizationCancellationWorkers);
+  await capture(structuralPathRandomizationCaptureName(192, "dialog"));
+  await cancelledSetup.start.click();
+  const activeProgress = cancelledSetup.dialog.locator(
+    '.nd-run-progress[aria-busy="true"]:is(.queued,.validating,.running)',
+  );
+  await activeProgress.waitFor({ state: "visible", timeout: 5_000 });
+  const cancel = cancelledSetup.dialog.getByRole("button", { name: "Cancel calculation", exact: true });
+  await cancel.waitFor({ state: "visible", timeout: 1_000 });
+  const activeCancellation = await cancelledSetup.dialog.evaluate((dialog) => {
+    const progress = dialog.querySelector('.nd-run-progress[aria-busy="true"]:is(.queued,.validating,.running)');
+    const buttons = [...dialog.querySelectorAll("button")].filter(
+      (button) => button.textContent?.replace(/\s+/g, " ").trim() === "Cancel calculation",
+    );
+    const button = buttons[0] ?? null;
+    return {
+      ariaBusy: progress?.getAttribute("aria-busy") ?? null,
+      status: progress
+        ? [...progress.classList].find((className) => ["queued", "validating", "running"].includes(className)) ?? null
+        : null,
+      phase: progress?.querySelector("strong")?.textContent?.trim() ?? "",
+      message: progress?.querySelector("p")?.textContent?.trim() ?? "",
+      progressValue: progress?.querySelector("progress")?.getAttribute("value") ?? null,
+      progressMax: progress?.querySelector("progress")?.getAttribute("max") ?? null,
+      logEntries: progress?.querySelectorAll("ol li").length ?? 0,
+      cancelButtonCount: buttons.length,
+      cancelButtonEnabled: button instanceof HTMLButtonElement && !button.disabled,
+    };
+  });
+  const {
+    cancelButtonCount,
+    cancelButtonEnabled,
+    ...activeCancellationState
+  } = activeCancellation;
+  if (activeCancellationState.ariaBusy !== "true" || !activeCancellationState.status
+    || cancelButtonCount !== 1 || !cancelButtonEnabled) {
+    throw new Error(`Structural Path Randomization cancellation did not expose one genuine active state and enabled Cancel calculation button: ${JSON.stringify(activeCancellation)}`);
+  }
+  const terminalStatePromise = page.waitForFunction(() => {
+    if (document.querySelector('.nd-app[data-surface="results"]')) return "results_surface";
+    const dialog = document.querySelector('.nd-dialog-calculation[role="dialog"]');
+    if (!dialog) return "dialog_detached";
+    if (dialog.querySelector('.nd-run-progress.cancelled[aria-busy="false"]')) return "cancelled";
+    if (dialog.querySelector(".nd-run-progress.completed")) return "completed";
+    return null;
+  }, null, { timeout: 60_000 });
+  const [terminalStateHandle] = await Promise.all([
+    terminalStatePromise,
+    cancel.click({ timeout: 1_000 }),
+  ]);
+  const terminalOutcome = await terminalStateHandle.jsonValue();
+  if (terminalOutcome !== "cancelled") {
+    throw new Error(`completion_won_race: Structural Path Randomization reached ${terminalOutcome} before terminal cancellation became authoritative.`);
+  }
+  const cancelledState = cancelledSetup.dialog.locator('.nd-run-progress.cancelled[aria-busy="false"]');
+  const cancelledLifecycle = await cancelledState.evaluate((element) => ({
+    ariaBusy: element.getAttribute("aria-busy"),
+    status: [...element.classList].find((className) => className === "cancelled") ?? null,
+    phase: element.querySelector("strong")?.textContent?.trim() ?? "",
+    message: element.querySelector("p")?.textContent?.trim() ?? "",
+    progressValue: element.querySelector("progress")?.getAttribute("value") ?? null,
+    progressMax: element.querySelector("progress")?.getAttribute("max") ?? null,
+    logEntries: element.querySelectorAll("ol li").length,
+    logMessages: [...element.querySelectorAll("ol li span")].map((row) => row.textContent?.replace(/\s+/g, " ").trim() ?? ""),
+  }));
+  const cancellationLogNewest = cancelledLifecycle.logMessages.slice(0, 2);
+  const cancellationLogExact = JSON.stringify(cancellationLogNewest)
+    === JSON.stringify(["Calculation cancelled.", "Cancellation requested."]);
+  if (cancelledLifecycle.ariaBusy !== "false" || cancelledLifecycle.status !== "cancelled"
+    || cancelledLifecycle.phase !== "Cancelled" || cancelledLifecycle.message !== "Calculation cancelled."
+    || !cancellationLogExact) {
+    throw new Error(`Structural Path Randomization cancellation did not reach the exact terminal cancelled contract: ${JSON.stringify({ cancelledLifecycle, cancellationLogNewest })}`);
+  }
+  const cancellationArchiveAfterSnapshot = await snapshotStructuralPathRandomizationCancellationArchive(
+    "after",
+    structuralPathRandomizationProjectPath,
+  );
+  const zeroResultRecipeRunDelta = ["recipeCount", "resultCount", "runCount"].every(
+    (key) => cancellationArchiveAfterSnapshot[key] === 0
+      && cancellationArchiveBeforeSnapshot[key] === 0,
+  ) && [cancellationArchiveBeforeSnapshot, cancellationArchiveAfterSnapshot].every(
+    (snapshot) => snapshot.recipeIds.length === 0
+      && snapshot.resultIds.length === 0
+      && snapshot.runIds.length === 0,
+  );
+  const archiveSnapshotsByteIdentical = cancellationArchiveAfterSnapshot.artifact.size
+    === cancellationArchiveBeforeSnapshot.artifact.size
+    && cancellationArchiveAfterSnapshot.artifact.sha256
+      === cancellationArchiveBeforeSnapshot.artifact.sha256;
+  const retry = cancelledSetup.dialog.getByRole("button", { name: "Retry path randomization", exact: true });
+  await retry.waitFor({ state: "visible", timeout: 10_000 });
+  const retrySetup = await readSetup(cancelledSetup.dialog, retry);
+  const retrySetupMatches = JSON.stringify({ ...retrySetup, startLabel: "Start path randomization" })
+    === JSON.stringify(cancelledSetup.contract);
+  await capture(structuralPathRandomizationCaptureName(194, "cancelled"));
+  const completionWorkers = cancelledSetup.dialog.locator("#nd-calculation-workers");
+  await completionWorkers.fill(String(structuralPathRandomizationWorkers));
+  const completionSetup = await readSetup(cancelledSetup.dialog, retry);
+  const completionSetupExact = JSON.stringify(completionSetup)
+    === JSON.stringify(expectedSetupContract(structuralPathRandomizationWorkers, "Retry path randomization"));
+  const normalizedCompletionSetup = { ...completionSetup, startLabel: "Start path randomization" };
+  evidence.checks.structuralPathRandomizationSetup = {
+    passed: completionSetupExact,
+    model,
+    ...normalizedCompletionSetup,
+    feature_id: structuralPathRandomizationFeatureId,
+    method_version: structuralPathRandomizationMethodVersion,
+    catalogue_snapshot_date: structuralPathRandomizationCatalogueSnapshotDate,
+  };
+  evidence.checks.structuralPathRandomizationCancellation = {
+    passed: false,
+    activeLifecycleCaptured: true,
+    activeState: activeCancellationState,
+    cancelButtonCount,
+    cancelButtonEnabled,
+    cancelClickDispatched: true,
+    terminalOutcome,
+    completionWonRace: false,
+    cancelledState: cancelledLifecycle,
+    cancelledMessage: cancelledLifecycle.message,
+    cancellationLogNewest,
+    cancellationLogExact,
+    archiveBeforeSnapshot: cancellationArchiveBeforeSnapshot,
+    archiveAfterSnapshot: cancellationArchiveAfterSnapshot,
+    archiveSnapshotsByteIdentical,
+    zeroResultRecipeRunDelta,
+    noPartialResult: archiveSnapshotsByteIdentical && zeroResultRecipeRunDelta,
+    cancellationSetup: cancelledSetup.contract,
+    exactFrozenSetupOnRetry: retrySetupMatches,
+    retrySetup,
+    completionSetup,
+    completionSetupExact,
+    retryCompleted: false,
+    retryRunId: null,
+    retryNewIdentity: false,
+  };
+  if (!archiveSnapshotsByteIdentical || !zeroResultRecipeRunDelta || !retrySetupMatches
+    || !completionSetupExact || !await retry.isEnabled()) {
+    throw new Error(`Structural Path Randomization cancellation/retry did not preserve setup or discard partial output: ${JSON.stringify(evidence.checks.structuralPathRandomizationCancellation)}`);
+  }
+  const activeCompletionPromise = captureActiveCalculation(
+    cancelledSetup.dialog,
+    structuralPathRandomizationCaptureName(195, "running"),
+    "Structural Path Randomization 10,000-permutation run",
+    { allowTerminalTransitionAfterCapture: true },
+  ).then((activeState) => ({ captured: true, ...activeState }))
+    .catch((error) => ({ captured: false, detail: error instanceof Error ? error.message : String(error) }));
+  const completionProofPromise = page.waitForFunction(() => {
+    if (document.querySelector('.nd-app[data-surface="results"]') === null) return null;
+    const options = [...document.querySelectorAll(".nd-run-select select option")]
+      .filter((option) => /Structural Path Randomization/i.test(option.textContent ?? ""));
+    if (options.length !== 1 || !(options[0] instanceof HTMLOptionElement) || !options[0].value) return null;
+    return {
+      surface: "results",
+      completedRunCount: options.length,
+      runId: options[0].value,
+    };
+  }, null, { timeout: 900_000 });
+  await retry.click();
+  const completionProof = await completionProofPromise.then((handle) => handle.jsonValue());
+  const activeCompletion = await activeCompletionPromise;
+  if (!activeCompletion.captured) {
+    throw new Error(`Structural Path Randomization did not expose a genuine active retry lifecycle: ${JSON.stringify(activeCompletion)}`);
+  }
+  const runSelect = page.locator(".nd-run-select select");
+  const runOptions = runSelect.locator("option").filter({ hasText: /Structural Path Randomization/i });
+  await runOptions.first().waitFor({ state: "attached", timeout: 30_000 });
+  if (await runOptions.count() !== 1) {
+    throw new Error(`Structural Path Randomization exposed ${await runOptions.count()} completed options after one cancelled and one completed run.`);
+  }
+  const runId = await runOptions.first().getAttribute("value");
+  if (!runId) throw new Error("The completed Structural Path Randomization option had no run identifier.");
+  if (completionProof?.surface !== "results" || completionProof.completedRunCount !== 1
+    || completionProof.runId !== runId) {
+    throw new Error(`Structural Path Randomization completion proof did not bind the exact completed result identity: ${JSON.stringify({ completionProof, runId })}`);
+  }
+  const retryNewIdentity = ![
+    ...cancellationArchiveBeforeSnapshot.resultIds,
+    ...cancellationArchiveBeforeSnapshot.runIds,
+    ...cancellationArchiveAfterSnapshot.resultIds,
+    ...cancellationArchiveAfterSnapshot.runIds,
+  ].includes(runId);
+  Object.assign(evidence.checks.structuralPathRandomizationCancellation, {
+    retryCompleted: activeCompletion.captured === true,
+    retryRunId: runId,
+    retryNewIdentity,
+  });
+  evidence.checks.structuralPathRandomizationCancellation.passed = Boolean(
+    evidence.checks.structuralPathRandomizationCancellation.noPartialResult
+      && evidence.checks.structuralPathRandomizationCancellation.exactFrozenSetupOnRetry
+      && evidence.checks.structuralPathRandomizationCancellation.completionSetupExact
+      && activeCompletion.captured === true
+      && retryNewIdentity,
+  );
+  if (!evidence.checks.structuralPathRandomizationCancellation.passed) {
+    throw new Error(`Structural Path Randomization terminal cancellation/retry identity contract failed: ${JSON.stringify(evidence.checks.structuralPathRandomizationCancellation)}`);
+  }
+  const selectedRunId = await runSelect.inputValue();
+  const selectedRunLabel = compactVisibleText(await runSelect.locator("option:checked").textContent());
+  const initialSelectedTable = await page.locator('.nd-result-tree [role="treeitem"][aria-selected="true"]')
+    .getAttribute("data-result-tree-item-id");
+  const inferenceGroup = page.getByRole("treeitem", { name: "Inference", exact: true });
+  await inferenceGroup.waitFor({ state: "visible", timeout: 15_000 });
+  if (await inferenceGroup.getAttribute("aria-expanded") === "false") await inferenceGroup.click();
+  const tableItem = page.locator('.nd-result-tree [role="treeitem"][data-result-tree-item-id="permutation"]');
+  await tableItem.waitFor({ state: "visible", timeout: 15_000 });
+  await tableItem.click();
+  await page.getByRole("heading", { name: "Structural path randomization", exact: true }).waitFor({ state: "visible", timeout: 15_000 });
+  const tableColumns = (await page.locator(".nd-result-table thead th").allTextContents()).map(compactVisibleText);
+  const tableRows = await page.locator(".nd-result-table tbody tr").evaluateAll((rows) => rows.map((row) => (
+    Array.from(row.querySelectorAll("th, td"), (cell) => cell.textContent?.replace(/\s+/g, " ").trim() ?? "")
+  )));
+  const warning = compactVisibleText(await page.locator(".nd-inline-warning").textContent());
+  const pGridExact = tableRows.every((row) => {
+    const exceedances = Number(row[2]);
+    const permutations = Number(row[3]);
+    const probability = Number(row[4]);
+    return Number.isInteger(exceedances) && exceedances >= 0 && exceedances <= structuralPathRandomizationPermutations
+      && permutations === structuralPathRandomizationPermutations
+      && Number.isFinite(probability) && Object.is(probability, (exceedances + 1) / (permutations + 1));
+  });
+  const allTreeItems = (await page.locator('.nd-result-tree [role="treeitem"]').allTextContents()).map(compactVisibleText);
+  const runDetails = await inspectCurrentRunDetails();
+  evidence.checks.structuralPathRandomizationResults = {
+    passed: selectedRunId === runId && /Structural Path Randomization/i.test(selectedRunLabel)
+      && initialSelectedTable === "model_estimates"
+      && JSON.stringify(tableColumns) === JSON.stringify(structuralPathRandomizationExpectedColumns)
+      && tableRows.length === 2
+      && JSON.stringify(tableRows.map((row) => row[0])) === JSON.stringify(structuralPathRandomizationExpectedPathLabels)
+      && tableRows.every((row) => row.length === 5 && Number.isFinite(Number(row[1])))
+      && pGridExact && warning === structuralPathRandomizationWarning
+      && !allTreeItems.some((label) => /Bootstrap confidence|Bootstrap inference|Studentized confidence/i.test(label))
+      && !/\bN\/?A\b|NaN|Infinity/i.test(tableRows.flat().join(" "))
+      && runDetails.properties.Method === "Structural Path Randomization"
+      && runDetails.properties["Recorded seed"] === String(structuralPathRandomizationSeed)
+      && runDetails.properties["Method version"] === `pls_pm_v1+pls_mediation_v1+pls_assessment_v7+${structuralPathRandomizationMethodVersion}`
+      && runDetails.properties.Engine === packageVersion
+      && runDetails.properties.Weighting === "path"
+      && runDetails.properties.Preprocessing === "standardized"
+      && typeof runDetails.properties.Recipe === "string" && runDetails.properties.Recipe.length > 0
+      && typeof runDetails.properties["Dataset fingerprint"] === "string"
+      && runDetails.properties["Dataset fingerprint"].length > 0
+      && Number.isInteger(runDetails.logEntries) && runDetails.logEntries >= 1,
+    runId,
+    selectedRunId,
+    selectedRunLabel,
+    initialSelectedTable,
+    group: compactVisibleText(await inferenceGroup.textContent()),
+    tableId: await tableItem.getAttribute("data-result-tree-item-id"),
+    title: "Structural path randomization",
+    warning,
+    columns: tableColumns,
+    rows: tableRows,
+    pathOrder: tableRows.map((row) => row[0]),
+    plusOneProbabilityGridExact: pGridExact,
+    noBootstrapTables: !allTreeItems.some((label) => /Bootstrap confidence|Bootstrap inference|Studentized confidence/i.test(label)),
+    noPlaceholderValues: !/\bN\/?A\b|NaN|Infinity/i.test(tableRows.flat().join(" ")),
+    activeLifecycle: activeCompletion,
+    runDetails,
+  };
+  if (!evidence.checks.structuralPathRandomizationResults.passed) {
+    throw new Error(`The Structural Path Randomization Results table did not match the exact candidate path order and plus-one grid: ${JSON.stringify(evidence.checks.structuralPathRandomizationResults)}`);
+  }
+  await capture(structuralPathRandomizationCaptureName(196, "results"));
+
+  const exportCommand = page.locator(".nd-commandbar button").filter({ hasText: /^Export/i });
+  await exportCommand.click();
+  const exportDialog = page.locator('.nd-dialog-export[role="dialog"]');
+  await exportDialog.waitFor({ state: "visible", timeout: 10_000 });
+  const xlsxExport = exportDialog.getByRole("button", { name: /XLSX workbook/i });
+  await xlsxExport.waitFor({ state: "visible", timeout: 10_000 });
+  const expectedSheets = ["Structural path randomization", "Run provenance"];
+  const expectedSharedStrings = [
+    "Structural path randomization",
+    "Run provenance",
+    "experimental",
+    structuralPathRandomizationWarning,
+    "Randomization method",
+    structuralPathRandomizationMethodVersion,
+    "Randomization operation",
+    structuralPathRandomizationOperation,
+    "Randomized structural paths",
+    "2",
+    "Requested path permutations",
+    String(structuralPathRandomizationPermutations),
+    "Randomization estimand",
+    "Structural path coefficients conditional on fixed original PLS construct scores",
+    "Pathwise probability",
+    structuralPathRandomizationProbabilityDisclosure,
+    "Qualification status",
+    structuralPathRandomizationQualificationDisclosure,
+  ];
+  evidence.checks.structuralPathRandomizationExport = {
+    passed: false,
+    xlsxEnabled: await xlsxExport.isEnabled(),
+    buttonCount: await exportDialog.locator(".nd-export-list button").count(),
+    expectedSheets,
+    expectedSharedStrings,
+    nativeXlsx: null,
+  };
+  if (!evidence.checks.structuralPathRandomizationExport.xlsxEnabled) {
+    throw new Error("The completed Structural Path Randomization result did not enable native XLSX export.");
+  }
+  const nativeSaveHelper = startWindowsNativeSaveExportHelper({
+    targetPath: exportTargetPath,
+    windowTitle: evidence.checks.runtime.title,
+    expectedSheets,
+    expectedSharedStrings,
+  });
+  let helperCompleted = false;
+  try {
+    const ready = await nativeSaveHelper.ready;
+    if (!ready.passed || ready.event !== "ready") {
+      throw new Error(`Native Structural Path Randomization XLSX helper did not become ready: ${JSON.stringify(ready)}`);
+    }
+    await xlsxExport.click();
+    const completion = await nativeSaveHelper.completed;
+    helperCompleted = true;
+    if (!completion.passed) {
+      throw new Error(`Native Structural Path Randomization XLSX save failed: ${JSON.stringify(completion)}`);
+    }
+    const feedbackText = `Saved ${path.basename(exportTargetPath)}.`;
+    const feedback = exportDialog.locator("#nd-export-feedback").filter({ hasText: feedbackText });
+    await feedback.waitFor({ state: "visible", timeout: 15_000 });
+    const file = await fs.stat(exportTargetPath);
+    const workbookSheets = await inspectXlsxWorkbookSheets(exportTargetPath);
+    const exactRequiredSheets = expectedSheets.every((name) => workbookSheets.filter((candidate) => candidate === name).length === 1);
+    const noBootstrapSheets = !workbookSheets.some((name) => /bootstrap|studentized/i.test(name));
+    evidence.checks.structuralPathRandomizationExport.nativeXlsx = {
+      attempted: true,
+      targetPath: exportTargetPath,
+      helper: { ready, completion },
+      appFeedback: compactVisibleText(await feedback.textContent()),
+      file: { size: file.size, isFile: file.isFile() },
+      workbookSheets,
+      exactRequiredSheets,
+      noBootstrapSheets,
+    };
+    evidence.checks.structuralPathRandomizationExport.passed = file.isFile() && file.size > 0
+      && evidence.checks.structuralPathRandomizationExport.nativeXlsx.appFeedback === feedbackText
+      && exactRequiredSheets && noBootstrapSheets;
+    if (!evidence.checks.structuralPathRandomizationExport.passed) {
+      throw new Error(`The native Structural Path Randomization XLSX did not preserve its candidate table and provenance contract: ${JSON.stringify(evidence.checks.structuralPathRandomizationExport)}`);
+    }
+  } finally {
+    if (!helperCompleted) nativeSaveHelper.stop();
+  }
+  await capture(structuralPathRandomizationCaptureName(197, "export"));
+  await exportDialog.getByRole("button", { name: "Close", exact: true }).click();
+
+  await page.keyboard.press("Control+S");
+  await page.locator(".nd-toast").filter({ hasText: /Project saved/i }).last().waitFor({ state: "visible", timeout: 15_000 });
+  await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
+  const archive = await inspectSavedStructuralPathRandomizationArchive(structuralPathRandomizationProjectPath, runId);
+  evidence.checks.structuralPathRandomizationArchive = {
+    passed: archive.passed === true,
+    ...archive,
+  };
+  await reloadToLauncher();
+  await openRecentProject(structuralPathRandomizationProjectName, structuralPathRandomizationProjectPath);
+  await openMenuItem("View", "Results");
+  await waitForSurface("results");
+  const reopenedOptions = page.locator(".nd-run-select select option").filter({ hasText: /Structural Path Randomization/i });
+  await reopenedOptions.first().waitFor({ state: "attached", timeout: 30_000 });
+  if (await reopenedOptions.count() !== 1) {
+    throw new Error(`The reopened archive exposed ${await reopenedOptions.count()} Structural Path Randomization runs instead of one.`);
+  }
+  const reopenedRunId = await reopenedOptions.first().getAttribute("value");
+  if (!reopenedRunId) throw new Error("The reopened Structural Path Randomization option had no run identifier.");
+  const reopenedSelect = page.locator(".nd-run-select select");
+  if (await reopenedSelect.inputValue() !== reopenedRunId) await reopenedSelect.selectOption(reopenedRunId);
+  const reopenedInitialTable = await page.locator('.nd-result-tree [role="treeitem"][aria-selected="true"]')
+    .getAttribute("data-result-tree-item-id");
+  const reopenedInference = page.getByRole("treeitem", { name: "Inference", exact: true });
+  if (await reopenedInference.getAttribute("aria-expanded") === "false") await reopenedInference.click();
+  const reopenedRows = await openResultTable("Structural path randomization");
+  const reopenedColumns = (await page.locator(".nd-result-table thead th").allTextContents()).map(compactVisibleText);
+  const reopenedValues = await page.locator(".nd-result-table tbody tr").evaluateAll((rows) => rows.map((row) => (
+    Array.from(row.querySelectorAll("th, td"), (cell) => cell.textContent?.replace(/\s+/g, " ").trim() ?? "")
+  )));
+  const reopenedWarning = compactVisibleText(await page.locator(".nd-inline-warning").textContent());
+  evidence.checks.structuralPathRandomizationSaveReopen = {
+    passed: reopenedRunId === runId && await reopenedSelect.inputValue() === runId
+      && reopenedInitialTable === "model_estimates" && reopenedRows === 2
+      && JSON.stringify(reopenedColumns) === JSON.stringify(tableColumns)
+      && JSON.stringify(reopenedValues) === JSON.stringify(tableRows)
+      && reopenedWarning === structuralPathRandomizationWarning,
+    expectedRunId: runId,
+    reopenedRunId,
+    selectedRunId: await reopenedSelect.inputValue(),
+    sameRunRestored: reopenedRunId === runId && await reopenedSelect.inputValue() === runId,
+    initialSelectedTable: reopenedInitialTable,
+    rows: reopenedRows,
+    columns: reopenedColumns,
+    values: reopenedValues,
+    warning: reopenedWarning,
+    archiveChecksumMatches: archive.manifest.projectChecksumMatches,
+  };
+  if (!evidence.checks.structuralPathRandomizationSaveReopen.passed) {
+    throw new Error(`The exact Structural Path Randomization run did not survive explicit save and same-run reopen: ${JSON.stringify(evidence.checks.structuralPathRandomizationSaveReopen)}`);
+  }
+  await capture(structuralPathRandomizationCaptureName(198, "reopened"));
+}
+
 async function runFocusedCbsemAcceptance() {
   if (!requestedCbsemNativeExportPath) {
     throw new Error("QUICKPLS_CBSEM_NATIVE_EXPORT_PATH is required for focused packaged CB-SEM acceptance; enabled-button assertions do not replace a genuine native XLSX Save and workbook-content check.");
@@ -4000,7 +5989,7 @@ async function runFocusedCbsemAcceptance() {
   );
   await seedRecentProject({ name: cbsemProjectName, path: cbsemProjectPath, openedAt: "2026-08-12T00:00:00.000Z" });
   await reloadToLauncher();
-  await openRecentProject(cbsemProjectName);
+  await openRecentProject(cbsemProjectName, cbsemProjectPath);
   await waitForSurface("data");
   await page.locator(".nd-data-table").waitFor({ state: "visible", timeout: 15_000 });
   const status = compactVisibleText(await page.locator(".nd-statusbar").textContent());
@@ -4071,7 +6060,7 @@ async function runFocusedCbsemAcceptance() {
     blockers,
     startEnabled: await start.isEnabled(),
   };
-  if (evidence.checks.cbsemDialog.catalogCount !== 13 || evidence.checks.cbsemDialog.selectedMethod !== "CB-SEM / CFA"
+  if (evidence.checks.cbsemDialog.catalogCount !== expectedOptionLabels.length || evidence.checks.cbsemDialog.selectedMethod !== "CB-SEM / CFA"
     || evidence.checks.cbsemDialog.category !== "Covariance-based SEM"
     || JSON.stringify(evidence.checks.cbsemDialog.modelTypeOptions) !== JSON.stringify([
       { value: "sem", text: "Structural equation model (paths required)" },
@@ -4266,7 +6255,7 @@ async function runFocusedCbsemAcceptance() {
   await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
   const savedArchive = await inspectSavedCbsemArchive(cbsemProjectPath, runId);
   await reloadToLauncher();
-  await openRecentProject(cbsemProjectName);
+  await openRecentProject(cbsemProjectName, cbsemProjectPath);
   await openMenuItem("View", "Results");
   await waitForSurface("results");
   const reopenedOption = page.locator(".nd-run-select select option").filter({ hasText: /CB-SEM \/ CFA/i }).first();
@@ -4306,7 +6295,7 @@ async function runFocusedGscaAcceptance() {
   );
   await seedRecentProject({ name: gscaProjectName, path: gscaProjectPath, openedAt: "2026-08-12T00:00:00.000Z" });
   await reloadToLauncher();
-  await openRecentProject(gscaProjectName);
+  await openRecentProject(gscaProjectName, gscaProjectPath);
   await waitForSurface("data");
   await page.locator(".nd-data-table").waitFor({ state: "visible", timeout: 15_000 });
   const status = compactVisibleText(await page.locator(".nd-statusbar").textContent());
@@ -4388,7 +6377,12 @@ async function runFocusedGscaAcceptance() {
   }
   await capture(gscaCaptureName(142, "dialog"));
 
-  const activeCapture = captureActiveCalculation(calculation, gscaCaptureName(143, "running"), "GSCA")
+  const activeCapture = captureActiveCalculation(
+    calculation,
+    gscaCaptureName(143, "running"),
+    "GSCA",
+    { allowTerminalTransitionAfterCapture: true },
+  )
     .then((state) => ({ captured: true, ...state }));
   await start.click();
   await waitForSurface("results", 180_000);
@@ -4402,6 +6396,15 @@ async function runFocusedGscaAcceptance() {
   await selectedRun.waitFor({ state: "attached", timeout: 30_000 });
   const runId = await page.locator(".nd-run-select select").inputValue();
   if (!runId) throw new Error("The completed GSCA run had no identifier.");
+  const gscaRunLabel = compactVisibleText(await selectedRun.textContent());
+  evidence.checks.gscaProgress.completedRunProof = {
+    runId,
+    runLabel: gscaRunLabel,
+    matched: /GSCA/i.test(gscaRunLabel),
+  };
+  if (!evidence.checks.gscaProgress.completedRunProof.matched) {
+    throw new Error(`The focused GSCA lifecycle did not resolve to its matching completed run: ${JSON.stringify(evidence.checks.gscaProgress)}`);
+  }
   const initialSelectedTable = await page.locator('.nd-result-tree [role="treeitem"][aria-selected="true"]').getAttribute("data-result-tree-item-id");
   const readTable = async (title) => {
     const rows = await openResultTable(title);
@@ -4436,7 +6439,7 @@ async function runFocusedGscaAcceptance() {
   };
   evidence.checks.gscaResult = {
     runId,
-    runLabel: compactVisibleText(await selectedRun.textContent()),
+    runLabel: gscaRunLabel,
     initialSelectedTable,
     treeItems,
     fit,
@@ -4547,7 +6550,7 @@ async function runFocusedGscaAcceptance() {
   await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
   const savedArchive = await inspectSavedGscaArchive(gscaProjectPath, runId);
   await reloadToLauncher();
-  await openRecentProject(gscaProjectName);
+  await openRecentProject(gscaProjectName, gscaProjectPath);
   await openMenuItem("View", "Results");
   await waitForSurface("results");
   const reopenedOption = page.locator(".nd-run-select select option").filter({ hasText: /^GSCA run$/i }).first();
@@ -4584,7 +6587,7 @@ async function runFocusedOlsAcceptance() {
   );
   await seedRecentProject({ name: olsProjectName, path: olsProjectPath, openedAt: "2026-08-12T00:00:00.000Z" });
   await reloadToLauncher();
-  await openRecentProject(olsProjectName);
+  await openRecentProject(olsProjectName, olsProjectPath);
   await waitForSurface("data");
   await page.locator(".nd-data-table").waitFor({ state: "visible", timeout: 15_000 });
   const status = compactVisibleText(await page.locator(".nd-statusbar").textContent());
@@ -4660,7 +6663,7 @@ async function runFocusedOlsAcceptance() {
     noModelBlocker: !/construct|structural path|editable model|active model/i.test(blockerText),
     startEnabled: await start.isEnabled(),
   };
-  if (evidence.checks.olsDialog.catalogCount !== 12
+  if (evidence.checks.olsDialog.catalogCount !== expectedOptionLabels.length
     || evidence.checks.olsDialog.selectedMethod !== "Regression"
     || evidence.checks.olsDialog.category !== "Standalone analysis"
     || evidence.checks.olsDialog.outcome !== olsOutcome
@@ -4810,7 +6813,7 @@ async function runFocusedOlsAcceptance() {
   await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
   const savedArchive = await inspectSavedOlsArchive(olsProjectPath, runId);
   await reloadToLauncher();
-  await openRecentProject(olsProjectName);
+  await openRecentProject(olsProjectName, olsProjectPath);
   await openMenuItem("View", "Results");
   await waitForSurface("results");
   const reopenedOption = page.locator(".nd-run-select select option").filter({ hasText: /Ordinary Least Squares Regression/i }).first();
@@ -4854,7 +6857,7 @@ async function runFocusedLogisticAcceptance() {
   );
   await seedRecentProject({ name: logisticProjectName, path: logisticProjectPath, openedAt: "2026-08-12T00:00:00.000Z" });
   await reloadToLauncher();
-  await openRecentProject(logisticProjectName);
+  await openRecentProject(logisticProjectName, logisticProjectPath);
   await waitForSurface("data");
   await page.locator(".nd-data-table").waitFor({ state: "visible", timeout: 15_000 });
   const status = compactVisibleText(await page.locator(".nd-statusbar").textContent());
@@ -4989,7 +6992,12 @@ async function runFocusedLogisticAcceptance() {
   }
   await capture(logisticCaptureName(151, "dialog"));
 
-  const activeCapture = captureActiveCalculation(calculation, logisticCaptureName(152, "running"), "binary logistic regression")
+  const activeCapture = captureActiveCalculation(
+    calculation,
+    logisticCaptureName(152, "running"),
+    "binary logistic regression",
+    { allowTerminalTransitionAfterCapture: true },
+  )
     .then((state) => ({ captured: true, ...state }))
     .catch((error) => ({ captured: false, detail: error instanceof Error ? error.message : String(error) }));
   await start.click();
@@ -5004,6 +7012,15 @@ async function runFocusedLogisticAcceptance() {
   await selectedRun.waitFor({ state: "attached", timeout: 30_000 });
   const runId = await page.locator(".nd-run-select select").inputValue();
   if (!runId) throw new Error("The completed logistic run had no identifier.");
+  const logisticRunLabel = compactVisibleText(await selectedRun.textContent());
+  evidence.checks.logisticProgress.completedRunProof = {
+    runId,
+    runLabel: logisticRunLabel,
+    matched: logisticRunLabel === "Binary Logistic Regression run",
+  };
+  if (!evidence.checks.logisticProgress.completedRunProof.matched) {
+    throw new Error(`The focused logistic lifecycle did not resolve to its matching completed run: ${JSON.stringify(evidence.checks.logisticProgress)}`);
+  }
   const initialSelectedTable = await page.locator('.nd-result-tree [role="treeitem"][aria-selected="true"]').getAttribute("data-result-tree-item-id");
   const readTable = async (title) => {
     const rows = await openResultTable(title);
@@ -5197,7 +7214,7 @@ async function runFocusedLogisticAcceptance() {
     throw new Error(`The packaged current logistic result was confused with historical v1 output: ${JSON.stringify(evidence.checks.logisticLegacyV1)}`);
   }
   await reloadToLauncher();
-  await openRecentProject(logisticProjectName);
+  await openRecentProject(logisticProjectName, logisticProjectPath);
   await openMenuItem("View", "Results");
   await waitForSurface("results");
   const reopenedOption = page.locator(".nd-run-select select option").filter({ hasText: /Binary Logistic Regression/i }).first();
@@ -5721,6 +7738,947 @@ async function runFocusedRegressionBootstrapAcceptance() {
   };
 }
 
+async function runFocusedProcessV2Acceptance() {
+  evidence.checks.processV2Workflow = {
+    passed: false,
+    feature_id: processV2FeatureId,
+    method_version: processV2MethodVersion,
+    bootstrap_method_version: processV2BootstrapMethodVersion,
+    catalogue_snapshot_date: processV2CatalogueSnapshotDate,
+  };
+  if (!requestedProcessV2ExportPath) {
+    throw new Error("QUICKPLS_PROCESS_V2_EXPORT_PATH is required; enabled-button assertions do not replace a genuine native PROCESS v2 XLSX save.");
+  }
+  if (!processV2ExpectedGraphCounts) {
+    throw new Error("PROCESS v2 packaged acceptance requires independently derived expected graph counts from process_v2_reference.py.");
+  }
+  const exportTarget = await validateRequestedNativeExportPath(
+    requestedProcessV2ExportPath,
+    "QUICKPLS_PROCESS_V2_EXPORT_PATH",
+  );
+  await seedRecentProject({
+    name: processV2ProjectName,
+    path: processV2ProjectPath,
+    openedAt: "2026-08-12T00:00:00.000Z",
+  });
+  await reloadToLauncher();
+  await openRecentProject(processV2ProjectName, processV2ProjectPath);
+  await waitForSurface("data");
+  await page.locator(".nd-data-table").waitFor({ state: "visible", timeout: 15_000 });
+  const fixtureStatus = compactVisibleText(await page.locator(".nd-statusbar").textContent());
+  const fixtureColumns = (await page.locator(".nd-data-table thead th").allTextContents()).map(compactVisibleText);
+  const initialArchive = await inspectInitialNcaArchive(processV2ProjectPath);
+  evidence.checks.processV2Fixture = {
+    passed: fixtureStatus.includes("180 cases")
+      && JSON.stringify(fixtureColumns.slice(-9)) === JSON.stringify(["X", "M1", "M2", "M3", "M4", "W", "B", "C", "Y"])
+      && fixtureColumns.length === 10
+      && initialArchive.models === 0 && initialArchive.activeModelId === null,
+    status: fixtureStatus,
+    columns: fixtureColumns,
+    initialArchive,
+  };
+  if (!evidence.checks.processV2Fixture.passed) {
+    throw new Error(`The PROCESS v2 fixture was not an exact 180-row, nine-variable, model-free project: ${JSON.stringify(evidence.checks.processV2Fixture)}`);
+  }
+  await page.waitForTimeout(processV2IdleSettleMilliseconds);
+  await markProcessV2ResourcePhase("initial_idle", {
+    surface: "data",
+    completed_result_count: 0,
+    witness_count: 0,
+    selected_run_id: null,
+    state_kind: "model_free_fixture",
+  }, processV2ProjectPath);
+  await page.waitForTimeout(processV2ResourcePostMarkerHoldMilliseconds);
+  await capture(processV2CaptureName(180, "fixture-data"));
+
+  const desiredPaths = [
+    ["X", "Y"], ["X", "M1"], ["M1", "M2"], ["M2", "Y"],
+    ["X", "M3"], ["M3", "Y"], ["X", "M4"], ["M4", "Y"],
+  ];
+  const desiredModerations = [
+    { edge: "X -> Y", primary: "W", conditioning: "B" },
+    { edge: "X -> M3", primary: "W", conditioning: "" },
+    { edge: "M4 -> Y", primary: "B", conditioning: "" },
+  ];
+  const readProcessV2SetupSnapshot = async (calculation, action) => {
+    const listbox = calculation.getByRole("listbox", { name: "Available calculation methods", exact: true });
+    const graph = calculation.locator("#nd-calculation-process-graph");
+    const profileNode = calculation.locator("#nd-calculation-process-profile");
+    const pathLegend = compactVisibleText(await graph.locator("fieldset").nth(0).locator("legend").textContent());
+    const controlLegend = compactVisibleText(await calculation.locator(".nd-process-controls legend").textContent());
+    const scope = compactVisibleText(await calculation.locator("#nd-calculation-process-scope strong").textContent());
+    const bootstrapScope = compactVisibleText(await calculation.locator("#nd-calculation-regression-bootstrap-scope strong").textContent());
+    const predictorCapacity = pathLegend.match(/(\d+)\/(\d+) graph predictors/i);
+    const controlCapacity = controlLegend.match(/Controls \((\d+)\/(\d+)/i);
+    const equationTermCapacity = scope.match(/the (\d+)-term ceiling/i);
+    return {
+      catalogCount: await listbox.getByRole("option").count(),
+      selectedMethod: compactVisibleText(await listbox.getByRole("option", { selected: true }).locator("strong").textContent()),
+      regressionType: await calculation.locator("#nd-calculation-regression-type").inputValue(),
+      outcome: await calculation.locator("#nd-process-outcome").inputValue(),
+      focalPredictor: await calculation.locator("#nd-process-focal").inputValue(),
+      paths: await calculation.locator("[data-process-path-row]").evaluateAll((rows) => rows.map((row) => ({
+        from: row.querySelector("select[id^='nd-process-path-from-']")?.value ?? "",
+        to: row.querySelector("select[id^='nd-process-path-to-']")?.value ?? "",
+      }))),
+      moderators: await calculation.locator("[data-process-moderator-row]").evaluateAll((rows) => rows.map((row) => ({
+        variable: row.querySelector("select[id^='nd-process-moderator-variable-']")?.value ?? "",
+        scale: row.querySelector("select[id^='nd-process-moderator-scale-']")?.value ?? "",
+      }))),
+      moderations: await calculation.locator("[data-process-moderation-row]").evaluateAll((rows) => rows.map((row) => ({
+        edge: row.querySelector("select[id^='nd-process-moderation-edge-']")?.selectedOptions[0]?.textContent?.replace(/\s+/g, " ").trim() ?? "",
+        primary: row.querySelector("select[id^='nd-process-moderation-primary-']")?.value ?? "",
+        conditioning: row.querySelector("select[id^='nd-process-moderation-conditioning-']")?.value ?? "",
+      }))),
+      selectedControls: await calculation.locator("[data-process-control]:checked").evaluateAll((inputs) => inputs.map((input) => (
+        input.closest("label")?.querySelector("span")?.textContent?.trim() ?? ""
+      ))),
+      samples: await calculation.locator("#nd-calculation-regression-bootstrap-samples").inputValue(),
+      workers: await calculation.locator("#nd-calculation-regression-bootstrap-workers").inputValue(),
+      seed: await calculation.locator("#nd-calculation-seed").inputValue(),
+      profile: compactVisibleText(await profileNode.textContent()),
+      profileAriaBusy: await profileNode.getAttribute("aria-busy"),
+      scope,
+      bootstrapScope,
+      blockers: (await calculation.locator(".nd-blocker li").allTextContents()).map(compactVisibleText),
+      startEnabled: await action.isEnabled(),
+      capacity: {
+        topLevelPredictors: predictorCapacity ? Number(predictorCapacity[1]) : null,
+        topLevelPredictorsMaximum: predictorCapacity ? Number(predictorCapacity[2]) : null,
+        controls: controlCapacity ? Number(controlCapacity[1]) : null,
+        controlsMaximum: controlCapacity ? Number(controlCapacity[2]) : null,
+        equationNonInterceptTermsMaximum: equationTermCapacity ? Number(equationTermCapacity[1]) : null,
+      },
+      graphDefinedWithoutNumberedTemplates: /does not execute numbered PROCESS templates/i.test(compactVisibleText(await graph.textContent())),
+    };
+  };
+  const configure = async () => {
+    const calculation = await openAnalysisFromDataToolbar();
+    const listbox = calculation.getByRole("listbox", { name: "Available calculation methods", exact: true });
+    await calculation.locator("#nd-calculation-method-regression").click();
+    const regressionType = calculation.locator("#nd-calculation-regression-type");
+    await regressionType.selectOption("process");
+    const graph = calculation.locator("#nd-calculation-process-graph");
+    await graph.waitFor({ state: "visible", timeout: 10_000 });
+    await calculation.locator("#nd-process-outcome").selectOption("Y");
+    await calculation.locator("#nd-process-focal").selectOption("X");
+    const waitForRows = async (selector, count) => page.waitForFunction(({ selector: value, count: expected }) => (
+      document.querySelectorAll(value).length === expected
+    ), { selector, count }, { timeout: 10_000 });
+    const setPath = async (index, from, to) => {
+      await calculation.locator(`#nd-process-path-to-${index}`).selectOption(to);
+      await calculation.locator(`#nd-process-path-from-${index}`).selectOption(from);
+    };
+    const readPaths = () => calculation.locator("[data-process-path-row]").evaluateAll((rows) => rows.map((row) => ({
+      from: row.querySelector("select[id^='nd-process-path-from-']")?.value ?? "",
+      to: row.querySelector("select[id^='nd-process-path-to-']")?.value ?? "",
+    })));
+    const expectedPaths = desiredPaths.map(([from, to]) => ({ from, to }));
+    const initialPathCount = await calculation.locator("[data-process-path-row]").count();
+    if (initialPathCount !== 1 && initialPathCount !== desiredPaths.length) {
+      throw new Error(`PROCESS v2 setup exposed ${initialPathCount} path rows; expected a fresh row or the exact persisted graph.`);
+    }
+    if (initialPathCount === desiredPaths.length) {
+      const persistedPaths = await readPaths();
+      if (JSON.stringify(persistedPaths) !== JSON.stringify(expectedPaths)) {
+        throw new Error(`PROCESS v2 persisted path rows drifted before retry: ${JSON.stringify(persistedPaths)}`);
+      }
+    } else {
+      await waitForRows("[data-process-path-row]", initialPathCount);
+      for (let index = initialPathCount; index < desiredPaths.length; index += 1) {
+        await calculation.locator("#nd-process-add-path").click();
+        await waitForRows("[data-process-path-row]", index + 1);
+      }
+      for (let index = 0; index < desiredPaths.length; index += 1) {
+        await setPath(index, ...desiredPaths[index]);
+      }
+    }
+    const initialModeratorCount = await calculation.locator("[data-process-moderator-row]").count();
+    if (initialModeratorCount !== 0 && initialModeratorCount !== 2) {
+      throw new Error(`PROCESS v2 setup exposed ${initialModeratorCount} moderator rows; expected none or the exact persisted pair.`);
+    }
+    const expectedModerators = [{ variable: "W", scale: "continuous" }, { variable: "B", scale: "binary_0_1" }];
+    if (initialModeratorCount === 2) {
+      const persistedModerators = await calculation.locator("[data-process-moderator-row]").evaluateAll((rows) => rows.map((row) => ({
+        variable: row.querySelector("select[id^='nd-process-moderator-variable-']")?.value ?? "",
+        scale: row.querySelector("select[id^='nd-process-moderator-scale-']")?.value ?? "",
+      })));
+      if (JSON.stringify(persistedModerators) !== JSON.stringify(expectedModerators)) {
+        throw new Error(`PROCESS v2 persisted moderator rows drifted before retry: ${JSON.stringify(persistedModerators)}`);
+      }
+    } else {
+      for (let index = initialModeratorCount; index < 2; index += 1) {
+        await calculation.locator("#nd-process-add-moderator").click();
+        await waitForRows("[data-process-moderator-row]", index + 1);
+      }
+      await calculation.locator("#nd-process-moderator-variable-0").selectOption("W");
+      await calculation.locator("#nd-process-moderator-scale-0").selectOption("continuous");
+      await calculation.locator("#nd-process-moderator-variable-1").selectOption("B");
+      await calculation.locator("#nd-process-moderator-scale-1").selectOption("binary_0_1");
+    }
+    const initialModerationCount = await calculation.locator("[data-process-moderation-row]").count();
+    if (initialModerationCount !== 0 && initialModerationCount !== desiredModerations.length) {
+      throw new Error(`PROCESS v2 setup exposed ${initialModerationCount} moderation rows; expected none or the exact persisted set.`);
+    }
+    if (initialModerationCount === desiredModerations.length) {
+      const persistedModerations = await calculation.locator("[data-process-moderation-row]").evaluateAll((rows) => rows.map((row) => ({
+        edge: row.querySelector("select[id^='nd-process-moderation-edge-']")?.selectedOptions[0]?.textContent?.replace(/\s+/g, " ").trim() ?? "",
+        primary: row.querySelector("select[id^='nd-process-moderation-primary-']")?.value ?? "",
+        conditioning: row.querySelector("select[id^='nd-process-moderation-conditioning-']")?.value ?? "",
+      })));
+      if (JSON.stringify(persistedModerations) !== JSON.stringify(desiredModerations)) {
+        throw new Error(`PROCESS v2 persisted moderation rows drifted before retry: ${JSON.stringify(persistedModerations)}`);
+      }
+    } else {
+      for (let index = initialModerationCount; index < desiredModerations.length; index += 1) {
+        await calculation.locator("#nd-process-add-moderation").click();
+        await waitForRows("[data-process-moderation-row]", index + 1);
+      }
+      for (let index = 0; index < desiredModerations.length; index += 1) {
+        const row = desiredModerations[index];
+        await calculation.locator(`#nd-process-moderation-edge-${index}`).selectOption({ label: row.edge });
+        await calculation.locator(`#nd-process-moderation-primary-${index}`).selectOption(row.primary);
+        const conditioning = calculation.locator(`#nd-process-moderation-conditioning-${index}`);
+        if (!await conditioning.isDisabled()) await conditioning.selectOption(row.conditioning);
+      }
+    }
+    const control = calculation.locator(".nd-process-controls label").filter({ hasText: /^C$/ }).locator("[data-process-control]");
+    if (await control.count() !== 1) throw new Error("PROCESS v2 did not expose C as exactly one eligible control.");
+    await control.check();
+    await calculation.locator("#nd-calculation-regression-bootstrap").selectOption("enabled");
+    await calculation.locator("#nd-calculation-regression-bootstrap-samples").fill(String(processV2Samples));
+    await calculation.locator("#nd-calculation-regression-bootstrap-workers").fill(String(processV2Workers));
+    await calculation.locator("#nd-calculation-seed").fill(String(processV2Seed));
+    await page.waitForFunction(({ expected }) => {
+      const node = document.querySelector("#nd-calculation-process-profile");
+      return node?.getAttribute("aria-busy") === "false" && node.textContent?.replace(/\s+/g, " ").includes(expected);
+    }, { expected: `${processV2Observations} global listwise-complete cases; ${processV2Omitted} rows omitted; 5 OLS equations verified` }, { timeout: 60_000 });
+    const start = calculation.getByRole("button", { name: "Start graph-defined path analysis with bootstrap", exact: true });
+    const contract = await readProcessV2SetupSnapshot(calculation, start);
+    const valid = contract.catalogCount === 14 && contract.selectedMethod === "Regression"
+      && contract.regressionType === "process" && contract.outcome === "Y" && contract.focalPredictor === "X"
+      && JSON.stringify(contract.paths) === JSON.stringify(expectedPaths)
+      && JSON.stringify(contract.moderators) === JSON.stringify(expectedModerators)
+      && JSON.stringify(contract.moderations) === JSON.stringify(desiredModerations)
+      && JSON.stringify(contract.selectedControls) === JSON.stringify(["C"])
+      && contract.samples === String(processV2Samples) && contract.workers === String(processV2Workers)
+      && contract.seed === String(processV2Seed) && contract.blockers.length === 0 && contract.startEnabled
+      && contract.profileAriaBusy === "false"
+      && contract.profile.includes(`${processV2Observations} global listwise-complete cases; ${processV2Omitted} rows omitted; 5 OLS equations verified`)
+      && JSON.stringify(contract.capacity) === JSON.stringify({
+        topLevelPredictors: 7, topLevelPredictorsMaximum: 8, controls: 1,
+        controlsMaximum: 1, equationNonInterceptTermsMaximum: 50,
+      })
+      && contract.graphDefinedWithoutNumberedTemplates
+      && /up to 8 selected predictors/i.test(contract.scope) && /one control entered in every equation/i.test(contract.scope)
+      && /50-term ceiling is an equation-design safety bound/i.test(contract.scope)
+      && /original sample raw mean/i.test(contract.scope)
+      && /Resamples and delete-one fits re-center their equations internally while retaining that original raw probe grid/i.test(contract.scope)
+      && /10,000 complete-case resamples are recommended for final results/i.test(contract.bootstrapScope)
+      && /Percentile intervals are primary/i.test(contract.bootstrapScope) && /worker-invariant/i.test(contract.bootstrapScope);
+    if (!valid) throw new Error(`The PROCESS v2 setup contract was invalid: ${JSON.stringify(contract)}`);
+    return { calculation, start, contract };
+  };
+
+  const cancelledSetup = await configure();
+  await capture(processV2CaptureName(181, "cancellation-dialog"));
+  const cancellationActivePromise = captureActiveCalculation(
+    cancelledSetup.calculation,
+    processV2CaptureName(182, "cancellation-running"),
+    "PROCESS v2 cancellation",
+  ).then((state) => ({ captured: true, ...state }))
+    .catch((error) => ({ captured: false, detail: error instanceof Error ? error.message : String(error) }));
+  await cancelledSetup.start.click();
+  const cancellationActive = await cancellationActivePromise;
+  const cancelButton = cancelledSetup.calculation.getByRole("button", { name: "Cancel calculation", exact: true });
+  await cancelButton.waitFor({ state: "visible", timeout: 15_000 });
+  await cancelButton.click();
+  const cancelled = cancelledSetup.calculation.locator(".nd-run-progress.cancelled");
+  await cancelled.waitFor({ state: "visible", timeout: 60_000 });
+  const partialResults = await page.locator(".nd-run-select select option").count();
+  evidence.checks.processV2Cancellation = {
+    passed: cancellationActive.captured && partialResults === 0,
+    activeLifecycleCaptured: cancellationActive.captured,
+    noPartialResult: partialResults === 0,
+    activeState: cancellationActive,
+    cancelledMessage: compactVisibleText(await cancelled.textContent()),
+  };
+  if (!evidence.checks.processV2Cancellation.passed) {
+    throw new Error(`PROCESS v2 cancellation evidence failed: ${JSON.stringify(evidence.checks.processV2Cancellation)}`);
+  }
+  await capture(processV2CaptureName(183, "cancelled"));
+  await page.waitForTimeout(processV2IdleSettleMilliseconds);
+  await markProcessV2ResourcePhase("post_cancellation_idle", {
+    surface: "data",
+    completed_result_count: 0,
+    witness_count: 0,
+    selected_run_id: null,
+    state_kind: "cancelled_setup_no_result",
+  }, processV2ProjectPath);
+  await page.waitForTimeout(processV2ResourcePostMarkerHoldMilliseconds);
+
+  const retry = cancelledSetup.calculation.getByRole("button", {
+    name: "Retry graph-defined path analysis with bootstrap",
+    exact: true,
+  });
+  await retry.waitFor({ state: "visible", timeout: 10_000 });
+  if (!await retry.isEnabled()) {
+    throw new Error("The cancelled PROCESS v2 calculation did not expose an enabled retry action with its frozen setup.");
+  }
+  const preRetrySnapshot = await readProcessV2SetupSnapshot(cancelledSetup.calculation, retry);
+  const preRetryMatchesFrozenSetup = JSON.stringify(preRetrySnapshot) === JSON.stringify(cancelledSetup.contract);
+  evidence.checks.processV2CancelledRetrySetup = {
+    passed: preRetryMatchesFrozenSetup,
+    readOnly: true,
+    exactFrozenSetupMatch: preRetryMatchesFrozenSetup,
+    snapshot: preRetrySnapshot,
+    frozenSetup: cancelledSetup.contract,
+  };
+  if (!evidence.checks.processV2CancelledRetrySetup.passed) {
+    throw new Error(`The cancelled PROCESS v2 dialog did not retain the exact frozen setup before Retry: ${JSON.stringify(evidence.checks.processV2CancelledRetrySetup)}`);
+  }
+  const fullSetup = {
+    calculation: cancelledSetup.calculation,
+    start: retry,
+    contract: cancelledSetup.contract,
+  };
+  evidence.checks.processV2Setup = {
+    passed: true,
+    outcome: fullSetup.contract.outcome,
+    focalPredictor: fullSetup.contract.focalPredictor,
+    topLevelPredictors: fullSetup.contract.capacity.topLevelPredictors,
+    topLevelPredictorsMaximum: fullSetup.contract.capacity.topLevelPredictorsMaximum,
+    paths: fullSetup.contract.paths.length,
+    moderators: fullSetup.contract.moderators.length,
+    moderations: fullSetup.contract.moderations.length,
+    controls: fullSetup.contract.selectedControls.length,
+    controlsMaximum: fullSetup.contract.capacity.controlsMaximum,
+    equationNonInterceptTermsMaximum: fullSetup.contract.capacity.equationNonInterceptTermsMaximum,
+    bootstrapReplicates: Number(fullSetup.contract.samples),
+    workers: Number(fullSetup.contract.workers),
+    seed: Number(fullSetup.contract.seed),
+    contract: fullSetup.contract,
+  };
+  await capture(processV2CaptureName(184, "dialog"));
+  const activePromise = captureActiveCalculation(
+    fullSetup.calculation,
+    processV2CaptureName(185, "running"),
+    "PROCESS v2 10,000-resample run",
+  ).then((state) => ({ captured: true, ...state }))
+    .catch((error) => ({ captured: false, detail: error instanceof Error ? error.message : String(error) }));
+  await fullSetup.start.click();
+  await waitForSurface("results", 900_000);
+  const activeState = await activePromise;
+  if (!activeState.captured) throw new Error(`PROCESS v2 did not expose a genuine active lifecycle: ${JSON.stringify(activeState)}`);
+
+  const runSelect = page.locator(".nd-run-select select");
+  const runOption = runSelect.locator("option").filter({ hasText: /Graph-defined path analysis with bootstrap/i }).last();
+  await runOption.waitFor({ state: "attached", timeout: 30_000 });
+  const runId = await runOption.getAttribute("value");
+  if (!runId) throw new Error("The completed PROCESS v2 option had no run identifier.");
+  await runSelect.selectOption(runId);
+  const selectedTreeItem = page.locator('.nd-result-tree [role="treeitem"][aria-selected="true"]');
+  await selectedTreeItem.waitFor({ state: "visible", timeout: 30_000 });
+  await page.waitForFunction((expected) => (
+    document.querySelectorAll('.nd-result-tree [role="treeitem"][aria-level="2"]').length === expected
+  ), processV2ExpectedTableIds.length, { timeout: 30_000 });
+  const initialSelectedTable = await selectedTreeItem.getAttribute("data-result-tree-item-id");
+  const group = page.locator('.nd-result-tree [role="treeitem"][aria-level="1"]');
+  const groupId = await group.getAttribute("data-result-tree-item-id");
+  const groupTitle = compactVisibleText(await group.textContent());
+  const tableItems = page.locator('.nd-result-tree [role="treeitem"][aria-level="2"]');
+  const tableIds = await tableItems.evaluateAll((items) => items.map((item) => item.getAttribute("data-result-tree-item-id")));
+  const titleById = {
+    process_model_summary: "Model summary", process_paths: "Directed paths",
+    process_equation_coefficients: "Equation coefficients", process_equation_fit: "Equation fit",
+    process_reference_effects: "Reference effects", process_conditional_indirect_effects: "Conditional indirect effects",
+    process_moderated_mediation_indices: "Moderated-mediation indices",
+    process_simple_slopes: "Simple slopes and conditional plots",
+    process_conditional_plot_points: "Conditional outcome plot data",
+    process_johnson_neyman: "Johnson-Neyman regions",
+    process_johnson_neyman_curve_points: "Johnson-Neyman curve data",
+    process_bootstrap_summary: "Bootstrap summary", process_bootstrap_failures: "Bootstrap failures",
+    process_bootstrap_inference: "Bootstrap inference", process_bootstrap_bca: "Bootstrap BCa intervals",
+    process_scope: "Scope and provenance",
+  };
+  const rendered = {};
+  let renderedText = "";
+  for (const id of processV2ExpectedTableIds) {
+    const item = page.locator(`.nd-result-tree [role="treeitem"][data-result-tree-item-id="${id}"]`);
+    await item.click();
+    await page.getByRole("heading", { name: titleById[id], exact: true }).waitFor({ state: "visible", timeout: 15_000 });
+    const rows = await page.locator(".nd-result-table tbody tr").evaluateAll((tableRows) => tableRows.map((row) => Array.from(
+      row.querySelectorAll("th, td"), (cell) => cell.textContent?.replace(/\s+/g, " ").trim() ?? "",
+    )));
+    const columns = (await page.locator(".nd-result-table thead th").allTextContents()).map(compactVisibleText);
+    const warning = compactVisibleText(await page.locator(".nd-inline-warning").textContent().catch(() => ""));
+    rendered[id] = { rows: rows.length, columns, warning, values: rows };
+    renderedText += `\n${titleById[id]}\n${warning}\n${columns.join("\n")}\n${rows.flat().join("\n")}`;
+  }
+  const summary = Object.fromEntries(rendered.process_bootstrap_summary.values.map((row) => [row[0], row[1]]));
+  await page.locator('.nd-result-tree [role="treeitem"][data-result-tree-item-id="process_simple_slopes"]').click();
+  await page.getByRole("heading", { name: "Simple slopes and conditional plots", exact: true }).waitFor({ state: "visible", timeout: 15_000 });
+  const conditionalPlotAccessibility = await page.locator("[data-process-plot-id]").evaluateAll((figures) => ({
+    figureCount: figures.length,
+    seriesCounts: figures.map((figure) => figure.querySelectorAll(".nd-process-plot-legend li").length),
+    pointDisclosures: figures.map((figure) => figure.querySelector("p")?.textContent?.replace(/\s+/g, " ").trim() ?? ""),
+    everySvgNamed: figures.every((figure) => {
+      const svg = figure.querySelector('svg[role="img"]');
+      const ids = svg?.getAttribute("aria-labelledby")?.split(/\s+/).filter(Boolean) ?? [];
+      return ids.length === 2 && ids.every((id) => Boolean(document.getElementById(id)));
+    }),
+    everyLegendNamed: figures.every((figure) => Boolean(figure.querySelector(".nd-process-plot-legend[aria-label]"))),
+    everySeriesHasMarkerText: figures.every((figure) => Array.from(figure.querySelectorAll(".nd-process-plot-legend li span")).every((node) => (
+      /circle|square|triangle/i.test(node.textContent ?? "")
+    ))),
+    dashPatternsPresent: figures.every((figure) => figure.querySelectorAll("polyline.process-estimate[stroke-dasharray]").length >= 1),
+  }));
+  await page.locator('.nd-result-tree [role="treeitem"][data-result-tree-item-id="process_johnson_neyman"]').click();
+  await page.getByRole("heading", { name: "Johnson-Neyman regions", exact: true }).waitFor({ state: "visible", timeout: 15_000 });
+  const johnsonNeymanAccessibility = await page.locator("[data-process-jn-moderation]").evaluateAll((figures) => ({
+    figureCount: figures.length,
+    totalCurveMarkers: figures.reduce((total, figure) => total + figure.querySelectorAll('svg[role="img"] circle').length, 0),
+    everySvgNamed: figures.every((figure) => {
+      const svg = figure.querySelector('svg[role="img"]');
+      const ids = svg?.getAttribute("aria-labelledby")?.split(/\s+/).filter(Boolean) ?? [];
+      return ids.length === 2 && ids.every((id) => Boolean(document.getElementById(id)));
+    }),
+    everyCurveDisclosure: figures.every((figure) => /All 101 curve points, intervals, roots, and regions were persisted by the engine/i.test(figure.querySelector("p")?.textContent ?? "")),
+    textualRootsRegions: figures.every((figure) => /Roots:.*Regions:/i.test(figure.querySelector("desc")?.textContent ?? "")),
+  }));
+  const accessibleNonColorPlotSemantics = conditionalPlotAccessibility.figureCount === 3
+    && JSON.stringify(conditionalPlotAccessibility.seriesCounts) === JSON.stringify([3, 6, 2])
+    && conditionalPlotAccessibility.pointDisclosures.every((value) => /All 25 points per series/i.test(value))
+    && conditionalPlotAccessibility.everySvgNamed && conditionalPlotAccessibility.everyLegendNamed
+    && conditionalPlotAccessibility.everySeriesHasMarkerText && conditionalPlotAccessibility.dashPatternsPresent
+    && johnsonNeymanAccessibility.figureCount === 3 && johnsonNeymanAccessibility.totalCurveMarkers === 303
+    && johnsonNeymanAccessibility.everySvgNamed && johnsonNeymanAccessibility.everyCurveDisclosure
+    && johnsonNeymanAccessibility.textualRootsRegions;
+  const failedCount = Number(summary["Failed replicates"]);
+  const failureRows = rendered.process_bootstrap_failures.values;
+  const failureDisclosureTruthful = Number.isInteger(failedCount) && failedCount >= 0
+    && (failedCount === 0
+      ? failureRows.length === 1 && failureRows[0][1] === "No failed replicates"
+      : failureRows.length === failedCount && failureRows.every((row) => /^\d+$/.test(row[0]) && row[1] && row[2]));
+  const renderedPrivateDataText = [
+    ...tableIds,
+    ...Object.values(titleById),
+    ...processV2ExpectedTableIds.flatMap((id) => [
+      ...rendered[id].columns,
+      ...rendered[id].values.flat(),
+    ]),
+  ].join("\n");
+  const validationWitnessNotRendered = !processV2PrivateWitnessWireToken.test(renderedPrivateDataText);
+  const noNaFabrication = !/\bN\/?A\b/i.test(renderedText);
+  const referenceEffectColumnsExact = JSON.stringify(rendered.process_reference_effects.columns)
+    === JSON.stringify(processV2ReferenceColumns);
+  const referenceConditionRowsExact = rendered.process_reference_effects.values.length
+    === processV2ExpectedGraphCounts.referenceEffects
+    && rendered.process_reference_effects.values.every((row) => (
+      row.length === processV2ReferenceColumns.length && row[4] === processV2ReferenceCondition
+    ));
+  const candidatePromotionWarningsExact = processV2ExpectedTableIds.every((id) => (
+    rendered[id].warning.startsWith(processV2PromotionPendingWarning)
+  ));
+  const curveWarningDisclosureExact = rendered.process_johnson_neyman_curve_points.warning
+    === `${processV2PromotionPendingWarning} ${processV2CurveWarningDisclosure}`;
+  const johnsonNeymanAnalysisKeys = [...new Map(
+    rendered.process_johnson_neyman.values.map((row) => {
+      const key = row.slice(0, 3);
+      return [JSON.stringify(key), key];
+    }),
+  ).values()];
+  const rowCountsValid = rendered.process_model_summary.rows === 11
+    && rendered.process_paths.rows === processV2ExpectedGraphCounts.paths
+    && rendered.process_equation_coefficients.rows === 27
+    && rendered.process_equation_fit.rows === processV2ExpectedGraphCounts.equations
+    && rendered.process_reference_effects.rows === processV2ExpectedGraphCounts.referenceEffects
+    && rendered.process_conditional_indirect_effects.rows === processV2ExpectedGraphCounts.conditionalIndirectEffects
+    && rendered.process_moderated_mediation_indices.rows === processV2ExpectedGraphCounts.moderatedMediationIndices
+    && rendered.process_simple_slopes.rows === processV2ExpectedGraphCounts.simpleSlopes
+    && rendered.process_conditional_plot_points.rows === processV2ExpectedGraphCounts.conditionalPlotPoints
+    && rendered.process_johnson_neyman.rows === processV2ExpectedGraphCounts.johnsonNeymanRegionRows
+    && johnsonNeymanAnalysisKeys.length === processV2ExpectedGraphCounts.johnsonNeyman
+    && JSON.stringify(johnsonNeymanAnalysisKeys) === JSON.stringify(processV2ExpectedJohnsonNeymanAnalysisKeys)
+    && rendered.process_johnson_neyman_curve_points.rows === processV2ExpectedGraphCounts.johnsonNeymanCurvePoints
+    && rendered.process_bootstrap_summary.rows === 13
+    && rendered.process_bootstrap_failures.rows >= 1
+    && rendered.process_bootstrap_inference.rows === processV2ExpectedGraphCounts.estimands
+    && rendered.process_bootstrap_bca.rows === processV2ExpectedGraphCounts.estimands
+    && rendered.process_scope.rows === 4;
+  const summaryValid = summary["Method version"] === processV2BootstrapMethodVersion
+    && summary.Algorithm === "Indexed case resampling with replacement"
+    && summary["Interval policy"] === "Percentile primary; BCa conditional"
+    && summary["Test reference"] === "Two-sided standard-normal bootstrap ratio"
+    && summary["Confidence level"] === "0.95 (fixed)"
+    && summary["Requested replicates"] === String(processV2Samples)
+    && Number(summary["Usable replicates"]) + failedCount === processV2Samples
+    && summary["Seed"] === String(processV2Seed) && summary.Workers === String(processV2Workers)
+    && summary.Stream === "process_indexed_case_stream_v1"
+    && summary["Probe grid"] === "Original-sample raw moderator probes; each resample and delete-one equation re-centered internally";
+  evidence.checks.processV2Results = {
+    passed: initialSelectedTable === processV2DefaultTableId && groupId === "process"
+      && /Graph-defined path analysis with bootstrap/i.test(groupTitle)
+      && JSON.stringify(tableIds) === JSON.stringify(processV2ExpectedTableIds)
+      && rowCountsValid && summaryValid && failureDisclosureTruthful
+      && validationWitnessNotRendered && noNaFabrication && accessibleNonColorPlotSemantics
+      && referenceEffectColumnsExact && referenceConditionRowsExact && candidatePromotionWarningsExact
+      && curveWarningDisclosureExact,
+    initialSelectedTable, tableIds, exactTableIds: JSON.stringify(tableIds) === JSON.stringify(processV2ExpectedTableIds),
+    equationCount: rendered.process_equation_fit.rows,
+    referenceEffectRows: rendered.process_reference_effects.rows,
+    conditionalIndirectRows: rendered.process_conditional_indirect_effects.rows,
+    moderatedMediationIndexRows: rendered.process_moderated_mediation_indices.rows,
+    simpleSlopeRows: rendered.process_simple_slopes.rows,
+    conditionalPlotPointRows: rendered.process_conditional_plot_points.rows,
+    johnsonNeymanRows: rendered.process_johnson_neyman.rows,
+    johnsonNeymanAnalysisCount: johnsonNeymanAnalysisKeys.length,
+    johnsonNeymanAnalysisKeys,
+    renderedJohnsonNeymanRows: rendered.process_johnson_neyman.rows,
+    johnsonNeymanCurvePointRows: rendered.process_johnson_neyman_curve_points.rows,
+    bootstrapEstimandRows: rendered.process_bootstrap_inference.rows,
+    failureDisclosureTruthful, validationWitnessNotRendered, noNaFabrication,
+    referenceEffectColumnsExact, referenceConditionRowsExact, candidatePromotionWarningsExact,
+    curveWarningDisclosureExact,
+    accessibleNonColorPlotSemantics,
+    plotAccessibility: { conditional: conditionalPlotAccessibility, johnsonNeyman: johnsonNeymanAccessibility },
+    genericRegressionShellNotApplicable: null,
+    expectedCountsSource: "validation/process_v2_reference.py:reference_graph",
+    expectedGraphCounts: processV2ExpectedGraphCounts,
+    summary, rows: rendered,
+  };
+  if (!evidence.checks.processV2Results.passed) {
+    throw new Error(`PROCESS v2 result tables were invalid: ${JSON.stringify(evidence.checks.processV2Results)}`);
+  }
+  await openResultTable("Bootstrap inference");
+  await capture(processV2CaptureName(186, "results"));
+
+  const exportCommand = page.locator(".nd-commandbar button").filter({ hasText: /^Export/i });
+  await exportCommand.click();
+  const exportDialog = page.locator('.nd-dialog-export[role="dialog"]');
+  await exportDialog.waitFor({ state: "visible", timeout: 10_000 });
+  const expectedSheets = [...Object.values(titleById).map((title) => title.slice(0, 31).trimEnd()), "Run provenance"];
+  const expectedSharedStrings = [
+    "Graph-Defined Path Analysis with Bootstrap", processV2MethodVersion, processV2BootstrapMethodVersion,
+    "Original-sample raw moderator probes; each resample and delete-one equation re-centered internally",
+    "Run provenance", ...processV2ReferenceColumns,
+    processV2ReferenceCondition, "experimental", processV2PromotionPendingWarning,
+    `${processV2PromotionPendingWarning} ${processV2CurveWarningDisclosure}`,
+  ];
+  const helper = startWindowsNativeSaveExportHelper({
+    targetPath: exportTarget,
+    windowTitle: evidence.checks.runtime.title,
+    expectedSheets,
+    expectedSharedStrings,
+  });
+  let helperCompleted = false;
+  let nativeXlsx;
+  try {
+    const ready = await helper.ready;
+    if (!ready.passed || ready.event !== "ready") throw new Error(`PROCESS v2 XLSX helper did not become ready: ${JSON.stringify(ready)}`);
+    await exportDialog.getByRole("button", { name: /XLSX workbook/i }).click();
+    const completion = await helper.completed;
+    helperCompleted = true;
+    if (!completion.passed) throw new Error(`PROCESS v2 XLSX verification failed: ${JSON.stringify(completion)}`);
+    const feedback = exportDialog.locator("#nd-export-feedback").filter({ hasText: `Saved ${path.basename(exportTarget)}.` });
+    await feedback.waitFor({ state: "visible", timeout: 15_000 });
+    const file = await fs.stat(exportTarget);
+    const workbookSheets = await inspectXlsxWorkbookSheets(exportTarget);
+    const requiredSharedStrings = completion.workbook?.requiredSharedStrings ?? [];
+    const processTableContract = {
+      passed: JSON.stringify(requiredSharedStrings) === JSON.stringify(expectedSharedStrings),
+      reference_sheet: "Reference effects",
+      reference_columns: processV2ReferenceColumns,
+      reference_effect_rows: processV2ExpectedGraphCounts.referenceEffects,
+      reference_condition: processV2ReferenceCondition,
+      candidate_status: "experimental",
+      promotion_pending_warning: processV2PromotionPendingWarning,
+      curve_warning_disclosure: processV2CurveWarningDisclosure,
+      curve_warning_disclosure_exact: requiredSharedStrings.includes(
+        `${processV2PromotionPendingWarning} ${processV2CurveWarningDisclosure}`,
+      ),
+      required_shared_strings_verified: JSON.stringify(requiredSharedStrings) === JSON.stringify(expectedSharedStrings),
+    };
+    nativeXlsx = {
+      attempted: true, targetPath: exportTarget, helper: { ready, completion },
+      appFeedback: compactVisibleText(await feedback.textContent()),
+      file: { size: file.size, isFile: file.isFile() }, workbookSheets, processTableContract,
+    };
+    if (!file.isFile() || file.size <= 0 || JSON.stringify(workbookSheets) !== JSON.stringify(expectedSheets)
+      || !processTableContract.passed) {
+      throw new Error(`PROCESS v2 XLSX sheet identity drifted: ${JSON.stringify(nativeXlsx)}`);
+    }
+  } finally {
+    if (!helperCompleted) helper.stop();
+  }
+  const witnessScan = await xlsxExcludesValidationWitness(exportTarget);
+  nativeXlsx.witnessScan = witnessScan;
+  evidence.checks.processV2Export = {
+    passed: witnessScan.passed && nativeXlsx.processTableContract.passed,
+    nativeXlsx,
+    validationWitnessExcluded: witnessScan.passed,
+    expectedSheets,
+  };
+  if (!evidence.checks.processV2Export.passed) throw new Error("The PROCESS v2 archive-only witness leaked into XLSX.");
+  await capture(processV2CaptureName(187, "export"));
+  await exportDialog.getByRole("button", { name: "Close", exact: true }).click();
+
+  await page.keyboard.press("Control+S");
+  await page.locator(".nd-toast").filter({ hasText: /Project saved/i }).last().waitFor({ state: "visible", timeout: 30_000 });
+  await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 30_000 });
+  const archive = await inspectSavedProcessV2Archive(processV2ProjectPath, runId);
+  if (path.resolve(processV2ResetProjectPath) === path.resolve(processV2ProjectPath)
+    || path.dirname(path.resolve(processV2ResetProjectPath)) !== path.resolve(validationResultsDir)) {
+    throw new Error(`PROCESS v2 reset clone path was not a distinct validation/results path: ${processV2ResetProjectPath}`);
+  }
+  await clearProcessV2ResetArtifacts(processV2ResetProjectPath);
+  const resetSidecarsBeforeCopy = await processV2SidecarState(processV2ResetProjectPath);
+  await fs.copyFile(processV2ProjectPath, processV2ResetProjectPath, fsConstants.COPYFILE_EXCL);
+  const [originalArchiveArtifact, resetArchiveArtifact] = await Promise.all([
+    artifactDigest(processV2ProjectPath), artifactDigest(processV2ResetProjectPath),
+  ]);
+  const resetArchive = await inspectSavedProcessV2Archive(processV2ResetProjectPath, runId);
+  const resetLogicalState = await inspectProcessV2LogicalArchiveState(processV2ResetProjectPath);
+  const resetSidecarsAfterCopy = await processV2SidecarState(processV2ResetProjectPath);
+  evidence.checks.processV2ResourceResetClone = {
+    passed: resetSidecarsBeforeCopy.present.length === 0 && resetSidecarsAfterCopy.present.length === 0
+      && originalArchiveArtifact !== null && resetArchiveArtifact !== null
+      && originalArchiveArtifact.size === resetArchiveArtifact.size
+      && originalArchiveArtifact.sha256 === resetArchiveArtifact.sha256
+      && resetArchive.identity.resultId === archive.identity.resultId
+      && resetArchive.identity.recipeId === archive.identity.recipeId
+      && resetArchive.identity.runId === archive.identity.runId
+      && resetLogicalState.manifestValid
+      && resetLogicalState.completedResultCount === 1 && resetLogicalState.witnessCount === 1
+      && resetLogicalState.selectedRunId === runId
+      && JSON.stringify(resetLogicalState.completedRunIds) === JSON.stringify([runId])
+      && JSON.stringify(resetLogicalState.witnessRunIds) === JSON.stringify([runId]),
+    originalPath: path.relative(root, processV2ProjectPath).replaceAll("\\", "/"),
+    resetPath: path.relative(root, processV2ResetProjectPath).replaceAll("\\", "/"),
+    distinctPath: path.resolve(processV2ResetProjectPath) !== path.resolve(processV2ProjectPath),
+    originalArchive: originalArchiveArtifact,
+    resetArchive: resetArchiveArtifact,
+    identity: resetArchive.identity,
+    logicalState: resetLogicalState,
+    sidecarsBeforeCopy: resetSidecarsBeforeCopy,
+    sidecarsAfterCopy: resetSidecarsAfterCopy,
+    sidecarsBeforeOpen: null,
+    settledAutosave: null,
+    autosaveAfterCheckpoint: null,
+    recoveryDisclosureAbsent: null,
+  };
+  if (!evidence.checks.processV2ResourceResetClone.passed) {
+    throw new Error(`PROCESS v2 one-result reset clone was not exact and sidecar-free: ${JSON.stringify(evidence.checks.processV2ResourceResetClone)}`);
+  }
+  evidence.checks.processV2Results.genericRegressionShellNotApplicable = archive.genericRegressionShellNotApplicable;
+  const liveArchiveCountsAgree = archive.graphCounts.equations === evidence.checks.processV2Results.equationCount
+    && archive.graphCounts.referenceEffects === evidence.checks.processV2Results.referenceEffectRows
+    && archive.graphCounts.conditionalIndirectEffects === evidence.checks.processV2Results.conditionalIndirectRows
+    && archive.graphCounts.moderatedMediationIndices === evidence.checks.processV2Results.moderatedMediationIndexRows
+    && archive.graphCounts.simpleSlopes === evidence.checks.processV2Results.simpleSlopeRows
+    && archive.graphCounts.conditionalPlotPoints === evidence.checks.processV2Results.conditionalPlotPointRows
+    && archive.graphCounts.johnsonNeyman === evidence.checks.processV2Results.johnsonNeymanAnalysisCount
+    && archive.graphCounts.johnsonNeymanRegionRows === evidence.checks.processV2Results.johnsonNeymanRows
+    && archive.graphCounts.availableJohnsonNeyman === johnsonNeymanAccessibility.figureCount
+    && archive.graphCounts.johnsonNeymanCurvePoints === evidence.checks.processV2Results.johnsonNeymanCurvePointRows
+    && archive.graphCounts.estimands === evidence.checks.processV2Results.bootstrapEstimandRows;
+  evidence.checks.processV2Results.liveArchiveCountsAgree = liveArchiveCountsAgree;
+  evidence.checks.processV2Results.passed = evidence.checks.processV2Results.passed
+    && archive.genericRegressionShellNotApplicable && liveArchiveCountsAgree;
+  if (!evidence.checks.processV2Results.passed) {
+    throw new Error(`PROCESS v2 live result and saved graph counts disagreed: ${JSON.stringify(evidence.checks.processV2Results)}`);
+  }
+  evidence.checks.processV2WitnessBoundary = {
+    passed: archive.witnessBoundary.passed
+      && evidence.checks.processV2Results.validationWitnessNotRendered
+      && evidence.checks.processV2Export.validationWitnessExcluded,
+    archiveOnly: archive.witnessBoundary.passed,
+    witnessMethodVersion: archive.witnessBoundary.witnessMethodVersion,
+    estimandOrderExact: archive.witnessBoundary.estimandOrderExact,
+    bootstrapIndexPartitionExact: archive.witnessBoundary.bootstrapIndexPartitionExact,
+    jackknifeIndexPartitionExact: archive.witnessBoundary.jackknifeIndexPartitionExact,
+    excludedFromResults: evidence.checks.processV2Results.validationWitnessNotRendered,
+    excludedFromExports: evidence.checks.processV2Export.validationWitnessExcluded,
+  };
+  if (!evidence.checks.processV2WitnessBoundary.passed) {
+    throw new Error(`PROCESS v2 witness boundary failed: ${JSON.stringify(evidence.checks.processV2WitnessBoundary)}`);
+  }
+
+  await reloadToLauncher();
+  await openRecentProject(processV2ProjectName, processV2ProjectPath);
+  await openMenuItem("View", "Results");
+  await waitForSurface("results");
+  const reopenedOption = page.locator(".nd-run-select select option").filter({ hasText: /Graph-defined path analysis with bootstrap/i }).last();
+  await reopenedOption.waitFor({ state: "attached", timeout: 30_000 });
+  const reopenedRunId = await reopenedOption.getAttribute("value");
+  const reopenedAutoSelectedRunId = await page.locator(".nd-run-select select").inputValue();
+  const reopenedSelected = page.locator('.nd-result-tree [role="treeitem"][aria-selected="true"]');
+  await reopenedSelected.waitFor({ state: "visible", timeout: 30_000 });
+  await page.waitForFunction((expected) => (
+    document.querySelectorAll('.nd-result-tree [role="treeitem"][aria-level="2"]').length === expected
+  ), processV2ExpectedTableIds.length, { timeout: 30_000 });
+  const reopenedInitialSelectedTable = await reopenedSelected.getAttribute("data-result-tree-item-id");
+  const reopenedTableIds = await page.locator('.nd-result-tree [role="treeitem"][aria-level="2"]').evaluateAll((items) => (
+    items.map((item) => item.getAttribute("data-result-tree-item-id"))
+  ));
+  const cycle1LogicalState = await inspectProcessV2LogicalArchiveState(processV2ProjectPath);
+  if (reopenedRunId !== runId || reopenedAutoSelectedRunId !== runId
+    || reopenedInitialSelectedTable !== processV2DefaultTableId
+    || JSON.stringify(reopenedTableIds) !== JSON.stringify(processV2ExpectedTableIds)
+    || cycle1LogicalState.completedResultCount !== 1 || cycle1LogicalState.witnessCount !== 1
+    || cycle1LogicalState.selectedRunId !== runId) {
+    throw new Error(`PROCESS v2 original one-result checkpoint was not auto-restored in the frozen default state: ${JSON.stringify({ reopenedRunId, reopenedAutoSelectedRunId, reopenedInitialSelectedTable, reopenedTableIds, cycle1LogicalState })}`);
+  }
+  await page.waitForTimeout(processV2IdleSettleMilliseconds);
+  const cycle1AutosaveState = await processV2SettledAutosaveState(
+    processV2ProjectPath,
+    { primaryDurability: true },
+  );
+  const cycle1EffectiveState = cycle1AutosaveState.logicalState;
+  if (!cycle1AutosaveState.exactAllowedIdentity || !cycle1EffectiveState?.manifestValid
+    || cycle1EffectiveState.completedResultCount !== 1 || cycle1EffectiveState.witnessCount !== 1
+    || cycle1EffectiveState.selectedRunId !== runId
+    || JSON.stringify(cycle1EffectiveState.completedRunIds) !== JSON.stringify([runId])) {
+    throw new Error(`PROCESS v2 original one-result autosave did not settle to the exact allowed state: ${JSON.stringify(cycle1AutosaveState)}`);
+  }
+  await markProcessV2ResourcePhase("post_completed_cycle_1_idle", {
+    surface: "results",
+    completed_result_count: cycle1EffectiveState.completedResultCount,
+    witness_count: cycle1EffectiveState.witnessCount,
+    selected_run_id: runId,
+    state_kind: "one_result_reopened_original",
+  }, `${processV2ProjectPath}.autosave`);
+  await page.waitForTimeout(processV2ResourcePostMarkerHoldMilliseconds);
+  const cycle1AutosaveStateAfterCheckpoint = await processV2SettledAutosaveState(
+    processV2ProjectPath,
+    { primaryDurability: true },
+  );
+  if (!cycle1AutosaveStateAfterCheckpoint.exactAllowedIdentity
+    || cycle1AutosaveStateAfterCheckpoint.autosavePath !== cycle1AutosaveState.autosavePath
+    || JSON.stringify(cycle1AutosaveStateAfterCheckpoint.artifacts)
+      !== JSON.stringify(cycle1AutosaveState.artifacts)
+    || cycle1AutosaveStateAfterCheckpoint.logicalState?.completedResultCount !== 1
+    || cycle1AutosaveStateAfterCheckpoint.logicalState?.witnessCount !== 1
+    || cycle1AutosaveStateAfterCheckpoint.logicalState?.selectedRunId !== runId) {
+    throw new Error(`PROCESS v2 original one-result autosave changed during its idle window: ${JSON.stringify(cycle1AutosaveStateAfterCheckpoint)}`);
+  }
+  const cycle1SidecarEvidence = await captureProcessV2SidecarEvidence(
+    "cycle1",
+    cycle1AutosaveStateAfterCheckpoint,
+  );
+  const cycle1SettledAutosaveEvidence = {
+    ...cycle1AutosaveState,
+    capturedArtifacts: cycle1SidecarEvidence,
+  };
+  const cycle1AutosaveAfterCheckpointEvidence = {
+    ...cycle1AutosaveStateAfterCheckpoint,
+    capturedArtifacts: cycle1SidecarEvidence,
+  };
+  const reopenedConditionalPlotRows = await openResultTable("Conditional outcome plot data");
+  const reopenedJohnsonNeymanCurveRows = await openResultTable("Johnson-Neyman curve data");
+  const reopenedInferenceRows = await openResultTable("Bootstrap inference");
+  evidence.checks.processV2SaveReopen = {
+    passed: reopenedRunId === runId && reopenedInitialSelectedTable === processV2DefaultTableId
+      && JSON.stringify(reopenedTableIds) === JSON.stringify(processV2ExpectedTableIds)
+      && reopenedConditionalPlotRows === archive.graphCounts.conditionalPlotPoints
+      && reopenedJohnsonNeymanCurveRows === archive.graphCounts.johnsonNeymanCurvePoints
+      && reopenedInferenceRows === 24 && archive.manifest.projectChecksumMatches && archive.witnessBoundary.passed,
+    sameRunRestored: reopenedRunId === runId,
+    initialSelectedTable: reopenedInitialSelectedTable,
+    tableIds: reopenedTableIds,
+    rows: {
+      conditionalPlotPoints: reopenedConditionalPlotRows,
+      johnsonNeymanCurvePoints: reopenedJohnsonNeymanCurveRows,
+      bootstrapInference: reopenedInferenceRows,
+    },
+    settledAutosave: cycle1SettledAutosaveEvidence,
+    autosaveAfterCheckpoint: cycle1AutosaveAfterCheckpointEvidence,
+    archive,
+  };
+  if (!evidence.checks.processV2SaveReopen.passed) {
+    throw new Error(`PROCESS v2 did not survive exact save/reopen: ${JSON.stringify(evidence.checks.processV2SaveReopen)}`);
+  }
+  await capture(processV2CaptureName(188, "reopened"));
+  const completedRunIdsBefore = await page.locator(".nd-run-select select option")
+    .filter({ hasText: /Graph-defined path analysis with bootstrap/i })
+    .evaluateAll((options) => options.map((option) => option.value));
+
+  await openMenuItem("View", "Data");
+  await waitForSurface("data");
+  const repeatedSetup = await configure();
+  const repeatedActivePromise = captureActiveCalculation(
+    repeatedSetup.calculation,
+    processV2CaptureName(189, "repeated-running"),
+    "PROCESS v2 repeated 10,000-resample run",
+  ).then((state) => ({ captured: true, ...state }))
+    .catch((error) => ({ captured: false, detail: error instanceof Error ? error.message : String(error) }));
+  await repeatedSetup.start.click();
+  await waitForSurface("results", 900_000);
+  const repeatedActiveState = await repeatedActivePromise;
+  const repeatedRunOptions = page.locator(".nd-run-select select option").filter({ hasText: /Graph-defined path analysis with bootstrap/i });
+  await page.waitForFunction((priorCount) => (
+    Array.from(document.querySelectorAll(".nd-run-select select option"))
+      .filter((option) => /Graph-defined path analysis with bootstrap/i.test(option.textContent ?? "")).length >= priorCount + 1
+  ), completedRunIdsBefore.length, { timeout: 30_000 });
+  const completedRunIdsAfter = await repeatedRunOptions.evaluateAll((options) => options.map((option) => option.value));
+  const addedRunIds = completedRunIdsAfter.filter((id) => !completedRunIdsBefore.includes(id));
+  const repeatedRunId = addedRunIds.length === 1 ? addedRunIds[0] : null;
+  const autoSelectedRunId = await runSelect.inputValue();
+  if (repeatedRunId) await runSelect.selectOption(repeatedRunId);
+  const explicitlySelectedRunId = await runSelect.inputValue();
+  await page.waitForFunction((expected) => (
+    document.querySelectorAll('.nd-result-tree [role="treeitem"][aria-level="2"]').length === expected
+  ), processV2ExpectedTableIds.length, { timeout: 30_000 });
+  const repeatedInitialTable = await page.locator('.nd-result-tree [role="treeitem"][aria-selected="true"]')
+    .getAttribute("data-result-tree-item-id");
+  const completedRunIdsBeforeUnique = completedRunIdsBefore.length === new Set(completedRunIdsBefore).size;
+  const completedRunIdsAfterUnique = completedRunIdsAfter.length === new Set(completedRunIdsAfter).size;
+  const priorIdsPreserved = completedRunIdsBefore.every((id) => completedRunIdsAfter.includes(id));
+  evidence.checks.processV2RepeatedCompletion = {
+    passed: repeatedActiveState.captured && Boolean(repeatedRunId) && repeatedRunId !== runId
+      && completedRunIdsBefore.length === 1 && completedRunIdsBefore[0] === runId
+      && completedRunIdsBefore.every(Boolean) && completedRunIdsBeforeUnique
+      && completedRunIdsAfter.length === completedRunIdsBefore.length + 1
+      && completedRunIdsAfter.every(Boolean) && completedRunIdsAfterUnique && priorIdsPreserved
+      && addedRunIds.length === 1 && addedRunIds[0] === repeatedRunId
+      && autoSelectedRunId === repeatedRunId && explicitlySelectedRunId === repeatedRunId
+      && repeatedInitialTable === processV2DefaultTableId,
+    activeLifecycleCaptured: repeatedActiveState.captured,
+    priorRunId: runId,
+    repeatedRunId,
+    completedRunIdsBefore,
+    completedRunIdsAfter,
+    addedRunIds,
+    completedRunCountBefore: completedRunIdsBefore.length,
+    completedRunCount: completedRunIdsAfter.length,
+    uniqueCompletedRunCount: new Set(completedRunIdsAfter).size,
+    autoSelectedRunId,
+    explicitlySelectedRunId,
+    initialSelectedTable: repeatedInitialTable,
+  };
+  if (!evidence.checks.processV2RepeatedCompletion.passed) {
+    throw new Error(`PROCESS v2 did not complete a second genuine resource cycle: ${JSON.stringify(evidence.checks.processV2RepeatedCompletion)}`);
+  }
+  const historyDefaultTable = page.locator(`.nd-result-tree [data-result-tree-item-id="${processV2DefaultTableId}"]`);
+  await historyDefaultTable.click();
+  await page.waitForFunction((tableId) => (
+    document.querySelector('.nd-result-tree [role="treeitem"][aria-selected="true"]')?.getAttribute("data-result-tree-item-id") === tableId
+  ), processV2DefaultTableId, { timeout: 10_000 });
+  await page.waitForTimeout(processV2IdleSettleMilliseconds);
+  const historyAutosavePath = `${processV2ProjectPath}.autosave`;
+  const historyLogicalState = await inspectProcessV2LogicalArchiveState(historyAutosavePath);
+  if (!historyLogicalState.manifestValid || historyLogicalState.completedResultCount !== 2
+    || historyLogicalState.witnessCount !== 2
+    || historyLogicalState.completedRunIds.length !== 2
+    || !historyLogicalState.completedRunIds.includes(runId)
+    || !historyLogicalState.completedRunIds.includes(repeatedRunId)
+    || JSON.stringify([...historyLogicalState.completedRunIds].sort())
+      !== JSON.stringify([...historyLogicalState.witnessRunIds].sort())) {
+    throw new Error(`PROCESS v2 retained-history autosave did not contain two exact witnessed results: ${JSON.stringify(historyLogicalState)}`);
+  }
+  await markProcessV2ResourcePhase("post_completed_history_2_idle", {
+    surface: "results",
+    completed_result_count: historyLogicalState.completedResultCount,
+    witness_count: historyLogicalState.witnessCount,
+    selected_run_id: repeatedRunId,
+    state_kind: "two_results_retained_history",
+  }, historyAutosavePath);
+  await page.waitForTimeout(processV2ResourcePostMarkerHoldMilliseconds);
+
+  await reloadToLauncher();
+  const resetSidecarsBeforeOpen = await processV2SidecarState(processV2ResetProjectPath);
+  if (resetSidecarsBeforeOpen.present.length !== 0) {
+    throw new Error(`PROCESS v2 reset clone acquired a sidecar before open: ${JSON.stringify(resetSidecarsBeforeOpen)}`);
+  }
+  await openProjectAtExactPath(processV2ProjectName, processV2ResetProjectPath);
+  await openMenuItem("View", "Results");
+  await waitForSurface("results");
+  const resetRunOptions = page.locator(".nd-run-select select option")
+    .filter({ hasText: /Graph-defined path analysis with bootstrap/i });
+  await resetRunOptions.first().waitFor({ state: "attached", timeout: 30_000 });
+  const resetRunIds = await resetRunOptions.evaluateAll((options) => options.map((option) => option.value));
+  if (JSON.stringify(resetRunIds) !== JSON.stringify([runId])) {
+    throw new Error(`PROCESS v2 reset clone did not expose exactly the original run: ${JSON.stringify(resetRunIds)}`);
+  }
+  const resetAutoSelectedRunId = await runSelect.inputValue();
+  await page.waitForFunction((expected) => (
+    document.querySelectorAll('.nd-result-tree [role="treeitem"][aria-level="2"]').length === expected
+  ), processV2ExpectedTableIds.length, { timeout: 30_000 });
+  const resetTableIds = await page.locator('.nd-result-tree [role="treeitem"][aria-level="2"]')
+    .evaluateAll((items) => items.map((item) => item.getAttribute("data-result-tree-item-id")));
+  const resetInitialSelectedTable = await page.locator('.nd-result-tree [role="treeitem"][aria-selected="true"]')
+    .getAttribute("data-result-tree-item-id");
+  const resetRecoveryText = compactVisibleText(await page.locator(".nd-toast").allTextContents());
+  const resetArchiveAfterOpen = await inspectProcessV2LogicalArchiveState(processV2ResetProjectPath);
+  const resetReopenPassed = resetAutoSelectedRunId === runId
+    && resetInitialSelectedTable === processV2DefaultTableId
+    && JSON.stringify(resetTableIds) === JSON.stringify(processV2ExpectedTableIds)
+    && !/recover(?:y|ed)|autosave/i.test(resetRecoveryText)
+    && resetArchiveAfterOpen.manifestValid && resetArchiveAfterOpen.completedResultCount === 1
+    && resetArchiveAfterOpen.witnessCount === 1
+    && JSON.stringify(resetArchiveAfterOpen.completedRunIds) === JSON.stringify([runId]);
+  evidence.checks.processV2ResourceResetClone.sidecarsBeforeOpen = resetSidecarsBeforeOpen;
+  evidence.checks.processV2ResourceResetClone.recoveryDisclosureAbsent = !/recover(?:y|ed)|autosave/i.test(resetRecoveryText);
+  evidence.checks.processV2ResourceResetClone.resetTableIds = resetTableIds;
+  evidence.checks.processV2ResourceResetClone.selectedRunId = resetAutoSelectedRunId;
+  evidence.checks.processV2ResourceResetClone.selectedTableId = resetInitialSelectedTable;
+  evidence.checks.processV2ResourceResetClone.passed = evidence.checks.processV2ResourceResetClone.passed && resetReopenPassed;
+  if (!evidence.checks.processV2ResourceResetClone.passed) {
+    throw new Error(`PROCESS v2 reset clone did not reopen as the exact one-result state without recovery disclosure: ${JSON.stringify(evidence.checks.processV2ResourceResetClone)}`);
+  }
+  await page.waitForTimeout(processV2IdleSettleMilliseconds);
+  const resetSettledAutosave = await processV2SettledAutosaveState(
+    processV2ResetProjectPath,
+    { primaryDurability: false },
+  );
+  const resetEffectiveState = resetSettledAutosave.logicalState;
+  if (!resetSettledAutosave.exactAllowedIdentity || !resetEffectiveState?.manifestValid
+    || resetEffectiveState.completedResultCount !== 1 || resetEffectiveState.witnessCount !== 1
+    || resetEffectiveState.selectedRunId !== runId
+    || JSON.stringify(resetEffectiveState.completedRunIds) !== JSON.stringify([runId])) {
+    throw new Error(`PROCESS v2 reset clone autosave did not settle to the exact allowed state: ${JSON.stringify(resetSettledAutosave)}`);
+  }
+  evidence.checks.processV2ResourceResetClone.settledAutosave = resetSettledAutosave;
+  await markProcessV2ResourcePhase("post_completed_cycle_2_idle", {
+    surface: "results",
+    completed_result_count: resetEffectiveState.completedResultCount,
+    witness_count: resetEffectiveState.witnessCount,
+    selected_run_id: runId,
+    state_kind: "one_result_reopened_reset_clone",
+  }, `${processV2ResetProjectPath}.autosave`);
+  await page.waitForTimeout(processV2ResourcePostMarkerHoldMilliseconds);
+  const resetAutosaveAfterCheckpoint = await processV2SettledAutosaveState(
+    processV2ResetProjectPath,
+    { primaryDurability: false },
+  );
+  evidence.checks.processV2ResourceResetClone.autosaveAfterCheckpoint = resetAutosaveAfterCheckpoint;
+  evidence.checks.processV2ResourceResetClone.passed = evidence.checks.processV2ResourceResetClone.passed
+    && resetSidecarsBeforeOpen.present.length === 0
+    && resetAutosaveAfterCheckpoint.exactAllowedIdentity
+    && JSON.stringify(resetAutosaveAfterCheckpoint.artifacts)
+      === JSON.stringify(resetSettledAutosave.artifacts)
+    && resetAutosaveAfterCheckpoint.logicalState?.completedResultCount === 1
+    && resetAutosaveAfterCheckpoint.logicalState?.witnessCount === 1
+    && resetAutosaveAfterCheckpoint.logicalState?.selectedRunId === runId;
+  if (!evidence.checks.processV2ResourceResetClone.passed) {
+    throw new Error(`PROCESS v2 reset clone autosave drifted or acquired forbidden recovery artifacts during its idle window: ${JSON.stringify(evidence.checks.processV2ResourceResetClone)}`);
+  }
+  evidence.checks.processV2Workflow = {
+    passed: true,
+    feature_id: processV2FeatureId,
+    method_version: processV2MethodVersion,
+    bootstrap_method_version: processV2BootstrapMethodVersion,
+    catalogue_snapshot_date: processV2CatalogueSnapshotDate,
+    completed: true,
+    activeLifecycleCaptured: activeState.captured && repeatedActiveState.captured,
+    completedRuns: 2,
+    modelFree: archive.modelFree,
+    graphDefinedWithoutNumberedTemplates: fullSetup.contract.graphDefinedWithoutNumberedTemplates,
+    realXlsxSaved: true,
+    explicitSaveAndSameRunReopen: true,
+  };
+}
+
 async function runFocusedPcaAcceptance() {
   if (!requestedPcaNativeExportPath) {
     throw new Error("QUICKPLS_PCA_NATIVE_EXPORT_PATH is required for focused packaged PCA acceptance; enabled-button assertions do not replace a genuine native XLSX Save and workbook-content check.");
@@ -5736,7 +8694,7 @@ async function runFocusedPcaAcceptance() {
     openedAt: "2026-08-12T00:00:00.000Z",
   });
   await reloadToLauncher();
-  await openRecentProject(pcaProjectName);
+  await openRecentProject(pcaProjectName, pcaProjectPath);
   await waitForSurface("data");
   await page.locator(".nd-data-table").waitFor({ state: "visible", timeout: 15_000 });
   const status = compactVisibleText(await page.locator(".nd-statusbar").textContent());
@@ -5807,7 +8765,7 @@ async function runFocusedPcaAcceptance() {
     noModelBlocker: !/construct|structural path|editable model|active model/i.test(blockerText),
     startEnabled: await start.isEnabled(),
   };
-  if (evidence.checks.pcaDialog.catalogCount !== 12
+  if (evidence.checks.pcaDialog.catalogCount !== expectedOptionLabels.length
     || evidence.checks.pcaDialog.selectedMethod !== "Principal Component Analysis"
     || evidence.checks.pcaDialog.category !== "Standalone analysis"
     || JSON.stringify(availableVariables) !== JSON.stringify(expectedColumns.slice(1))
@@ -5965,7 +8923,7 @@ async function runFocusedPcaAcceptance() {
   await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
   const savedArchive = await inspectSavedPcaArchive(pcaProjectPath, pcaRunId);
   await reloadToLauncher();
-  await openRecentProject(pcaProjectName);
+  await openRecentProject(pcaProjectName, pcaProjectPath);
   await openMenuItem("View", "Results");
   await waitForSurface("results");
   const reopenedOption = page.locator(".nd-run-select select option").filter({ hasText: /Principal Component Analysis/i }).first();
@@ -6008,7 +8966,7 @@ async function runFocusedHigherOrderAcceptance() {
     openedAt: "2026-08-12T00:00:00.000Z",
   });
   await reloadToLauncher();
-  await openRecentProject(hocProjectName);
+  await openRecentProject(hocProjectName, hocProjectPath);
   await waitForSurface("data");
   await page.locator(".nd-data-table").waitFor({ state: "visible", timeout: 15_000 });
   const status = compactVisibleText(await page.locator(".nd-statusbar").textContent());
@@ -6228,7 +9186,7 @@ async function runFocusedHigherOrderAcceptance() {
     outcomeId: authored.ids.performance,
   });
   await reloadToLauncher();
-  await openRecentProject(hocProjectName);
+  await openRecentProject(hocProjectName, hocProjectPath);
   await openMenuItem("View", "Results");
   await waitForSurface("results");
   const reopenedOption = page.locator(".nd-run-select select option").filter({ hasText: /PLS-SEM Algorithm/i }).first();
@@ -6334,7 +9292,12 @@ async function runFocusedPredictionAcceptance() {
   }
   await capture(predictionCaptureName(92, "dialog"));
 
-  const activeCapture = captureActiveCalculation(dialog, predictionCaptureName(93, "running"), "PLSpredict / CVPAT");
+  const activeCapture = captureActiveCalculation(
+    dialog,
+    predictionCaptureName(93, "running"),
+    "PLSpredict / CVPAT",
+    { allowTerminalTransitionAfterCapture: true },
+  );
   await start.click();
   evidence.checks.predictionV2Progress = await activeCapture;
   await waitForSurface("results", 180_000);
@@ -6342,6 +9305,15 @@ async function runFocusedPredictionAcceptance() {
   await selectedRunOption.waitFor({ state: "attached", timeout: 180_000 });
   const predictionRunId = await page.locator(".nd-run-select select").inputValue();
   if (!predictionRunId) throw new Error("The completed focused prediction run had no run identifier.");
+  const predictionRunLabel = compactVisibleText(await selectedRunOption.textContent());
+  evidence.checks.predictionV2Progress.completedRunProof = {
+    runId: predictionRunId,
+    runLabel: predictionRunLabel,
+    matched: /PLSpredict \/ CVPAT/i.test(predictionRunLabel),
+  };
+  if (!evidence.checks.predictionV2Progress.completedRunProof.matched) {
+    throw new Error(`The focused prediction lifecycle did not resolve to its matching completed run: ${JSON.stringify(evidence.checks.predictionV2Progress)}`);
+  }
 
   const predictionTreeIds = await page.locator('.nd-result-tree [role="treeitem"][data-result-tree-item-id]').evaluateAll((items) => items.map((item) => item.getAttribute("data-result-tree-item-id")));
   const requiredPredictionTreeIds = [
@@ -6526,6 +9498,10 @@ try {
     await runFocusedLogisticAcceptance();
   } else if (regressionBootstrapOnly) {
     await runFocusedRegressionBootstrapAcceptance();
+  } else if (processV2Only) {
+    await runFocusedProcessV2Acceptance();
+  } else if (structuralPathRandomizationOnly) {
+    await runFocusedStructuralPathRandomizationAcceptance();
   } else if (olsOnly) {
     await runFocusedOlsAcceptance();
   } else if (pcaOnly) {
@@ -6621,7 +9597,10 @@ try {
     structuralPathRandomization: {
       optionCount: await pathRandomizationOption.count(),
       description: pathRandomizationDescription,
-      singleModelFreedmanLane: /single-model Freedman(?:\u2013|-|\s)Lane randomization inference/i.test(pathRandomizationDescription),
+      singleModelFreedmanLane: /single-model Freedman(?:\u2013|-|\s)Lane randomization/i.test(pathRandomizationDescription)
+        && /structural paths/i.test(pathRandomizationDescription)
+        && /fixed original PLS construct scores/i.test(pathRandomizationDescription)
+        && /unadjusted pathwise p values/i.test(pathRandomizationDescription),
       mentionsMgaOrMicom: /\bMGA\b|\bMICOM\b/i.test(pathRandomizationDescription),
     },
   };
@@ -6632,7 +9611,7 @@ try {
   if (evidence.checks.calculationCatalog.structuralPathRandomization.optionCount !== 1
     || !evidence.checks.calculationCatalog.structuralPathRandomization.singleModelFreedmanLane
     || evidence.checks.calculationCatalog.structuralPathRandomization.mentionsMgaOrMicom) {
-    throw new Error(`Structural Path Randomization was not explicitly presented as single-model Freedman-Lane path inference distinct from MGA and MICOM: ${pathRandomizationDescription}`);
+    throw new Error(`Structural Path Randomization did not preserve its required single-model Freedman-Lane structural-path, fixed-score, unadjusted pathwise scope, or mentioned MGA/MICOM: ${pathRandomizationDescription}`);
   }
 
   const predictionOption = calculationDialog.getByRole("option", { name: /PLSpredict \/ CVPAT/i });
@@ -6674,7 +9653,7 @@ try {
 
   await seedDisposableRecentProject();
   await reloadToLauncher();
-  const seededRecentRow = page.locator(".nd-recent-projects .nd-project-row").filter({ hasText: disposableProjectName });
+  const seededRecentRow = exactRecentProjectRow(disposableProjectName, disposableProjectPath);
   await seededRecentRow.waitFor({ state: "visible", timeout: 10_000 });
   evidence.checks.disposableRecentProject = {
     visibleRows: await seededRecentRow.count(),
@@ -6790,7 +9769,12 @@ try {
 
   const plscDialog = await openCalculationFromToolbar();
   const plscListbox = plscDialog.getByRole("listbox", { name: "Available calculation methods", exact: true });
-  if (await plscListbox.getByRole("option").count() !== 10) throw new Error("The reopened calculation browser did not retain its ten-method catalog.");
+  const reopenedOptionLabels = (await plscListbox.getByRole("option").locator("strong").allTextContents())
+    .map((label) => label.trim());
+  if (reopenedOptionLabels.length !== expectedOptionLabels.length
+    || JSON.stringify(reopenedOptionLabels) !== JSON.stringify(expectedOptionLabels)) {
+    throw new Error(`The reopened calculation browser did not retain its expected ${expectedOptionLabels.length}-method catalog: ${reopenedOptionLabels.join(" | ")}`);
+  }
   await plscListbox.getByRole("option", { name: /Consistent PLS/i }).click();
   const startPlsc = plscDialog.getByRole("button", { name: "Start consistent PLS", exact: true });
   evidence.checks.plscDialog = {
@@ -6806,6 +9790,7 @@ try {
     plscDialog,
     "23-tauri-native-running-plsc-1440x900.png",
     "Consistent PLS",
+    { allowTerminalTransitionAfterCapture: true },
   );
   await startPlsc.click();
   evidence.checks.plscProgress = await plscProgressCapture;
@@ -6814,6 +9799,14 @@ try {
   await page.locator(".nd-run-select select option:checked").filter({ hasText: /Consistent PLS/i }).waitFor({ state: "attached", timeout: 120_000 });
   const plscRunId = await page.locator(".nd-run-select select").inputValue();
   const plscRunLabel = (await page.locator(".nd-run-select select option:checked").textContent())?.trim();
+  evidence.checks.plscProgress.completedRunProof = {
+    runId: plscRunId,
+    runLabel: plscRunLabel,
+    matched: Boolean(plscRunId) && /Consistent PLS/i.test(plscRunLabel ?? ""),
+  };
+  if (!evidence.checks.plscProgress.completedRunProof.matched) {
+    throw new Error(`Consistent PLS did not expose its matching completed run immediately after the active lifecycle: ${JSON.stringify(evidence.checks.plscProgress)}`);
+  }
   const plscReliabilityRows = await openResultTable("PLSc correction reliability");
   const plscReliabilityText = (await page.locator(".nd-result-table tbody").textContent())?.trim() ?? "";
   const plscCorrelationRows = await openResultTable("PLSc construct correlations");
@@ -6893,6 +9886,7 @@ try {
     wplsDialog,
     "28-tauri-native-running-wpls-1440x900.png",
     "Weighted PLS",
+    { allowTerminalTransitionAfterCapture: true },
   );
   await startWpls.click();
   evidence.checks.wplsProgress = await wplsProgressCapture;
@@ -6901,6 +9895,14 @@ try {
   await page.locator(".nd-run-select select option:checked").filter({ hasText: /Weighted PLS/i }).waitFor({ state: "attached", timeout: 120_000 });
   const wplsRunId = await page.locator(".nd-run-select select").inputValue();
   const wplsRunLabel = (await page.locator(".nd-run-select select option:checked").textContent())?.trim();
+  evidence.checks.wplsProgress.completedRunProof = {
+    runId: wplsRunId,
+    runLabel: wplsRunLabel,
+    matched: Boolean(wplsRunId) && /Weighted PLS/i.test(wplsRunLabel ?? ""),
+  };
+  if (!evidence.checks.wplsProgress.completedRunProof.matched) {
+    throw new Error(`Weighted PLS did not expose its matching completed run immediately after the active lifecycle: ${JSON.stringify(evidence.checks.wplsProgress)}`);
+  }
   const weightedPathRows = await openResultTable("Path coefficients");
   const weightedPathText = (await page.locator(".nd-result-table tbody").textContent())?.trim() ?? "";
   evidence.checks.wplsResult = {
@@ -6983,24 +9985,48 @@ try {
     predictionRunDialog,
     "32-tauri-native-running-prediction-1440x900.png",
     "PLSpredict / CVPAT",
+    { allowTerminalTransitionAfterCapture: true },
   );
   await startLargePrediction.click();
   evidence.checks.predictionProgress = await predictionProgressCapture;
   await waitForSurface("results");
   await page.locator(".nd-run-select select option:checked").filter({ hasText: /PLSpredict \/ CVPAT/i }).waitFor({ state: "attached", timeout: 120_000 });
+  const predictionRunId = await page.locator(".nd-run-select select").inputValue();
   const predictionRunLabel = (await page.locator(".nd-run-select select option:checked").textContent())?.trim();
+  evidence.checks.predictionProgress.completedRunProof = {
+    runId: predictionRunId,
+    runLabel: predictionRunLabel,
+    matched: Boolean(predictionRunId) && /PLSpredict \/ CVPAT/i.test(predictionRunLabel ?? ""),
+  };
+  if (!evidence.checks.predictionProgress.completedRunProof.matched) {
+    throw new Error(`PLSpredict / CVPAT did not expose its matching completed run immediately after the active lifecycle: ${JSON.stringify(evidence.checks.predictionProgress)}`);
+  }
   const indicatorRows = await openResultTable("Indicator prediction summary (10-fold × 10-repeat)");
   const indicatorText = (await page.locator(".nd-result-table tbody").textContent())?.trim() ?? "";
+  const indicatorCells = await page.locator(".nd-result-table tbody tr").evaluateAll((rows) => rows.map((row) => (
+    Array.from(row.querySelectorAll("th, td")).map((cell) => cell.textContent?.replace(/\s+/g, " ").trim() ?? "")
+  )));
   await capture("33-tauri-native-prediction-indicator-results-1440x900.png");
   const cvpatRows = await openResultTable("CVPAT benchmark assessment (single model)");
   const cvpatText = (await page.locator(".nd-result-table tbody").textContent())?.trim() ?? "";
+  const cvpatCells = await page.locator(".nd-result-table tbody tr").evaluateAll((rows) => rows.map((row) => (
+    Array.from(row.querySelectorAll("th, td")).map((cell) => cell.textContent?.replace(/\s+/g, " ").trim() ?? "")
+  )));
+  const displayedIndicators = indicatorCells.map((cells) => cells[1] ?? "");
+  const noInternalConstructIds = [...indicatorCells, ...cvpatCells]
+    .flat()
+    .every((cell) => !/construct-/i.test(cell));
   evidence.checks.predictionResult = {
-    runId: await page.locator(".nd-run-select select").inputValue(),
+    runId: predictionRunId,
     runLabel: predictionRunLabel,
     indicatorRows,
     cvpatRows,
     indicatorText,
     cvpatText,
+    indicatorCells,
+    cvpatCells,
+    displayedIndicators,
+    noInternalConstructIds,
     noPlaceholder: !/\bN\/A\b/i.test(`${indicatorText} ${cvpatText}`),
     singleModelScope: /Indicator average \(IA\)/i.test(cvpatText)
       && /Linear model \(LM\)/i.test(cvpatText)
@@ -7010,7 +10036,9 @@ try {
     || !evidence.checks.predictionResult.noPlaceholder || !evidence.checks.predictionResult.singleModelScope) {
     throw new Error(`The completed Prediction run did not expose genuine indicator prediction and two-row single-model CVPAT benchmark outputs: ${JSON.stringify(evidence.checks.predictionResult)}`);
   }
-  if (![indicatorText, cvpatText].every((text) => !/construct-/i.test(text)) || !indicatorText.includes("Construct 2") || !/\by1\b/.test(indicatorText) || !/\by2\b/.test(indicatorText)) {
+  if (!noInternalConstructIds
+    || !indicatorCells.every((cells) => cells[0] === "Construct 2")
+    || JSON.stringify(displayedIndicators) !== JSON.stringify(["y1", "y2"])) {
     throw new Error(`The completed Prediction tables exposed internal construct identifiers instead of immutable model labels: ${JSON.stringify(evidence.checks.predictionResult)}`);
   }
   await capture("33a-tauri-native-prediction-cvpat-results-1440x900.png");
@@ -7298,6 +10326,9 @@ try {
   const preservedReportRunId = await page.locator(".nd-run-select select").inputValue();
   const preservedReportRows = await openResultTable("WPLS case-weight diagnostics");
   const resultModelCommand = page.locator(".nd-commandbar button").filter({ hasText: /^Edit Model$/ });
+  const resultDataCommand = page.locator(".nd-commandbar button").filter({ hasText: /^Edit Data$/ });
+  const editModelCount = await resultModelCommand.count();
+  const editDataCount = await resultDataCommand.count();
   evidence.checks.workspaceExplorerHistoricalResult = {
     deletedModel: originalModelName,
     remainingModels: remainingModelNames,
@@ -7305,11 +10336,17 @@ try {
     selectedRunId: preservedReportRunId,
     expectedRunId: wplsRunId,
     rows: preservedReportRows,
-    editDeletedModelDisabled: await resultModelCommand.count() === 1 && !await resultModelCommand.isEnabled(),
+    editModelCount,
+    editDataCount,
+    editDataVisible: editDataCount === 1 && await resultDataCommand.isVisible(),
+    editDataEnabled: editDataCount === 1 && await resultDataCommand.isEnabled(),
   };
   if (preservedReportRunId !== wplsRunId
     || !preservedReportRows
-    || !evidence.checks.workspaceExplorerHistoricalResult.editDeletedModelDisabled) {
+    || evidence.checks.workspaceExplorerHistoricalResult.editModelCount !== 0
+    || evidence.checks.workspaceExplorerHistoricalResult.editDataCount !== 1
+    || !evidence.checks.workspaceExplorerHistoricalResult.editDataVisible
+    || !evidence.checks.workspaceExplorerHistoricalResult.editDataEnabled) {
     throw new Error(`Deleting a model damaged its historical result/report contract: ${JSON.stringify(evidence.checks.workspaceExplorerHistoricalResult)}`);
   }
   await capture("37d-tauri-native-workspace-explorer-historical-report-open-1440x900.png");
@@ -7362,7 +10399,7 @@ try {
     openedAt: "2026-08-11T00:00:00.000Z",
   });
   await reloadToLauncher();
-  const mediationRecentRow = page.locator(".nd-recent-projects .nd-project-row").filter({ hasText: mediationProjectName });
+  const mediationRecentRow = exactRecentProjectRow(mediationProjectName, mediationProjectPath);
   await mediationRecentRow.waitFor({ state: "visible", timeout: 10_000 });
   evidence.checks.mediationRecentProject = {
     visibleRows: await mediationRecentRow.count(),
@@ -7374,7 +10411,7 @@ try {
   }
   await capture(mediationCaptureName(38, "mediation-seeded-recent-project"));
 
-  await openRecentProject(mediationProjectName);
+  await openRecentProject(mediationProjectName, mediationProjectPath);
   await waitForSurface("data");
   await page.locator(".nd-data-table").waitFor({ state: "visible", timeout: 15_000 });
   const mediationDatasetStatus = (await page.locator(".nd-statusbar").textContent())?.trim() ?? "";
@@ -7552,7 +10589,7 @@ try {
   await page.locator(".nd-toast").filter({ hasText: /Project saved/i }).last().waitFor({ state: "visible", timeout: 15_000 });
   await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
   await reloadToLauncher();
-  await openRecentProject(mediationProjectName);
+  await openRecentProject(mediationProjectName, mediationProjectPath);
   await openMenuItem("View", "Results");
   await waitForSurface("results");
   await page.locator(".nd-run-select select option").first().waitFor({ state: "attached", timeout: 15_000 });
@@ -7609,7 +10646,7 @@ try {
     openedAt: "2026-08-11T00:05:00.000Z",
   });
   await reloadToLauncher();
-  const moderationRecentRow = page.locator(".nd-recent-projects .nd-project-row").filter({ hasText: moderationProjectName });
+  const moderationRecentRow = exactRecentProjectRow(moderationProjectName, moderationProjectPath);
   await moderationRecentRow.waitFor({ state: "visible", timeout: 10_000 });
   evidence.checks.moderationRecentProject = {
     visibleRows: await moderationRecentRow.count(),
@@ -7621,7 +10658,7 @@ try {
   }
   await capture(moderationCaptureName(47, "moderation-seeded-recent-project"));
 
-  await openRecentProject(moderationProjectName);
+  await openRecentProject(moderationProjectName, moderationProjectPath);
   await waitForSurface("data");
   await page.locator(".nd-data-table").waitFor({ state: "visible", timeout: 15_000 });
   const moderationDatasetStatus = (await page.locator(".nd-statusbar").textContent())?.trim() ?? "";
@@ -7814,7 +10851,7 @@ try {
   await page.locator(".nd-toast").filter({ hasText: /Project saved/i }).last().waitFor({ state: "visible", timeout: 15_000 });
   await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
   await reloadToLauncher();
-  await openRecentProject(moderationProjectName);
+  await openRecentProject(moderationProjectName, moderationProjectPath);
   await openMenuItem("View", "Results");
   await waitForSurface("results");
   await page.locator(".nd-run-select select option").first().waitFor({ state: "attached", timeout: 15_000 });
@@ -7887,7 +10924,7 @@ try {
     openedAt: "2026-08-11T02:00:00.000Z",
   });
   await reloadToLauncher();
-  const mgaRecentRow = page.locator(".nd-recent-projects .nd-project-row").filter({ hasText: mgaProjectName });
+  const mgaRecentRow = exactRecentProjectRow(mgaProjectName, mgaProjectPath);
   await mgaRecentRow.waitFor({ state: "visible", timeout: 10_000 });
   evidence.checks.mgaRecentProject = {
     visibleRows: await mgaRecentRow.count(),
@@ -7898,7 +10935,7 @@ try {
     throw new Error("The disposable MGA project was not exposed through one truthful visible Recent Projects row.");
   }
 
-  await openRecentProject(mgaProjectName);
+  await openRecentProject(mgaProjectName, mgaProjectPath);
   await waitForSurface("data");
   await page.locator(".nd-data-table").waitFor({ state: "visible", timeout: 15_000 });
   const mgaDatasetStatus = (await page.locator(".nd-statusbar").textContent())?.trim() ?? "";
@@ -8017,20 +11054,8 @@ try {
   const mgaDialog = await openCalculationFromToolbar();
   const mgaMethodListbox = mgaDialog.getByRole("listbox", { name: "Available calculation methods", exact: true });
   const mgaMethodNames = (await mgaMethodListbox.getByRole("option").locator("strong").allTextContents()).map((label) => label.trim());
-  const expectedMgaMethodNames = [
-    "PLS-SEM Algorithm",
-    "Consistent PLS",
-    "Weighted PLS",
-    "CCA composite residual diagnostics",
-    "Importance-Performance Map Analysis",
-    "PLS-SEM Bootstrapping",
-    "Structural Path Randomization",
-    "MICOM and Two-Group Permutation MGA",
-    "PLSpredict / CVPAT",
-    "Necessary Condition Analysis",
-  ];
-  if (JSON.stringify(mgaMethodNames) !== JSON.stringify(expectedMgaMethodNames)) {
-    throw new Error(`The group calculation browser did not expose exactly ten truthful methods with the joint MICOM/MGA catalog entry: ${JSON.stringify({ mgaMethodNames })}`);
+  if (JSON.stringify(mgaMethodNames) !== JSON.stringify(expectedOptionLabels)) {
+    throw new Error(`The group calculation browser did not preserve the canonical ${expectedOptionLabels.length}-method catalog with the joint MICOM/MGA entry: ${JSON.stringify({ mgaMethodNames })}`);
   }
   await mgaMethodListbox.getByRole("option", { name: /MICOM and Two-Group Permutation MGA/i }).click();
   const mgaGroupColumn = mgaDialog.locator("#nd-calculation-group-column");
@@ -8269,7 +11294,7 @@ try {
   await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
   const savedMgaArchive = await inspectSavedMgaArchive(mgaProjectPath, mgaRunId);
   await reloadToLauncher();
-  await openRecentProject(mgaProjectName);
+  await openRecentProject(mgaProjectName, mgaProjectPath);
   await openMenuItem("View", "Results");
   await waitForSurface("results");
   const reopenedMgaOption = page.locator(".nd-run-select select option").filter({ hasText: /MICOM and Two-Group Permutation MGA/i }).first();
@@ -8306,12 +11331,12 @@ try {
     openedAt: "2026-08-11T00:00:00.000Z",
   });
   await reloadToLauncher();
-  const ccaRecentRow = page.locator(".nd-recent-projects .nd-project-row").filter({ hasText: ccaProjectName });
+  const ccaRecentRow = exactRecentProjectRow(ccaProjectName, ccaProjectPath);
   await ccaRecentRow.waitFor({ state: "visible", timeout: 10_000 });
   if (await ccaRecentRow.count() !== 1 || !(await ccaRecentRow.textContent())?.includes(ccaProjectPath)) {
     throw new Error("The deterministic CCA project was not exposed through one truthful Recent Projects row.");
   }
-  await openRecentProject(ccaProjectName);
+  await openRecentProject(ccaProjectName, ccaProjectPath);
   await waitForSurface("data");
   await page.locator(".nd-data-table").waitFor({ state: "visible", timeout: 15_000 });
   const ccaDatasetStatus = (await page.locator(".nd-statusbar").textContent())?.replace(/\s+/g, " ").trim() ?? "";
@@ -8535,7 +11560,7 @@ try {
     throw new Error(`The visible and saved CCA maximum residuals diverged: ${JSON.stringify(evidence.checks.ccaResult)}`);
   }
   await reloadToLauncher();
-  await openRecentProject(ccaProjectName);
+  await openRecentProject(ccaProjectName, ccaProjectPath);
   await openMenuItem("View", "Results");
   await waitForSurface("results");
   const reopenedCcaOption = page.locator(".nd-run-select select option").filter({ hasText: /CCA composite residual diagnostics/i }).first();
@@ -8567,12 +11592,12 @@ try {
     openedAt: "2026-08-11T00:00:00.000Z",
   });
   await reloadToLauncher();
-  const ipmaRecentRow = page.locator(".nd-recent-projects .nd-project-row").filter({ hasText: ipmaProjectName });
+  const ipmaRecentRow = exactRecentProjectRow(ipmaProjectName, ipmaProjectPath);
   await ipmaRecentRow.waitFor({ state: "visible", timeout: 10_000 });
   if (await ipmaRecentRow.count() !== 1 || !(await ipmaRecentRow.textContent())?.includes(ipmaProjectPath)) {
     throw new Error("The deterministic IPMA project was not exposed through one truthful Recent Projects row.");
   }
-  await openRecentProject(ipmaProjectName);
+  await openRecentProject(ipmaProjectName, ipmaProjectPath);
   await waitForSurface("data");
   await page.locator(".nd-data-table").waitFor({ state: "visible", timeout: 15_000 });
   const ipmaDatasetStatus = compactVisibleText(await page.locator(".nd-statusbar").textContent());
@@ -8811,7 +11836,7 @@ try {
   await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
   const savedIpmaArchive = await inspectSavedIpmaArchive(ipmaProjectPath, ipmaRunId, ipmaConstructIds);
   await reloadToLauncher();
-  await openRecentProject(ipmaProjectName);
+  await openRecentProject(ipmaProjectName, ipmaProjectPath);
   await openMenuItem("View", "Results");
   await waitForSurface("results");
   const reopenedIpmaOption = page.locator(".nd-run-select select option").filter({ hasText: /Importance-Performance Map Analysis/i }).first();
@@ -8847,12 +11872,12 @@ try {
     openedAt: "2026-08-11T00:00:00.000Z",
   });
   await reloadToLauncher();
-  const ncaRecentRow = page.locator(".nd-recent-projects .nd-project-row").filter({ hasText: ncaProjectName });
+  const ncaRecentRow = exactRecentProjectRow(ncaProjectName, ncaProjectPath);
   await ncaRecentRow.waitFor({ state: "visible", timeout: 10_000 });
   if (await ncaRecentRow.count() !== 1 || !(await ncaRecentRow.textContent())?.includes(ncaProjectPath)) {
     throw new Error("The deterministic model-free NCA project was not exposed through one truthful Recent Projects row.");
   }
-  await openRecentProject(ncaProjectName);
+  await openRecentProject(ncaProjectName, ncaProjectPath);
   await waitForSurface("data");
   await page.locator(".nd-data-table").waitFor({ state: "visible", timeout: 15_000 });
   const ncaDatasetStatus = compactVisibleText(await page.locator(".nd-statusbar").textContent());
@@ -9161,7 +12186,7 @@ try {
   await page.waitForFunction(() => !document.title.endsWith(" *"), null, { timeout: 15_000 });
   const savedNcaArchive = await inspectSavedNcaArchive(ncaProjectPath, ncaRunId);
   await reloadToLauncher();
-  await openRecentProject(ncaProjectName);
+  await openRecentProject(ncaProjectName, ncaProjectPath);
   await openMenuItem("View", "Results");
   await waitForSurface("results");
   const reopenedNcaOption = page.locator(".nd-run-select select option").filter({ hasText: /Necessary Condition Analysis/i }).first();

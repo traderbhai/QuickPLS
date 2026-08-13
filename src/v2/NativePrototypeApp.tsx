@@ -1756,7 +1756,7 @@ function TrustScreen({ data }: { data: NativePrototypeData }) {
   const statusIcon = (state: string) => state === "ok" ? <CheckCircle2 size={13} /> : state === "warn" ? <AlertTriangle size={13} /> : <X size={13} />;
   const statusTone = (status: string) => status.toLowerCase().includes("valid") || status.toLowerCase().includes("recommended") ? "good" : status.toLowerCase().includes("experimental") || status.toLowerCase().includes("setup") || status.toLowerCase().includes("available") ? "warn" : "bad";
   const selectedEvidence = evidenceRows[0] ?? ["No method", "No scope", "No evidence loaded", "N/A", "N/A", "N/A", "Unsupported"];
-  const releaseVersion = "2.45.0";
+  const releaseVersion = "2.46.0";
   const checksumPrompt = "Use Verify Checksums Now to inspect current release artifacts";
   return <main className="np-trust-center-exact" data-v237-screen="trust" data-v241-trust-exact="true">
     <span className="np-parity-required-text">Method Compatibility Matrix Validation Evidence Evidence Detail Release Integrity Overall Assessment Scope checked</span>

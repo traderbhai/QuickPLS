@@ -34,21 +34,25 @@ use qpls_estimation::{
     PLS_PREDICT_METHOD_VERSION_V1, PLS_PREDICT_REPEATED_KFOLD_METHOD_VERSION,
     PLS_TWO_STAGE_MODERATION_METHOD_VERSION, PLSC_METHOD_VERSION, PLSC_METHOD_VERSION_V1,
     PcaAnalysis, PlsPredictAnalysis, PlsPredictCvpatBenchmarkAssessment, PlsPredictErrorMetrics,
-    PlsPredictIndicatorTarget, PlsResult, REGRESSION_LOGISTIC_METHOD_VERSION,
-    REGRESSION_LOGISTIC_METHOD_VERSION_V1, REGRESSION_OLS_METHOD_VERSION,
-    REGRESSION_PROCESS_METHOD_VERSION, RegressionAnalysis, RegressionBootstrapAnalysis,
+    PlsPredictIndicatorTarget, PlsResult, ProcessBootstrapAnalysis, ProcessGraphAnalysis,
+    REGRESSION_LOGISTIC_METHOD_VERSION, REGRESSION_LOGISTIC_METHOD_VERSION_V1,
+    REGRESSION_OLS_METHOD_VERSION, REGRESSION_PROCESS_METHOD_VERSION,
+    REGRESSION_PROCESS_METHOD_VERSION_V1, RegressionAnalysis, RegressionBootstrapAnalysis,
     RegressionBootstrapBcaInterval, RegressionBootstrapCoefficient, RegressionBootstrapOddsRatio,
     RegressionBootstrapTest, WPLS_METHOD_VERSION, analyze_mediation_effects_with_tolerance,
-    analyze_moderation, nca_analysis_matches_v2_contract,
+    analyze_moderation, nca_analysis_matches_v2_contract, process_bootstrap_estimands,
 };
 use qpls_resampling::{
-    PERMUTATION_METHOD_VERSION, PlsBootstrapResult, PlsPermutationResult,
-    REGRESSION_BOOTSTRAP_ALGORITHM, REGRESSION_BOOTSTRAP_INTERVAL_POLICY,
-    REGRESSION_BOOTSTRAP_METHOD_VERSION, REGRESSION_BOOTSTRAP_MINIMUM_USABLE_FRACTION,
-    REGRESSION_BOOTSTRAP_STREAM_TOKEN, REGRESSION_BOOTSTRAP_TEST_REFERENCE,
-    REGRESSION_BOOTSTRAP_VALIDATION_WITNESS_VERSION, RESAMPLING_METHOD_VERSION,
-    RESAMPLING_METHOD_VERSION_V1, RESAMPLING_METHOD_VERSION_V2, RESAMPLING_METHOD_VERSION_V3,
-    STUDENTIZED_METHOD_VERSION, normal_reference_test, summarize_regression_bootstrap_coefficients,
+    PERMUTATION_METHOD_VERSION, PROCESS_BOOTSTRAP_ALGORITHM, PROCESS_BOOTSTRAP_INTERVAL_POLICY,
+    PROCESS_BOOTSTRAP_METHOD_VERSION, PROCESS_BOOTSTRAP_STREAM_TOKEN,
+    PROCESS_BOOTSTRAP_TEST_REFERENCE, PROCESS_BOOTSTRAP_VALIDATION_WITNESS_VERSION,
+    PlsBootstrapResult, PlsPermutationResult, REGRESSION_BOOTSTRAP_ALGORITHM,
+    REGRESSION_BOOTSTRAP_INTERVAL_POLICY, REGRESSION_BOOTSTRAP_METHOD_VERSION,
+    REGRESSION_BOOTSTRAP_MINIMUM_USABLE_FRACTION, REGRESSION_BOOTSTRAP_STREAM_TOKEN,
+    REGRESSION_BOOTSTRAP_TEST_REFERENCE, REGRESSION_BOOTSTRAP_VALIDATION_WITNESS_VERSION,
+    RESAMPLING_METHOD_VERSION, RESAMPLING_METHOD_VERSION_V1, RESAMPLING_METHOD_VERSION_V2,
+    RESAMPLING_METHOD_VERSION_V3, STUDENTIZED_METHOD_VERSION, normal_reference_test,
+    summarize_process_bootstrap_estimands, summarize_regression_bootstrap_coefficients,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -341,6 +345,14 @@ impl Project {
         {
             return Err(ProjectError::Invalid(
                 "historical regression_logistic_v1 results are archive-readable but cannot be appended as new scientific evidence"
+                    .into(),
+            ));
+        }
+        if result.provenance.method == AnalysisMethod::Regression
+            && result.provenance.method_version == REGRESSION_PROCESS_METHOD_VERSION_V1
+        {
+            return Err(ProjectError::Invalid(
+                "historical regression_process_v1 results are archive-readable but cannot be appended as new scientific evidence"
                     .into(),
             ));
         }
@@ -799,6 +811,62 @@ fn validate_result_contracts_with_recipes(
     recipes: &[AnalysisRecipe],
 ) -> Result<(), ProjectError> {
     validate_result_contracts_internal(results, recipes, true)
+}
+
+fn process_v2_pls_root_keys_are_declared(estimation: &serde_json::Value) -> bool {
+    if estimation
+        .pointer("/regression/process/method_version")
+        .and_then(serde_json::Value::as_str)
+        != Some(REGRESSION_PROCESS_METHOD_VERSION)
+        || estimation
+            .pointer("/regression/process/graph_v2")
+            .map_or(true, serde_json::Value::is_null)
+    {
+        return true;
+    }
+    let Some(root) = estimation.as_object() else {
+        return false;
+    };
+    if root.contains_key("mediation") || root.contains_key("moderation") {
+        return false;
+    }
+    root.keys().all(|key| {
+        matches!(
+            key.as_str(),
+            "method_version"
+                | "converged"
+                | "iterations"
+                | "used_observations"
+                | "omitted_observations"
+                | "transforms"
+                | "construct_scores"
+                | "outer_estimates"
+                | "paths"
+                | "control_estimates"
+                | "effects"
+                | "plsc"
+                | "endogeneity"
+                | "nonlinear_effects"
+                | "moderated_mediation"
+                | "cta_pls"
+                | "wpls"
+                | "cca"
+                | "predict"
+                | "segmentation"
+                | "mga"
+                | "micom"
+                | "mga_permutation"
+                | "fimix"
+                | "ipma"
+                | "cbsem"
+                | "pca"
+                | "regression"
+                | "nca"
+                | "gsca"
+                | "r_squared"
+                | "warnings"
+        )
+    })
 }
 
 fn validate_unique_analysis_ids(
@@ -1771,6 +1839,8 @@ const PCA_NOT_APPLICABLE_ASSESSMENT_WARNING: &str =
 const REGRESSION_NOT_APPLICABLE_ASSESSMENT_VERSION: &str = "assessment_not_applicable_v1";
 const REGRESSION_NOT_APPLICABLE_ASSESSMENT_WARNING: &str =
     "PLS assessment is not applicable to standalone raw-data analyses.";
+const REGRESSION_NOT_APPLICABLE_ASSESSMENT_WARNING_V08: &str =
+    "PLS assessment is not applicable to standalone v0.8 methods.";
 
 fn validate_gsca_payload_contract(
     result: &AnalysisResult,
@@ -2307,6 +2377,12 @@ enum ProcessPersistenceContract {
         mediator: String,
         moderator: String,
     },
+    Graph {
+        focal_predictor: String,
+        paths: Vec<qpls_core::ProcessPathConfig>,
+        moderators: Vec<qpls_core::ProcessModeratorConfig>,
+        moderations: Vec<qpls_core::ProcessModerationConfig>,
+    },
 }
 
 impl ProcessPersistenceContract {
@@ -2315,6 +2391,7 @@ impl ProcessPersistenceContract {
             Self::Mediation { .. } => "mediation",
             Self::Moderation { .. } => "moderation",
             Self::ModeratedMediation { .. } => "moderated_mediation",
+            Self::Graph { .. } => "graph",
         }
     }
 
@@ -2345,6 +2422,34 @@ impl ProcessPersistenceContract {
                     .collect::<BTreeSet<_>>();
                 unique.len() == 4 && contains(x) && contains(mediator) && contains(moderator)
             }
+            Self::Graph {
+                focal_predictor,
+                paths,
+                moderators,
+                moderations,
+            } => {
+                contains(focal_predictor)
+                    && paths.iter().all(|path| {
+                        path.from != path.to
+                            && (contains(&path.from) || path.from == outcome)
+                            && (contains(&path.to) || path.to == outcome)
+                    })
+                    && moderators
+                        .iter()
+                        .all(|moderator| contains(&moderator.variable))
+                    && moderations.iter().all(|moderation| {
+                        paths
+                            .iter()
+                            .any(|path| path.from == moderation.from && path.to == moderation.to)
+                    })
+            }
+        }
+    }
+
+    fn method_version(&self) -> &'static str {
+        match self {
+            Self::Graph { .. } => REGRESSION_PROCESS_METHOD_VERSION,
+            _ => REGRESSION_PROCESS_METHOD_VERSION_V1,
         }
     }
 }
@@ -2361,7 +2466,7 @@ impl RegressionPersistenceKind {
         match self {
             Self::Ols => REGRESSION_OLS_METHOD_VERSION,
             Self::Logistic => REGRESSION_LOGISTIC_METHOD_VERSION,
-            Self::Process(_) => REGRESSION_PROCESS_METHOD_VERSION,
+            Self::Process(process) => process.method_version(),
         }
     }
 
@@ -2375,6 +2480,9 @@ impl RegressionPersistenceKind {
             }
             Self::Logistic => {
                 "Logistic regression v2 is validated for the documented QuickPLS binary numeric complete-case scope; multinomial, ordinal, weighted, clustered, categorical auto-encoding, and Firth-corrected models remain unsupported."
+            }
+            Self::Process(ProcessPersistenceContract::Graph { .. }) => {
+                "PROCESS v2 is an independently implemented graph-defined observed-variable path-analysis workflow; it does not execute copied numbered templates."
             }
             Self::Process(_) => {
                 "PROCESS-style regression v1 is validated for the documented QuickPLS v1.2.2 bounded mediation/moderation workflow scope; moderated mediation and the full Hayes model catalogue remain experimental."
@@ -2435,6 +2543,18 @@ fn regression_recipe_contract(recipe: &AnalysisRecipe) -> Option<RegressionRecip
                         x: x.clone(),
                         mediator: mediator.clone(),
                         moderator: moderator.clone(),
+                    },
+                    qpls_core::ProcessRelationshipConfig::Graph {
+                        focal_predictor,
+                        paths,
+                        moderators,
+                        moderations,
+                        ..
+                    } => ProcessPersistenceContract::Graph {
+                        focal_predictor: focal_predictor.clone(),
+                        paths: paths.clone(),
+                        moderators: moderators.clone(),
+                        moderations: moderations.clone(),
                     },
                 };
                 RegressionPersistenceKind::Process(process)
@@ -2565,7 +2685,13 @@ fn validate_regression_payload_contract(
         RegressionPersistenceKind::Logistic => return false,
         _ => contract.kind.method_version(),
     };
-    let expected_method_version = if contract.bootstrap {
+    let process_graph = matches!(
+        contract.kind,
+        RegressionPersistenceKind::Process(ProcessPersistenceContract::Graph { .. })
+    );
+    let expected_method_version = if contract.bootstrap && process_graph {
+        format!("{base_method_version}+{PROCESS_BOOTSTRAP_METHOD_VERSION}")
+    } else if contract.bootstrap {
         format!("{base_method_version}+{REGRESSION_BOOTSTRAP_METHOD_VERSION}")
     } else {
         base_method_version.to_string()
@@ -2574,7 +2700,9 @@ fn validate_regression_payload_contract(
         contract.current_typed
             && matches!(
                 &contract.kind,
-                RegressionPersistenceKind::Ols | RegressionPersistenceKind::Logistic
+                RegressionPersistenceKind::Ols
+                    | RegressionPersistenceKind::Logistic
+                    | RegressionPersistenceKind::Process(ProcessPersistenceContract::Graph { .. })
             )
             && (99..=10_000).contains(&recipe.settings.bootstrap_samples)
             && (1..=64).contains(&recipe.settings.workers)
@@ -2634,8 +2762,13 @@ fn validate_regression_payload_contract(
         || estimation.nca.is_some()
         || estimation.gsca.is_some()
         || !estimation.r_squared.is_empty()
-        || estimation.warnings.len() != 1
-        || estimation.warnings[0] != contract.kind.scope_warning(base_method_version)
+        || estimation.warnings.first().map(String::as_str)
+            != Some(contract.kind.scope_warning(base_method_version))
+        || (process_graph
+            && (estimation.warnings.len() != 2
+                || estimation.warnings[1]
+                    != "PROCESS v2 uses raw listwise-complete OLS equations with HC3 covariance and fixed two-sided 95% Student-t inference; unsupported shapes are rejected."))
+        || (!process_graph && estimation.warnings.len() != 1)
     {
         return false;
     }
@@ -2665,29 +2798,73 @@ fn validate_regression_payload_contract(
             recipe.settings.confidence_level,
         ),
         RegressionPersistenceKind::Process(process) => {
-            validate_linear_regression_analysis_contract(
-                regression,
-                base_method_version,
-                "process",
-                &contract.outcome,
-                &contract.predictors,
-                &contract.controls,
-                estimation.used_observations,
-                recipe.settings.confidence_level,
-                true,
-            ) && validate_process_analysis_contract(regression, process)
+            if process_graph {
+                regression.method_version == base_method_version
+                    && regression.regression_type == "process"
+                    && regression.outcome == contract.outcome
+                    && regression.predictors == contract.predictors
+                    && regression.controls == contract.controls
+                    && regression.observations == estimation.used_observations
+                    && regression.coefficients.is_empty()
+                    && regression.fit.is_none()
+                    && regression.predictions.is_empty()
+                    && regression.logistic.is_none()
+                    && validate_process_analysis_contract(
+                        regression,
+                        process,
+                        estimation.omitted_observations,
+                    )
+            } else {
+                validate_linear_regression_analysis_contract(
+                    regression,
+                    base_method_version,
+                    "process",
+                    &contract.outcome,
+                    &contract.predictors,
+                    &contract.controls,
+                    estimation.used_observations,
+                    recipe.settings.confidence_level,
+                    true,
+                ) && validate_process_analysis_contract(
+                    regression,
+                    process,
+                    estimation.omitted_observations,
+                )
+            }
         }
     };
-    let bootstrap_valid = match (contract.bootstrap, regression.bootstrap.as_ref()) {
-        (true, Some(bootstrap)) => validate_regression_bootstrap_contract(
-            bootstrap,
-            regression,
-            &contract.kind,
-            &recipe.settings,
-        ),
-        (false, None) => true,
-        _ => false,
-    };
+    let bootstrap_valid =
+        if let RegressionPersistenceKind::Process(ProcessPersistenceContract::Graph { .. }) =
+            &contract.kind
+        {
+            regression.bootstrap.is_none()
+                && regression
+                    .process
+                    .as_ref()
+                    .and_then(|process| process.graph_v2.as_ref())
+                    .is_some_and(
+                        |graph| match (contract.bootstrap, graph.bootstrap.as_ref()) {
+                            (true, Some(bootstrap)) => validate_process_bootstrap_contract(
+                                bootstrap,
+                                graph,
+                                &recipe.settings,
+                            ),
+                            (false, None) => true,
+                            _ => false,
+                        },
+                    )
+        } else {
+            match (contract.bootstrap, regression.bootstrap.as_ref()) {
+                (true, Some(bootstrap)) => validate_regression_bootstrap_contract(
+                    bootstrap,
+                    regression,
+                    &contract.kind,
+                    &recipe.settings,
+                ),
+                (false, None) => true,
+                _ => false,
+            }
+        };
     analysis_valid && bootstrap_valid && regression.warnings == estimation.warnings
 }
 
@@ -2842,6 +3019,184 @@ fn validate_regression_bootstrap_contract(
         }
     }
     true
+}
+
+fn validate_process_bootstrap_contract(
+    bootstrap: &ProcessBootstrapAnalysis,
+    graph: &ProcessGraphAnalysis,
+    settings: &AnalysisSettings,
+) -> bool {
+    let witness = &bootstrap.validation_witness;
+    let original = process_bootstrap_estimands(graph);
+    let original_ids = original
+        .iter()
+        .map(|(id, _)| id.clone())
+        .collect::<Vec<_>>();
+    let successful_indices = witness
+        .successful_bootstrap
+        .iter()
+        .map(|row| row.replicate_index)
+        .collect::<Vec<_>>();
+    let failed_indices = bootstrap
+        .failed_replicates
+        .iter()
+        .map(|row| row.replicate_index)
+        .collect::<Vec<_>>();
+    let successful_jackknife = witness
+        .successful_jackknife
+        .iter()
+        .map(|row| row.omitted_case)
+        .collect::<Vec<_>>();
+    let failed_jackknife = witness
+        .failed_jackknife
+        .iter()
+        .map(|row| row.omitted_case)
+        .collect::<Vec<_>>();
+    let valid_failure_code = |reason: &str| {
+        matches!(
+            reason,
+            "rank_deficient_equation"
+                | "nonfinite_estimate"
+                | "invalid_binary_profile"
+                | "high_leverage_hc3_instability"
+                | "invalid_hc3_covariance"
+                | "degenerate_simple_slope_variance"
+        )
+    };
+    let failed_jackknife_count = bootstrap
+        .jackknife_cases
+        .saturating_sub(bootstrap.usable_jackknife_cases);
+    let mut expected_warnings = vec![
+        "PROCESS bootstrap v1 uses deterministic indexed complete-case resampling with replacement; percentile intervals are primary and BCa intervals require every delete-one fit.".to_string(),
+        "PROCESS bootstrap ratio tests use the original effect divided by its bootstrap standard error with a fixed two-sided standard-normal reference.".to_string(),
+    ];
+    if !bootstrap.failed_replicates.is_empty() {
+        expected_warnings.push(format!(
+            "{} of {} PROCESS bootstrap replicates failed and were excluded from inference.",
+            bootstrap.failed_replicates.len(),
+            bootstrap.requested_replicates
+        ));
+    }
+    if failed_jackknife_count > 0 {
+        expected_warnings.push(format!(
+            "{failed_jackknife_count} of {} PROCESS delete-one fits failed; BCa intervals are explicitly unavailable.",
+            bootstrap.jackknife_cases
+        ));
+    }
+    if bootstrap.method_version != PROCESS_BOOTSTRAP_METHOD_VERSION
+        || bootstrap.algorithm != PROCESS_BOOTSTRAP_ALGORITHM
+        || bootstrap.interval_policy != PROCESS_BOOTSTRAP_INTERVAL_POLICY
+        || bootstrap.test_reference != PROCESS_BOOTSTRAP_TEST_REFERENCE
+        || bootstrap.requested_replicates != settings.bootstrap_samples
+        || bootstrap.usable_replicates as usize + bootstrap.failed_replicates.len()
+            != bootstrap.requested_replicates as usize
+        || bootstrap.minimum_usable_fraction.to_bits()
+            != REGRESSION_BOOTSTRAP_MINIMUM_USABLE_FRACTION.to_bits()
+        || bootstrap.usable_replicates
+            < ((bootstrap.requested_replicates as f64
+                * REGRESSION_BOOTSTRAP_MINIMUM_USABLE_FRACTION)
+                .ceil() as u32)
+        || bootstrap.seed != settings.seed
+        || bootstrap.workers != settings.workers
+        || bootstrap.stream_token != PROCESS_BOOTSTRAP_STREAM_TOKEN
+        || bootstrap.warnings != expected_warnings
+        || bootstrap.jackknife_cases != graph.complete_cases
+        || bootstrap.usable_jackknife_cases + witness.failed_jackknife.len()
+            != bootstrap.jackknife_cases
+        || witness.method_version != PROCESS_BOOTSTRAP_VALIDATION_WITNESS_VERSION
+        || witness.estimand_ids != original_ids
+        || witness.estimand_ids.is_empty()
+        || witness.estimand_ids.iter().collect::<BTreeSet<_>>().len() != witness.estimand_ids.len()
+        || witness.successful_bootstrap.len() != bootstrap.usable_replicates as usize
+        || witness.successful_jackknife.len() != bootstrap.usable_jackknife_cases
+        || !successful_indices.windows(2).all(|pair| pair[0] < pair[1])
+        || !failed_indices.windows(2).all(|pair| pair[0] < pair[1])
+        || !successful_jackknife
+            .windows(2)
+            .all(|pair| pair[0] < pair[1])
+        || !failed_jackknife.windows(2).all(|pair| pair[0] < pair[1])
+        || witness.successful_bootstrap.iter().any(|row| {
+            row.estimates.len() != witness.estimand_ids.len()
+                || row.estimates.iter().any(|value| !value.is_finite())
+        })
+        || witness.successful_jackknife.iter().any(|row| {
+            row.estimates.len() != witness.estimand_ids.len()
+                || row.estimates.iter().any(|value| !value.is_finite())
+        })
+        || bootstrap.failed_replicates.iter().any(|failure| {
+            !valid_failure_code(&failure.reason_code) || failure.message.trim().is_empty()
+        })
+        || witness.failed_jackknife.iter().any(|failure| {
+            !valid_failure_code(&failure.reason_code) || failure.message.trim().is_empty()
+        })
+    {
+        return false;
+    }
+    let mut all_bootstrap_indices = successful_indices;
+    all_bootstrap_indices.extend(failed_indices);
+    all_bootstrap_indices.sort_unstable();
+    if all_bootstrap_indices != (0..bootstrap.requested_replicates).collect::<Vec<_>>() {
+        return false;
+    }
+    let mut all_jackknife_indices = successful_jackknife;
+    all_jackknife_indices.extend(failed_jackknife);
+    all_jackknife_indices.sort_unstable();
+    if all_jackknife_indices != (0..bootstrap.jackknife_cases).collect::<Vec<_>>() {
+        return false;
+    }
+    let bootstrap_estimates = witness
+        .successful_bootstrap
+        .iter()
+        .map(|row| row.estimates.clone())
+        .collect::<Vec<_>>();
+    let jackknife_estimates = witness
+        .successful_jackknife
+        .iter()
+        .map(|row| row.estimates.clone())
+        .collect::<Vec<_>>();
+    summarize_process_bootstrap_estimands(
+        &witness.estimand_ids,
+        &original.iter().map(|(_, value)| *value).collect::<Vec<_>>(),
+        &bootstrap_estimates,
+        &jackknife_estimates,
+        bootstrap.jackknife_cases,
+        0.95,
+    )
+    .is_ok_and(|recomputed| {
+        recomputed.len() == bootstrap.estimands.len()
+            && recomputed
+                .iter()
+                .zip(&bootstrap.estimands)
+                .all(|(left, right)| {
+                    left.effect_id == right.effect_id
+                        && regression_bootstrap_json_roundtrip_close(left.original, right.original)
+                        && regression_bootstrap_json_roundtrip_close(
+                            left.bootstrap_mean,
+                            right.bootstrap_mean,
+                        )
+                        && regression_bootstrap_json_roundtrip_close(left.bias, right.bias)
+                        && regression_bootstrap_json_roundtrip_close(
+                            left.standard_error,
+                            right.standard_error,
+                        )
+                        && regression_bootstrap_tests_match_after_json_roundtrip(
+                            &left.test,
+                            &right.test,
+                        )
+                        && regression_bootstrap_json_roundtrip_close(
+                            left.percentile_lower,
+                            right.percentile_lower,
+                        )
+                        && regression_bootstrap_json_roundtrip_close(
+                            left.percentile_upper,
+                            right.percentile_upper,
+                        )
+                        && regression_bootstrap_bca_matches_after_json_roundtrip(
+                            &left.bca, &right.bca,
+                        )
+                        && left.usable_replicates == right.usable_replicates
+                })
+    })
 }
 
 fn validate_regression_bootstrap_witness(
@@ -3248,7 +3603,9 @@ fn validate_linear_regression_analysis_contract(
             return false;
         }
     }
-    let fit = &regression.fit;
+    let Some(fit) = regression.fit.as_ref() else {
+        return false;
+    };
     let (Some(r_squared), Some(adjusted_r_squared), Some(f_statistic), Some(rmse)) = (
         fit.r_squared,
         fit.adjusted_r_squared,
@@ -3411,7 +3768,9 @@ fn validate_logistic_analysis_contract(
             return false;
         }
     }
-    let fit = &regression.fit;
+    let Some(fit) = regression.fit.as_ref() else {
+        return false;
+    };
     let (Some(log_likelihood), Some(pseudo_r_squared)) = (fit.log_likelihood, fit.pseudo_r_squared)
     else {
         return false;
@@ -3576,7 +3935,24 @@ fn validate_logistic_analysis_contract(
 fn validate_process_analysis_contract(
     regression: &RegressionAnalysis,
     expected: &ProcessPersistenceContract,
+    expected_omitted_observations: usize,
 ) -> bool {
+    if let ProcessPersistenceContract::Graph {
+        focal_predictor,
+        paths,
+        moderators,
+        moderations,
+    } = expected
+    {
+        return validate_process_graph_analysis_contract(
+            regression,
+            focal_predictor,
+            paths,
+            moderators,
+            moderations,
+            expected_omitted_observations,
+        );
+    }
     const WARNING: &str = "PROCESS v1 reports bounded deterministic mediation/moderation effects validated for the documented QuickPLS v1.2.2 scope; moderated mediation remains experimental.";
     let Some(process) = regression.process.as_ref() else {
         return false;
@@ -3587,8 +3963,9 @@ fn validate_process_analysis_contract(
         ProcessPersistenceContract::ModeratedMediation { .. } => {
             &["direct", "indirect", "total", "interaction"]
         }
+        ProcessPersistenceContract::Graph { .. } => &[],
     };
-    if process.method_version != REGRESSION_PROCESS_METHOD_VERSION
+    if process.method_version != REGRESSION_PROCESS_METHOD_VERSION_V1
         || process.model != expected.model()
         || process.effects.len() != expected_effects.len()
         || process.warnings.len() != 1
@@ -3639,6 +4016,1693 @@ fn validate_process_analysis_contract(
         process.simple_slopes[2].slope,
         process.simple_slopes[1].slope + interaction,
     )
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ProjectProcessTermSpec {
+    term_id: String,
+    kind: String,
+    variables: Vec<String>,
+}
+
+fn project_process_canonical_relationships(
+    predictors: &[String],
+    outcome: &str,
+    paths: &[qpls_core::ProcessPathConfig],
+    moderations: &[qpls_core::ProcessModerationConfig],
+) -> Option<(
+    Vec<qpls_core::ProcessPathConfig>,
+    Vec<qpls_core::ProcessModerationConfig>,
+)> {
+    let mut node_order = predictors
+        .iter()
+        .enumerate()
+        .map(|(index, variable)| (variable.as_str(), index))
+        .collect::<BTreeMap<_, _>>();
+    node_order.insert(outcome, predictors.len());
+    if paths.iter().any(|path| {
+        !node_order.contains_key(path.from.as_str()) || !node_order.contains_key(path.to.as_str())
+    }) || moderations.iter().any(|moderation| {
+        !node_order.contains_key(moderation.from.as_str())
+            || !node_order.contains_key(moderation.to.as_str())
+    }) {
+        return None;
+    }
+    let mut ordered_paths = paths.to_vec();
+    ordered_paths.sort_by(|left, right| {
+        (
+            node_order[left.to.as_str()],
+            node_order[left.from.as_str()],
+            left.from.as_str(),
+            left.to.as_str(),
+        )
+            .cmp(&(
+                node_order[right.to.as_str()],
+                node_order[right.from.as_str()],
+                right.from.as_str(),
+                right.to.as_str(),
+            ))
+    });
+    let mut ordered_moderations = moderations.to_vec();
+    ordered_moderations.sort_by(|left, right| {
+        (
+            node_order[left.to.as_str()],
+            node_order[left.from.as_str()],
+            left.moderator.as_str(),
+            left.conditioning_moderator.as_deref(),
+        )
+            .cmp(&(
+                node_order[right.to.as_str()],
+                node_order[right.from.as_str()],
+                right.moderator.as_str(),
+                right.conditioning_moderator.as_deref(),
+            ))
+    });
+    Some((ordered_paths, ordered_moderations))
+}
+
+fn project_process_expected_equations(
+    focal_predictor: &str,
+    outcome: &str,
+    predictors: &[String],
+    controls: &[String],
+    moderators: &[qpls_core::ProcessModeratorConfig],
+    ordered_paths: &[qpls_core::ProcessPathConfig],
+    ordered_moderations: &[qpls_core::ProcessModerationConfig],
+) -> Vec<(String, Vec<ProjectProcessTermSpec>)> {
+    let moderator_names = moderators
+        .iter()
+        .map(|moderator| moderator.variable.as_str())
+        .collect::<BTreeSet<_>>();
+    let mut outcomes = predictors
+        .iter()
+        .filter(|variable| {
+            variable.as_str() != focal_predictor
+                && !moderator_names.contains(variable.as_str())
+                && ordered_paths
+                    .iter()
+                    .any(|path| path.to.as_str() == variable.as_str())
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    if ordered_paths.iter().any(|path| path.to == outcome) {
+        outcomes.push(outcome.to_string());
+    }
+    outcomes
+        .into_iter()
+        .map(|equation_outcome| {
+            let mut terms = ordered_paths
+                .iter()
+                .filter(|path| path.to == equation_outcome)
+                .map(|path| ProjectProcessTermSpec {
+                    term_id: format!("path:{}->{}", path.from, path.to),
+                    kind: "path".into(),
+                    variables: vec![path.from.clone()],
+                })
+                .collect::<Vec<_>>();
+            let relevant_moderations = ordered_moderations
+                .iter()
+                .filter(|moderation| moderation.to == equation_outcome)
+                .collect::<Vec<_>>();
+            for moderator in moderators {
+                if relevant_moderations.iter().any(|moderation| {
+                    moderation.moderator == moderator.variable
+                        || moderation.conditioning_moderator.as_ref() == Some(&moderator.variable)
+                }) && !terms
+                    .iter()
+                    .any(|term| term.variables == [moderator.variable.clone()])
+                {
+                    terms.push(ProjectProcessTermSpec {
+                        term_id: format!("moderator:{}", moderator.variable),
+                        kind: "moderator_main".into(),
+                        variables: vec![moderator.variable.clone()],
+                    });
+                }
+            }
+            let mut interactions = Vec::new();
+            for moderation in relevant_moderations {
+                let primary = vec![moderation.from.clone(), moderation.moderator.clone()];
+                if !interactions
+                    .iter()
+                    .any(|term: &ProjectProcessTermSpec| term.variables == primary)
+                {
+                    interactions.push(ProjectProcessTermSpec {
+                        term_id: format!(
+                            "interaction:{}*{}",
+                            moderation.from, moderation.moderator
+                        ),
+                        kind: "interaction".into(),
+                        variables: primary,
+                    });
+                }
+                if let Some(conditioning) = &moderation.conditioning_moderator {
+                    for pair in [
+                        vec![moderation.from.clone(), conditioning.clone()],
+                        vec![moderation.moderator.clone(), conditioning.clone()],
+                    ] {
+                        if !interactions.iter().any(|term| term.variables == pair) {
+                            interactions.push(ProjectProcessTermSpec {
+                                term_id: format!("interaction:{}*{}", pair[0], pair[1]),
+                                kind: "interaction".into(),
+                                variables: pair,
+                            });
+                        }
+                    }
+                    interactions.push(ProjectProcessTermSpec {
+                        term_id: format!(
+                            "interaction:{}*{}*{}",
+                            moderation.from, moderation.moderator, conditioning
+                        ),
+                        kind: "interaction".into(),
+                        variables: vec![
+                            moderation.from.clone(),
+                            moderation.moderator.clone(),
+                            conditioning.clone(),
+                        ],
+                    });
+                }
+            }
+            interactions.sort_by(|left, right| {
+                (left.variables.len(), left.term_id.as_str())
+                    .cmp(&(right.variables.len(), right.term_id.as_str()))
+            });
+            interactions.dedup_by(|left, right| left.variables == right.variables);
+            terms.extend(interactions);
+            terms.extend(controls.iter().map(|control| ProjectProcessTermSpec {
+                term_id: format!("control:{control}"),
+                kind: "control".into(),
+                variables: vec![control.clone()],
+            }));
+            terms.insert(
+                0,
+                ProjectProcessTermSpec {
+                    term_id: "intercept".into(),
+                    kind: "intercept".into(),
+                    variables: Vec::new(),
+                },
+            );
+            (equation_outcome, terms)
+        })
+        .collect()
+}
+
+fn validate_process_graph_analysis_contract(
+    regression: &RegressionAnalysis,
+    focal_predictor: &str,
+    paths: &[qpls_core::ProcessPathConfig],
+    moderators: &[qpls_core::ProcessModeratorConfig],
+    moderations: &[qpls_core::ProcessModerationConfig],
+    expected_omitted_observations: usize,
+) -> bool {
+    const WARNING_1: &str = "PROCESS v2 is an independently implemented graph-defined observed-variable path-analysis workflow; it does not execute copied numbered templates.";
+    const WARNING_2: &str = "PROCESS v2 uses raw listwise-complete OLS equations with HC3 covariance and fixed two-sided 95% Student-t inference; unsupported shapes are rejected.";
+    let Some(process) = regression.process.as_ref() else {
+        return false;
+    };
+    let Some(graph) = process.graph_v2.as_ref() else {
+        return false;
+    };
+    let Some((ordered_paths, ordered_moderations)) = project_process_canonical_relationships(
+        &regression.predictors,
+        &regression.outcome,
+        paths,
+        moderations,
+    ) else {
+        return false;
+    };
+    if process.method_version != REGRESSION_PROCESS_METHOD_VERSION
+        || process.model != "graph"
+        || !process.effects.is_empty()
+        || !process.simple_slopes.is_empty()
+        || process.warnings != [WARNING_1, WARNING_2]
+        || graph.policies.centering != "equation_complete_case_mean_v1"
+        || graph.policies.covariance != "hc3_v1"
+        || graph.policies.inference_reference != "student_t_residual_df_v1"
+        || graph.policies.confidence_level.to_bits() != 0.95_f64.to_bits()
+        || graph.complete_cases != regression.observations
+        || graph.omitted_cases != expected_omitted_observations
+        || graph.complete_cases == 0
+        || graph.complete_cases + graph.omitted_cases == 0
+    {
+        return false;
+    }
+    if graph.paths.len() != ordered_paths.len()
+        || graph
+            .paths
+            .iter()
+            .zip(&ordered_paths)
+            .any(|(actual, expected)| {
+                actual.path_id != format!("{}->{}", expected.from, expected.to)
+                    || actual.from != expected.from
+                    || actual.to != expected.to
+            })
+        || graph.moderations.len() != ordered_moderations.len()
+        || graph
+            .moderations
+            .iter()
+            .zip(&ordered_moderations)
+            .any(|(actual, expected)| {
+                actual.moderation_id
+                    != match &expected.conditioning_moderator {
+                        Some(conditioning) => format!(
+                            "moderation:{}->{}@{}|{}",
+                            expected.from, expected.to, expected.moderator, conditioning
+                        ),
+                        None => format!(
+                            "moderation:{}->{}@{}",
+                            expected.from, expected.to, expected.moderator
+                        ),
+                    }
+                    || actual.from != expected.from
+                    || actual.to != expected.to
+                    || actual.moderator != expected.moderator
+                    || actual.conditioning_moderator != expected.conditioning_moderator
+            })
+    {
+        return false;
+    }
+    let moderator_scales = moderators
+        .iter()
+        .map(|moderator| {
+            (
+                moderator.variable.as_str(),
+                match moderator.scale {
+                    qpls_core::ProcessModeratorScale::Continuous => "continuous",
+                    qpls_core::ProcessModeratorScale::Binary01 => "binary_0_1",
+                },
+            )
+        })
+        .collect::<BTreeMap<_, _>>();
+    let expected_profiles = regression
+        .predictors
+        .iter()
+        .map(|variable| {
+            (
+                variable.as_str(),
+                if variable == focal_predictor {
+                    "focal_predictor"
+                } else if moderator_scales.contains_key(variable.as_str()) {
+                    "moderator"
+                } else {
+                    "mediator"
+                },
+                moderator_scales
+                    .get(variable.as_str())
+                    .copied()
+                    .unwrap_or("continuous"),
+            )
+        })
+        .chain(
+            regression
+                .controls
+                .iter()
+                .map(|variable| (variable.as_str(), "control", "continuous")),
+        )
+        .chain(std::iter::once((
+            regression.outcome.as_str(),
+            "outcome",
+            "continuous",
+        )))
+        .collect::<Vec<_>>();
+    if graph.variable_profiles.len() != expected_profiles.len()
+        || graph.variable_profiles.iter().zip(expected_profiles).any(
+            |(profile, (variable, role, scale))| {
+                profile.variable != variable
+                    || profile.role != role
+                    || profile.scale != scale
+                    || !process_profile_valid(profile)
+            },
+        )
+    {
+        return false;
+    }
+    let expected_equations = project_process_expected_equations(
+        focal_predictor,
+        &regression.outcome,
+        &regression.predictors,
+        &regression.controls,
+        moderators,
+        &ordered_paths,
+        &ordered_moderations,
+    );
+    if graph.equations.len() != expected_equations.len()
+        || graph.equations.iter().zip(&expected_equations).any(
+            |(equation, (expected_outcome, expected_terms))| {
+                equation.equation_id != format!("equation:{expected_outcome}")
+                    || equation.outcome != *expected_outcome
+                    || equation.term_ids
+                        != expected_terms
+                            .iter()
+                            .map(|term| term.term_id.clone())
+                            .collect::<Vec<_>>()
+                    || equation.coefficients.len() != expected_terms.len()
+                    || equation.coefficients.iter().zip(expected_terms).any(
+                        |(coefficient, term)| {
+                            coefficient.term_id != term.term_id
+                                || coefficient.kind != term.kind
+                                || coefficient.variables != term.variables
+                        },
+                    )
+                    || equation.coefficients.is_empty()
+                    || equation.coefficients[0].term_id != "intercept"
+                    || equation.residual_degrees_of_freedom == 0
+                    || equation.coefficient_covariance.len() != equation.coefficients.len()
+                    || equation.coefficient_covariance.iter().any(|row| {
+                        row.len() != equation.coefficients.len()
+                            || row.iter().any(|value| !value.is_finite())
+                    })
+                    || equation
+                        .coefficient_covariance
+                        .iter()
+                        .enumerate()
+                        .any(|(left, row)| {
+                            row.iter().enumerate().any(|(right, value)| {
+                                !close_enough(*value, equation.coefficient_covariance[right][left])
+                            }) || row[left] < 0.0
+                                || !close_enough(
+                                    row[left].sqrt(),
+                                    equation.coefficients[left].standard_error,
+                                )
+                        })
+                    || equation.coefficients.iter().any(|coefficient| {
+                        ![
+                            coefficient.estimate,
+                            coefficient.standard_error,
+                            coefficient.statistic,
+                            coefficient.p_value_two_sided,
+                            coefficient.confidence_interval_lower,
+                            coefficient.confidence_interval_upper,
+                        ]
+                        .iter()
+                        .all(|value| value.is_finite())
+                            || coefficient.standard_error <= 0.0
+                            || !close_enough(
+                                coefficient.statistic,
+                                coefficient.estimate / coefficient.standard_error,
+                            )
+                    })
+                    || StudentsT::new(0.0, 1.0, equation.residual_degrees_of_freedom as f64).map_or(
+                        true,
+                        |distribution| {
+                            let critical = distribution
+                                .inverse_cdf(0.5 + graph.policies.confidence_level / 2.0);
+                            equation.coefficients.iter().any(|coefficient| {
+                                let expected_p = (2.0
+                                    * (1.0 - distribution.cdf(coefficient.statistic.abs())))
+                                .clamp(0.0, 1.0);
+                                !(0.0..=1.0).contains(&coefficient.p_value_two_sided)
+                                    || !close_enough(coefficient.p_value_two_sided, expected_p)
+                                    || !close_enough(
+                                        coefficient.confidence_interval_lower,
+                                        coefficient.estimate
+                                            - critical * coefficient.standard_error,
+                                    )
+                                    || !close_enough(
+                                        coefficient.confidence_interval_upper,
+                                        coefficient.estimate
+                                            + critical * coefficient.standard_error,
+                                    )
+                            })
+                        },
+                    )
+                    || !project_process_equation_fit_matches(equation, graph.complete_cases)
+            },
+        )
+    {
+        return false;
+    }
+    validate_process_effect_arithmetic(
+        graph,
+        focal_predictor,
+        &regression.outcome,
+        paths,
+        moderations,
+    ) && validate_process_diagnostic_shapes(graph, moderations, graph.policies.confidence_level)
+}
+
+fn project_process_equation_fit_matches(
+    equation: &qpls_estimation::ProcessEquation,
+    complete_cases: usize,
+) -> bool {
+    let fit = &equation.fit;
+    let n = fit.observations;
+    let p = fit.parameter_count;
+    if n != complete_cases
+        || p != equation.coefficients.len()
+        || p < 2
+        || n <= p
+        || equation.residual_degrees_of_freedom != n - p
+        || !fit.residual_sum_squares.is_finite()
+        || fit.residual_sum_squares < 0.0
+        || !fit.total_sum_squares.is_finite()
+        || fit.total_sum_squares < 0.0
+    {
+        return false;
+    }
+    let residual_df = (n - p) as f64;
+    let r_squared = if fit.total_sum_squares > f64::EPSILON {
+        1.0 - fit.residual_sum_squares / fit.total_sum_squares
+    } else {
+        0.0
+    };
+    let adjusted_r_squared = 1.0 - (1.0 - r_squared) * (n - 1) as f64 / residual_df;
+    let f_statistic = if r_squared < 1.0 {
+        (r_squared / (p - 1) as f64) / ((1.0 - r_squared) / residual_df)
+    } else {
+        0.0
+    };
+    let sigma2 = (fit.residual_sum_squares / n as f64).max(f64::MIN_POSITIVE);
+    let aic = n as f64 * sigma2.ln() + 2.0 * p as f64;
+    let bic = n as f64 * sigma2.ln() + (n as f64).ln() * p as f64;
+    let rmse = (fit.residual_sum_squares / n as f64).sqrt();
+    [
+        fit.r_squared,
+        fit.adjusted_r_squared,
+        fit.f_statistic,
+        fit.aic,
+        fit.bic,
+        fit.rmse,
+    ]
+    .iter()
+    .all(|value| value.is_finite())
+        && close_enough(fit.r_squared, r_squared)
+        && close_enough(fit.adjusted_r_squared, adjusted_r_squared)
+        && close_enough(fit.f_statistic, f_statistic)
+        && close_enough(fit.aic, aic)
+        && close_enough(fit.bic, bic)
+        && close_enough(fit.rmse, rmse)
+}
+
+fn process_profile_valid(profile: &qpls_estimation::ProcessVariableProfile) -> bool {
+    [
+        profile.raw_mean,
+        profile.raw_sample_sd,
+        profile.raw_min,
+        profile.raw_max,
+    ]
+    .iter()
+    .all(|value| value.is_finite())
+        && profile.raw_sample_sd >= 0.0
+        && profile.raw_min <= profile.raw_max
+        && matches!(
+            profile.role.as_str(),
+            "focal_predictor" | "mediator" | "moderator" | "outcome" | "control"
+        )
+        && matches!(profile.scale.as_str(), "continuous" | "binary_0_1")
+        && if profile.scale == "binary_0_1" {
+            profile.levels == [0.0, 1.0] && profile.raw_min >= 0.0 && profile.raw_max <= 1.0
+        } else {
+            profile.levels.is_empty()
+        }
+}
+
+fn project_process_semantic_probe_levels(
+    profile: &qpls_estimation::ProcessVariableProfile,
+) -> Option<Vec<(f64, &'static str)>> {
+    if profile.scale == "binary_0_1" {
+        return Some(vec![(0.0, "binary_0"), (1.0, "binary_1")]);
+    }
+    let levels = [
+        profile.raw_mean - profile.raw_sample_sd,
+        profile.raw_mean,
+        profile.raw_mean + profile.raw_sample_sd,
+    ];
+    (levels.iter().all(|value| value.is_finite()) && levels[0] < levels[1] && levels[1] < levels[2])
+        .then(|| {
+            vec![
+                (levels[0], "minus_1sd"),
+                (levels[1], "mean"),
+                (levels[2], "plus_1sd"),
+            ]
+        })
+}
+
+struct ProjectProcessSemanticProbe {
+    values: Vec<qpls_estimation::ProcessModeratorValue>,
+    suffix: String,
+}
+
+fn project_process_probe_value(
+    profile: &qpls_estimation::ProcessVariableProfile,
+    raw_value: f64,
+) -> qpls_estimation::ProcessModeratorValue {
+    qpls_estimation::ProcessModeratorValue {
+        variable: profile.variable.clone(),
+        raw_value,
+        coded_value: if profile.scale == "binary_0_1" {
+            raw_value
+        } else {
+            raw_value - profile.raw_mean
+        },
+    }
+}
+
+fn project_process_probe_grid(
+    graph: &ProcessGraphAnalysis,
+    moderation: &qpls_core::ProcessModerationConfig,
+) -> Option<Vec<ProjectProcessSemanticProbe>> {
+    let primary = graph
+        .variable_profiles
+        .iter()
+        .find(|profile| profile.variable == moderation.moderator)?;
+    let conditioning = if let Some(variable) = &moderation.conditioning_moderator {
+        Some(
+            graph
+                .variable_profiles
+                .iter()
+                .find(|profile| profile.variable == *variable)?,
+        )
+    } else {
+        None
+    };
+    let conditioning_values = if let Some(profile) = conditioning {
+        project_process_semantic_probe_levels(profile)?
+    } else {
+        vec![(0.0, "")]
+    };
+    let mut grid = Vec::new();
+    for (raw_primary, primary_token) in project_process_semantic_probe_levels(primary)? {
+        for (raw_conditioning, conditioning_token) in &conditioning_values {
+            let mut row = vec![project_process_probe_value(primary, raw_primary)];
+            let mut suffix = format!("{}={primary_token}", moderation.moderator);
+            if let Some(conditioning) = conditioning {
+                row.push(project_process_probe_value(conditioning, *raw_conditioning));
+                suffix.push_str(&format!(",{}={conditioning_token}", conditioning.variable));
+            }
+            grid.push(ProjectProcessSemanticProbe {
+                values: row,
+                suffix,
+            });
+        }
+    }
+    Some(grid)
+}
+
+fn project_process_conditioning_grid(
+    graph: &ProcessGraphAnalysis,
+    moderation: &qpls_core::ProcessModerationConfig,
+) -> Option<Vec<Vec<qpls_estimation::ProcessModeratorValue>>> {
+    match moderation.conditioning_moderator.as_ref() {
+        Some(variable) => {
+            let profile = graph
+                .variable_profiles
+                .iter()
+                .find(|profile| profile.variable == *variable)?;
+            Some(
+                project_process_semantic_probe_levels(profile)?
+                    .into_iter()
+                    .map(|(raw, _)| vec![project_process_probe_value(profile, raw)])
+                    .collect(),
+            )
+        }
+        None => Some(vec![Vec::new()]),
+    }
+}
+
+fn project_process_probe_row_matches(
+    actual: &[qpls_estimation::ProcessModeratorValue],
+    expected: &[qpls_estimation::ProcessModeratorValue],
+) -> bool {
+    actual.len() == expected.len()
+        && actual.iter().zip(expected).all(|(actual, expected)| {
+            actual.variable == expected.variable
+                && close_enough(actual.raw_value, expected.raw_value)
+                && close_enough(actual.coded_value, expected.coded_value)
+        })
+}
+
+fn project_process_moderation<'a>(
+    emitted: &qpls_estimation::ProcessModeration,
+    moderations: &'a [qpls_core::ProcessModerationConfig],
+) -> Option<&'a qpls_core::ProcessModerationConfig> {
+    moderations.iter().find(|candidate| {
+        candidate.from == emitted.from
+            && candidate.to == emitted.to
+            && candidate.moderator == emitted.moderator
+            && candidate.conditioning_moderator == emitted.conditioning_moderator
+    })
+}
+
+fn validate_process_diagnostic_shapes(
+    graph: &ProcessGraphAnalysis,
+    moderations: &[qpls_core::ProcessModerationConfig],
+    confidence_level: f64,
+) -> bool {
+    let mut expected_slopes = Vec::new();
+    let mut expected_jn = Vec::new();
+    for emitted in &graph.moderations {
+        let Some(moderation) = project_process_moderation(emitted, moderations) else {
+            return false;
+        };
+        let Some(grid) = project_process_probe_grid(graph, moderation) else {
+            return false;
+        };
+        expected_slopes.extend(
+            grid.into_iter()
+                .map(|probe| (emitted.moderation_id.as_str(), probe.suffix, probe.values)),
+        );
+        let Some(conditioning_grid) = project_process_conditioning_grid(graph, moderation) else {
+            return false;
+        };
+        expected_jn.extend(conditioning_grid.into_iter().map(|conditioning| {
+            (
+                emitted.moderation_id.as_str(),
+                moderation.moderator.as_str(),
+                conditioning,
+            )
+        }));
+    }
+    if graph.simple_slopes.len() != expected_slopes.len()
+        || graph.simple_slopes.iter().zip(&expected_slopes).any(
+            |(slope, (moderation_id, suffix, probe))| {
+                slope.moderation_id != *moderation_id
+                    || slope.effect_id != format!("slope:{moderation_id}@{suffix}")
+                    || !project_process_probe_row_matches(&slope.moderator_values, probe)
+            },
+        )
+        || graph.johnson_neyman.len() != expected_jn.len()
+        || graph.johnson_neyman.iter().zip(&expected_jn).any(
+            |(jn, (moderation_id, solved, conditioning))| match jn {
+                qpls_estimation::ProcessJohnsonNeyman::Available {
+                    moderation_id: actual_id,
+                    solved_moderator,
+                    conditioning_values,
+                    ..
+                }
+                | qpls_estimation::ProcessJohnsonNeyman::Unavailable {
+                    moderation_id: actual_id,
+                    solved_moderator,
+                    conditioning_values,
+                    ..
+                } => {
+                    actual_id != *moderation_id
+                        || solved_moderator != *solved
+                        || !project_process_probe_row_matches(conditioning_values, conditioning)
+                }
+            },
+        )
+    {
+        return false;
+    }
+    graph.simple_slopes.iter().all(|slope| {
+        [
+            slope.estimate,
+            slope.standard_error,
+            slope.statistic,
+            slope.p_value_two_sided,
+            slope.confidence_interval_lower,
+            slope.confidence_interval_upper,
+        ]
+        .iter()
+        .all(|value| value.is_finite())
+            && slope.standard_error > 0.0
+            && close_enough(slope.statistic, slope.estimate / slope.standard_error)
+            && project_process_slope_matches(graph, slope, moderations, confidence_level)
+    }) && graph.plots.len() == graph.moderations.len()
+        && graph
+            .plots
+            .iter()
+            .zip(&graph.moderations)
+            .all(|(plot, moderation)| {
+                plot.moderation_id == moderation.moderation_id
+                    && project_process_plot_matches(graph, plot, moderations, confidence_level)
+            })
+        && graph.johnson_neyman.iter().all(|jn| match jn {
+            qpls_estimation::ProcessJohnsonNeyman::Available {
+                moderation_id,
+                solved_moderator,
+                conditioning_values,
+                raw_min,
+                raw_max,
+                roots,
+                regions,
+                curve_points,
+                ..
+            } => {
+                raw_min.is_finite()
+                    && raw_max.is_finite()
+                    && raw_min <= raw_max
+                    && roots.windows(2).all(|pair| pair[0] <= pair[1])
+                    && roots
+                        .iter()
+                        .all(|root| root.is_finite() && root >= raw_min && root <= raw_max)
+                    && regions.len() == roots.len() + 1
+                    && curve_points.len() == 101
+                    && project_process_jn_curve_matches(
+                        graph,
+                        moderation_id,
+                        solved_moderator,
+                        conditioning_values,
+                        curve_points,
+                        moderations,
+                        confidence_level,
+                    )
+                    && project_process_jn_regions_match(
+                        graph,
+                        moderation_id,
+                        solved_moderator,
+                        conditioning_values,
+                        *raw_min,
+                        *raw_max,
+                        roots,
+                        regions,
+                        moderations,
+                        confidence_level,
+                    )
+            }
+            qpls_estimation::ProcessJohnsonNeyman::Unavailable {
+                moderation_id,
+                solved_moderator,
+                conditioning_values,
+                reason_code,
+                message,
+            } => project_process_jn_unavailable_matches(
+                graph,
+                moderation_id,
+                solved_moderator,
+                conditioning_values,
+                reason_code,
+                message,
+                moderations,
+            ),
+        })
+}
+
+fn project_process_jn_unavailable_matches(
+    graph: &ProcessGraphAnalysis,
+    moderation_id: &str,
+    solved_moderator: &str,
+    conditioning_values: &[qpls_estimation::ProcessModeratorValue],
+    reason_code: &str,
+    message: &str,
+    moderations: &[qpls_core::ProcessModerationConfig],
+) -> bool {
+    let Some(emitted) = graph
+        .moderations
+        .iter()
+        .find(|moderation| moderation.moderation_id == moderation_id)
+    else {
+        return false;
+    };
+    let Some(moderation) = project_process_moderation(emitted, moderations) else {
+        return false;
+    };
+    let Some(profile) = graph
+        .variable_profiles
+        .iter()
+        .find(|profile| profile.variable == solved_moderator)
+    else {
+        return false;
+    };
+    let Some(equation) = graph
+        .equations
+        .iter()
+        .find(|equation| equation.outcome == moderation.to)
+    else {
+        return false;
+    };
+    if profile.scale == "binary_0_1" {
+        reason_code == "binary_solved_moderator"
+            && message == "Johnson-Neyman regions require a continuous solved moderator."
+    } else {
+        let mut probes_zero = conditioning_values
+            .iter()
+            .map(|value| (value.variable.clone(), value.coded_value))
+            .collect::<BTreeMap<_, _>>();
+        probes_zero.insert(solved_moderator.to_string(), 0.0);
+        let mut probes_one = probes_zero.clone();
+        probes_one.insert(solved_moderator.to_string(), 1.0);
+        let weights_zero = project_process_slope_weights(equation, moderation, &probes_zero);
+        let weights_one = project_process_slope_weights(equation, moderation, &probes_one);
+        let weights_delta = weights_one
+            .iter()
+            .zip(&weights_zero)
+            .map(|(one, zero)| one - zero)
+            .collect::<Vec<_>>();
+        let a = equation
+            .coefficients
+            .iter()
+            .zip(&weights_zero)
+            .map(|(coefficient, weight)| coefficient.estimate * weight)
+            .sum::<f64>();
+        let b = equation
+            .coefficients
+            .iter()
+            .zip(&weights_delta)
+            .map(|(coefficient, weight)| coefficient.estimate * weight)
+            .sum::<f64>();
+        let covariance_form = |left: &[f64], right: &[f64]| {
+            left.iter()
+                .enumerate()
+                .map(|(row, left_weight)| {
+                    right
+                        .iter()
+                        .enumerate()
+                        .map(|(column, right_weight)| {
+                            left_weight
+                                * equation.coefficient_covariance[row][column]
+                                * right_weight
+                        })
+                        .sum::<f64>()
+                })
+                .sum::<f64>()
+        };
+        let v0 = covariance_form(&weights_zero, &weights_zero);
+        let v1 = covariance_form(&weights_zero, &weights_delta);
+        let v2 = covariance_form(&weights_delta, &weights_delta);
+        let covariance_finite = [v0, v1, v2].iter().all(|value| value.is_finite());
+        if !a.is_finite() || !b.is_finite() || !covariance_finite {
+            reason_code == qpls_estimation::PROCESS_JN_INVALID_COVARIANCE_REASON
+                && message == qpls_estimation::PROCESS_JN_INVALID_COVARIANCE_MESSAGE
+        } else {
+            let coded_min = profile.raw_min - profile.raw_mean;
+            let coded_max = profile.raw_max - profile.raw_mean;
+            !project_process_jn_variance_is_positive_across_range(v0, v1, v2, coded_min, coded_max)
+                && reason_code == qpls_estimation::PROCESS_JN_INVALID_COVARIANCE_REASON
+                && message == qpls_estimation::PROCESS_JN_INVALID_COVARIANCE_MESSAGE
+        }
+    }
+}
+
+fn project_process_plot_matches(
+    graph: &ProcessGraphAnalysis,
+    plot: &qpls_estimation::ProcessPlot,
+    moderations: &[qpls_core::ProcessModerationConfig],
+    confidence_level: f64,
+) -> bool {
+    let Some(emitted_moderation) = graph
+        .moderations
+        .iter()
+        .find(|row| row.moderation_id == plot.moderation_id)
+    else {
+        return false;
+    };
+    let Some(moderation) = moderations.iter().find(|candidate| {
+        candidate.from == emitted_moderation.from
+            && candidate.to == emitted_moderation.to
+            && candidate.moderator == emitted_moderation.moderator
+            && candidate.conditioning_moderator == emitted_moderation.conditioning_moderator
+    }) else {
+        return false;
+    };
+    let profiles = graph
+        .variable_profiles
+        .iter()
+        .map(|profile| (profile.variable.as_str(), profile))
+        .collect::<BTreeMap<_, _>>();
+    let Some(focal_profile) = profiles.get(moderation.from.as_str()).copied() else {
+        return false;
+    };
+    let Some(equation) = graph
+        .equations
+        .iter()
+        .find(|equation| equation.outcome == moderation.to)
+    else {
+        return false;
+    };
+    let Ok(distribution) = StudentsT::new(0.0, 1.0, equation.residual_degrees_of_freedom as f64)
+    else {
+        return false;
+    };
+    let critical = distribution.inverse_cdf(0.5 + confidence_level / 2.0);
+    let Some(expected_grid) = project_process_probe_grid(graph, moderation) else {
+        return false;
+    };
+    plot.plot_id == format!("plot:{}", plot.moderation_id)
+        && plot.series.len() == expected_grid.len()
+        && plot.series.iter().zip(&expected_grid).enumerate().all(
+            |(series_index, (series, expected_probe))| {
+                if series.series_id != format!("series:{series_index}:{}", expected_probe.suffix)
+                    || series.points.len() != 25
+                    || !project_process_probe_row_matches(
+                        &series.moderator_values,
+                        &expected_probe.values,
+                    )
+                {
+                    return false;
+                }
+                series
+                    .points
+                    .iter()
+                    .enumerate()
+                    .all(|(point_index, point)| {
+                        let predictor_raw = focal_profile.raw_min
+                            + (focal_profile.raw_max - focal_profile.raw_min) * point_index as f64
+                                / 24.0;
+                        let mut raw_values = profiles
+                            .values()
+                            .map(|profile| {
+                                (
+                                    profile.variable.clone(),
+                                    if profile.scale == "binary_0_1" {
+                                        0.0
+                                    } else {
+                                        profile.raw_mean
+                                    },
+                                )
+                            })
+                            .collect::<BTreeMap<_, _>>();
+                        raw_values.insert(moderation.from.clone(), predictor_raw);
+                        for value in &series.moderator_values {
+                            raw_values.insert(value.variable.clone(), value.raw_value);
+                        }
+                        let design = equation
+                            .coefficients
+                            .iter()
+                            .map(|coefficient| {
+                                if coefficient.kind == "intercept" {
+                                    Some(1.0)
+                                } else {
+                                    coefficient.variables.iter().try_fold(
+                                        1.0,
+                                        |product, variable| {
+                                            let raw = raw_values.get(variable)?;
+                                            let profile = profiles.get(variable.as_str())?;
+                                            let value = if coefficient.variables.len() > 1
+                                                && profile.scale != "binary_0_1"
+                                            {
+                                                raw - profile.raw_mean
+                                            } else {
+                                                *raw
+                                            };
+                                            Some(product * value)
+                                        },
+                                    )
+                                }
+                            })
+                            .collect::<Option<Vec<_>>>();
+                        let Some(design) = design else {
+                            return false;
+                        };
+                        project_process_linear_combination(equation, &design).is_some_and(
+                            |(predicted, standard_error)| {
+                                close_enough(point.predictor_raw, predictor_raw)
+                                    && close_enough(point.predicted_raw, predicted)
+                                    && close_enough(
+                                        point.confidence_interval_lower,
+                                        predicted - critical * standard_error,
+                                    )
+                                    && close_enough(
+                                        point.confidence_interval_upper,
+                                        predicted + critical * standard_error,
+                                    )
+                            },
+                        )
+                    })
+            },
+        )
+}
+
+fn project_process_slope_weights(
+    equation: &qpls_estimation::ProcessEquation,
+    moderation: &qpls_core::ProcessModerationConfig,
+    probes: &BTreeMap<String, f64>,
+) -> Vec<f64> {
+    let primary = probes.get(&moderation.moderator).copied().unwrap_or(0.0);
+    let conditioning = moderation
+        .conditioning_moderator
+        .as_ref()
+        .and_then(|variable| probes.get(variable))
+        .copied()
+        .unwrap_or(0.0);
+    equation
+        .coefficients
+        .iter()
+        .map(|coefficient| {
+            if coefficient.variables == [moderation.from.clone()] {
+                1.0
+            } else if coefficient.variables
+                == [moderation.from.clone(), moderation.moderator.clone()]
+            {
+                primary
+            } else if moderation
+                .conditioning_moderator
+                .as_ref()
+                .is_some_and(|variable| {
+                    coefficient.variables == [moderation.from.clone(), variable.clone()]
+                })
+            {
+                conditioning
+            } else if moderation
+                .conditioning_moderator
+                .as_ref()
+                .is_some_and(|variable| {
+                    coefficient.variables
+                        == [
+                            moderation.from.clone(),
+                            moderation.moderator.clone(),
+                            variable.clone(),
+                        ]
+                })
+            {
+                primary * conditioning
+            } else {
+                0.0
+            }
+        })
+        .collect()
+}
+
+fn project_process_contrast(
+    equation: &qpls_estimation::ProcessEquation,
+    weights: &[f64],
+) -> Option<(f64, f64)> {
+    if weights.len() != equation.coefficients.len()
+        || equation.coefficient_covariance.len() != weights.len()
+    {
+        return None;
+    }
+    let estimate = equation
+        .coefficients
+        .iter()
+        .zip(weights)
+        .map(|(coefficient, weight)| coefficient.estimate * weight)
+        .sum::<f64>();
+    let variance = weights
+        .iter()
+        .enumerate()
+        .map(|(left, left_weight)| {
+            weights
+                .iter()
+                .enumerate()
+                .map(|(right, right_weight)| {
+                    left_weight * equation.coefficient_covariance[left][right] * right_weight
+                })
+                .sum::<f64>()
+        })
+        .sum::<f64>();
+    (estimate.is_finite() && variance.is_finite()).then_some((estimate, variance))
+}
+
+fn project_process_linear_combination(
+    equation: &qpls_estimation::ProcessEquation,
+    weights: &[f64],
+) -> Option<(f64, f64)> {
+    project_process_contrast(equation, weights)
+        .and_then(|(estimate, variance)| (variance >= 0.0).then_some((estimate, variance.sqrt())))
+}
+
+fn project_process_jn_variance(v0: f64, v1: f64, v2: f64, coded: f64) -> Option<f64> {
+    let variance = v0 + 2.0 * v1 * coded + v2 * coded * coded;
+    (variance.is_finite() && variance > 0.0).then_some(variance)
+}
+
+fn project_process_jn_variance_is_positive_across_range(
+    v0: f64,
+    v1: f64,
+    v2: f64,
+    coded_min: f64,
+    coded_max: f64,
+) -> bool {
+    if project_process_jn_variance(v0, v1, v2, coded_min).is_none()
+        || project_process_jn_variance(v0, v1, v2, coded_max).is_none()
+    {
+        return false;
+    }
+    if v2 > 0.0 {
+        let vertex = -v1 / v2;
+        if vertex > coded_min
+            && vertex < coded_max
+            && project_process_jn_variance(v0, v1, v2, vertex).is_none()
+        {
+            return false;
+        }
+    }
+    true
+}
+
+fn project_process_slope_matches(
+    graph: &ProcessGraphAnalysis,
+    slope: &qpls_estimation::ProcessGraphSimpleSlope,
+    moderations: &[qpls_core::ProcessModerationConfig],
+    confidence_level: f64,
+) -> bool {
+    let Some(emitted_moderation) = graph
+        .moderations
+        .iter()
+        .find(|row| row.moderation_id == slope.moderation_id)
+    else {
+        return false;
+    };
+    let Some(moderation) = moderations.iter().find(|candidate| {
+        candidate.from == emitted_moderation.from
+            && candidate.to == emitted_moderation.to
+            && candidate.moderator == emitted_moderation.moderator
+            && candidate.conditioning_moderator == emitted_moderation.conditioning_moderator
+    }) else {
+        return false;
+    };
+    let Some(equation) = graph
+        .equations
+        .iter()
+        .find(|equation| equation.outcome == moderation.to)
+    else {
+        return false;
+    };
+    let probes = slope
+        .moderator_values
+        .iter()
+        .map(|value| (value.variable.clone(), value.coded_value))
+        .collect::<BTreeMap<_, _>>();
+    let weights = project_process_slope_weights(equation, moderation, &probes);
+    let Some((estimate, standard_error)) = project_process_linear_combination(equation, &weights)
+    else {
+        return false;
+    };
+    let Ok(distribution) = StudentsT::new(0.0, 1.0, equation.residual_degrees_of_freedom as f64)
+    else {
+        return false;
+    };
+    let critical = distribution.inverse_cdf(0.5 + confidence_level / 2.0);
+    let expected_p = if standard_error > 0.0 {
+        2.0 * (1.0 - distribution.cdf((estimate / standard_error).abs()))
+    } else {
+        1.0
+    };
+    close_enough(slope.estimate, estimate)
+        && close_enough(slope.standard_error, standard_error)
+        && close_enough(slope.p_value_two_sided, expected_p)
+        && close_enough(
+            slope.confidence_interval_lower,
+            estimate - critical * standard_error,
+        )
+        && close_enough(
+            slope.confidence_interval_upper,
+            estimate + critical * standard_error,
+        )
+}
+
+fn project_process_jn_curve_matches(
+    graph: &ProcessGraphAnalysis,
+    moderation_id: &str,
+    solved_moderator: &str,
+    conditioning_values: &[qpls_estimation::ProcessModeratorValue],
+    curve_points: &[qpls_estimation::ProcessJohnsonNeymanPoint],
+    moderations: &[qpls_core::ProcessModerationConfig],
+    confidence_level: f64,
+) -> bool {
+    let Some(emitted_moderation) = graph
+        .moderations
+        .iter()
+        .find(|row| row.moderation_id == moderation_id)
+    else {
+        return false;
+    };
+    let Some(moderation) = moderations.iter().find(|candidate| {
+        candidate.from == emitted_moderation.from
+            && candidate.to == emitted_moderation.to
+            && candidate.moderator == emitted_moderation.moderator
+            && candidate.conditioning_moderator == emitted_moderation.conditioning_moderator
+    }) else {
+        return false;
+    };
+    if moderation.moderator != solved_moderator {
+        return false;
+    }
+    let Some(profile) = graph
+        .variable_profiles
+        .iter()
+        .find(|profile| profile.variable == solved_moderator)
+    else {
+        return false;
+    };
+    let Some(equation) = graph
+        .equations
+        .iter()
+        .find(|equation| equation.outcome == moderation.to)
+    else {
+        return false;
+    };
+    let Ok(distribution) = StudentsT::new(0.0, 1.0, equation.residual_degrees_of_freedom as f64)
+    else {
+        return false;
+    };
+    let critical = distribution.inverse_cdf(0.5 + confidence_level / 2.0);
+    curve_points.iter().enumerate().all(|(index, point)| {
+        let expected_raw =
+            profile.raw_min + (profile.raw_max - profile.raw_min) * index as f64 / 100.0;
+        let mut probes = conditioning_values
+            .iter()
+            .map(|value| (value.variable.clone(), value.coded_value))
+            .collect::<BTreeMap<_, _>>();
+        probes.insert(
+            solved_moderator.to_string(),
+            point.moderator_raw - profile.raw_mean,
+        );
+        let weights = project_process_slope_weights(equation, moderation, &probes);
+        project_process_contrast(equation, &weights).is_some_and(|(estimate, variance)| {
+            if variance <= 0.0 {
+                return false;
+            }
+            let standard_error = variance.sqrt();
+            close_enough(point.moderator_raw, expected_raw)
+                && close_enough(point.effect, estimate)
+                && close_enough(point.standard_error, standard_error)
+                && close_enough(
+                    point.confidence_interval_lower,
+                    estimate - critical * standard_error,
+                )
+                && close_enough(
+                    point.confidence_interval_upper,
+                    estimate + critical * standard_error,
+                )
+        })
+    })
+}
+
+fn project_process_jn_regions_match(
+    graph: &ProcessGraphAnalysis,
+    moderation_id: &str,
+    solved_moderator: &str,
+    conditioning_values: &[qpls_estimation::ProcessModeratorValue],
+    raw_min: f64,
+    raw_max: f64,
+    roots: &[f64],
+    regions: &[qpls_estimation::ProcessJohnsonNeymanRegion],
+    moderations: &[qpls_core::ProcessModerationConfig],
+    confidence_level: f64,
+) -> bool {
+    let Some(emitted_moderation) = graph
+        .moderations
+        .iter()
+        .find(|row| row.moderation_id == moderation_id)
+    else {
+        return false;
+    };
+    let Some(moderation) = project_process_moderation(emitted_moderation, moderations) else {
+        return false;
+    };
+    let Some(profile) = graph
+        .variable_profiles
+        .iter()
+        .find(|profile| profile.variable == solved_moderator)
+    else {
+        return false;
+    };
+    let Some(equation) = graph
+        .equations
+        .iter()
+        .find(|equation| equation.outcome == moderation.to)
+    else {
+        return false;
+    };
+    let Ok(distribution) = StudentsT::new(0.0, 1.0, equation.residual_degrees_of_freedom as f64)
+    else {
+        return false;
+    };
+    let critical = distribution.inverse_cdf(0.5 + confidence_level / 2.0);
+    let mut probes_zero = conditioning_values
+        .iter()
+        .map(|value| (value.variable.clone(), value.coded_value))
+        .collect::<BTreeMap<_, _>>();
+    probes_zero.insert(solved_moderator.to_string(), 0.0);
+    let mut probes_one = probes_zero.clone();
+    probes_one.insert(solved_moderator.to_string(), 1.0);
+    let weights_zero = project_process_slope_weights(equation, moderation, &probes_zero);
+    let weights_one = project_process_slope_weights(equation, moderation, &probes_one);
+    let weights_delta = weights_one
+        .iter()
+        .zip(&weights_zero)
+        .map(|(one, zero)| one - zero)
+        .collect::<Vec<_>>();
+    let a = equation
+        .coefficients
+        .iter()
+        .zip(&weights_zero)
+        .map(|(coefficient, weight)| coefficient.estimate * weight)
+        .sum::<f64>();
+    let b = equation
+        .coefficients
+        .iter()
+        .zip(&weights_delta)
+        .map(|(coefficient, weight)| coefficient.estimate * weight)
+        .sum::<f64>();
+    let covariance_form = |left: &[f64], right: &[f64]| {
+        left.iter()
+            .enumerate()
+            .map(|(row, left_weight)| {
+                right
+                    .iter()
+                    .enumerate()
+                    .map(|(column, right_weight)| {
+                        left_weight * equation.coefficient_covariance[row][column] * right_weight
+                    })
+                    .sum::<f64>()
+            })
+            .sum::<f64>()
+    };
+    let v0 = covariance_form(&weights_zero, &weights_zero);
+    let v1 = covariance_form(&weights_zero, &weights_delta);
+    let v2 = covariance_form(&weights_delta, &weights_delta);
+    let qa = b * b - critical * critical * v2;
+    let qb = 2.0 * (a * b - critical * critical * v1);
+    let qc = a * a - critical * critical * v0;
+    let coded_min = profile.raw_min - profile.raw_mean;
+    let coded_max = profile.raw_max - profile.raw_mean;
+    if !project_process_jn_variance_is_positive_across_range(v0, v1, v2, coded_min, coded_max) {
+        return false;
+    }
+    let expected_coded_roots =
+        qpls_estimation::process_johnson_neyman_coded_roots(qa, qb, qc, coded_min, coded_max);
+    let expected_roots = expected_coded_roots
+        .iter()
+        .map(|root| root + profile.raw_mean)
+        .collect::<Vec<_>>();
+    let mut boundaries = vec![profile.raw_min];
+    boundaries.extend(roots.iter().copied());
+    boundaries.push(profile.raw_max);
+    close_enough(raw_min, profile.raw_min)
+        && close_enough(raw_max, profile.raw_max)
+        && roots.len() == expected_roots.len()
+        && roots
+            .iter()
+            .zip(&expected_roots)
+            .all(|(actual, expected)| close_enough(*actual, *expected))
+        && roots.iter().all(|root| {
+            let mut probes = conditioning_values
+                .iter()
+                .map(|value| (value.variable.clone(), value.coded_value))
+                .collect::<BTreeMap<_, _>>();
+            probes.insert(solved_moderator.to_string(), root - profile.raw_mean);
+            let weights = project_process_slope_weights(equation, moderation, &probes);
+            project_process_linear_combination(equation, &weights).is_some_and(
+                |(estimate, standard_error)| {
+                    close_enough(estimate.abs(), critical * standard_error)
+                },
+            )
+        })
+        && regions.len() == boundaries.len() - 1
+        && regions
+            .iter()
+            .zip(boundaries.windows(2))
+            .all(|(region, bounds)| {
+                let raw = (bounds[0] + bounds[1]) / 2.0;
+                let mut probes = conditioning_values
+                    .iter()
+                    .map(|value| (value.variable.clone(), value.coded_value))
+                    .collect::<BTreeMap<_, _>>();
+                probes.insert(solved_moderator.to_string(), raw - profile.raw_mean);
+                let weights = project_process_slope_weights(equation, moderation, &probes);
+                project_process_linear_combination(equation, &weights).is_some_and(
+                    |(estimate, standard_error)| {
+                        let margin = critical * standard_error;
+                        let status = if estimate + margin < 0.0 {
+                            "significant_negative"
+                        } else if estimate - margin > 0.0 {
+                            "significant_positive"
+                        } else {
+                            "not_significant"
+                        };
+                        close_enough(region.lower, bounds[0])
+                            && close_enough(region.upper, bounds[1])
+                            && region.status == status
+                    },
+                )
+            })
+}
+
+fn validate_process_effect_arithmetic(
+    graph: &ProcessGraphAnalysis,
+    focal: &str,
+    outcome: &str,
+    paths: &[qpls_core::ProcessPathConfig],
+    moderations: &[qpls_core::ProcessModerationConfig],
+) -> bool {
+    let simple_paths = project_process_paths(focal, outcome, paths);
+    let direct_path = vec![focal.to_string(), outcome.to_string()];
+    let direct = if simple_paths.contains(&direct_path) {
+        project_process_path_effect(graph, &direct_path, &BTreeMap::new(), moderations)
+    } else {
+        Some(0.0)
+    };
+    let Some(direct) = direct else {
+        return false;
+    };
+    let mut expected = vec![(
+        format!("direct:{focal}->{outcome}"),
+        "direct",
+        direct_path.clone(),
+        direct,
+    )];
+    let mut total_indirect = 0.0;
+    for path in simple_paths.iter().filter(|path| path.len() > 2) {
+        let Some(estimate) =
+            project_process_path_effect(graph, path, &BTreeMap::new(), moderations)
+        else {
+            return false;
+        };
+        total_indirect += estimate;
+        expected.push((
+            format!("indirect:{}", path.join("->")),
+            "indirect",
+            path.clone(),
+            estimate,
+        ));
+    }
+    expected.push((
+        format!("total_indirect:{focal}->{outcome}"),
+        "total_indirect",
+        direct_path.clone(),
+        total_indirect,
+    ));
+    expected.push((
+        format!("total:{focal}->{outcome}"),
+        "total",
+        direct_path,
+        direct + total_indirect,
+    ));
+    if graph.reference_effects.len() != expected.len()
+        || graph.reference_effects.iter().zip(expected).any(
+            |(actual, (effect_id, kind, path, estimate))| {
+                actual.effect_id != effect_id
+                    || actual.kind != kind
+                    || actual.path != path
+                    || !close_enough(actual.estimate, estimate)
+            },
+        )
+    {
+        return false;
+    }
+    let mut expected_conditional = Vec::new();
+    for path in simple_paths.iter().filter(|path| path.len() > 2) {
+        if let Some(moderation) = path.windows(2).find_map(|edge| {
+            moderations
+                .iter()
+                .find(|item| item.from == edge[0] && item.to == edge[1])
+        }) {
+            let Some(grid) = project_process_probe_grid(graph, moderation) else {
+                return false;
+            };
+            let path_id = path.join("->");
+            expected_conditional.extend(
+                grid.into_iter()
+                    .map(|probe| (path_id.clone(), probe.suffix, probe.values)),
+            );
+        }
+    }
+    if graph.conditional_indirect_effects.len() != expected_conditional.len() {
+        return false;
+    }
+    for (actual, (expected_path_id, expected_suffix, expected_probe)) in graph
+        .conditional_indirect_effects
+        .iter()
+        .zip(&expected_conditional)
+    {
+        let path = actual
+            .path_id
+            .split("->")
+            .map(str::to_string)
+            .collect::<Vec<_>>();
+        if actual.path_id != *expected_path_id
+            || !simple_paths.contains(&path)
+            || path.len() <= 2
+            || !project_process_probe_row_matches(&actual.moderator_values, expected_probe)
+            || actual.effect_id != format!("indirect:{expected_path_id}@{expected_suffix}")
+        {
+            return false;
+        }
+        let probes = actual
+            .moderator_values
+            .iter()
+            .map(|value| (value.variable.clone(), value.coded_value))
+            .collect::<BTreeMap<_, _>>();
+        let Some(expected_estimate) =
+            project_process_path_effect(graph, &path, &probes, moderations)
+        else {
+            return false;
+        };
+        if !close_enough(actual.estimate, expected_estimate) {
+            return false;
+        }
+    }
+    let expected_indices = simple_paths
+        .iter()
+        .filter(|path| path.len() > 2)
+        .filter_map(|path| {
+            path.windows(2)
+                .find_map(|edge| {
+                    moderations
+                        .iter()
+                        .find(|item| item.from == edge[0] && item.to == edge[1])
+                })
+                .map(|moderation| (path, moderation))
+        })
+        .collect::<Vec<_>>();
+    if graph.moderated_mediation_indices.len() != expected_indices.len() {
+        return false;
+    }
+    for (actual, (path, moderation)) in graph
+        .moderated_mediation_indices
+        .iter()
+        .zip(expected_indices)
+    {
+        let path_id = path.join("->");
+        let moderated_edge = format!("{}->{}", moderation.from, moderation.to);
+        if actual.path_id != path_id
+            || actual.moderated_edge != moderated_edge
+            || actual.moderator != moderation.moderator
+            || actual.effect_id
+                != format!(
+                    "index:{}:{}->{}:{}",
+                    path_id, moderation.from, moderation.to, moderation.moderator
+                )
+        {
+            return false;
+        }
+        let Some(interaction) = project_process_coefficient(
+            graph,
+            &moderation.to,
+            &[moderation.from.clone(), moderation.moderator.clone()],
+        ) else {
+            return false;
+        };
+        let mut other_product = 1.0;
+        for edge in path.windows(2) {
+            if edge[0] == moderation.from && edge[1] == moderation.to {
+                continue;
+            }
+            let Some(slope) = project_process_edge_slope(
+                graph,
+                &edge[0],
+                &edge[1],
+                &BTreeMap::new(),
+                moderations,
+            ) else {
+                return false;
+            };
+            other_product *= slope;
+        }
+        if !close_enough(actual.estimate, interaction.estimate * other_product) {
+            return false;
+        }
+    }
+    true
+}
+
+fn project_process_paths(
+    focal: &str,
+    outcome: &str,
+    paths: &[qpls_core::ProcessPathConfig],
+) -> Vec<Vec<String>> {
+    fn visit(
+        node: &str,
+        outcome: &str,
+        paths: &[qpls_core::ProcessPathConfig],
+        current: &mut Vec<String>,
+        result: &mut Vec<Vec<String>>,
+    ) {
+        if node == outcome {
+            result.push(current.clone());
+            return;
+        }
+        let mut outgoing = paths
+            .iter()
+            .filter(|path| path.from == node)
+            .collect::<Vec<_>>();
+        outgoing.sort_by(|left, right| left.to.cmp(&right.to));
+        for path in outgoing {
+            if !current.contains(&path.to) {
+                current.push(path.to.clone());
+                visit(&path.to, outcome, paths, current, result);
+                current.pop();
+            }
+        }
+    }
+    let mut result = Vec::new();
+    visit(
+        focal,
+        outcome,
+        paths,
+        &mut vec![focal.to_string()],
+        &mut result,
+    );
+    result.sort();
+    result
+}
+
+fn project_process_coefficient<'a>(
+    graph: &'a ProcessGraphAnalysis,
+    outcome: &str,
+    variables: &[String],
+) -> Option<&'a qpls_estimation::ProcessEquationCoefficient> {
+    graph
+        .equations
+        .iter()
+        .find(|equation| equation.outcome == outcome)?
+        .coefficients
+        .iter()
+        .find(|coefficient| coefficient.variables == variables)
+}
+
+fn project_process_edge_slope(
+    graph: &ProcessGraphAnalysis,
+    from: &str,
+    to: &str,
+    probes: &BTreeMap<String, f64>,
+    moderations: &[qpls_core::ProcessModerationConfig],
+) -> Option<f64> {
+    let mut slope = project_process_coefficient(graph, to, &[from.to_string()])?.estimate;
+    let Some(moderation) = moderations
+        .iter()
+        .find(|moderation| moderation.from == from && moderation.to == to)
+    else {
+        return Some(slope);
+    };
+    let primary = probes.get(&moderation.moderator).copied().unwrap_or(0.0);
+    slope +=
+        project_process_coefficient(graph, to, &[from.to_string(), moderation.moderator.clone()])?
+            .estimate
+            * primary;
+    if let Some(conditioning) = &moderation.conditioning_moderator {
+        let conditioning_value = probes.get(conditioning).copied().unwrap_or(0.0);
+        slope += project_process_coefficient(graph, to, &[from.to_string(), conditioning.clone()])?
+            .estimate
+            * conditioning_value;
+        slope += project_process_coefficient(
+            graph,
+            to,
+            &[
+                from.to_string(),
+                moderation.moderator.clone(),
+                conditioning.clone(),
+            ],
+        )?
+        .estimate
+            * primary
+            * conditioning_value;
+    }
+    Some(slope)
+}
+
+fn project_process_path_effect(
+    graph: &ProcessGraphAnalysis,
+    path: &[String],
+    probes: &BTreeMap<String, f64>,
+    moderations: &[qpls_core::ProcessModerationConfig],
+) -> Option<f64> {
+    path.windows(2).try_fold(1.0, |effect, edge| {
+        Some(effect * project_process_edge_slope(graph, &edge[0], &edge[1], probes, moderations)?)
+    })
 }
 
 fn validate_nca_payload_contract(
@@ -5487,6 +7551,15 @@ fn compatibility_notices(results: &[AnalysisResult]) -> Vec<ProjectCompatibility
                 message: "This result uses the historical regression_logistic_v1 contract. It remains readable for archive compatibility but lacks the v2 complete-case outcome profile, convergence record, classification diagnostics, odds-ratio intervals, and expanded likelihood fit identities; rerun to obtain regression_logistic_v2."
                     .into(),
             })
+        } else if result.provenance.method == AnalysisMethod::Regression
+            && result.provenance.method_version == REGRESSION_PROCESS_METHOD_VERSION_V1
+        {
+            Some(Diagnostic {
+                code: "regression.process.legacy_method_version".into(),
+                level: DiagnosticLevel::Warning,
+                message: "This archive contains historical regression_process_v1 bounded mediation/moderation output. It remains readable without reinterpretation but is not graph-defined PROCESS v2 evidence; rerun with regression_process_v2 for current equations, moderation diagnostics, and bootstrap inference."
+                    .into(),
+            })
         } else {
             None
         };
@@ -5597,6 +7670,12 @@ fn validate_result_contracts_internal(
                 result.id, result.provenance.method
             ))
         })?;
+        if !process_v2_pls_root_keys_are_declared(estimation) {
+            return Err(ProjectError::Invalid(format!(
+                "result {} has an undeclared PROCESS v2 estimation-root field",
+                result.id
+            )));
+        }
         let mediation_payload_present = estimation.get("mediation").is_some();
         let moderation_payload_present = estimation.get("moderation").is_some();
         let estimation: PlsResult =
@@ -5652,7 +7731,17 @@ fn validate_result_contracts_internal(
                 .get("warnings")
                 .and_then(serde_json::Value::as_array)
                 .is_some_and(|warnings| {
-                    warnings.len() == 1 && warnings[0].as_str() == Some(expected_assessment_warning)
+                    warnings.len() == 1
+                        && (warnings[0].as_str() == Some(expected_assessment_warning)
+                            || (result.provenance.method == AnalysisMethod::Regression
+                                && matches!(
+                                    result.provenance.method_version.as_str(),
+                                    REGRESSION_OLS_METHOD_VERSION
+                                        | REGRESSION_LOGISTIC_METHOD_VERSION_V1
+                                        | REGRESSION_PROCESS_METHOD_VERSION_V1
+                                )
+                                && warnings[0].as_str()
+                                    == Some(REGRESSION_NOT_APPLICABLE_ASSESSMENT_WARNING_V08)))
                 });
             let payload_valid = match result.provenance.method {
                 AnalysisMethod::Nca => validate_nca_payload_contract(
@@ -6316,11 +8405,27 @@ fn validate_result_contracts_internal(
                         result.id
                     ))
                 })?;
-            let parameter_names = permutation
-                .parameters
-                .iter()
-                .map(|parameter| parameter.parameter.as_str())
-                .collect::<std::collections::HashSet<_>>();
+            let canonical_estimation_order = recipe.is_none_or(|recipe| {
+                let canonical_paths = recipe
+                    .model
+                    .constructs
+                    .iter()
+                    .flat_map(|construct| {
+                        recipe
+                            .model
+                            .paths
+                            .iter()
+                            .filter(move |path| path.target == construct.id)
+                    })
+                    .collect::<Vec<_>>();
+                canonical_paths.len() == estimation.paths.len()
+                    && canonical_paths.iter().zip(&estimation.paths).all(
+                        |(recipe_path, estimated_path)| {
+                            recipe_path.source == estimated_path.source
+                                && recipe_path.target == estimated_path.target
+                        },
+                    )
+            });
             let expected = estimation
                 .paths
                 .iter()
@@ -6334,7 +8439,23 @@ fn validate_result_contracts_internal(
                         path.coefficient,
                     )
                 })
-                .collect::<std::collections::HashMap<_, _>>();
+                .collect::<Vec<_>>();
+            let parameter_manifest_matches = permutation.parameters.len() == expected.len()
+                && permutation.parameters.iter().zip(&expected).all(
+                    |(parameter, (expected_identity, expected_original))| {
+                        let expected_probability = (parameter.exceedances as f64 + 1.0)
+                            / (permutation.plan.permutations as f64 + 1.0);
+                        parameter.parameter.as_str() == expected_identity.as_str()
+                            && parameter.original.is_finite()
+                            && parameter.original.to_bits() == expected_original.to_bits()
+                            && parameter.permutations == permutation.plan.permutations
+                            && parameter.exceedances <= permutation.plan.permutations
+                            && parameter.p_value_two_sided.is_finite()
+                            && (0.0..=1.0).contains(&parameter.p_value_two_sided)
+                            && parameter.p_value_two_sided.to_bits()
+                                == expected_probability.to_bits()
+                    },
+                );
             let envelope_has_version = result
                 .provenance
                 .method_version
@@ -6346,29 +8467,9 @@ fn validate_result_contracts_internal(
                 || permutation.plan.master_seed != result.provenance.settings.seed
                 || permutation.plan.operation != "pls_pm_freedman_lane_v1"
                 || !(99..=10_000).contains(&permutation.plan.permutations)
-                || parameter_names.len() != permutation.parameters.len()
-                || parameter_names.len() != expected.len()
-                || permutation.parameters.iter().any(|parameter| {
-                    let expected_original = expected.get(&parameter.parameter).copied();
-                    let expected_probability = (parameter.exceedances as f64 + 1.0)
-                        / (permutation.plan.permutations as f64 + 1.0);
-                    expected_original.is_none()
-                        || !parameter.original.is_finite()
-                        || !approximately_equal(
-                            parameter.original,
-                            expected_original.unwrap_or_default(),
-                            1e-12,
-                        )
-                        || parameter.permutations != permutation.plan.permutations
-                        || parameter.exceedances > permutation.plan.permutations
-                        || !parameter.p_value_two_sided.is_finite()
-                        || !(0.0..=1.0).contains(&parameter.p_value_two_sided)
-                        || !approximately_equal(
-                            parameter.p_value_two_sided,
-                            expected_probability,
-                            1e-12,
-                        )
-                })
+                || expected.is_empty()
+                || !canonical_estimation_order
+                || !parameter_manifest_matches
             {
                 return Err(ProjectError::Invalid(format!(
                     "result {} permutation provenance is inconsistent",
@@ -7909,6 +10010,22 @@ mod tests {
         (dataset, recipe, result)
     }
 
+    fn runner_generated_direct_only_pls() -> (Dataset, AnalysisRecipe, AnalysisResult) {
+        let dataset = import_delimited_bytes(
+            include_bytes!("../../../validation/fixtures/simple_reflective.csv"),
+            "simple_reflective.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe = migrated_execution_recipe(include_bytes!(
+            "../../../validation/fixtures/simple_reflective.recipe.json"
+        ));
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+        (dataset, recipe, result)
+    }
+
     fn runner_generated_cbsem(model_type: &str) -> (Dataset, AnalysisRecipe, AnalysisResult) {
         let (data, data_name, recipe_json): (&[u8], &str, &[u8]) = match model_type {
             "cfa" => (
@@ -8175,9 +10292,157 @@ mod tests {
     }
 
     fn runner_generated_process() -> (Dataset, AnalysisRecipe, AnalysisResult) {
-        runner_generated_regression_fixture(include_bytes!(
+        let dataset = import_delimited_bytes(
+            include_bytes!("../../../validation/results/v08_extended_methods_fixture.csv"),
+            "v08_extended_methods_fixture.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let recipe = serde_json::from_slice(include_bytes!(
             "../../../validation/results/v08_process.recipe.json"
         ))
+        .unwrap();
+        let result = serde_json::from_slice(include_bytes!(
+            "../../../validation/results/v08_process_quickpls.json"
+        ))
+        .unwrap();
+        (dataset, recipe, result)
+    }
+
+    fn runner_generated_process_v2() -> (Dataset, AnalysisRecipe, AnalysisResult) {
+        let mut csv = String::from("X,M,W,Y\n");
+        for index in 0..32 {
+            let x = index as f64 / 4.0 - 4.0;
+            let w = ((index * 7) % 17) as f64 / 4.0 - 2.0;
+            let m = 0.55 * x + 0.2 * x * w + ((index * 3) % 11) as f64 / 50.0;
+            let y = 0.3 * x + 0.75 * m + ((index * 5) % 13) as f64 / 60.0;
+            csv.push_str(&format!("{x},{m},{w},{y}\n"));
+        }
+        let dataset = import_delimited_bytes(
+            csv.as_bytes(),
+            "process-v2-project.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut settings = AnalysisSettings::default();
+        settings.method = AnalysisMethod::Regression;
+        settings.preprocessing = Preprocessing::Unstandardized;
+        settings.bootstrap_samples = 99;
+        settings.seed = 1729;
+        settings.workers = 2;
+        let recipe = AnalysisRecipe {
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
+            id: Uuid::new_v4(),
+            created_at: Utc::now(),
+            dataset_fingerprint: dataset.fingerprint.0.clone(),
+            model: ModelSpec {
+                id: Uuid::new_v4(),
+                name: "PROCESS v2 project".into(),
+                constructs: Vec::new(),
+                paths: Vec::new(),
+                controls: Vec::new(),
+                higher_order_constructs: Vec::new(),
+                interactions: Vec::new(),
+            },
+            settings,
+            method_config: Some(qpls_core::MethodConfig::Regression {
+                outcome: "Y".into(),
+                predictors: vec!["X".into(), "M".into(), "W".into()],
+                controls: Vec::new(),
+                model: qpls_core::RegressionModelConfig::Process {
+                    relationship: qpls_core::ProcessRelationshipConfig::Graph {
+                        focal_predictor: "X".into(),
+                        paths: vec![
+                            qpls_core::ProcessPathConfig {
+                                from: "X".into(),
+                                to: "M".into(),
+                            },
+                            qpls_core::ProcessPathConfig {
+                                from: "M".into(),
+                                to: "Y".into(),
+                            },
+                            qpls_core::ProcessPathConfig {
+                                from: "X".into(),
+                                to: "Y".into(),
+                            },
+                        ],
+                        moderators: vec![qpls_core::ProcessModeratorConfig {
+                            variable: "W".into(),
+                            scale: qpls_core::ProcessModeratorScale::Continuous,
+                        }],
+                        moderations: vec![qpls_core::ProcessModerationConfig {
+                            from: "X".into(),
+                            to: "M".into(),
+                            moderator: "W".into(),
+                            conditioning_moderator: None,
+                        }],
+                        continuous_product_centering:
+                            qpls_core::ProcessContinuousCentering::EquationCompleteCaseMeanV1,
+                    },
+                },
+                bootstrap: Some(qpls_core::RegressionBootstrapConfig {
+                    algorithm: qpls_core::RegressionBootstrapAlgorithm::CaseResampling,
+                    intervals: vec![
+                        qpls_core::RegressionBootstrapInterval::Percentile,
+                        qpls_core::RegressionBootstrapInterval::Bca,
+                    ],
+                }),
+            }),
+            metadata: BTreeMap::new(),
+        };
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+        (dataset, recipe, result)
+    }
+
+    fn process_v2_with_high_leverage_bootstrap_failure(
+        mut result: AnalysisResult,
+    ) -> AnalysisResult {
+        let graph_value = estimation_payload(&result)["regression"]["process"]["graph_v2"].clone();
+        let mut graph: ProcessGraphAnalysis = serde_json::from_value(graph_value).unwrap();
+        let mut bootstrap = graph.bootstrap.take().unwrap();
+        let failed = bootstrap
+            .validation_witness
+            .successful_bootstrap
+            .pop()
+            .unwrap();
+        bootstrap.usable_replicates -= 1;
+        bootstrap
+            .failed_replicates
+            .push(qpls_estimation::ProcessBootstrapFailedReplicate {
+                replicate_index: failed.replicate_index,
+                reason_code: "high_leverage_hc3_instability".into(),
+                message: "PROCESS equation Y has unstable HC3 leverage in this resample.".into(),
+            });
+        let original = process_bootstrap_estimands(&graph);
+        bootstrap.estimands = summarize_process_bootstrap_estimands(
+            &bootstrap.validation_witness.estimand_ids,
+            &original.iter().map(|(_, value)| *value).collect::<Vec<_>>(),
+            &bootstrap
+                .validation_witness
+                .successful_bootstrap
+                .iter()
+                .map(|row| row.estimates.clone())
+                .collect::<Vec<_>>(),
+            &bootstrap
+                .validation_witness
+                .successful_jackknife
+                .iter()
+                .map(|row| row.estimates.clone())
+                .collect::<Vec<_>>(),
+            bootstrap.jackknife_cases,
+            0.95,
+        )
+        .unwrap();
+        bootstrap.warnings.push(format!(
+            "1 of {} PROCESS bootstrap replicates failed and were excluded from inference.",
+            bootstrap.requested_replicates
+        ));
+        graph.bootstrap = Some(bootstrap);
+        estimation_payload_mut(&mut result)["regression"]["process"]["graph_v2"] =
+            serde_json::to_value(graph).unwrap();
+        result
     }
 
     fn runner_generated_mediation() -> (Dataset, AnalysisRecipe, AnalysisResult) {
@@ -8381,7 +10646,7 @@ mod tests {
         let (dataset, recipe, current_result) = runner_generated_nca();
         let historical_result = legacy_nca_v1_result(current_result);
         let mut project = Project::new("Legacy v4 scientific record");
-        project.datasets.push(dataset);
+        project.datasets.push(dataset.clone());
         project.recipes.push(recipe);
         project.results.push(historical_result.clone());
         save_project(&path, &project).unwrap();
@@ -9997,15 +12262,20 @@ mod tests {
             (
                 "logistic",
                 runner_generated_logistic as fn() -> (Dataset, AnalysisRecipe, AnalysisResult),
-                REGRESSION_LOGISTIC_METHOD_VERSION,
+                REGRESSION_LOGISTIC_METHOD_VERSION.to_owned(),
             ),
             (
                 "process",
-                runner_generated_process as fn() -> (Dataset, AnalysisRecipe, AnalysisResult),
-                REGRESSION_PROCESS_METHOD_VERSION,
+                runner_generated_process_v2 as fn() -> (Dataset, AnalysisRecipe, AnalysisResult),
+                format!("{REGRESSION_PROCESS_METHOD_VERSION}+{PROCESS_BOOTSTRAP_METHOD_VERSION}"),
             ),
         ] {
             let (dataset, recipe, result) = generated();
+            assert_eq!(recipe.schema_version, ANALYSIS_RECIPE_SCHEMA_VERSION);
+            assert!(matches!(
+                &recipe.method_config,
+                Some(qpls_core::MethodConfig::Regression { .. })
+            ));
             assert!(!recipe.metadata.contains_key("status"));
             assert_eq!(result.provenance.method_version, expected_version);
             let path = directory.path().join(format!("{label}.qpls"));
@@ -10193,6 +12463,88 @@ mod tests {
     }
 
     #[test]
+    fn process_v1_remains_archive_only() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("process-v1-archive.qpls");
+        let (dataset, recipe, result) = runner_generated_process();
+        assert_eq!(
+            result.provenance.method_version,
+            REGRESSION_PROCESS_METHOD_VERSION_V1
+        );
+        let mut rejected = Project::new("Rejected PROCESS v1 append");
+        assert!(matches!(
+            rejected.append_validated_result(recipe.clone(), result.clone()),
+            Err(ProjectError::Invalid(message)) if message.contains("archive-readable")
+        ));
+        assert!(rejected.results.is_empty());
+
+        let mut historical_recipe = recipe;
+        historical_recipe.metadata = historical_recipe.effective_metadata().unwrap();
+        historical_recipe.schema_version = 2;
+        historical_recipe.method_config = None;
+        let historical_estimation: PlsResult =
+            serde_json::from_value(estimation_payload(&result).clone()).unwrap();
+        let historical_regression = historical_estimation.regression.as_ref().unwrap();
+        assert!(validate_linear_regression_analysis_contract(
+            historical_regression,
+            REGRESSION_PROCESS_METHOD_VERSION_V1,
+            "process",
+            "y",
+            &["x".into(), "m".into()],
+            &[],
+            140,
+            0.95,
+            true,
+        ));
+        assert!(validate_process_analysis_contract(
+            historical_regression,
+            &ProcessPersistenceContract::Mediation {
+                x: "x".into(),
+                mediator: "m".into(),
+            },
+            0,
+        ));
+        let effective_historical_recipe = historical_recipe.with_effective_metadata().unwrap();
+        assert_eq!(
+            effective_historical_recipe.settings,
+            result.provenance.settings
+        );
+        assert_eq!(
+            effective_historical_recipe.dataset_fingerprint,
+            result.provenance.dataset_fingerprint
+        );
+        assert_eq!(
+            historical_regression.warnings,
+            historical_estimation.warnings
+        );
+        assert!(historical_regression.bootstrap.is_none());
+        let assessment = match &result.payload {
+            AnalysisPayload::PlsPmV1 { assessment, .. } => assessment,
+            _ => unreachable!("the frozen PROCESS v1 fixture uses the v1 envelope"),
+        };
+        assert!(validate_regression_payload_contract(
+            &result,
+            &historical_estimation,
+            Some(&effective_historical_recipe),
+            assessment["method_version"].as_str().unwrap(),
+        ));
+        let mut archive = Project::new("Historical PROCESS v1");
+        archive.datasets.push(dataset);
+        archive.recipes.push(historical_recipe);
+        archive.results.push(result.clone());
+        save_project(&path, &archive).unwrap();
+        let reopened = load_project(&path).unwrap();
+        assert_eq!(reopened.results[0].id, result.id);
+        assert_eq!(
+            reopened.results[0].provenance.method_version,
+            REGRESSION_PROCESS_METHOD_VERSION_V1
+        );
+        assert!(reopened.compatibility_notices.iter().any(|notice| {
+            notice.diagnostic.code == "regression.process.legacy_method_version"
+        }));
+    }
+
+    #[test]
     fn regression_bootstrap_json_roundtrip_tolerance_is_narrow() {
         let near = 1.0 + 32.0 * f64::EPSILON;
         assert!(regression_bootstrap_json_roundtrip_close(1.0, near));
@@ -10204,6 +12556,606 @@ mod tests {
             f64::NAN,
             f64::NAN
         ));
+    }
+
+    #[test]
+    fn process_graph_v2_unavailable_bootstrap_roundtrip_and_tamper_contract() {
+        let ids = vec!["direct:X->Y".to_string()];
+        let bootstrap_rows = (0..99)
+            .map(
+                |replicate_index| qpls_estimation::ProcessBootstrapWitnessBootstrapRow {
+                    replicate_index,
+                    estimates: vec![0.5],
+                },
+            )
+            .collect::<Vec<_>>();
+        let jackknife_rows = (0..8)
+            .map(
+                |omitted_case| qpls_estimation::ProcessBootstrapWitnessJackknifeRow {
+                    omitted_case,
+                    estimates: vec![0.5],
+                },
+            )
+            .collect::<Vec<_>>();
+        let bootstrap_values = bootstrap_rows
+            .iter()
+            .map(|row| row.estimates.clone())
+            .collect::<Vec<_>>();
+        let jackknife_values = jackknife_rows
+            .iter()
+            .map(|row| row.estimates.clone())
+            .collect::<Vec<_>>();
+        let estimands = summarize_process_bootstrap_estimands(
+            &ids,
+            &[0.5],
+            &bootstrap_values,
+            &jackknife_values,
+            8,
+            0.95,
+        )
+        .unwrap();
+        let mut bootstrap = ProcessBootstrapAnalysis {
+            method_version: PROCESS_BOOTSTRAP_METHOD_VERSION.into(),
+            algorithm: PROCESS_BOOTSTRAP_ALGORITHM.into(),
+            interval_policy: PROCESS_BOOTSTRAP_INTERVAL_POLICY.into(),
+            test_reference: PROCESS_BOOTSTRAP_TEST_REFERENCE.into(),
+            requested_replicates: 99,
+            usable_replicates: 99,
+            minimum_usable_fraction: REGRESSION_BOOTSTRAP_MINIMUM_USABLE_FRACTION,
+            jackknife_cases: 8,
+            usable_jackknife_cases: 8,
+            seed: 91,
+            workers: 2,
+            stream_token: PROCESS_BOOTSTRAP_STREAM_TOKEN.into(),
+            failed_replicates: Vec::new(),
+            estimands,
+            validation_witness: qpls_estimation::ProcessBootstrapValidationWitness {
+                method_version: PROCESS_BOOTSTRAP_VALIDATION_WITNESS_VERSION.into(),
+                estimand_ids: ids,
+                successful_bootstrap: bootstrap_rows,
+                successful_jackknife: jackknife_rows,
+                failed_jackknife: Vec::new(),
+            },
+            warnings: vec![
+                "PROCESS bootstrap v1 uses deterministic indexed complete-case resampling with replacement; percentile intervals are primary and BCa intervals require every delete-one fit.".into(),
+                "PROCESS bootstrap ratio tests use the original effect divided by its bootstrap standard error with a fixed two-sided standard-normal reference.".into(),
+            ],
+        };
+        let graph = ProcessGraphAnalysis {
+            policies: qpls_estimation::ProcessPolicies {
+                centering: "equation_complete_case_mean_v1".into(),
+                covariance: "hc3_v1".into(),
+                inference_reference: "student_t_residual_df_v1".into(),
+                confidence_level: 0.95,
+            },
+            complete_cases: 8,
+            omitted_cases: 0,
+            variable_profiles: Vec::new(),
+            paths: Vec::new(),
+            moderations: Vec::new(),
+            equations: Vec::new(),
+            reference_effects: vec![qpls_estimation::ProcessReferenceEffect {
+                effect_id: "direct:X->Y".into(),
+                kind: "direct".into(),
+                path: vec!["X".into(), "Y".into()],
+                estimate: 0.5,
+            }],
+            conditional_indirect_effects: Vec::new(),
+            moderated_mediation_indices: Vec::new(),
+            simple_slopes: Vec::new(),
+            plots: Vec::new(),
+            johnson_neyman: Vec::new(),
+            bootstrap: None,
+        };
+        let mut settings = AnalysisSettings::default();
+        settings.bootstrap_samples = 99;
+        settings.seed = 91;
+        settings.workers = 2;
+        let encoded = serde_json::to_vec(&bootstrap).unwrap();
+        let decoded: ProcessBootstrapAnalysis = serde_json::from_slice(&encoded).unwrap();
+        assert!(validate_process_bootstrap_contract(
+            &decoded, &graph, &settings
+        ));
+        assert!(matches!(
+            &decoded.estimands[0].test,
+            RegressionBootstrapTest::Unavailable { reason_code, .. }
+                if reason_code == "zero_bootstrap_standard_error"
+        ));
+        bootstrap.estimands[0].bias = 10.0;
+        assert!(!validate_process_bootstrap_contract(
+            &bootstrap, &graph, &settings
+        ));
+        let RegressionBootstrapTest::Unavailable { reason_code, .. } =
+            &mut bootstrap.estimands[0].test
+        else {
+            panic!("fixture test must be unavailable")
+        };
+        *reason_code = "degenerate_bootstrap_standard_error".into();
+        assert!(!validate_process_bootstrap_contract(
+            &bootstrap, &graph, &settings
+        ));
+    }
+
+    #[test]
+    fn direct_only_pls_populated_mediation_survives_runner_project_roundtrip() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("direct-only-pls.qpls");
+        let (dataset, recipe, result) = runner_generated_direct_only_pls();
+        assert!(
+            result
+                .provenance
+                .method_version
+                .split('+')
+                .any(|version| version == PLS_MEDIATION_METHOD_VERSION)
+        );
+        let estimation = estimation_payload(&result);
+        assert_eq!(
+            estimation["mediation"]["estimates"][0]["classification"],
+            "direct_only"
+        );
+        assert!(estimation.get("moderation").is_none());
+
+        let mut project = Project::new("Direct-only PLS compatibility");
+        project.datasets.push(dataset);
+        project
+            .append_validated_result(recipe.clone(), result.clone())
+            .unwrap();
+        save_project(&path, &project).unwrap();
+        let reopened = load_project(&path).unwrap();
+        assert_eq!(reopened.results[0].id, result.id);
+        assert_eq!(reopened.recipes[0], recipe);
+        let reopened_estimation = estimation_payload(&reopened.results[0]);
+        assert_eq!(
+            reopened_estimation["mediation"]["estimates"][0]["classification"],
+            "direct_only"
+        );
+        assert!(reopened_estimation.get("moderation").is_none());
+    }
+
+    #[test]
+    fn process_graph_v2_append_save_reopen_and_tamper_are_atomic() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("process-v2.qpls");
+        let (dataset, recipe, result) = runner_generated_process_v2();
+        assert_eq!(
+            result.provenance.method_version,
+            format!("{REGRESSION_PROCESS_METHOD_VERSION}+{PROCESS_BOOTSTRAP_METHOD_VERSION}")
+        );
+        let estimation = estimation_payload(&result);
+        assert!(estimation.get("mediation").is_none());
+        assert!(estimation.get("moderation").is_none());
+        let regression = estimation["regression"].as_object().unwrap();
+        assert_eq!(regression["observations"], 32);
+        assert_eq!(regression["coefficients"], serde_json::json!([]));
+        assert_eq!(regression["fit"], serde_json::Value::Null);
+        assert_eq!(regression["predictions"], serde_json::json!([]));
+        assert!(regression.get("logistic").is_none());
+        assert!(regression.get("bootstrap").is_none());
+        let mut collapsed_graph: ProcessGraphAnalysis =
+            serde_json::from_value(regression["process"]["graph_v2"].clone()).unwrap();
+        let collapsed_profile = collapsed_graph
+            .variable_profiles
+            .iter_mut()
+            .find(|profile| profile.variable == "W")
+            .unwrap();
+        collapsed_profile.raw_mean = 9_007_199_254_740_992.0;
+        collapsed_profile.raw_sample_sd = 0.25;
+        collapsed_profile.raw_min = 9_007_199_254_740_990.0;
+        collapsed_profile.raw_max = 9_007_199_254_740_994.0;
+        assert!(
+            project_process_probe_grid(
+                &collapsed_graph,
+                &qpls_core::ProcessModerationConfig {
+                    from: "X".into(),
+                    to: "M".into(),
+                    moderator: "W".into(),
+                    conditioning_moderator: None,
+                },
+            )
+            .is_none()
+        );
+        let mut project = Project::new("PROCESS v2 persistence");
+        project.datasets.push(dataset.clone());
+        project
+            .append_validated_result(recipe.clone(), result.clone())
+            .unwrap();
+        save_project(&path, &project).unwrap();
+        let saved = fs::read(&path).unwrap();
+        let reopened = load_project(&path).unwrap();
+        assert_eq!(reopened.results[0].id, result.id);
+        assert_eq!(reopened.recipes[0], recipe);
+
+        let mixed_failure = process_v2_with_high_leverage_bootstrap_failure(result.clone());
+        let mixed_path = directory
+            .path()
+            .join("process-v2-high-leverage-failure.qpls");
+        let mut mixed_project = Project::new("PROCESS v2 mixed bootstrap failure");
+        mixed_project.datasets.push(dataset);
+        mixed_project
+            .append_validated_result(recipe.clone(), mixed_failure.clone())
+            .unwrap();
+        save_project(&mixed_path, &mixed_project).unwrap();
+        let mixed_reopened = load_project(&mixed_path).unwrap();
+        let mixed_bootstrap = &estimation_payload(&mixed_reopened.results[0])["regression"]["process"]
+            ["graph_v2"]["bootstrap"];
+        assert_eq!(mixed_bootstrap["usable_replicates"], 98);
+        assert_eq!(
+            mixed_bootstrap["failed_replicates"][0]["reason_code"],
+            "high_leverage_hc3_instability"
+        );
+
+        let mut tampered = result.clone();
+        estimation_payload_mut(&mut tampered)["regression"]["process"]["graph_v2"]["reference_effects"]
+            [0]["estimate"] = serde_json::json!(99.0);
+        let reject_atomically = |tampered| {
+            let mut rejected = Project::new("Rejected PROCESS v2");
+            assert!(matches!(
+                rejected.append_validated_result(recipe.clone(), tampered),
+                Err(ProjectError::Invalid(_))
+            ));
+            assert!(rejected.recipes.is_empty());
+            assert!(rejected.results.is_empty());
+        };
+        let mut unknown_failure = mixed_failure;
+        estimation_payload_mut(&mut unknown_failure)["regression"]["process"]["graph_v2"]["bootstrap"]
+            ["failed_replicates"][0]["reason_code"] = serde_json::json!("unknown_failure");
+        reject_atomically(unknown_failure);
+        reject_atomically(tampered);
+
+        let mut tampered_covariance = result.clone();
+        estimation_payload_mut(&mut tampered_covariance)["regression"]["process"]["graph_v2"]["equations"]
+            [0]["coefficient_covariance"][0][0] = serde_json::json!(99.0);
+        reject_atomically(tampered_covariance);
+
+        let mut tampered_negative_variance = result.clone();
+        estimation_payload_mut(&mut tampered_negative_variance)["regression"]["process"]["graph_v2"]
+            ["equations"][0]["coefficient_covariance"][0][0] = serde_json::json!(-f64::EPSILON);
+        reject_atomically(tampered_negative_variance);
+
+        let mut tampered_coefficient_p = result.clone();
+        estimation_payload_mut(&mut tampered_coefficient_p)["regression"]["process"]["graph_v2"]
+            ["equations"][0]["coefficients"][0]["p_value_two_sided"] =
+            serde_json::json!(0.123456789);
+        reject_atomically(tampered_coefficient_p);
+
+        let mut tampered_coefficient_interval = result.clone();
+        estimation_payload_mut(&mut tampered_coefficient_interval)["regression"]["process"]["graph_v2"]
+            ["equations"][0]["coefficients"][0]["confidence_interval_upper"] =
+            serde_json::json!(99.0);
+        reject_atomically(tampered_coefficient_interval);
+
+        let mut tampered_extra_equation = result.clone();
+        let extra_equation = estimation_payload(&tampered_extra_equation)["regression"]["process"]
+            ["graph_v2"]["equations"][0]
+            .clone();
+        estimation_payload_mut(&mut tampered_extra_equation)["regression"]["process"]["graph_v2"]
+            ["equations"]
+            .as_array_mut()
+            .unwrap()
+            .push(extra_equation);
+        reject_atomically(tampered_extra_equation);
+
+        let mut tampered_equation_term_kind = result.clone();
+        estimation_payload_mut(&mut tampered_equation_term_kind)["regression"]["process"]["graph_v2"]
+            ["equations"][0]["coefficients"][1]["kind"] = serde_json::json!("control");
+        reject_atomically(tampered_equation_term_kind);
+
+        let mut tampered_equation_term_variables = result.clone();
+        estimation_payload_mut(&mut tampered_equation_term_variables)["regression"]["process"]["graph_v2"]
+            ["equations"][0]["coefficients"][1]["variables"] = serde_json::json!(["W"]);
+        reject_atomically(tampered_equation_term_variables);
+
+        let mut tampered_equation_order = result.clone();
+        estimation_payload_mut(&mut tampered_equation_order)["regression"]["process"]["graph_v2"]
+            ["equations"]
+            .as_array_mut()
+            .unwrap()
+            .swap(0, 1);
+        reject_atomically(tampered_equation_order);
+
+        for fit_field in [
+            "r_squared",
+            "adjusted_r_squared",
+            "f_statistic",
+            "aic",
+            "bic",
+            "rmse",
+        ] {
+            let mut tampered_fit = result.clone();
+            estimation_payload_mut(&mut tampered_fit)["regression"]["process"]["graph_v2"]["equations"]
+                [0]["fit"][fit_field] = serde_json::json!(99.0);
+            reject_atomically(tampered_fit);
+        }
+
+        for (field, value) in [
+            ("observations", serde_json::json!(99)),
+            ("parameter_count", serde_json::json!(99)),
+            ("residual_sum_squares", serde_json::json!(99.0)),
+            ("total_sum_squares", serde_json::json!(99.0)),
+        ] {
+            let mut tampered_fit_sufficient_stats = result.clone();
+            estimation_payload_mut(&mut tampered_fit_sufficient_stats)["regression"]["process"]["graph_v2"]
+                ["equations"][0]["fit"][field] = value;
+            reject_atomically(tampered_fit_sufficient_stats);
+        }
+
+        let mut tampered_omitted_cases = result.clone();
+        estimation_payload_mut(&mut tampered_omitted_cases)["regression"]["process"]["graph_v2"]
+            ["omitted_cases"] = serde_json::json!(1);
+        reject_atomically(tampered_omitted_cases);
+
+        let mut tampered_extra_profile = result.clone();
+        let extra_profile = estimation_payload(&tampered_extra_profile)["regression"]["process"]
+            ["graph_v2"]["variable_profiles"][0]
+            .clone();
+        estimation_payload_mut(&mut tampered_extra_profile)["regression"]["process"]["graph_v2"]
+            ["variable_profiles"]
+            .as_array_mut()
+            .unwrap()
+            .push(extra_profile);
+        reject_atomically(tampered_extra_profile);
+
+        let mut tampered_profile_order = result.clone();
+        estimation_payload_mut(&mut tampered_profile_order)["regression"]["process"]["graph_v2"]
+            ["variable_profiles"]
+            .as_array_mut()
+            .unwrap()
+            .swap(0, 1);
+        reject_atomically(tampered_profile_order);
+
+        let mut tampered_profile_role = result.clone();
+        estimation_payload_mut(&mut tampered_profile_role)["regression"]["process"]["graph_v2"]["variable_profiles"]
+            [0]["role"] = serde_json::json!("mediator");
+        reject_atomically(tampered_profile_role);
+
+        let mut tampered_generic_fit = result.clone();
+        estimation_payload_mut(&mut tampered_generic_fit)["regression"]["fit"] =
+            serde_json::json!({"aic": 0.0, "bic": 0.0});
+        reject_atomically(tampered_generic_fit);
+
+        for (field, empty_shell) in [
+            (
+                "mediation",
+                serde_json::json!({
+                    "method_version": PLS_MEDIATION_METHOD_VERSION,
+                    "tolerance": 1e-12,
+                    "estimates": [],
+                    "warnings": []
+                }),
+            ),
+            (
+                "moderation",
+                serde_json::json!({
+                    "method_version": PLS_TWO_STAGE_MODERATION_METHOD_VERSION,
+                    "moderator_score_levels": [-1.0, 0.0, 1.0],
+                    "estimates": [],
+                    "warnings": []
+                }),
+            ),
+        ] {
+            let mut tampered_legacy_shell = result.clone();
+            estimation_payload_mut(&mut tampered_legacy_shell)[field] = empty_shell;
+            reject_atomically(tampered_legacy_shell);
+        }
+
+        for wrapper in ["root", "regression", "process", "graph_v2"] {
+            let mut tampered_wrapper = result.clone();
+            match wrapper {
+                "root" => {
+                    estimation_payload_mut(&mut tampered_wrapper)["undeclared"] =
+                        serde_json::json!(true);
+                }
+                "regression" => {
+                    estimation_payload_mut(&mut tampered_wrapper)["regression"]["undeclared"] =
+                        serde_json::json!(true);
+                }
+                "process" => {
+                    estimation_payload_mut(&mut tampered_wrapper)["regression"]["process"]["undeclared"] =
+                        serde_json::json!(true);
+                }
+                "graph_v2" => {
+                    estimation_payload_mut(&mut tampered_wrapper)["regression"]["process"]["graph_v2"]
+                        ["undeclared"] = serde_json::json!(true);
+                }
+                _ => unreachable!(),
+            }
+            reject_atomically(tampered_wrapper);
+        }
+
+        for wrapper in ["root", "regression", "process", "graph_v2"] {
+            let unknown_load_path = directory
+                .path()
+                .join(format!("unknown-{wrapper}-wrapper.qpls"));
+            fs::copy(&path, &unknown_load_path).unwrap();
+            rewrite_zip_entry_with_manifest_checksum(
+                &unknown_load_path,
+                PROJECT_ENTRY_NAME,
+                |bytes| {
+                    let mut document: serde_json::Value = serde_json::from_slice(bytes).unwrap();
+                    let estimation = &mut document["results"][0]["payload"]["estimation"];
+                    match wrapper {
+                        "root" => estimation["undeclared"] = serde_json::json!(true),
+                        "regression" => {
+                            estimation["regression"]["undeclared"] = serde_json::json!(true)
+                        }
+                        "process" => {
+                            estimation["regression"]["process"]["undeclared"] =
+                                serde_json::json!(true)
+                        }
+                        "graph_v2" => {
+                            estimation["regression"]["process"]["graph_v2"]["undeclared"] =
+                                serde_json::json!(true)
+                        }
+                        _ => unreachable!(),
+                    }
+                    serde_json::to_vec_pretty(&document).unwrap()
+                },
+            );
+            assert!(matches!(
+                load_project(&unknown_load_path),
+                Err(ProjectError::Invalid(_))
+            ));
+        }
+
+        for (field, empty_shell) in [
+            (
+                "mediation",
+                serde_json::json!({
+                    "method_version": PLS_MEDIATION_METHOD_VERSION,
+                    "tolerance": 1e-12,
+                    "estimates": [],
+                    "warnings": []
+                }),
+            ),
+            (
+                "moderation",
+                serde_json::json!({
+                    "method_version": PLS_TWO_STAGE_MODERATION_METHOD_VERSION,
+                    "moderator_score_levels": [-1.0, 0.0, 1.0],
+                    "estimates": [],
+                    "warnings": []
+                }),
+            ),
+        ] {
+            let legacy_shell_path = directory
+                .path()
+                .join(format!("process-v2-empty-{field}-shell.qpls"));
+            fs::copy(&path, &legacy_shell_path).unwrap();
+            rewrite_zip_entry_with_manifest_checksum(
+                &legacy_shell_path,
+                PROJECT_ENTRY_NAME,
+                |bytes| {
+                    let mut document: serde_json::Value = serde_json::from_slice(bytes).unwrap();
+                    document["results"][0]["payload"]["estimation"][field] = empty_shell.clone();
+                    serde_json::to_vec_pretty(&document).unwrap()
+                },
+            );
+            assert!(matches!(
+                load_project(&legacy_shell_path),
+                Err(ProjectError::Invalid(_))
+            ));
+        }
+
+        let mut tampered_plot_prediction = result.clone();
+        estimation_payload_mut(&mut tampered_plot_prediction)["regression"]["process"]["graph_v2"]
+            ["plots"][0]["series"][0]["points"][0]["predicted_raw"] = serde_json::json!(99.0);
+        reject_atomically(tampered_plot_prediction);
+
+        let mut tampered_plot_interval = result.clone();
+        estimation_payload_mut(&mut tampered_plot_interval)["regression"]["process"]["graph_v2"]
+            ["plots"][0]["series"][0]["points"][0]["confidence_interval_upper"] =
+            serde_json::json!(99.0);
+        reject_atomically(tampered_plot_interval);
+
+        let mut tampered_conditional_probe = result.clone();
+        estimation_payload_mut(&mut tampered_conditional_probe)["regression"]["process"]["graph_v2"]
+            ["conditional_indirect_effects"][0]["moderator_values"][0]["raw_value"] =
+            serde_json::json!(99.0);
+        reject_atomically(tampered_conditional_probe);
+
+        let mut tampered_slope_probe = result.clone();
+        estimation_payload_mut(&mut tampered_slope_probe)["regression"]["process"]["graph_v2"]["simple_slopes"]
+            [0]["moderator_values"][0]["raw_value"] = serde_json::json!(99.0);
+        reject_atomically(tampered_slope_probe);
+
+        let mut tampered_plot_probe = result.clone();
+        estimation_payload_mut(&mut tampered_plot_probe)["regression"]["process"]["graph_v2"]["plots"]
+            [0]["series"][0]["moderator_values"][0]["raw_value"] = serde_json::json!(99.0);
+        reject_atomically(tampered_plot_probe);
+
+        let mut tampered_jn_conditioning = result.clone();
+        estimation_payload_mut(&mut tampered_jn_conditioning)["regression"]["process"]["graph_v2"]
+            ["johnson_neyman"][0]["conditioning_values"] = serde_json::json!([{
+            "variable": "W",
+            "raw_value": 0.0,
+            "coded_value": 0.0
+        }]);
+        reject_atomically(tampered_jn_conditioning);
+
+        let mut tampered_jn_region = result.clone();
+        estimation_payload_mut(&mut tampered_jn_region)["regression"]["process"]["graph_v2"]["johnson_neyman"]
+            [0]["regions"][0]["status"] = serde_json::json!("tampered");
+        reject_atomically(tampered_jn_region);
+
+        let mut tampered_jn_root_set = result.clone();
+        let jn = &mut estimation_payload_mut(&mut tampered_jn_root_set)["regression"]["process"]["graph_v2"]
+            ["johnson_neyman"][0];
+        let raw_min = jn["raw_min"].clone();
+        jn["roots"].as_array_mut().unwrap().insert(0, raw_min);
+        let duplicate_region = jn["regions"][0].clone();
+        jn["regions"].as_array_mut().unwrap().push(duplicate_region);
+        reject_atomically(tampered_jn_root_set);
+
+        let mut tampered_jn_unavailable = result.clone();
+        let jn = &mut estimation_payload_mut(&mut tampered_jn_unavailable)["regression"]["process"]
+            ["graph_v2"]["johnson_neyman"][0];
+        let moderation_id = jn["moderation_id"].clone();
+        let solved_moderator = jn["solved_moderator"].clone();
+        let conditioning_values = jn["conditioning_values"].clone();
+        *jn = serde_json::json!({
+            "status": "unavailable",
+            "moderation_id": moderation_id,
+            "solved_moderator": solved_moderator,
+            "conditioning_values": conditioning_values,
+            "reason_code": qpls_estimation::PROCESS_JN_INVALID_COVARIANCE_REASON,
+            "message": qpls_estimation::PROCESS_JN_INVALID_COVARIANCE_MESSAGE
+        });
+        reject_atomically(tampered_jn_unavailable);
+
+        let mut false_invalid_hc3_unavailable = result.clone();
+        let jn = &mut estimation_payload_mut(&mut false_invalid_hc3_unavailable)["regression"]["process"]
+            ["graph_v2"]["johnson_neyman"][0];
+        let moderation_id = jn["moderation_id"].clone();
+        let solved_moderator = jn["solved_moderator"].clone();
+        let conditioning_values = jn["conditioning_values"].clone();
+        *jn = serde_json::json!({
+            "status": "unavailable",
+            "moderation_id": moderation_id,
+            "solved_moderator": solved_moderator,
+            "conditioning_values": conditioning_values,
+            "reason_code": qpls_estimation::PROCESS_JN_INVALID_COVARIANCE_REASON,
+            "message": qpls_estimation::PROCESS_JN_INVALID_COVARIANCE_MESSAGE
+        });
+        reject_atomically(false_invalid_hc3_unavailable);
+
+        let mut wrong_invalid_hc3_message = result.clone();
+        let jn = &mut estimation_payload_mut(&mut wrong_invalid_hc3_message)["regression"]["process"]
+            ["graph_v2"]["johnson_neyman"][0];
+        let moderation_id = jn["moderation_id"].clone();
+        let solved_moderator = jn["solved_moderator"].clone();
+        let conditioning_values = jn["conditioning_values"].clone();
+        *jn = serde_json::json!({
+            "status": "unavailable",
+            "moderation_id": moderation_id,
+            "solved_moderator": solved_moderator,
+            "conditioning_values": conditioning_values,
+            "reason_code": qpls_estimation::PROCESS_JN_INVALID_COVARIANCE_REASON,
+            "message": "tampered"
+        });
+        reject_atomically(wrong_invalid_hc3_message);
+
+        let mut tampered_missing_index = result.clone();
+        estimation_payload_mut(&mut tampered_missing_index)["regression"]["process"]["graph_v2"]
+            ["moderated_mediation_indices"]
+            .as_array_mut()
+            .unwrap()
+            .clear();
+        reject_atomically(tampered_missing_index);
+
+        let mut tampered_index_identity = result.clone();
+        estimation_payload_mut(&mut tampered_index_identity)["regression"]["process"]["graph_v2"]
+            ["moderated_mediation_indices"][0]["effect_id"] = serde_json::json!("index:tampered");
+        reject_atomically(tampered_index_identity);
+
+        let mut tampered_witness = reopened;
+        estimation_payload_mut(&mut tampered_witness.results[0])["regression"]["process"]["graph_v2"]
+            ["bootstrap"]["validation_witness"]["successful_bootstrap"][0]["estimates"][0] =
+            serde_json::json!(99.0);
+        assert!(matches!(
+            save_project(&path, &tampered_witness),
+            Err(ProjectError::Invalid(_))
+        ));
+        assert_eq!(fs::read(&path).unwrap(), saved);
     }
 
     #[test]
@@ -12392,18 +15344,18 @@ mod tests {
     }
 
     #[test]
-    fn permutation_pls_payload_round_trips_and_rejects_tampering() {
+    fn permutation_pls_multi_path_appends_round_trips_and_rejects_manifest_tampering() {
         let directory = tempfile::tempdir().unwrap();
         let path = directory.path().join("permutation.qpls");
         let dataset = import_delimited_bytes(
-            include_bytes!("../../../validation/fixtures/simple_reflective.csv"),
-            "simple_reflective.csv",
+            include_bytes!("../../../validation/fixtures/corporate_reputation.csv"),
+            "corporate_reputation.csv",
             b',',
             &ImportOptions::default(),
         )
         .unwrap();
         let mut recipe = migrated_execution_recipe(include_bytes!(
-            "../../../validation/fixtures/simple_reflective.recipe.json"
+            "../../../validation/fixtures/corporate_reputation.recipe.json"
         ));
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
         recipe.settings.permutation_samples = 99;
@@ -12423,6 +15375,22 @@ mod tests {
             |_| {},
         )
         .unwrap();
+        let expected_parameter_order = estimation
+            .paths
+            .iter()
+            .map(|path| {
+                serde_json::to_string(&("path", [path.source.as_str(), path.target.as_str()]))
+                    .unwrap()
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            permutation
+                .parameters
+                .iter()
+                .map(|parameter| parameter.parameter.clone())
+                .collect::<Vec<_>>(),
+            expected_parameter_order
+        );
         let result = AnalysisResult::completed_pls_inference(
             &recipe,
             format!(
@@ -12436,11 +15404,16 @@ mod tests {
             Vec::new(),
         );
         let mut project = Project::new("Permutation");
-        project.datasets.push(dataset);
-        project.recipes.push(recipe);
-        project.results.push(result);
+        project.datasets.push(dataset.clone());
+        project
+            .append_validated_result(recipe.clone(), result.clone())
+            .unwrap();
         save_project(&path, &project).unwrap();
         let restored = load_project(&path).unwrap();
+        assert_eq!(restored.recipes, vec![recipe.clone()]);
+        assert_eq!(restored.results.len(), 1);
+        assert_eq!(restored.results[0].id, result.id);
+        assert_eq!(restored.results[0].provenance, result.provenance);
         assert!(matches!(
             &restored.results[0].payload,
             AnalysisPayload::PlsPmV3 {
@@ -12449,26 +15422,137 @@ mod tests {
                 ..
             }
         ));
+        let restored_permutation = match &restored.results[0].payload {
+            AnalysisPayload::PlsPmV3 {
+                permutation: Some(permutation),
+                ..
+            } => serde_json::from_value::<PlsPermutationResult>(permutation.clone()).unwrap(),
+            _ => unreachable!(),
+        };
+        assert_eq!(
+            restored_permutation
+                .parameters
+                .iter()
+                .map(|parameter| parameter.parameter.clone())
+                .collect::<Vec<_>>(),
+            expected_parameter_order
+        );
+        let original_permutation = match &result.payload {
+            AnalysisPayload::PlsPmV3 {
+                permutation: Some(permutation),
+                ..
+            } => serde_json::from_value::<PlsPermutationResult>(permutation.clone()).unwrap(),
+            _ => unreachable!(),
+        };
+        assert_eq!(restored_permutation, original_permutation);
 
-        let mut missing = restored.results[0].clone();
+        let reject_atomically = |tampered: AnalysisResult| {
+            let mut rejected = Project::new("Rejected permutation");
+            rejected.datasets.push(dataset.clone());
+            assert!(matches!(
+                rejected.append_validated_result(recipe.clone(), tampered),
+                Err(ProjectError::Invalid(_))
+            ));
+            assert!(rejected.recipes.is_empty());
+            assert!(rejected.results.is_empty());
+        };
+
+        let mut missing = result.clone();
         if let AnalysisPayload::PlsPmV3 { permutation, .. } = &mut missing.payload {
             *permutation = None;
         }
-        assert!(matches!(
-            validate_result_contracts(&[missing]),
-            Err(ProjectError::Invalid(_))
-        ));
+        reject_atomically(missing);
 
-        let mut tampered = restored.results[0].clone();
+        let mut reordered = result.clone();
+        if let AnalysisPayload::PlsPmV3 {
+            permutation: Some(permutation),
+            ..
+        } = &mut reordered.payload
+        {
+            permutation["parameters"].as_array_mut().unwrap().swap(0, 1);
+        }
+        reject_atomically(reordered);
+
+        let mut altered_identity = result.clone();
+        if let AnalysisPayload::PlsPmV3 {
+            permutation: Some(permutation),
+            ..
+        } = &mut altered_identity.payload
+        {
+            permutation["parameters"][0]["parameter"] =
+                serde_json::json!("[\"path\",[\"forged\",\"target\"]]");
+        }
+        reject_atomically(altered_identity);
+
+        let mut reordered_estimation_and_parameters = result.clone();
+        if let AnalysisPayload::PlsPmV3 {
+            estimation,
+            permutation: Some(permutation),
+            ..
+        } = &mut reordered_estimation_and_parameters.payload
+        {
+            estimation["paths"].as_array_mut().unwrap().swap(0, 1);
+            permutation["parameters"].as_array_mut().unwrap().swap(0, 1);
+        }
+        reject_atomically(reordered_estimation_and_parameters);
+
+        let mut tampered = result.clone();
         if let AnalysisPayload::PlsPmV3 {
             permutation: Some(permutation),
             ..
         } = &mut tampered.payload
         {
-            permutation["parameters"][0]["p_value_two_sided"] = serde_json::json!(0.75);
+            let probability = permutation["parameters"][0]["p_value_two_sided"]
+                .as_f64()
+                .unwrap();
+            permutation["parameters"][0]["p_value_two_sided"] =
+                serde_json::json!(f64::from_bits(probability.to_bits() + 1));
         }
+        reject_atomically(tampered);
+
+        let mut altered_original = result.clone();
+        if let AnalysisPayload::PlsPmV3 {
+            permutation: Some(permutation),
+            ..
+        } = &mut altered_original.payload
+        {
+            permutation["parameters"][0]["original"] = serde_json::json!(99.0);
+        }
+        reject_atomically(altered_original);
+
+        for wrapper in ["result", "plan", "parameter"] {
+            let mut unknown = result.clone();
+            if let AnalysisPayload::PlsPmV3 {
+                permutation: Some(permutation),
+                ..
+            } = &mut unknown.payload
+            {
+                match wrapper {
+                    "result" => permutation["undeclared"] = serde_json::json!(true),
+                    "plan" => permutation["plan"]["undeclared"] = serde_json::json!(true),
+                    "parameter" => {
+                        permutation["parameters"][0]["undeclared"] = serde_json::json!(true)
+                    }
+                    _ => unreachable!(),
+                }
+            }
+            reject_atomically(unknown);
+        }
+
+        let checksum_recomputed = directory.path().join("permutation-unknown-plan.qpls");
+        fs::copy(&path, &checksum_recomputed).unwrap();
+        rewrite_zip_entry_with_manifest_checksum(
+            &checksum_recomputed,
+            PROJECT_ENTRY_NAME,
+            |bytes| {
+                let mut document: serde_json::Value = serde_json::from_slice(bytes).unwrap();
+                document["results"][0]["payload"]["permutation"]["plan"]["undeclared"] =
+                    serde_json::json!(true);
+                serde_json::to_vec_pretty(&document).unwrap()
+            },
+        );
         assert!(matches!(
-            validate_result_contracts(&[tampered]),
+            load_project(&checksum_recomputed),
             Err(ProjectError::Invalid(_))
         ));
     }

@@ -192,12 +192,12 @@
       "id": "v0_4_inference_resampling",
       "release": "v0.4",
       "family": "Inference",
-      "name": "Bootstrap, BCa, studentized bootstrap, jackknife, and permutation",
+      "name": "Bootstrap, BCa, studentized bootstrap, and jackknife",
       "status": "validated",
       "stable_output": true,
       "owner_track": "validation",
       "priority": 4,
-      "summary": "Indexed percentile bootstrap, BCa, nested studentized/bootstrap-t, jackknife support, and Freedman-Lane path permutation are validated for the documented PLS inference/resampling scope. Unsupported model shapes, unaudited small-sample/non-normal claims, and inference attached to still-experimental base methods remain excluded.",
+      "summary": "Indexed percentile bootstrap, BCa, nested studentized/bootstrap-t, and jackknife support are validated for the documented PLS inference/resampling scope. Structural Path Randomization is release-qualified only through validation/results/structural_path_randomization_method_promotion_audit.json for its bounded fixed-score, exchangeable-residual contract; generic bootstrap evidence cannot substitute for that dedicated evidence. Its calibration covers paired homoscedastic Gaussian constant-variance scenarios only, and unsupported model shapes, heteroskedastic or broader non-Gaussian validity, multiplicity adjustment, and inference attached to still-experimental base methods remain excluded.",
       "gates": [
         {
           "track": "specification",
@@ -262,6 +262,7 @@
       ],
       "next_actions": [
         "Keep unsupported model shapes and unaudited small-sample/non-normal settings outside the validated inference scope.",
+        "Keep validation/results/structural_path_randomization_method_promotion_audit.json and its dedicated packaged dependencies current; do not substitute generic bootstrap evidence for Structural Path Randomization.",
         "Do not imply that inference validates experimental base estimators such as CB-SEM beta, GSCA, segmentation, or PROCESS workflows."
       ]
     },

@@ -24,6 +24,7 @@ import {
 const methodLabels: Record<AnalysisMethodId, string> = {
   pls_pm: "PLS path modeling",
   bootstrap: "PLS bootstrapping",
+  permutation: "Structural Path Randomization",
   plsc: "Consistent PLS",
   wpls: "Weighted PLS",
   cca: "Confirmatory composite analysis",

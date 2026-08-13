@@ -1,0 +1,162 @@
+{
+    "generated_at_utc":  "2026-08-13T06:49:10.3627118Z",
+    "launched_pid":  51204,
+    "descendants_at_shutdown":  [
+                                    {
+                                        "ProcessId":  12460,
+                                        "ParentProcessId":  56848,
+                                        "CreationDate":  "\/Date(1786603621229)\/",
+                                        "Name":  "msedgewebview2.exe",
+                                        "ExecutablePath":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe"
+                                    },
+                                    {
+                                        "ProcessId":  23528,
+                                        "ParentProcessId":  56848,
+                                        "CreationDate":  "\/Date(1786603621471)\/",
+                                        "Name":  "msedgewebview2.exe",
+                                        "ExecutablePath":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe"
+                                    },
+                                    {
+                                        "ProcessId":  30424,
+                                        "ParentProcessId":  56848,
+                                        "CreationDate":  "\/Date(1786603621808)\/",
+                                        "Name":  "msedgewebview2.exe",
+                                        "ExecutablePath":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe"
+                                    },
+                                    {
+                                        "ProcessId":  52436,
+                                        "ParentProcessId":  56848,
+                                        "CreationDate":  "\/Date(1786603621491)\/",
+                                        "Name":  "msedgewebview2.exe",
+                                        "ExecutablePath":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe"
+                                    },
+                                    {
+                                        "ProcessId":  56488,
+                                        "ParentProcessId":  56848,
+                                        "CreationDate":  "\/Date(1786603621590)\/",
+                                        "Name":  "msedgewebview2.exe",
+                                        "ExecutablePath":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe"
+                                    },
+                                    {
+                                        "ProcessId":  56848,
+                                        "ParentProcessId":  51204,
+                                        "CreationDate":  "\/Date(1786603621152)\/",
+                                        "Name":  "msedgewebview2.exe",
+                                        "ExecutablePath":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\151.0.4129.78\\msedgewebview2.exe"
+                                    }
+                                ],
+    "graceful_close_exit_code":  0,
+    "graceful_exit_confirmed":  true,
+    "forced_parent_termination":  false,
+    "forced_descendant_pids":  [
+
+                               ],
+    "parent_exit_confirmed":  true,
+    "lingering_descendant_pids":  [
+
+                                  ],
+    "resource_monitor_pid":  62576,
+    "resource_monitor_exit_confirmed":  true,
+    "resource_monitor_exit_code":  0,
+    "resource_monitor_stderr":  "",
+    "resource_monitor_first_sample":  {
+                                          "recorded_at_utc":  "2026-08-13T06:47:02.6153140Z",
+                                          "root_present":  true,
+                                          "root_pid":  51204,
+                                          "total_working_set_bytes":  443486208,
+                                          "total_private_memory_bytes":  277909504,
+                                          "total_handle_count":  3214,
+                                          "total_thread_count":  175,
+                                          "process_role_counts":  {
+                                                                      "desktop_root":  1,
+                                                                      "webview_browser":  1,
+                                                                      "webview_renderer":  1,
+                                                                      "webview_gpu":  1,
+                                                                      "webview_utility":  2,
+                                                                      "webview_other":  1,
+                                                                      "other_descendant":  0
+                                                                  },
+                                          "processes":  [
+                                                            {
+                                                                "pid":  12460,
+                                                                "parent_pid":  56848,
+                                                                "name":  "msedgewebview2.exe",
+                                                                "role":  "webview_other",
+                                                                "creation_date":  "08/13/2026 12:17:01",
+                                                                "working_set_bytes":  11956224,
+                                                                "private_memory_bytes":  4726784,
+                                                                "handle_count":  170,
+                                                                "thread_count":  12
+                                                            },
+                                                            {
+                                                                "pid":  23528,
+                                                                "parent_pid":  56848,
+                                                                "name":  "msedgewebview2.exe",
+                                                                "role":  "webview_gpu",
+                                                                "creation_date":  "08/13/2026 12:17:01",
+                                                                "working_set_bytes":  133308416,
+                                                                "private_memory_bytes":  142643200,
+                                                                "handle_count":  674,
+                                                                "thread_count":  33
+                                                            },
+                                                            {
+                                                                "pid":  30424,
+                                                                "parent_pid":  56848,
+                                                                "name":  "msedgewebview2.exe",
+                                                                "role":  "webview_renderer",
+                                                                "creation_date":  "08/13/2026 12:17:01",
+                                                                "working_set_bytes":  81141760,
+                                                                "private_memory_bytes":  44118016,
+                                                                "handle_count":  329,
+                                                                "thread_count":  20
+                                                            },
+                                                            {
+                                                                "pid":  51204,
+                                                                "parent_pid":  56772,
+                                                                "name":  "quickpls-desktop.exe",
+                                                                "role":  "desktop_root",
+                                                                "creation_date":  "08/13/2026 12:17:00",
+                                                                "working_set_bytes":  31252480,
+                                                                "private_memory_bytes":  8441856,
+                                                                "handle_count":  362,
+                                                                "thread_count":  23
+                                                            },
+                                                            {
+                                                                "pid":  52436,
+                                                                "parent_pid":  56848,
+                                                                "name":  "msedgewebview2.exe",
+                                                                "role":  "webview_utility",
+                                                                "creation_date":  "08/13/2026 12:17:01",
+                                                                "working_set_bytes":  38940672,
+                                                                "private_memory_bytes":  19599360,
+                                                                "handle_count":  352,
+                                                                "thread_count":  23
+                                                            },
+                                                            {
+                                                                "pid":  56488,
+                                                                "parent_pid":  56848,
+                                                                "name":  "msedgewebview2.exe",
+                                                                "role":  "webview_utility",
+                                                                "creation_date":  "08/13/2026 12:17:01",
+                                                                "working_set_bytes":  23707648,
+                                                                "private_memory_bytes":  15835136,
+                                                                "handle_count":  196,
+                                                                "thread_count":  12
+                                                            },
+                                                            {
+                                                                "pid":  56848,
+                                                                "parent_pid":  51204,
+                                                                "name":  "msedgewebview2.exe",
+                                                                "role":  "webview_browser",
+                                                                "creation_date":  "08/13/2026 12:17:01",
+                                                                "working_set_bytes":  123179008,
+                                                                "private_memory_bytes":  42545152,
+                                                                "handle_count":  1131,
+                                                                "thread_count":  52
+                                                            }
+                                                        ]
+                                      },
+    "resource_monitor_terminal_reason":  "stop_signal",
+    "forced_resource_monitor_termination":  false,
+    "passed":  true
+}

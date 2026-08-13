@@ -1,6 +1,7 @@
 import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
 import type { AnalysisRun, MethodDefinition } from "../types";
 import { methodStatusDescription } from "../domain/methodStatus";
+import { runExportTables } from "../domain/resultTables";
 
 export function WorkspacePage({ children, className = "", ...props }: HTMLAttributes<HTMLElement> & { children: ReactNode }) {
   return <section {...props} className={`workspace-page qpls2-workspace qpls2-page-shell ${className}`.trim()}>{children}</section>;
@@ -108,8 +109,13 @@ export function MethodScopeDrawer({ method, open, onToggle }: { method?: MethodD
 }
 
 export function MethodConfidencePanel({ run }: { run: AnalysisRun }) {
+  const confidenceTables = runExportTables(run);
+  const scopeStatus = confidenceTables.length > 0
+    && confidenceTables.every((table) => table.status === "validated")
+    ? "validated"
+    : "experimental";
   return <section className="method-confidence-panel" aria-label="Method confidence">
-    <header><strong>Method Confidence</strong><StatusBadge status="validated">Validated scope</StatusBadge></header>
+    <header><strong>Method Confidence</strong><StatusBadge status={scopeStatus}>{scopeStatus === "validated" ? "Validated scope" : "Candidate scope"}</StatusBadge></header>
     <dl>
       <div><dt>Method</dt><dd>{run.method}</dd></div>
       <div><dt>Seed</dt><dd>{run.seed}</dd></div>

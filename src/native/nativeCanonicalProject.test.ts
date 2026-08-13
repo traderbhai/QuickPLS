@@ -58,7 +58,7 @@ function recipe(overrides: Partial<NativeCanonicalAnalysisRecipe> = {}): NativeC
 
 function envelope(overrides: Partial<AnalysisResultEnvelope> = {}): AnalysisResultEnvelope {
   return {
-    schema_version: 4,
+    schema_version: 1,
     id: "result-1",
     status: "completed",
     provenance: {

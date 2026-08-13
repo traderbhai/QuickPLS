@@ -74,6 +74,27 @@ describe("native calculation request", () => {
     expect(parseNativeCalculationRequest(null)).toBeNull();
   });
 
+  it("accepts only an explicit mutually exclusive Structural Path Randomization plan", () => {
+    const request = {
+      kind: "pls_permutation" as const,
+      settings: { ...settings, method: "pls_pm" as const, permutationSamples: 999, workers: 4 },
+    };
+    expect(parseNativeCalculationRequest(request)).toEqual(request);
+    for (const settingsPatch of [
+      { permutationSamples: 0 },
+      { permutationSamples: 98 },
+      { permutationSamples: 10_001 },
+      { permutationSamples: 999.5 },
+      { bootstrapSamples: 999 },
+      { studentizedInnerSamples: 99 },
+      { workers: 0 },
+      { workers: 65 },
+      { workers: 1.5 },
+    ]) {
+      expect(parseNativeCalculationRequest({ ...request, settings: { ...request.settings, ...settingsPatch } })).toBeNull();
+    }
+  });
+
   it("carries a cloned full-profile proof only for binary logistic dispatch", () => {
     const logisticSettings: AnalysisUiSettings = {
       ...settings,
@@ -138,5 +159,66 @@ describe("native calculation request", () => {
         regressionPredictors: Array.from({ length: 50 }, (_, index) => `x${index + 1}`).join(","),
       },
     })).not.toBeNull();
+  });
+
+  it("preserves a graph-defined PROCESS request only with its typed graph and current full-data proof", () => {
+    const processSettings: AnalysisUiSettings = {
+      ...settings,
+      method: "regression",
+      preprocessing: "unstandardized",
+      regressionType: "process",
+      regressionOutcome: "y",
+      regressionPredictors: "x,m,w",
+      regressionControls: "c",
+      regressionBootstrap: true,
+      bootstrapSamples: 999,
+      workers: 2,
+      processGraph: {
+        model: "graph",
+        focal_predictor: "x",
+        paths: [{ from: "x", to: "m" }, { from: "m", to: "y" }],
+        moderators: [{ variable: "w", scale: "continuous" }],
+        moderations: [{ from: "x", to: "m", moderator: "w" }],
+        continuous_product_centering: "equation_complete_case_mean_v1",
+      },
+    };
+    const processProfile = {
+      datasetId: "process-data",
+      datasetFingerprint: "sha256:process",
+      selectionToken: JSON.stringify({
+        outcome: "y",
+        predictors: ["x", "m", "w"],
+        controls: ["c"],
+        graph: processSettings.processGraph,
+      }),
+      variables: ["y", "x", "m", "w", "c"],
+      binaryModerators: [],
+      expectedRows: 40,
+      scannedRows: 40,
+      completeCases: 39,
+      omittedRows: 1,
+      invalidBinaryRows: {},
+      binaryEquationOutcomes: [],
+      constantVariables: [],
+    };
+    const request = createNativeCalculationRequest("regression", processSettings, processProfile);
+    expect(request).toMatchObject({
+      kind: "regression",
+      settings: { regressionType: "process" },
+      processProfile: { completeCases: 39 },
+    });
+    expect(parseNativeCalculationRequest(request)).toEqual(request);
+    expect(parseNativeCalculationRequest({
+      ...request,
+      settings: { ...request.settings, regressionPredictors: "x,w,m" },
+    })).toBeNull();
+    expect(parseNativeCalculationRequest({
+      ...request,
+      settings: { ...request.settings, bootstrapSamples: 98 },
+    })).toBeNull();
+    expect(parseNativeCalculationRequest({
+      ...request,
+      processProfile: { ...request.processProfile, scannedRows: 39 },
+    })).toBeNull();
   });
 });

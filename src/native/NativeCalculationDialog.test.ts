@@ -6,7 +6,10 @@ import type { AnalysisUiSettings, ColumnMetadata, ConstructData, Dataset, RunMon
 import {
   default as NativeCalculationDialog,
   NATIVE_RESAMPLING_SAMPLE_INPUT_CONSTRAINTS,
+  nativeRegressionTypeSettingsPatch,
   nativeNumericCaseWeightColumns,
+  retryNativeProcessProfileState,
+  shouldStartNativeProcessProfile,
   scrollNativeMethodOptionIntoView,
 } from "./NativeCalculationDialog";
 import type { NativeWorkbenchAnalysisKind } from "./nativeAnalysisCatalog";
@@ -81,6 +84,58 @@ const metadata = (name: string, columnType: ColumnMetadata["column_type"]): Colu
 });
 
 describe("NativeCalculationDialog contracts", () => {
+  it("preserves seeded predictors across fast non-PROCESS type switches and clears them only for PROCESS", () => {
+    const autoSeeded = {
+      ...settings,
+      regressionType: "ols" as const,
+      regressionOutcome: "outcome",
+      regressionPredictors: "predictor",
+      regressionControls: null,
+    };
+    const logisticPatch = nativeRegressionTypeSettingsPatch("logistic");
+    const olsPatch = nativeRegressionTypeSettingsPatch("ols");
+
+    expect(Object.prototype.hasOwnProperty.call(logisticPatch, "regressionPredictors")).toBe(false);
+    expect(Object.prototype.hasOwnProperty.call(olsPatch, "regressionPredictors")).toBe(false);
+    expect({ ...autoSeeded, ...logisticPatch }).toMatchObject({
+      regressionType: "logistic",
+      regressionOutcome: "outcome",
+      regressionPredictors: "predictor",
+      robustSe: "none",
+    });
+
+    const processSettings = {
+      ...autoSeeded,
+      ...nativeRegressionTypeSettingsPatch("process"),
+    };
+    expect(processSettings.regressionPredictors).toBeNull();
+
+    const authoredProcessSettings = {
+      ...processSettings,
+      regressionOutcome: "Y",
+      regressionPredictors: "X,M",
+    };
+    expect({ ...authoredProcessSettings, ...nativeRegressionTypeSettingsPatch("logistic") }).toMatchObject({
+      regressionType: "logistic",
+      regressionOutcome: "Y",
+      regressionPredictors: "X,M",
+      robustSe: "none",
+    });
+  });
+
+  it("does not reprofile an unchanged PROCESS selection after runtime-only setting edits", () => {
+    const key = ["dataset", "fingerprint", "40", "scientific-selection"].join("\0");
+    expect(shouldStartNativeProcessProfile(true, null, true, key, { status: "idle", key: "" })).toBe(true);
+    expect(shouldStartNativeProcessProfile(true, null, true, key, { status: "loading", key })).toBe(false);
+    expect(shouldStartNativeProcessProfile(true, null, true, key, { status: "ready", key })).toBe(false);
+    expect(shouldStartNativeProcessProfile(true, null, true, `${key}-changed`, { status: "ready", key })).toBe(true);
+    expect(shouldStartNativeProcessProfile(true, null, true, key, { status: "failed", key })).toBe(false);
+    const retry = retryNativeProcessProfileState(key);
+    expect(retry).toEqual({ status: "idle", key, profile: null, error: null });
+    expect(shouldStartNativeProcessProfile(true, null, true, key, retry)).toBe(true);
+    expect(shouldStartNativeProcessProfile(true, null, true, key, { status: "ready", key })).toBe(false);
+  });
+
   it("reveals the selected method without moving focus or animating the catalog", () => {
     const scrollIntoView = vi.fn();
 
@@ -115,6 +170,9 @@ describe("NativeCalculationDialog contracts", () => {
 
     const permutation = renderReadyDialog("pls_permutation", { ...settings, permutationSamples: 4_321 });
     expect(permutation).toMatch(/id="nd-calculation-permutations"[^>]*step="1"[^>]*value="4321"/);
+    expect(permutation).toContain("Candidate scope");
+    expect(permutation).toContain("fixed original PLS construct scores");
+    expect(permutation).toContain("no multiplicity adjustment");
     expect(permutation).toMatch(/class="primary" type="submit"/);
   });
 
@@ -205,7 +263,7 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).toContain("Standardized (fixed)");
     expect(markup).toContain("Listwise deletion");
     expect(markup).toContain("Direct and indirect structural predecessors only; the target and unrelated constructs are omitted");
-    expect(markup).toContain("0–100 observed-range scaling of standardized composite scores; no theoretical-range correction");
+    expect(markup).toContain("0-100 observed-range scaling of standardized composite scores; no theoretical-range correction");
     expect(markup).toContain("Start importance-performance analysis");
     expect(markup).not.toContain('id="nd-calculation-weighting"');
     expect(markup).not.toContain('id="nd-calculation-preprocessing"');

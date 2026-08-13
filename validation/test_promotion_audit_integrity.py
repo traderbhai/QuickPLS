@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import sys
 import tempfile
 import unittest
@@ -242,6 +243,372 @@ class ReleaseArtifactIntegrityTests(unittest.TestCase):
 
 
 class StaticPromotionScriptTests(unittest.TestCase):
+    def test_native_randomization_catalog_uses_exact_semantic_scope_contract(self) -> None:
+        source = (VALIDATION / "v247_tauri_native_acceptance.mjs").read_text(encoding="utf-8")
+        for token in (
+            r"/single-model Freedman(?:\u2013|-|\s)Lane randomization/i.test(pathRandomizationDescription)",
+            r"/structural paths/i.test(pathRandomizationDescription)",
+            r"/fixed original PLS construct scores/i.test(pathRandomizationDescription)",
+            r"/unadjusted pathwise p values/i.test(pathRandomizationDescription)",
+            r"/\bMGA\b|\bMICOM\b/i.test(pathRandomizationDescription)",
+            "did not preserve its required single-model Freedman-Lane structural-path, fixed-score, unadjusted pathwise scope, or mentioned MGA/MICOM",
+        ):
+            self.assertIn(token, source)
+        self.assertNotIn(
+            r"randomization inference/i.test(pathRandomizationDescription)",
+            source,
+        )
+
+        valid = (
+            "Structural Path Randomization Run candidate single-model Freedman-Lane "
+            "randomization for structural paths using fixed original PLS construct scores "
+            "and unadjusted pathwise p values."
+        )
+
+        def preserves_scope(description: str) -> bool:
+            return (
+                re.search(r"single-model Freedman(?:\u2013|-|\s)Lane randomization", description, re.IGNORECASE)
+                is not None
+                and re.search(r"structural paths", description, re.IGNORECASE) is not None
+                and re.search(r"fixed original PLS construct scores", description, re.IGNORECASE) is not None
+                and re.search(r"unadjusted pathwise p values", description, re.IGNORECASE) is not None
+                and re.search(r"\bMGA\b|\bMICOM\b", description, re.IGNORECASE) is None
+            )
+
+        self.assertTrue(preserves_scope(valid))
+        for mutation in (
+            valid.replace("single-model Freedman-Lane randomization", "path randomization"),
+            valid.replace("structural paths", "parameters"),
+            valid.replace("fixed original PLS construct scores", "construct scores"),
+            valid.replace("unadjusted pathwise p values", "p values"),
+            f"{valid} This is MGA.",
+            f"{valid} This is MICOM.",
+        ):
+            self.assertFalse(preserves_scope(mutation), mutation)
+
+    def test_native_recent_project_selection_binds_exact_name_and_current_path(self) -> None:
+        source = (VALIDATION / "v247_tauri_native_acceptance.mjs").read_text(encoding="utf-8")
+        for token in (
+            "function exactRecentProjectRow(projectName, projectPath)",
+            "Recent-project selection for ${projectName} requires an exact project path.",
+            'page.locator("strong").filter({ hasText: exactVisibleText(projectName) })',
+            'page.locator("small").filter({ hasText: exactVisibleText(projectPath) })',
+            "async function openRecentProject(projectName, projectPath)",
+            "exactRecentProjectRow(mgaProjectName, mgaProjectPath)",
+        ):
+            self.assertIn(token, source)
+
+        def unscoped_open_calls(candidate: str) -> list[str]:
+            return re.findall(
+                r"await openRecentProject\(\s*[^,\n()]+\s*\);",
+                candidate,
+            )
+
+        self.assertEqual(unscoped_open_calls(source), [])
+        mutated = source.replace(
+            "openRecentProject(mgaProjectName, mgaProjectPath)",
+            "openRecentProject(mgaProjectName)",
+            1,
+        )
+        self.assertEqual(
+            unscoped_open_calls(mutated),
+            ["await openRecentProject(mgaProjectName);"],
+        )
+
+    def test_native_mga_catalog_reuses_the_canonical_method_manifest(self) -> None:
+        source = (VALIDATION / "v247_tauri_native_acceptance.mjs").read_text(encoding="utf-8")
+        contract = "JSON.stringify(mgaMethodNames) !== JSON.stringify(expectedOptionLabels)"
+        self.assertIn(contract, source)
+        self.assertIn(
+            "did not preserve the canonical ${expectedOptionLabels.length}-method catalog with the joint MICOM/MGA entry",
+            source,
+        )
+        self.assertNotIn("const expectedMgaMethodNames = [", source)
+        self.assertNotIn("did not expose exactly ten truthful methods", source)
+
+        mutated = source.replace(contract, "mgaMethodNames.length !== 10", 1)
+        self.assertNotIn(contract, mutated)
+        self.assertIn("mgaMethodNames.length !== 10", mutated)
+
+    def test_focused_dialogs_reuse_the_canonical_method_count(self) -> None:
+        source = (VALIDATION / "v247_tauri_native_acceptance.mjs").read_text(encoding="utf-8")
+        for dialog in ("cbsemDialog", "olsDialog", "pcaDialog"):
+            contract = (
+                f"evidence.checks.{dialog}.catalogCount !== expectedOptionLabels.length"
+            )
+            self.assertIn(contract, source)
+            mutated = source.replace(contract, f"evidence.checks.{dialog}.catalogCount !== 12", 1)
+            self.assertNotIn(contract, mutated)
+            self.assertIn(f"evidence.checks.{dialog}.catalogCount !== 12", mutated)
+
+        self.assertNotRegex(source, r"catalogCount !== (?:12|13)\b")
+
+    def test_native_mga_archive_inspection_requires_typed_schema_v3_config(self) -> None:
+        source = (VALIDATION / "v247_tauri_native_acceptance.mjs").read_text(encoding="utf-8")
+        for token in (
+            "const methodConfig = recipe?.method_config;",
+            '"configural_invariance_confirmed",',
+            '"group_column",',
+            '"methods",',
+            '"permutation_samples",',
+            'JSON.stringify(methodConfig.methods) === JSON.stringify(["micom", "mga_permutation"])',
+            "contract.recipe?.schemaVersion !== 3",
+            'contract.recipe?.methodConfigKind !== "mga"',
+            "contract.recipe?.groupPermutationSamples !== mgaRuntimePermutationSamples",
+            "contract.recipe?.configuralConfirmed !== true",
+        ):
+            self.assertIn(token, source)
+        for legacy_key in (
+            "recipe.metadata?.group_methods",
+            "recipe.metadata?.group_permutation_samples",
+            "recipe.metadata?.micom_configural_confirmed",
+            "recipe.metadata?.mga_group_column",
+            "recipe.metadata?.mga_group_a",
+            "recipe.metadata?.mga_group_b",
+        ):
+            self.assertNotIn(legacy_key, source)
+
+        typed_declaration = "const methodConfig = recipe?.method_config;"
+        typed_declaration_count = source.count(typed_declaration)
+        self.assertGreaterEqual(typed_declaration_count, 1)
+        mutated = source.replace(typed_declaration, "const methodConfig = recipe?.metadata;", 1)
+        self.assertEqual(mutated.count(typed_declaration), typed_declaration_count - 1)
+        self.assertEqual(mutated.count("const methodConfig = recipe?.metadata;"), 1)
+
+    def test_native_current_archive_inspectors_do_not_execute_free_form_metadata(self) -> None:
+        source = (VALIDATION / "v247_tauri_native_acceptance.mjs").read_text(encoding="utf-8")
+        legacy_tokens = (
+            "recipe.metadata?.ipma_targets",
+            "recipe.metadata?.nca_x",
+            "recipe.metadata?.nca_y",
+            "recipe.metadata?.nca_ceiling",
+            "recipe.metadata?.nca_permutation_samples",
+            "recipe.metadata?.pca_variables",
+            "recipe.metadata?.pca_component_rule",
+            "recipe.metadata?.pca_variance_threshold",
+            "recipe.metadata?.regression_type",
+            "recipe.metadata?.regression_outcome",
+            "recipe.metadata?.regression_predictors",
+            "recipe.metadata?.regression_controls",
+            "recipe.metadata?.robust_se",
+            "recipe.metadata?.cbsem_model_type",
+            "recipe.metadata?.cbsem_estimator",
+            "recipe.metadata?.cbsem_input",
+            "recipe.metadata?.cbsem_mean_structure",
+        )
+        for token in legacy_tokens:
+            self.assertNotIn(token, source)
+        for token in (
+            "ipmaTargets: methodConfig?.targets ?? null",
+            "ncaX: methodConfig?.condition ?? null",
+            "ncaPermutationSamples: methodConfig?.permutation_samples ?? null",
+            "variables: methodConfig?.variables ?? null",
+            "componentRule: retention?.rule ?? null",
+            "regressionType: regressionModel?.type ?? null",
+            "robustSe: regressionModel?.robust_se ?? null",
+            "modelType: methodConfig?.model_type ?? null",
+            "methodBootstrapSamples: methodConfig?.bootstrap_samples ?? null",
+        ):
+            self.assertIn(token, source)
+
+        mutation = source.replace(
+            "ipmaTargets: methodConfig?.targets ?? null",
+            "ipmaTargets: recipe.metadata?.ipma_targets ?? null",
+            1,
+        )
+        self.assertTrue(any(token in mutation for token in legacy_tokens))
+
+    def test_gsca_archive_accepts_only_absent_or_empty_legacy_analysis_shells(self) -> None:
+        source = (VALIDATION / "v247_tauri_native_acceptance.mjs").read_text(encoding="utf-8")
+        for shell in ("mediation", "moderation"):
+            absent = f"estimation?.{shell} == null"
+            empty = (
+                f"Array.isArray(estimation.{shell}.estimates) "
+                f"&& estimation.{shell}.estimates.length === 0"
+            )
+            self.assertIn(absent, source)
+            self.assertIn(empty, source)
+
+            mutated = source.replace(absent, "true", 1)
+            self.assertNotIn(absent, mutated)
+            self.assertIn(empty, mutated)
+
+        self.assertNotIn("estimation?.mediation?.estimates?.length ?? -1", source)
+        self.assertNotIn("estimation?.moderation?.estimates?.length ?? -1", source)
+
+    def test_standard_logistic_archive_does_not_reference_bootstrap_witness(self) -> None:
+        source = (VALIDATION / "v247_tauri_native_acceptance.mjs").read_text(encoding="utf-8")
+        logistic_inspector = source[
+            source.index("async function inspectSavedLogisticArchive") : source.index(
+                "function exactZeroBasedPartition"
+            )
+        ]
+        self.assertNotIn("witness", logistic_inspector)
+        self.assertIn("resultCount: project.results?.length ?? null", logistic_inspector)
+        self.assertIn("recipeCount: project.recipes?.length ?? null", logistic_inspector)
+
+        mutated = logistic_inspector.replace(
+            "recipeCount: project.recipes?.length ?? null,",
+            "recipeCount: project.recipes?.length ?? null,\n      witnessCount: witness ? 1 : 0,",
+            1,
+        )
+        self.assertIn("witnessCount: witness ? 1 : 0", mutated)
+
+    def test_native_nca_caption_matches_the_ascii_product_contract(self) -> None:
+        source = (VALIDATION / "v247_tauri_native_acceptance.mjs").read_text(encoding="utf-8")
+        contract = 'plotContract.captionPair !== "x -> y"'
+        self.assertIn(contract, source)
+        self.assertNotIn(r'plotContract.captionPair !== "x \u2192 y"', source)
+
+        mutated = source.replace(contract, r'plotContract.captionPair !== "x \u2192 y"', 1)
+        self.assertNotIn(contract, mutated)
+        self.assertIn(r'plotContract.captionPair !== "x \u2192 y"', mutated)
+
+    def test_native_reopen_catalog_uses_frozen_catalog_identity(self) -> None:
+        source = (VALIDATION / "v247_tauri_native_acceptance.mjs").read_text(encoding="utf-8")
+        self.assertIn(
+            "reopenedOptionLabels.length !== expectedOptionLabels.length",
+            source,
+        )
+        self.assertIn(
+            "JSON.stringify(reopenedOptionLabels) !== JSON.stringify(expectedOptionLabels)",
+            source,
+        )
+        self.assertIn(
+            "expected ${expectedOptionLabels.length}-method catalog: ${reopenedOptionLabels.join",
+            source,
+        )
+        self.assertNotIn(
+            'plscListbox.getByRole("option").count() !== 10',
+            source,
+        )
+
+    def test_fast_gsca_logistic_plsc_wpls_and_prediction_lifecycle_transitions_require_completed_run_proof(self) -> None:
+        source = (VALIDATION / "v247_tauri_native_acceptance.mjs").read_text(encoding="utf-8")
+        self.assertIn(
+            "{ allowTerminalTransitionAfterCapture = false } = {}",
+            source,
+        )
+        self.assertIn(
+            "if (!stillActive && !allowTerminalTransitionAfterCapture)",
+            source,
+        )
+        self.assertEqual(
+            source.count("{ allowTerminalTransitionAfterCapture: true }"),
+            7,
+        )
+        for method_label in (
+            "Structural Path Randomization 10,000-permutation run",
+            "GSCA",
+            "binary logistic regression",
+            "Consistent PLS",
+            "Weighted PLS",
+            "PLSpredict / CVPAT",
+        ):
+            self.assertIn(
+                f'"{method_label}",\n    {{ allowTerminalTransitionAfterCapture: true }},',
+                source,
+            )
+        self.assertIn(
+            "evidence.checks.logisticProgress.completedRunProof = {",
+            source,
+        )
+        self.assertIn(
+            'matched: logisticRunLabel === "Binary Logistic Regression run"',
+            source,
+        )
+        self.assertIn(
+            "if (!evidence.checks.logisticProgress.completedRunProof.matched)",
+            source,
+        )
+        self.assertIn(
+            "evidence.checks.gscaProgress.completedRunProof = {",
+            source,
+        )
+        self.assertIn(
+            "if (!evidence.checks.gscaProgress.completedRunProof.matched)",
+            source,
+        )
+        self.assertIn(
+            "evidence.checks.plscProgress.completedRunProof = {",
+            source,
+        )
+        self.assertIn(
+            "if (!evidence.checks.plscProgress.completedRunProof.matched)",
+            source,
+        )
+        self.assertIn(
+            "evidence.checks.wplsProgress.completedRunProof = {",
+            source,
+        )
+        self.assertIn(
+            "if (!evidence.checks.wplsProgress.completedRunProof.matched)",
+            source,
+        )
+        self.assertIn(
+            "evidence.checks.predictionProgress.completedRunProof = {",
+            source,
+        )
+        self.assertIn(
+            "if (!evidence.checks.predictionProgress.completedRunProof.matched)",
+            source,
+        )
+        self.assertIn(
+            "evidence.checks.predictionV2Progress.completedRunProof = {",
+            source,
+        )
+        self.assertIn(
+            "if (!evidence.checks.predictionV2Progress.completedRunProof.matched)",
+            source,
+        )
+        self.assertIn(
+            'predictionCaptureName(93, "running"),\n    "PLSpredict / CVPAT",\n    { allowTerminalTransitionAfterCapture: true },',
+            source,
+        )
+
+    def test_prediction_result_identity_uses_exact_cells_not_concatenated_text(self) -> None:
+        source = (VALIDATION / "v247_tauri_native_acceptance.mjs").read_text(encoding="utf-8")
+        self.assertIn(
+            'const displayedIndicators = indicatorCells.map((cells) => cells[1] ?? "");',
+            source,
+        )
+        self.assertIn(
+            'JSON.stringify(displayedIndicators) !== JSON.stringify(["y1", "y2"])',
+            source,
+        )
+        self.assertIn(
+            ".every((cell) => !/construct-/i.test(cell));",
+            source,
+        )
+        self.assertNotIn("!/\\by1\\b/.test(indicatorText)", source)
+        self.assertNotIn("!/\\by2\\b/.test(indicatorText)", source)
+
+    def test_deleted_source_model_routes_historical_result_to_edit_data(self) -> None:
+        source = (VALIDATION / "v247_tauri_native_acceptance.mjs").read_text(encoding="utf-8")
+        self.assertIn(
+            'const resultDataCommand = page.locator(".nd-commandbar button").filter({ hasText: /^Edit Data$/ });',
+            source,
+        )
+        self.assertIn(
+            "const editModelCount = await resultModelCommand.count();",
+            source,
+        )
+        self.assertIn(
+            "const editDataCount = await resultDataCommand.count();",
+            source,
+        )
+        self.assertIn("editDataVisible: editDataCount === 1", source)
+        self.assertIn("editDataEnabled: editDataCount === 1", source)
+        self.assertIn(
+            "workspaceExplorerHistoricalResult.editModelCount !== 0",
+            source,
+        )
+        self.assertIn(
+            "workspaceExplorerHistoricalResult.editDataCount !== 1",
+            source,
+        )
+        self.assertNotIn("editDeletedModelDisabled", source)
+
     def test_targeted_promotion_scripts_have_no_literal_passing_checks(self) -> None:
         targets = [
             "logistic_method_promotion_audit.py",

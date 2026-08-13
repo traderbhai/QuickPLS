@@ -16,7 +16,12 @@ import {
   nativeLogisticResultProjection,
   nativeLegacyLogisticResultProjection,
   nativeRegressionBootstrapResultProjection,
+  nativeProcessResultProjection,
 } from "./nativeResults";
+import {
+  NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING,
+  nativeStructuralPathRandomizationProjection,
+} from "./nativeStructuralPathRandomization";
 
 export interface NativeRunSettingApplicability {
   usesSeed: boolean;
@@ -27,16 +32,17 @@ export interface NativeRunSettingApplicability {
 export function nativeRunSettingApplicability(run: AnalysisRun): NativeRunSettingApplicability {
   const settings = run.provenance?.settings;
   const usesBootstrap = (settings?.bootstrap_samples ?? 0) > 0 || Boolean(run.bootstrap);
-  const usesPermutation = (settings?.permutation_samples ?? 0) > 0 || Boolean(run.permutation);
+  const usesPermutation = nativeStructuralPathRandomizationProjection(run) !== null;
   const usesGroupPermutation = run.provenance?.method === "mga" && Boolean(run.result?.mga_permutation);
   const usesNcaPermutation = run.provenance?.method === "nca" && run.result?.nca?.method_version === "nca_v2";
   const usesPredictionResampling = currentPredictionResult(run) !== null;
+  const usesProcess = nativeProcessResultProjection(run) !== null;
   const usesOlsConfidence = nativeOlsResultProjection(run) !== null;
   const usesLogisticConfidence = nativeLogisticResultProjection(run) !== null
     || nativeLegacyLogisticResultProjection(run) !== null;
   return {
     usesSeed: usesBootstrap || usesPermutation || usesGroupPermutation || usesNcaPermutation || usesPredictionResampling,
-    usesConfidenceLevel: usesBootstrap || usesGroupPermutation || usesPredictionResampling || usesOlsConfidence || usesLogisticConfidence,
+    usesConfidenceLevel: usesBootstrap || usesGroupPermutation || usesPredictionResampling || usesOlsConfidence || usesLogisticConfidence || usesProcess,
     usesWorkers: usesBootstrap || usesPermutation,
   };
 }
@@ -52,8 +58,11 @@ export function nativeRunProvenanceTable(
   const logistic = nativeLogisticResultProjection(run);
   const legacyLogistic = nativeLegacyLogisticResultProjection(run);
   const regressionBootstrap = nativeRegressionBootstrapResultProjection(run);
+  const process = nativeProcessResultProjection(run);
   const cbsem = nativeCbsemResultProjection(run);
   const gsca = nativeGscaResultProjection(run);
+  const structuralPathRandomization = nativeStructuralPathRandomizationProjection(run);
+  const effectiveStatus = structuralPathRandomization ? "experimental" : status;
   const prediction = currentPredictionResult(run);
   const rows: string[][] = [
     ["Run", run.name],
@@ -89,6 +98,37 @@ export function nativeRunProvenanceTable(
         ["Missing data", "Listwise deletion"],
         ["Maximum eigensolver iterations", String(run.provenance.settings.max_iterations)],
         ["Eigensolver stop criterion", String(run.provenance.settings.tolerance)],
+      );
+    } else if (process) {
+      rows.push(
+        ["Outcome", process.outcome],
+        ["Predictors in canonical graph order", process.predictors.join(", ")],
+        ["Controls in every equation", process.controls.length ? process.controls.join(", ") : "None"],
+        ["Global complete cases", String(process.observations)],
+        ["Rows omitted listwise", String(process.omittedObservations)],
+        ["Directed paths", String(process.graph.paths.length)],
+        ["Moderated paths", String(process.graph.moderations.length)],
+        ["OLS equations", String(process.graph.equations.length)],
+        ["Estimator", "Raw observed-variable OLS equations with intercept"],
+        ["Covariance", "HC3"],
+        ["Coefficient inference", "Student-t residual df; fixed two-sided 95% confidence intervals"],
+        ["Continuous product centering", "Equation complete-case mean within each original, resample, or delete-one fit"],
+        ["Moderator probes", "Original-sample raw mean - SD, mean, mean + SD for continuous moderators; raw 0/1 for binary moderators"],
+        ["Plots", "Persisted engine-produced raw points and confidence intervals; no UI scientific recomputation"],
+        ["Missing data", "One global listwise-complete sample"],
+      );
+      if (process.bootstrap) rows.push(
+        ["PROCESS bootstrap method", process.bootstrap.method_version],
+        ["PROCESS bootstrap sampling", "Indexed complete-case resampling with replacement"],
+        ["PROCESS bootstrap stream", process.bootstrap.stream_token],
+        ["PROCESS bootstrap interval policy", "Percentile primary; BCa conditional on every delete-one fit"],
+        ["PROCESS bootstrap test reference", "Two-sided standard-normal bootstrap ratio"],
+        ["Requested PROCESS bootstrap replicates", String(process.bootstrap.requested_replicates)],
+        ["Usable PROCESS bootstrap replicates", String(process.bootstrap.usable_replicates)],
+        ["Failed PROCESS bootstrap replicates", String(process.bootstrap.failed_replicates.length)],
+        ["PROCESS delete-one fits usable / required", `${process.bootstrap.usable_jackknife_cases} / ${process.bootstrap.jackknife_cases}`],
+        ["PROCESS bootstrap workers", String(process.bootstrap.workers)],
+        ["PROCESS bootstrap reproducibility", "Fixed seed with deterministic worker-invariant indexed streams and original raw probe grid"],
       );
     } else if (ols) {
       rows.push(
@@ -197,6 +237,17 @@ export function nativeRunProvenanceTable(
         ["Regression bootstrap reproducibility", "Fixed seed with deterministic worker-invariant indexed streams"],
       );
     }
+    if (structuralPathRandomization) {
+      rows.push(
+        ["Randomization method", structuralPathRandomization.methodVersion],
+        ["Randomization operation", structuralPathRandomization.operation],
+        ["Randomized structural paths", String(structuralPathRandomization.parameters.length)],
+        ["Requested path permutations", String(structuralPathRandomization.permutations)],
+        ["Randomization estimand", "Structural path coefficients conditional on fixed original PLS construct scores"],
+        ["Pathwise probability", "Conditional/approximate two-sided plus-one probability under exchangeable reduced-model residuals; no multiplicity adjustment"],
+        ["Qualification status", "Internal candidate/experimental product label; method-specific qualification evidence is tracked separately"],
+      );
+    }
     if (applicability.usesConfidenceLevel) {
       rows.push([
         prediction ? "CVPAT confidence level" : "Confidence level",
@@ -247,8 +298,10 @@ export function nativeRunProvenanceTable(
   return {
     id: "run_provenance",
     title: "Run provenance",
-    status,
-    warning: null,
+    status: effectiveStatus,
+    warning: structuralPathRandomization
+      ? NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING
+      : null,
     columns: ["Field", "Value"],
     rows,
   };

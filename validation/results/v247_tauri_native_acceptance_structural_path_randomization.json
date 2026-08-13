@@ -1,0 +1,980 @@
+{
+    "schema_version":  "quickpls.packaged_acceptance.v1",
+    "feature_id":  "qpls3.inference.structural_path_randomization",
+    "method_version":  "freedman_lane_permutation_v1",
+    "catalogue_snapshot_date":  "2026-08-12",
+    "acceptance_scope":  "structural_path_randomization",
+    "passed":  true,
+    "generatedAt":  "2026-08-13T06:45:59.514Z",
+    "endpoint":  "http://127.0.0.1:9222",
+    "runtime":  "tauri-webview2-cdp",
+    "focusedRun":  {
+                       "scope":  "structural_path_randomization",
+                       "priorGeneratedAt":  null,
+                       "completedAt":  "2026-08-13T06:46:44.481Z"
+                   },
+    "checks":  {
+                   "runtimePreflight":  {
+                                            "passed":  true,
+                                            "expectedOrigin":  "http://tauri.localhost",
+                                            "enumeratedPages":  [
+                                                                    {
+                                                                        "index":  0,
+                                                                        "url":  "http://tauri.localhost/",
+                                                                        "origin":  "http://tauri.localhost",
+                                                                        "title":  "QuickPLS",
+                                                                        "shellVisible":  true,
+                                                                        "tauriRuntime":  true
+                                                                    }
+                                                                ],
+                                            "qualifyingPageCount":  1,
+                                            "preReload":  {
+                                                              "index":  0,
+                                                              "url":  "http://tauri.localhost/",
+                                                              "origin":  "http://tauri.localhost",
+                                                              "title":  "QuickPLS",
+                                                              "shellVisible":  true,
+                                                              "tauriRuntime":  true
+                                                          },
+                                            "reloadCount":  1,
+                                            "postReload":  {
+                                                               "index":  0,
+                                                               "url":  "http://tauri.localhost/",
+                                                               "origin":  "http://tauri.localhost",
+                                                               "title":  "QuickPLS",
+                                                               "shellVisible":  true,
+                                                               "tauriRuntime":  true
+                                                           },
+                                            "sameOrigin":  true
+                                        },
+                   "structuralPathRandomizationFixtureProvisioning":  {
+                                                                          "passed":  true,
+                                                                          "fixture":  {
+                                                                                          "path":  "D:\\QuickPLS\\validation\\results\\mga_reference.csv",
+                                                                                          "columns":  [
+                                                                                                          "group",
+                                                                                                          "x1",
+                                                                                                          "x2",
+                                                                                                          "z1",
+                                                                                                          "z2",
+                                                                                                          "y1",
+                                                                                                          "y2"
+                                                                                                      ],
+                                                                                          "rows":  180,
+                                                                                          "groups":  {
+                                                                                                         "A":  90,
+                                                                                                         "B":  90
+                                                                                                     },
+                                                                                          "deterministic":  true
+                                                                                      },
+                                                                          "project":  {
+                                                                                          "sourceCsv":  "D:\\QuickPLS\\validation\\results\\mga_reference.csv",
+                                                                                          "project":  "D:\\QuickPLS\\validation\\results\\v247-native-structural-path-randomization-1786603559512-56988.qpls",
+                                                                                          "projectName":  "Native Structural Path Randomization Acceptance",
+                                                                                          "cli":  "D:\\QuickPLS\\target\\release\\qpls.exe",
+                                                                                          "stdout":  "created D:\\QuickPLS\\validation\\results\\v247-native-structural-path-randomization-1786603559512-56988.qpls",
+                                                                                          "stderr":  ""
+                                                                                      },
+                                                                          "model_name":  "Structural Path Randomization Model",
+                                                                          "status":  "ReadyNative Structural Path Randomization Acceptancemga_reference.csv180 cases0 constructsDataOffline",
+                                                                          "columns":  [
+                                                                                          "#",
+                                                                                          "group",
+                                                                                          "x1",
+                                                                                          "x2",
+                                                                                          "z1",
+                                                                                          "z2",
+                                                                                          "y1",
+                                                                                          "y2"
+                                                                                      ],
+                                                                          "observations":  180,
+                                                                          "initialArchive":  {
+                                                                                                 "manifestEngineVersion":  "2.46.0",
+                                                                                                 "packageVersion":  "2.46.0",
+                                                                                                 "models":  0,
+                                                                                                 "recipes":  0,
+                                                                                                 "results":  0,
+                                                                                                 "activeModelId":  null,
+                                                                                                 "nodes":  0,
+                                                                                                 "edges":  0
+                                                                                             }
+                                                                      },
+                   "runtime":  {
+                                   "title":  "QuickPLS",
+                                   "tauriRuntime":  true,
+                                   "viewport":  {
+                                                    "width":  1536,
+                                                    "height":  794,
+                                                    "dpr":  1.25
+                                                },
+                                   "surface":  "launcher"
+                               },
+                   "structuralPathRandomizationSetup":  {
+                                                            "passed":  true,
+                                                            "model":  {
+                                                                          "creation":  {
+                                                                                           "projectName":  "Native Structural Path Randomization Acceptance",
+                                                                                           "importedEditableModels":  0,
+                                                                                           "name":  "Structural Path Randomization Model",
+                                                                                           "constructs":  0,
+                                                                                           "structuralPaths":  0
+                                                                                       },
+                                                                          "constructs":  3,
+                                                                          "constructLabels":  [
+                                                                                                  "X",
+                                                                                                  "Z",
+                                                                                                  "Y"
+                                                                                              ],
+                                                                          "assignedIndicators":  6,
+                                                                          "structuralPaths":  2,
+                                                                          "unassignedGroupColumn":  true
+                                                                      },
+                                                            "catalogCount":  14,
+                                                            "selectedMethod":  "Structural Path Randomization",
+                                                            "permutations":  {
+                                                                                 "count":  1,
+                                                                                 "type":  "number",
+                                                                                 "minimum":  "99",
+                                                                                 "maximum":  "10000",
+                                                                                 "step":  "1",
+                                                                                 "value":  "10000"
+                                                                             },
+                                                            "workers":  {
+                                                                            "count":  1,
+                                                                            "type":  "number",
+                                                                            "minimum":  "1",
+                                                                            "maximum":  "64",
+                                                                            "value":  "4"
+                                                                        },
+                                                            "seed":  {
+                                                                         "count":  1,
+                                                                         "type":  "number",
+                                                                         "minimum":  "0",
+                                                                         "maximum":  "4294967295",
+                                                                         "value":  "20260718"
+                                                                     },
+                                                            "bootstrapControls":  0,
+                                                            "groupControls":  0,
+                                                            "scopeLabel":  "Candidate scope",
+                                                            "scope":  "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only.",
+                                                            "blockers":  [
+
+                                                                         ],
+                                                            "startLabel":  "Start path randomization",
+                                                            "startEnabled":  true,
+                                                            "feature_id":  "qpls3.inference.structural_path_randomization",
+                                                            "method_version":  "freedman_lane_permutation_v1",
+                                                            "catalogue_snapshot_date":  "2026-08-12"
+                                                        },
+                   "structuralPathRandomizationCancellation":  {
+                                                                   "passed":  true,
+                                                                   "activeLifecycleCaptured":  true,
+                                                                   "activeState":  {
+                                                                                       "ariaBusy":  "true",
+                                                                                       "status":  "queued",
+                                                                                       "phase":  "Queued",
+                                                                                       "message":  "Native engine accepted the calculation job.",
+                                                                                       "progressValue":  "0",
+                                                                                       "progressMax":  "100",
+                                                                                       "logEntries":  3
+                                                                                   },
+                                                                   "cancelButtonCount":  1,
+                                                                   "cancelButtonEnabled":  true,
+                                                                   "cancelClickDispatched":  true,
+                                                                   "terminalOutcome":  "cancelled",
+                                                                   "completionWonRace":  false,
+                                                                   "cancelledState":  {
+                                                                                          "ariaBusy":  "false",
+                                                                                          "status":  "cancelled",
+                                                                                          "phase":  "Cancelled",
+                                                                                          "message":  "Calculation cancelled.",
+                                                                                          "progressValue":  "0",
+                                                                                          "progressMax":  "100",
+                                                                                          "logEntries":  5,
+                                                                                          "logMessages":  [
+                                                                                                              "Calculation cancelled.",
+                                                                                                              "Cancellation requested.",
+                                                                                                              "Native calculation job started.",
+                                                                                                              "Frontend readiness checks passed.",
+                                                                                                              "Structural Path Randomization requested."
+                                                                                                          ]
+                                                                                      },
+                                                                   "cancelledMessage":  "Calculation cancelled.",
+                                                                   "cancellationLogNewest":  [
+                                                                                                 "Calculation cancelled.",
+                                                                                                 "Cancellation requested."
+                                                                                             ],
+                                                                   "cancellationLogExact":  true,
+                                                                   "archiveBeforeSnapshot":  {
+                                                                                                 "phase":  "before",
+                                                                                                 "artifact":  {
+                                                                                                                  "path":  "validation/results/v247-native-structural-path-randomization-1786603559512-56988-cancellation-before.qpls",
+                                                                                                                  "size":  12168,
+                                                                                                                  "sha256":  "aa87371a50ecf25f6e998a5c74635851e190105ae201dbf069d75d40075cdf3e"
+                                                                                                              },
+                                                                                                 "datasetCount":  1,
+                                                                                                 "modelCount":  1,
+                                                                                                 "modelName":  "Structural Path Randomization Model",
+                                                                                                 "constructLabels":  [
+                                                                                                                         "X",
+                                                                                                                         "Z",
+                                                                                                                         "Y"
+                                                                                                                     ],
+                                                                                                 "pathLabels":  [
+                                                                                                                    "X -\u003e Y",
+                                                                                                                    "Z -\u003e Y"
+                                                                                                                ],
+                                                                                                 "recipeCount":  0,
+                                                                                                 "resultCount":  0,
+                                                                                                 "runCount":  0,
+                                                                                                 "recipeIds":  [
+
+                                                                                                               ],
+                                                                                                 "resultIds":  [
+
+                                                                                                               ],
+                                                                                                 "runIds":  [
+
+                                                                                                            ],
+                                                                                                 "sourcePath":  "validation/results/v247-native-structural-path-randomization-1786603559512-56988.qpls",
+                                                                                                 "sourceSize":  12168,
+                                                                                                 "sourceSha256":  "aa87371a50ecf25f6e998a5c74635851e190105ae201dbf069d75d40075cdf3e",
+                                                                                                 "sourceMtimeNsBefore":  "1786603563242987000",
+                                                                                                 "sourceMtimeNsAfter":  "1786603563242987000",
+                                                                                                 "sourceStableDuringCopy":  true,
+                                                                                                 "snapshotMatchesSource":  true
+                                                                                             },
+                                                                   "archiveAfterSnapshot":  {
+                                                                                                "phase":  "after",
+                                                                                                "artifact":  {
+                                                                                                                 "path":  "validation/results/v247-native-structural-path-randomization-1786603559512-56988-cancellation-after.qpls",
+                                                                                                                 "size":  12168,
+                                                                                                                 "sha256":  "aa87371a50ecf25f6e998a5c74635851e190105ae201dbf069d75d40075cdf3e"
+                                                                                                             },
+                                                                                                "datasetCount":  1,
+                                                                                                "modelCount":  1,
+                                                                                                "modelName":  "Structural Path Randomization Model",
+                                                                                                "constructLabels":  [
+                                                                                                                        "X",
+                                                                                                                        "Z",
+                                                                                                                        "Y"
+                                                                                                                    ],
+                                                                                                "pathLabels":  [
+                                                                                                                   "X -\u003e Y",
+                                                                                                                   "Z -\u003e Y"
+                                                                                                               ],
+                                                                                                "recipeCount":  0,
+                                                                                                "resultCount":  0,
+                                                                                                "runCount":  0,
+                                                                                                "recipeIds":  [
+
+                                                                                                              ],
+                                                                                                "resultIds":  [
+
+                                                                                                              ],
+                                                                                                "runIds":  [
+
+                                                                                                           ],
+                                                                                                "sourcePath":  "validation/results/v247-native-structural-path-randomization-1786603559512-56988.qpls",
+                                                                                                "sourceSize":  12168,
+                                                                                                "sourceSha256":  "aa87371a50ecf25f6e998a5c74635851e190105ae201dbf069d75d40075cdf3e",
+                                                                                                "sourceMtimeNsBefore":  "1786603563242987000",
+                                                                                                "sourceMtimeNsAfter":  "1786603563242987000",
+                                                                                                "sourceStableDuringCopy":  true,
+                                                                                                "snapshotMatchesSource":  true
+                                                                                            },
+                                                                   "archiveSnapshotsByteIdentical":  true,
+                                                                   "zeroResultRecipeRunDelta":  true,
+                                                                   "noPartialResult":  true,
+                                                                   "cancellationSetup":  {
+                                                                                             "catalogCount":  14,
+                                                                                             "selectedMethod":  "Structural Path Randomization",
+                                                                                             "permutations":  {
+                                                                                                                  "count":  1,
+                                                                                                                  "type":  "number",
+                                                                                                                  "minimum":  "99",
+                                                                                                                  "maximum":  "10000",
+                                                                                                                  "step":  "1",
+                                                                                                                  "value":  "10000"
+                                                                                                              },
+                                                                                             "workers":  {
+                                                                                                             "count":  1,
+                                                                                                             "type":  "number",
+                                                                                                             "minimum":  "1",
+                                                                                                             "maximum":  "64",
+                                                                                                             "value":  "1"
+                                                                                                         },
+                                                                                             "seed":  {
+                                                                                                          "count":  1,
+                                                                                                          "type":  "number",
+                                                                                                          "minimum":  "0",
+                                                                                                          "maximum":  "4294967295",
+                                                                                                          "value":  "20260718"
+                                                                                                      },
+                                                                                             "bootstrapControls":  0,
+                                                                                             "groupControls":  0,
+                                                                                             "scopeLabel":  "Candidate scope",
+                                                                                             "scope":  "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only.",
+                                                                                             "blockers":  [
+
+                                                                                                          ],
+                                                                                             "startLabel":  "Start path randomization",
+                                                                                             "startEnabled":  true
+                                                                                         },
+                                                                   "exactFrozenSetupOnRetry":  true,
+                                                                   "retrySetup":  {
+                                                                                      "catalogCount":  14,
+                                                                                      "selectedMethod":  "Structural Path Randomization",
+                                                                                      "permutations":  {
+                                                                                                           "count":  1,
+                                                                                                           "type":  "number",
+                                                                                                           "minimum":  "99",
+                                                                                                           "maximum":  "10000",
+                                                                                                           "step":  "1",
+                                                                                                           "value":  "10000"
+                                                                                                       },
+                                                                                      "workers":  {
+                                                                                                      "count":  1,
+                                                                                                      "type":  "number",
+                                                                                                      "minimum":  "1",
+                                                                                                      "maximum":  "64",
+                                                                                                      "value":  "1"
+                                                                                                  },
+                                                                                      "seed":  {
+                                                                                                   "count":  1,
+                                                                                                   "type":  "number",
+                                                                                                   "minimum":  "0",
+                                                                                                   "maximum":  "4294967295",
+                                                                                                   "value":  "20260718"
+                                                                                               },
+                                                                                      "bootstrapControls":  0,
+                                                                                      "groupControls":  0,
+                                                                                      "scopeLabel":  "Candidate scope",
+                                                                                      "scope":  "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only.",
+                                                                                      "blockers":  [
+
+                                                                                                   ],
+                                                                                      "startLabel":  "Retry path randomization",
+                                                                                      "startEnabled":  true
+                                                                                  },
+                                                                   "completionSetup":  {
+                                                                                           "catalogCount":  14,
+                                                                                           "selectedMethod":  "Structural Path Randomization",
+                                                                                           "permutations":  {
+                                                                                                                "count":  1,
+                                                                                                                "type":  "number",
+                                                                                                                "minimum":  "99",
+                                                                                                                "maximum":  "10000",
+                                                                                                                "step":  "1",
+                                                                                                                "value":  "10000"
+                                                                                                            },
+                                                                                           "workers":  {
+                                                                                                           "count":  1,
+                                                                                                           "type":  "number",
+                                                                                                           "minimum":  "1",
+                                                                                                           "maximum":  "64",
+                                                                                                           "value":  "4"
+                                                                                                       },
+                                                                                           "seed":  {
+                                                                                                        "count":  1,
+                                                                                                        "type":  "number",
+                                                                                                        "minimum":  "0",
+                                                                                                        "maximum":  "4294967295",
+                                                                                                        "value":  "20260718"
+                                                                                                    },
+                                                                                           "bootstrapControls":  0,
+                                                                                           "groupControls":  0,
+                                                                                           "scopeLabel":  "Candidate scope",
+                                                                                           "scope":  "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only.",
+                                                                                           "blockers":  [
+
+                                                                                                        ],
+                                                                                           "startLabel":  "Retry path randomization",
+                                                                                           "startEnabled":  true
+                                                                                       },
+                                                                   "completionSetupExact":  true,
+                                                                   "retryCompleted":  true,
+                                                                   "retryRunId":  "b9826e52-7d63-48b1-b653-066ecc366e92",
+                                                                   "retryNewIdentity":  true
+                                                               },
+                   "structuralPathRandomizationResults":  {
+                                                              "passed":  true,
+                                                              "runId":  "b9826e52-7d63-48b1-b653-066ecc366e92",
+                                                              "selectedRunId":  "b9826e52-7d63-48b1-b653-066ecc366e92",
+                                                              "selectedRunLabel":  "Structural Path Randomization run",
+                                                              "initialSelectedTable":  "model_estimates",
+                                                              "group":  "Inference",
+                                                              "tableId":  "permutation",
+                                                              "title":  "Structural path randomization",
+                                                              "warning":  "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only.",
+                                                              "columns":  [
+                                                                              "Path",
+                                                                              "Original",
+                                                                              "Exceedances",
+                                                                              "Permutations",
+                                                                              "Raw two-sided p"
+                                                                          ],
+                                                              "rows":  [
+                                                                           [
+                                                                               "X -\u003e Y",
+                                                                               "0.6524",
+                                                                               "0",
+                                                                               "10000",
+                                                                               "0.00009999000099990002"
+                                                                           ],
+                                                                           [
+                                                                               "Z -\u003e Y",
+                                                                               "0.5030",
+                                                                               "0",
+                                                                               "10000",
+                                                                               "0.00009999000099990002"
+                                                                           ]
+                                                                       ],
+                                                              "pathOrder":  [
+                                                                                "X -\u003e Y",
+                                                                                "Z -\u003e Y"
+                                                                            ],
+                                                              "plusOneProbabilityGridExact":  true,
+                                                              "noBootstrapTables":  true,
+                                                              "noPlaceholderValues":  true,
+                                                              "activeLifecycle":  {
+                                                                                      "captured":  true,
+                                                                                      "ariaBusy":  "true",
+                                                                                      "status":  "queued",
+                                                                                      "phase":  "Queued",
+                                                                                      "message":  "Native engine accepted the calculation job.",
+                                                                                      "progressValue":  "0",
+                                                                                      "progressMax":  "100",
+                                                                                      "logEntries":  8,
+                                                                                      "postCapture":  {
+                                                                                                          "ariaBusy":  null,
+                                                                                                          "status":  null,
+                                                                                                          "active":  false,
+                                                                                                          "terminalTransitionObserved":  true,
+                                                                                                          "terminalTransitionAllowed":  true
+                                                                                                      }
+                                                                                  },
+                                                              "runDetails":  {
+                                                                                 "properties":  {
+                                                                                                    "Run":  "Structural Path Randomization run",
+                                                                                                    "Method":  "Structural Path Randomization",
+                                                                                                    "Created":  "13/8/2026, 12:16:05 pm",
+                                                                                                    "Recorded seed":  "20260718",
+                                                                                                    "Dataset fingerprint":  "v2:39cda42ad687e77d85dfeea50afff2b3806b8db4f90386c4529104e0671d9b2c",
+                                                                                                    "Recipe":  "0802e18e-1d70-4061-b1a2-3c8e89b7304b",
+                                                                                                    "Engine":  "2.46.0",
+                                                                                                    "Method version":  "pls_pm_v1+pls_mediation_v1+pls_assessment_v7+freedman_lane_permutation_v1",
+                                                                                                    "Weighting":  "path",
+                                                                                                    "Preprocessing":  "standardized"
+                                                                                                },
+                                                                                 "logEntries":  9
+                                                                             }
+                                                          },
+                   "structuralPathRandomizationExport":  {
+                                                             "passed":  true,
+                                                             "xlsxEnabled":  true,
+                                                             "buttonCount":  6,
+                                                             "expectedSheets":  [
+                                                                                    "Structural path randomization",
+                                                                                    "Run provenance"
+                                                                                ],
+                                                             "expectedSharedStrings":  [
+                                                                                           "Structural path randomization",
+                                                                                           "Run provenance",
+                                                                                           "experimental",
+                                                                                           "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only.",
+                                                                                           "Randomization method",
+                                                                                           "freedman_lane_permutation_v1",
+                                                                                           "Randomization operation",
+                                                                                           "pls_pm_freedman_lane_v1",
+                                                                                           "Randomized structural paths",
+                                                                                           "2",
+                                                                                           "Requested path permutations",
+                                                                                           "10000",
+                                                                                           "Randomization estimand",
+                                                                                           "Structural path coefficients conditional on fixed original PLS construct scores",
+                                                                                           "Pathwise probability",
+                                                                                           "Conditional/approximate two-sided plus-one probability under exchangeable reduced-model residuals; no multiplicity adjustment",
+                                                                                           "Qualification status",
+                                                                                           "Internal candidate/experimental product label; method-specific qualification evidence is tracked separately"
+                                                                                       ],
+                                                             "nativeXlsx":  {
+                                                                                "attempted":  true,
+                                                                                "targetPath":  "D:\\QuickPLS\\validation\\results\\structural-path-randomization-v1-20260813-121555545.xlsx",
+                                                                                "helper":  {
+                                                                                               "ready":  {
+                                                                                                             "event":  "ready",
+                                                                                                             "mainWindow":  {
+                                                                                                                                "executable":  "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                                                                                                                                "handle":  18090608,
+                                                                                                                                "pid":  13300,
+                                                                                                                                "title":  "QuickPLS"
+                                                                                                                            },
+                                                                                                             "passed":  true,
+                                                                                                             "phase":  "main_window_binding",
+                                                                                                             "resultsRoot":  "D:\\QuickPLS\\validation\\results",
+                                                                                                             "targetPath":  "D:\\QuickPLS\\validation\\results\\structural-path-randomization-v1-20260813-121555545.xlsx"
+                                                                                                         },
+                                                                                               "completion":  {
+                                                                                                                  "boundControls":  {
+                                                                                                                                        "filenameEditControlId":  1001,
+                                                                                                                                        "saveButtonControlId":  1
+                                                                                                                                    },
+                                                                                                                  "dialog":  {
+                                                                                                                                 "className":  "#32770",
+                                                                                                                                 "directOwner":  18090608,
+                                                                                                                                 "handle":  3999578,
+                                                                                                                                 "pid":  13300,
+                                                                                                                                 "rootOwner":  18090608,
+                                                                                                                                 "title":  "Save As"
+                                                                                                                             },
+                                                                                                                  "event":  "complete",
+                                                                                                                  "mainWindow":  {
+                                                                                                                                     "executable":  "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                                                                                                                                     "handle":  18090608,
+                                                                                                                                     "pid":  13300,
+                                                                                                                                     "title":  "QuickPLS"
+                                                                                                                                 },
+                                                                                                                  "passed":  true,
+                                                                                                                  "phase":  "xlsx_creation_and_readback",
+                                                                                                                  "saveSubmission":  {
+                                                                                                                                         "filenameAfterSet":  "D:\\QuickPLS\\validation\\results\\structural-path-randomization-v1-20260813-121555545.xlsx",
+                                                                                                                                         "filenameBefore":  "quickpls-result-tables",
+                                                                                                                                         "filenameVerified":  true,
+                                                                                                                                         "saveButtonEnabled":  true,
+                                                                                                                                         "saveButtonVisible":  true,
+                                                                                                                                         "setAttempts":  [
+                                                                                                                                                             {
+                                                                                                                                                                 "attempt":  1,
+                                                                                                                                                                 "settledReads":  [
+                                                                                                                                                                                      "D:\\QuickPLS\\validation\\results\\structural-path-randomization-v1-20260813-121555545.xlsx",
+                                                                                                                                                                                      "D:\\QuickPLS\\validation\\results\\structural-path-randomization-v1-20260813-121555545.xlsx"
+                                                                                                                                                                                  ]
+                                                                                                                                                             }
+                                                                                                                                                         ],
+                                                                                                                                         "submissionMethod":  "BM_CLICK",
+                                                                                                                                         "targetText":  "D:\\QuickPLS\\validation\\results\\structural-path-randomization-v1-20260813-121555545.xlsx"
+                                                                                                                                     },
+                                                                                                                  "targetPath":  "D:\\QuickPLS\\validation\\results\\structural-path-randomization-v1-20260813-121555545.xlsx",
+                                                                                                                  "workbook":  {
+                                                                                                                                   "path":  "D:\\QuickPLS\\validation\\results\\structural-path-randomization-v1-20260813-121555545.xlsx",
+                                                                                                                                   "requiredSharedStrings":  [
+                                                                                                                                                                 "Structural path randomization",
+                                                                                                                                                                 "Run provenance",
+                                                                                                                                                                 "experimental",
+                                                                                                                                                                 "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only.",
+                                                                                                                                                                 "Randomization method",
+                                                                                                                                                                 "freedman_lane_permutation_v1",
+                                                                                                                                                                 "Randomization operation",
+                                                                                                                                                                 "pls_pm_freedman_lane_v1",
+                                                                                                                                                                 "Randomized structural paths",
+                                                                                                                                                                 "2",
+                                                                                                                                                                 "Requested path permutations",
+                                                                                                                                                                 "10000",
+                                                                                                                                                                 "Randomization estimand",
+                                                                                                                                                                 "Structural path coefficients conditional on fixed original PLS construct scores",
+                                                                                                                                                                 "Pathwise probability",
+                                                                                                                                                                 "Conditional/approximate two-sided plus-one probability under exchangeable reduced-model residuals; no multiplicity adjustment",
+                                                                                                                                                                 "Qualification status",
+                                                                                                                                                                 "Internal candidate/experimental product label; method-specific qualification evidence is tracked separately"
+                                                                                                                                                             ],
+                                                                                                                                   "requiredSheets":  [
+                                                                                                                                                          "Structural path randomization",
+                                                                                                                                                          "Run provenance"
+                                                                                                                                                      ],
+                                                                                                                                   "sha256":  "b8004c08f201b141762c445a0c75232e07b2c1f2df3102ae394203bb3d519f1f",
+                                                                                                                                   "sheetNames":  [
+                                                                                                                                                      "Path coefficients",
+                                                                                                                                                      "Outer loadings",
+                                                                                                                                                      "Outer weights",
+                                                                                                                                                      "R-square",
+                                                                                                                                                      "Total effects",
+                                                                                                                                                      "Construct reliability and valid",
+                                                                                                                                                      "Cross loadings",
+                                                                                                                                                      "Fornell-Larcker criterion",
+                                                                                                                                                      "HTMT+",
+                                                                                                                                                      "Original HTMT",
+                                                                                                                                                      "Structural model",
+                                                                                                                                                      "Inner VIF values",
+                                                                                                                                                      "f-square effect sizes",
+                                                                                                                                                      "Model fit",
+                                                                                                                                                      "Construct cross-validated redun",
+                                                                                                                                                      "Structural path randomization",
+                                                                                                                                                      "Run provenance"
+                                                                                                                                                  ],
+                                                                                                                                   "size":  18364
+                                                                                                                               },
+                                                                                                                  "transport":  {
+                                                                                                                                    "exitCode":  0,
+                                                                                                                                    "signal":  null,
+                                                                                                                                    "stderr":  "",
+                                                                                                                                    "events":  [
+                                                                                                                                                   {
+                                                                                                                                                       "event":  "ready",
+                                                                                                                                                       "mainWindow":  {
+                                                                                                                                                                          "executable":  "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                                                                                                                                                                          "handle":  18090608,
+                                                                                                                                                                          "pid":  13300,
+                                                                                                                                                                          "title":  "QuickPLS"
+                                                                                                                                                                      },
+                                                                                                                                                       "passed":  true,
+                                                                                                                                                       "phase":  "main_window_binding",
+                                                                                                                                                       "resultsRoot":  "D:\\QuickPLS\\validation\\results",
+                                                                                                                                                       "targetPath":  "D:\\QuickPLS\\validation\\results\\structural-path-randomization-v1-20260813-121555545.xlsx"
+                                                                                                                                                   },
+                                                                                                                                                   {
+                                                                                                                                                       "boundControls":  {
+                                                                                                                                                                             "filenameEditControlId":  1001,
+                                                                                                                                                                             "saveButtonControlId":  1
+                                                                                                                                                                         },
+                                                                                                                                                       "dialog":  {
+                                                                                                                                                                      "className":  "#32770",
+                                                                                                                                                                      "directOwner":  18090608,
+                                                                                                                                                                      "handle":  3999578,
+                                                                                                                                                                      "pid":  13300,
+                                                                                                                                                                      "rootOwner":  18090608,
+                                                                                                                                                                      "title":  "Save As"
+                                                                                                                                                                  },
+                                                                                                                                                       "event":  "complete",
+                                                                                                                                                       "mainWindow":  {
+                                                                                                                                                                          "executable":  "D:\\QuickPLS\\target\\release\\quickpls-desktop.exe",
+                                                                                                                                                                          "handle":  18090608,
+                                                                                                                                                                          "pid":  13300,
+                                                                                                                                                                          "title":  "QuickPLS"
+                                                                                                                                                                      },
+                                                                                                                                                       "passed":  true,
+                                                                                                                                                       "phase":  "xlsx_creation_and_readback",
+                                                                                                                                                       "saveSubmission":  {
+                                                                                                                                                                              "filenameAfterSet":  "D:\\QuickPLS\\validation\\results\\structural-path-randomization-v1-20260813-121555545.xlsx",
+                                                                                                                                                                              "filenameBefore":  "quickpls-result-tables",
+                                                                                                                                                                              "filenameVerified":  true,
+                                                                                                                                                                              "saveButtonEnabled":  true,
+                                                                                                                                                                              "saveButtonVisible":  true,
+                                                                                                                                                                              "setAttempts":  [
+                                                                                                                                                                                                  {
+                                                                                                                                                                                                      "attempt":  1,
+                                                                                                                                                                                                      "settledReads":  [
+                                                                                                                                                                                                                           "D:\\QuickPLS\\validation\\results\\structural-path-randomization-v1-20260813-121555545.xlsx",
+                                                                                                                                                                                                                           "D:\\QuickPLS\\validation\\results\\structural-path-randomization-v1-20260813-121555545.xlsx"
+                                                                                                                                                                                                                       ]
+                                                                                                                                                                                                  }
+                                                                                                                                                                                              ],
+                                                                                                                                                                              "submissionMethod":  "BM_CLICK",
+                                                                                                                                                                              "targetText":  "D:\\QuickPLS\\validation\\results\\structural-path-randomization-v1-20260813-121555545.xlsx"
+                                                                                                                                                                          },
+                                                                                                                                                       "targetPath":  "D:\\QuickPLS\\validation\\results\\structural-path-randomization-v1-20260813-121555545.xlsx",
+                                                                                                                                                       "workbook":  {
+                                                                                                                                                                        "path":  "D:\\QuickPLS\\validation\\results\\structural-path-randomization-v1-20260813-121555545.xlsx",
+                                                                                                                                                                        "requiredSharedStrings":  [
+                                                                                                                                                                                                      "Structural path randomization",
+                                                                                                                                                                                                      "Run provenance",
+                                                                                                                                                                                                      "experimental",
+                                                                                                                                                                                                      "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only.",
+                                                                                                                                                                                                      "Randomization method",
+                                                                                                                                                                                                      "freedman_lane_permutation_v1",
+                                                                                                                                                                                                      "Randomization operation",
+                                                                                                                                                                                                      "pls_pm_freedman_lane_v1",
+                                                                                                                                                                                                      "Randomized structural paths",
+                                                                                                                                                                                                      "2",
+                                                                                                                                                                                                      "Requested path permutations",
+                                                                                                                                                                                                      "10000",
+                                                                                                                                                                                                      "Randomization estimand",
+                                                                                                                                                                                                      "Structural path coefficients conditional on fixed original PLS construct scores",
+                                                                                                                                                                                                      "Pathwise probability",
+                                                                                                                                                                                                      "Conditional/approximate two-sided plus-one probability under exchangeable reduced-model residuals; no multiplicity adjustment",
+                                                                                                                                                                                                      "Qualification status",
+                                                                                                                                                                                                      "Internal candidate/experimental product label; method-specific qualification evidence is tracked separately"
+                                                                                                                                                                                                  ],
+                                                                                                                                                                        "requiredSheets":  [
+                                                                                                                                                                                               "Structural path randomization",
+                                                                                                                                                                                               "Run provenance"
+                                                                                                                                                                                           ],
+                                                                                                                                                                        "sha256":  "b8004c08f201b141762c445a0c75232e07b2c1f2df3102ae394203bb3d519f1f",
+                                                                                                                                                                        "sheetNames":  [
+                                                                                                                                                                                           "Path coefficients",
+                                                                                                                                                                                           "Outer loadings",
+                                                                                                                                                                                           "Outer weights",
+                                                                                                                                                                                           "R-square",
+                                                                                                                                                                                           "Total effects",
+                                                                                                                                                                                           "Construct reliability and valid",
+                                                                                                                                                                                           "Cross loadings",
+                                                                                                                                                                                           "Fornell-Larcker criterion",
+                                                                                                                                                                                           "HTMT+",
+                                                                                                                                                                                           "Original HTMT",
+                                                                                                                                                                                           "Structural model",
+                                                                                                                                                                                           "Inner VIF values",
+                                                                                                                                                                                           "f-square effect sizes",
+                                                                                                                                                                                           "Model fit",
+                                                                                                                                                                                           "Construct cross-validated redun",
+                                                                                                                                                                                           "Structural path randomization",
+                                                                                                                                                                                           "Run provenance"
+                                                                                                                                                                                       ],
+                                                                                                                                                                        "size":  18364
+                                                                                                                                                                    }
+                                                                                                                                                   }
+                                                                                                                                               ],
+                                                                                                                                    "protocolErrors":  [
+
+                                                                                                                                                       ]
+                                                                                                                                }
+                                                                                                              }
+                                                                                           },
+                                                                                "appFeedback":  "Saved structural-path-randomization-v1-20260813-121555545.xlsx.",
+                                                                                "file":  {
+                                                                                             "size":  18364,
+                                                                                             "isFile":  true
+                                                                                         },
+                                                                                "workbookSheets":  [
+                                                                                                       "Path coefficients",
+                                                                                                       "Outer loadings",
+                                                                                                       "Outer weights",
+                                                                                                       "R-square",
+                                                                                                       "Total effects",
+                                                                                                       "Construct reliability and valid",
+                                                                                                       "Cross loadings",
+                                                                                                       "Fornell-Larcker criterion",
+                                                                                                       "HTMT+",
+                                                                                                       "Original HTMT",
+                                                                                                       "Structural model",
+                                                                                                       "Inner VIF values",
+                                                                                                       "f-square effect sizes",
+                                                                                                       "Model fit",
+                                                                                                       "Construct cross-validated redun",
+                                                                                                       "Structural path randomization",
+                                                                                                       "Run provenance"
+                                                                                                   ],
+                                                                                "exactRequiredSheets":  true,
+                                                                                "noBootstrapSheets":  true
+                                                                            }
+                                                         },
+                   "structuralPathRandomizationArchive":  {
+                                                              "passed":  true,
+                                                              "manifest":  {
+                                                                               "schemaVersion":  5,
+                                                                               "engineVersion":  "2.46.0",
+                                                                               "checksumAlgorithm":  "sha256",
+                                                                               "declaredProjectChecksum":  "5da2b7592e5605500eedb70759b43c6a79db66078f7669ae8a483a39666e0606",
+                                                                               "projectChecksum":  "5da2b7592e5605500eedb70759b43c6a79db66078f7669ae8a483a39666e0606",
+                                                                               "projectChecksumMatches":  true
+                                                                           },
+                                                              "project":  {
+                                                                              "modelCount":  1,
+                                                                              "recipeCount":  1,
+                                                                              "resultCount":  1,
+                                                                              "matchingRunCount":  1
+                                                                          },
+                                                              "resultId":  "b9826e52-7d63-48b1-b653-066ecc366e92",
+                                                              "resultSchemaVersion":  1,
+                                                              "resultStatus":  "completed",
+                                                              "payloadKind":  "pls_pm_v3",
+                                                              "estimationMethodVersion":  "pls_pm_v1",
+                                                              "bootstrapAbsent":  true,
+                                                              "provenanceMethod":  "pls_pm",
+                                                              "provenanceMethodVersion":  "pls_pm_v1+pls_mediation_v1+pls_assessment_v7+freedman_lane_permutation_v1",
+                                                              "recipeId":  "0802e18e-1d70-4061-b1a2-3c8e89b7304b",
+                                                              "recipeSchemaVersion":  3,
+                                                              "recipeMethodConfig":  {
+                                                                                         "kind":  "pls_permutation"
+                                                                                     },
+                                                              "recipeMethodConfigExact":  true,
+                                                              "recipeStatus":  "candidate_freedman_lane_path_randomization_scope",
+                                                              "settings":  {
+                                                                               "method":  "pls_pm",
+                                                                               "weightingScheme":  "path",
+                                                                               "preprocessing":  "standardized",
+                                                                               "missingData":  "listwise_deletion",
+                                                                               "bootstrapSamples":  0,
+                                                                               "studentizedInnerSamples":  0,
+                                                                               "permutationSamples":  10000,
+                                                                               "seed":  20260718,
+                                                                               "workers":  4,
+                                                                               "confidenceLevel":  0.95,
+                                                                               "caseWeightColumn":  null,
+                                                                               "exactProvenanceMatch":  true
+                                                                           },
+                                                              "constructs":  [
+                                                                                 {
+                                                                                     "id":  "construct-1786603561852",
+                                                                                     "name":  "X",
+                                                                                     "indicators":  [
+                                                                                                        "x1",
+                                                                                                        "x2"
+                                                                                                    ]
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "construct-1786603562204",
+                                                                                     "name":  "Z",
+                                                                                     "indicators":  [
+                                                                                                        "z1",
+                                                                                                        "z2"
+                                                                                                    ]
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "construct-1786603562553",
+                                                                                     "name":  "Y",
+                                                                                     "indicators":  [
+                                                                                                        "y1",
+                                                                                                        "y2"
+                                                                                                    ]
+                                                                                 }
+                                                                             ],
+                                                              "recipePathIds":  [
+                                                                                    [
+                                                                                        "construct-1786603561852",
+                                                                                        "construct-1786603562553"
+                                                                                    ],
+                                                                                    [
+                                                                                        "construct-1786603562204",
+                                                                                        "construct-1786603562553"
+                                                                                    ]
+                                                                                ],
+                                                              "resultPathIds":  [
+                                                                                    [
+                                                                                        "construct-1786603561852",
+                                                                                        "construct-1786603562553"
+                                                                                    ],
+                                                                                    [
+                                                                                        "construct-1786603562204",
+                                                                                        "construct-1786603562553"
+                                                                                    ]
+                                                                                ],
+                                                              "pathLabels":  [
+                                                                                 "X -\u003e Y",
+                                                                                 "Z -\u003e Y"
+                                                                             ],
+                                                              "pathOrderExact":  true,
+                                                              "permutation":  {
+                                                                                  "exactKeys":  true,
+                                                                                  "methodVersion":  "freedman_lane_permutation_v1",
+                                                                                  "planExactKeys":  true,
+                                                                                  "permutations":  10000,
+                                                                                  "masterSeed":  20260718,
+                                                                                  "operation":  "pls_pm_freedman_lane_v1",
+                                                                                  "parameterCount":  2,
+                                                                                  "parameterIds":  [
+                                                                                                       "[\"path\",[\"construct-1786603561852\",\"construct-1786603562553\"]]",
+                                                                                                       "[\"path\",[\"construct-1786603562204\",\"construct-1786603562553\"]]"
+                                                                                                   ],
+                                                                                  "exceedances":  [
+                                                                                                      0,
+                                                                                                      0
+                                                                                                  ],
+                                                                                  "pValues":  [
+                                                                                                  0.00009999000099990002,
+                                                                                                  0.00009999000099990002
+                                                                                              ],
+                                                                                  "parameterContract":  true
+                                                                              },
+                                                              "run":  {
+                                                                          "id":  "b9826e52-7d63-48b1-b653-066ecc366e92",
+                                                                          "method":  "Structural Path Randomization",
+                                                                          "status":  "completed",
+                                                                          "modelId":  "d8550247-07de-480c-b6ba-f0185d00d451",
+                                                                          "snapshotNodes":  3,
+                                                                          "snapshotEdges":  2,
+                                                                          "logs":  9
+                                                                      }
+                                                          },
+                   "structuralPathRandomizationSaveReopen":  {
+                                                                 "passed":  true,
+                                                                 "expectedRunId":  "b9826e52-7d63-48b1-b653-066ecc366e92",
+                                                                 "reopenedRunId":  "b9826e52-7d63-48b1-b653-066ecc366e92",
+                                                                 "selectedRunId":  "b9826e52-7d63-48b1-b653-066ecc366e92",
+                                                                 "sameRunRestored":  true,
+                                                                 "initialSelectedTable":  "model_estimates",
+                                                                 "rows":  2,
+                                                                 "columns":  [
+                                                                                 "Path",
+                                                                                 "Original",
+                                                                                 "Exceedances",
+                                                                                 "Permutations",
+                                                                                 "Raw two-sided p"
+                                                                             ],
+                                                                 "values":  [
+                                                                                [
+                                                                                    "X -\u003e Y",
+                                                                                    "0.6524",
+                                                                                    "0",
+                                                                                    "10000",
+                                                                                    "0.00009999000099990002"
+                                                                                ],
+                                                                                [
+                                                                                    "Z -\u003e Y",
+                                                                                    "0.5030",
+                                                                                    "0",
+                                                                                    "10000",
+                                                                                    "0.00009999000099990002"
+                                                                                ]
+                                                                            ],
+                                                                 "warning":  "Candidate output: single-model Freedman-Lane randomization holds the original PLS construct scores fixed and reports unadjusted pathwise two-sided plus-one p values. Interpret these as conditional, approximate inference under exchangeable reduced-model residuals. Measurement-score uncertainty is not re-estimated, no multiplicity adjustment is applied, and current calibration covers homoscedastic Gaussian errors only.",
+                                                                 "archiveChecksumMatches":  true
+                                                             },
+                   "recentProjectsRestored":  true,
+                   "resources":  {
+                                     "passed":  true,
+                                     "sample_count":  85,
+                                     "peak_total_working_set_bytes":  593584128,
+                                     "peak_total_private_memory_bytes":  386650112,
+                                     "peak_total_handle_count":  4122,
+                                     "peak_total_thread_count":  222,
+                                     "peak_process_count":  7,
+                                     "peak_working_set_under_2_gib":  true,
+                                     "zero_other_descendants":  true,
+                                     "scope":  "Single packaged cancellation/retry/completion/save/reopen run; this is a bounded process footprint report, not a sustained no-leak claim.",
+                                     "disk":  {
+                                                  "xlsx_bytes":  18364,
+                                                  "source_report_bytes":  34798
+                                              },
+                                     "artifacts":  {
+                                                       "samples":  {
+                                                                       "path":  "validation/results/structural_path_randomization_v1_process_samples.jsonl",
+                                                                       "size":  161984,
+                                                                       "sha256":  "2f2b741e618c6e0fa8826fc176fa6eb1b44718eac7023b346d38fe8b37e0ca13"
+                                                                   },
+                                                       "report":  {
+                                                                      "path":  "validation/results/structural_path_randomization_v1_resource_report.json",
+                                                                      "size":  10539,
+                                                                      "sha256":  "e251f69be3f84ad441e2f309318548d33f5013774513f4d30bc347838e6f4351"
+                                                                  }
+                                                   }
+                                 },
+                   "cleanup":  {
+                                   "passed":  true,
+                                   "launched_pid":  13300,
+                                   "graceful_close_exit_code":  0,
+                                   "graceful_exit_confirmed":  true,
+                                   "forced_parent_termination":  false,
+                                   "forced_descendant_pids":  [
+
+                                                              ],
+                                   "parent_exit_confirmed":  true,
+                                   "lingering_descendant_pids":  [
+
+                                                                 ],
+                                   "resource_monitor_exit_confirmed":  true,
+                                   "resource_monitor_exit_code":  0,
+                                   "forced_resource_monitor_termination":  false,
+                                   "artifact":  {
+                                                    "path":  "validation/results/structural_path_randomization_v1_process_cleanup.json",
+                                                    "size":  3748,
+                                                    "sha256":  "1cf8e8fa0ea454392bd7249062ede13d48c1ce35cdd9a75136bc596b52d6791d"
+                                                }
+                               }
+               },
+    "screenshots":  [
+                        "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\190-tauri-native-structural-path-randomization-fixture-data-1536x794.png",
+                        "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\191-tauri-native-structural-path-randomization-model-1536x794.png",
+                        "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\192-tauri-native-structural-path-randomization-dialog-1536x794.png",
+                        "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\194-tauri-native-structural-path-randomization-cancelled-1536x794.png",
+                        "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\195-tauri-native-structural-path-randomization-running-1536x794.png",
+                        "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\196-tauri-native-structural-path-randomization-results-1536x794.png",
+                        "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\197-tauri-native-structural-path-randomization-export-1536x794.png",
+                        "D:\\QuickPLS\\validation\\results\\screens\\v247-native-desktop-acceptance\\198-tauri-native-structural-path-randomization-reopened-1536x794.png"
+                    ],
+    "consoleErrors":  [
+
+                      ],
+    "failures":  [
+
+                 ]
+}

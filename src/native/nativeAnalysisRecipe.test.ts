@@ -116,7 +116,11 @@ describe("native analysis recipe descriptors", () => {
   it("covers every native calculation entry exactly once with an executable Rust method", () => {
     expect(NATIVE_ANALYSIS_RECIPE_KINDS).toHaveLength(18);
     expect(new Set(NATIVE_ANALYSIS_RECIPE_KINDS).size).toBe(18);
-    expect(NATIVE_ANALYSIS_RECIPE_DESCRIPTORS.every((item) => item.scopeStatus === "validated")).toBe(true);
+    expect(NATIVE_ANALYSIS_RECIPE_DESCRIPTORS.filter((item) => item.kind !== "pls_permutation").every((item) => item.scopeStatus === "validated")).toBe(true);
+    expect(nativeAnalysisRecipeDescriptor("pls_permutation")).toMatchObject({
+      scopeStatus: "experimental",
+      scopeMetadata: "candidate_freedman_lane_path_randomization_scope",
+    });
     expect(NATIVE_ANALYSIS_RECIPE_DESCRIPTORS.map((item) => item.engineMethod)).not.toContain("bootstrap");
     expect(nativeAnalysisRecipeDescriptor("pls_bootstrap").engineMethod).toBe("pls_pm");
     expect(nativeAnalysisRecipeDescriptor("pls_permutation").engineMethod).toBe("pls_pm");
@@ -150,6 +154,7 @@ describe("native analysis recipe descriptors", () => {
     expect(nativeAnalysisRecipeKindForCalculationMode("permutation")).toBe("pls_permutation");
     expect(nativeAnalysisRecipeKindForCalculationMode("predict")).toBe("predict");
     expect(nativeAnalysisRecipeKindForSettings(baseSettings)).toBe("pls_algorithm");
+    expect(nativeAnalysisRecipeKindForSettings({ ...baseSettings, method: "permutation", permutationSamples: 0 })).toBe("pls_permutation");
     expect(nativeAnalysisRecipeKindForSettings({ ...baseSettings, method: "bootstrap", bootstrapSamples: 0 })).toBe("pls_bootstrap");
     expect(nativeAnalysisRecipeKindForSettings({ ...baseSettings, bootstrapSamples: 5_000 })).toBe("pls_bootstrap");
     expect(nativeAnalysisRecipeKindForSettings({ ...baseSettings, method: "bootstrap", bootstrapSamples: 5_000, permutationSamples: 999 })).toBe("pls_permutation");
@@ -246,7 +251,7 @@ describe("primary native PLS calculation payloads", () => {
     expect(algorithm.metadata).toEqual({ status: "validated_v1_0_supported_pls_scope" });
     expect(bootstrap.metadata).toEqual({ status: "validated_v1_0_supported_pls_scope" });
     expect(permutation.metadata).toEqual({
-      status: "validated_v1_0_freedman_lane_path_randomization_scope",
+      status: "candidate_freedman_lane_path_randomization_scope",
     });
   });
 
@@ -665,30 +670,43 @@ describe("advanced validated backend family mappings", () => {
       predictors: maximumBootstrapTerms,
     });
 
-    const mediation = buildNativeAnalysisRecipe(makeInput("regression", {
-      ...common,
+    const processGraph = {
+      model: "graph" as const,
+      focal_predictor: "x",
+      paths: [
+        { from: "x", to: "y" },
+        { from: "x", to: "m" },
+        { from: "m", to: "y" },
+      ],
+      moderators: [{ variable: "w", scale: "continuous" as const }],
+      moderations: [{ from: "x", to: "m", moderator: "w" }],
+      continuous_product_centering: "equation_complete_case_mean_v1" as const,
+    };
+    const process = buildNativeAnalysisRecipe(makeInput("regression", {
+      regressionOutcome: "y",
+      regressionPredictors: "x,m,w",
+      regressionControls: "age",
       regressionType: "process",
-      processModel: "mediation",
-      processX: "x",
-      processM: "m",
+      processGraph,
+      regressionBootstrap: true,
+      bootstrapSamples: 999,
+      workers: 4,
     }));
-    expect(mediation.metadata).toEqual({ status: "validated_v1_2_2_process_mediation_bounded_scope" });
-    expect(mediation.method_config).toMatchObject({
+    expect(process.metadata).toEqual({ status: "candidate_regression_process_v2_plus_bootstrap_v1_bounded_scope" });
+    expect(process.method_config).toEqual({
       kind: "regression",
-      model: { type: "process", relationship: { model: "mediation", x: "x", mediator: "m" } },
+      outcome: "y",
+      predictors: ["x", "m", "w"],
+      controls: ["age"],
+      model: { type: "process", relationship: processGraph },
+      bootstrap: { algorithm: "case_resampling", intervals: ["percentile", "bca"] },
     });
-
-    const moderation = buildNativeAnalysisRecipe(makeInput("regression", {
-      ...common,
-      regressionType: "process",
-      processModel: "moderation",
-      processX: "x",
-      processW: "w",
-    }));
-    expect(moderation.metadata).toEqual({ status: "validated_v1_2_2_process_moderation_bounded_scope" });
-    expect(moderation.method_config).toMatchObject({
-      kind: "regression",
-      model: { type: "process", relationship: { model: "moderation", x: "x", moderator: "w" } },
+    expect(process.settings).toMatchObject({
+      method: "regression",
+      preprocessing: "unstandardized",
+      confidence_level: 0.95,
+      bootstrap_samples: 999,
+      workers: 4,
     });
 
     expectFieldError(makeInput("regression", { regressionOutcome: null, regressionPredictors: "x" }), "regressionOutcome");
@@ -703,7 +721,13 @@ describe("advanced validated backend family mappings", () => {
       regressionBootstrap: true,
       bootstrapSamples: 999,
     }), "regressionPredictors");
-    expectFieldError(makeInput("regression", { ...common, regressionType: "process", processModel: "moderated_mediation", processX: "x", processM: "m", processW: "w" }), "processModel");
+    expectFieldError(makeInput("regression", { ...common, regressionType: "process", processGraph: null }), "processGraph");
+    expectFieldError(makeInput("regression", {
+      regressionOutcome: "y",
+      regressionPredictors: "x,w,m",
+      regressionType: "process",
+      processGraph,
+    }), "processGraph");
   });
 
   it("maps typed NCA variables, ceiling, and permutations with independent bounds", () => {

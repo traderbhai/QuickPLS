@@ -225,8 +225,8 @@ export function AnalysisCatalog() {
             </div>)}
             <div className="setup-v226-addon muted">
               <div>
-                <strong>Freedman-Lane permutation</strong>
-                <span>Available through expert resampling settings when the selected estimator supports permutation output.</span>
+                <strong>Candidate Freedman-Lane structural path randomization</strong>
+                <span>Expert single-model inference with fixed original PLS construct scores and unadjusted pathwise two-sided plus-one p values; not a group comparison.</span>
               </div>
               <span className="applicability-pill needs_setup">Expert</span>
             </div>
