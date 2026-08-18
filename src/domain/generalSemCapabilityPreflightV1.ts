@@ -17,6 +17,7 @@ import {
   type SemModelV4,
   type SemRelationV4,
 } from "./semModelV4";
+import { sha256HexBytesV1 } from "./sha256V1";
 
 export const GENERAL_SEM_PLS_ESTIMATOR_ID_V1 = "qpls.pls_sem.v3" as const;
 export const GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1 = "qpls.cbsem.v3" as const;
@@ -26,6 +27,13 @@ const PLS_CELL = {
   capability_id: "smartpls.mediation",
   cell_id: "qpls3.pls.mediation",
   capability_version: "pls_mediation_v1",
+} as const;
+
+const PLS_BOOTSTRAP_CELL = {
+  registry_schema_version: 2,
+  capability_id: "smartpls.pls_bootstrapping",
+  cell_id: "qpls3.inference.bootstrap",
+  capability_version: "indexed_resampling_v4",
 } as const;
 
 const CBSEM_CELL = {
@@ -45,6 +53,16 @@ const PLS_EVIDENCE: readonly SemCapabilityEvidenceV1[] = [
     description: "The versioned PLS v3 compiler preserves the proven v2 scoring plan and adds stable topology and effect identities.",
   },
 ];
+
+const PLS_BOOTSTRAP_EVIDENCE: SemCapabilityEvidenceV1 = {
+  evidence_id: "capability_registry_v2:smartpls.pls_bootstrapping:qpls3.inference.bootstrap:indexed_resampling_v4",
+  description: "Capability Registry V2 exposes the bounded indexed case-resampling primitive used by this General SEM compiler slice.",
+};
+
+const PLS_BOOTSTRAP_COMPILER_EVIDENCE: SemCapabilityEvidenceV1 = {
+  evidence_id: "compiler:recipe_v4_to_compiled_pls_plan_v3_bootstrap_v1",
+  description: "The bootstrap compiler binds exact Recipe V4 inference settings to the General SEM config while retaining the proven point-scoring plan.",
+};
 
 const CBSEM_EVIDENCE: readonly SemCapabilityEvidenceV1[] = [
   {
@@ -225,6 +243,27 @@ function sameRelationPath(left: readonly string[], right: readonly string[]): bo
   return left.length === right.length && left.every((relationId, index) => relationId === right[index]);
 }
 
+/** Mirrors qpls-core specific_directed_path_identity_v1 byte-for-byte. */
+function specificDirectedPathIdentityV1(relationIds: readonly string[]): string {
+  const encoder = new TextEncoder();
+  const domain = encoder.encode("qpls.compiled-sem-topology-v1.specific-directed-path\0");
+  const encodedIds = relationIds.map((relationId) => encoder.encode(relationId));
+  const totalLength = domain.length + encodedIds.reduce((total, bytes) => total + 8 + bytes.length, 0);
+  const identityInput = new Uint8Array(totalLength);
+  identityInput.set(domain);
+  let offset = domain.length;
+  for (const bytes of encodedIds) {
+    const length = BigInt(bytes.length);
+    const lengthView = new DataView(identityInput.buffer, offset, 8);
+    lengthView.setUint32(0, Number(length >> 32n), false);
+    lengthView.setUint32(4, Number(length & 0xffff_ffffn), false);
+    offset += 8;
+    identityInput.set(bytes, offset);
+    offset += bytes.length;
+  }
+  return `sem_specific_path_v1_${sha256HexBytesV1(identityInput)}`;
+}
+
 function executionScopeDiagnostics(config: GeneralSemConfigV1): SemCapabilityDiagnosticV1[] {
   const diagnostics: SemCapabilityDiagnosticV1[] = [];
   if (config.conditional_effect_probes.length > 0) {
@@ -234,12 +273,21 @@ function executionScopeDiagnostics(config: GeneralSemConfigV1): SemCapabilityDia
       "Remove the probe request for point estimation, or wait for the qualified moderation execution cell.",
     ));
   }
-  if (config.inference.kind !== "none") {
-    diagnostics.push(errorDiagnostic(
-      "sem.capability.pls.general_inference_not_executable",
-      "General SEM case-bootstrap inference is requested but is not connected to the v3 execution adapter.",
-      "Set General SEM inference to none for the current point-estimation slice, or use a separately qualified bounded bootstrap workflow.",
-    ));
+  if (config.inference.kind === "case_bootstrap") {
+    if (config.inference.interval !== "percentile") {
+      diagnostics.push(errorDiagnostic(
+        "sem.capability.pls.general_bootstrap_bca_not_executable",
+        "BCa intervals are represented in the General SEM contract but are not qualified for this execution slice.",
+        "Choose percentile intervals with two-sided inference, or set inference to none until the full General SEM delete-one effect ledger is qualified.",
+      ));
+    }
+    if (config.inference.tail !== "two_sided") {
+      diagnostics.push(errorDiagnostic(
+        "sem.capability.pls.general_bootstrap_one_sided_not_executable",
+        "One-sided General SEM bootstrap intervals are represented but their interval semantics are not yet qualified.",
+        "Choose two-sided inference, or set inference to none until the directional interval contract is qualified.",
+      ));
+    }
   }
   if (config.output_policy.lazy_specific_path_materialization
     || config.output_policy.when_specific_path_limit_exceeded === "return_lazy") {
@@ -280,6 +328,9 @@ function requestedEffectDiagnostics(
 ): SemCapabilityDiagnosticV1[] {
   const relations = structuralRelations(model)
     .filter((relation) => (relation.role ?? "structural") === "structural");
+  const reservedSpecificPathIdentities = new Set(
+    paths.map((path) => specificDirectedPathIdentityV1(path.relationIds)),
+  );
   const diagnostics: SemCapabilityDiagnosticV1[] = [];
   for (const estimand of config.requested_effect_estimands) {
     if (estimand.kind === "specific_path") {
@@ -291,6 +342,15 @@ function requestedEffectDiagnostics(
           estimand.estimand_id,
         ));
       }
+      continue;
+    }
+    if (reservedSpecificPathIdentities.has(estimand.estimand_id)) {
+      diagnostics.push(errorDiagnostic(
+        "sem.capability.pls.effect_identity_collision",
+        "The aggregate effect request reuses a reserved canonical specific-path identity.",
+        "Choose an aggregate estimand id that does not use an existing sem_specific_path_v1 identity.",
+        estimand.estimand_id,
+      ));
       continue;
     }
     const indirectReachable = paths.some((path) => (
@@ -312,14 +372,21 @@ function requestedEffectDiagnostics(
 }
 
 /**
- * Exact preflight for the executable General SEM PLS point-estimation slice.
- * The input model and request are inspected only and are never rewritten.
+ * Exact preflight for the General SEM PLS point-estimation and bounded
+ * percentile case-bootstrap compiler slices. The inputs are never rewritten.
  */
 export function preflightGeneralSemPlsV1(
   model: SemModelV4,
   config: GeneralSemConfigV1,
 ): SemCapabilityDecisionV1 {
   const validatedConfig = parseGeneralSemConfigV1(config);
+  const bootstrapRequested = validatedConfig.inference.kind === "case_bootstrap";
+  const capabilityCells = bootstrapRequested
+    ? [PLS_CELL, PLS_BOOTSTRAP_CELL]
+    : [PLS_CELL];
+  const evidence = bootstrapRequested
+    ? [...PLS_EVIDENCE, PLS_BOOTSTRAP_COMPILER_EVIDENCE, PLS_BOOTSTRAP_EVIDENCE]
+    : PLS_EVIDENCE;
   const diagnostics = executionScopeDiagnostics(validatedConfig);
   diagnostics.push(...plsShapeDiagnostics(model));
 
@@ -385,9 +452,9 @@ export function preflightGeneralSemPlsV1(
     return createSemCapabilityDecisionV1({
       status: "blocked",
       estimator_id: GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
-      capability_cells: [PLS_CELL],
+      capability_cells: capabilityCells,
       diagnostics,
-      evidence: PLS_EVIDENCE,
+      evidence,
       summary: "PLS-SEM cannot calculate this exact General SEM request yet.",
       explanation: "The authored model remains intact. Apply one of the listed corrections or select an estimator whose exact capability cell supports the graph.",
     });
@@ -396,17 +463,21 @@ export function preflightGeneralSemPlsV1(
   return createSemCapabilityDecisionV1({
     status: "experimental",
     estimator_id: GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
-    capability_cells: [PLS_CELL],
+    capability_cells: capabilityCells,
     diagnostics: [{
       code: "sem.capability.pls.experimental_labs",
       severity: "info",
       subject: null,
-      message: "General recursive PLS point estimation and path-specific effects are available in Experimental Labs.",
+      message: bootstrapRequested
+        ? "General recursive PLS percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
+        : "General recursive PLS point estimation and path-specific effects pass the Experimental Labs compiler preflight.",
       corrections: [],
     }],
-    evidence: PLS_EVIDENCE,
-    summary: "PLS-SEM can calculate this request in Experimental Labs.",
-    explanation: "The complete recursive model is re-estimated by the proven PLS score executor and decomposed through stable relation-path identities. Resampling and conditional effects require separate qualified cells.",
+    evidence,
+    summary: "PLS-SEM can compile this exact request in Experimental Labs.",
+    explanation: bootstrapRequested
+      ? "The compiler binds percentile, two-sided case resampling to both the mediation and indexed-resampling cells. Runtime inference must carry a matching complete-model re-estimation receipt before publication."
+      : "The compiler binds the proven PLS scoring plan to stable relation-path identities. Runtime validation remains authoritative before a result can be published.",
   });
 }
 

@@ -69,9 +69,56 @@ function documentFixture(): CanonicalResultDocumentV2 {
   };
 }
 
+type GeneralSemAnalyticalFixture = Omit<CanonicalResultDocumentV2, "general_sem_results"> & {
+  general_sem_results: {
+    schema_version: 1;
+    inference_receipt: {
+      method_version: string;
+      seed: string;
+      workers: number;
+      usable_replicate_indices_sha256: string;
+    };
+    specific_indirect_effects: Array<{
+      effect_id: string;
+      value: { estimate: number };
+    }>;
+  };
+};
+
+function generalSemDocumentFixture(): GeneralSemAnalyticalFixture {
+  const document = documentFixture() as unknown as GeneralSemAnalyticalFixture;
+  document.general_sem_results = {
+    schema_version: 1,
+    inference_receipt: {
+      method_version: "general_sem_pls_full_model_case_bootstrap_v1",
+      seed: "42",
+      workers: 4,
+      usable_replicate_indices_sha256: "b".repeat(64),
+    },
+    specific_indirect_effects: [{
+      effect_id: "specific:x>m>y",
+      value: { estimate: 0.21 },
+    }],
+  };
+  return document;
+}
+
+function generalSemAnalyticalJson(document: GeneralSemAnalyticalFixture): string {
+  return canonicalAnalyticalResultJson(document as unknown as CanonicalResultDocumentV2);
+}
+
 describe("CanonicalResultDocumentV2", () => {
   it("accepts a typed, cross-referenced result document", () => {
     expect(validateCanonicalResultDocumentV2(documentFixture())).toEqual({ passed: true, errors: [] });
+  });
+
+  it("accepts bare and versioned v2 lowercase dataset fingerprints", () => {
+    const bare = documentFixture();
+    const versioned = documentFixture();
+    versioned.provenance.dataset_fingerprint = `v2:${digest}`;
+
+    expect(validateCanonicalResultDocumentV2(bare)).toEqual({ passed: true, errors: [] });
+    expect(validateCanonicalResultDocumentV2(versioned)).toEqual({ passed: true, errors: [] });
   });
 
   it("rejects duplicate IDs, row shape drift, nonfinite values, and dangling references", () => {
@@ -122,6 +169,27 @@ describe("CanonicalResultDocumentV2", () => {
 
     expect(canonicalResultDocumentJson(second)).not.toBe(canonicalResultDocumentJson(first));
     expect(canonicalAnalyticalResultJson(second)).toBe(canonicalAnalyticalResultJson(first));
+  });
+
+  it("includes General SEM scientific results and inference identity in analytical equality", () => {
+    const first = generalSemDocumentFixture();
+    const changedEstimate = generalSemDocumentFixture();
+    changedEstimate.general_sem_results.specific_indirect_effects[0].value.estimate = 0.22;
+    const changedReceipt = generalSemDocumentFixture();
+    changedReceipt.general_sem_results.inference_receipt.usable_replicate_indices_sha256 = "c".repeat(64);
+
+    expect(generalSemAnalyticalJson(changedEstimate)).not.toBe(generalSemAnalyticalJson(first));
+    expect(generalSemAnalyticalJson(changedReceipt)).not.toBe(generalSemAnalyticalJson(first));
+  });
+
+  it("excludes only inference receipt workers from General SEM analytical equality", () => {
+    const first = generalSemDocumentFixture();
+    const workerOnlyChange = generalSemDocumentFixture();
+    workerOnlyChange.general_sem_results.inference_receipt.workers = 1;
+
+    expect(canonicalResultDocumentJson(workerOnlyChange as unknown as CanonicalResultDocumentV2))
+      .not.toBe(canonicalResultDocumentJson(first as unknown as CanonicalResultDocumentV2));
+    expect(generalSemAnalyticalJson(workerOnlyChange)).toBe(generalSemAnalyticalJson(first));
   });
 
   it("preserves legacy string tables without inferring numeric meaning", () => {

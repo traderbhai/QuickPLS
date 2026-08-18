@@ -53,6 +53,74 @@ async function outcomeFixture() {
   };
 }
 
+function generalSemDocumentFixture(): CanonicalResultDocumentV2 {
+  const document = documentFixture();
+  const capabilityCell = { ...document.provenance.capability_cell };
+  document.provenance.dataset_fingerprint = `v2:${document.provenance.dataset_fingerprint}`;
+  document.capability_cells = [capabilityCell];
+  document.sections = document.sections.map((section) => ({
+    ...section,
+    capability_cells: [capabilityCell],
+  }));
+  document.tables = document.tables.map((table) => ({
+    ...table,
+    capability_cells: [capabilityCell],
+  }));
+  document.general_sem_results = {
+    schema_version: 1,
+    identification_diagnostics: [{
+      diagnostic_id: "identification_model_1",
+      trace: {
+        model_id: document.provenance.model_id,
+        capability_cell: capabilityCell,
+      },
+      scope: "model",
+      subject_id: document.provenance.model_id,
+      status: "identified",
+      code: "identified",
+      message: "The compiled model passed identification checks.",
+      degrees_of_freedom: 1,
+    }],
+  };
+  return document;
+}
+
+async function generalSemOutcomeFixture() {
+  const canonicalDocument = generalSemDocumentFixture();
+  const canonicalDocumentJson = JSON.stringify(canonicalDocument);
+  return {
+    status: "ok",
+    value: {
+      schemaVersion: 1,
+      projectId: canonicalDocument.provenance.project_id,
+      archivePath: request.archivePath,
+      sourceDocumentSha256: sourceDigest,
+      canonicalResultDocumentCount: 1,
+      documents: [{
+        documentId: canonicalDocument.document_id,
+        runId: canonicalDocument.provenance.run_id,
+        canonicalDocumentSha256: await canonicalResultDocumentJsonSha256V1(
+          canonicalDocumentJson,
+        ),
+        immutable: true,
+        canonicalDocumentJson,
+        canonicalDocument,
+      }],
+      sourceRecheckedUnchanged: true,
+    },
+  };
+}
+
+async function synchronizeGeneralSemAttachment(
+  response: Awaited<ReturnType<typeof generalSemOutcomeFixture>>,
+): Promise<void> {
+  const attachment = response.value.documents[0];
+  attachment.canonicalDocumentJson = JSON.stringify(attachment.canonicalDocument);
+  attachment.canonicalDocumentSha256 = await canonicalResultDocumentJsonSha256V1(
+    attachment.canonicalDocumentJson,
+  );
+}
+
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
@@ -1868,6 +1936,39 @@ describe("internal schema-6 canonical-result read parser", () => {
     await expect(
       parseInternalProjectSchema6ResultReadOutcomeV1(response, request),
     ).resolves.toEqual(response);
+  });
+
+  it("round-trips strict General SEM attachments with a versioned dataset fingerprint", async () => {
+    const response = await generalSemOutcomeFixture();
+
+    const parsed = await parseInternalProjectSchema6ResultReadOutcomeV1(response, request);
+
+    expect(parsed.status).toBe("ok");
+    if (parsed.status !== "ok") throw new Error("Expected an ok schema-6 read outcome.");
+    const document = parsed.value.documents[0].canonicalDocument;
+    expect(document.provenance.dataset_fingerprint).toBe(`v2:${"b".repeat(64)}`);
+    expect(document.general_sem_results?.identification_diagnostics?.[0]).toMatchObject({
+      diagnostic_id: "identification_model_1",
+      subject_id: document.provenance.model_id,
+      status: "identified",
+    });
+    expect(parsed).toEqual(response);
+  });
+
+  it("rejects tampered and unknown General SEM fields after exact JSON digest rebinding", async () => {
+    const tampered = await generalSemOutcomeFixture();
+    tampered.value.documents[0].canonicalDocument.general_sem_results!
+      .identification_diagnostics![0].subject_id = "model-other";
+    await synchronizeGeneralSemAttachment(tampered);
+    await expect(parseInternalProjectSchema6ResultReadOutcomeV1(tampered, request))
+      .rejects.toThrow(/general_sem_results\.identification_diagnostics\[0\]\.subject_id.*provenance\.model_id/);
+
+    const unknown = await generalSemOutcomeFixture();
+    (unknown.value.documents[0].canonicalDocument.general_sem_results!
+      .identification_diagnostics![0] as unknown as Record<string, unknown>).unexpected = true;
+    await synchronizeGeneralSemAttachment(unknown);
+    await expect(parseInternalProjectSchema6ResultReadOutcomeV1(unknown, request))
+      .rejects.toThrow(/general_sem_results\.identification_diagnostics\[0\]\.unexpected.*not supported/);
   });
 
   it("keeps historical schema-6 projects without canonical attachments readable", async () => {

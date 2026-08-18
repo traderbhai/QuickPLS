@@ -11,6 +11,7 @@ import {
   type SemModelV4,
 } from "./semModelV4";
 import { defaultGeneralSemConfigV1 } from "./generalSemConfigV1";
+import type { CanonicalResultDocumentV2 } from "./canonicalResultDocumentV2";
 
 const PROJECT_ID = "00000000-0000-0000-0000-000000000101";
 const RECIPE_ID = "00000000-0000-0000-0000-000000000201";
@@ -120,6 +121,83 @@ function currentRecipe(id: string, model: SemModelV4) {
   };
 }
 
+function generalSemCanonicalDocument(): CanonicalResultDocumentV2 {
+  const capabilityCell = {
+    registry_schema_version: 2 as const,
+    capability_id: "smartpls.pls_algorithm",
+    cell_id: "qpls3.pls.algorithm",
+    capability_version: "pls_pm_v1",
+  };
+  return {
+    schema_version: 2,
+    document_id: "result.general_sem:1",
+    title: "General SEM result",
+    provenance: {
+      run_id: "run-general-sem-1",
+      project_id: PROJECT_ID,
+      model_id: "model-general-sem-1",
+      model_digest: SHA_A,
+      dataset_id: "dataset-general-sem-1",
+      dataset_fingerprint: `v2:${SHA_B}`,
+      recipe_id: "recipe-general-sem-1",
+      recipe_digest: SHA_B,
+      capability_cell: capabilityCell,
+      method_version: "general_sem_effects_v1",
+      engine_version: "compiled_general_sem_pls_recipe_v1_point_execution_v1",
+      seed: 42,
+      workers: 1,
+      started_at: "2026-08-15T09:00:00Z",
+      completed_at: "2026-08-15T09:00:01Z",
+    },
+    capability_cells: [capabilityCell],
+    sections: [],
+    tables: [],
+    charts: [],
+    notices: [],
+    exclusions: [],
+    footnotes: [],
+    presentation: {
+      default_section_id: null,
+      default_table_id: null,
+      precision: 4,
+      missing_value_label: "—",
+      chart_defaults: {},
+    },
+    general_sem_results: {
+      schema_version: 1,
+      identification_diagnostics: [{
+        diagnostic_id: "identification_model_1",
+        trace: {
+          model_id: "model-general-sem-1",
+          capability_cell: capabilityCell,
+        },
+        scope: "model",
+        subject_id: "model-general-sem-1",
+        status: "identified",
+        code: "identified",
+        message: "The compiled model passed identification checks.",
+        degrees_of_freedom: 1,
+      }],
+    },
+  };
+}
+
+function generalSemArchive() {
+  const canonicalDocument = generalSemCanonicalDocument();
+  return {
+    ...baseArchive(),
+    sem_generation: "general_sem_v1",
+    canonical_result_documents: [{
+      document_id: canonicalDocument.document_id,
+      run_id: canonicalDocument.provenance.run_id,
+      document_schema_version: 2,
+      canonical_document: canonicalDocument,
+      canonical_document_sha256: SHA_A,
+      immutable: true,
+    }],
+  };
+}
+
 describe("internal schema-v6 project archive wire", () => {
   it("classifies historical, current, and future schemas without interpreting future content", () => {
     expect(classifyInternalProjectArchiveSchemaV6(5)).toBe("historical_upgrade_copy_required");
@@ -170,6 +248,40 @@ describe("internal schema-v6 project archive wire", () => {
       ...baseArchive(),
       sem_generation: "future_generation",
     })).toThrowError(expect.objectContaining({ code: "project_archive_v6.enum_invalid" }));
+  });
+
+  it("round-trips a strict General SEM canonical attachment without changing its wire values", () => {
+    const parsed = parseInternalProjectArchiveV6Wire(generalSemArchive());
+    const document = parsed.canonical_result_documents[0].canonical_document;
+
+    expect(document.provenance.dataset_fingerprint).toBe(`v2:${SHA_B}`);
+    expect(document.general_sem_results?.identification_diagnostics?.[0]).toMatchObject({
+      diagnostic_id: "identification_model_1",
+      subject_id: "model-general-sem-1",
+      status: "identified",
+    });
+    expect(parseInternalProjectArchiveV6Wire(JSON.parse(JSON.stringify(parsed))))
+      .toEqual(parsed);
+  });
+
+  it("rejects scientific tampering and unknown fields in General SEM attachments", () => {
+    const tampered = generalSemArchive();
+    tampered.canonical_result_documents[0].canonical_document.general_sem_results!
+      .identification_diagnostics![0].subject_id = "model-other";
+    expect(() => parseInternalProjectArchiveV6Wire(tampered))
+      .toThrowError(expect.objectContaining({
+        code: "project_archive_v6.canonical_document_invalid",
+        message: expect.stringMatching(/subject_id.*provenance\.model_id/),
+      }));
+
+    const unknown = generalSemArchive();
+    (unknown.canonical_result_documents[0].canonical_document.general_sem_results!
+      .identification_diagnostics![0] as unknown as Record<string, unknown>).unexpected = true;
+    expect(() => parseInternalProjectArchiveV6Wire(unknown))
+      .toThrowError(expect.objectContaining({
+        code: "project_archive_v6.canonical_document_invalid",
+        message: expect.stringMatching(/unexpected.*not supported/),
+      }));
   });
 
   it("reads legacy top-level upgrade_lineage and emits only corrected upgraded_copy origin", () => {

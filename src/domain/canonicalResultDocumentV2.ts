@@ -1,3 +1,9 @@
+import {
+  CanonicalGeneralSemResultsV1ParseError,
+  parseCanonicalGeneralSemResultsV1,
+  type CanonicalGeneralSemResultsV1,
+} from "./canonicalGeneralSemResultsV1";
+
 /**
  * Canonical, method-neutral result document used by UI, comparison, archive,
  * accessibility, and export adapters.
@@ -176,6 +182,8 @@ export interface CanonicalResultDocumentV2 {
   provenance: CanonicalResultProvenanceV2;
   /** Sorted, distinct option-cell set; provenance.capability_cell remains primary. */
   capability_cells?: CapabilityCellReferenceV2[];
+  /** Additive typed General SEM result extension; legacy documents omit it. */
+  general_sem_results?: CanonicalGeneralSemResultsV1;
   sections: CanonicalResultSection[];
   tables: CanonicalResultTable[];
   charts: CanonicalResultChart[];
@@ -192,6 +200,7 @@ export interface CanonicalResultValidation {
 
 const STABLE_ID = /^[a-z0-9][a-z0-9_.:-]*$/;
 const HEX_64 = /^[a-f0-9]{64}$/;
+const DATASET_FINGERPRINT_V1 = /^(?:v2:)?[a-f0-9]{64}$/;
 
 function duplicateIds(items: ReadonlyArray<{ id: string }>): string[] {
   const seen = new Set<string>();
@@ -394,7 +403,9 @@ export function validateCanonicalResultDocumentV2(document: CanonicalResultDocum
     if (!value.trim()) errors.push(`provenance.${name} must be nonempty`);
   }
   if (!HEX_64.test(provenance.model_digest)) errors.push("provenance.model_digest must be lowercase SHA-256");
-  if (!HEX_64.test(provenance.dataset_fingerprint)) errors.push("provenance.dataset_fingerprint must be lowercase SHA-256");
+  if (!DATASET_FINGERPRINT_V1.test(provenance.dataset_fingerprint)) {
+    errors.push("provenance.dataset_fingerprint must be bare lowercase SHA-256 or v2:<lowercase SHA-256>");
+  }
   if (!HEX_64.test(provenance.recipe_digest)) errors.push("provenance.recipe_digest must be lowercase SHA-256");
   if (provenance.seed != null && (!Number.isSafeInteger(provenance.seed) || provenance.seed < 0)) errors.push("provenance.seed must be a nonnegative safe integer or null");
   if (!Number.isInteger(provenance.workers) || provenance.workers < 1) errors.push("provenance.workers must be a positive integer");
@@ -404,6 +415,26 @@ export function validateCanonicalResultDocumentV2(document: CanonicalResultDocum
   if (startedAt == null) errors.push("provenance.started_at must be an ISO timestamp");
   if (completedAt == null) errors.push("provenance.completed_at must be an ISO timestamp");
   if (startedAt != null && completedAt != null && completedAt < startedAt) errors.push("provenance.completed_at precedes started_at");
+
+  if (document.general_sem_results !== undefined) {
+    try {
+      parseCanonicalGeneralSemResultsV1(document.general_sem_results, {
+        modelId: provenance.model_id,
+        modelDigest: provenance.model_digest,
+        datasetFingerprint: provenance.dataset_fingerprint,
+        recipeDigest: provenance.recipe_digest,
+        seed: provenance.seed,
+        workers: provenance.workers,
+        capabilityCells: document.capability_cells ?? [],
+      });
+    } catch (error) {
+      if (error instanceof CanonicalGeneralSemResultsV1ParseError) {
+        errors.push(`${error.path}: ${error.message}`);
+      } else {
+        throw error;
+      }
+    }
+  }
 
   const presentation = document.presentation;
   if (presentation.default_section_id != null && !sectionIds.has(presentation.default_section_id)) errors.push("presentation.default_section_id is missing");
@@ -427,6 +458,35 @@ export function canonicalResultDocumentJson(document: CanonicalResultDocumentV2)
   return JSON.stringify(stableValue(document));
 }
 
+function analyticalGeneralSemResults(document: CanonicalResultDocumentV2): unknown | undefined {
+  const generalSemResults = (document as CanonicalResultDocumentV2 & {
+    general_sem_results?: unknown;
+  }).general_sem_results;
+  if (
+    generalSemResults == null
+    || typeof generalSemResults !== "object"
+    || Array.isArray(generalSemResults)
+  ) {
+    return generalSemResults;
+  }
+
+  const results = generalSemResults as unknown as Record<string, unknown>;
+  const inferenceReceipt = results.inference_receipt;
+  if (
+    inferenceReceipt == null
+    || typeof inferenceReceipt !== "object"
+    || Array.isArray(inferenceReceipt)
+  ) {
+    return generalSemResults;
+  }
+
+  const { workers: _workers, ...analyticalReceipt } = inferenceReceipt as Record<string, unknown>;
+  return {
+    ...results,
+    inference_receipt: analyticalReceipt,
+  };
+}
+
 /**
  * Return the scientific projection used for semantic equality. Execution-only
  * timing/workers and every display cache/default are excluded; model, data,
@@ -434,6 +494,7 @@ export function canonicalResultDocumentJson(document: CanonicalResultDocumentV2)
  * exclusions remain bound.
  */
 export function canonicalAnalyticalResultJson(document: CanonicalResultDocumentV2): string {
+  const generalSemResults = analyticalGeneralSemResults(document);
   const analytical = {
     schema_version: document.schema_version,
     document_id: document.document_id,
@@ -469,6 +530,7 @@ export function canonicalAnalyticalResultJson(document: CanonicalResultDocumentV
     notices: document.notices,
     exclusions: document.exclusions,
     footnotes: document.footnotes,
+    ...(generalSemResults === undefined ? {} : { general_sem_results: generalSemResults }),
   };
   return JSON.stringify(stableValue(analytical));
 }

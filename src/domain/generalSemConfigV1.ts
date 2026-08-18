@@ -1,5 +1,8 @@
 export const GENERAL_SEM_CONFIG_V1_SCHEMA_VERSION = 1 as const;
 export const DEFAULT_MAX_MATERIALIZED_SPECIFIC_PATHS_V1 = 10_000;
+export const GENERAL_SEM_CASE_BOOTSTRAP_MIN_RESAMPLES_V1 = 2;
+export const GENERAL_SEM_CASE_BOOTSTRAP_MAX_RESAMPLES_V1 = 10_000;
+export const GENERAL_SEM_CASE_BOOTSTRAP_MAX_SEED_V1 = Number.MAX_SAFE_INTEGER;
 
 const U32_MAX = 0xffff_ffff;
 const CONTROL_CHARACTER = /[\u0000-\u001f\u007f-\u009f]/u;
@@ -97,7 +100,7 @@ export type GeneralSemConfigV1ErrorCode =
   | "general_sem_config_v1.u64_safe_integer_required"
   | "general_sem_config_v1.enum_invalid"
   | "general_sem_config_v1.boolean_required"
-  | "general_sem_config_v1.bootstrap_resamples_zero"
+  | "general_sem_config_v1.bootstrap_resamples_out_of_range"
   | "general_sem_config_v1.confidence_level_invalid"
   | "general_sem_config_v1.max_paths_zero"
   | "general_sem_config_v1.lazy_policy_incoherent";
@@ -176,7 +179,12 @@ function u32At(value: unknown, path: string): number {
 }
 
 function u64SafeIntegerAt(value: unknown, path: string): number {
-  if (!Number.isSafeInteger(value) || Object.is(value, -0) || (value as number) < 0) {
+  if (
+    !Number.isSafeInteger(value)
+    || Object.is(value, -0)
+    || (value as number) < 0
+    || (value as number) > GENERAL_SEM_CASE_BOOTSTRAP_MAX_SEED_V1
+  ) {
     return fail(
       "general_sem_config_v1.u64_safe_integer_required",
       path,
@@ -417,11 +425,14 @@ function parseInference(value: unknown, path: string): GeneralSemInferenceV1 {
       path,
     );
     const resamples = u32At(inference.resamples, `${path}.resamples`);
-    if (resamples === 0) {
+    if (
+      resamples < GENERAL_SEM_CASE_BOOTSTRAP_MIN_RESAMPLES_V1
+      || resamples > GENERAL_SEM_CASE_BOOTSTRAP_MAX_RESAMPLES_V1
+    ) {
       fail(
-        "general_sem_config_v1.bootstrap_resamples_zero",
+        "general_sem_config_v1.bootstrap_resamples_out_of_range",
         `${path}.resamples`,
-        `${path}.resamples must be greater than zero.`,
+        `${path}.resamples must be between ${GENERAL_SEM_CASE_BOOTSTRAP_MIN_RESAMPLES_V1} and ${GENERAL_SEM_CASE_BOOTSTRAP_MAX_RESAMPLES_V1}, inclusive.`,
       );
     }
     const confidenceLevel = finiteAt(inference.confidence_level, `${path}.confidence_level`);

@@ -68,7 +68,7 @@ export function GeneralSemEstimatorSelectionButton({
     data-general-sem-estimator-select={estimatorId}
     onClick={runnable ? () => onSelectEstimator(estimatorId) : undefined}
   >
-    {isSelected ? `Selected ${estimatorLabel}` : runnable ? `Use ${estimatorLabel}` : `${estimatorLabel} unavailable`}
+    {isSelected ? `Selected ${estimatorLabel}` : runnable ? `Select ${estimatorLabel}` : `${estimatorLabel} unavailable`}
   </button>;
 }
 
@@ -107,7 +107,9 @@ function EstimatorCard({
   const blockedReasonId = `${idPrefix}-blocked-reason`;
   const selectionDescriptionId = runnable ? explanationId : blockedReasonId;
   const blockingReason = firstBlockingReason(decision);
-  const capability = decision.capability_cells[0]!;
+  const capabilitySummary = decision.capability_cells
+    .map((capability) => `${capability.cell_id} (${capability.capability_version})`)
+    .join("; ");
 
   return <article
     className="nd-method-details-card"
@@ -117,7 +119,7 @@ function EstimatorCard({
   >
     <header>
       <div>
-        <span>{capability.cell_id} · {capability.capability_version}</span>
+        <span aria-label={`${label} exact capability cells`}>Exact capability cells: {capabilitySummary}</span>
         <h3 id={headingId}>{label}</h3>
       </div>
       <span
@@ -134,7 +136,7 @@ function EstimatorCard({
         <h4>Compatibility explanation</h4>
         <p id={explanationId}>{decision.explanation}</p>
         {decision.status === "experimental" ? <p className="nd-inline-warning" role="note">
-          <strong>Experimental Labs.</strong> This request is runnable only through the exact experimental capability shown above; review its limitations before selecting it.
+          <strong>Experimental Labs.</strong> This request passes the exact compiler-qualification cells listed above. Selecting it records an estimator preference only; it does not start native execution.
         </p> : null}
       </section>
       <section>
@@ -176,8 +178,8 @@ function EstimatorCard({
 
 /**
  * Provides a deterministic client-side compatibility preview for both
- * estimator boundaries. Native compilation remains authoritative and must
- * revalidate the exact request before execution.
+ * estimator boundaries. This component does not invoke native preflight or
+ * execute a General SEM calculation.
  */
 export function GeneralSemEstimatorCompatibilityPanel({
   model,
@@ -211,12 +213,12 @@ export function GeneralSemEstimatorCompatibilityPanel({
   >
     <header>
       <h2 id={headingId}>Estimator compatibility preview</h2>
-      <p>Review which estimator is likely to calculate the authored General SEM request.</p>
-      <p role="note">The native compiler confirms the final capability decision before calculation.</p>
+      <p>Review which estimator passes the current client-side compiler qualification for the authored General SEM request.</p>
+      <p role="note">Compile-qualification preview only: this panel does not run a calculation or invoke native General SEM execution.</p>
     </header>
     <p className="nd-form-status" role="status" aria-live="polite" aria-atomic="true">
       Estimator compatibility preview: {options.map((option) => `${option.label}: ${option.decision.status_label}`).join("; ")}.
-      {selected ? ` Selected: ${selected.label}.` : " No runnable estimator selected."}
+      {selected ? ` Selected: ${selected.label}.` : " No compile-qualified estimator selected."}
     </p>
     <div className="nd-method-details-list">
       {options.map((option, index) => <EstimatorCard

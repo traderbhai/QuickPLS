@@ -1,20 +1,23 @@
 use crate::{
-    AnalysisRecipeV4, CapabilityCellReferenceV2, CapabilityRegistryV2,
-    CompiledAnalysisRecipeV4, CompiledPlsPlanV3, CompiledPlsPlanV3Error, CompiledRecipePlanV4,
-    GeneralSemInferenceV1,
-    GeneralSemSpecificPathLimitBehaviorV1, RecipeV4CompilationError, RecipeV4CompilerTarget,
-    SemModelV4, compile_analysis_recipe_v4, compile_pls_plan_v3,
-    validate_compiled_analysis_recipe_v4,
+    AnalysisRecipeV4, CapabilityCellReferenceV2, CapabilityRegistryV2, CompiledAnalysisRecipeV4,
+    CompiledPlsPlanV3, CompiledPlsPlanV3Error, CompiledRecipePlanV4, GeneralSemBootstrapIntervalV1,
+    GeneralSemInferenceTailV1, GeneralSemInferenceV1, GeneralSemSpecificPathLimitBehaviorV1,
+    PlsBootstrapTestTail, RecipeV4CompilationError, RecipeV4CompilerTarget, SemModelV4,
+    compile_analysis_recipe_v4, compile_pls_plan_v3, validate_compiled_analysis_recipe_v4,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 pub const GENERAL_SEM_PLS_RECIPE_ARTIFACT_SCHEMA_VERSION_V1: u32 = 1;
-pub const GENERAL_SEM_PLS_RECIPE_COMPILER_VERSION_V1: &str =
-    "recipe_v4_to_compiled_pls_plan_v3_v1";
+pub const GENERAL_SEM_PLS_RECIPE_COMPILER_VERSION_V1: &str = "recipe_v4_to_compiled_pls_plan_v3_v1";
+pub const GENERAL_SEM_PLS_BOOTSTRAP_RECIPE_COMPILER_VERSION_V1: &str =
+    "recipe_v4_to_compiled_pls_plan_v3_bootstrap_v1";
 pub const PLS_GENERAL_RECURSIVE_EFFECTS_CAPABILITY_ID_V1: &str = "smartpls.mediation";
 pub const PLS_GENERAL_RECURSIVE_EFFECTS_CELL_ID_V1: &str = "qpls3.pls.mediation";
 pub const PLS_GENERAL_RECURSIVE_EFFECTS_CAPABILITY_VERSION_V1: &str = "pls_mediation_v1";
+pub const PLS_GENERAL_BOOTSTRAP_CAPABILITY_ID_V1: &str = "smartpls.pls_bootstrapping";
+pub const PLS_GENERAL_BOOTSTRAP_CELL_ID_V1: &str = "qpls3.inference.bootstrap";
+pub const PLS_GENERAL_BOOTSTRAP_CAPABILITY_VERSION_V1: &str = "indexed_resampling_v4";
 
 pub fn pls_general_recursive_effects_capability_cell_v1() -> CapabilityCellReferenceV2 {
     CapabilityCellReferenceV2 {
@@ -22,6 +25,15 @@ pub fn pls_general_recursive_effects_capability_cell_v1() -> CapabilityCellRefer
         capability_id: PLS_GENERAL_RECURSIVE_EFFECTS_CAPABILITY_ID_V1.into(),
         cell_id: PLS_GENERAL_RECURSIVE_EFFECTS_CELL_ID_V1.into(),
         capability_version: PLS_GENERAL_RECURSIVE_EFFECTS_CAPABILITY_VERSION_V1.into(),
+    }
+}
+
+pub fn pls_general_bootstrap_capability_cell_v1() -> CapabilityCellReferenceV2 {
+    CapabilityCellReferenceV2 {
+        registry_schema_version: 2,
+        capability_id: PLS_GENERAL_BOOTSTRAP_CAPABILITY_ID_V1.into(),
+        cell_id: PLS_GENERAL_BOOTSTRAP_CELL_ID_V1.into(),
+        capability_version: PLS_GENERAL_BOOTSTRAP_CAPABILITY_VERSION_V1.into(),
     }
 }
 
@@ -36,6 +48,7 @@ pub struct CompiledGeneralSemPlsRecipeV1 {
     capability_cell: CapabilityCellReferenceV2,
     base_artifact: CompiledAnalysisRecipeV4,
     plan: CompiledPlsPlanV3,
+    recipe_analytical_sha256: String,
     general_sem_config_sha256: String,
     artifact_identity_sha256: String,
 }
@@ -65,6 +78,10 @@ impl CompiledGeneralSemPlsRecipeV1 {
         &self.general_sem_config_sha256
     }
 
+    pub fn recipe_analytical_sha256(&self) -> &str {
+        &self.recipe_analytical_sha256
+    }
+
     pub fn artifact_identity_sha256(&self) -> &str {
         &self.artifact_identity_sha256
     }
@@ -76,13 +93,43 @@ pub enum GeneralSemPlsRecipeCompilationErrorV1 {
     MissingGeneralSemConfig,
     #[error("General SEM PLS point-estimation v1 does not yet execute conditional probes")]
     ConditionalProbesNotYetExecutable,
-    #[error("General SEM PLS point-estimation v1 does not yet execute resampling inference")]
-    InferenceNotYetExecutable,
+    #[error("General SEM PLS case-bootstrap v1 executes percentile intervals only")]
+    BootstrapIntervalNotYetExecutable,
+    #[error("General SEM PLS case-bootstrap v1 executes two-sided inference only")]
+    BootstrapTailNotYetExecutable,
+    #[error(
+        "General SEM point inference requires recipe settings.bootstrap_samples=0 (found {found})"
+    )]
+    PointInferenceBootstrapSamplesMismatch { found: u32 },
+    #[error("General SEM point inference requires recipe settings.bootstrap_test_tail=two_sided")]
+    PointInferenceBootstrapTailMismatch,
+    #[error(
+        "General SEM point inference requires recipe settings.studentized_inner_samples=0 (found {found})"
+    )]
+    PointInferenceStudentizedSamplesMismatch { found: u32 },
+    #[error(
+        "General SEM case-bootstrap resamples ({expected}) differ from recipe settings.bootstrap_samples ({found})"
+    )]
+    BootstrapSamplesMismatch { expected: u32, found: u32 },
+    #[error(
+        "General SEM case-bootstrap seed ({expected}) differs from recipe settings.seed ({found})"
+    )]
+    BootstrapSeedMismatch { expected: u64, found: u64 },
+    #[error(
+        "General SEM case-bootstrap confidence_level ({expected}) differs from recipe settings.confidence_level ({found})"
+    )]
+    BootstrapConfidenceLevelMismatch { expected: f64, found: f64 },
+    #[error("General SEM case-bootstrap requires recipe settings.bootstrap_test_tail=two_sided")]
+    BootstrapRecipeTailMismatch,
+    #[error(
+        "General SEM percentile bootstrap requires recipe settings.studentized_inner_samples=0 (found {found})"
+    )]
+    BootstrapStudentizedSamplesMismatch { found: u32 },
     #[error("General SEM PLS v1 does not yet implement lazy specific-path materialization")]
     LazySpecificPathMaterializationNotYetExecutable,
-    #[error("Capability Registry V2 cannot authorize the General SEM mediation cell: {0}")]
+    #[error("Capability Registry V2 cannot authorize the required General SEM PLS cells: {0}")]
     CapabilityRegistry(String),
-    #[error("the exact General SEM mediation capability cell is not available in Labs or Standard")]
+    #[error("a required General SEM PLS capability cell is not available in Labs or Standard")]
     CapabilityUnavailable,
     #[error(transparent)]
     BaseCompilation(#[from] RecipeV4CompilationError),
@@ -106,12 +153,13 @@ pub fn compile_general_sem_pls_recipe_v1(
         .general_sem_config
         .as_ref()
         .ok_or(GeneralSemPlsRecipeCompilationErrorV1::MissingGeneralSemConfig)?;
-    ensure_point_estimation_scope(config)?;
-    ensure_capability_available()?;
+    ensure_compilation_scope(recipe, config)?;
+    ensure_capabilities_available(config)?;
 
     let target = RecipeV4CompilerTarget::PlsPlanV2;
+    let base_recipe = project_general_sem_pls_base_recipe_v1(recipe)?;
     let base_artifact = compile_analysis_recipe_v4(
-        recipe,
+        &base_recipe,
         resolved_model,
         target,
         target.capability_cell_for_method(recipe.settings.method),
@@ -126,23 +174,25 @@ pub fn compile_general_sem_pls_recipe_v1(
     }
 
     let capability_cell = pls_general_recursive_effects_capability_cell_v1();
+    let compiler_version = compiler_version_for_config(config);
+    let recipe_analytical_sha256 = crate::recipe_v4_analytical_sha256(recipe, model)?;
     let general_sem_config_sha256 = plan.general_sem_config_sha256().to_string();
     let artifact_identity_sha256 = hash_serializable(&GeneralSemArtifactIdentityV1 {
         schema_version: GENERAL_SEM_PLS_RECIPE_ARTIFACT_SCHEMA_VERSION_V1,
-        compiler_version: GENERAL_SEM_PLS_RECIPE_COMPILER_VERSION_V1,
+        compiler_version,
         capability_cell: &capability_cell,
-        base_analytical_identity_sha256: base_artifact
-            .receipt()
-            .analytical_identity_sha256(),
+        recipe_analytical_sha256: &recipe_analytical_sha256,
+        base_analytical_identity_sha256: base_artifact.receipt().analytical_identity_sha256(),
         plan_sha256: &plan.deterministic_sha256(),
         general_sem_config_sha256: &general_sem_config_sha256,
     })?;
     Ok(CompiledGeneralSemPlsRecipeV1 {
         schema_version: GENERAL_SEM_PLS_RECIPE_ARTIFACT_SCHEMA_VERSION_V1,
-        compiler_version: GENERAL_SEM_PLS_RECIPE_COMPILER_VERSION_V1.into(),
+        compiler_version: compiler_version.into(),
         capability_cell,
         base_artifact,
         plan,
+        recipe_analytical_sha256,
         general_sem_config_sha256,
         artifact_identity_sha256,
     })
@@ -153,19 +203,26 @@ pub fn validate_compiled_general_sem_pls_recipe_v1(
     recipe: &AnalysisRecipeV4,
     resolved_model: Option<&SemModelV4>,
 ) -> Result<(), GeneralSemPlsRecipeCompilationErrorV1> {
+    let config = recipe
+        .general_sem_config
+        .as_ref()
+        .ok_or(GeneralSemPlsRecipeCompilationErrorV1::MissingGeneralSemConfig)?;
+    ensure_compilation_scope(recipe, config)?;
     if artifact.schema_version != GENERAL_SEM_PLS_RECIPE_ARTIFACT_SCHEMA_VERSION_V1
-        || artifact.compiler_version != GENERAL_SEM_PLS_RECIPE_COMPILER_VERSION_V1
+        || artifact.compiler_version != compiler_version_for_config(config)
         || artifact.capability_cell != pls_general_recursive_effects_capability_cell_v1()
+        || artifact.recipe_analytical_sha256
+            != crate::recipe_v4_analytical_sha256(
+                recipe,
+                resolved_model_from_recipe(recipe, resolved_model)?,
+            )?
         || artifact.general_sem_config_sha256 != artifact.plan.general_sem_config_sha256()
         || !is_lowercase_sha256(&artifact.artifact_identity_sha256)
     {
         return Err(GeneralSemPlsRecipeCompilationErrorV1::InvalidArtifactContract);
     }
-    validate_compiled_analysis_recipe_v4(
-        artifact.base_artifact(),
-        recipe,
-        resolved_model,
-    )?;
+    let base_recipe = project_general_sem_pls_base_recipe_v1(recipe)?;
+    validate_compiled_analysis_recipe_v4(artifact.base_artifact(), &base_recipe, resolved_model)?;
     let expected = compile_general_sem_pls_recipe_v1(recipe, resolved_model)?;
     if *artifact != expected {
         return Err(GeneralSemPlsRecipeCompilationErrorV1::ArtifactMismatch);
@@ -173,14 +230,12 @@ pub fn validate_compiled_general_sem_pls_recipe_v1(
     Ok(())
 }
 
-fn ensure_point_estimation_scope(
+fn ensure_compilation_scope(
+    recipe: &AnalysisRecipeV4,
     config: &crate::GeneralSemConfigV1,
 ) -> Result<(), GeneralSemPlsRecipeCompilationErrorV1> {
     if !config.conditional_effect_probes.is_empty() {
         return Err(GeneralSemPlsRecipeCompilationErrorV1::ConditionalProbesNotYetExecutable);
-    }
-    if config.inference != GeneralSemInferenceV1::None {
-        return Err(GeneralSemPlsRecipeCompilationErrorV1::InferenceNotYetExecutable);
     }
     if config.output_policy.lazy_specific_path_materialization
         || config.output_policy.when_specific_path_limit_exceeded
@@ -190,22 +245,137 @@ fn ensure_point_estimation_scope(
             GeneralSemPlsRecipeCompilationErrorV1::LazySpecificPathMaterializationNotYetExecutable,
         );
     }
+    match config.inference {
+        GeneralSemInferenceV1::None => {
+            if recipe.settings.bootstrap_samples != 0 {
+                return Err(
+                    GeneralSemPlsRecipeCompilationErrorV1::PointInferenceBootstrapSamplesMismatch {
+                        found: recipe.settings.bootstrap_samples,
+                    },
+                );
+            }
+            if recipe.settings.bootstrap_test_tail != PlsBootstrapTestTail::TwoSided {
+                return Err(
+                    GeneralSemPlsRecipeCompilationErrorV1::PointInferenceBootstrapTailMismatch,
+                );
+            }
+            if recipe.settings.studentized_inner_samples != 0 {
+                return Err(
+                    GeneralSemPlsRecipeCompilationErrorV1::PointInferenceStudentizedSamplesMismatch {
+                        found: recipe.settings.studentized_inner_samples,
+                    },
+                );
+            }
+        }
+        GeneralSemInferenceV1::CaseBootstrap {
+            resamples,
+            seed,
+            confidence_level,
+            interval,
+            tail,
+        } => {
+            if interval != GeneralSemBootstrapIntervalV1::Percentile {
+                return Err(
+                    GeneralSemPlsRecipeCompilationErrorV1::BootstrapIntervalNotYetExecutable,
+                );
+            }
+            if tail != GeneralSemInferenceTailV1::TwoSided {
+                return Err(GeneralSemPlsRecipeCompilationErrorV1::BootstrapTailNotYetExecutable);
+            }
+            if recipe.settings.bootstrap_samples != resamples {
+                return Err(
+                    GeneralSemPlsRecipeCompilationErrorV1::BootstrapSamplesMismatch {
+                        expected: resamples,
+                        found: recipe.settings.bootstrap_samples,
+                    },
+                );
+            }
+            if recipe.settings.seed != seed {
+                return Err(
+                    GeneralSemPlsRecipeCompilationErrorV1::BootstrapSeedMismatch {
+                        expected: seed,
+                        found: recipe.settings.seed,
+                    },
+                );
+            }
+            if recipe.settings.confidence_level.to_bits() != confidence_level.to_bits() {
+                return Err(
+                    GeneralSemPlsRecipeCompilationErrorV1::BootstrapConfidenceLevelMismatch {
+                        expected: confidence_level,
+                        found: recipe.settings.confidence_level,
+                    },
+                );
+            }
+            if recipe.settings.bootstrap_test_tail != PlsBootstrapTestTail::TwoSided {
+                return Err(GeneralSemPlsRecipeCompilationErrorV1::BootstrapRecipeTailMismatch);
+            }
+            if recipe.settings.studentized_inner_samples != 0 {
+                return Err(
+                    GeneralSemPlsRecipeCompilationErrorV1::BootstrapStudentizedSamplesMismatch {
+                        found: recipe.settings.studentized_inner_samples,
+                    },
+                );
+            }
+        }
+    }
     Ok(())
 }
 
-fn ensure_capability_available() -> Result<(), GeneralSemPlsRecipeCompilationErrorV1> {
-    let expected = pls_general_recursive_effects_capability_cell_v1();
+/// Produces the exact point-scoring recipe that corresponds to a validated
+/// General SEM request. The returned recipe is the only recipe that may be
+/// paired with `CompiledGeneralSemPlsRecipeV1::base_artifact()`; the outer
+/// General SEM artifact and config digest remain authoritative for inference.
+pub fn project_general_sem_pls_base_recipe_v1(
+    recipe: &AnalysisRecipeV4,
+) -> Result<AnalysisRecipeV4, GeneralSemPlsRecipeCompilationErrorV1> {
+    let config = recipe
+        .general_sem_config
+        .as_ref()
+        .ok_or(GeneralSemPlsRecipeCompilationErrorV1::MissingGeneralSemConfig)?;
+    ensure_compilation_scope(recipe, config)?;
+    let mut base_recipe = recipe.clone();
+    if matches!(
+        config.inference,
+        GeneralSemInferenceV1::CaseBootstrap { .. }
+    ) {
+        base_recipe.settings.bootstrap_samples = 0;
+        base_recipe.settings.studentized_inner_samples = 0;
+    }
+    Ok(base_recipe)
+}
+
+fn compiler_version_for_config(config: &crate::GeneralSemConfigV1) -> &'static str {
+    match config.inference {
+        GeneralSemInferenceV1::None => GENERAL_SEM_PLS_RECIPE_COMPILER_VERSION_V1,
+        GeneralSemInferenceV1::CaseBootstrap { .. } => {
+            GENERAL_SEM_PLS_BOOTSTRAP_RECIPE_COMPILER_VERSION_V1
+        }
+    }
+}
+
+fn ensure_capabilities_available(
+    config: &crate::GeneralSemConfigV1,
+) -> Result<(), GeneralSemPlsRecipeCompilationErrorV1> {
+    let mut expected_cells = vec![pls_general_recursive_effects_capability_cell_v1()];
+    if matches!(
+        config.inference,
+        GeneralSemInferenceV1::CaseBootstrap { .. }
+    ) {
+        expected_cells.push(pls_general_bootstrap_capability_cell_v1());
+    }
     let registry = CapabilityRegistryV2::embedded().map_err(|error| {
         GeneralSemPlsRecipeCompilationErrorV1::CapabilityRegistry(error.to_string())
     })?;
-    let available = registry.option_cells().any(|cell| {
-        cell.capability_id == expected.capability_id
-            && cell.cell_id == expected.cell_id
-            && cell.capability_version == expected.capability_version
-            && (cell.standard_available() || cell.labs_available())
-    });
-    if !available {
-        return Err(GeneralSemPlsRecipeCompilationErrorV1::CapabilityUnavailable);
+    for expected in expected_cells {
+        let available = registry.option_cells().any(|cell| {
+            cell.capability_id == expected.capability_id
+                && cell.cell_id == expected.cell_id
+                && cell.capability_version == expected.capability_version
+                && (cell.standard_available() || cell.labs_available())
+        });
+        if !available {
+            return Err(GeneralSemPlsRecipeCompilationErrorV1::CapabilityUnavailable);
+        }
     }
     Ok(())
 }
@@ -216,8 +386,9 @@ fn resolved_model_from_recipe<'a>(
 ) -> Result<&'a SemModelV4, RecipeV4CompilationError> {
     match &recipe.model_binding {
         crate::AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 { model, .. } => Ok(model),
-        crate::AnalysisRecipeModelBindingV4::ProjectSemModelV4Reference { .. } => resolved_model
-            .ok_or(RecipeV4CompilationError::UnresolvedModelReference),
+        crate::AnalysisRecipeModelBindingV4::ProjectSemModelV4Reference { .. } => {
+            resolved_model.ok_or(RecipeV4CompilationError::UnresolvedModelReference)
+        }
         crate::AnalysisRecipeModelBindingV4::LegacyEstimandUnspecified { .. } => {
             Err(RecipeV4CompilationError::LegacyEstimandUnspecified)
         }
@@ -229,6 +400,7 @@ struct GeneralSemArtifactIdentityV1<'a> {
     schema_version: u32,
     compiler_version: &'a str,
     capability_cell: &'a CapabilityCellReferenceV2,
+    recipe_analytical_sha256: &'a str,
     base_analytical_identity_sha256: &'a str,
     plan_sha256: &'a str,
     general_sem_config_sha256: &'a str,
@@ -253,9 +425,9 @@ fn is_lowercase_sha256(value: &str) -> bool {
 mod tests {
     use super::*;
     use crate::{
-        ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisMethod, AnalysisRecipe, AnalysisRecipeModelBindingV4,
-        AnalysisSettings, Construct, GeneralSemConfigV1, LegacyBasicModelInterpretationV4,
-        MeasurementMode, MethodConfig, ModelSpec, StructuralPath,
+        ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisMethod, AnalysisRecipe,
+        AnalysisRecipeModelBindingV4, AnalysisSettings, Construct, GeneralSemConfigV1,
+        LegacyBasicModelInterpretationV4, MeasurementMode, MethodConfig, ModelSpec, StructuralPath,
         confirm_legacy_recipe_estimand_v4, migrate_analysis_recipe_to_v4_pending,
     };
     use chrono::{TimeZone, Utc};
@@ -325,16 +497,35 @@ mod tests {
         (recipe, model)
     }
 
+    fn configure_percentile_bootstrap(recipe: &mut AnalysisRecipeV4) {
+        let inference = GeneralSemInferenceV1::CaseBootstrap {
+            resamples: 500,
+            seed: 7,
+            confidence_level: 0.95,
+            interval: GeneralSemBootstrapIntervalV1::Percentile,
+            tail: GeneralSemInferenceTailV1::TwoSided,
+        };
+        recipe.general_sem_config.as_mut().unwrap().inference = inference;
+        recipe.settings.bootstrap_samples = 500;
+        recipe.settings.bootstrap_test_tail = PlsBootstrapTestTail::TwoSided;
+        recipe.settings.studentized_inner_samples = 0;
+        recipe.settings.seed = 7;
+        recipe.settings.confidence_level = 0.95;
+    }
+
     #[test]
     fn compilation_is_additive_deterministic_and_tamper_detecting() {
         let (recipe, model) = recipe_and_model();
         let artifact = compile_general_sem_pls_recipe_v1(&recipe, Some(&model)).unwrap();
         assert_eq!(artifact.schema_version(), 1);
         assert_eq!(artifact.plan().schema_version(), 3);
-        assert_eq!(artifact.plan().base_plan(), match artifact.base_artifact().plan() {
-            CompiledRecipePlanV4::PlsPlanV2 { plan } => plan,
-            _ => unreachable!(),
-        });
+        assert_eq!(
+            artifact.plan().base_plan(),
+            match artifact.base_artifact().plan() {
+                CompiledRecipePlanV4::PlsPlanV2 { plan } => plan,
+                _ => unreachable!(),
+            }
+        );
         validate_compiled_general_sem_pls_recipe_v1(&artifact, &recipe, Some(&model)).unwrap();
         assert_eq!(
             compile_general_sem_pls_recipe_v1(&recipe, Some(&model))
@@ -352,26 +543,171 @@ mod tests {
     }
 
     #[test]
-    fn absent_config_and_unimplemented_inference_are_explicitly_blocked() {
+    fn absent_config_is_explicitly_blocked_and_point_none_remains_compilable() {
         let (mut recipe, model) = recipe_and_model();
+        compile_general_sem_pls_recipe_v1(&recipe, Some(&model)).unwrap();
         recipe.general_sem_config = None;
         assert!(matches!(
             compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
             Err(GeneralSemPlsRecipeCompilationErrorV1::MissingGeneralSemConfig)
         ));
+    }
 
-        let mut config = GeneralSemConfigV1::default();
-        config.inference = GeneralSemInferenceV1::CaseBootstrap {
-            resamples: 100,
-            seed: 7,
-            confidence_level: 0.95,
-            interval: crate::GeneralSemBootstrapIntervalV1::Percentile,
-            tail: crate::GeneralSemInferenceTailV1::TwoSided,
-        };
-        recipe.general_sem_config = Some(config);
-        assert!(matches!(
+    #[test]
+    fn coherent_percentile_two_sided_bootstrap_compiles_deterministically() {
+        let (mut recipe, model) = recipe_and_model();
+        configure_percentile_bootstrap(&mut recipe);
+
+        let artifact = compile_general_sem_pls_recipe_v1(&recipe, Some(&model)).unwrap();
+        assert_eq!(
+            artifact.compiler_version(),
+            GENERAL_SEM_PLS_BOOTSTRAP_RECIPE_COMPILER_VERSION_V1
+        );
+        let projected = project_general_sem_pls_base_recipe_v1(&recipe).unwrap();
+        assert_eq!(projected.settings.bootstrap_samples, 0);
+        assert_eq!(projected.settings.studentized_inner_samples, 0);
+        assert_eq!(projected.settings.seed, 7);
+        assert_eq!(
+            projected.settings.confidence_level.to_bits(),
+            0.95_f64.to_bits()
+        );
+        assert_eq!(projected.general_sem_config, recipe.general_sem_config);
+        validate_compiled_analysis_recipe_v4(artifact.base_artifact(), &projected, Some(&model))
+            .unwrap();
+        validate_compiled_general_sem_pls_recipe_v1(&artifact, &recipe, Some(&model)).unwrap();
+        assert_eq!(
+            artifact.plan().general_sem_config_sha256(),
+            artifact.general_sem_config_sha256()
+        );
+        assert_eq!(
+            artifact.base_artifact().receipt().compiler_target(),
+            RecipeV4CompilerTarget::PlsPlanV2
+        );
+        assert_eq!(
+            artifact.artifact_identity_sha256(),
+            compile_general_sem_pls_recipe_v1(&recipe, Some(&model))
+                .unwrap()
+                .artifact_identity_sha256()
+        );
+    }
+
+    #[test]
+    fn bca_and_one_sided_bootstrap_remain_typed_blocked() {
+        let (mut recipe, model) = recipe_and_model();
+        configure_percentile_bootstrap(&mut recipe);
+        if let GeneralSemInferenceV1::CaseBootstrap { interval, .. } =
+            &mut recipe.general_sem_config.as_mut().unwrap().inference
+        {
+            *interval = GeneralSemBootstrapIntervalV1::Bca;
+        }
+        assert_eq!(
             compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
-            Err(GeneralSemPlsRecipeCompilationErrorV1::InferenceNotYetExecutable)
+            Err(GeneralSemPlsRecipeCompilationErrorV1::BootstrapIntervalNotYetExecutable)
+        );
+
+        configure_percentile_bootstrap(&mut recipe);
+        if let GeneralSemInferenceV1::CaseBootstrap { tail, .. } =
+            &mut recipe.general_sem_config.as_mut().unwrap().inference
+        {
+            *tail = GeneralSemInferenceTailV1::OneSidedUpper;
+        }
+        assert_eq!(
+            compile_general_sem_pls_recipe_v1(&recipe, Some(&model)),
+            Err(GeneralSemPlsRecipeCompilationErrorV1::BootstrapTailNotYetExecutable)
+        );
+    }
+
+    #[test]
+    fn bootstrap_recipe_settings_must_exactly_match_general_sem_inference() {
+        let (mut recipe, model) = recipe_and_model();
+        configure_percentile_bootstrap(&mut recipe);
+
+        let mut mismatch = recipe.clone();
+        mismatch.settings.bootstrap_samples = 501;
+        assert_eq!(
+            compile_general_sem_pls_recipe_v1(&mismatch, Some(&model)),
+            Err(
+                GeneralSemPlsRecipeCompilationErrorV1::BootstrapSamplesMismatch {
+                    expected: 500,
+                    found: 501,
+                }
+            )
+        );
+
+        let mut mismatch = recipe.clone();
+        mismatch.settings.seed = 8;
+        assert_eq!(
+            compile_general_sem_pls_recipe_v1(&mismatch, Some(&model)),
+            Err(
+                GeneralSemPlsRecipeCompilationErrorV1::BootstrapSeedMismatch {
+                    expected: 7,
+                    found: 8,
+                }
+            )
+        );
+
+        let mut mismatch = recipe.clone();
+        mismatch.settings.confidence_level = 0.90;
+        assert_eq!(
+            compile_general_sem_pls_recipe_v1(&mismatch, Some(&model)),
+            Err(
+                GeneralSemPlsRecipeCompilationErrorV1::BootstrapConfidenceLevelMismatch {
+                    expected: 0.95,
+                    found: 0.90,
+                }
+            )
+        );
+
+        let mut mismatch = recipe.clone();
+        mismatch.settings.bootstrap_test_tail = PlsBootstrapTestTail::OneSidedGreater;
+        assert_eq!(
+            compile_general_sem_pls_recipe_v1(&mismatch, Some(&model)),
+            Err(GeneralSemPlsRecipeCompilationErrorV1::BootstrapRecipeTailMismatch)
+        );
+
+        let mut mismatch = recipe;
+        mismatch.settings.studentized_inner_samples = 99;
+        assert_eq!(
+            compile_general_sem_pls_recipe_v1(&mismatch, Some(&model)),
+            Err(
+                GeneralSemPlsRecipeCompilationErrorV1::BootstrapStudentizedSamplesMismatch {
+                    found: 99,
+                }
+            )
+        );
+    }
+
+    #[test]
+    fn point_none_rejects_orphaned_bootstrap_controls() {
+        let (recipe, model) = recipe_and_model();
+
+        let mut orphaned = recipe.clone();
+        orphaned.settings.bootstrap_samples = 2;
+        assert!(matches!(
+            compile_general_sem_pls_recipe_v1(&orphaned, Some(&model)),
+            Err(
+                GeneralSemPlsRecipeCompilationErrorV1::PointInferenceBootstrapSamplesMismatch {
+                    found: 2
+                }
+            )
+        ));
+
+        let mut orphaned = recipe.clone();
+        orphaned.settings.bootstrap_test_tail = PlsBootstrapTestTail::OneSidedLess;
+        assert_eq!(
+            compile_general_sem_pls_recipe_v1(&orphaned, Some(&model)),
+            Err(GeneralSemPlsRecipeCompilationErrorV1::PointInferenceBootstrapTailMismatch)
+        );
+
+        let mut orphaned = recipe;
+        orphaned.settings.studentized_inner_samples = 99;
+        assert!(matches!(
+            compile_general_sem_pls_recipe_v1(&orphaned, Some(&model)),
+            Err(
+                GeneralSemPlsRecipeCompilationErrorV1::PointInferenceStudentizedSamplesMismatch {
+                    found: 99
+                }
+            )
         ));
     }
 }

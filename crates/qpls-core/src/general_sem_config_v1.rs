@@ -5,6 +5,10 @@ use unicode_normalization::UnicodeNormalization;
 
 pub const GENERAL_SEM_CONFIG_V1_SCHEMA_VERSION: u32 = 1;
 pub const DEFAULT_MAX_MATERIALIZED_SPECIFIC_PATHS_V1: u32 = 10_000;
+pub const GENERAL_SEM_CASE_BOOTSTRAP_MIN_RESAMPLES_V1: u32 = 2;
+pub const GENERAL_SEM_CASE_BOOTSTRAP_MAX_RESAMPLES_V1: u32 = 10_000;
+/// Largest integer that round-trips losslessly through the JavaScript JSON wire.
+pub const GENERAL_SEM_CASE_BOOTSTRAP_MAX_SEED_V1: u64 = 9_007_199_254_740_991;
 
 /// Scientific requests layered over a validated SEM model and its compiled topology.
 ///
@@ -183,12 +187,25 @@ impl GeneralSemConfigV1 {
 
         if let GeneralSemInferenceV1::CaseBootstrap {
             resamples,
+            seed,
             confidence_level,
             ..
         } = self.inference
         {
-            if resamples == 0 {
-                return Err(GeneralSemConfigV1ValidationError::ZeroBootstrapResamples);
+            if !(GENERAL_SEM_CASE_BOOTSTRAP_MIN_RESAMPLES_V1
+                ..=GENERAL_SEM_CASE_BOOTSTRAP_MAX_RESAMPLES_V1)
+                .contains(&resamples)
+            {
+                return Err(
+                    GeneralSemConfigV1ValidationError::BootstrapResamplesOutOfRange {
+                        found: resamples,
+                    },
+                );
+            }
+            if seed > GENERAL_SEM_CASE_BOOTSTRAP_MAX_SEED_V1 {
+                return Err(GeneralSemConfigV1ValidationError::BootstrapSeedOutOfRange {
+                    found: seed,
+                });
             }
             if !confidence_level.is_finite() || confidence_level <= 0.0 || confidence_level >= 1.0 {
                 return Err(GeneralSemConfigV1ValidationError::InvalidConfidenceLevel);
@@ -405,8 +422,14 @@ pub enum GeneralSemConfigV1ValidationError {
         left_index: usize,
         right_index: usize,
     },
-    #[error("case-bootstrap inference requires at least one resample")]
-    ZeroBootstrapResamples,
+    #[error(
+        "case-bootstrap inference requires {GENERAL_SEM_CASE_BOOTSTRAP_MIN_RESAMPLES_V1}..={GENERAL_SEM_CASE_BOOTSTRAP_MAX_RESAMPLES_V1} resamples (found {found})"
+    )]
+    BootstrapResamplesOutOfRange { found: u32 },
+    #[error(
+        "case-bootstrap seed must be at most {GENERAL_SEM_CASE_BOOTSTRAP_MAX_SEED_V1} so the JSON wire preserves it exactly (found {found})"
+    )]
+    BootstrapSeedOutOfRange { found: u64 },
     #[error("case-bootstrap confidence_level must be finite and strictly between 0 and 1")]
     InvalidConfidenceLevel,
     #[error("max_materialized_specific_paths must be greater than zero")]
@@ -788,7 +811,7 @@ mod tests {
             for tail in tails {
                 let mut config = comprehensive_config();
                 config.inference = GeneralSemInferenceV1::CaseBootstrap {
-                    resamples: 1,
+                    resamples: GENERAL_SEM_CASE_BOOTSTRAP_MIN_RESAMPLES_V1,
                     seed: 0,
                     confidence_level: 0.95,
                     interval,
@@ -801,17 +824,51 @@ mod tests {
             }
         }
 
-        let mut zero = comprehensive_config();
-        zero.inference = GeneralSemInferenceV1::CaseBootstrap {
-            resamples: 0,
-            seed: 9,
-            confidence_level: 0.95,
-            interval: GeneralSemBootstrapIntervalV1::Percentile,
-            tail: GeneralSemInferenceTailV1::TwoSided,
-        };
+        for invalid_resamples in [0, 1, GENERAL_SEM_CASE_BOOTSTRAP_MAX_RESAMPLES_V1 + 1] {
+            let mut invalid = comprehensive_config();
+            invalid.inference = GeneralSemInferenceV1::CaseBootstrap {
+                resamples: invalid_resamples,
+                seed: 9,
+                confidence_level: 0.95,
+                interval: GeneralSemBootstrapIntervalV1::Percentile,
+                tail: GeneralSemInferenceTailV1::TwoSided,
+            };
+            assert_eq!(
+                invalid.ensure_valid(),
+                Err(
+                    GeneralSemConfigV1ValidationError::BootstrapResamplesOutOfRange {
+                        found: invalid_resamples,
+                    }
+                )
+            );
+        }
+
+        for valid_resamples in [
+            GENERAL_SEM_CASE_BOOTSTRAP_MIN_RESAMPLES_V1,
+            GENERAL_SEM_CASE_BOOTSTRAP_MAX_RESAMPLES_V1,
+        ] {
+            let mut valid = comprehensive_config();
+            if let GeneralSemInferenceV1::CaseBootstrap { resamples, .. } = &mut valid.inference {
+                *resamples = valid_resamples;
+            }
+            valid.ensure_valid().unwrap();
+        }
+
+        let mut max_seed = comprehensive_config();
+        if let GeneralSemInferenceV1::CaseBootstrap { seed, .. } = &mut max_seed.inference {
+            *seed = GENERAL_SEM_CASE_BOOTSTRAP_MAX_SEED_V1;
+        }
+        max_seed.ensure_valid().unwrap();
+
+        let mut unsafe_seed = max_seed;
+        if let GeneralSemInferenceV1::CaseBootstrap { seed, .. } = &mut unsafe_seed.inference {
+            *seed = GENERAL_SEM_CASE_BOOTSTRAP_MAX_SEED_V1 + 1;
+        }
         assert_eq!(
-            zero.ensure_valid(),
-            Err(GeneralSemConfigV1ValidationError::ZeroBootstrapResamples)
+            unsafe_seed.ensure_valid(),
+            Err(GeneralSemConfigV1ValidationError::BootstrapSeedOutOfRange {
+                found: GENERAL_SEM_CASE_BOOTSTRAP_MAX_SEED_V1 + 1,
+            })
         );
 
         for confidence_level in [f64::NAN, f64::NEG_INFINITY, 0.0, 1.0, 1.01] {
@@ -854,7 +911,7 @@ mod tests {
         assert!(
             error
                 .to_string()
-                .contains("case-bootstrap inference requires at least one resample")
+                .contains("case-bootstrap inference requires 2..=10000 resamples")
         );
     }
 

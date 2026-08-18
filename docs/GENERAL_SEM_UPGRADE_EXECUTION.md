@@ -98,13 +98,66 @@ work-evidence harnesses. The full desktop suite also passes after tightening the
 CB-SEM exact-bootstrap archive validator so studentized-table injection and
 cross-version relabeling fail closed.
 
+## Checkpoint C: bounded PLS multiple-mediation case bootstrap
+
+The next executable slice adds Experimental Labs inference to the qualified PLS
+multiple-mediation boundary. It is intentionally limited to a two-sided case
+bootstrap with percentile intervals calculated by the frozen Type-7 quantile
+rule. Replicate counts must be between 2 and 10,000 inclusive, and publication
+requires at least `max(2, ceil(0.9 * B))` usable replicates.
+
+Within that boundary the slice:
+
+- refits the complete original PLS model inside every bootstrap replicate and
+  refuses a stale point result, rather than resampling only derived effects;
+- assigns deterministic indexed bootstrap streams so supported worker-count
+  changes produce the same scientific result;
+- reports specific indirect, total indirect, and total effects with stable
+  typed effect identities, usable/exceedance counts, plus-one two-sided
+  p-values, standard errors, and percentile intervals;
+- binds the canonical inference receipt to the exact recipe, model, dataset,
+  compiled PLS/effect plan, capability cell, initialization, bootstrap method,
+  quantile rule, summation rule, seed, and requested/effective worker settings;
+- makes schema-6 persistence re-resolve the resident Recipe V4, SemModel V4,
+  and dataset, deterministically recompile the plan, and reject stale or
+  tampered General SEM result authority; and
+- mirrors the new receipt and invariants in the TypeScript canonical parser,
+  adds JavaScript-safe seed and path-identity preflight checks, and keeps the
+  estimator compatibility panel explicit that this is compiler qualification,
+  not a native calculation workflow.
+
+BCa, one-sided, studentized, conditional-probe, and lazy-materialization cells
+remain blocked. There is no native General SEM execution command and no complete
+new-project creation -> model/data binding -> calculate journey. This checkpoint
+therefore remains Labs-only; it is neither roadmap completion nor a Standard
+promotion.
+
+### Verified evidence for checkpoint C
+
+| Scope | Verified result | Qualification |
+| --- | ---: | --- |
+| `qpls-core` full suite | 238 passed | Green for the extended canonical contract and deterministic plan identities |
+| `qpls-resampling` full suite | 115 passed | Green for the bounded kernel, deterministic partial-failure ledger, 90% no-result gate, and existing resampling regressions |
+| `qpls-runner` full suite | 60 passed; 2 intentionally ignored | Green for the point and bounded bootstrap adapters |
+| `qpls-project` full suite | 171 unit + 2 integration passed; authority test rerun passed after label hardening | Green for resident schema-6 authority recompile and strict persisted-result binding |
+| Frontend focused shared-parser/readback group | 67 passed | Green for one strict General SEM parser across native, schema-6 result, and archive readers |
+| Frontend full typecheck | Passed | Repository command `npm run typecheck:full` |
+| Frontend full Vitest suite | 170 files; 1,325 passed | Green after final shared-reader hardening |
+| `quickpls-desktop` full suite | 143 passed; 1 intentionally ignored | Green for native-shell compilation and existing desktop regressions |
+
+These results qualify only the bounded Labs compiler/runtime cell described
+above. They do not imply a user-visible native calculation workflow or a
+Standard promotion.
+
 ## Remaining Labs blockers
 
 The roadmap is not complete. The following must remain blocked until their
 compiler, execution, canonical-result, persistence, and qualification evidence
 is implemented and rerun:
 
-- bootstrap/resampling inference, including interval and tail semantics;
+- every resampling cell outside the bounded PLS case-bootstrap qualification,
+  including BCa, one-sided and studentized inference, conditional probes, lazy
+  materialization, and any unfrozen interval or tail semantics;
 - conditional-effect probes and moderated-mediation execution;
 - execution of multiple interactions in one model, three-way interaction
   authoring, and conditional interaction surfaces;
@@ -114,10 +167,20 @@ is implemented and rerun:
 - strict parsing of raw legacy-workspace `interaction_v2` payloads outside the
   schema-6 authority path;
 - wiring the authoritative native preflight into the calculation workflow;
+- a resident-authority-valid Rust output -> schema-6 archive -> frontend
+  golden readback fixture; current frontend fixtures prove strict parser
+  behavior but are not substitutes for that cross-runtime qualification;
+- registering and independently qualifying an exact combination-specific
+  Capability Registry V2 option cell for General SEM multiple-mediation,
+  full-model percentile bootstrap instead of treating the existing generic
+  bootstrap cell as qualification of that combined workflow;
 - a native General SEM execution, monitoring/cancellation, canonical-result
   persistence, result-view, and export path; and
+- General SEM-aware semantic result comparison and semantic export/readback;
+  the current table-oriented projections intentionally do not interpret the
+  additive General SEM result extension; and
 - end-to-end UI workflow wiring for configuration, estimator selection,
   execution, progress/cancellation, results, export, reopen, and recovery.
 
 No capability should be promoted from Blocked or Experimental Labs solely from
-the foundation or the current PLS point-estimation slice.
+the foundation, point-estimation, or bounded case-bootstrap slices.

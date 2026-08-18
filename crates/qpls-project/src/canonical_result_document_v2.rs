@@ -3,13 +3,15 @@ pub use qpls_core::{
     CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION, CanonicalAggregateEffectKindV1,
     CanonicalAggregateEffectResultV1, CanonicalCbsemFitResultV1,
     CanonicalConditionalEffectProbeResultV1, CanonicalConditionalEffectResultV1,
-    CanonicalConditionalProbeValuesResultV1, CanonicalGeneralSemEstimateV1,
-    CanonicalGeneralSemIntervalV1, CanonicalGeneralSemResultTraceV1, CanonicalGeneralSemResultsV1,
-    CanonicalHocRelationEstimateV1, CanonicalHocStageKindV1, CanonicalHocStageResultV1,
-    CanonicalIdentificationDiagnosticV1, CanonicalIdentificationScopeV1,
-    CanonicalIdentificationStatusV1, CanonicalInteractionPlotPointV1,
-    CanonicalInteractionPlotResultV1, CanonicalInteractionPlotSeriesV1,
-    CanonicalSpecificIndirectEffectResultV1,
+    CanonicalConditionalProbeValuesResultV1, CanonicalGeneralSemBootstrapIntervalV1,
+    CanonicalGeneralSemEstimateV1, CanonicalGeneralSemFailedReplicateV1,
+    CanonicalGeneralSemInferenceKindV1, CanonicalGeneralSemInferenceReceiptV1,
+    CanonicalGeneralSemInferenceTailV1, CanonicalGeneralSemIntervalV1,
+    CanonicalGeneralSemResultTraceV1, CanonicalGeneralSemResultsV1, CanonicalHocRelationEstimateV1,
+    CanonicalHocStageKindV1, CanonicalHocStageResultV1, CanonicalIdentificationDiagnosticV1,
+    CanonicalIdentificationScopeV1, CanonicalIdentificationStatusV1,
+    CanonicalInteractionPlotPointV1, CanonicalInteractionPlotResultV1,
+    CanonicalInteractionPlotSeriesV1, CanonicalSpecificIndirectEffectResultV1,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -563,11 +565,11 @@ impl CanonicalResultProvenanceV2 {
         }
         for (field, digest) in [
             ("model_digest", self.model_digest.as_str()),
-            ("dataset_fingerprint", self.dataset_fingerprint.as_str()),
             ("recipe_digest", self.recipe_digest.as_str()),
         ] {
             require_sha256(digest, &format!("provenance.{field}"))?;
         }
+        require_dataset_fingerprint(&self.dataset_fingerprint, "provenance.dataset_fingerprint")?;
         capability_identity(&self.capability_cell)?;
         if self
             .seed
@@ -616,6 +618,12 @@ fn validate_general_sem_results_with_core(
 fn ensure_general_sem_results_finite(
     results: &CanonicalGeneralSemResultsV1,
 ) -> Result<(), CanonicalResultDocumentV2Error> {
+    if let Some(receipt) = &results.inference_receipt {
+        require_finite(
+            receipt.confidence_level,
+            "general_sem_results.inference_receipt.confidence_level",
+        )?;
+    }
     for (index, effect) in results.specific_indirect_effects.iter().enumerate() {
         ensure_general_sem_estimate_finite(
             &effect.value,
@@ -719,6 +727,8 @@ fn ensure_general_sem_estimate_finite(
     context: &str,
 ) -> Result<(), CanonicalResultDocumentV2Error> {
     require_finite(value.estimate, &format!("{context}.estimate"))?;
+    ensure_optional_finite(value.bootstrap_mean, &format!("{context}.bootstrap_mean"))?;
+    ensure_optional_finite(value.bootstrap_bias, &format!("{context}.bootstrap_bias"))?;
     ensure_optional_finite(value.standard_error, &format!("{context}.standard_error"))?;
     ensure_optional_finite(value.lower, &format!("{context}.lower"))?;
     ensure_optional_finite(value.upper, &format!("{context}.upper"))?;
@@ -997,6 +1007,23 @@ fn require_sha256(value: &str, context: &str) -> Result<(), CanonicalResultDocum
     Ok(())
 }
 
+fn require_dataset_fingerprint(
+    value: &str,
+    context: &str,
+) -> Result<(), CanonicalResultDocumentV2Error> {
+    let digest = value.strip_prefix("v2:").unwrap_or(value);
+    if digest.len() != 64
+        || !digest
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+    {
+        return invalid(format!(
+            "{context} must be bare lowercase SHA-256 or v2:<lowercase SHA-256>"
+        ));
+    }
+    Ok(())
+}
+
 fn invalid<T>(message: impl Into<String>) -> Result<T, CanonicalResultDocumentV2Error> {
     Err(invalid_error(message))
 }
@@ -1028,6 +1055,15 @@ mod tests {
         }
     }
 
+    fn bootstrap_capability_cell() -> CapabilityCellReferenceV2 {
+        CapabilityCellReferenceV2 {
+            registry_schema_version: 2,
+            capability_id: "smartpls.pls_bootstrapping".into(),
+            cell_id: "qpls3.inference.bootstrap".into(),
+            capability_version: "indexed_resampling_v4".into(),
+        }
+    }
+
     fn core_capability_cell() -> qpls_core::CapabilityCellReferenceV2 {
         qpls_core::CapabilityCellReferenceV2 {
             registry_schema_version: 2,
@@ -1047,40 +1083,64 @@ mod tests {
     fn estimate(value: f64) -> CanonicalGeneralSemEstimateV1 {
         CanonicalGeneralSemEstimateV1 {
             estimate: value,
-            standard_error: Some(0.05),
-            lower: Some(value - 0.1),
-            upper: Some(value + 0.1),
-            p_value: Some(0.01),
+            bootstrap_mean: None,
+            bootstrap_bias: None,
+            standard_error: None,
+            lower: None,
+            upper: None,
+            p_value: None,
+            bootstrap_usable_replicates: None,
+            bootstrap_two_sided_exceedances: None,
         }
     }
 
     fn complete_general_sem_results() -> CanonicalGeneralSemResultsV1 {
         CanonicalGeneralSemResultsV1 {
             schema_version: CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION,
+            inference_receipt: None,
             specific_indirect_effects: vec![CanonicalSpecificIndirectEffectResultV1 {
-                effect_id: "effect_specific_1".into(),
+                effect_id: qpls_core::specific_directed_path_identity_v1(&[
+                    "relation_x_m".to_string(),
+                    "relation_m_y".to_string(),
+                ]),
                 estimand_id: "estimand_specific_1".into(),
                 trace: trace(),
+                source_id: "construct:x".into(),
+                target_id: "construct:y".into(),
                 ordered_relation_ids: vec!["relation_x_m".into(), "relation_m_y".into()],
                 value: estimate(0.2),
             }],
             aggregate_effects: vec![
                 CanonicalAggregateEffectResultV1 {
-                    effect_id: "effect_total_effect_1".into(),
+                    effect_id: "estimand_total_effect_1".into(),
                     estimand_id: "estimand_total_effect_1".into(),
                     trace: trace(),
                     kind: CanonicalAggregateEffectKindV1::TotalEffect,
                     source_id: "construct:x".into(),
                     target_id: "construct:y".into(),
+                    direct_relation_ids: vec!["relation_x_y".into()],
+                    contributing_path_identities: vec![
+                        qpls_core::specific_directed_path_identity_v1(&[
+                            "relation_x_m".to_string(),
+                            "relation_m_y".to_string(),
+                        ]),
+                    ],
                     value: estimate(0.5),
                 },
                 CanonicalAggregateEffectResultV1 {
-                    effect_id: "effect_total_indirect_1".into(),
+                    effect_id: "estimand_total_indirect_1".into(),
                     estimand_id: "estimand_total_indirect_1".into(),
                     trace: trace(),
                     kind: CanonicalAggregateEffectKindV1::TotalIndirect,
                     source_id: "construct:x".into(),
                     target_id: "construct:y".into(),
+                    direct_relation_ids: Vec::new(),
+                    contributing_path_identities: vec![
+                        qpls_core::specific_directed_path_identity_v1(&[
+                            "relation_x_m".to_string(),
+                            "relation_m_y".to_string(),
+                        ]),
+                    ],
                     value: estimate(0.2),
                 },
             ],
@@ -1230,6 +1290,91 @@ mod tests {
         }
     }
 
+    fn complete_general_sem_inference_results() -> CanonicalGeneralSemResultsV1 {
+        let mut results = complete_general_sem_results();
+        for effect in &mut results.specific_indirect_effects {
+            effect.value = inferred_estimate(effect.value.estimate);
+        }
+        for effect in &mut results.aggregate_effects {
+            effect.value = inferred_estimate(effect.value.estimate);
+        }
+        let mut effect_ids = results
+            .specific_indirect_effects
+            .iter()
+            .map(|effect| effect.effect_id.clone())
+            .chain(
+                results
+                    .aggregate_effects
+                    .iter()
+                    .map(|effect| effect.effect_id.clone()),
+            )
+            .collect::<Vec<_>>();
+        effect_ids.sort();
+        let usable_indices = (0..10_u32)
+            .filter(|replicate_index| *replicate_index != 7)
+            .collect::<Vec<_>>();
+        results.inference_receipt = Some(CanonicalGeneralSemInferenceReceiptV1 {
+            kind: CanonicalGeneralSemInferenceKindV1::CaseBootstrap,
+            capability_cell: qpls_core::general_sem_pls_bootstrap_capability_cell_v1(),
+            method_version: qpls_core::GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1.into(),
+            resampling_operation_version:
+                qpls_core::GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1.into(),
+            resampling_stream_version:
+                qpls_core::GENERAL_SEM_INDEXED_CASE_RESAMPLING_STREAM_VERSION_V1.into(),
+            quantile_method_version: qpls_core::GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1.into(),
+            standard_error_method_version:
+                qpls_core::GENERAL_SEM_SAMPLE_STANDARD_ERROR_METHOD_VERSION_V1.into(),
+            summation_method_version: qpls_core::GENERAL_SEM_NEUMAIER_SUMMATION_METHOD_VERSION_V1
+                .into(),
+            p_value_method_version:
+                qpls_core::GENERAL_SEM_NULL_CENTERED_PLUS_ONE_P_VALUE_METHOD_VERSION_V1.into(),
+            failure_policy_version:
+                qpls_core::GENERAL_SEM_MINIMUM_USABLE_FRACTION_POLICY_VERSION_V1.into(),
+            compilation_artifact_identity_sha256: "d".repeat(64),
+            compiled_plan_sha256: "9".repeat(64),
+            general_sem_config_sha256: "e".repeat(64),
+            recipe_analytical_sha256: "c".repeat(64),
+            model_scientific_sha256: "a".repeat(64),
+            source_dataset_fingerprint: "b".repeat(64),
+            complete_case_frame_sha256: "f".repeat(64),
+            usable_replicate_indices_sha256: qpls_core::sha256_serialized(&usable_indices),
+            effect_identity_set_sha256: qpls_core::general_sem_effect_identity_set_sha256_v1(
+                &qpls_core::canonical_general_sem_effect_identities_v1(&results),
+            ),
+            effect_ids,
+            interval: CanonicalGeneralSemBootstrapIntervalV1::PercentileType7,
+            tail: CanonicalGeneralSemInferenceTailV1::TwoSided,
+            confidence_level: 0.95,
+            resamples_requested: 10,
+            resamples_usable: 9,
+            minimum_usable_resamples: 9,
+            seed: "1".to_string(),
+            workers: 1,
+            complete_model_reestimated_per_replicate: true,
+            failed_replicates: vec![CanonicalGeneralSemFailedReplicateV1 {
+                replicate_index: 7,
+                reason_code:
+                    qpls_core::CanonicalGeneralSemFailedReplicateReasonV1::EstimationNonconvergence,
+                message: "The complete model did not converge for this draw.".into(),
+            }],
+        });
+        results
+    }
+
+    fn inferred_estimate(value: f64) -> CanonicalGeneralSemEstimateV1 {
+        CanonicalGeneralSemEstimateV1 {
+            estimate: value,
+            bootstrap_mean: Some(value + 0.01),
+            bootstrap_bias: Some(0.01),
+            standard_error: Some(0.05),
+            lower: Some(value - 0.1),
+            upper: Some(value + 0.1),
+            p_value: Some(0.2),
+            bootstrap_usable_replicates: Some(9),
+            bootstrap_two_sided_exceedances: Some(1),
+        }
+    }
+
     fn document() -> CanonicalResultDocumentV2 {
         CanonicalResultDocumentV2 {
             schema_version: CANONICAL_RESULT_DOCUMENT_V2_SCHEMA_VERSION,
@@ -1285,6 +1430,65 @@ mod tests {
             serde_json::from_slice(&encoded).unwrap();
         let core_validation = qpls_core::validate_canonical_result_document_v2(&core_document);
         assert!(core_validation.passed, "{:?}", core_validation.errors);
+    }
+
+    #[test]
+    fn general_sem_inference_receipt_round_trips_and_fails_closed_in_archive_wire() {
+        let mut source = document();
+        source.capability_cells = Some(vec![capability_cell(), bootstrap_capability_cell()]);
+        source.general_sem_results = Some(complete_general_sem_inference_results());
+        source.ensure_valid().unwrap();
+
+        let attachment =
+            CanonicalResultDocumentAttachmentV2::from_document(source.clone()).unwrap();
+        let encoded = serde_json::to_vec(&attachment).unwrap();
+        let restored: CanonicalResultDocumentAttachmentV2 =
+            serde_json::from_slice(&encoded).unwrap();
+        restored.ensure_valid("project_1").unwrap();
+        assert_eq!(restored.canonical_document(), &source);
+        let receipt = restored
+            .canonical_document()
+            .general_sem_results
+            .as_ref()
+            .unwrap()
+            .inference_receipt
+            .as_ref()
+            .unwrap();
+        assert_eq!(receipt.seed, "1");
+        assert_eq!(receipt.resamples_usable, 9);
+
+        let mut nonfinite = source.clone();
+        nonfinite
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .specific_indirect_effects[0]
+            .value
+            .bootstrap_mean = Some(f64::NAN);
+        assert!(
+            nonfinite
+                .ensure_valid()
+                .unwrap_err()
+                .to_string()
+                .contains("bootstrap_mean must be finite")
+        );
+
+        let mut tampered = source;
+        tampered
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .inference_receipt
+            .as_mut()
+            .unwrap()
+            .effect_identity_set_sha256 = "0".repeat(64);
+        assert!(
+            tampered
+                .ensure_valid()
+                .unwrap_err()
+                .to_string()
+                .contains("effect_identity_set_sha256 does not match")
+        );
     }
 
     #[test]

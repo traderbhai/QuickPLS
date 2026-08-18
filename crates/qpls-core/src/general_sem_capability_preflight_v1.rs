@@ -1,23 +1,24 @@
 use crate::{
     CompiledCbsemExecutionDispositionV3, CompiledCbsemStructuralFormV3, CompiledPlsPlanV3Error,
-    GeneralSemConfigV1, GeneralSemInferenceV1, GeneralSemSpecificPathLimitBehaviorV1,
-    SemCapabilityCellIdV1, SemCapabilityDecisionStatusV1, SemCapabilityDecisionV1,
-    SemCapabilityDecisionV1ValidationError, SemCapabilityDiagnosticSeverityV1,
-    SemCapabilityDiagnosticV1, SemCapabilityEvidenceV1, SemModelV4, compile_cbsem_plan_v3,
-    compile_pls_plan_v3,
+    GeneralSemBootstrapIntervalV1, GeneralSemConfigV1, GeneralSemInferenceTailV1,
+    GeneralSemInferenceV1, GeneralSemSpecificPathLimitBehaviorV1, SemCapabilityCellIdV1,
+    SemCapabilityDecisionStatusV1, SemCapabilityDecisionV1, SemCapabilityDecisionV1ValidationError,
+    SemCapabilityDiagnosticSeverityV1, SemCapabilityDiagnosticV1, SemCapabilityEvidenceV1,
+    SemModelV4, compile_cbsem_plan_v3, compile_pls_plan_v3,
 };
 
 pub const GENERAL_SEM_PLS_ESTIMATOR_ID_V1: &str = "qpls.pls_sem.v3";
 pub const GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1: &str = "qpls.cbsem.v3";
 
-/// Exact, recovery-oriented preflight for the currently executable General SEM
-/// PLS point-estimation slice. Model semantics are inspected but never changed.
+/// Exact, recovery-oriented preflight for the General SEM PLS point-estimation
+/// and bounded percentile case-bootstrap compiler slices. Model semantics are
+/// inspected but never changed.
 pub fn preflight_general_sem_pls_v1(
     model: &SemModelV4,
     config: &GeneralSemConfigV1,
 ) -> Result<SemCapabilityDecisionV1, SemCapabilityDecisionV1ValidationError> {
-    let cell = pls_cell()?;
-    let evidence = vec![
+    let capability_cells = pls_cells(config)?;
+    let mut evidence = vec![
         SemCapabilityEvidenceV1::new(
             "capability_registry_v2:smartpls.mediation:qpls3.pls.mediation:pls_mediation_v1",
             "Capability Registry V2 exposes the exact mediation option in Experimental Labs.",
@@ -27,6 +28,19 @@ pub fn preflight_general_sem_pls_v1(
             "The versioned PLS v3 compiler preserves the proven v2 scoring plan and adds stable topology and effect identities.",
         )?,
     ];
+    if matches!(
+        config.inference,
+        GeneralSemInferenceV1::CaseBootstrap { .. }
+    ) {
+        evidence.push(SemCapabilityEvidenceV1::new(
+            "compiler:recipe_v4_to_compiled_pls_plan_v3_bootstrap_v1",
+            "The bootstrap compiler binds exact Recipe V4 inference settings to the General SEM config while retaining the proven point-scoring plan.",
+        )?);
+        evidence.push(SemCapabilityEvidenceV1::new(
+            "capability_registry_v2:smartpls.pls_bootstrapping:qpls3.inference.bootstrap:indexed_resampling_v4",
+            "Capability Registry V2 exposes the bounded indexed case-resampling primitive used by this General SEM compiler slice.",
+        )?);
+    }
     let mut diagnostics = execution_scope_diagnostics(config)?;
     match compile_pls_plan_v3(model, config) {
         Ok(_) => {}
@@ -36,7 +50,7 @@ pub fn preflight_general_sem_pls_v1(
         return SemCapabilityDecisionV1::new(
             SemCapabilityDecisionStatusV1::Blocked,
             GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
-            vec![cell],
+            capability_cells,
             diagnostics,
             evidence,
             "PLS-SEM cannot calculate this exact General SEM request yet.",
@@ -46,17 +60,31 @@ pub fn preflight_general_sem_pls_v1(
     SemCapabilityDecisionV1::new(
         SemCapabilityDecisionStatusV1::Experimental,
         GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
-        vec![cell],
+        capability_cells,
         vec![SemCapabilityDiagnosticV1::new(
             "sem.capability.pls.experimental_labs",
             SemCapabilityDiagnosticSeverityV1::Info,
             None,
-            "General recursive PLS point estimation and path-specific effects are available in Experimental Labs.",
+            match config.inference {
+                GeneralSemInferenceV1::None => {
+                    "General recursive PLS point estimation and path-specific effects pass the Experimental Labs compiler preflight."
+                }
+                GeneralSemInferenceV1::CaseBootstrap { .. } => {
+                    "General recursive PLS percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
+                }
+            },
             Vec::new(),
         )?],
         evidence,
-        "PLS-SEM can calculate this request in Experimental Labs.",
-        "The complete recursive model is re-estimated by the proven PLS score executor and decomposed through stable relation-path identities. Resampling and conditional effects require separate qualified cells.",
+        "PLS-SEM can compile this exact request in Experimental Labs.",
+        match config.inference {
+            GeneralSemInferenceV1::None => {
+                "The compiler binds the proven PLS scoring plan to stable relation-path identities. Runtime validation remains authoritative before a result can be published."
+            }
+            GeneralSemInferenceV1::CaseBootstrap { .. } => {
+                "The compiler binds percentile, two-sided case resampling to both the mediation and indexed-resampling cells. Runtime inference must carry a matching complete-model re-estimation receipt before publication."
+            }
+        },
     )
 }
 
@@ -141,16 +169,29 @@ fn execution_scope_diagnostics(
             ],
         )?);
     }
-    if config.inference != GeneralSemInferenceV1::None {
-        diagnostics.push(SemCapabilityDiagnosticV1::new(
-            "sem.capability.pls.general_inference_not_executable",
-            SemCapabilityDiagnosticSeverityV1::Error,
-            None,
-            "General SEM case-bootstrap inference is requested but is not connected to the v3 execution adapter.",
-            vec![
-                "Set General SEM inference to none for the current point-estimation slice, or use a separately qualified bounded bootstrap workflow.".into(),
-            ],
-        )?);
+    if let GeneralSemInferenceV1::CaseBootstrap { interval, tail, .. } = config.inference {
+        if interval != GeneralSemBootstrapIntervalV1::Percentile {
+            diagnostics.push(SemCapabilityDiagnosticV1::new(
+                "sem.capability.pls.general_bootstrap_bca_not_executable",
+                SemCapabilityDiagnosticSeverityV1::Error,
+                None,
+                "BCa intervals are represented in the General SEM contract but are not qualified for this execution slice.",
+                vec![
+                    "Choose percentile intervals with two-sided inference, or set inference to none until the full General SEM delete-one effect ledger is qualified.".into(),
+                ],
+            )?);
+        }
+        if tail != GeneralSemInferenceTailV1::TwoSided {
+            diagnostics.push(SemCapabilityDiagnosticV1::new(
+                "sem.capability.pls.general_bootstrap_one_sided_not_executable",
+                SemCapabilityDiagnosticSeverityV1::Error,
+                None,
+                "One-sided General SEM bootstrap intervals are represented but their interval semantics are not yet qualified.",
+                vec![
+                    "Choose two-sided inference, or set inference to none until the directional interval contract is qualified.".into(),
+                ],
+            )?);
+        }
     }
     if config.output_policy.lazy_specific_path_materialization
         || config.output_policy.when_specific_path_limit_exceeded
@@ -222,6 +263,28 @@ fn pls_cell() -> Result<SemCapabilityCellIdV1, SemCapabilityDecisionV1Validation
         "qpls3.pls.mediation",
         "pls_mediation_v1",
     )
+}
+
+fn pls_bootstrap_cell() -> Result<SemCapabilityCellIdV1, SemCapabilityDecisionV1ValidationError> {
+    SemCapabilityCellIdV1::new(
+        2,
+        "smartpls.pls_bootstrapping",
+        "qpls3.inference.bootstrap",
+        "indexed_resampling_v4",
+    )
+}
+
+fn pls_cells(
+    config: &GeneralSemConfigV1,
+) -> Result<Vec<SemCapabilityCellIdV1>, SemCapabilityDecisionV1ValidationError> {
+    let mut cells = vec![pls_cell()?];
+    if matches!(
+        config.inference,
+        GeneralSemInferenceV1::CaseBootstrap { .. }
+    ) {
+        cells.push(pls_bootstrap_cell()?);
+    }
+    Ok(cells)
 }
 
 fn cbsem_cell() -> Result<SemCapabilityCellIdV1, SemCapabilityDecisionV1ValidationError> {
@@ -328,7 +391,7 @@ mod tests {
     }
 
     #[test]
-    fn unimplemented_inference_is_never_silently_ignored() {
+    fn percentile_two_sided_bootstrap_is_experimental_and_requires_both_exact_cells() {
         let model = recursive_model();
         let mut config = GeneralSemConfigV1::default();
         config.inference = GeneralSemInferenceV1::CaseBootstrap {
@@ -339,9 +402,65 @@ mod tests {
             tail: crate::GeneralSemInferenceTailV1::TwoSided,
         };
         let decision = preflight_general_sem_pls_v1(&model, &config).unwrap();
-        assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Blocked);
-        assert!(decision.diagnostics().iter().any(|diagnostic| {
-            diagnostic.code() == "sem.capability.pls.general_inference_not_executable"
+        assert_eq!(
+            decision.status(),
+            SemCapabilityDecisionStatusV1::Experimental
+        );
+        assert_eq!(decision.capability_cells().len(), 2);
+        assert!(decision.capability_cells().iter().any(|cell| {
+            cell.capability_id() == "smartpls.mediation" && cell.cell_id() == "qpls3.pls.mediation"
         }));
+        assert!(decision.capability_cells().iter().any(|cell| {
+            cell.capability_id() == "smartpls.pls_bootstrapping"
+                && cell.cell_id() == "qpls3.inference.bootstrap"
+                && cell.capability_version() == "indexed_resampling_v4"
+        }));
+        assert!(decision.evidence().iter().any(|item| {
+            item.evidence_id() == "compiler:recipe_v4_to_compiled_pls_plan_v3_bootstrap_v1"
+        }));
+        assert!(decision.explanation().contains("matching complete-model"));
+    }
+
+    #[test]
+    fn bca_and_one_sided_bootstrap_are_typed_blocked_without_dropping_cells() {
+        let model = recursive_model();
+        for (interval, tail, expected_code) in [
+            (
+                crate::GeneralSemBootstrapIntervalV1::Bca,
+                crate::GeneralSemInferenceTailV1::TwoSided,
+                "sem.capability.pls.general_bootstrap_bca_not_executable",
+            ),
+            (
+                crate::GeneralSemBootstrapIntervalV1::Percentile,
+                crate::GeneralSemInferenceTailV1::OneSidedLower,
+                "sem.capability.pls.general_bootstrap_one_sided_not_executable",
+            ),
+        ] {
+            let mut config = GeneralSemConfigV1::default();
+            config.inference = GeneralSemInferenceV1::CaseBootstrap {
+                resamples: 500,
+                seed: 11,
+                confidence_level: 0.95,
+                interval,
+                tail,
+            };
+            let decision = preflight_general_sem_pls_v1(&model, &config).unwrap();
+            assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Blocked);
+            assert_eq!(decision.capability_cells().len(), 2);
+            assert!(
+                decision
+                    .diagnostics()
+                    .iter()
+                    .any(|diagnostic| diagnostic.code() == expected_code)
+            );
+            assert!(
+                decision
+                    .diagnostics()
+                    .iter()
+                    .filter(|diagnostic| diagnostic.severity()
+                        == SemCapabilityDiagnosticSeverityV1::Error)
+                    .all(|diagnostic| !diagnostic.corrections().is_empty())
+            );
+        }
     }
 }
