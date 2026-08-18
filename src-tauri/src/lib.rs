@@ -2,7 +2,9 @@ mod capability_registry_command;
 #[cfg(test)]
 mod pls_algorithm_current_product_qualification;
 mod pls_model_comparison_jobs;
+mod project_archive_v6_general_sem_preflight;
 mod project_archive_v6_model_mutation;
+mod project_archive_v6_new_general_sem;
 mod project_archive_v6_read;
 mod project_archive_v6_save_copy;
 mod project_schema6_result_append;
@@ -26,7 +28,9 @@ use pls_model_comparison_jobs::{
     dismiss_internal_labs_pls_model_comparison_job, internal_labs_pls_model_comparison_job_result,
     internal_labs_pls_model_comparison_job_status, start_internal_labs_pls_model_comparison_job,
 };
+use project_archive_v6_general_sem_preflight::preflight_internal_general_sem_estimators_v1;
 use project_archive_v6_model_mutation::mutate_internal_project_archive_v6_model;
+use project_archive_v6_new_general_sem::create_internal_general_sem_project_archive_v6;
 use project_archive_v6_read::inspect_internal_project_archive_v6_zip;
 use project_archive_v6_save_copy::save_internal_project_archive_v6_copy;
 use project_schema6_result_append::append_internal_project_schema6_canonical_result_v2;
@@ -7266,6 +7270,8 @@ pub fn run() {
             cancel_internal_labs_recipe_v4_pls_job,
             dismiss_internal_labs_recipe_v4_pls_job,
             internal_labs_recipe_v4_pls_job_result,
+            create_internal_general_sem_project_archive_v6,
+            preflight_internal_general_sem_estimators_v1,
             mutate_internal_project_archive_v6_model,
             inspect_internal_project_archive_v6_zip,
             save_internal_project_archive_v6_copy,

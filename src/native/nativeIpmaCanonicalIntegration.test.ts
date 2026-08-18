@@ -116,6 +116,7 @@ describe("native canonical IPMA frontend slice", () => {
       ["Retention Intent", "Market Capability", "x1", "0.256200", "0.910000", "58.5000", "-0.040000"],
       ["Retention Intent", "Relationship Quality", "m1", "0.610000", "0.880000", "70.2500", "0.110000"],
     ]);
+    expect(table("ipma_scope")?.title).toBe("Run details");
     expect(table("ipma_scope")?.rows).toEqual(expect.arrayContaining([
       ["Target", "Retention Intent"],
       ["Method version", "ipma_v1"],
@@ -146,7 +147,7 @@ describe("native canonical IPMA frontend slice", () => {
     const csv = tablesToCsv([...navigation.tables, provenance]);
     expect(csv).toContain("Construct importance and performance");
     expect(csv).toContain("Indicator performance");
-    expect(csv).toContain("Analysis details");
+    expect(csv).toContain("Run details");
     expect(csv).not.toMatch(/\bN\/?A\b|Confidence level|Workers/i);
   });
 

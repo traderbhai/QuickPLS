@@ -691,6 +691,25 @@ function addInteraction(model: MutableModel, intent: Extract<StandardSemModelV4E
   if (intent.method === "product_indicator" && !intent.product_indicator) fail("standard_sem_authority.product_indicator_spec_required", termId, "Product-indicator interactions require explicit construction settings.", "Choose centering, standardization, and pairing settings.");
   if (intent.method !== "product_indicator" && intent.product_indicator) fail("standard_sem_authority.product_indicator_spec_forbidden", termId, "Product-indicator settings apply only to the product-indicator method.", "Clear the product-indicator settings or choose that method.");
   if (model.derived_terms.some((term) => term.id === termId) || model.variables.some((variable) => variable.id === outputId)) duplicate("interaction", termId);
+  const semanticDuplicate = model.derived_terms.find((term) => {
+    if (term.kind !== "interaction" && term.kind !== "interaction_v2") return false;
+    if (term.focal_relation !== intent.focal_relation) return false;
+    if (term.kind === "interaction") {
+      return term.predictor === intent.predictor && term.moderator === intent.moderator;
+    }
+    return term.kind === "interaction_v2"
+      && term.operands.length === 2
+      && term.operands[0] === intent.predictor
+      && term.operands[1] === intent.moderator;
+  });
+  if (semanticDuplicate) {
+    fail(
+      "standard_sem_authority.interaction_duplicate",
+      termId,
+      `Moderating effect ${semanticDuplicate.id} already uses predictor ${intent.predictor}, moderator ${intent.moderator}, and focal relation ${intent.focal_relation}.`,
+      "Choose a different moderator or focal relationship, or remove the existing moderating effect before retrying.",
+    );
+  }
   model.variables.push({ kind: "derived", id: outputId, label: requiredText(intent.label, "intent.label") });
   model.derived_terms.push({
     kind: "interaction",
@@ -834,7 +853,7 @@ function normalizeFactorDisturbances(model: MutableModel) {
 function removeRelationCascade(model: MutableModel, relationId: string) {
   const relation = model.relations.find((candidate) => candidate.id === relationId);
   if (!relation) missing("relation", relationId);
-  const outputIds = model.derived_terms.filter((term) => term.kind === "interaction" && term.focal_relation === relationId).map((term) => term.output);
+  const outputIds = model.derived_terms.filter((term) => isInteractionTerm(term) && term.focal_relation === relationId).map((term) => term.output);
   model.relations = model.relations.filter((candidate) => candidate.id !== relationId);
   removeParameters(model, new Set([relation.parameter, ...(relation.kind === "structural" && relation.intercept_parameter ? [relation.intercept_parameter] : [])]));
   if (outputIds.length) removeVariablesCascade(model, new Set(outputIds));
@@ -848,7 +867,7 @@ function removeVariablesCascade(model: MutableModel, initial: Set<string>) {
     changed = false;
     for (const term of model.derived_terms) if (!variableIds.has(term.output) && (
       derivedReferencesAny(term, variableIds)
-      || term.kind === "interaction" && model.relations.some((relation) => relation.id === term.focal_relation && relationReferencesAny(relation, variableIds))
+      || isInteractionTerm(term) && model.relations.some((relation) => relation.id === term.focal_relation && relationReferencesAny(relation, variableIds))
     )) {
       variableIds.add(term.output);
       changed = true;
@@ -859,7 +878,7 @@ function removeVariablesCascade(model: MutableModel, initial: Set<string>) {
   for (const parameter of model.parameters) if (targetReferencesAny(parameter.target, variableIds)) parameterIds.add(parameter.id);
   model.variables = model.variables.filter((variable) => !variableIds.has(variable.id));
   model.relations = model.relations.filter((relation) => !relationIds.has(relation.id));
-  model.derived_terms = model.derived_terms.filter((term) => !variableIds.has(term.output) && !derivedReferencesAny(term, variableIds) && !(term.kind === "interaction" && relationIds.has(term.focal_relation)));
+  model.derived_terms = model.derived_terms.filter((term) => !variableIds.has(term.output) && !derivedReferencesAny(term, variableIds) && !(isInteractionTerm(term) && relationIds.has(term.focal_relation)));
   removeParameters(model, parameterIds);
   model.annotations = model.annotations.filter((annotation) => annotation.kind !== "display_only_covariance" || !variableIds.has(annotation.left) && !variableIds.has(annotation.right));
   if (model.presentation.kind === "canvas") {
@@ -1021,8 +1040,15 @@ function targetReferencesAny(target: SemParameterTargetV4, ids: ReadonlySet<stri
   return ids.has(target.variable);
 }
 
+function isInteractionTerm(
+  term: SemModelV4["derived_terms"][number],
+): term is Extract<SemModelV4["derived_terms"][number], { kind: "interaction" | "interaction_v2" }> {
+  return term.kind === "interaction" || term.kind === "interaction_v2";
+}
+
 function derivedReferencesAny(term: SemModelV4["derived_terms"][number], ids: ReadonlySet<string>) {
   if (term.kind === "interaction") return ids.has(term.output) || ids.has(term.predictor) || ids.has(term.moderator);
+  if (term.kind === "interaction_v2") return ids.has(term.output) || term.operands.some((id) => ids.has(id));
   if (term.kind === "higher_order") return ids.has(term.output) || term.components.some((id) => ids.has(id));
   return ids.has(term.output) || ids.has(term.source);
 }

@@ -1,4 +1,16 @@
 use chrono::DateTime;
+pub use qpls_core::{
+    CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION, CanonicalAggregateEffectKindV1,
+    CanonicalAggregateEffectResultV1, CanonicalCbsemFitResultV1,
+    CanonicalConditionalEffectProbeResultV1, CanonicalConditionalEffectResultV1,
+    CanonicalConditionalProbeValuesResultV1, CanonicalGeneralSemEstimateV1,
+    CanonicalGeneralSemIntervalV1, CanonicalGeneralSemResultTraceV1, CanonicalGeneralSemResultsV1,
+    CanonicalHocRelationEstimateV1, CanonicalHocStageKindV1, CanonicalHocStageResultV1,
+    CanonicalIdentificationDiagnosticV1, CanonicalIdentificationScopeV1,
+    CanonicalIdentificationStatusV1, CanonicalInteractionPlotPointV1,
+    CanonicalInteractionPlotResultV1, CanonicalInteractionPlotSeriesV1,
+    CanonicalSpecificIndirectEffectResultV1,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -260,6 +272,11 @@ pub struct CanonicalResultDocumentV2 {
     pub provenance: CanonicalResultProvenanceV2,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub capability_cells: Option<Vec<CapabilityCellReferenceV2>>,
+    /// Exact qpls-core General SEM V1 wire type. Reuse keeps archive persistence
+    /// aligned with the analytical contract while this module validates the
+    /// document-level model and capability cross-references.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub general_sem_results: Option<CanonicalGeneralSemResultsV1>,
     pub sections: Vec<CanonicalResultSectionV2>,
     pub tables: Vec<CanonicalResultTableV2>,
     pub charts: Vec<CanonicalResultChartV2>,
@@ -523,6 +540,10 @@ impl CanonicalResultDocumentV2 {
         {
             return invalid("presentation.default_table_id is missing");
         }
+        if let Some(results) = &self.general_sem_results {
+            ensure_general_sem_results_finite(results)?;
+            validate_general_sem_results_with_core(self)?;
+        }
         Ok(())
     }
 }
@@ -566,6 +587,160 @@ impl CanonicalResultProvenanceV2 {
         }
         Ok(())
     }
+}
+
+fn validate_general_sem_results_with_core(
+    document: &CanonicalResultDocumentV2,
+) -> Result<(), CanonicalResultDocumentV2Error> {
+    // qpls-project already depends on qpls-core. Converting the complete wire
+    // document lets the authoritative validator enforce the same stable-ID
+    // ordering, scientific uniqueness, probe/plot references, HOC stages,
+    // fit constraints, model identity, and declared capability-cell rules.
+    let wire = serde_json::to_value(document)?;
+    let core_document = serde_json::from_value::<qpls_core::CanonicalResultDocumentV2>(wire)
+        .map_err(|error| {
+            invalid_error(format!(
+                "general_sem_results does not match the qpls-core V1 wire: {error}"
+            ))
+        })?;
+    let validation = qpls_core::validate_canonical_result_document_v2(&core_document);
+    if !validation.passed {
+        return invalid(format!(
+            "qpls-core General SEM validation failed: {}",
+            validation.errors.join("; ")
+        ));
+    }
+    Ok(())
+}
+
+fn ensure_general_sem_results_finite(
+    results: &CanonicalGeneralSemResultsV1,
+) -> Result<(), CanonicalResultDocumentV2Error> {
+    for (index, effect) in results.specific_indirect_effects.iter().enumerate() {
+        ensure_general_sem_estimate_finite(
+            &effect.value,
+            &format!("general_sem_results.specific_indirect_effects[{index}].value"),
+        )?;
+    }
+    for (index, effect) in results.aggregate_effects.iter().enumerate() {
+        ensure_general_sem_estimate_finite(
+            &effect.value,
+            &format!("general_sem_results.aggregate_effects[{index}].value"),
+        )?;
+    }
+    for (index, probe) in results.conditional_effect_probes.iter().enumerate() {
+        let context = format!("general_sem_results.conditional_effect_probes[{index}].values");
+        match &probe.values {
+            CanonicalConditionalProbeValuesResultV1::DataDerivedMeanPlusMinusOneSd {
+                mean,
+                standard_deviation,
+            } => {
+                require_finite(*mean, &format!("{context}.mean"))?;
+                require_finite(
+                    *standard_deviation,
+                    &format!("{context}.standard_deviation"),
+                )?;
+            }
+            CanonicalConditionalProbeValuesResultV1::Explicit { values } => {
+                for (value_index, value) in values.iter().enumerate() {
+                    require_finite(*value, &format!("{context}.values[{value_index}]"))?;
+                }
+            }
+        }
+    }
+    for (index, effect) in results.conditional_effects.iter().enumerate() {
+        let context = format!("general_sem_results.conditional_effects[{index}]");
+        require_finite(
+            effect.moderator_value,
+            &format!("{context}.moderator_value"),
+        )?;
+        ensure_general_sem_estimate_finite(&effect.value, &format!("{context}.value"))?;
+    }
+    for (plot_index, plot) in results.interaction_plots.iter().enumerate() {
+        for (series_index, series) in plot.series.iter().enumerate() {
+            let series_context = format!(
+                "general_sem_results.interaction_plots[{plot_index}].series[{series_index}]"
+            );
+            require_finite(
+                series.moderator_value,
+                &format!("{series_context}.moderator_value"),
+            )?;
+            for (point_index, point) in series.points.iter().enumerate() {
+                let point_context = format!("{series_context}.points[{point_index}]");
+                require_finite(point.focal_value, &format!("{point_context}.focal_value"))?;
+                require_finite(
+                    point.predicted_value,
+                    &format!("{point_context}.predicted_value"),
+                )?;
+                ensure_optional_finite(point.lower, &format!("{point_context}.lower"))?;
+                ensure_optional_finite(point.upper, &format!("{point_context}.upper"))?;
+            }
+        }
+    }
+    for (stage_index, stage) in results.higher_order_stages.iter().enumerate() {
+        for (relation_index, relation) in stage.relation_estimates.iter().enumerate() {
+            ensure_general_sem_estimate_finite(
+                &relation.value,
+                &format!(
+                    "general_sem_results.higher_order_stages[{stage_index}].relation_estimates[{relation_index}].value"
+                ),
+            )?;
+        }
+    }
+    for (index, fit) in results.cbsem_fit.iter().enumerate() {
+        let context = format!("general_sem_results.cbsem_fit[{index}]");
+        require_finite(fit.chi_square, &format!("{context}.chi_square"))?;
+        for (name, value) in [
+            ("chi_square_p_value", fit.chi_square_p_value),
+            ("rmsea", fit.rmsea),
+            ("cfi", fit.cfi),
+            ("tli", fit.tli),
+            ("srmr", fit.srmr),
+            ("aic", fit.aic),
+            ("bic", fit.bic),
+        ] {
+            ensure_optional_finite(value, &format!("{context}.{name}"))?;
+        }
+        if let Some(interval) = &fit.rmsea_interval {
+            let interval_context = format!("{context}.rmsea_interval");
+            require_finite(
+                interval.confidence_level,
+                &format!("{interval_context}.confidence_level"),
+            )?;
+            require_finite(interval.lower, &format!("{interval_context}.lower"))?;
+            require_finite(interval.upper, &format!("{interval_context}.upper"))?;
+        }
+    }
+    Ok(())
+}
+
+fn ensure_general_sem_estimate_finite(
+    value: &CanonicalGeneralSemEstimateV1,
+    context: &str,
+) -> Result<(), CanonicalResultDocumentV2Error> {
+    require_finite(value.estimate, &format!("{context}.estimate"))?;
+    ensure_optional_finite(value.standard_error, &format!("{context}.standard_error"))?;
+    ensure_optional_finite(value.lower, &format!("{context}.lower"))?;
+    ensure_optional_finite(value.upper, &format!("{context}.upper"))?;
+    ensure_optional_finite(value.p_value, &format!("{context}.p_value"))?;
+    Ok(())
+}
+
+fn ensure_optional_finite(
+    value: Option<f64>,
+    context: &str,
+) -> Result<(), CanonicalResultDocumentV2Error> {
+    if let Some(value) = value {
+        require_finite(value, context)?;
+    }
+    Ok(())
+}
+
+fn require_finite(value: f64, context: &str) -> Result<(), CanonicalResultDocumentV2Error> {
+    if !value.is_finite() {
+        return invalid(format!("{context} must be finite"));
+    }
+    Ok(())
 }
 
 /// Immutable schema-6 attachment. Private fields prevent in-place edits by
@@ -838,4 +1013,373 @@ pub enum CanonicalResultDocumentV2Error {
     DigestMismatch { document_id: String },
     #[error(transparent)]
     Json(#[from] serde_json::Error),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn capability_cell() -> CapabilityCellReferenceV2 {
+        CapabilityCellReferenceV2 {
+            registry_schema_version: 2,
+            capability_id: "smartpls.mediation".into(),
+            cell_id: "qpls3.pls.mediation".into(),
+            capability_version: "pls_mediation_v1".into(),
+        }
+    }
+
+    fn core_capability_cell() -> qpls_core::CapabilityCellReferenceV2 {
+        qpls_core::CapabilityCellReferenceV2 {
+            registry_schema_version: 2,
+            capability_id: "smartpls.mediation".into(),
+            cell_id: "qpls3.pls.mediation".into(),
+            capability_version: "pls_mediation_v1".into(),
+        }
+    }
+
+    fn trace() -> CanonicalGeneralSemResultTraceV1 {
+        CanonicalGeneralSemResultTraceV1 {
+            model_id: "model_1".into(),
+            capability_cell: core_capability_cell(),
+        }
+    }
+
+    fn estimate(value: f64) -> CanonicalGeneralSemEstimateV1 {
+        CanonicalGeneralSemEstimateV1 {
+            estimate: value,
+            standard_error: Some(0.05),
+            lower: Some(value - 0.1),
+            upper: Some(value + 0.1),
+            p_value: Some(0.01),
+        }
+    }
+
+    fn complete_general_sem_results() -> CanonicalGeneralSemResultsV1 {
+        CanonicalGeneralSemResultsV1 {
+            schema_version: CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION,
+            specific_indirect_effects: vec![CanonicalSpecificIndirectEffectResultV1 {
+                effect_id: "effect_specific_1".into(),
+                estimand_id: "estimand_specific_1".into(),
+                trace: trace(),
+                ordered_relation_ids: vec!["relation_x_m".into(), "relation_m_y".into()],
+                value: estimate(0.2),
+            }],
+            aggregate_effects: vec![
+                CanonicalAggregateEffectResultV1 {
+                    effect_id: "effect_total_effect_1".into(),
+                    estimand_id: "estimand_total_effect_1".into(),
+                    trace: trace(),
+                    kind: CanonicalAggregateEffectKindV1::TotalEffect,
+                    source_id: "construct:x".into(),
+                    target_id: "construct:y".into(),
+                    value: estimate(0.5),
+                },
+                CanonicalAggregateEffectResultV1 {
+                    effect_id: "effect_total_indirect_1".into(),
+                    estimand_id: "estimand_total_indirect_1".into(),
+                    trace: trace(),
+                    kind: CanonicalAggregateEffectKindV1::TotalIndirect,
+                    source_id: "construct:x".into(),
+                    target_id: "construct:y".into(),
+                    value: estimate(0.2),
+                },
+            ],
+            conditional_effect_probes: vec![
+                CanonicalConditionalEffectProbeResultV1 {
+                    probe_id: "probe_explicit".into(),
+                    trace: trace(),
+                    moderator_id: "construct:w".into(),
+                    values: CanonicalConditionalProbeValuesResultV1::Explicit {
+                        values: vec![-1.0, 0.0, 1.0],
+                    },
+                },
+                CanonicalConditionalEffectProbeResultV1 {
+                    probe_id: "probe_sd".into(),
+                    trace: trace(),
+                    moderator_id: "construct:w".into(),
+                    values:
+                        CanonicalConditionalProbeValuesResultV1::DataDerivedMeanPlusMinusOneSd {
+                            mean: 0.0,
+                            standard_deviation: 1.0,
+                        },
+                },
+            ],
+            conditional_effects: vec![CanonicalConditionalEffectResultV1 {
+                effect_id: "effect_conditional_1".into(),
+                estimand_id: "estimand_conditional_1".into(),
+                trace: trace(),
+                interaction_id: "interaction_1".into(),
+                focal_relation_id: "relation_x_y".into(),
+                probe_id: "probe_explicit".into(),
+                moderator_id: "construct:w".into(),
+                probe_value_index: 1,
+                moderator_value: 0.0,
+                value: estimate(0.4),
+            }],
+            interaction_plots: vec![CanonicalInteractionPlotResultV1 {
+                plot_id: "plot_1".into(),
+                trace: trace(),
+                interaction_id: "interaction_1".into(),
+                focal_relation_id: "relation_x_y".into(),
+                focal_predictor_id: "construct:x".into(),
+                moderator_id: "construct:w".into(),
+                outcome_id: "construct:y".into(),
+                series: vec![
+                    CanonicalInteractionPlotSeriesV1 {
+                        series_id: "series_high".into(),
+                        probe_id: "probe_explicit".into(),
+                        probe_value_index: 2,
+                        moderator_value: 1.0,
+                        points: vec![
+                            CanonicalInteractionPlotPointV1 {
+                                focal_value: -1.0,
+                                predicted_value: 0.1,
+                                lower: Some(0.0),
+                                upper: Some(0.2),
+                            },
+                            CanonicalInteractionPlotPointV1 {
+                                focal_value: 1.0,
+                                predicted_value: 0.7,
+                                lower: Some(0.6),
+                                upper: Some(0.8),
+                            },
+                        ],
+                    },
+                    CanonicalInteractionPlotSeriesV1 {
+                        series_id: "series_low".into(),
+                        probe_id: "probe_explicit".into(),
+                        probe_value_index: 0,
+                        moderator_value: -1.0,
+                        points: vec![
+                            CanonicalInteractionPlotPointV1 {
+                                focal_value: -1.0,
+                                predicted_value: 0.2,
+                                lower: Some(0.1),
+                                upper: Some(0.3),
+                            },
+                            CanonicalInteractionPlotPointV1 {
+                                focal_value: 1.0,
+                                predicted_value: 0.4,
+                                lower: Some(0.3),
+                                upper: Some(0.5),
+                            },
+                        ],
+                    },
+                ],
+            }],
+            higher_order_stages: vec![
+                CanonicalHocStageResultV1 {
+                    stage_id: "stage_1".into(),
+                    trace: trace(),
+                    higher_order_construct_id: "construct:hoc".into(),
+                    stage_number: 1,
+                    kind: CanonicalHocStageKindV1::LowerOrderScoreEstimation,
+                    input_construct_ids: vec!["construct:m1".into(), "construct:m2".into()],
+                    output_variable_ids: vec!["score:hoc".into()],
+                    relation_estimates: vec![CanonicalHocRelationEstimateV1 {
+                        relation_id: "relation_m1_hoc".into(),
+                        source_id: "construct:m1".into(),
+                        target_id: "construct:hoc".into(),
+                        value: estimate(0.8),
+                    }],
+                },
+                CanonicalHocStageResultV1 {
+                    stage_id: "stage_2".into(),
+                    trace: trace(),
+                    higher_order_construct_id: "construct:hoc".into(),
+                    stage_number: 2,
+                    kind: CanonicalHocStageKindV1::HigherOrderEstimation,
+                    input_construct_ids: vec!["score:hoc".into()],
+                    output_variable_ids: vec!["construct:y".into()],
+                    relation_estimates: vec![CanonicalHocRelationEstimateV1 {
+                        relation_id: "relation_hoc_y".into(),
+                        source_id: "construct:hoc".into(),
+                        target_id: "construct:y".into(),
+                        value: estimate(0.6),
+                    }],
+                },
+            ],
+            cbsem_fit: vec![CanonicalCbsemFitResultV1 {
+                fit_id: "fit_1".into(),
+                trace: trace(),
+                chi_square: 12.0,
+                degrees_of_freedom: 10,
+                chi_square_p_value: Some(0.28),
+                rmsea: Some(0.05),
+                rmsea_interval: Some(CanonicalGeneralSemIntervalV1 {
+                    confidence_level: 0.9,
+                    lower: 0.02,
+                    upper: 0.08,
+                }),
+                cfi: Some(0.97),
+                tli: Some(0.96),
+                srmr: Some(0.04),
+                aic: Some(120.0),
+                bic: Some(130.0),
+            }],
+            identification_diagnostics: vec![CanonicalIdentificationDiagnosticV1 {
+                diagnostic_id: "diagnostic_1".into(),
+                trace: trace(),
+                scope: CanonicalIdentificationScopeV1::Model,
+                subject_id: "model_1".into(),
+                status: CanonicalIdentificationStatusV1::Identified,
+                code: "identified".into(),
+                message: "The model is identified.".into(),
+                degrees_of_freedom: Some(10),
+            }],
+        }
+    }
+
+    fn document() -> CanonicalResultDocumentV2 {
+        CanonicalResultDocumentV2 {
+            schema_version: CANONICAL_RESULT_DOCUMENT_V2_SCHEMA_VERSION,
+            document_id: "document_1".into(),
+            title: "Canonical result".into(),
+            provenance: CanonicalResultProvenanceV2 {
+                run_id: "run_1".into(),
+                project_id: "project_1".into(),
+                model_id: "model_1".into(),
+                model_digest: "a".repeat(64),
+                dataset_id: "dataset_1".into(),
+                dataset_fingerprint: "b".repeat(64),
+                recipe_id: "recipe_1".into(),
+                recipe_digest: "c".repeat(64),
+                capability_cell: capability_cell(),
+                method_version: "method_v1".into(),
+                engine_version: "engine_v1".into(),
+                seed: Some(1),
+                workers: 1,
+                started_at: "2026-08-18T00:00:00Z".into(),
+                completed_at: "2026-08-18T00:00:01Z".into(),
+            },
+            capability_cells: Some(vec![capability_cell()]),
+            general_sem_results: None,
+            sections: Vec::new(),
+            tables: Vec::new(),
+            charts: Vec::new(),
+            notices: Vec::new(),
+            exclusions: Vec::new(),
+            footnotes: Vec::new(),
+            presentation: CanonicalResultPresentationV2 {
+                default_section_id: None,
+                default_table_id: None,
+                precision: 4,
+                missing_value_label: "—".into(),
+                chart_defaults: CanonicalChartDisplayOptionsV2::default(),
+            },
+        }
+    }
+
+    #[test]
+    fn populated_general_sem_results_round_trip_through_project_and_core_wires() {
+        let mut source = document();
+        source.general_sem_results = Some(complete_general_sem_results());
+        source.ensure_valid().unwrap();
+
+        let encoded = serde_json::to_vec(&source).unwrap();
+        let restored: CanonicalResultDocumentV2 = serde_json::from_slice(&encoded).unwrap();
+        assert_eq!(restored, source);
+        restored.ensure_valid().unwrap();
+
+        let core_document: qpls_core::CanonicalResultDocumentV2 =
+            serde_json::from_slice(&encoded).unwrap();
+        let core_validation = qpls_core::validate_canonical_result_document_v2(&core_document);
+        assert!(core_validation.passed, "{:?}", core_validation.errors);
+    }
+
+    #[test]
+    fn legacy_document_omits_general_sem_results_without_changing_round_trip() {
+        let source = document();
+        source.ensure_valid().unwrap();
+        let encoded = serde_json::to_vec(&source).unwrap();
+        let value: Value = serde_json::from_slice(&encoded).unwrap();
+        assert!(value.get("general_sem_results").is_none());
+
+        let restored: CanonicalResultDocumentV2 = serde_json::from_slice(&encoded).unwrap();
+        assert_eq!(restored, source);
+        assert!(restored.general_sem_results.is_none());
+    }
+
+    #[test]
+    fn general_sem_wire_rejects_unknown_fields_and_invalid_schema() {
+        let mut source = document();
+        source.general_sem_results = Some(complete_general_sem_results());
+        let mut unknown = serde_json::to_value(&source).unwrap();
+        unknown["general_sem_results"]["unexpected"] = serde_json::json!(true);
+        assert!(serde_json::from_value::<CanonicalResultDocumentV2>(unknown).is_err());
+
+        source.general_sem_results.as_mut().unwrap().schema_version = 2;
+        let error = source.ensure_valid().unwrap_err().to_string();
+        assert!(error.contains("general_sem_results.schema_version must equal 1"));
+    }
+
+    #[test]
+    fn general_sem_validation_rejects_nonfinite_ordering_and_cross_reference_tampering() {
+        let mut nonfinite = document();
+        nonfinite.general_sem_results = Some(complete_general_sem_results());
+        nonfinite
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .specific_indirect_effects[0]
+            .value
+            .standard_error = Some(f64::NAN);
+        assert!(
+            nonfinite
+                .ensure_valid()
+                .unwrap_err()
+                .to_string()
+                .contains("standard_error must be finite")
+        );
+
+        let mut unsorted = document();
+        unsorted.general_sem_results = Some(complete_general_sem_results());
+        unsorted
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .aggregate_effects
+            .reverse();
+        assert!(
+            unsorted
+                .ensure_valid()
+                .unwrap_err()
+                .to_string()
+                .contains("aggregate_effects must be ordered")
+        );
+
+        let mut missing_probe = document();
+        missing_probe.general_sem_results = Some(complete_general_sem_results());
+        missing_probe
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .conditional_effects[0]
+            .probe_id = "probe_missing".into();
+        assert!(
+            missing_probe
+                .ensure_valid()
+                .unwrap_err()
+                .to_string()
+                .contains("references a missing conditional-effect probe")
+        );
+
+        let mut undeclared_capability = document();
+        undeclared_capability.general_sem_results = Some(complete_general_sem_results());
+        undeclared_capability
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .specific_indirect_effects[0]
+            .trace
+            .capability_cell
+            .cell_id = "qpls3.pls.other".into();
+        assert!(
+            undeclared_capability
+                .ensure_valid()
+                .unwrap_err()
+                .to_string()
+                .contains("references undeclared option cell")
+        );
+    }
 }

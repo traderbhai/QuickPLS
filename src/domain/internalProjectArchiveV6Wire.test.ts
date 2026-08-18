@@ -3,12 +3,14 @@ import {
   classifyInternalProjectArchiveSchemaV6,
   isExecutableProjectModelRecordV6Wire,
   parseInternalProjectArchiveV6Wire,
+  supportsGeneralSemV1,
 } from "./internalProjectArchiveV6Wire";
 import {
   convertLegacyBasicModelV4,
   type LegacyBasicModelV4Input,
   type SemModelV4,
 } from "./semModelV4";
+import { defaultGeneralSemConfigV1 } from "./generalSemConfigV1";
 
 const PROJECT_ID = "00000000-0000-0000-0000-000000000101";
 const RECIPE_ID = "00000000-0000-0000-0000-000000000201";
@@ -140,9 +142,34 @@ describe("internal schema-v6 project archive wire", () => {
       canonical_result_documents: [],
     });
     expect(parsed).not.toHaveProperty("upgrade_lineage");
+    expect(parsed).not.toHaveProperty("sem_generation");
+    expect(supportsGeneralSemV1(parsed)).toBe(false);
 
     expect(() => parseInternalProjectArchiveV6Wire({ ...baseArchive(), datasets: null }))
       .toThrowError(expect.objectContaining({ code: "project_archive_v6.array_required" }));
+  });
+
+  it("admits general_sem_v1 only on newly created schema-v6 projects", () => {
+    const parsed = parseInternalProjectArchiveV6Wire({
+      ...baseArchive(),
+      sem_generation: "general_sem_v1",
+    });
+    expect(parsed.sem_generation).toBe("general_sem_v1");
+    expect(supportsGeneralSemV1(parsed)).toBe(true);
+
+    const upgraded = {
+      ...baseArchive(),
+      origin: { kind: "upgraded_copy", lineage: lineage() },
+      sem_generation: "general_sem_v1",
+    };
+    expect(() => parseInternalProjectArchiveV6Wire(upgraded))
+      .toThrowError(expect.objectContaining({
+        code: "project_archive_v6.general_sem_generation_requires_new_project",
+      }));
+    expect(() => parseInternalProjectArchiveV6Wire({
+      ...baseArchive(),
+      sem_generation: "future_generation",
+    })).toThrowError(expect.objectContaining({ code: "project_archive_v6.enum_invalid" }));
   });
 
   it("reads legacy top-level upgrade_lineage and emits only corrected upgraded_copy origin", () => {
@@ -196,6 +223,57 @@ describe("internal schema-v6 project archive wire", () => {
     }];
     expect(() => parseInternalProjectArchiveV6Wire(recipeBindingDraft))
       .toThrowError(expect.objectContaining({ code: "project_archive_v6.recipe_model_reference" }));
+  });
+
+  it("round-trips optional GeneralSemConfigV1 additively beside method_config", () => {
+    const oldRecipe = currentRecipe(CURRENT_RECIPE_ID, readyModel());
+    const oldParsed = parseInternalProjectArchiveV6Wire({
+      ...baseArchive(),
+      recipes: [oldRecipe],
+    });
+    expect(oldParsed.recipes[0]).not.toHaveProperty("general_sem_config");
+    expect(oldParsed.recipes[0].method_config).toEqual({ kind: "pls_algorithm" });
+    const oldRoundTrip = parseInternalProjectArchiveV6Wire(
+      JSON.parse(JSON.stringify(oldParsed)),
+    );
+    expect(oldRoundTrip.recipes[0]).not.toHaveProperty("general_sem_config");
+
+    const generalSemConfig = defaultGeneralSemConfigV1();
+    generalSemConfig.requested_effect_estimands = [{
+      kind: "total_effect",
+      estimand_id: "effect:01:total",
+      source_id: "construct:x",
+      target_id: "construct:y",
+    }];
+    const configuredRecipe = {
+      ...currentRecipe(CURRENT_RECIPE_ID, readyModel()),
+      general_sem_config: generalSemConfig,
+    };
+    const configured = parseInternalProjectArchiveV6Wire({
+      ...baseArchive(),
+      recipes: [configuredRecipe],
+    });
+    expect(configured.recipes[0].general_sem_config).toEqual(generalSemConfig);
+    expect(configured.recipes[0].method_config).toEqual({ kind: "pls_algorithm" });
+    expect(
+      parseInternalProjectArchiveV6Wire(JSON.parse(JSON.stringify(configured)))
+        .recipes[0].general_sem_config,
+    ).toEqual(generalSemConfig);
+
+    const unknownNested = structuredClone(configuredRecipe);
+    (unknownNested.general_sem_config.output_policy as unknown as Record<string, unknown>)
+      .truncate = true;
+    expect(() => parseInternalProjectArchiveV6Wire({
+      ...baseArchive(),
+      recipes: [unknownNested],
+    })).toThrowError(expect.objectContaining({ code: "general_sem_config_v1.field_unknown" }));
+
+    const wrongSchema = structuredClone(configuredRecipe);
+    (wrongSchema.general_sem_config as unknown as { schema_version: number }).schema_version = 2;
+    expect(() => parseInternalProjectArchiveV6Wire({
+      ...baseArchive(),
+      recipes: [wrongSchema],
+    })).toThrowError(expect.objectContaining({ code: "general_sem_config_v1.schema_version" }));
   });
 
   it("strictly decodes current RecipeV4 settings and the complete method-config wire boundary", () => {

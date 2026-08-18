@@ -204,6 +204,31 @@ function interactionMethodLabel(interaction: InteractionData): string {
     : "Two-stage product score";
 }
 
+function interactionOperands(interaction: InteractionData): readonly string[] {
+  return interaction.kind === "interaction_v2"
+    ? interaction.operands
+    : [interaction.predictor, interaction.moderator];
+}
+
+function interactionRequiredPaths(
+  interactionId: string,
+  interaction: InteractionData,
+): Array<{ source: string; target: string; relationId?: string }> {
+  const operands = interactionOperands(interaction);
+  const paths: Array<{ source: string; target: string; relationId?: string }> = [
+    {
+      source: operands[0]!,
+      target: interaction.outcome,
+      ...(interaction.focalRelationId ? { relationId: interaction.focalRelationId } : {}),
+    },
+    { source: interactionId, target: interaction.outcome },
+  ];
+  if (interaction.kind !== "interaction_v2" || interaction.hierarchyPolicy !== "none") {
+    paths.push(...operands.slice(1).map((operand) => ({ source: operand, target: interaction.outcome })));
+  }
+  return paths;
+}
+
 function higherOrderApproachLabel(higherOrder: HigherOrderConstructData): string {
   if (higherOrder.canonicalApproach) return HIGHER_ORDER_APPROACH_LABELS[higherOrder.canonicalApproach];
   if (higherOrder.method === "repeated_indicators") return "Repeated indicators";
@@ -321,6 +346,9 @@ export function NativeModelInspector({
   const experimentalSemAuthoringEnabled = experimentalLabsEnabledOverride ?? storeExperimentalSemAuthoringEnabled;
   const nodes = nodesOverride ?? storeNodes;
   const selected = nodes.find((node) => node.id === selectedNodeId);
+  const selectedInteraction = selected?.data.semantic === "interaction"
+    ? selected.data.interaction
+    : undefined;
   const selectedPath = edges.find((edge) => edge.id === selectedEdgeId && !edge.id.startsWith("measurement::"));
   const source = nodes.find((node) => node.id === selectedPath?.source)?.data.label ?? selectedPath?.source ?? "";
   const target = nodes.find((node) => node.id === selectedPath?.target)?.data.label ?? selectedPath?.target ?? "";
@@ -330,11 +358,10 @@ export function NativeModelInspector({
     : "structural";
   const selectedPathSupportsModeration = selectedPath ? nodes.some((node) => {
     const interaction = node.data.semantic === "interaction" ? node.data.interaction : undefined;
-    return interaction && [
-      [interaction.predictor, interaction.outcome],
-      [interaction.moderator, interaction.outcome],
-      [node.id, interaction.outcome],
-    ].some(([sourceId, targetId]) => selectedPath.source === sourceId && selectedPath.target === targetId);
+    return interaction && interactionRequiredPaths(node.id, interaction)
+      .some((required) => selectedPath.source === required.source
+        && selectedPath.target === required.target
+        && (!required.relationId || selectedPath.id === required.relationId));
   }) : false;
   const assignedIndicators = new Set(nodes.flatMap((node) => node.data.indicators));
   const availableIndicators = dataset.columns.filter((column) => column !== groupingVariable && !assignedIndicators.has(column));
@@ -501,10 +528,16 @@ export function NativeModelInspector({
           <label>Name<CommitTextInput id="nd-model-construct-name" value={selected.data.label} onCommit={renameConstruct} /></label>
           {selected.data.semantic !== "interaction" ? <label>Short name<CommitTextInput value={selected.data.shortName} maxLength={12} onCommit={(shortName) => updateConstruct(selected.id, { shortName })} /></label> : null}
           {strictAuthority ? <p className="nd-property-note">The short name is projected presentation metadata; strict scientific edits use the authority controls below.</p> : null}
-          {selected.data.semantic === "interaction" && selected.data.interaction ? <dl className="nd-property-list">
-            <div><dt>Predictor</dt><dd>{nodes.find((node) => node.id === selected.data.interaction?.predictor)?.data.label ?? selected.data.interaction.predictor}</dd></div>
-            <div><dt>Moderator</dt><dd>{nodes.find((node) => node.id === selected.data.interaction?.moderator)?.data.label ?? selected.data.interaction.moderator}</dd></div>
-            <div><dt>Outcome</dt><dd>{nodes.find((node) => node.id === selected.data.interaction?.outcome)?.data.label ?? selected.data.interaction.outcome}</dd></div>
+          {selectedInteraction ? <dl className="nd-property-list">
+            {selectedInteraction.kind === "interaction_v2" ? <>
+              <div><dt>Focal predictor</dt><dd>{nodes.find((node) => node.id === selectedInteraction.operands[0])?.data.label ?? selectedInteraction.operands[0]}</dd></div>
+              <div><dt>Moderators (authored order)</dt><dd>{selectedInteraction.operands.slice(1).map((operand) => nodes.find((node) => node.id === operand)?.data.label ?? operand).join(" × ")}</dd></div>
+              <div><dt>Hierarchy policy</dt><dd>{selectedInteraction.hierarchyPolicy}</dd></div>
+            </> : <>
+              <div><dt>Predictor</dt><dd>{nodes.find((node) => node.id === selectedInteraction.predictor)?.data.label ?? selectedInteraction.predictor}</dd></div>
+              <div><dt>Moderator</dt><dd>{nodes.find((node) => node.id === selectedInteraction.moderator)?.data.label ?? selectedInteraction.moderator}</dd></div>
+            </>}
+            <div><dt>Outcome</dt><dd>{nodes.find((node) => node.id === selectedInteraction.outcome)?.data.label ?? selectedInteraction.outcome}</dd></div>
           </dl> : selected.data.semantic === "higher_order" && selected.data.higherOrder ? <dl className="nd-property-list">
             <div><dt>Type</dt><dd>{higherOrderMeasurementLabel(selected.data.higherOrder)}</dd></div>
             <div><dt>Method</dt><dd>{higherOrderApproachLabel(selected.data.higherOrder)}</dd></div>
@@ -536,9 +569,9 @@ export function NativeModelInspector({
       </form> : null}
 
       {activeTab === "parameter" ? <form className="nd-property-form" onSubmit={(event) => event.preventDefault()}>
-        {selected?.data.semantic === "interaction" && selected.data.interaction ? <>
-          <dl className="nd-property-list"><div><dt>Parameter</dt><dd>{interactionMethodLabel(selected.data.interaction)}</dd></div><div><dt>Manifest indicators</dt><dd>Not applicable</dd></div></dl>
-          <p className="nd-property-note">The interaction parameter is derived from its predictor and moderator scores.</p>
+        {selectedInteraction ? <>
+          <dl className="nd-property-list"><div><dt>Parameter</dt><dd>{interactionMethodLabel(selectedInteraction)}</dd></div><div><dt>Manifest indicators</dt><dd>Not applicable</dd></div></dl>
+          <p className="nd-property-note">The interaction parameter is derived from its ordered operand scores.</p>
         </> : selected?.data.semantic === "higher_order" && selected.data.higherOrder ? <>
           <dl className="nd-property-list"><div><dt>Method</dt><dd>{higherOrderApproachLabel(selected.data.higherOrder)}</dd></div><div><dt>Indicators</dt><dd>Generated component scores</dd></div></dl>
           <p className="nd-property-note">The higher-order construct remains indicator-free in the editable model.</p>

@@ -15,8 +15,8 @@ use qpls_core::{
 };
 use qpls_project::{
     PROJECT_ARCHIVE_SCHEMA_V6_VERSION, ProjectArchiveDocumentV6, ProjectModelPayloadV6,
-    ProjectModelRecordV6, ProjectOriginV6, read_project_document_v6, serialize_project_document_v6,
-    write_project_document_v6_new,
+    ProjectModelRecordV6, ProjectOriginV6, ProjectSemGenerationV6, read_project_document_v6,
+    serialize_project_document_v6, write_project_document_v6_new,
 };
 use std::collections::{BTreeMap, BTreeSet};
 use tempfile::tempdir;
@@ -808,6 +808,7 @@ fn section_3_1_shapes_author_serialize_and_reopen_through_standalone_schema6() {
         historical_results: Vec::new(),
         canonical_result_documents: Vec::new(),
         origin: ProjectOriginV6::NewProject,
+        sem_generation: Some(ProjectSemGenerationV6::GeneralSemV1),
     };
     document.ensure_valid().unwrap();
     let expected_bytes = serialize_project_document_v6(&document).unwrap();

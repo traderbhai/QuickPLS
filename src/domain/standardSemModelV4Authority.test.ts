@@ -40,6 +40,51 @@ const observed = (id: string): Extract<SemVariableV4, { kind: "observed" }> => (
   transformation_lineage: [],
 });
 
+function interactionAuthority(): StandardSemModelV4AuthorityRecordV1 {
+  const withModerator = reduceStandardSemModelV4AuthorityV1(authority(), {
+    kind: "add_construct",
+    variable_id: "construct:z",
+    label: "Moderator",
+    representation: { kind: "composite", weighting: { kind: "mode_a" } },
+    indicators: [observed("observed:z1")],
+  });
+  const focal = withModerator.model.relations.find((relation) =>
+    relation.kind === "structural"
+    && relation.source === "construct:x"
+    && relation.target === "construct:y");
+  if (!focal) throw new Error("Expected the focal structural relation.");
+  const withInteraction = reduceStandardSemModelV4AuthorityV1(authority(withModerator.model, "b".repeat(64)), {
+    kind: "add_interaction",
+    term_id: "interaction-v2:x-z",
+    output_id: "derived:interaction-v2:x-z",
+    label: "X by Z V2",
+    predictor: "construct:x",
+    moderator: "construct:z",
+    focal_relation: focal.id,
+    outcome: "construct:y",
+    method: "two_stage",
+  });
+  return authority(withInteraction.model, "b".repeat(64));
+}
+
+function interactionV2Authority(): StandardSemModelV4AuthorityRecordV1 {
+  const source = interactionAuthority();
+  const model = structuredClone(source.model);
+  const index = model.derived_terms.findIndex((term) => term.id === "interaction-v2:x-z");
+  const term = model.derived_terms[index];
+  if (term?.kind !== "interaction") throw new Error("Expected the legacy interaction seed.");
+  model.derived_terms[index] = {
+    kind: "interaction_v2",
+    id: term.id,
+    output: term.output,
+    operands: [term.predictor, term.moderator],
+    focal_relation: term.focal_relation,
+    method: term.method,
+    hierarchy_policy: "strong",
+  };
+  return authority(parseSemModelV4AuthoringDraft(model), "c".repeat(64));
+}
+
 describe("StandardSemModelV4 authority", () => {
   it("strictly parses and freezes the exact authority revision", () => {
     const parsed = parseStandardSemModelV4AuthorityRecordV1(authority());
@@ -271,5 +316,103 @@ describe("StandardSemModelV4 authority", () => {
       degree: 2,
     });
     expect(polynomial.model.derived_terms).toContainEqual(expect.objectContaining({ kind: "polynomial", id: "polynomial:x2", source: "construct:x", degree: 2 }));
+  });
+
+  it.each([
+    ["legacy interaction", interactionAuthority],
+    ["interaction_v2", interactionV2Authority],
+  ])("rejects a semantic duplicate of an existing %s even when IDs differ", (_label, sourceFactory) => {
+    const source = sourceFactory();
+    const existing = source.model.derived_terms.find((term) => term.kind === "interaction" || term.kind === "interaction_v2");
+    if (!existing) throw new Error("Expected an existing interaction term.");
+
+    expect(() => reduceStandardSemModelV4AuthorityV1(source, {
+      kind: "add_interaction",
+      term_id: "interaction:duplicate-with-fresh-id",
+      output_id: "derived:duplicate-with-fresh-id",
+      label: "Duplicate X by Z",
+      predictor: "construct:x",
+      moderator: "construct:z",
+      focal_relation: existing.focal_relation,
+      outcome: "construct:y",
+      method: "two_stage",
+    })).toThrowError(expect.objectContaining({
+      code: "standard_sem_authority.interaction_duplicate",
+      subject: "interaction:duplicate-with-fresh-id",
+      corrective_action: expect.stringContaining("different moderator or focal relationship"),
+    }));
+  });
+
+  it("accepts distinct moderators on one focal path and the same moderator on a distinct focal path", () => {
+    const source = interactionAuthority();
+    const focal = source.model.relations.find((relation) => relation.kind === "structural"
+      && relation.source === "construct:x"
+      && relation.target === "construct:y");
+    if (!focal) throw new Error("Expected the original focal relation.");
+
+    const withSecondModerator = reduceStandardSemModelV4AuthorityV1(source, {
+      kind: "add_construct",
+      variable_id: "construct:w",
+      label: "Moderator W",
+      representation: { kind: "composite", weighting: { kind: "mode_a" } },
+      indicators: [observed("observed:w1")],
+    });
+    const distinctModerator = reduceStandardSemModelV4AuthorityV1(authority(withSecondModerator.model, "d".repeat(64)), {
+      kind: "add_interaction",
+      term_id: "interaction:x-w",
+      output_id: "derived:x-w",
+      label: "X by W",
+      predictor: "construct:x",
+      moderator: "construct:w",
+      focal_relation: focal.id,
+      outcome: "construct:y",
+      method: "two_stage",
+    });
+    expect(distinctModerator.model.derived_terms.filter((term) => term.kind === "interaction")).toHaveLength(2);
+
+    const withSecondOutcome = reduceStandardSemModelV4AuthorityV1(source, {
+      kind: "add_construct",
+      variable_id: "construct:q",
+      label: "Outcome Q",
+      representation: { kind: "composite", weighting: { kind: "mode_a" } },
+      indicators: [observed("observed:q1")],
+    });
+    const withSecondFocal = reduceStandardSemModelV4AuthorityV1(authority(withSecondOutcome.model, "e".repeat(64)), {
+      kind: "add_relationship",
+      relationship_id: "relation:x-q",
+      definition: { kind: "structural", source: "construct:x", target: "construct:q", label: "X to Q" },
+    });
+    const distinctFocalPath = reduceStandardSemModelV4AuthorityV1(authority(withSecondFocal.model, "f".repeat(64)), {
+      kind: "add_interaction",
+      term_id: "interaction:x-z-q",
+      output_id: "derived:x-z-q",
+      label: "X by Z on Q",
+      predictor: "construct:x",
+      moderator: "construct:z",
+      focal_relation: "relation:x-q",
+      outcome: "construct:q",
+      method: "two_stage",
+    });
+    expect(distinctFocalPath.model.derived_terms.filter((term) => term.kind === "interaction")).toHaveLength(2);
+  });
+
+  it("cascades interaction_v2 references when an operand or focal relation is deleted", () => {
+    const source = interactionV2Authority();
+    const term = source.model.derived_terms.find((candidate) => candidate.kind === "interaction_v2");
+    if (term?.kind !== "interaction_v2") throw new Error("Expected an interaction_v2 term.");
+
+    const withoutModerator = reduceStandardSemModelV4AuthorityV1(source, {
+      kind: "delete_construct",
+      variable_id: "construct:z",
+    });
+    expect(withoutModerator.model.variables.some((variable) => variable.id === term.output)).toBe(false);
+    expect(withoutModerator.model.derived_terms.some((candidate) => candidate.id === term.id)).toBe(false);
+
+    const withoutFocal = reduceStandardSemModelV4AuthorityV1(source, {
+      kind: "delete_relationship",
+      relationship_id: term.focal_relation,
+    });
+    expect(withoutFocal.model.variables.some((variable) => variable.id === term.output)).toBe(false);
+    expect(withoutFocal.model.derived_terms.some((candidate) => candidate.id === term.id)).toBe(false);
   });
 });

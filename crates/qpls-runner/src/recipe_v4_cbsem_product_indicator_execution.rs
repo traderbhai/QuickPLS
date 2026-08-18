@@ -415,6 +415,7 @@ mod tests {
                 group_column: None,
                 invariance_steps: Vec::new(),
             }),
+            general_sem_config: None,
             metadata: BTreeMap::new(),
             legacy_source: None,
         };

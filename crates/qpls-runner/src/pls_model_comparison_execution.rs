@@ -819,6 +819,7 @@ pub fn build_pls_model_comparison_canonical_result_v2(
             completed_at: context.completed_at.clone(),
         },
         capability_cells: capability_cells.clone(),
+        general_sem_results: None,
         sections: vec![
             CanonicalResultSection {
                 id: "run_details".into(),

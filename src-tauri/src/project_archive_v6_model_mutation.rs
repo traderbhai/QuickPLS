@@ -125,6 +125,10 @@ fn mutation_error(error: ProjectArchiveV6Error) -> ProjectArchiveV6ModelMutation
             "schema6_model_mutation.invalid_sem_model",
             "Resolve the reported SemModelV4 authoring or readiness issues and retry.",
         ),
+        ProjectArchiveV6Error::GeneralSemFeatureRequiresGeneration { .. } => (
+            "schema6_model_mutation.general_sem_v1_project_required",
+            "Create a new General SEM project from Experimental Labs and author the advanced model there.",
+        ),
         _ => (
             "schema6_model_mutation.invalid_project",
             "Reload a strict, valid schema-6 project document before retrying the mutation.",
@@ -235,6 +239,7 @@ mod tests {
             historical_results: Vec::new(),
             canonical_result_documents: Vec::new(),
             origin: ProjectOriginV6::NewProject,
+            sem_generation: None,
         }
     }
 
@@ -350,6 +355,15 @@ mod tests {
             mutate_project_archive_v6_model(denied),
             ProjectArchiveV6ModelMutationOutcomeV1::Blocked { diagnostic }
                 if diagnostic.code == "schema6_model_mutation.internal_labs_required"
+        ));
+
+        assert!(matches!(
+            mutation_error(ProjectArchiveV6Error::GeneralSemFeatureRequiresGeneration {
+                subject: "SEM model model:advanced".into(),
+            }),
+            ProjectArchiveV6ModelMutationOutcomeV1::Blocked { diagnostic }
+                if diagnostic.code
+                    == "schema6_model_mutation.general_sem_v1_project_required"
         ));
     }
 }

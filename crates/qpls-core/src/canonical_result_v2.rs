@@ -4,6 +4,7 @@ use serde_json::{Map, Value};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 pub const CANONICAL_RESULT_DOCUMENT_V2_SCHEMA_VERSION: u32 = 2;
+pub const CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION: u32 = 1;
 const MAX_SAFE_INTEGER: i64 = 9_007_199_254_740_991;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -285,6 +286,245 @@ pub struct CanonicalResultPresentationV2 {
     pub chart_defaults: CanonicalChartDisplayOptions,
 }
 
+/// Exact model and qualified capability cell that produced a typed General SEM
+/// result. Specialized result rows add relation, path, interaction, or
+/// higher-order identities without replacing this common trace.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalGeneralSemResultTraceV1 {
+    pub model_id: String,
+    pub capability_cell: CapabilityCellReferenceV2,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalGeneralSemEstimateV1 {
+    pub estimate: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub standard_error: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lower: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub upper: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub p_value: Option<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalSpecificIndirectEffectResultV1 {
+    pub effect_id: String,
+    pub estimand_id: String,
+    pub trace: CanonicalGeneralSemResultTraceV1,
+    pub ordered_relation_ids: Vec<String>,
+    pub value: CanonicalGeneralSemEstimateV1,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalAggregateEffectKindV1 {
+    TotalIndirect,
+    TotalEffect,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalAggregateEffectResultV1 {
+    pub effect_id: String,
+    pub estimand_id: String,
+    pub trace: CanonicalGeneralSemResultTraceV1,
+    pub kind: CanonicalAggregateEffectKindV1,
+    pub source_id: String,
+    pub target_id: String,
+    pub value: CanonicalGeneralSemEstimateV1,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum CanonicalConditionalProbeValuesResultV1 {
+    DataDerivedMeanPlusMinusOneSd { mean: f64, standard_deviation: f64 },
+    Explicit { values: Vec<f64> },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalConditionalEffectProbeResultV1 {
+    pub probe_id: String,
+    pub trace: CanonicalGeneralSemResultTraceV1,
+    pub moderator_id: String,
+    pub values: CanonicalConditionalProbeValuesResultV1,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalConditionalEffectResultV1 {
+    pub effect_id: String,
+    pub estimand_id: String,
+    pub trace: CanonicalGeneralSemResultTraceV1,
+    pub interaction_id: String,
+    pub focal_relation_id: String,
+    pub probe_id: String,
+    pub moderator_id: String,
+    pub probe_value_index: u32,
+    pub moderator_value: f64,
+    pub value: CanonicalGeneralSemEstimateV1,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalInteractionPlotPointV1 {
+    pub focal_value: f64,
+    pub predicted_value: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lower: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub upper: Option<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalInteractionPlotSeriesV1 {
+    pub series_id: String,
+    pub probe_id: String,
+    pub probe_value_index: u32,
+    pub moderator_value: f64,
+    pub points: Vec<CanonicalInteractionPlotPointV1>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalInteractionPlotResultV1 {
+    pub plot_id: String,
+    pub trace: CanonicalGeneralSemResultTraceV1,
+    pub interaction_id: String,
+    pub focal_relation_id: String,
+    pub focal_predictor_id: String,
+    pub moderator_id: String,
+    pub outcome_id: String,
+    pub series: Vec<CanonicalInteractionPlotSeriesV1>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalHocStageKindV1 {
+    LowerOrderScoreEstimation,
+    HigherOrderEstimation,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalHocRelationEstimateV1 {
+    pub relation_id: String,
+    pub source_id: String,
+    pub target_id: String,
+    pub value: CanonicalGeneralSemEstimateV1,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalHocStageResultV1 {
+    pub stage_id: String,
+    pub trace: CanonicalGeneralSemResultTraceV1,
+    pub higher_order_construct_id: String,
+    pub stage_number: u32,
+    pub kind: CanonicalHocStageKindV1,
+    pub input_construct_ids: Vec<String>,
+    pub output_variable_ids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub relation_estimates: Vec<CanonicalHocRelationEstimateV1>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalGeneralSemIntervalV1 {
+    pub confidence_level: f64,
+    pub lower: f64,
+    pub upper: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalCbsemFitResultV1 {
+    pub fit_id: String,
+    pub trace: CanonicalGeneralSemResultTraceV1,
+    pub chi_square: f64,
+    pub degrees_of_freedom: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub chi_square_p_value: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rmsea: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rmsea_interval: Option<CanonicalGeneralSemIntervalV1>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cfi: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tli: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub srmr: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub aic: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bic: Option<f64>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalIdentificationScopeV1 {
+    Model,
+    Variable,
+    Relation,
+    Interaction,
+    HigherOrderConstruct,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalIdentificationStatusV1 {
+    Identified,
+    Underidentified,
+    LocallyUnderidentified,
+    BoundaryCondition,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalIdentificationDiagnosticV1 {
+    pub diagnostic_id: String,
+    pub trace: CanonicalGeneralSemResultTraceV1,
+    pub scope: CanonicalIdentificationScopeV1,
+    pub subject_id: String,
+    pub status: CanonicalIdentificationStatusV1,
+    pub code: String,
+    pub message: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub degrees_of_freedom: Option<i64>,
+}
+
+/// Optional typed analytical extension for the General SEM roadmap. Every
+/// collection is canonical stable-ID order; the extension never implies that
+/// an estimator executed a section that is absent.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalGeneralSemResultsV1 {
+    pub schema_version: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub specific_indirect_effects: Vec<CanonicalSpecificIndirectEffectResultV1>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub aggregate_effects: Vec<CanonicalAggregateEffectResultV1>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub conditional_effect_probes: Vec<CanonicalConditionalEffectProbeResultV1>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub conditional_effects: Vec<CanonicalConditionalEffectResultV1>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub interaction_plots: Vec<CanonicalInteractionPlotResultV1>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub higher_order_stages: Vec<CanonicalHocStageResultV1>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub cbsem_fit: Vec<CanonicalCbsemFitResultV1>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub identification_diagnostics: Vec<CanonicalIdentificationDiagnosticV1>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct CanonicalResultDocumentV2 {
@@ -296,6 +536,8 @@ pub struct CanonicalResultDocumentV2 {
     /// the primary capability for wire compatibility.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub capability_cells: Option<Vec<CapabilityCellReferenceV2>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub general_sem_results: Option<CanonicalGeneralSemResultsV1>,
     pub sections: Vec<CanonicalResultSection>,
     pub tables: Vec<CanonicalResultTable>,
     pub charts: Vec<CanonicalResultChart>,
@@ -430,6 +672,710 @@ fn validate_capability_set(
     identities
 }
 
+fn require_canonical_stable_ids<'a>(
+    errors: &mut Vec<String>,
+    ids: impl IntoIterator<Item = &'a str>,
+    context: &str,
+) {
+    let ids = ids.into_iter().collect::<Vec<_>>();
+    require_unique_ids(errors, ids.iter().copied(), context);
+    let mut sorted = ids.clone();
+    sorted.sort_unstable();
+    if ids != sorted {
+        errors.push(format!(
+            "{context} must be ordered by exact stable identifier"
+        ));
+    }
+}
+
+fn validate_general_sem_trace(
+    errors: &mut Vec<String>,
+    trace: &CanonicalGeneralSemResultTraceV1,
+    document_model_id: &str,
+    document_capability_ids: Option<&HashSet<String>>,
+    context: &str,
+) {
+    require_stable_id(errors, &trace.model_id, &format!("{context}.model_id"));
+    if trace.model_id != document_model_id {
+        errors.push(format!("{context}.model_id must equal provenance.model_id"));
+    }
+    validate_capability_reference(
+        errors,
+        &trace.capability_cell,
+        &format!("{context}.capability_cell"),
+    );
+    let identity = capability_cell_reference_identity_v2(&trace.capability_cell);
+    match document_capability_ids {
+        Some(identities) if !identities.contains(&identity) => errors.push(format!(
+            "{context}.capability_cell references undeclared option cell {identity}"
+        )),
+        None => errors.push(format!(
+            "{context}.capability_cell requires document capability_cells"
+        )),
+        _ => {}
+    }
+}
+
+fn validate_general_sem_bounds(
+    errors: &mut Vec<String>,
+    lower: Option<f64>,
+    upper: Option<f64>,
+    context: &str,
+) {
+    if lower.is_some_and(|value| !value.is_finite()) {
+        errors.push(format!("{context}.lower must be finite"));
+    }
+    if upper.is_some_and(|value| !value.is_finite()) {
+        errors.push(format!("{context}.upper must be finite"));
+    }
+    if matches!((lower, upper), (Some(lower), Some(upper)) if lower > upper) {
+        errors.push(format!("{context}.lower must not exceed upper"));
+    }
+}
+
+fn validate_general_sem_estimate(
+    errors: &mut Vec<String>,
+    value: &CanonicalGeneralSemEstimateV1,
+    context: &str,
+) {
+    if !value.estimate.is_finite() {
+        errors.push(format!("{context}.estimate must be finite"));
+    }
+    if value
+        .standard_error
+        .is_some_and(|standard_error| !standard_error.is_finite() || standard_error < 0.0)
+    {
+        errors.push(format!(
+            "{context}.standard_error must be finite and nonnegative"
+        ));
+    }
+    if value
+        .p_value
+        .is_some_and(|p_value| !p_value.is_finite() || !(0.0..=1.0).contains(&p_value))
+    {
+        errors.push(format!(
+            "{context}.p_value must be finite and between 0 and 1"
+        ));
+    }
+    validate_general_sem_bounds(errors, value.lower, value.upper, context);
+}
+
+fn approximately_equal(left: f64, right: f64) -> bool {
+    left == right
+        || (left - right).abs() <= f64::EPSILON * 8.0 * left.abs().max(right.abs()).max(1.0)
+}
+
+fn conditional_probe_value(
+    probe: &CanonicalConditionalEffectProbeResultV1,
+    index: u32,
+) -> Option<f64> {
+    let index = usize::try_from(index).ok()?;
+    match &probe.values {
+        CanonicalConditionalProbeValuesResultV1::DataDerivedMeanPlusMinusOneSd {
+            mean,
+            standard_deviation,
+        } => [
+            *mean - *standard_deviation,
+            *mean,
+            *mean + *standard_deviation,
+        ]
+        .get(index)
+        .copied(),
+        CanonicalConditionalProbeValuesResultV1::Explicit { values } => values.get(index).copied(),
+    }
+}
+
+fn validate_general_sem_results_v1(
+    errors: &mut Vec<String>,
+    results: &CanonicalGeneralSemResultsV1,
+    document_model_id: &str,
+    document_capability_ids: Option<&HashSet<String>>,
+) {
+    let context = "general_sem_results";
+    if results.schema_version != CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION {
+        errors.push(format!(
+            "{context}.schema_version must equal {CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION}"
+        ));
+    }
+    if results.specific_indirect_effects.is_empty()
+        && results.aggregate_effects.is_empty()
+        && results.conditional_effect_probes.is_empty()
+        && results.conditional_effects.is_empty()
+        && results.interaction_plots.is_empty()
+        && results.higher_order_stages.is_empty()
+        && results.cbsem_fit.is_empty()
+        && results.identification_diagnostics.is_empty()
+    {
+        errors.push(format!(
+            "{context} must contain at least one typed result section"
+        ));
+    }
+
+    require_canonical_stable_ids(
+        errors,
+        results
+            .specific_indirect_effects
+            .iter()
+            .map(|item| item.effect_id.as_str()),
+        &format!("{context}.specific_indirect_effects"),
+    );
+    require_canonical_stable_ids(
+        errors,
+        results
+            .aggregate_effects
+            .iter()
+            .map(|item| item.effect_id.as_str()),
+        &format!("{context}.aggregate_effects"),
+    );
+    require_canonical_stable_ids(
+        errors,
+        results
+            .conditional_effect_probes
+            .iter()
+            .map(|item| item.probe_id.as_str()),
+        &format!("{context}.conditional_effect_probes"),
+    );
+    require_canonical_stable_ids(
+        errors,
+        results
+            .conditional_effects
+            .iter()
+            .map(|item| item.effect_id.as_str()),
+        &format!("{context}.conditional_effects"),
+    );
+    require_canonical_stable_ids(
+        errors,
+        results
+            .interaction_plots
+            .iter()
+            .map(|item| item.plot_id.as_str()),
+        &format!("{context}.interaction_plots"),
+    );
+    require_canonical_stable_ids(
+        errors,
+        results
+            .higher_order_stages
+            .iter()
+            .map(|item| item.stage_id.as_str()),
+        &format!("{context}.higher_order_stages"),
+    );
+    require_canonical_stable_ids(
+        errors,
+        results.cbsem_fit.iter().map(|item| item.fit_id.as_str()),
+        &format!("{context}.cbsem_fit"),
+    );
+    require_canonical_stable_ids(
+        errors,
+        results
+            .identification_diagnostics
+            .iter()
+            .map(|item| item.diagnostic_id.as_str()),
+        &format!("{context}.identification_diagnostics"),
+    );
+
+    let mut effect_ids = BTreeSet::new();
+    let mut specific_signatures = BTreeSet::new();
+    for (index, effect) in results.specific_indirect_effects.iter().enumerate() {
+        let item_context = format!("{context}.specific_indirect_effects[{index}]");
+        if !effect_ids.insert(effect.effect_id.as_str()) {
+            errors.push(format!(
+                "{item_context}.effect_id is duplicated across effect sections"
+            ));
+        }
+        require_stable_id(
+            errors,
+            &effect.estimand_id,
+            &format!("{item_context}.estimand_id"),
+        );
+        validate_general_sem_trace(
+            errors,
+            &effect.trace,
+            document_model_id,
+            document_capability_ids,
+            &format!("{item_context}.trace"),
+        );
+        if effect.ordered_relation_ids.len() < 2 {
+            errors.push(format!(
+                "{item_context}.ordered_relation_ids requires at least two relations"
+            ));
+        }
+        require_unique_ids(
+            errors,
+            effect.ordered_relation_ids.iter().map(String::as_str),
+            &format!("{item_context}.ordered_relation_ids"),
+        );
+        if !specific_signatures.insert(effect.ordered_relation_ids.join("\0")) {
+            errors.push(format!(
+                "{item_context} duplicates another specific indirect path"
+            ));
+        }
+        validate_general_sem_estimate(errors, &effect.value, &format!("{item_context}.value"));
+    }
+
+    let mut aggregate_signatures = BTreeSet::new();
+    for (index, effect) in results.aggregate_effects.iter().enumerate() {
+        let item_context = format!("{context}.aggregate_effects[{index}]");
+        if !effect_ids.insert(effect.effect_id.as_str()) {
+            errors.push(format!(
+                "{item_context}.effect_id is duplicated across effect sections"
+            ));
+        }
+        require_stable_id(
+            errors,
+            &effect.estimand_id,
+            &format!("{item_context}.estimand_id"),
+        );
+        validate_general_sem_trace(
+            errors,
+            &effect.trace,
+            document_model_id,
+            document_capability_ids,
+            &format!("{item_context}.trace"),
+        );
+        require_stable_id(
+            errors,
+            &effect.source_id,
+            &format!("{item_context}.source_id"),
+        );
+        require_stable_id(
+            errors,
+            &effect.target_id,
+            &format!("{item_context}.target_id"),
+        );
+        if effect.source_id == effect.target_id {
+            errors.push(format!(
+                "{item_context} requires distinct source_id and target_id"
+            ));
+        }
+        let kind = match effect.kind {
+            CanonicalAggregateEffectKindV1::TotalIndirect => "total_indirect",
+            CanonicalAggregateEffectKindV1::TotalEffect => "total_effect",
+        };
+        if !aggregate_signatures.insert(format!(
+            "{kind}\0{}\0{}",
+            effect.source_id, effect.target_id
+        )) {
+            errors.push(format!(
+                "{item_context} duplicates another aggregate scientific effect"
+            ));
+        }
+        validate_general_sem_estimate(errors, &effect.value, &format!("{item_context}.value"));
+    }
+
+    for (index, probe) in results.conditional_effect_probes.iter().enumerate() {
+        let item_context = format!("{context}.conditional_effect_probes[{index}]");
+        validate_general_sem_trace(
+            errors,
+            &probe.trace,
+            document_model_id,
+            document_capability_ids,
+            &format!("{item_context}.trace"),
+        );
+        require_stable_id(
+            errors,
+            &probe.moderator_id,
+            &format!("{item_context}.moderator_id"),
+        );
+        match &probe.values {
+            CanonicalConditionalProbeValuesResultV1::DataDerivedMeanPlusMinusOneSd {
+                mean,
+                standard_deviation,
+            } => {
+                if !mean.is_finite() {
+                    errors.push(format!("{item_context}.values.mean must be finite"));
+                }
+                if !standard_deviation.is_finite() || *standard_deviation < 0.0 {
+                    errors.push(format!(
+                        "{item_context}.values.standard_deviation must be finite and nonnegative"
+                    ));
+                }
+            }
+            CanonicalConditionalProbeValuesResultV1::Explicit { values } => {
+                if values.is_empty() {
+                    errors.push(format!("{item_context}.values.values must not be empty"));
+                }
+                for (value_index, value) in values.iter().enumerate() {
+                    if !value.is_finite() {
+                        errors.push(format!(
+                            "{item_context}.values.values[{value_index}] must be finite"
+                        ));
+                    }
+                }
+                for (value_index, pair) in values.windows(2).enumerate() {
+                    if pair[0].partial_cmp(&pair[1]) != Some(std::cmp::Ordering::Less) {
+                        errors.push(format!(
+                            "{item_context}.values.values must be strictly increasing at indices {value_index} and {}",
+                            value_index + 1
+                        ));
+                    }
+                }
+            }
+        }
+    }
+
+    let probes = results
+        .conditional_effect_probes
+        .iter()
+        .map(|probe| (probe.probe_id.as_str(), probe))
+        .collect::<BTreeMap<_, _>>();
+    let mut conditional_signatures = BTreeSet::new();
+    for (index, effect) in results.conditional_effects.iter().enumerate() {
+        let item_context = format!("{context}.conditional_effects[{index}]");
+        if !effect_ids.insert(effect.effect_id.as_str()) {
+            errors.push(format!(
+                "{item_context}.effect_id is duplicated across effect sections"
+            ));
+        }
+        for (name, id) in [
+            ("estimand_id", effect.estimand_id.as_str()),
+            ("interaction_id", effect.interaction_id.as_str()),
+            ("focal_relation_id", effect.focal_relation_id.as_str()),
+            ("probe_id", effect.probe_id.as_str()),
+            ("moderator_id", effect.moderator_id.as_str()),
+        ] {
+            require_stable_id(errors, id, &format!("{item_context}.{name}"));
+        }
+        validate_general_sem_trace(
+            errors,
+            &effect.trace,
+            document_model_id,
+            document_capability_ids,
+            &format!("{item_context}.trace"),
+        );
+        if !effect.moderator_value.is_finite() {
+            errors.push(format!("{item_context}.moderator_value must be finite"));
+        }
+        match probes.get(effect.probe_id.as_str()) {
+            None => errors.push(format!(
+                "{item_context}.probe_id references a missing conditional-effect probe"
+            )),
+            Some(probe) => {
+                if effect.moderator_id != probe.moderator_id {
+                    errors.push(format!("{item_context}.moderator_id contradicts its probe"));
+                }
+                match conditional_probe_value(probe, effect.probe_value_index) {
+                    None => errors.push(format!(
+                        "{item_context}.probe_value_index is outside its probe"
+                    )),
+                    Some(expected) if !approximately_equal(effect.moderator_value, expected) => {
+                        errors.push(format!(
+                            "{item_context}.moderator_value contradicts its probe value"
+                        ));
+                    }
+                    _ => {}
+                }
+            }
+        }
+        if !conditional_signatures.insert(format!(
+            "{}\0{}\0{}\0{}\0{}",
+            effect.estimand_id,
+            effect.interaction_id,
+            effect.focal_relation_id,
+            effect.probe_id,
+            effect.probe_value_index
+        )) {
+            errors.push(format!(
+                "{item_context} duplicates another conditional scientific effect"
+            ));
+        }
+        validate_general_sem_estimate(errors, &effect.value, &format!("{item_context}.value"));
+    }
+
+    for (index, plot) in results.interaction_plots.iter().enumerate() {
+        let item_context = format!("{context}.interaction_plots[{index}]");
+        validate_general_sem_trace(
+            errors,
+            &plot.trace,
+            document_model_id,
+            document_capability_ids,
+            &format!("{item_context}.trace"),
+        );
+        for (name, id) in [
+            ("interaction_id", plot.interaction_id.as_str()),
+            ("focal_relation_id", plot.focal_relation_id.as_str()),
+            ("focal_predictor_id", plot.focal_predictor_id.as_str()),
+            ("moderator_id", plot.moderator_id.as_str()),
+            ("outcome_id", plot.outcome_id.as_str()),
+        ] {
+            require_stable_id(errors, id, &format!("{item_context}.{name}"));
+        }
+        if plot.focal_predictor_id == plot.moderator_id
+            || plot.focal_predictor_id == plot.outcome_id
+            || plot.moderator_id == plot.outcome_id
+        {
+            errors.push(format!(
+                "{item_context} requires distinct focal, moderator, and outcome identities"
+            ));
+        }
+        if plot.series.is_empty() {
+            errors.push(format!("{item_context}.series must not be empty"));
+        }
+        require_canonical_stable_ids(
+            errors,
+            plot.series.iter().map(|series| series.series_id.as_str()),
+            &format!("{item_context}.series"),
+        );
+        let mut expected_grid: Option<Vec<f64>> = None;
+        for (series_index, series) in plot.series.iter().enumerate() {
+            let series_context = format!("{item_context}.series[{series_index}]");
+            require_stable_id(
+                errors,
+                &series.probe_id,
+                &format!("{series_context}.probe_id"),
+            );
+            if !series.moderator_value.is_finite() {
+                errors.push(format!("{series_context}.moderator_value must be finite"));
+            }
+            match probes.get(series.probe_id.as_str()) {
+                None => errors.push(format!(
+                    "{series_context}.probe_id references a missing conditional-effect probe"
+                )),
+                Some(probe) => {
+                    if probe.moderator_id != plot.moderator_id {
+                        errors.push(format!(
+                            "{series_context}.probe_id uses a different moderator"
+                        ));
+                    }
+                    match conditional_probe_value(probe, series.probe_value_index) {
+                        None => errors.push(format!(
+                            "{series_context}.probe_value_index is outside its probe"
+                        )),
+                        Some(expected)
+                            if !approximately_equal(series.moderator_value, expected) =>
+                        {
+                            errors.push(format!(
+                                "{series_context}.moderator_value contradicts its probe value"
+                            ));
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            if series.points.is_empty() {
+                errors.push(format!("{series_context}.points must not be empty"));
+            }
+            let mut previous_focal_value = None;
+            for (point_index, point) in series.points.iter().enumerate() {
+                let point_context = format!("{series_context}.points[{point_index}]");
+                if !point.focal_value.is_finite() {
+                    errors.push(format!("{point_context}.focal_value must be finite"));
+                }
+                if !point.predicted_value.is_finite() {
+                    errors.push(format!("{point_context}.predicted_value must be finite"));
+                }
+                if previous_focal_value.is_some_and(|previous| previous >= point.focal_value) {
+                    errors.push(format!(
+                        "{series_context}.points must use strictly increasing focal values"
+                    ));
+                }
+                previous_focal_value = Some(point.focal_value);
+                validate_general_sem_bounds(errors, point.lower, point.upper, &point_context);
+            }
+            let grid = series
+                .points
+                .iter()
+                .map(|point| point.focal_value)
+                .collect::<Vec<_>>();
+            if let Some(expected) = &expected_grid {
+                if grid.len() != expected.len()
+                    || grid
+                        .iter()
+                        .zip(expected)
+                        .any(|(left, right)| !approximately_equal(*left, *right))
+                {
+                    errors.push(format!(
+                        "{series_context}.points must use the plot's common focal-value grid"
+                    ));
+                }
+            } else {
+                expected_grid = Some(grid);
+            }
+        }
+    }
+
+    let mut hoc_stage_signatures = BTreeSet::new();
+    for (index, stage) in results.higher_order_stages.iter().enumerate() {
+        let item_context = format!("{context}.higher_order_stages[{index}]");
+        validate_general_sem_trace(
+            errors,
+            &stage.trace,
+            document_model_id,
+            document_capability_ids,
+            &format!("{item_context}.trace"),
+        );
+        require_stable_id(
+            errors,
+            &stage.higher_order_construct_id,
+            &format!("{item_context}.higher_order_construct_id"),
+        );
+        let expected_stage_number = match stage.kind {
+            CanonicalHocStageKindV1::LowerOrderScoreEstimation => 1,
+            CanonicalHocStageKindV1::HigherOrderEstimation => 2,
+        };
+        if stage.stage_number != expected_stage_number {
+            errors.push(format!(
+                "{item_context}.stage_number contradicts its stage kind"
+            ));
+        }
+        if !hoc_stage_signatures
+            .insert((stage.higher_order_construct_id.as_str(), stage.stage_number))
+        {
+            errors.push(format!(
+                "{item_context} duplicates a higher-order construct stage"
+            ));
+        }
+        for (name, ids) in [
+            ("input_construct_ids", &stage.input_construct_ids),
+            ("output_variable_ids", &stage.output_variable_ids),
+        ] {
+            if ids.is_empty() {
+                errors.push(format!("{item_context}.{name} must not be empty"));
+            }
+            require_canonical_stable_ids(
+                errors,
+                ids.iter().map(String::as_str),
+                &format!("{item_context}.{name}"),
+            );
+        }
+        require_canonical_stable_ids(
+            errors,
+            stage
+                .relation_estimates
+                .iter()
+                .map(|relation| relation.relation_id.as_str()),
+            &format!("{item_context}.relation_estimates"),
+        );
+        for (relation_index, relation) in stage.relation_estimates.iter().enumerate() {
+            let relation_context = format!("{item_context}.relation_estimates[{relation_index}]");
+            for (name, id) in [
+                ("source_id", relation.source_id.as_str()),
+                ("target_id", relation.target_id.as_str()),
+            ] {
+                require_stable_id(errors, id, &format!("{relation_context}.{name}"));
+            }
+            if relation.source_id == relation.target_id {
+                errors.push(format!(
+                    "{relation_context} requires distinct source_id and target_id"
+                ));
+            }
+            validate_general_sem_estimate(
+                errors,
+                &relation.value,
+                &format!("{relation_context}.value"),
+            );
+        }
+    }
+
+    for (index, fit) in results.cbsem_fit.iter().enumerate() {
+        let item_context = format!("{context}.cbsem_fit[{index}]");
+        validate_general_sem_trace(
+            errors,
+            &fit.trace,
+            document_model_id,
+            document_capability_ids,
+            &format!("{item_context}.trace"),
+        );
+        if !fit.chi_square.is_finite() || fit.chi_square < 0.0 {
+            errors.push(format!(
+                "{item_context}.chi_square must be finite and nonnegative"
+            ));
+        }
+        if fit
+            .chi_square_p_value
+            .is_some_and(|value| !value.is_finite() || !(0.0..=1.0).contains(&value))
+        {
+            errors.push(format!(
+                "{item_context}.chi_square_p_value must be finite and between 0 and 1"
+            ));
+        }
+        if fit.degrees_of_freedom == 0 && fit.chi_square_p_value.is_some() {
+            errors.push(format!(
+                "{item_context}.chi_square_p_value must be absent when degrees_of_freedom is zero"
+            ));
+        }
+        for (name, value) in [
+            ("rmsea", fit.rmsea),
+            ("cfi", fit.cfi),
+            ("tli", fit.tli),
+            ("srmr", fit.srmr),
+            ("aic", fit.aic),
+            ("bic", fit.bic),
+        ] {
+            if value.is_some_and(|value| !value.is_finite()) {
+                errors.push(format!("{item_context}.{name} must be finite"));
+            }
+        }
+        if fit.rmsea.is_some_and(|value| value < 0.0) {
+            errors.push(format!("{item_context}.rmsea must be nonnegative"));
+        }
+        if fit.srmr.is_some_and(|value| value < 0.0) {
+            errors.push(format!("{item_context}.srmr must be nonnegative"));
+        }
+        if let Some(interval) = &fit.rmsea_interval {
+            if fit.rmsea.is_none() {
+                errors.push(format!(
+                    "{item_context}.rmsea_interval requires an rmsea estimate"
+                ));
+            }
+            if !interval.confidence_level.is_finite()
+                || interval.confidence_level <= 0.0
+                || interval.confidence_level >= 1.0
+            {
+                errors.push(format!(
+                    "{item_context}.rmsea_interval.confidence_level must be finite and between 0 and 1"
+                ));
+            }
+            validate_general_sem_bounds(
+                errors,
+                Some(interval.lower),
+                Some(interval.upper),
+                &format!("{item_context}.rmsea_interval"),
+            );
+            if interval.lower.is_finite() && interval.lower < 0.0 {
+                errors.push(format!(
+                    "{item_context}.rmsea_interval.lower must be nonnegative"
+                ));
+            }
+        }
+    }
+
+    for (index, diagnostic) in results.identification_diagnostics.iter().enumerate() {
+        let item_context = format!("{context}.identification_diagnostics[{index}]");
+        validate_general_sem_trace(
+            errors,
+            &diagnostic.trace,
+            document_model_id,
+            document_capability_ids,
+            &format!("{item_context}.trace"),
+        );
+        require_stable_id(
+            errors,
+            &diagnostic.subject_id,
+            &format!("{item_context}.subject_id"),
+        );
+        require_stable_id(errors, &diagnostic.code, &format!("{item_context}.code"));
+        if diagnostic.message.trim().is_empty() {
+            errors.push(format!("{item_context}.message must be nonempty"));
+        }
+        if diagnostic.scope == CanonicalIdentificationScopeV1::Model
+            && diagnostic.subject_id != document_model_id
+        {
+            errors.push(format!(
+                "{item_context}.subject_id must equal provenance.model_id for model scope"
+            ));
+        }
+        if diagnostic.status == CanonicalIdentificationStatusV1::Identified
+            && diagnostic
+                .degrees_of_freedom
+                .is_some_and(|degrees| degrees < 0)
+        {
+            errors.push(format!(
+                "{item_context} cannot be identified with negative degrees_of_freedom"
+            ));
+        }
+    }
+}
+
 fn is_lowercase_sha256(value: &str) -> bool {
     value.len() == 64
         && value
@@ -516,6 +1462,14 @@ pub fn validate_canonical_result_document_v2(
         }
         identities
     });
+    if let Some(results) = &document.general_sem_results {
+        validate_general_sem_results_v1(
+            &mut errors,
+            results,
+            &document.provenance.model_id,
+            document_capability_ids.as_ref(),
+        );
+    }
 
     for section in &document.sections {
         if section.title.trim().is_empty() {
@@ -1073,6 +2027,7 @@ pub fn canonical_result_document_from_legacy_tables(
         title: context.title,
         provenance: context.provenance,
         capability_cells: None,
+        general_sem_results: None,
         sections: vec![CanonicalResultSection {
             id: "historical_results".to_string(),
             title: "Historical results".to_string(),
@@ -1145,6 +2100,7 @@ mod tests {
             title: "PLS path results".to_string(),
             provenance: provenance(),
             capability_cells: Some(vec![capability_reference()]),
+            general_sem_results: None,
             sections: vec![CanonicalResultSection {
                 id: "structural".to_string(),
                 title: "Structural model".to_string(),
@@ -1237,6 +2193,194 @@ mod tests {
         }
     }
 
+    fn general_sem_trace() -> CanonicalGeneralSemResultTraceV1 {
+        CanonicalGeneralSemResultTraceV1 {
+            model_id: "model-1".to_string(),
+            capability_cell: capability_reference(),
+        }
+    }
+
+    fn effect_value(estimate: f64) -> CanonicalGeneralSemEstimateV1 {
+        CanonicalGeneralSemEstimateV1 {
+            estimate,
+            standard_error: Some(0.04),
+            lower: Some(estimate - 0.08),
+            upper: Some(estimate + 0.08),
+            p_value: Some(0.02),
+        }
+    }
+
+    fn general_sem_results_fixture() -> CanonicalGeneralSemResultsV1 {
+        CanonicalGeneralSemResultsV1 {
+            schema_version: CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION,
+            specific_indirect_effects: vec![CanonicalSpecificIndirectEffectResultV1 {
+                effect_id: "effect_specific_1".to_string(),
+                estimand_id: "estimand_specific_1".to_string(),
+                trace: general_sem_trace(),
+                ordered_relation_ids: vec!["relation_a".to_string(), "relation_b".to_string()],
+                value: effect_value(0.12),
+            }],
+            aggregate_effects: vec![
+                CanonicalAggregateEffectResultV1 {
+                    effect_id: "effect_total_1".to_string(),
+                    estimand_id: "estimand_total_indirect_1".to_string(),
+                    trace: general_sem_trace(),
+                    kind: CanonicalAggregateEffectKindV1::TotalIndirect,
+                    source_id: "construct_x".to_string(),
+                    target_id: "construct_y".to_string(),
+                    value: effect_value(0.18),
+                },
+                CanonicalAggregateEffectResultV1 {
+                    effect_id: "effect_total_2".to_string(),
+                    estimand_id: "estimand_total_effect_1".to_string(),
+                    trace: general_sem_trace(),
+                    kind: CanonicalAggregateEffectKindV1::TotalEffect,
+                    source_id: "construct_x".to_string(),
+                    target_id: "construct_y".to_string(),
+                    value: effect_value(0.60),
+                },
+            ],
+            conditional_effect_probes: vec![
+                CanonicalConditionalEffectProbeResultV1 {
+                    probe_id: "probe_data".to_string(),
+                    trace: general_sem_trace(),
+                    moderator_id: "moderator_m".to_string(),
+                    values:
+                        CanonicalConditionalProbeValuesResultV1::DataDerivedMeanPlusMinusOneSd {
+                            mean: 1.0,
+                            standard_deviation: 1.0,
+                        },
+                },
+                CanonicalConditionalEffectProbeResultV1 {
+                    probe_id: "probe_explicit".to_string(),
+                    trace: general_sem_trace(),
+                    moderator_id: "moderator_m".to_string(),
+                    values: CanonicalConditionalProbeValuesResultV1::Explicit {
+                        values: vec![-1.0, 0.0, 1.0],
+                    },
+                },
+            ],
+            conditional_effects: vec![CanonicalConditionalEffectResultV1 {
+                effect_id: "effect_conditional_1".to_string(),
+                estimand_id: "estimand_conditional_1".to_string(),
+                trace: general_sem_trace(),
+                interaction_id: "interaction_1".to_string(),
+                focal_relation_id: "relation_focal_1".to_string(),
+                probe_id: "probe_data".to_string(),
+                moderator_id: "moderator_m".to_string(),
+                probe_value_index: 1,
+                moderator_value: 1.0,
+                value: effect_value(0.42),
+            }],
+            interaction_plots: vec![CanonicalInteractionPlotResultV1 {
+                plot_id: "interaction_plot_1".to_string(),
+                trace: general_sem_trace(),
+                interaction_id: "interaction_1".to_string(),
+                focal_relation_id: "relation_focal_1".to_string(),
+                focal_predictor_id: "construct_x".to_string(),
+                moderator_id: "moderator_m".to_string(),
+                outcome_id: "construct_y".to_string(),
+                series: vec![
+                    CanonicalInteractionPlotSeriesV1 {
+                        series_id: "series_01_low".to_string(),
+                        probe_id: "probe_data".to_string(),
+                        probe_value_index: 0,
+                        moderator_value: 0.0,
+                        points: vec![
+                            CanonicalInteractionPlotPointV1 {
+                                focal_value: -1.0,
+                                predicted_value: -0.2,
+                                lower: Some(-0.3),
+                                upper: Some(-0.1),
+                            },
+                            CanonicalInteractionPlotPointV1 {
+                                focal_value: 1.0,
+                                predicted_value: 0.2,
+                                lower: Some(0.1),
+                                upper: Some(0.3),
+                            },
+                        ],
+                    },
+                    CanonicalInteractionPlotSeriesV1 {
+                        series_id: "series_02_high".to_string(),
+                        probe_id: "probe_data".to_string(),
+                        probe_value_index: 2,
+                        moderator_value: 2.0,
+                        points: vec![
+                            CanonicalInteractionPlotPointV1 {
+                                focal_value: -1.0,
+                                predicted_value: -0.5,
+                                lower: Some(-0.6),
+                                upper: Some(-0.4),
+                            },
+                            CanonicalInteractionPlotPointV1 {
+                                focal_value: 1.0,
+                                predicted_value: 0.5,
+                                lower: Some(0.4),
+                                upper: Some(0.6),
+                            },
+                        ],
+                    },
+                ],
+            }],
+            higher_order_stages: vec![
+                CanonicalHocStageResultV1 {
+                    stage_id: "hoc_stage_1".to_string(),
+                    trace: general_sem_trace(),
+                    higher_order_construct_id: "hoc_ab".to_string(),
+                    stage_number: 1,
+                    kind: CanonicalHocStageKindV1::LowerOrderScoreEstimation,
+                    input_construct_ids: vec!["construct_a".to_string(), "construct_b".to_string()],
+                    output_variable_ids: vec!["score_a".to_string(), "score_b".to_string()],
+                    relation_estimates: Vec::new(),
+                },
+                CanonicalHocStageResultV1 {
+                    stage_id: "hoc_stage_2".to_string(),
+                    trace: general_sem_trace(),
+                    higher_order_construct_id: "hoc_ab".to_string(),
+                    stage_number: 2,
+                    kind: CanonicalHocStageKindV1::HigherOrderEstimation,
+                    input_construct_ids: vec!["score_a".to_string(), "score_b".to_string()],
+                    output_variable_ids: vec!["hoc_ab".to_string()],
+                    relation_estimates: vec![CanonicalHocRelationEstimateV1 {
+                        relation_id: "relation_hoc_1".to_string(),
+                        source_id: "hoc_ab".to_string(),
+                        target_id: "construct_y".to_string(),
+                        value: effect_value(0.31),
+                    }],
+                },
+            ],
+            cbsem_fit: vec![CanonicalCbsemFitResultV1 {
+                fit_id: "cbsem_fit_1".to_string(),
+                trace: general_sem_trace(),
+                chi_square: 12.5,
+                degrees_of_freedom: 8,
+                chi_square_p_value: Some(0.13),
+                rmsea: Some(0.04),
+                rmsea_interval: Some(CanonicalGeneralSemIntervalV1 {
+                    confidence_level: 0.90,
+                    lower: 0.01,
+                    upper: 0.08,
+                }),
+                cfi: Some(0.98),
+                tli: Some(0.97),
+                srmr: Some(0.03),
+                aic: Some(101.2),
+                bic: Some(120.4),
+            }],
+            identification_diagnostics: vec![CanonicalIdentificationDiagnosticV1 {
+                diagnostic_id: "identification_model_1".to_string(),
+                trace: general_sem_trace(),
+                scope: CanonicalIdentificationScopeV1::Model,
+                subject_id: "model-1".to_string(),
+                status: CanonicalIdentificationStatusV1::Identified,
+                code: "identified".to_string(),
+                message: "The compiled model passed identification checks.".to_string(),
+                degrees_of_freedom: Some(8),
+            }],
+        }
+    }
+
     #[test]
     fn valid_microcase_passes() {
         let validation = validate_canonical_result_document_v2(&document_fixture());
@@ -1251,6 +2395,208 @@ mod tests {
                 ineligibility: None,
             }
         );
+    }
+
+    #[test]
+    fn absent_general_sem_extension_preserves_historical_wire_shape() {
+        let document = document_fixture();
+        let value = serde_json::to_value(&document).unwrap();
+        assert!(value.get("general_sem_results").is_none());
+        let decoded: CanonicalResultDocumentV2 = serde_json::from_value(value).unwrap();
+        assert_eq!(decoded, document);
+        assert!(decoded.general_sem_results.is_none());
+    }
+
+    #[test]
+    fn every_general_sem_result_family_roundtrips_and_binds_analytical_identity() {
+        let mut document = document_fixture();
+        document.general_sem_results = Some(general_sem_results_fixture());
+
+        let validation = validate_canonical_result_document_v2(&document);
+        assert!(validation.passed, "{:?}", validation.errors);
+        let encoded = serde_json::to_vec(&document).unwrap();
+        let decoded: CanonicalResultDocumentV2 = serde_json::from_slice(&encoded).unwrap();
+        assert_eq!(decoded, document);
+
+        let mut changed = document.clone();
+        changed
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .specific_indirect_effects[0]
+            .value
+            .estimate = 0.13;
+        assert_ne!(
+            canonical_analytical_result_json(&document).unwrap(),
+            canonical_analytical_result_json(&changed).unwrap()
+        );
+    }
+
+    #[test]
+    fn general_sem_identity_path_and_aggregate_contradictions_fail_closed() {
+        let mut document = document_fixture();
+        let mut results = general_sem_results_fixture();
+        results.specific_indirect_effects[0].trace.model_id = "model-other".to_string();
+        results.specific_indirect_effects[0].trace.capability_cell =
+            secondary_capability_reference();
+        results.specific_indirect_effects[0].ordered_relation_ids =
+            vec!["relation_a".to_string(), "relation_a".to_string()];
+        results.aggregate_effects[0].target_id = "construct_x".to_string();
+        results.aggregate_effects[1].effect_id = "effect_specific_1".to_string();
+        document.general_sem_results = Some(results);
+
+        let validation = validate_canonical_result_document_v2(&document);
+        assert!(!validation.passed);
+        for expected in [
+            "model_id must equal provenance.model_id",
+            "references undeclared option cell",
+            "ordered_relation_ids contains duplicate IDs",
+            "requires distinct source_id and target_id",
+            "effect_id is duplicated across effect sections",
+        ] {
+            assert!(
+                validation
+                    .errors
+                    .iter()
+                    .any(|error| error.contains(expected)),
+                "missing {expected:?} in {:?}",
+                validation.errors
+            );
+        }
+    }
+
+    #[test]
+    fn conditional_probe_effect_and_plot_contradictions_fail_closed() {
+        let mut document = document_fixture();
+        let mut results = general_sem_results_fixture();
+        results.conditional_effect_probes[1].values =
+            CanonicalConditionalProbeValuesResultV1::Explicit {
+                values: vec![0.0, f64::NAN],
+            };
+        results.conditional_effects[0].probe_id = "probe_missing".to_string();
+        results.conditional_effects[0].moderator_value = f64::INFINITY;
+        results.interaction_plots[0].series[0].probe_value_index = 99;
+        results.interaction_plots[0].series[0].points[0].lower = Some(0.5);
+        results.interaction_plots[0].series[0].points[0].upper = Some(0.4);
+        results.interaction_plots[0].series[1].points[1].focal_value = 2.0;
+        document.general_sem_results = Some(results);
+
+        let validation = validate_canonical_result_document_v2(&document);
+        assert!(!validation.passed);
+        for expected in [
+            "values.values[1] must be finite",
+            "probe_id references a missing conditional-effect probe",
+            "moderator_value must be finite",
+            "probe_value_index is outside its probe",
+            "lower must not exceed upper",
+            "common focal-value grid",
+        ] {
+            assert!(
+                validation
+                    .errors
+                    .iter()
+                    .any(|error| error.contains(expected)),
+                "missing {expected:?} in {:?}",
+                validation.errors
+            );
+        }
+    }
+
+    #[test]
+    fn hoc_cbsem_fit_and_identification_contradictions_fail_closed() {
+        let mut document = document_fixture();
+        let mut results = general_sem_results_fixture();
+        results.higher_order_stages[1].stage_number = 1;
+        results.cbsem_fit[0].chi_square = f64::NAN;
+        results.cbsem_fit[0].degrees_of_freedom = 0;
+        results.cbsem_fit[0].chi_square_p_value = Some(2.0);
+        results.cbsem_fit[0].rmsea = None;
+        results.cbsem_fit[0].rmsea_interval = Some(CanonicalGeneralSemIntervalV1 {
+            confidence_level: 1.0,
+            lower: 0.2,
+            upper: 0.1,
+        });
+        results.identification_diagnostics[0].subject_id = "model-other".to_string();
+        results.identification_diagnostics[0].message.clear();
+        results.identification_diagnostics[0].degrees_of_freedom = Some(-1);
+        document.general_sem_results = Some(results);
+
+        let validation = validate_canonical_result_document_v2(&document);
+        assert!(!validation.passed);
+        for expected in [
+            "stage_number contradicts its stage kind",
+            "duplicates a higher-order construct stage",
+            "chi_square must be finite and nonnegative",
+            "chi_square_p_value must be finite and between 0 and 1",
+            "chi_square_p_value must be absent when degrees_of_freedom is zero",
+            "rmsea_interval requires an rmsea estimate",
+            "confidence_level must be finite and between 0 and 1",
+            "lower must not exceed upper",
+            "subject_id must equal provenance.model_id for model scope",
+            "message must be nonempty",
+            "cannot be identified with negative degrees_of_freedom",
+        ] {
+            assert!(
+                validation
+                    .errors
+                    .iter()
+                    .any(|error| error.contains(expected)),
+                "missing {expected:?} in {:?}",
+                validation.errors
+            );
+        }
+    }
+
+    #[test]
+    fn general_sem_extension_is_versioned_canonical_and_strict() {
+        let mut document = document_fixture();
+        let mut results = general_sem_results_fixture();
+        results.schema_version = 2;
+        results.aggregate_effects.reverse();
+        document.general_sem_results = Some(results);
+        let validation = validate_canonical_result_document_v2(&document);
+        assert!(
+            validation
+                .errors
+                .iter()
+                .any(|error| error.contains("general_sem_results.schema_version must equal 1"))
+        );
+        assert!(
+            validation
+                .errors
+                .iter()
+                .any(|error| error.contains("must be ordered by exact stable identifier"))
+        );
+
+        let mut empty = document_fixture();
+        empty.general_sem_results = Some(CanonicalGeneralSemResultsV1 {
+            schema_version: CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION,
+            specific_indirect_effects: Vec::new(),
+            aggregate_effects: Vec::new(),
+            conditional_effect_probes: Vec::new(),
+            conditional_effects: Vec::new(),
+            interaction_plots: Vec::new(),
+            higher_order_stages: Vec::new(),
+            cbsem_fit: Vec::new(),
+            identification_diagnostics: Vec::new(),
+        });
+        assert!(
+            validate_canonical_result_document_v2(&empty)
+                .errors
+                .iter()
+                .any(|error| error.contains("at least one typed result section"))
+        );
+
+        let mut value = serde_json::to_value(document_fixture()).unwrap();
+        value.as_object_mut().unwrap().insert(
+            "general_sem_results".to_string(),
+            serde_json::json!({
+                "schema_version": 1,
+                "specific_indirect_effects": [],
+                "unexpected": true
+            }),
+        );
+        assert!(serde_json::from_value::<CanonicalResultDocumentV2>(value).is_err());
     }
 
     #[test]

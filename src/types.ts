@@ -296,14 +296,10 @@ export interface PublicationDiagramSettings {
   showRunProvenance: boolean;
 }
 
-export interface InteractionData {
+interface InteractionDataBase {
   termId?: string;
-  predictor: string;
-  moderator: string;
   outcome: string;
   focalRelationId?: string;
-  /** Legacy canvas compatibility token; canonicalMethod is authoritative for Standard projections. */
-  method: "two_stage_product_score";
   canonicalMethod?: "two_stage" | "product_indicator" | "orthogonalizing";
   productIndicator?: {
     centering: "none" | "mean_center" | "double_mean_center";
@@ -311,6 +307,28 @@ export interface InteractionData {
     pairing: "all_pairs";
   } | null;
 }
+
+/** Historical two-way canvas interaction. An omitted kind preserves legacy serialized bytes. */
+export interface LegacyInteractionData extends InteractionDataBase {
+  kind?: "interaction";
+  predictor: string;
+  moderator: string;
+  /** Legacy canvas and native-recipe compatibility token. */
+  method: "two_stage_product_score";
+}
+
+/** Lossless readback metadata for ordered SemModelV4 interaction_v2 terms. */
+export interface InteractionV2Data extends InteractionDataBase {
+  kind: "interaction_v2";
+  termId: string;
+  /** operands[0] is the focal predictor; remaining operands are moderators in authored order. */
+  operands: [string, string, ...string[]];
+  focalRelationId: string;
+  canonicalMethod: "two_stage" | "product_indicator" | "orthogonalizing";
+  hierarchyPolicy: "strong" | "weak" | "none";
+}
+
+export type InteractionData = LegacyInteractionData | InteractionV2Data;
 
 export interface HigherOrderConstructData {
   id: string;

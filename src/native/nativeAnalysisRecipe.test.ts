@@ -251,6 +251,37 @@ describe("native recipe model payload", () => {
     expect(sourceNodes[0].data.indicators).toEqual(["x1", "x2"]);
   });
 
+  it("rejects interaction_v2 instead of flattening ordered operands into the legacy recipe", () => {
+    const interactionV2: Node<ConstructData> = {
+      id: "derived:x-z",
+      type: "construct",
+      position: { x: 250, y: 400 },
+      data: {
+        label: "X by Z",
+        shortName: "XxZ",
+        mode: "formative",
+        indicators: [],
+        semantic: "interaction",
+        interaction: {
+          kind: "interaction_v2",
+          termId: "interaction:x-z",
+          operands: ["x", "z"],
+          outcome: "y",
+          focalRelationId: "path:x-y",
+          canonicalMethod: "two_stage",
+          hierarchyPolicy: "strong",
+          productIndicator: null,
+        },
+      },
+    };
+
+    expect(() => buildNativeAnalysisRecipe(makeInput("pls_algorithm", {}, { nodes: [...nodes, interactionV2] })))
+      .toThrowError(expect.objectContaining({
+        field: "model",
+        message: expect.stringContaining("cannot serialize interaction_v2"),
+      }));
+  });
+
   it("rejects a two-group MGA recipe when its grouping variable is also an indicator", () => {
     expectFieldError(makeInput("mga", {
       method: "mga",

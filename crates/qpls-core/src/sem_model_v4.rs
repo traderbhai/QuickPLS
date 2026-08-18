@@ -460,6 +460,24 @@ pub enum InteractionMethodV4 {
     Orthogonalizing,
 }
 
+/// Scientific lower-order-term policy for a version-2 interaction.
+///
+/// New canvas helpers create `Strong` interactions. The other policies remain
+/// representable so imported or expert-authored models are never rewritten;
+/// estimator capability preflight decides whether an exact policy is runnable.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case", deny_unknown_fields)]
+pub enum InteractionHierarchyPolicyV2 {
+    /// Every operand has a main effect on the focal outcome and every immediate
+    /// lower-order interaction is present. Strong lower-order terms make the
+    /// requirement transitive for interactions of order four and above.
+    Strong,
+    /// Main effects are present, but lower-order interactions are not required.
+    Weak,
+    /// The scientific model deliberately imposes no hierarchy requirement.
+    None,
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case", deny_unknown_fields)]
 pub enum ProductIndicatorCenteringV4 {
@@ -527,6 +545,19 @@ pub enum SemDerivedTermV4 {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         product_indicator: Option<ProductIndicatorSpecificationV4>,
     },
+    /// Stable multi-operand interaction authority. `operands[0]` is the focal
+    /// predictor and subsequent operands are moderators in authored order.
+    /// Existing two-way `interaction` documents remain readable unchanged.
+    InteractionV2 {
+        id: String,
+        output: String,
+        operands: Vec<String>,
+        focal_relation: String,
+        method: InteractionMethodV4,
+        hierarchy_policy: InteractionHierarchyPolicyV2,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        product_indicator: Option<ProductIndicatorSpecificationV4>,
+    },
     HigherOrder {
         id: String,
         output: String,
@@ -546,6 +577,7 @@ impl SemDerivedTermV4 {
     pub fn id(&self) -> &str {
         match self {
             Self::Interaction { id, .. }
+            | Self::InteractionV2 { id, .. }
             | Self::HigherOrder { id, .. }
             | Self::Polynomial { id, .. } => id,
         }
@@ -554,6 +586,7 @@ impl SemDerivedTermV4 {
     pub fn output(&self) -> &str {
         match self {
             Self::Interaction { output, .. }
+            | Self::InteractionV2 { output, .. }
             | Self::HigherOrder { output, .. }
             | Self::Polynomial { output, .. } => output,
         }
@@ -1979,6 +2012,184 @@ fn validate_derived_terms(
                     )),
                 }
             }
+            SemDerivedTermV4::InteractionV2 {
+                id,
+                output,
+                operands,
+                focal_relation,
+                method,
+                hierarchy_policy,
+                product_indicator,
+            } => {
+                let unique_operands = operands.iter().collect::<HashSet<_>>();
+                if operands.len() < 2
+                    || unique_operands.len() != operands.len()
+                    || operands.contains(output)
+                {
+                    issues.push(issue(
+                        "derived.interaction_v2.operands_invalid",
+                        Some(id.clone()),
+                        "interaction_v2 requires at least two unique, non-output operands in stable authored order",
+                    ));
+                }
+                for input in operands {
+                    if !variables.contains_key(input.as_str()) {
+                        issues.push(issue(
+                            "derived.input.unknown",
+                            Some(id.clone()),
+                            format!("Unknown interaction input {input}"),
+                        ));
+                    }
+                }
+                match (method, product_indicator) {
+                    (InteractionMethodV4::ProductIndicator, None) => issues.push(issue(
+                        "derived.interaction.product_indicator_spec_required",
+                        Some(id.clone()),
+                        "Product-indicator interactions require explicit construction settings",
+                    )),
+                    (InteractionMethodV4::ProductIndicator, Some(_)) => {}
+                    (_, Some(_)) => issues.push(issue(
+                        "derived.interaction.product_indicator_spec_forbidden",
+                        Some(id.clone()),
+                        "Product-indicator construction settings are valid only for the product-indicator method",
+                    )),
+                    (_, None) => {}
+                }
+
+                let focal_target = match (
+                    operands.first(),
+                    relations_by_id.get(focal_relation.as_str()),
+                ) {
+                    (
+                        Some(predictor),
+                        Some(SemRelationV4::Structural {
+                            source,
+                            target,
+                            role: StructuralRelationRoleV4::Structural,
+                            ..
+                        }),
+                    ) if source.as_str() == predictor.as_str() => Some(target.as_str()),
+                    (_, Some(_)) => {
+                        issues.push(issue(
+                            "derived.interaction.focal_relation_invalid",
+                            Some(id.clone()),
+                            "The focal relation must be a structural-effect path sourced by operands[0]",
+                        ));
+                        None
+                    }
+                    (_, None) => {
+                        issues.push(issue(
+                            "derived.interaction.focal_relation_unknown",
+                            Some(id.clone()),
+                            format!("Unknown focal relation {focal_relation}"),
+                        ));
+                        None
+                    }
+                };
+
+                if let Some(target) = focal_target {
+                    let has_effect_path = relations.iter().any(|relation| {
+                        matches!(relation, SemRelationV4::Structural {
+                            source,
+                            target: interaction_target,
+                            role: StructuralRelationRoleV4::Structural,
+                            ..
+                        } if source == output && interaction_target == target)
+                    });
+                    if !has_effect_path {
+                        issues.push(issue(
+                            "derived.interaction.effect_path_missing",
+                            Some(id.clone()),
+                            "The interaction output must have a structural-effect path to the focal relation outcome",
+                        ));
+                    }
+
+                    if matches!(
+                        hierarchy_policy,
+                        InteractionHierarchyPolicyV2::Strong | InteractionHierarchyPolicyV2::Weak
+                    ) {
+                        for operand in operands {
+                            if !relations.iter().any(|relation| {
+                                matches!(relation, SemRelationV4::Structural {
+                                    source,
+                                    target: main_target,
+                                    role: StructuralRelationRoleV4::Structural,
+                                    ..
+                                } if source == operand && main_target == target)
+                            }) {
+                                issues.push(issue(
+                                    "derived.interaction_v2.main_effect_missing",
+                                    Some(id.clone()),
+                                    format!(
+                                        "Hierarchy policy requires a main-effect path from {operand} to {target}"
+                                    ),
+                                ));
+                            }
+                        }
+                    }
+
+                    if *hierarchy_policy == InteractionHierarchyPolicyV2::Strong
+                        && operands.len() > 2
+                        && unique_operands.len() == operands.len()
+                    {
+                        for omitted in 0..operands.len() {
+                            let required = operands
+                                .iter()
+                                .enumerate()
+                                .filter_map(|(index, operand)| {
+                                    (index != omitted).then_some(operand.as_str())
+                                })
+                                .collect::<HashSet<_>>();
+                            let lower_order_present = terms.iter().any(|candidate| {
+                                if candidate.id() == id {
+                                    return false;
+                                }
+                                let Some(candidate_operands) = interaction_operands(candidate)
+                                else {
+                                    return false;
+                                };
+                                if candidate_operands.len() != required.len()
+                                    || candidate_operands.iter().copied().collect::<HashSet<_>>()
+                                        != required
+                                {
+                                    return false;
+                                }
+                                if candidate_operands.len() > 2
+                                    && !matches!(
+                                        candidate,
+                                        SemDerivedTermV4::InteractionV2 {
+                                            hierarchy_policy: InteractionHierarchyPolicyV2::Strong,
+                                            ..
+                                        }
+                                    )
+                                {
+                                    return false;
+                                }
+                                relations.iter().any(|relation| {
+                                    matches!(relation, SemRelationV4::Structural {
+                                        source,
+                                        target: lower_target,
+                                        role: StructuralRelationRoleV4::Structural,
+                                        ..
+                                    } if source == candidate.output() && lower_target == target)
+                                })
+                            });
+                            if !lower_order_present {
+                                let mut required = required.into_iter().collect::<Vec<_>>();
+                                required.sort_unstable();
+                                issues.push(issue(
+                                    "derived.interaction_v2.lower_order_missing",
+                                    Some(id.clone()),
+                                    format!(
+                                        "Strong hierarchy requires an interaction for operands [{}] targeting {target}",
+                                        required.join(", ")
+                                    ),
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
             SemDerivedTermV4::HigherOrder {
                 id,
                 output,
@@ -2030,6 +2241,20 @@ fn validate_derived_terms(
                 "Derived variable requires exactly one defining term",
             ));
         }
+    }
+}
+
+fn interaction_operands(term: &SemDerivedTermV4) -> Option<Vec<&str>> {
+    match term {
+        SemDerivedTermV4::Interaction {
+            predictor,
+            moderator,
+            ..
+        } => Some(vec![predictor.as_str(), moderator.as_str()]),
+        SemDerivedTermV4::InteractionV2 { operands, .. } => {
+            Some(operands.iter().map(String::as_str).collect())
+        }
+        SemDerivedTermV4::HigherOrder { .. } | SemDerivedTermV4::Polynomial { .. } => None,
     }
 }
 
@@ -3128,6 +3353,60 @@ mod tests {
         }
     }
 
+    fn add_free_structural_relation(model: &mut SemModelV4, id: &str, source: &str, target: &str) {
+        let parameter = format!("parameter:{id}");
+        model.relations.push(SemRelationV4::Structural {
+            id: id.into(),
+            source: source.into(),
+            target: target.into(),
+            parameter: parameter.clone(),
+            role: StructuralRelationRoleV4::Structural,
+            intercept_parameter: None,
+        });
+        model.parameters.push(SemParameterV4::Free {
+            id: parameter,
+            label: format!("{source} -> {target}"),
+            target: SemParameterTargetV4::Regression {
+                source: source.into(),
+                target: target.into(),
+            },
+            start: None,
+            lower: None,
+            upper: None,
+            equality_label: None,
+            group_overrides: Vec::new(),
+        });
+    }
+
+    fn add_interaction_v2(
+        model: &mut SemModelV4,
+        id: &str,
+        output: &str,
+        operands: &[&str],
+        focal_relation: &str,
+        hierarchy_policy: InteractionHierarchyPolicyV2,
+    ) {
+        model.variables.push(SemVariableV4::Derived {
+            id: output.into(),
+            label: operands.join(" x "),
+        });
+        add_free_structural_relation(
+            model,
+            &format!("relation:{id}:effect"),
+            output,
+            "construct:y",
+        );
+        model.derived_terms.push(SemDerivedTermV4::InteractionV2 {
+            id: id.into(),
+            output: output.into(),
+            operands: operands.iter().map(|operand| (*operand).into()).collect(),
+            focal_relation: focal_relation.into(),
+            method: InteractionMethodV4::TwoStage,
+            hierarchy_policy,
+            product_indicator: None,
+        });
+    }
+
     #[test]
     fn roundtrip_and_order_determinism_are_stable() {
         let model = convert_legacy_basic_model_v4(
@@ -4021,6 +4300,160 @@ mod tests {
             serde_json::to_string(&higher_order)
                 .unwrap()
                 .contains("extended_repeated_indicators")
+        );
+    }
+
+    #[test]
+    fn interaction_v2_preserves_operand_order_and_validates_strong_three_way_hierarchy() {
+        let mut legacy = legacy_model();
+        for (id, name) in [("m", "Moderator M"), ("w", "Moderator W")] {
+            legacy.constructs.push(Construct {
+                id: id.into(),
+                name: name.into(),
+                short_name: id.to_uppercase(),
+                mode: MeasurementMode::Reflective,
+                indicators: vec![format!("{id}1"), format!("{id}2")],
+            });
+        }
+        let mut model = convert_legacy_basic_model_v4(
+            &legacy,
+            LegacyBasicModelInterpretationV4::PlsComposite,
+            &[],
+        )
+        .unwrap();
+        let focal_x = model
+            .relations
+            .iter()
+            .find_map(|relation| match relation {
+                SemRelationV4::Structural {
+                    id, source, target, ..
+                } if source == "construct:x" && target == "construct:y" => Some(id.clone()),
+                _ => None,
+            })
+            .unwrap();
+        add_free_structural_relation(
+            &mut model,
+            "relation:main:m:y",
+            "construct:m",
+            "construct:y",
+        );
+        add_free_structural_relation(
+            &mut model,
+            "relation:main:w:y",
+            "construct:w",
+            "construct:y",
+        );
+        add_interaction_v2(
+            &mut model,
+            "term:x:m",
+            "derived:x:m",
+            &["construct:x", "construct:m"],
+            &focal_x,
+            InteractionHierarchyPolicyV2::Strong,
+        );
+        add_interaction_v2(
+            &mut model,
+            "term:x:w",
+            "derived:x:w",
+            &["construct:x", "construct:w"],
+            &focal_x,
+            InteractionHierarchyPolicyV2::Strong,
+        );
+        add_interaction_v2(
+            &mut model,
+            "term:m:w",
+            "derived:m:w",
+            &["construct:m", "construct:w"],
+            "relation:main:m:y",
+            InteractionHierarchyPolicyV2::Strong,
+        );
+        add_interaction_v2(
+            &mut model,
+            "term:x:m:w",
+            "derived:x:m:w",
+            &["construct:x", "construct:m", "construct:w"],
+            &focal_x,
+            InteractionHierarchyPolicyV2::Strong,
+        );
+        model.ensure_valid().unwrap();
+
+        let encoded = serde_json::to_value(&model).unwrap();
+        let top = encoded["derived_terms"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|term| term["id"] == "term:x:m:w")
+            .unwrap();
+        assert_eq!(top["kind"], "interaction_v2");
+        assert_eq!(
+            top["operands"],
+            serde_json::json!(["construct:x", "construct:m", "construct:w"])
+        );
+        let decoded: SemModelV4 = serde_json::from_value(encoded).unwrap();
+        assert_eq!(decoded, model);
+
+        let original_digest = model.scientific_sha256().unwrap();
+        let mut reordered_operands = model.clone();
+        let SemDerivedTermV4::InteractionV2 { operands, .. } = reordered_operands
+            .derived_terms
+            .iter_mut()
+            .find(|term| term.id() == "term:x:m:w")
+            .unwrap()
+        else {
+            unreachable!()
+        };
+        operands.swap(1, 2);
+        assert_ne!(
+            reordered_operands.scientific_sha256().unwrap(),
+            original_digest
+        );
+
+        let mut missing_lower_order = model.clone();
+        missing_lower_order
+            .derived_terms
+            .retain(|term| term.id() != "term:m:w");
+        missing_lower_order
+            .variables
+            .retain(|variable| variable.id() != "derived:m:w");
+        missing_lower_order.relations.retain(|relation| {
+            !matches!(relation, SemRelationV4::Structural { source, .. } if source == "derived:m:w")
+        });
+        missing_lower_order.parameters.retain(|parameter| {
+            !matches!(parameter.target(), SemParameterTargetV4::Regression { source, .. } if source == "derived:m:w")
+        });
+        assert!(missing_lower_order.validate().iter().any(|issue| {
+            issue.code == "derived.interaction_v2.lower_order_missing"
+                && issue.subject.as_deref() == Some("term:x:m:w")
+        }));
+
+        let SemDerivedTermV4::InteractionV2 {
+            hierarchy_policy, ..
+        } = missing_lower_order
+            .derived_terms
+            .iter_mut()
+            .find(|term| term.id() == "term:x:m:w")
+            .unwrap()
+        else {
+            unreachable!()
+        };
+        *hierarchy_policy = InteractionHierarchyPolicyV2::Weak;
+        missing_lower_order.ensure_valid().unwrap();
+
+        let mut duplicate = model;
+        let SemDerivedTermV4::InteractionV2 { operands, .. } = duplicate
+            .derived_terms
+            .iter_mut()
+            .find(|term| term.id() == "term:x:m:w")
+            .unwrap()
+        else {
+            unreachable!()
+        };
+        operands[2] = operands[1].clone();
+        assert!(
+            duplicate
+                .validate()
+                .iter()
+                .any(|issue| issue.code == "derived.interaction_v2.operands_invalid")
         );
     }
 

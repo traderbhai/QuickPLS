@@ -96,7 +96,6 @@ function renderReadyDialog(
   methodSettings: AnalysisUiSettings,
   analysisNodes: Array<Node<ConstructData>> = nodes,
   experimentalLabsEnabled = true,
-  experimentalWarningShownSessionKeys: ReadonlySet<string> = new Set(),
   openMethodDetails?: () => void,
   registryUnavailableReason?: string | null,
   capabilityRegistry: MethodCapabilityRegistryReaderV2 = executableLabsRegistry,
@@ -113,7 +112,6 @@ function renderReadyDialog(
     nodes: analysisNodes,
     edges,
     experimentalLabsEnabled,
-    experimentalWarningShownSessionKeys,
     openMethodDetails,
     registryUnavailableReason,
     capabilityRegistry,
@@ -133,7 +131,6 @@ function renderWithLiveRegistry(
     methodSettings,
     analysisNodes,
     true,
-    new Set(),
     undefined,
     undefined,
     capabilityRegistryV2,
@@ -153,7 +150,7 @@ const metadata = (name: string, columnType: ColumnMetadata["column_type"]): Colu
 
 describe("NativeCalculationDialog contracts", () => {
   it("offers Method Details beside the selected setup when the desktop host provides it", () => {
-    const markup = renderReadyDialog("pls_algorithm", settings, nodes, true, new Set(), vi.fn());
+    const markup = renderReadyDialog("pls_algorithm", settings, nodes, true, vi.fn());
     expect(markup).toContain('class="nd-method-details-link"');
     expect(markup).toContain(">Method Details</button>");
   });
@@ -425,7 +422,7 @@ describe("NativeCalculationDialog contracts", () => {
     expect(firstMarkup).not.toContain(EXPERIMENTAL_LABS_WARNING);
     expect(firstMarkup).not.toContain('data-method-chip="experimental"');
 
-    const repeatedMarkup = renderReadyDialog("pls_algorithm", settings, nodes, true, shown);
+    const repeatedMarkup = renderReadyDialog("pls_algorithm", settings, nodes, true);
     expect(repeatedMarkup).not.toContain(EXPERIMENTAL_LABS_WARNING);
     expect(repeatedMarkup).not.toContain('data-method-chip="experimental"');
   });
@@ -449,7 +446,6 @@ describe("NativeCalculationDialog contracts", () => {
       settings,
       nodes,
       true,
-      new Set(),
       undefined,
       "QuickPLS could not verify the installed calculation catalogue.",
     );
@@ -653,7 +649,6 @@ describe("NativeCalculationDialog contracts", () => {
       },
       nodes,
       false,
-      new Set(),
       undefined,
       undefined,
       capabilityRegistryV2,
@@ -1020,7 +1015,6 @@ describe("NativeCalculationDialog contracts", () => {
       },
       nodes,
       false,
-      new Set(),
       undefined,
       undefined,
       capabilityRegistryV2,

@@ -205,7 +205,7 @@ describe("StandardSemModelV4 diagram projection", () => {
     expect(observedEdge?.data?.role).toBeUndefined();
   });
 
-  it("projects every interaction construction and polynomial source without collapsing authority", () => {
+  it("projects every legacy interaction construction without changing its historical canvas shape", () => {
     const withModerator = reduceStandardSemModelV4AuthorityV1(authority(), {
       kind: "add_construct",
       variable_id: "construct:z",
@@ -215,41 +215,44 @@ describe("StandardSemModelV4 diagram projection", () => {
     });
     const focal = withModerator.model.relations.find((relation) => relation.kind === "structural" && relation.source === "construct:x" && relation.target === "construct:y");
     if (!focal) throw new Error("Expected focal path.");
-    const product = reduceStandardSemModelV4AuthorityV1(nextAuthority(withModerator.model, "b"), {
-      kind: "add_interaction",
-      term_id: "interaction:product",
-      output_id: "derived:product",
-      label: "Product interaction",
-      predictor: "construct:x",
-      moderator: "construct:z",
-      focal_relation: focal.id,
-      outcome: "construct:y",
-      method: "product_indicator",
-      product_indicator: { centering: "mean_center", standardization: "none", pairing: "all_pairs" },
-    });
-    const orthogonal = reduceStandardSemModelV4AuthorityV1(nextAuthority(product.model, "c"), {
-      kind: "add_interaction",
-      term_id: "interaction:orthogonal",
-      output_id: "derived:orthogonal",
-      label: "Orthogonal interaction",
-      predictor: "construct:x",
-      moderator: "construct:z",
-      focal_relation: focal.id,
-      outcome: "construct:y",
-      method: "orthogonalizing",
-    });
-    const twoStage = reduceStandardSemModelV4AuthorityV1(nextAuthority(orthogonal.model, "d"), {
-      kind: "add_interaction",
-      term_id: "interaction:two-stage",
-      output_id: "derived:two-stage",
-      label: "Two-stage interaction",
-      predictor: "construct:x",
-      moderator: "construct:z",
-      focal_relation: focal.id,
-      outcome: "construct:y",
-      method: "two_stage",
-    });
-    const polynomial = reduceStandardSemModelV4AuthorityV1(nextAuthority(twoStage.model, "e"), {
+    const cases = [
+      {
+        method: "product_indicator" as const,
+        product_indicator: { centering: "mean_center" as const, standardization: "none" as const, pairing: "all_pairs" as const },
+      },
+      { method: "orthogonalizing" as const },
+      { method: "two_stage" as const },
+    ];
+    for (const [index, item] of cases.entries()) {
+      const candidate = reduceStandardSemModelV4AuthorityV1(nextAuthority(withModerator.model, String(index + 2)), {
+        kind: "add_interaction",
+        term_id: `interaction:${item.method}`,
+        output_id: `derived:${item.method}`,
+        label: `${item.method} interaction`,
+        predictor: "construct:x",
+        moderator: "construct:z",
+        focal_relation: focal.id,
+        outcome: "construct:y",
+        method: item.method,
+        ...(item.method === "product_indicator" ? { product_indicator: item.product_indicator } : {}),
+      });
+      const interaction = projectStandardSemModelV4DiagramV1(nextAuthority(candidate.model, String(index + 5)))
+        .nodes.find((node) => node.id === `derived:${item.method}`)?.data.interaction;
+      expect(interaction).toMatchObject({
+        termId: `interaction:${item.method}`,
+        predictor: "construct:x",
+        moderator: "construct:z",
+        outcome: "construct:y",
+        method: "two_stage_product_score",
+        canonicalMethod: item.method,
+        productIndicator: item.method === "product_indicator" ? item.product_indicator : null,
+      });
+      expect(interaction).not.toHaveProperty("kind");
+      expect(interaction).not.toHaveProperty("operands");
+      expect(interaction).not.toHaveProperty("hierarchyPolicy");
+    }
+
+    const polynomial = reduceStandardSemModelV4AuthorityV1(nextAuthority(withModerator.model, "e"), {
       kind: "add_polynomial",
       term_id: "polynomial:x3",
       output_id: "derived:x3",
@@ -257,16 +260,128 @@ describe("StandardSemModelV4 diagram projection", () => {
       source: "construct:x",
       degree: 3,
     });
-    const projected = projectStandardSemModelV4DiagramV1(nextAuthority(polynomial.model, "f"));
-    expect(projected.nodes.find((node) => node.id === "derived:product")?.data.interaction).toMatchObject({
-      termId: "interaction:product",
-      method: "two_stage_product_score",
-      canonicalMethod: "product_indicator",
-      productIndicator: { centering: "mean_center", standardization: "none", pairing: "all_pairs" },
+    expect(projectStandardSemModelV4DiagramV1(nextAuthority(polynomial.model, "f")).nodes
+      .find((node) => node.id === "derived:x3")?.data)
+      .toMatchObject({ semantic: "polynomial", polynomial: { termId: "polynomial:x3", source: "construct:x", degree: 3 } });
+  });
+
+  it("projects two-way interaction_v2 metadata without a legacy-method downgrade", () => {
+    const withModerator = reduceStandardSemModelV4AuthorityV1(authority(), {
+      kind: "add_construct",
+      variable_id: "construct:z",
+      label: "Moderator",
+      representation: { kind: "composite", weighting: { kind: "mode_a" } },
+      indicators: [observed("observed:z1")],
     });
-    expect(projected.nodes.find((node) => node.id === "derived:orthogonal")?.data.interaction).toMatchObject({ method: "two_stage_product_score", canonicalMethod: "orthogonalizing" });
-    expect(projected.nodes.find((node) => node.id === "derived:two-stage")?.data.interaction).toMatchObject({ method: "two_stage_product_score", canonicalMethod: "two_stage" });
-    expect(projected.nodes.find((node) => node.id === "derived:x3")?.data).toMatchObject({ semantic: "polynomial", polynomial: { termId: "polynomial:x3", source: "construct:x", degree: 3 } });
+    const focal = withModerator.model.relations.find((relation) =>
+      relation.kind === "structural"
+      && relation.source === "construct:x"
+      && relation.target === "construct:y");
+    if (!focal) throw new Error("Expected focal path.");
+    const seeded = reduceStandardSemModelV4AuthorityV1(nextAuthority(withModerator.model, "b"), {
+      kind: "add_interaction",
+      term_id: "interaction-v2:x-z",
+      output_id: "derived:interaction-v2:x-z",
+      label: "X by Z V2",
+      predictor: "construct:x",
+      moderator: "construct:z",
+      focal_relation: focal.id,
+      outcome: "construct:y",
+      method: "product_indicator",
+      product_indicator: { centering: "double_mean_center", standardization: "sample_standard_deviation", pairing: "all_pairs" },
+    });
+    const model = structuredClone(seeded.model);
+    const index = model.derived_terms.findIndex((term) => term.id === "interaction-v2:x-z");
+    const term = model.derived_terms[index];
+    if (term?.kind !== "interaction") throw new Error("Expected interaction seed.");
+    model.derived_terms[index] = {
+      kind: "interaction_v2",
+      id: term.id,
+      output: term.output,
+      operands: [term.predictor, term.moderator],
+      focal_relation: term.focal_relation,
+      method: term.method,
+      hierarchy_policy: "strong",
+      product_indicator: term.product_indicator,
+    };
+
+    const interaction = projectStandardSemModelV4DiagramV1(nextAuthority(model, "c"))
+      .nodes.find((node) => node.id === term.output)?.data.interaction;
+    expect(interaction).toEqual({
+      kind: "interaction_v2",
+      termId: term.id,
+      operands: ["construct:x", "construct:z"],
+      outcome: "construct:y",
+      focalRelationId: term.focal_relation,
+      canonicalMethod: "product_indicator",
+      hierarchyPolicy: "strong",
+      productIndicator: { centering: "double_mean_center", standardization: "sample_standard_deviation", pairing: "all_pairs" },
+    });
+    expect(interaction).not.toHaveProperty("method");
+  });
+
+  it("projects three-way interaction_v2 operand order and hierarchy losslessly", () => {
+    const withModerator = reduceStandardSemModelV4AuthorityV1(authority(), {
+      kind: "add_construct",
+      variable_id: "construct:z",
+      label: "First moderator",
+      representation: { kind: "composite", weighting: { kind: "mode_a" } },
+      indicators: [observed("observed:z1")],
+    });
+    const withSecondModerator = reduceStandardSemModelV4AuthorityV1(nextAuthority(withModerator.model, "b"), {
+      kind: "add_construct",
+      variable_id: "construct:w",
+      label: "Second moderator",
+      representation: { kind: "composite", weighting: { kind: "mode_a" } },
+      indicators: [observed("observed:w1")],
+    });
+    const focal = withSecondModerator.model.relations.find((relation) =>
+      relation.kind === "structural"
+      && relation.source === "construct:x"
+      && relation.target === "construct:y");
+    if (!focal) throw new Error("Expected focal path.");
+    const seeded = reduceStandardSemModelV4AuthorityV1(nextAuthority(withSecondModerator.model, "c"), {
+      kind: "add_interaction",
+      term_id: "interaction-v2:x-z-w",
+      output_id: "derived:interaction-v2:x-z-w",
+      label: "X by Z by W",
+      predictor: "construct:x",
+      moderator: "construct:z",
+      focal_relation: focal.id,
+      outcome: "construct:y",
+      method: "two_stage",
+    });
+    const withSecondMainEffect = reduceStandardSemModelV4AuthorityV1(nextAuthority(seeded.model, "d"), {
+      kind: "add_relationship",
+      relationship_id: "structural:w-y",
+      definition: { kind: "structural", source: "construct:w", target: "construct:y", label: "W to Y" },
+    });
+    const model = structuredClone(withSecondMainEffect.model);
+    const index = model.derived_terms.findIndex((term) => term.id === "interaction-v2:x-z-w");
+    const term = model.derived_terms[index];
+    if (term?.kind !== "interaction") throw new Error("Expected interaction seed.");
+    model.derived_terms[index] = {
+      kind: "interaction_v2",
+      id: term.id,
+      output: term.output,
+      operands: [term.predictor, term.moderator, "construct:w"],
+      focal_relation: term.focal_relation,
+      method: term.method,
+      hierarchy_policy: "weak",
+    };
+
+    expect(projectStandardSemModelV4DiagramV1(nextAuthority(model, "e")).nodes
+      .find((node) => node.id === term.output)?.data.interaction)
+      .toEqual({
+        kind: "interaction_v2",
+        termId: term.id,
+        operands: ["construct:x", "construct:z", "construct:w"],
+        outcome: "construct:y",
+        focalRelationId: term.focal_relation,
+        canonicalMethod: "two_stage",
+        hierarchyPolicy: "weak",
+        productIndicator: null,
+      });
   });
 
   it("strictly parses presentation-only layout and rejects identity or numeric drift", () => {

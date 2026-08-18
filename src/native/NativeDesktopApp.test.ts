@@ -138,13 +138,13 @@ describe("native desktop multi-model shell contracts", () => {
     expect(source).toContain('navigate("data")');
   });
 
-  it("passes the persisted Labs preference and application-session warning ledger into Calculate", () => {
+  it("passes the persisted Labs preference without restoring retired warning-ledger UI", () => {
     const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
 
     expect(source).toContain("experimentalLabsEnabled={uiPreferences.experimentalLabsEnabled}");
-    expect(source).toContain("experimentalWarningShownSessionKeys={experimentalWarningShownSessionKeys}");
-    expect(source).toContain("onExperimentalWarningShown={recordExperimentalWarningShown}");
-    expect(source).toContain("setExperimentalWarningShownSessionKeys((current) => {");
+    expect(source).not.toContain("experimentalWarningShownSessionKeys");
+    expect(source).not.toContain("onExperimentalWarningShown");
+    expect(source).not.toContain("recordExperimentalWarningShown");
   });
 
   it("verifies the installed Rust registry before enabling native calculations", () => {

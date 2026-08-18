@@ -252,6 +252,31 @@ function constructData(
       },
     };
   }
+  if (term.kind === "interaction_v2") {
+    if (term.operands.length < 2) {
+      return fail("standard_sem_projection.interaction_v2_operands_invalid", term.id, "The interaction_v2 term needs a focal predictor and at least one moderator.");
+    }
+    const focal = model.relations.find((relation): relation is Extract<SemRelationV4, { kind: "structural" }> =>
+      relation.kind === "structural"
+      && relation.role !== "control"
+      && relation.id === term.focal_relation
+      && relation.source === term.operands[0]);
+    if (!focal) return fail("standard_sem_projection.focal_relation_missing", term.id, "The interaction_v2 focal path is unavailable.");
+    return {
+      ...base,
+      semantic: "interaction",
+      interaction: {
+        kind: "interaction_v2",
+        termId: term.id,
+        operands: [term.operands[0]!, term.operands[1]!, ...term.operands.slice(2)],
+        outcome: focal.target,
+        focalRelationId: term.focal_relation,
+        canonicalMethod: term.method,
+        hierarchyPolicy: term.hierarchy_policy,
+        productIndicator: term.product_indicator ? structuredClone(term.product_indicator) : null,
+      },
+    };
+  }
   const method = term.approach === "repeated_indicators" || term.approach === "extended_repeated_indicators"
     ? "repeated_indicators"
     : term.approach === "hybrid" ? "hybrid" : "two_stage";

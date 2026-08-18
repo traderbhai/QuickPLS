@@ -145,6 +145,50 @@ describe("SemModelV4 parameter-table projection", () => {
     ]));
   });
 
+  it("renders ordered interaction_v2 operands and hierarchy without treating the term as polynomial", () => {
+    const adapted = adaptAuthoredNativeWorkbenchToSemModelV4(input());
+    expect(adapted.ok).toBe(true);
+    if (!adapted.ok) throw new Error(adapted.diagnostics[0]?.message);
+    const model = structuredClone(adapted.model);
+    const focal = model.relations.find((relation) => relation.kind === "structural");
+    if (focal?.kind !== "structural") throw new Error("Expected a focal structural path.");
+    const output = "derived:x-by-y:v2";
+    const effectParameter = "parameter:x-by-y:v2";
+    model.variables.push({ kind: "derived", id: output, label: "X by Y V2" });
+    model.relations.push({
+      kind: "structural",
+      id: "relation:x-by-y:v2",
+      source: output,
+      target: focal.target,
+      parameter: effectParameter,
+      intercept_parameter: null,
+    });
+    model.parameters.push({
+      kind: "free",
+      id: effectParameter,
+      label: "X by Y V2 effect",
+      target: { kind: "regression", source: output, target: focal.target },
+      group_overrides: [],
+    });
+    model.derived_terms.push({
+      kind: "interaction_v2",
+      id: "term:x-by-y:v2",
+      output,
+      operands: [focal.source, focal.target],
+      focal_relation: focal.id,
+      method: "two_stage",
+      hierarchy_policy: "none",
+    });
+
+    const row = projectSemModelV4ParameterTable(model, adapted.trace).rows
+      .find((candidate) => candidate.sem_id === "term:x-by-y:v2");
+    expect(row).toMatchObject({
+      section: "derived_term",
+      object_kind: "interaction_v2",
+      specification: "Predictor × Outcome; Two stage; None hierarchy",
+    });
+  });
+
   it("blocks unsupported feedback and group-specific parameter overrides with corrective diagnostics", () => {
     const feedbackInput = input();
     feedbackInput.edges = [...feedbackInput.edges, { id: "path-y-x", source: "y", target: "x" }];

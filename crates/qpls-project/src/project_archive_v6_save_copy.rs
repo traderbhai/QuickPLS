@@ -272,6 +272,8 @@ pub enum ProjectArchiveV6SaveCopyError {
     ArchiveLimit(String),
     #[error("schema-6 save-copy strict reopen differed from the requested document")]
     StrictReopenMismatch,
+    #[error("new schema-6 archive publication requires a document with no resident datasets")]
+    NewDocumentRequiresEmptyDatasets,
     #[error("schema-6 save-copy destination handle identity changed unexpectedly")]
     DestinationIdentityChanged,
     #[error(transparent)]
@@ -338,6 +340,55 @@ where
         );
         Err(ProjectArchiveV6SaveCopyError::UnsupportedPlatform)
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct ProjectArchiveV6NewDocumentPublication {
+    pub destination_archive_sha256: String,
+    pub destination_archive_bytes: u64,
+    pub strict_reopen_validated: bool,
+}
+
+/// Publishes a validated, dataset-free schema-6 document to a destination that
+/// must not exist. This crate-private seam is shared by the public new-project
+/// API and the proven save-copy writer's pinned-parent implementation.
+pub(crate) fn publish_new_project_archive_v6_document(
+    destination: &Path,
+    document: &ProjectArchiveDocumentV6,
+) -> Result<ProjectArchiveV6NewDocumentPublication, ProjectArchiveV6SaveCopyError> {
+    #[cfg(windows)]
+    {
+        publish_new_project_archive_v6_document_windows_with_hooks(
+            destination,
+            document,
+            |_| Ok(()),
+            |_| Ok(()),
+        )
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = (destination, document);
+        Err(ProjectArchiveV6SaveCopyError::UnsupportedPlatform)
+    }
+}
+
+#[cfg(all(test, windows))]
+pub(crate) fn publish_new_project_archive_v6_document_with_hooks<BeforeWrite, BeforeStrictReopen>(
+    destination: &Path,
+    document: &ProjectArchiveDocumentV6,
+    before_write: BeforeWrite,
+    before_strict_reopen: BeforeStrictReopen,
+) -> Result<ProjectArchiveV6NewDocumentPublication, ProjectArchiveV6SaveCopyError>
+where
+    BeforeWrite: FnOnce(&mut File) -> Result<(), ProjectArchiveV6SaveCopyError>,
+    BeforeStrictReopen: FnOnce(&mut File) -> Result<(), ProjectArchiveV6SaveCopyError>,
+{
+    publish_new_project_archive_v6_document_windows_with_hooks(
+        destination,
+        document,
+        before_write,
+        before_strict_reopen,
+    )
 }
 
 fn ensure_not_cancelled<Cancelled>(
@@ -697,6 +748,173 @@ fn add_total_uncompressed(total: &mut u64, size: u64) -> Result<(), ProjectArchi
 }
 
 #[cfg(windows)]
+struct WrittenProjectArchiveV6 {
+    destination_archive_sha256: String,
+    destination_archive_bytes: u64,
+}
+
+#[cfg(windows)]
+#[allow(clippy::too_many_arguments)]
+fn write_project_archive_v6_to_temporary<
+    Cancelled,
+    BeforeWrite,
+    WriteDatasets,
+    BeforeStrictReopen,
+    AfterStrictReopen,
+>(
+    owned_temporary: &mut DeleteOnCloseTemporary,
+    destination_identity: &FileIdentity,
+    document: &ProjectArchiveDocumentV6,
+    cancelled: &mut Cancelled,
+    before_write: BeforeWrite,
+    write_datasets: WriteDatasets,
+    before_strict_reopen: BeforeStrictReopen,
+    after_strict_reopen: AfterStrictReopen,
+) -> Result<WrittenProjectArchiveV6, ProjectArchiveV6SaveCopyError>
+where
+    Cancelled: FnMut() -> bool,
+    BeforeWrite: FnOnce(&mut File) -> Result<(), ProjectArchiveV6SaveCopyError>,
+    WriteDatasets: FnOnce(
+        &mut ZipWriter<File>,
+        SimpleFileOptions,
+        &mut BTreeMap<String, String>,
+        &mut u64,
+        &mut Cancelled,
+    ) -> Result<(), ProjectArchiveV6SaveCopyError>,
+    BeforeStrictReopen: FnOnce(&mut File) -> Result<(), ProjectArchiveV6SaveCopyError>,
+    AfterStrictReopen: FnOnce() -> Result<(), ProjectArchiveV6SaveCopyError>,
+{
+    let project_bytes = serialize_project_document_v6(document)?;
+    ensure_entry_size(
+        PROJECT_ENTRY_NAME,
+        project_bytes.len() as u64,
+        MAX_PROJECT_DOCUMENT_UNCOMPRESSED_BYTES,
+    )?;
+    let entry_count = document.datasets.len().saturating_add(2);
+    if entry_count > DEFAULT_ARCHIVE_LIMITS.max_entries {
+        return Err(ProjectArchiveV6SaveCopyError::ArchiveLimit(format!(
+            "{entry_count} entries exceed the {}-entry limit",
+            DEFAULT_ARCHIVE_LIMITS.max_entries
+        )));
+    }
+
+    before_write(&mut owned_temporary.file)?;
+    owned_temporary.file.seek(SeekFrom::Start(0))?;
+    let mut output = ZipWriter::new(owned_temporary.file.try_clone()?);
+    let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+    let mut checksums = BTreeMap::new();
+    let mut total_uncompressed = 0_u64;
+
+    output.start_file(PROJECT_ENTRY_NAME, options)?;
+    output.write_all(&project_bytes)?;
+    checksums.insert(PROJECT_ENTRY_NAME.to_owned(), sha256_bytes(&project_bytes));
+    add_total_uncompressed(&mut total_uncompressed, project_bytes.len() as u64)?;
+    ensure_not_cancelled(cancelled)?;
+
+    write_datasets(
+        &mut output,
+        options,
+        &mut checksums,
+        &mut total_uncompressed,
+        cancelled,
+    )?;
+
+    let manifest = ProjectManifest {
+        schema_version: super::PROJECT_ARCHIVE_SCHEMA_V6_VERSION,
+        project_id: document.project_id,
+        name: document.name.clone(),
+        created_at: document.created_at,
+        modified_at: document.modified_at,
+        engine_version: qpls_core::ENGINE_VERSION.to_owned(),
+        checksum_algorithm: "sha256".to_owned(),
+        checksums,
+    };
+    let manifest_bytes = serde_json::to_vec_pretty(&manifest)?;
+    ensure_entry_size(
+        MANIFEST_ENTRY_NAME,
+        manifest_bytes.len() as u64,
+        MAX_MANIFEST_UNCOMPRESSED_BYTES,
+    )?;
+    add_total_uncompressed(&mut total_uncompressed, manifest_bytes.len() as u64)?;
+    output.start_file(MANIFEST_ENTRY_NAME, options)?;
+    output.write_all(&manifest_bytes)?;
+    let mut finished = output.finish()?;
+    finished.sync_all()?;
+    if file_identity_from_file(&finished)? != *destination_identity {
+        return Err(ProjectArchiveV6SaveCopyError::DestinationIdentityChanged);
+    }
+    ensure_not_cancelled(cancelled)?;
+
+    before_strict_reopen(&mut finished)?;
+    let reopened = load_project_archive_v6_from_file(finished.try_clone()?)?;
+    if serialize_project_document_v6(&reopened.document)? != project_bytes
+        || serde_json::to_vec(&reopened.manifest)? != serde_json::to_vec(&manifest)?
+    {
+        return Err(ProjectArchiveV6SaveCopyError::StrictReopenMismatch);
+    }
+    ensure_not_cancelled(cancelled)?;
+    after_strict_reopen()?;
+
+    let (destination_archive_bytes, destination_archive_sha256) =
+        sha256_file_handle(&mut finished)?;
+    if file_identity_from_file(&finished)? != *destination_identity {
+        return Err(ProjectArchiveV6SaveCopyError::DestinationIdentityChanged);
+    }
+    ensure_not_cancelled(cancelled)?;
+
+    Ok(WrittenProjectArchiveV6 {
+        destination_archive_sha256,
+        destination_archive_bytes,
+    })
+}
+
+#[cfg(windows)]
+fn publish_new_project_archive_v6_document_windows_with_hooks<BeforeWrite, BeforeStrictReopen>(
+    destination: &Path,
+    document: &ProjectArchiveDocumentV6,
+    before_write: BeforeWrite,
+    before_strict_reopen: BeforeStrictReopen,
+) -> Result<ProjectArchiveV6NewDocumentPublication, ProjectArchiveV6SaveCopyError>
+where
+    BeforeWrite: FnOnce(&mut File) -> Result<(), ProjectArchiveV6SaveCopyError>,
+    BeforeStrictReopen: FnOnce(&mut File) -> Result<(), ProjectArchiveV6SaveCopyError>,
+{
+    if !destination.is_absolute() {
+        return Err(ProjectArchiveV6SaveCopyError::AbsolutePathsRequired);
+    }
+    validate_destination_name(destination)?;
+    document.ensure_valid()?;
+    if !document.datasets.is_empty() {
+        return Err(ProjectArchiveV6SaveCopyError::NewDocumentRequiresEmptyDatasets);
+    }
+
+    let parent = open_and_validate_destination_parent(destination)?;
+    let mut owned_temporary = create_relative_temporary(&parent, destination)?;
+    let destination_identity = file_identity_from_file(&owned_temporary.file)?;
+    let mut cancelled = || false;
+    let written = write_project_archive_v6_to_temporary(
+        &mut owned_temporary,
+        &destination_identity,
+        document,
+        &mut cancelled,
+        before_write,
+        |_, _, _, _, _| Ok(()),
+        before_strict_reopen,
+        || Ok(()),
+    )?;
+    let publication = ProjectArchiveV6NewDocumentPublication {
+        destination_archive_sha256: written.destination_archive_sha256,
+        destination_archive_bytes: written.destination_archive_bytes,
+        strict_reopen_validated: true,
+    };
+
+    // Final commit point: the no-replace link is the only publication. No
+    // fallible validation occurs after it succeeds.
+    owned_temporary.publish(&parent, destination)?;
+    Ok(publication)
+}
+
+#[cfg(windows)]
 fn save_copy_windows_with_hooks<Cancelled, BeforeWrite, BeforeStrictReopen>(
     source: &Path,
     expected_source_sha256: &str,
@@ -743,142 +961,88 @@ where
     let mut owned_temporary = create_relative_temporary(&parent, destination)?;
     let destination_identity = file_identity_from_file(&owned_temporary.file)?;
 
-    let operation = (|| {
-        let project_bytes = serialize_project_document_v6(document)?;
-        ensure_entry_size(
-            PROJECT_ENTRY_NAME,
-            project_bytes.len() as u64,
-            MAX_PROJECT_DOCUMENT_UNCOMPRESSED_BYTES,
-        )?;
-        let entry_count = document.datasets.len().saturating_add(2);
-        if entry_count > DEFAULT_ARCHIVE_LIMITS.max_entries {
-            return Err(ProjectArchiveV6SaveCopyError::ArchiveLimit(format!(
-                "{entry_count} entries exceed the {}-entry limit",
-                DEFAULT_ARCHIVE_LIMITS.max_entries
-            )));
-        }
-
-        source_file.seek(SeekFrom::Start(0))?;
-        let mut source_zip = ZipArchive::new(source_file.try_clone()?)?;
-        before_write(&mut owned_temporary.file)?;
-        owned_temporary.file.seek(SeekFrom::Start(0))?;
-        let mut output = ZipWriter::new(owned_temporary.file.try_clone()?);
-        let options =
-            SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
-        let mut checksums = BTreeMap::new();
-        let mut total_uncompressed = 0_u64;
-
-        output.start_file(PROJECT_ENTRY_NAME, options)?;
-        output.write_all(&project_bytes)?;
-        checksums.insert(PROJECT_ENTRY_NAME.to_owned(), sha256_bytes(&project_bytes));
-        add_total_uncompressed(&mut total_uncompressed, project_bytes.len() as u64)?;
-        ensure_not_cancelled(cancelled)?;
-
-        for descriptor in &document.datasets {
-            let entry_name = format!("data/{}.arrow", descriptor.id);
-            if entry_name.len() > DEFAULT_ARCHIVE_LIMITS.max_entry_name_bytes {
-                return Err(ProjectArchiveV6SaveCopyError::ArchiveLimit(format!(
-                    "entry name {entry_name} exceeds the {}-byte limit",
-                    DEFAULT_ARCHIVE_LIMITS.max_entry_name_bytes
-                )));
-            }
-            let mut source_entry = source_zip.by_name(&entry_name)?;
-            let declared_size = source_entry.size();
-            ensure_entry_size(
-                &entry_name,
-                declared_size,
-                DEFAULT_ARCHIVE_LIMITS.max_entry_uncompressed_bytes,
+    let operation: Result<ProjectArchiveV6SaveCopyReceipt, ProjectArchiveV6SaveCopyError> =
+        (|| {
+            source_file.seek(SeekFrom::Start(0))?;
+            let source_zip = ZipArchive::new(source_file.try_clone()?)?;
+            let written = write_project_archive_v6_to_temporary(
+                &mut owned_temporary,
+                &destination_identity,
+                document,
+                cancelled,
+                before_write,
+                move |output, options, checksums, total_uncompressed, cancelled| {
+                    let mut source_zip = source_zip;
+                    for descriptor in &document.datasets {
+                        let entry_name = format!("data/{}.arrow", descriptor.id);
+                        if entry_name.len() > DEFAULT_ARCHIVE_LIMITS.max_entry_name_bytes {
+                            return Err(ProjectArchiveV6SaveCopyError::ArchiveLimit(format!(
+                                "entry name {entry_name} exceeds the {}-byte limit",
+                                DEFAULT_ARCHIVE_LIMITS.max_entry_name_bytes
+                            )));
+                        }
+                        let mut source_entry = source_zip.by_name(&entry_name)?;
+                        let declared_size = source_entry.size();
+                        ensure_entry_size(
+                            &entry_name,
+                            declared_size,
+                            DEFAULT_ARCHIVE_LIMITS.max_entry_uncompressed_bytes,
+                        )?;
+                        output.start_file(&entry_name, options)?;
+                        let mut digest = Sha256::new();
+                        let mut copied = 0_u64;
+                        let mut buffer = [0_u8; 64 * 1024];
+                        loop {
+                            ensure_not_cancelled(cancelled)?;
+                            let read = source_entry.read(&mut buffer)?;
+                            if read == 0 {
+                                break;
+                            }
+                            copied = copied.checked_add(read as u64).ok_or_else(|| {
+                                ProjectArchiveV6SaveCopyError::ArchiveLimit(
+                                    "copied Arrow entry size overflowed".to_owned(),
+                                )
+                            })?;
+                            if copied > declared_size {
+                                return Err(ProjectArchiveV6SaveCopyError::ArchiveLimit(format!(
+                                    "entry {entry_name} expanded beyond its declared size"
+                                )));
+                            }
+                            output.write_all(&buffer[..read])?;
+                            digest.update(&buffer[..read]);
+                        }
+                        if copied != declared_size {
+                            return Err(ProjectArchiveV6SaveCopyError::ArchiveLimit(format!(
+                                "entry {entry_name} yielded {copied} bytes; expected {declared_size}"
+                            )));
+                        }
+                        add_total_uncompressed(total_uncompressed, copied)?;
+                        checksums.insert(entry_name, format!("{:x}", digest.finalize()));
+                    }
+                    Ok(())
+                },
+                before_strict_reopen,
+                || {
+                    let (_, final_source_sha256) = sha256_file_handle(&mut source_file)?;
+                    if final_source_sha256 != expected_source_sha256 {
+                        return Err(ProjectArchiveV6SaveCopyError::SourceChangedDuringSave);
+                    }
+                    Ok(())
+                },
             )?;
-            output.start_file(&entry_name, options)?;
-            let mut digest = Sha256::new();
-            let mut copied = 0_u64;
-            let mut buffer = [0_u8; 64 * 1024];
-            loop {
-                ensure_not_cancelled(cancelled)?;
-                let read = source_entry.read(&mut buffer)?;
-                if read == 0 {
-                    break;
-                }
-                copied = copied.checked_add(read as u64).ok_or_else(|| {
-                    ProjectArchiveV6SaveCopyError::ArchiveLimit(
-                        "copied Arrow entry size overflowed".to_owned(),
-                    )
-                })?;
-                if copied > declared_size {
-                    return Err(ProjectArchiveV6SaveCopyError::ArchiveLimit(format!(
-                        "entry {entry_name} expanded beyond its declared size"
-                    )));
-                }
-                output.write_all(&buffer[..read])?;
-                digest.update(&buffer[..read]);
-            }
-            if copied != declared_size {
-                return Err(ProjectArchiveV6SaveCopyError::ArchiveLimit(format!(
-                    "entry {entry_name} yielded {copied} bytes; expected {declared_size}"
-                )));
-            }
-            add_total_uncompressed(&mut total_uncompressed, copied)?;
-            checksums.insert(entry_name, format!("{:x}", digest.finalize()));
-        }
-        drop(source_zip);
 
-        let manifest = ProjectManifest {
-            schema_version: super::PROJECT_ARCHIVE_SCHEMA_V6_VERSION,
-            project_id: document.project_id,
-            name: document.name.clone(),
-            created_at: document.created_at,
-            modified_at: document.modified_at,
-            engine_version: qpls_core::ENGINE_VERSION.to_owned(),
-            checksum_algorithm: "sha256".to_owned(),
-            checksums,
-        };
-        let manifest_bytes = serde_json::to_vec_pretty(&manifest)?;
-        ensure_entry_size(
-            MANIFEST_ENTRY_NAME,
-            manifest_bytes.len() as u64,
-            MAX_MANIFEST_UNCOMPRESSED_BYTES,
-        )?;
-        add_total_uncompressed(&mut total_uncompressed, manifest_bytes.len() as u64)?;
-        output.start_file(MANIFEST_ENTRY_NAME, options)?;
-        output.write_all(&manifest_bytes)?;
-        let mut finished = output.finish()?;
-        finished.sync_all()?;
-        if file_identity_from_file(&finished)? != destination_identity {
-            return Err(ProjectArchiveV6SaveCopyError::DestinationIdentityChanged);
-        }
-        ensure_not_cancelled(cancelled)?;
-
-        before_strict_reopen(&mut finished)?;
-        let reopened = load_project_archive_v6_from_file(finished.try_clone()?)?;
-        if serialize_project_document_v6(&reopened.document)? != project_bytes
-            || serde_json::to_vec(&reopened.manifest)? != serde_json::to_vec(&manifest)?
-        {
-            return Err(ProjectArchiveV6SaveCopyError::StrictReopenMismatch);
-        }
-        ensure_not_cancelled(cancelled)?;
-        let (_, final_source_sha256) = sha256_file_handle(&mut source_file)?;
-        if final_source_sha256 != expected_source_sha256 {
-            return Err(ProjectArchiveV6SaveCopyError::SourceChangedDuringSave);
-        }
-        let (destination_archive_bytes, destination_archive_sha256) =
-            sha256_file_handle(&mut finished)?;
-        if file_identity_from_file(&finished)? != destination_identity {
-            return Err(ProjectArchiveV6SaveCopyError::DestinationIdentityChanged);
-        }
-        ensure_not_cancelled(cancelled)?;
-
-        Ok(ProjectArchiveV6SaveCopyReceipt {
-            schema_version: 1,
-            source_archive_path: source.to_string_lossy().into_owned(),
-            source_archive_sha256: expected_source_sha256.to_owned(),
-            source_verified_unchanged: true,
-            destination_archive_path: destination.to_string_lossy().into_owned(),
-            destination_archive_sha256,
-            destination_archive_bytes,
-            strict_reopen_validated: true,
-            model_count: document.models.len(),
-        })
-    })();
+            Ok(ProjectArchiveV6SaveCopyReceipt {
+                schema_version: 1,
+                source_archive_path: source.to_string_lossy().into_owned(),
+                source_archive_sha256: expected_source_sha256.to_owned(),
+                source_verified_unchanged: true,
+                destination_archive_path: destination.to_string_lossy().into_owned(),
+                destination_archive_sha256: written.destination_archive_sha256,
+                destination_archive_bytes: written.destination_archive_bytes,
+                strict_reopen_validated: true,
+                model_count: document.models.len(),
+            })
+        })();
 
     let receipt = operation?;
     // Final commit point. No cancellation or fallible work occurs after the
@@ -1424,6 +1588,16 @@ mod tests {
             save_project_archive_v6_model_copy(&source, &source_sha256, &destination, &candidate)
                 .unwrap();
 
+        assert_eq!(receipt.schema_version, 1);
+        assert_eq!(
+            receipt.source_archive_path,
+            source.to_string_lossy().into_owned()
+        );
+        assert_eq!(receipt.source_archive_sha256, source_sha256);
+        assert_eq!(
+            receipt.destination_archive_path,
+            destination.to_string_lossy().into_owned()
+        );
         assert_eq!(fs::read(&source).unwrap(), source_bytes);
         assert!(receipt.source_verified_unchanged);
         assert!(receipt.strict_reopen_validated);
@@ -1438,6 +1612,10 @@ mod tests {
         assert_eq!(
             receipt.destination_archive_sha256,
             sha256_bytes(&fs::read(&destination).unwrap())
+        );
+        assert_eq!(
+            receipt.destination_archive_bytes,
+            fs::metadata(&destination).unwrap().len()
         );
         assert!(temporary_links(directory.path()).is_empty());
     }

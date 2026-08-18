@@ -1,11 +1,13 @@
 use crate::recipe_v4_cbsem_execution::InternalRecipeV4CbsemExecutionRequestV1;
 use qpls_core::{
-    CANONICAL_RESULT_DOCUMENT_V2_SCHEMA_VERSION, CanonicalChartDisplayOptions, CanonicalColumnRole,
-    CanonicalColumnType, CanonicalMissingReason, CanonicalNoticeSeverity, CanonicalResultCell,
-    CanonicalResultColumn, CanonicalResultDocumentV2, CanonicalResultExclusion,
-    CanonicalResultNotice, CanonicalResultPresentationV2, CanonicalResultProvenanceV2,
-    CanonicalResultRow, CanonicalResultSection, CanonicalResultTable, CbsemBootstrapInterval,
-    CbsemBootstrapTestTail, MethodConfig, validate_canonical_result_document_v2,
+    CANONICAL_RESULT_DOCUMENT_V2_SCHEMA_VERSION, CBSEM_EXACT_BOOTSTRAP_CAPABILITY_ID,
+    CBSEM_EXACT_BOOTSTRAP_CAPABILITY_VERSION, CBSEM_EXACT_BOOTSTRAP_CELL_ID,
+    CanonicalChartDisplayOptions, CanonicalColumnRole, CanonicalColumnType, CanonicalMissingReason,
+    CanonicalNoticeSeverity, CanonicalResultCell, CanonicalResultColumn, CanonicalResultDocumentV2,
+    CanonicalResultExclusion, CanonicalResultNotice, CanonicalResultPresentationV2,
+    CanonicalResultProvenanceV2, CanonicalResultRow, CanonicalResultSection, CanonicalResultTable,
+    CbsemBootstrapInterval, CbsemBootstrapTestTail, MethodConfig,
+    validate_canonical_result_document_v2,
 };
 use qpls_estimation::{
     CBSEM_CFA_SCORE_LM_METHOD_VERSION_V1, CBSEM_CFA_SCORE_LM_SCOPE_V1,
@@ -1275,13 +1277,21 @@ pub(crate) fn validate_archived_recipe_v4_cbsem_method_identity(
     document: &qpls_project::CanonicalResultDocumentV2,
 ) -> Result<(), String> {
     let capability = &document.provenance.capability_cell;
-    if capability.capability_id != CBSEM_CAPABILITY_ID
-        || capability.cell_id != CBSEM_CAPABILITY_CELL_ID
-    {
+    let base_capability = capability.capability_id == CBSEM_CAPABILITY_ID
+        && capability.cell_id == CBSEM_CAPABILITY_CELL_ID;
+    let exact_bootstrap_capability = capability.capability_id
+        == CBSEM_EXACT_BOOTSTRAP_CAPABILITY_ID
+        && capability.cell_id == CBSEM_EXACT_BOOTSTRAP_CELL_ID;
+    if !base_capability && !exact_bootstrap_capability {
         return Ok(());
     }
-    if capability.capability_version != CBSEM_CAPABILITY_VERSION {
-        return Err("CB-SEM canonical capability version is not cbsem_ml_v1".into());
+    let expected_capability_version = if exact_bootstrap_capability {
+        CBSEM_EXACT_BOOTSTRAP_CAPABILITY_VERSION
+    } else {
+        CBSEM_CAPABILITY_VERSION
+    };
+    if capability.capability_version != expected_capability_version {
+        return Err("CB-SEM canonical capability version does not match its option cell".into());
     }
     let (adapter, estimator, moment, schema, mean_structure, mean_replacement, _current_rmsea) =
         match (
@@ -1424,6 +1434,16 @@ pub(crate) fn validate_archived_recipe_v4_cbsem_method_identity(
         };
     if document.provenance.engine_version != adapter {
         return Err("CB-SEM canonical engine identity does not match its method".into());
+    }
+    let exact_bootstrap_adapter = matches!(
+        adapter,
+        RECIPE_V4_CBSEM_EXECUTION_ADAPTER_VERSION_V9
+            | RECIPE_V4_CBSEM_EXECUTION_ADAPTER_VERSION_V10
+            | RECIPE_V4_CBSEM_EXECUTION_ADAPTER_VERSION_V11
+            | RECIPE_V4_CBSEM_EXECUTION_ADAPTER_VERSION_V12
+    );
+    if exact_bootstrap_adapter != exact_bootstrap_capability {
+        return Err("CB-SEM canonical capability cell does not match its execution adapter".into());
     }
     let mut summaries = document
         .tables
@@ -4367,6 +4387,7 @@ pub(crate) fn build_recipe_v4_cbsem_canonical_result(
             completed_at: completed_at.into(),
         },
         capability_cells: capability_cells.clone(),
+        general_sem_results: None,
         sections,
         tables,
         charts: Vec::new(),
@@ -4422,7 +4443,7 @@ mod tests {
     use qpls_core::{
         AnalysisRecipeModelBindingV4, CbsemBootstrapAlgorithm, CbsemBootstrapConfigV2,
         CbsemBootstrapInterval, CbsemInput, MethodConfig, MissingDataPolicy, MissingDataPolicyV4,
-        SemDataBindingV4, SemVariableV4,
+        SemDataBindingV4, SemVariableV4, cbsem_exact_bootstrap_capability_cell_v1,
     };
     use qpls_data::{ImportOptions, import_delimited_bytes};
     use qpls_project::{
@@ -4607,6 +4628,7 @@ mod tests {
             interval: CbsemBootstrapInterval::PercentileType7,
             test_tail: CbsemBootstrapTestTail::TwoSided,
         });
+        request.capability_cell = cbsem_exact_bootstrap_capability_cell_v1();
         (project, request)
     }
 

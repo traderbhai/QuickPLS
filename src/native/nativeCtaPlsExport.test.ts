@@ -5,7 +5,7 @@ import { nativeRunProvenanceTable } from "./nativeExportTables";
 import { nativeResultTables } from "./nativeResults";
 
 describe("native CTA-PLS export contract", () => {
-  it("exports same-run CTA tables with explicit method, covariance, exclusions, and fingerprint provenance", () => {
+  it("exports same-run CTA tables with explicit method, covariance, case accounting, and fingerprint provenance", () => {
     const run = completedCtaPlsRun();
     const tables = [...nativeResultTables(run), nativeRunProvenanceTable(run)];
     const csv = tablesToCsv(tables);
@@ -13,15 +13,18 @@ describe("native CTA-PLS export contract", () => {
     for (const value of [
       "CTA-PLS tetrad summary",
       "CTA-PLS tetrads",
-      "CTA-PLS requirements and exclusions",
+      "CTA-PLS run details",
       "cta_pls_tetrad_v1",
       "sample_covariance_of_preprocessed_indicators_v1",
       "sha256:cta",
-      "Not calculated; bootstrap, permutation, asymptotic, and vanishing-tetrad decisions are excluded",
     ]) {
       expect(csv).toContain(value);
       expect(html).toContain(value);
     }
+    expect(csv).toContain("Complete cases,80");
+    expect(csv).toContain("Omitted cases,2");
+    expect(csv).not.toContain("CTA-PLS requirements and exclusions");
+    expect(html).not.toContain("CTA-PLS requirements and exclusions");
     expect(tables.at(-1)).toMatchObject({ id: "run_provenance", status: "validated" });
   });
 

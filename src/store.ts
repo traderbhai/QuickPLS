@@ -46,7 +46,7 @@ type PathRouting = "smoothstep" | "default" | "straight";
 
 export type AddTwoStageInteractionBlockReason =
   | "constructs_not_distinct"
-  | "interaction_exists"
+  | "duplicate_interaction"
   | "construct_missing"
   | "unsupported_construct"
   | "focal_path_missing"
@@ -678,38 +678,106 @@ const interactionNodes = (nodes: Array<Node<ConstructData>>) => nodes.filter((no
   node.data.semantic === "interaction" && node.data.interaction,
 );
 
+const diagramInteractionOperands = (interaction: NonNullable<ConstructData["interaction"]>): readonly string[] =>
+  interaction.kind === "interaction_v2"
+    ? interaction.operands
+    : [interaction.predictor, interaction.moderator];
+
+type RequiredDiagramInteractionPath = { source: string; target: string; relationId?: string };
+
+const requiredDiagramInteractionPaths = (node: Node<ConstructData>): RequiredDiagramInteractionPath[] => {
+  const interaction = node.data.interaction!;
+  const operands = diagramInteractionOperands(interaction);
+  const required: RequiredDiagramInteractionPath[] = [
+    {
+      source: operands[0]!,
+      target: interaction.outcome,
+      ...(interaction.focalRelationId ? { relationId: interaction.focalRelationId } : {}),
+    },
+    { source: node.id, target: interaction.outcome },
+  ];
+  if (interaction.kind !== "interaction_v2" || interaction.hierarchyPolicy !== "none") {
+    required.push(...operands.slice(1).map((operand) => ({ source: operand, target: interaction.outcome })));
+  }
+  return required;
+};
+
+const matchesRequiredDiagramInteractionPath = (
+  edge: Pick<Edge, "id" | "source" | "target">,
+  required: RequiredDiagramInteractionPath,
+) => edge.source === required.source
+  && edge.target === required.target
+  && (!required.relationId || edge.id === required.relationId);
+
+const requiredLowerOrderInteractionNodeIds = (
+  node: Node<ConstructData>,
+  nodes: Array<Node<ConstructData>>,
+): string[] => {
+  const interaction = node.data.interaction!;
+  if (interaction.kind !== "interaction_v2" || interaction.hierarchyPolicy !== "strong" || interaction.operands.length <= 2) return [];
+  return interaction.operands.flatMap((_, omitted) => {
+    const required = new Set(interaction.operands.filter((__, index) => index !== omitted));
+    const lowerOrder = interactionNodes(nodes).find((candidate) => {
+      if (candidate.id === node.id || candidate.data.interaction!.outcome !== interaction.outcome) return false;
+      const candidateInteraction = candidate.data.interaction!;
+      const candidateOperands = diagramInteractionOperands(candidateInteraction);
+      if (candidateOperands.length !== required.size
+        || candidateOperands.some((operand) => !required.has(operand))) return false;
+      return candidateOperands.length <= 2
+        || candidateInteraction.kind === "interaction_v2" && candidateInteraction.hierarchyPolicy === "strong";
+    });
+    return lowerOrder ? [lowerOrder.id] : [];
+  });
+};
+
+const uniqueStableGraphId = (base: string, occupiedIds: ReadonlySet<string>) => {
+  const normalized = base.replace(/[^a-zA-Z0-9_-]/g, "-") || "interaction";
+  if (!occupiedIds.has(normalized)) return normalized;
+  let suffix = 2;
+  while (occupiedIds.has(`${normalized}-${suffix}`)) suffix += 1;
+  return `${normalized}-${suffix}`;
+};
+
 const touchesGeneratedInteraction = (nodes: Array<Node<ConstructData>>, source: string, target: string) => {
   const generatedIds = new Set(interactionNodes(nodes).map((node) => node.id));
   return generatedIds.has(source) || generatedIds.has(target);
 };
 
-const requiredInteractionEdge = (nodes: Array<Node<ConstructData>>, edge: Pick<Edge, "source" | "target">) => interactionNodes(nodes).some((node) => {
-  const interaction = node.data.interaction!;
-  return [
-    [interaction.predictor, interaction.outcome],
-    [interaction.moderator, interaction.outcome],
-    [node.id, interaction.outcome],
-  ].some(([source, target]) => edge.source === source && edge.target === target);
+const requiredInteractionEdge = (nodes: Array<Node<ConstructData>>, edge: Pick<Edge, "id" | "source" | "target">) => interactionNodes(nodes).some((node) => {
+  return requiredDiagramInteractionPaths(node)
+    .some((required) => matchesRequiredDiagramInteractionPath(edge, required));
 });
 
 const cascadingInteractionNodeIds = (
   nodes: Array<Node<ConstructData>>,
   removedNodeIds: ReadonlySet<string>,
-  removedEdges: readonly Pick<Edge, "source" | "target">[],
-) => new Set(interactionNodes(nodes)
-  .filter((node) => {
+  removedEdges: readonly Pick<Edge, "id" | "source" | "target">[],
+) => {
+  const interactions = interactionNodes(nodes);
+  const cascadingIds = new Set(interactions
+    .filter((node) => {
     const interaction = node.data.interaction!;
+    const operands = diagramInteractionOperands(interaction);
     return removedNodeIds.has(node.id)
-      || removedNodeIds.has(interaction.predictor)
-      || removedNodeIds.has(interaction.moderator)
+      || operands.some((operand) => removedNodeIds.has(operand))
       || removedNodeIds.has(interaction.outcome)
-      || removedEdges.some((edge) => [
-        [interaction.predictor, interaction.outcome],
-        [interaction.moderator, interaction.outcome],
-        [node.id, interaction.outcome],
-      ].some(([source, target]) => edge.source === source && edge.target === target));
-  })
-  .map((node) => node.id));
+      || removedEdges.some((edge) => requiredDiagramInteractionPaths(node)
+        .some((required) => matchesRequiredDiagramInteractionPath(edge, required)));
+    })
+    .map((node) => node.id));
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const node of interactions) {
+      if (cascadingIds.has(node.id)) continue;
+      if (requiredLowerOrderInteractionNodeIds(node, nodes).some((id) => cascadingIds.has(id))) {
+        cascadingIds.add(node.id);
+        changed = true;
+      }
+    }
+  }
+  return cascadingIds;
+};
 
 const cascadingHigherOrderNodeIds = (
   nodes: Array<Node<ConstructData>>,
@@ -1238,10 +1306,6 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       result = { status: "blocked", reason: "constructs_not_distinct" };
       return state;
     }
-    if (state.nodes.some((node) => node.data.semantic === "interaction")) {
-      result = { status: "blocked", reason: "interaction_exists" };
-      return state;
-    }
     const predictorNode = state.nodes.find((node) => node.id === predictor);
     const moderatorNode = state.nodes.find((node) => node.id === moderator);
     const outcomeNode = state.nodes.find((node) => node.id === outcome);
@@ -1268,9 +1332,23 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       result = { status: "blocked", reason: "focal_path_missing" };
       return state;
     }
-    const baseId = `interaction-${predictor}-${moderator}-${outcome}`.replace(/[^a-zA-Z0-9_-]/g, "-");
-    const id = state.nodes.some((node) => node.id === baseId) ? `${baseId}-${Date.now()}` : baseId;
-    const edgeId = `path-${id}-${outcome}`;
+    if (interactionNodes(state.nodes).some((node) => {
+      const interaction = node.data.interaction!;
+      const operands = diagramInteractionOperands(interaction);
+      return operands.length === 2
+        && operands[0] === predictor
+        && operands[1] === moderator
+        && interaction.outcome === outcome;
+    })) {
+      result = { status: "blocked", reason: "duplicate_interaction" };
+      return state;
+    }
+    const occupiedIds = new Set([
+      ...state.nodes.map((node) => node.id),
+      ...state.edges.map((edge) => edge.id),
+    ]);
+    const id = uniqueStableGraphId(`interaction-${predictor}-${moderator}-${outcome}`, occupiedIds);
+    occupiedIds.add(id);
     const shortName = `${predictorNode.data.shortName}x${moderatorNode.data.shortName}`.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8) || "INT";
     const hasModeratorMainEffect = state.edges.some((edge) =>
       !edge.id.startsWith("measurement::")
@@ -1278,17 +1356,19 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       && edge.target === outcome
       && edge.data?.role !== "covariance",
     );
-    const moderatorEdgeId = `path-${moderator}-${outcome}`;
+    const moderatorEdgeId = uniqueStableGraphId(`path-${moderator}-${outcome}`, occupiedIds);
     const withModeratorMainEffect = hasModeratorMainEffect
       ? state.edges
       : addEdge({
-        id: state.edges.some((edge) => edge.id === moderatorEdgeId) ? `${moderatorEdgeId}-${Date.now()}` : moderatorEdgeId,
+        id: moderatorEdgeId,
         source: moderator,
         target: outcome,
         type: "straight",
         label: "Path",
         markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
       }, state.edges);
+    for (const edge of withModeratorMainEffect) occupiedIds.add(edge.id);
+    const interactionEdgeId = uniqueStableGraphId(`path-${id}-${outcome}`, occupiedIds);
     result = { status: "created", interactionId: id };
     return {
       ...historyPatch(state),
@@ -1313,7 +1393,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       edges: withModeratorMainEffect.some((edge) => edge.source === id && edge.target === outcome)
         ? withModeratorMainEffect
         : addEdge({
-          id: edgeId,
+          id: interactionEdgeId,
           source: id,
           target: outcome,
           type: "straight",

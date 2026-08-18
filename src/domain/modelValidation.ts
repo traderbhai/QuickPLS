@@ -2,7 +2,7 @@ import type { Edge, Node } from "@xyflow/react";
 import type { ConstructData } from "../types";
 
 export interface ModelIssue {
-  code: "construct.empty_name" | "construct.no_indicators" | "indicator.duplicate" | "path.self" | "path.duplicate" | "path.cycle" | "path.unknown_construct" | "interaction.invalid" | "interaction.multiple" | "higher_order.invalid" | "higher_order.components" | "higher_order.self_component" | "higher_order.unknown_component" | "higher_order.duplicate_component" | "higher_order.hybrid_component_indicators";
+  code: "construct.empty_name" | "construct.no_indicators" | "indicator.duplicate" | "path.self" | "path.duplicate" | "path.cycle" | "path.unknown_construct" | "interaction.invalid" | "interaction.duplicate" | "higher_order.invalid" | "higher_order.components" | "higher_order.self_component" | "higher_order.unknown_component" | "higher_order.duplicate_component" | "higher_order.hybrid_component_indicators";
   subject: string;
 }
 
@@ -46,12 +46,20 @@ export function validateModel(nodes: Array<Node<ConstructData>>, edges: Edge[]):
   }
 
   const interactionNodes = nodes.filter((node) => node.data.semantic === "interaction");
-  if (interactionNodes.length > 1) issues.push({ code: "interaction.multiple", subject: "model" });
+  const interactionIdentities = new Set<string>();
   for (const node of interactionNodes) {
     const interaction = node.data.interaction;
-    const roles = interaction
-      ? [interaction.predictor, interaction.moderator, node.id, interaction.outcome]
+    const operands = interaction
+      ? interaction.kind === "interaction_v2"
+        ? interaction.operands
+        : [interaction.predictor, interaction.moderator]
       : [];
+    if (interaction) {
+      const identity = JSON.stringify([operands, interaction.outcome]);
+      if (interactionIdentities.has(identity)) issues.push({ code: "interaction.duplicate", subject: node.id });
+      interactionIdentities.add(identity);
+    }
+    const roles = interaction ? [...operands, node.id, interaction.outcome] : [];
     const hasPath = (source: string, target: string, allowControl: boolean) => edges.some((edge) =>
       !edge.id.startsWith("measurement::")
       && edge.source === source
@@ -59,11 +67,47 @@ export function validateModel(nodes: Array<Node<ConstructData>>, edges: Edge[]):
       && edge.data?.role !== "covariance"
       && (allowControl || edge.data?.role !== "control"),
     );
+    const hasExactV2FocalPath = interaction?.kind !== "interaction_v2" || edges.some((edge) =>
+      edge.id === interaction.focalRelationId
+      && edge.source === operands[0]
+      && edge.target === interaction.outcome
+      && edge.data?.role !== "covariance"
+      && edge.data?.role !== "control",
+    );
+    const hasRequiredMainEffects = !interaction
+      ? false
+      : interaction.kind === "interaction_v2"
+        ? interaction.hierarchyPolicy === "none" || operands.every((operand) => hasPath(operand, interaction.outcome, false))
+        : hasPath(interaction.moderator, interaction.outcome, true);
+    const hasRequiredLowerOrderInteractions = interaction?.kind !== "interaction_v2"
+      || interaction.hierarchyPolicy !== "strong"
+      || operands.length <= 2
+      || operands.every((_, omitted) => {
+        const required = new Set(operands.filter((__, index) => index !== omitted));
+        return interactionNodes.some((candidate) => {
+          if (candidate.id === node.id || candidate.data.interaction?.outcome !== interaction.outcome) return false;
+          const candidateInteraction = candidate.data.interaction;
+          const candidateOperands = candidateInteraction.kind === "interaction_v2"
+            ? candidateInteraction.operands
+            : [candidateInteraction.predictor, candidateInteraction.moderator];
+          return candidateOperands.length === required.size
+            && candidateOperands.every((operand) => required.has(operand))
+            && (candidateOperands.length <= 2
+              || candidateInteraction.kind === "interaction_v2" && candidateInteraction.hierarchyPolicy === "strong")
+            && hasPath(candidate.id, interaction.outcome, false);
+        });
+      });
+    const hasCoherentMethod = interaction?.kind !== "interaction_v2"
+      || (interaction.canonicalMethod === "product_indicator") === Boolean(interaction.productIndicator);
     if (!interaction
-      || new Set(roles).size !== 4
+      || operands.length < 2
+      || new Set(roles).size !== operands.length + 2
       || roles.some((id) => !nodeIds.has(id))
-      || !hasPath(interaction.predictor, interaction.outcome, false)
-      || !hasPath(interaction.moderator, interaction.outcome, true)
+      || !hasPath(operands[0]!, interaction.outcome, false)
+      || !hasExactV2FocalPath
+      || !hasRequiredMainEffects
+      || !hasRequiredLowerOrderInteractions
+      || !hasCoherentMethod
       || !hasPath(node.id, interaction.outcome, false)) {
       issues.push({ code: "interaction.invalid", subject: node.id });
     }

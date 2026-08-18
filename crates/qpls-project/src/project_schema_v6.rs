@@ -33,7 +33,7 @@ use qpls_core::{
     LegacyDisplayCovarianceV4, MethodConfig, ModelSpec, PLS_ALGORITHM_CAPABILITY_ID,
     PLS_ALGORITHM_CAPABILITY_VERSION, PLS_ALGORITHM_CELL_ID, PLS_NONLINEAR_EFFECTS_CAPABILITY_ID,
     PLS_NONLINEAR_EFFECTS_CAPABILITY_VERSION, PLS_NONLINEAR_EFFECTS_CELL_ID,
-    RecipeV4CompilerTarget, SemEndpointV4, SemModelV4, SemModelV4ValidationError,
+    RecipeV4CompilerTarget, SemDerivedTermV4, SemEndpointV4, SemModelV4, SemModelV4ValidationError,
     SemParameterTargetV4, SemVariableV4, compile_analysis_recipe_v4,
     compile_cbsem_exact_case_bootstrap_zero_null_eligibility_v1, confirm_legacy_recipe_estimand_v4,
     convert_legacy_basic_model_v4, sha256_serialized,
@@ -187,6 +187,17 @@ pub struct ProjectUpgradeLineageV6 {
 pub enum ProjectOriginV6 {
     NewProject,
     UpgradedCopy { lineage: ProjectUpgradeLineageV6 },
+}
+
+/// Explicit product-generation authority for newly authored schema-v6 projects.
+///
+/// Absence preserves the behavior of existing schema-v6 documents. The marker
+/// is intentionally unavailable to upgraded copies so opening or saving legacy
+/// work can never opt it into advanced General SEM semantics implicitly.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case", deny_unknown_fields)]
+pub enum ProjectSemGenerationV6 {
+    GeneralSemV1,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -451,6 +462,8 @@ pub struct ProjectArchiveDocumentV6 {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub canonical_result_documents: Vec<CanonicalResultDocumentAttachmentV2>,
     pub origin: ProjectOriginV6,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sem_generation: Option<ProjectSemGenerationV6>,
 }
 
 /// Compatibility-only reader for the staged internal schema-v6 foundation.
@@ -482,6 +495,8 @@ struct ProjectArchiveDocumentV6Wire {
     origin: Option<ProjectOriginV6>,
     #[serde(default)]
     upgrade_lineage: Option<ProjectUpgradeLineageV6>,
+    #[serde(default)]
+    sem_generation: Option<ProjectSemGenerationV6>,
 }
 
 impl<'de> Deserialize<'de> for ProjectArchiveDocumentV6 {
@@ -516,11 +531,42 @@ impl<'de> Deserialize<'de> for ProjectArchiveDocumentV6 {
             historical_results: wire.historical_results,
             canonical_result_documents: wire.canonical_result_documents,
             origin,
+            sem_generation: wire.sem_generation,
         })
     }
 }
 
 impl ProjectArchiveDocumentV6 {
+    /// Creates a blank project that is explicitly authorized for the advanced
+    /// General SEM authoring and estimator-capability workflow.
+    pub fn new_general_sem_v1(
+        project_id: Uuid,
+        name: impl Into<String>,
+        created_at: DateTime<Utc>,
+    ) -> Self {
+        Self {
+            schema_version: PROJECT_ARCHIVE_SCHEMA_V6_VERSION,
+            project_id,
+            name: name.into(),
+            created_at,
+            modified_at: created_at,
+            datasets: Vec::new(),
+            models: Vec::new(),
+            recipes: Vec::new(),
+            historical_recipes: Vec::new(),
+            layouts: BTreeMap::new(),
+            historical_results: Vec::new(),
+            canonical_result_documents: Vec::new(),
+            origin: ProjectOriginV6::NewProject,
+            sem_generation: Some(ProjectSemGenerationV6::GeneralSemV1),
+        }
+    }
+
+    pub fn supports_general_sem_v1(&self) -> bool {
+        matches!(self.origin, ProjectOriginV6::NewProject)
+            && self.sem_generation == Some(ProjectSemGenerationV6::GeneralSemV1)
+    }
+
     pub fn upgrade_lineage(&self) -> Option<&ProjectUpgradeLineageV6> {
         match &self.origin {
             ProjectOriginV6::NewProject => None,
@@ -536,6 +582,9 @@ impl ProjectArchiveDocumentV6 {
             validate_upgrade_lineage(lineage)?;
             if lineage.source_project_id != self.project_id {
                 return Err(ProjectArchiveV6Error::UpgradeProjectIdentity);
+            }
+            if self.sem_generation.is_some() {
+                return Err(ProjectArchiveV6Error::GeneralSemGenerationRequiresNewProject);
             }
         }
         // Schema v6 stores dataset descriptors, not Arrow buffers. This gate
@@ -610,21 +659,30 @@ impl ProjectArchiveDocumentV6 {
         }
         for recipe in &self.recipes {
             recipe.ensure_valid()?;
+            if recipe.general_sem_config.is_some() && !self.supports_general_sem_v1() {
+                return Err(ProjectArchiveV6Error::GeneralSemFeatureRequiresGeneration {
+                    subject: format!("analysis recipe {}", recipe.id),
+                });
+            }
             if !recipe_ids.insert(recipe.id) {
                 return Err(ProjectArchiveV6Error::DuplicateRecipeId(recipe.id));
             }
             match &recipe.model_binding {
-                AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 { .. } => {}
+                AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 { model, .. } => {
+                    ensure_general_sem_v1_model_authority(self, model)?;
+                }
                 AnalysisRecipeModelBindingV4::ProjectSemModelV4Reference {
                     model_id,
                     scientific_sha256,
                 } => {
-                    let Some((_, stored_sha256)) = scientific_models.get(model_id.as_str()) else {
+                    let Some((model, stored_sha256)) = scientific_models.get(model_id.as_str())
+                    else {
                         return Err(ProjectArchiveV6Error::RecipeModelReference {
                             recipe_id: recipe.id,
                             model_id: model_id.clone(),
                         });
                     };
+                    ensure_general_sem_v1_model_authority(self, model)?;
                     if *stored_sha256 != scientific_sha256 {
                         return Err(ProjectArchiveV6Error::RecipeModelDigest(recipe.id));
                     }
@@ -667,6 +725,11 @@ impl ProjectArchiveDocumentV6 {
         for attachment in &self.canonical_result_documents {
             attachment.ensure_valid(&expected_project_id)?;
             let canonical = attachment.canonical_document();
+            if canonical.general_sem_results.is_some() && !self.supports_general_sem_v1() {
+                return Err(ProjectArchiveV6Error::GeneralSemFeatureRequiresGeneration {
+                    subject: format!("canonical result document {}", canonical.document_id),
+                });
+            }
             if is_exact_recipe_v4_cbsem_result(canonical) {
                 let is_score_lm_current = matches!(
                     canonical.provenance.engine_version.as_str(),
@@ -5533,6 +5596,7 @@ pub fn plan_project_upgrade_to_v6(
                 historical_results_immutable: true,
             },
         },
+        sem_generation: None,
     };
     let plan = ProjectArchiveUpgradePlanV6 {
         document,
@@ -5581,6 +5645,59 @@ pub fn attach_canonical_result_document_v2_v6(
     Ok(attached)
 }
 
+/// Returns true only for authoring semantics introduced by the General SEM v1
+/// program. Legacy single-interaction and single disjoint reflective-reflective
+/// HOC models remain available to existing schema-6 projects exactly as before.
+pub fn sem_model_requires_general_sem_v1(model: &SemModelV4) -> bool {
+    let mut interaction_count = 0usize;
+    let mut higher_order_count = 0usize;
+    let mut has_interaction_v2 = false;
+    let mut has_extended_higher_order = false;
+
+    for term in &model.derived_terms {
+        match term {
+            SemDerivedTermV4::Interaction { .. } => interaction_count += 1,
+            SemDerivedTermV4::InteractionV2 { .. } => {
+                interaction_count += 1;
+                has_interaction_v2 = true;
+            }
+            SemDerivedTermV4::HigherOrder {
+                approach,
+                measurement_type,
+                ..
+            } => {
+                higher_order_count += 1;
+                has_extended_higher_order |= !matches!(
+                    (approach, measurement_type),
+                    (
+                        qpls_core::HigherOrderConstructionApproachV4::DisjointTwoStage,
+                        qpls_core::HigherOrderMeasurementTypeV4::ReflectiveReflective
+                    )
+                );
+            }
+            SemDerivedTermV4::Polynomial { .. } => {}
+        }
+    }
+
+    has_interaction_v2
+        || interaction_count > 1
+        || higher_order_count > 1
+        || (interaction_count > 0 && higher_order_count > 0)
+        || has_extended_higher_order
+}
+
+fn ensure_general_sem_v1_model_authority(
+    project: &ProjectArchiveDocumentV6,
+    model: &SemModelV4,
+) -> Result<(), ProjectArchiveV6Error> {
+    if sem_model_requires_general_sem_v1(model) && !project.supports_general_sem_v1() {
+        return Err(ProjectArchiveV6Error::GeneralSemFeatureRequiresGeneration {
+            subject: format!("SEM model {}", model.id),
+        });
+    }
+    Ok(())
+}
+
 /// Inserts a new authoring-integrity-checked model as a non-executable draft in
 /// a cloned schema-6 document. Existing records and every non-model field are
 /// left untouched; callers must choose a new model identifier for a revision
@@ -5591,6 +5708,7 @@ pub fn insert_sem_model_v4_draft_v6(
 ) -> Result<ProjectArchiveDocumentV6, ProjectArchiveV6Error> {
     source.ensure_valid()?;
     draft.ensure_authoring_integrity()?;
+    ensure_general_sem_v1_model_authority(source, &draft)?;
     if source
         .models
         .iter()
@@ -5642,6 +5760,7 @@ pub fn replace_sem_model_v4_draft_v6(
         current_model_document_sha256,
     )?;
     replacement.ensure_authoring_integrity()?;
+    ensure_general_sem_v1_model_authority(source, &replacement)?;
     if replacement.id != model_id {
         return Err(ProjectArchiveV6Error::ModelMutationIdentityMismatch {
             expected: model_id.to_owned(),
@@ -5685,6 +5804,7 @@ pub fn promote_sem_model_v4_draft_v6(
         current_model_document_sha256,
     )?;
     model.ensure_valid()?;
+    ensure_general_sem_v1_model_authority(source, model)?;
     let scientific_sha256 = model.scientific_sha256()?;
 
     let mut promoted = source.clone();
@@ -6283,6 +6403,14 @@ pub enum ProjectArchiveV6Error {
     UpgradeOriginRequired,
     #[error("upgraded_copy origin source_project_id must match project_id")]
     UpgradeProjectIdentity,
+    #[error(
+        "general_sem_v1 generation authority is valid only for a newly created schema-v6 project"
+    )]
+    GeneralSemGenerationRequiresNewProject,
+    #[error(
+        "{subject} uses General SEM v1 features; create a new schema-6 project with general_sem_v1 authority"
+    )]
+    GeneralSemFeatureRequiresGeneration { subject: String },
     #[error("legacy model {0} has conflicting scientific content")]
     ConflictingLegacyModel(String),
     #[error("display covariance input references unknown model {0}")]
@@ -6836,6 +6964,7 @@ mod tests {
                 completed_at: "2026-08-16T03:00:01Z".into(),
             },
             capability_cells: Some(vec![nonlinear.clone(), base.clone()]),
+            general_sem_results: None,
             sections: vec![
                 CanonicalResultSectionV2 {
                     id: "run_details".into(),
@@ -7872,6 +8001,7 @@ mod tests {
         document.layouts.clear();
         document.historical_results.clear();
         document.origin = ProjectOriginV6::NewProject;
+        document.sem_generation = None;
         document.ensure_valid().unwrap();
 
         let first = serialize_project_document_v6(&document).unwrap();
@@ -7880,6 +8010,7 @@ mod tests {
         let value: Value = serde_json::from_slice(&first).unwrap();
         assert_eq!(value["origin"]["kind"], "new_project");
         assert!(value.get("upgrade_lineage").is_none());
+        assert!(value.get("sem_generation").is_none());
 
         let directory = tempfile::tempdir().unwrap();
         let destination = directory.path().join("new-project-v6.json");
@@ -7892,6 +8023,76 @@ mod tests {
             read_project_document_v6(&destination).unwrap().origin,
             ProjectOriginV6::NewProject
         ));
+    }
+
+    #[test]
+    fn general_sem_generation_is_explicit_persistent_and_new_project_only() {
+        let created_at = Utc.with_ymd_and_hms(2026, 8, 18, 9, 30, 0).unwrap();
+        let document = ProjectArchiveDocumentV6::new_general_sem_v1(
+            Uuid::from_u128(0x6e65772d67656e6572616c2d73656d),
+            "General SEM v1",
+            created_at,
+        );
+        document.ensure_valid().unwrap();
+        assert!(document.supports_general_sem_v1());
+
+        let bytes = serialize_project_document_v6(&document).unwrap();
+        let value: Value = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(value["origin"]["kind"], "new_project");
+        assert_eq!(value["sem_generation"], "general_sem_v1");
+        let reopened = deserialize_project_document_v6(&bytes).unwrap();
+        assert!(reopened.supports_general_sem_v1());
+
+        let source = project_with_historical_result(AnalysisMethod::PlsPm);
+        let mut upgraded = plan_project_upgrade_to_v6(&source, &request())
+            .unwrap()
+            .document;
+        upgraded.sem_generation = Some(ProjectSemGenerationV6::GeneralSemV1);
+        assert!(matches!(
+            upgraded.ensure_valid(),
+            Err(ProjectArchiveV6Error::GeneralSemGenerationRequiresNewProject)
+        ));
+    }
+
+    #[test]
+    fn advanced_model_authoring_requires_the_general_sem_generation_marker() {
+        let source = plan_project_upgrade_to_v6(
+            &project_with_historical_result(AnalysisMethod::PlsPm),
+            &request(),
+        )
+        .unwrap()
+        .document;
+        let mut advanced = explicit_model(&source).clone();
+        assert!(!sem_model_requires_general_sem_v1(&advanced));
+
+        advanced
+            .derived_terms
+            .push(qpls_core::SemDerivedTermV4::InteractionV2 {
+                id: "term:three-way".into(),
+                output: "derived:three-way".into(),
+                operands: vec![
+                    "construct:x".into(),
+                    "construct:y".into(),
+                    "construct:z".into(),
+                ],
+                focal_relation: "relation:x:y".into(),
+                method: qpls_core::InteractionMethodV4::TwoStage,
+                hierarchy_policy: qpls_core::InteractionHierarchyPolicyV2::Strong,
+                product_indicator: None,
+            });
+        assert!(sem_model_requires_general_sem_v1(&advanced));
+        assert!(matches!(
+            ensure_general_sem_v1_model_authority(&source, &advanced),
+            Err(ProjectArchiveV6Error::GeneralSemFeatureRequiresGeneration { subject })
+                if subject.contains(&advanced.id)
+        ));
+
+        let general_sem = ProjectArchiveDocumentV6::new_general_sem_v1(
+            Uuid::from_u128(0x67656e6572616c2d73656d2d61757468),
+            "General SEM authority",
+            Utc.with_ymd_and_hms(2026, 8, 18, 11, 0, 0).unwrap(),
+        );
+        ensure_general_sem_v1_model_authority(&general_sem, &advanced).unwrap();
     }
 
     #[test]

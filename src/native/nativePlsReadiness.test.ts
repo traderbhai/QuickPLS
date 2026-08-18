@@ -554,6 +554,31 @@ describe("nativePlsReadiness", () => {
     expect(ready.canRun).toBe(true);
     expect(ready.items.find((item) => item.id === "calculation")?.detail).toContain("two-stage moderation");
 
+    const interactionV2: Node<ConstructData> = {
+      ...interaction,
+      data: {
+        ...interaction.data,
+        interaction: {
+          kind: "interaction_v2",
+          termId: "interaction:x-m",
+          operands: ["x", "m"],
+          outcome: "y",
+          focalRelationId: "x-y",
+          canonicalMethod: "two_stage",
+          hierarchyPolicy: "strong",
+          productIndicator: null,
+        },
+      },
+    };
+    const v2Blocked = readiness({
+      dataset: moderationDataset,
+      nodes: [...nodes, moderator, interactionV2],
+      edges: moderationEdges,
+      settings: { ...settings, weightingScheme: "path", preprocessing: "standardized" },
+    });
+    expect(v2Blocked.canRun).toBe(false);
+    expect(v2Blocked.blockers.find((item) => item.id === "calculation")?.detail).toContain("does not support interaction_v2");
+
     for (const invalidSettings of [
       { ...settings, weightingScheme: "factor" as const, preprocessing: "standardized" as const },
       { ...settings, weightingScheme: "path" as const, preprocessing: "mean_centered" as const },
@@ -572,6 +597,34 @@ describe("nativePlsReadiness", () => {
     });
     expect(withControl.canRun).toBe(false);
     expect(withControl.blockers.find((item) => item.id === "calculation")?.detail).toContain("control paths");
+
+    const secondModerator: Node<ConstructData> = { id: "m-next", position: { x: 0, y: 260 }, data: { label: "Second moderator", shortName: "M2", mode: "reflective", indicators: ["m3", "m4"] } };
+    const secondInteraction: Node<ConstructData> = {
+      id: "xm-next",
+      position: { x: 160, y: 260 },
+      data: {
+        label: "X x M2",
+        shortName: "XM2",
+        mode: "formative",
+        indicators: [],
+        semantic: "interaction",
+        interaction: { predictor: "x", moderator: "m-next", outcome: "y", method: "two_stage_product_score" },
+      },
+    };
+    const multipleInteractions = readiness({
+      dataset: {
+        ...moderationDataset,
+        columns: [...moderationDataset.columns, "m3", "m4"],
+        rows: moderationDataset.rows.map((row, index) => ({ ...row, m3: index + 6, m4: index + 7 })),
+        columnMetadata: [...(moderationDataset.columnMetadata ?? []), numericMetadata("m3"), numericMetadata("m4")],
+      },
+      nodes: [...moderationNodes, secondModerator, secondInteraction],
+      edges: [...moderationEdges, { id: "m-next-y", source: "m-next", target: "y" }, { id: "xm-next-y", source: "xm-next", target: "y" }],
+      settings: { ...settings, weightingScheme: "path", preprocessing: "standardized" },
+    });
+    expect(multipleInteractions.canRun).toBe(false);
+    expect(multipleInteractions.items.find((item) => item.id === "model")?.status).toBe("ready");
+    expect(multipleInteractions.blockers.find((item) => item.id === "calculation")?.detail).toContain("exactly one two-way interaction");
   });
 
   it("checks Weighted PLS setup without claiming to validate unseen native rows", () => {
