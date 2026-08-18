@@ -23,7 +23,6 @@ import type { Edge, Node } from "@xyflow/react";
 import type { AnalysisUiSettings, ConstructData, Dataset, DatasetGroupProfile, RunMonitorState } from "../types";
 import {
   capabilityCellSessionKey,
-  EXPERIMENTAL_LABS_WARNING,
   shouldShowExperimentalWarning,
   type CapabilitySurfaceCellV2,
 } from "../domain/capabilitySurfaceV2";
@@ -47,16 +46,9 @@ import {
   type NativeAnalysisCategoryId,
   type NativeWorkbenchAnalysisKind,
 } from "./nativeAnalysisCatalog";
-import {
-  NATIVE_PREDICTION_BENCHMARK_DESCRIPTION,
-  NATIVE_PREDICTION_CVPAT_DESCRIPTION,
-  NATIVE_PREDICTION_PLAN_DESCRIPTION,
-  NATIVE_PREDICTION_TARGET_DESCRIPTION,
-} from "./nativeCalculationMode";
 import { NATIVE_ANALYSIS_RECIPE_BOUNDS, NATIVE_CBSEM_ANALYTIC_STUDENTIZED_CAPS } from "./nativeAnalysisRecipe";
 import { buildNativePlsSampleSizePowerRecipe } from "./nativePlsSampleSizePower";
 import { nativeCalculationPhaseLabel } from "./nativeCalculationLifecycle";
-import { NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING } from "./nativeStructuralPathRandomization";
 import type { NativePlsReadiness } from "./nativePlsReadiness";
 import {
   nativeEligibleGroupColumns,
@@ -70,24 +62,20 @@ import {
   NATIVE_NCA_DEFAULT_PERMUTATIONS,
   NATIVE_NCA_MAX_PERMUTATIONS,
   NATIVE_NCA_MIN_PERMUTATIONS,
-  NATIVE_NCA_SCOPE_NOTE,
   nativeNcaNumericColumns,
 } from "./nativeNca";
 import {
   NATIVE_PCA_MAX_VARIABLES,
-  NATIVE_PCA_SCOPE_NOTE,
   nativePcaNumericColumns,
   nativePcaSelectedVariables,
 } from "./nativePca";
 import {
   NATIVE_OLS_MAX_TERMS,
-  NATIVE_OLS_SCOPE_NOTE,
   nativeOlsCsvValues,
   nativeOlsNumericColumns,
 } from "./nativeOls";
 import {
   NATIVE_LOGISTIC_MAX_TERMS,
-  NATIVE_LOGISTIC_SCOPE_NOTE,
   nativeLogisticReadiness,
   profileNativeLogisticDataset,
   residentNativeLogisticProfile,
@@ -95,8 +83,7 @@ import {
   type NativeLogisticReadinessAssessment,
 } from "./nativeLogistic";
 import { NATIVE_REGRESSION_BOOTSTRAP_MAX_SELECTED_TERMS } from "./nativeRegressionBootstrapWitness";
-import { NATIVE_GSCA_SCOPE_NOTE } from "./nativeGsca";
-import { NATIVE_CTA_PLS_SCOPE_NOTE, nativeCtaPlsEligibleBlocks } from "./nativeCtaPls";
+import { nativeCtaPlsEligibleBlocks } from "./nativeCtaPls";
 import NativeProcessSetup from "./NativeProcessSetup";
 import {
   nativeProcessReadiness,
@@ -122,8 +109,6 @@ export interface NativeCalculationDialogProps {
   cancel: () => void;
   close: () => void;
   experimentalLabsEnabled?: boolean;
-  experimentalWarningShownSessionKeys?: ReadonlySet<string>;
-  onExperimentalWarningShown?: (sessionKeys: readonly string[]) => void;
   openMethodDetails?: () => void;
   registryUnavailableReason?: string | null;
   capabilityRegistry?: MethodCapabilityRegistryReaderV2;
@@ -231,9 +216,7 @@ export function nativeRegressionTypeSettingsPatch(
 }
 
 const optionId = (kind: NativeWorkbenchAnalysisKind) => `nd-calculation-method-${kind}`;
-const optionDescriptionId = (kind: NativeWorkbenchAnalysisKind) => `${optionId(kind)}-description`;
 const panelTitleId = (kind: NativeWorkbenchAnalysisKind) => `nd-calculation-panel-${kind}-title`;
-const EMPTY_EXPERIMENTAL_WARNING_SESSION_KEYS: ReadonlySet<string> = new Set();
 
 export interface NativeCalculationCatalogEntryV2 {
   readonly item: NativeAnalysisCatalogItem;
@@ -363,18 +346,12 @@ export default function NativeCalculationDialog({
   cancel,
   close,
   experimentalLabsEnabled = false,
-  experimentalWarningShownSessionKeys = EMPTY_EXPERIMENTAL_WARNING_SESSION_KEYS,
-  onExperimentalWarningShown,
   openMethodDetails,
   registryUnavailableReason = null,
   capabilityRegistry = capabilityRegistryV2,
 }: NativeCalculationDialogProps) {
   const [query, setQuery] = useState("");
   const [focusedKind, setFocusedKind] = useState<NativeWorkbenchAnalysisKind>(kind);
-  const [activeExperimentalWarning, setActiveExperimentalWarning] = useState<{
-    selectionKey: string;
-    sessionKeys: readonly string[];
-  } | null>(null);
   const [groupProfileState, setGroupProfileState] = useState<GroupProfileState>({ status: "idle", profile: null, error: null });
   const [logisticProfileState, setLogisticProfileState] = useState<LogisticProfileState>({ status: "idle", key: "", profile: null, error: null });
   const [processProfileState, setProcessProfileState] = useState<ProcessProfileState>({ status: "idle", key: "", profile: null, error: null });
@@ -404,35 +381,10 @@ export default function NativeCalculationDialog({
   }, [catalogEntries, experimentalLabsEnabled, query]);
   const selectedMethod = nativeAnalysisCatalogItem(kind);
   const selectedCatalogEntry = catalogEntryByKind.get(kind);
-  const selectedAvailability = selectedCatalogEntry?.availability;
   const selectedMethodVisible = Boolean(
     selectedCatalogEntry
     && nativeCalculationMethodIsVisible(selectedCatalogEntry, experimentalLabsEnabled),
   );
-  const selectedUsesEstablishedLabsFallback = Boolean(
-    selectedMethodVisible
-    && !selectedAvailability?.selectable
-    && isNativeEstablishedWorkingAnalysisKindV1(kind),
-  );
-  const selectedExperimentalWarningKey = selectedAvailability?.tier === "experimental"
-    ? selectedCatalogEntry?.experimentalWarningCells.map((cell) => capabilityCellSessionKey(cell)).join("\u0000") ?? ""
-    : "";
-  const pendingExperimentalWarningSessionKeys = useMemo(
-    () => nativeExperimentalWarningSessionKeys(
-      selectedCatalogEntry,
-      experimentalLabsEnabled,
-      experimentalWarningShownSessionKeys,
-    ),
-    [experimentalLabsEnabled, experimentalWarningShownSessionKeys, selectedCatalogEntry],
-  );
-  const displayedExperimentalWarning = selectedMethodVisible
-    && selectedAvailability?.tier === "experimental"
-    ? activeExperimentalWarning?.selectionKey === selectedExperimentalWarningKey
-      ? activeExperimentalWarning
-      : pendingExperimentalWarningSessionKeys.length > 0
-        ? { selectionKey: selectedExperimentalWarningKey, sessionKeys: pendingExperimentalWarningSessionKeys }
-        : null
-    : null;
   const running = ACTIVE_RUN_STATUSES.has(runMonitor.status);
   const retry = RETRY_RUN_STATUSES.has(runMonitor.status);
   const rovingKind = filteredMethods.some((method) => method.kind === focusedKind)
@@ -577,34 +529,6 @@ export default function NativeCalculationDialog({
     setProcessProfileState(retryNativeProcessProfileState(processProfileKey));
     setProcessProfileRetryNonce((value) => value + 1);
   };
-
-  useEffect(() => {
-    if (!selectedMethodVisible || selectedAvailability?.tier !== "experimental") {
-      if (activeExperimentalWarning !== null) setActiveExperimentalWarning(null);
-      return;
-    }
-    if (activeExperimentalWarning?.selectionKey === selectedExperimentalWarningKey) return;
-    const sessionKeys = nativeExperimentalWarningSessionKeys(
-      selectedCatalogEntry,
-      experimentalLabsEnabled,
-      experimentalWarningShownSessionKeys,
-    );
-    if (sessionKeys.length === 0) {
-      if (activeExperimentalWarning !== null) setActiveExperimentalWarning(null);
-      return;
-    }
-    setActiveExperimentalWarning({ selectionKey: selectedExperimentalWarningKey, sessionKeys });
-    onExperimentalWarningShown?.(sessionKeys);
-  }, [
-    activeExperimentalWarning,
-    experimentalLabsEnabled,
-    experimentalWarningShownSessionKeys,
-    onExperimentalWarningShown,
-    selectedAvailability,
-    selectedCatalogEntry,
-    selectedExperimentalWarningKey,
-    selectedMethodVisible,
-  ]);
 
   useEffect(() => {
     if (kind !== "mga" || !groupColumn) {
@@ -842,7 +766,6 @@ export default function NativeCalculationDialog({
                 <div id={categoryLabelId} className="nd-method-category">{methods[0].categoryLabel}</div>
                 {methods.map((method) => {
                   const Icon = METHOD_ICONS[method.kind];
-                  const availability = catalogEntryByKind.get(method.kind)?.availability;
                   const selected = kind === method.kind;
                   return (
                     <button
@@ -852,7 +775,6 @@ export default function NativeCalculationDialog({
                       type="button"
                       role="option"
                       aria-selected={selected}
-                      aria-describedby={optionDescriptionId(method.kind)}
                       tabIndex={rovingKind === method.kind ? 0 : -1}
                       className={selected ? "active" : ""}
                       disabled={running}
@@ -863,16 +785,6 @@ export default function NativeCalculationDialog({
                       <Icon size={15} aria-hidden="true" />
                       <span>
                         <strong>{method.label}</strong>
-                        {availability?.tier === "experimental" ? (
-                          <span className="nd-form-status nd-inline-warning" data-method-chip="experimental">
-                            Experimental
-                          </span>
-                        ) : !availability?.selectable && isNativeEstablishedWorkingAnalysisKindV1(method.kind) ? (
-                          <span className="nd-form-status nd-inline-warning" data-method-chip="limited-scope">
-                            Limited scope
-                          </span>
-                        ) : null}
-                        <small id={optionDescriptionId(method.kind)}>{method.description}</small>
                       </span>
                     </button>
                   );
@@ -897,20 +809,6 @@ export default function NativeCalculationDialog({
           <RunProgress methodLabel={selectedMethod.label} monitor={runMonitor} active />
         ) : selectedMethodVisible ? (
           <>
-            {displayedExperimentalWarning ? (
-              <div
-                className="nd-inline-warning"
-                role="alert"
-                data-experimental-warning="true"
-              >
-                <strong>{EXPERIMENTAL_LABS_WARNING}</strong>
-              </div>
-            ) : null}
-            {selectedUsesEstablishedLabsFallback ? (
-              <div className="nd-inline-warning" role="note" data-limited-scope-warning="true">
-                <strong>Limited scope:</strong> this implemented workflow remains available in Experimental Labs. Its setup checks and Method Details define the supported boundary; Registry qualification does not disable the calculation.
-              </div>
-            ) : null}
             <section
               id="nd-calculation-panel"
               className="nd-method-settings-panel"
@@ -922,7 +820,6 @@ export default function NativeCalculationDialog({
                   <h3 id={panelTitleId(kind)}>{selectedMethod.label}</h3>
                   {openMethodDetails ? <button type="button" className="nd-method-details-link" onClick={openMethodDetails}>Method Details</button> : null}
                 </div>
-                <p>{selectedMethod.description}</p>
               </header>
               <MethodSettings
                 kind={kind}
@@ -968,7 +865,7 @@ export default function NativeCalculationDialog({
             <header className="nd-method-settings-header">
               <h3 id="nd-calculation-unavailable-title">{registryUnavailableReason ? "Calculation catalogue unavailable" : "Calculation method unavailable"}</h3>
               <p>
-                {registryUnavailableReason ?? (selectedAvailability?.internal_reason === "experimental_labs_disabled"
+                {registryUnavailableReason ?? (selectedCatalogEntry?.availability.internal_reason === "experimental_labs_disabled"
                   ? "Enable Experimental Labs in Preferences, then choose an available method."
                   : "The selected method or one of its optional add-ons is not currently available.")}
               </p>
@@ -1170,30 +1067,7 @@ function MethodSettings({
     <fieldset>
       <legend>Method settings</legend>
       <div className="nd-settings-grid">
-        {kind === "pls_sample_size_power" ? (
-          <div className="nd-setting-note">
-            <span>Estimator</span>
-            <strong>Path weighting (fixed)</strong>
-          </div>
-        ) : kind === "nca" || kind === "pca" || kind === "regression" ? (
-          <div className="nd-setting-note">
-            <span>Calculation basis</span>
-            <strong>{kind === "pca"
-              ? "Correlation matrix (fixed)"
-              : kind === "regression"
-                ? processRegression
-                  ? "Graph-defined raw-value OLS equations with HC3 covariance (fixed)"
-                  : logisticRegression
-                    ? "Binary logistic maximum likelihood with intercept (fixed)"
-                    : "Raw-value OLS with intercept (fixed)"
-                : "Observed variables (fixed)"}</strong>
-          </div>
-        ) : kind === "ipma" || kind === "mga" || kind === "cbsem" || kind === "gsca" ? (
-          <div className="nd-setting-note">
-            <span>Weighting scheme</span>
-            <strong>Path weighting (fixed)</strong>
-          </div>
-        ) : <label htmlFor="nd-calculation-weighting">Weighting scheme
+        {kind !== "pls_sample_size_power" && kind !== "nca" && kind !== "pca" && kind !== "regression" && kind !== "ipma" && kind !== "mga" && kind !== "cbsem" && kind !== "gsca" ? <label htmlFor="nd-calculation-weighting">Weighting scheme
           <select
             id="nd-calculation-weighting"
             value={settings.weightingScheme ?? "path"}
@@ -1205,29 +1079,9 @@ function MethodSettings({
             <option value="factor">Factor weighting</option>
             <option value="pca" disabled={kind === "plsc" || kind === "plsc_bootstrap" || kind === "wpls" || kind === "cca" || kind === "cta_pls"}>PCA weighting</option>
           </select>
-        </label>}
+        </label> : null}
 
-        {kind === "pls_sample_size_power" ? (
-          <div className="nd-setting-note">
-            <span>Generated indicator data</span>
-            <strong>Standardized (fixed)</strong>
-          </div>
-        ) : kind === "nca" || kind === "regression" ? (
-          <div className="nd-setting-note">
-            <span>Variable data</span>
-            <strong>{kind === "regression" ? "Unstandardized numeric values (fixed)" : "Observed numeric values (fixed)"}</strong>
-          </div>
-        ) : kind === "pca" ? (
-          <div className="nd-setting-note">
-            <span>Variable data</span>
-            <strong>Standardized numeric values (fixed)</strong>
-          </div>
-        ) : kind === "wpls" || kind === "cca" || kind === "ipma" || kind === "mga" || kind === "cbsem" || kind === "gsca" ? (
-          <div className="nd-setting-note">
-            <span>Result data</span>
-            <strong>Standardized (fixed)</strong>
-          </div>
-        ) : (
+        {kind !== "pls_sample_size_power" && kind !== "nca" && kind !== "regression" && kind !== "pca" && kind !== "wpls" && kind !== "cca" && kind !== "ipma" && kind !== "mga" && kind !== "cbsem" && kind !== "gsca" ? (
           <label htmlFor="nd-calculation-preprocessing">Result data
             <select
               id="nd-calculation-preprocessing"
@@ -1241,7 +1095,7 @@ function MethodSettings({
               <option value="unstandardized">Unstandardized</option>
             </select>
           </label>
-        )}
+        ) : null}
 
         {kind !== "nca" && kind !== "pca" && kind !== "regression" && kind !== "gsca" ? <label htmlFor="nd-calculation-max-iterations">Maximum iterations
           <input
@@ -1307,12 +1161,7 @@ function MethodSettings({
                   ))}
                 </select>
               </label>
-            ) : (
-              <div className="nd-setting-note wide">
-                <span>Inference contract</span>
-                <strong>Linked case bootstrap with two-sided normal-reference probabilities at alpha 0.05; studentized and permutation combinations are unavailable.</strong>
-              </div>
-            )}
+            ) : null}
           </>
         ) : null}
 
@@ -1340,10 +1189,6 @@ function MethodSettings({
                 onChange={(event) => setSettings({ confidenceLevel: Number(event.target.value) / 100 })}
               />
             </label>
-            <div className="nd-setting-note wide" id="nd-calculation-plsc-bootstrap-inference">
-              <span>Inference</span>
-              <strong>Two-sided normal-reference diagnostics, percentile intervals, and BCa when every required full-PLSc delete-one refit is usable</strong>
-            </div>
           </>
         ) : null}
 
@@ -1360,19 +1205,11 @@ function MethodSettings({
                 onChange={(event) => setSettings({ permutationSamples: Number(event.target.value) })}
               />
             </label>
-            <div className="nd-setting-note wide" id="nd-calculation-permutation-scope">
-              <span>Validated scope</span>
-              <strong>{NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING}</strong>
-            </div>
           </>
         ) : null}
 
         {kind === "pls_sample_size_power" ? (
           <div className="nd-pca-settings wide" id="nd-calculation-pls-power-setup">
-            <div className="nd-setting-note wide" id="nd-calculation-pls-power-scope">
-              <span>Requirements</span>
-              <strong>Exactly two ordinary reflective constructs, one predictor-to-outcome path, 3-10 indicators per block, Gaussian latent/disturbance/indicator errors, and no missingness. This is not retrospective observed power or a heuristic sample-size rule.</strong>
-            </div>
             <label htmlFor="nd-calculation-pls-power-scenario">Scenario identity
               <input
                 id="nd-calculation-pls-power-scenario"
@@ -1479,10 +1316,6 @@ function MethodSettings({
                 ? `${powerWorkload.plannedDatasets.toLocaleString("en-US")} independent datasets; ${powerWorkload.estimatedPlsFits.toLocaleString("en-US")} PLS fits; ${powerWorkload.estimatedPlsCaseFits.toLocaleString("en-US")} fitted rows. Hard caps: 250,000 fits and 100,000,000 fitted rows.`
                 : "Complete a valid plan to calculate workload. Plans above 250,000 fits or 100,000,000 fitted rows are blocked."}</strong>
             </div>
-            <div className="nd-setting-note wide">
-              <span>Decision and failures</span>
-              <strong>Power is rejections divided by all requested Monte Carlo replicates. Failed fits remain non-rejections. Selection is the first evaluated grid point whose Wilson lower confidence bound reaches target; nonmonotonic rows stay visible and unsmoothed.</strong>
-            </div>
           </div>
         ) : null}
 
@@ -1562,10 +1395,6 @@ function MethodSettings({
                 onChange={(event) => setSettings({ confidenceLevel: Number(event.target.value) / 100 })}
               />
             </label>
-            <div className="nd-setting-note">
-              <span>Test</span>
-              <strong>Two-tailed; Group A - Group B</strong>
-            </div>
             {groupProfileAssessment.warnings.length ? (
               <ul className="nd-setting-warnings" aria-label="Excluded group rows">
                 {groupProfileAssessment.warnings.map((warning) => <li key={warning}>{warning}</li>)}
@@ -1580,10 +1409,6 @@ function MethodSettings({
               />
               <span><strong>Confirm MICOM Step 1 (configural invariance)</strong> Both groups use identical indicators, coding, data treatment, model and algorithm settings, and the constructs have the same substantive meaning.</span>
             </label>
-            <div className="nd-setting-note wide">
-              <span>Measurement invariance</span>
-              <strong>Step 2 composition and Step 3 pooled-score means and variances are tested with the same deterministic permutations.</strong>
-            </div>
           </div>
         ) : null}
 
@@ -1619,29 +1444,15 @@ function MethodSettings({
                 <option value="cfa">Confirmatory factor analysis (no paths)</option>
               </select>
             </label>
-            <div className="nd-setting-note wide" id="nd-calculation-cbsem-exact-bootstrap-route">
-              <span>Exact CFA bootstrap</span>
-              <strong>Run percentile Type-7, analytic studentized Type-7, or BCa Type-7 case bootstrap from the Exact CB-SEM model tab. This Calculate route remains point-only so it cannot emit the historical percentile-only schema-3 recipe for current inference.</strong>
-              {cbsemBootstrap ? <button type="button" onClick={() => setSettings({
+            {cbsemBootstrap ? <div className="nd-inline-warning wide" id="nd-calculation-cbsem-archived-bootstrap" role="alert">
+              <strong>Clear the archived bootstrap setting before running this point-estimate setup.</strong>
+              <button type="button" onClick={() => setSettings({
                 cbsemBootstrapSamples: 0,
                 cbsemBootstrapInterval: "percentile_type7",
                 cbsemBootstrapTestTail: "two_sided",
                 workers: 1,
-              })}>Clear archived bootstrap setting</button> : null}
-            </div>
-          </>
-        ) : null}
-
-        {kind === "gsca" ? (
-          <>
-            <div className="nd-setting-note wide" id="nd-calculation-gsca-estimator">
-              <span>Estimator</span>
-              <strong>Joint global least-squares alternating least squares; fixed +1 initialization</strong>
-            </div>
-            <div className="nd-setting-note wide" id="nd-calculation-gsca-scope">
-              <span>Supported setup</span>
-              <strong>{NATIVE_GSCA_SCOPE_NOTE}</strong>
-            </div>
+              })}>Clear setting</button>
+            </div> : null}
           </>
         ) : null}
 
@@ -1697,10 +1508,6 @@ function MethodSettings({
                 onChange={(event) => setSettings({ ncaPermutationSamples: Number(event.target.value) })}
               />
             </label>
-            <div className="nd-setting-note wide">
-              <span>Supported setup</span>
-              <strong>{NATIVE_NCA_SCOPE_NOTE}</strong>
-            </div>
           </>
         ) : null}
 
@@ -1770,10 +1577,6 @@ function MethodSettings({
                 />
               </label>
             ) : null}
-            <div className="nd-setting-note wide">
-              <span>Validated scope</span>
-              <strong>{NATIVE_PCA_SCOPE_NOTE}</strong>
-            </div>
           </div>
         ) : null}
 
@@ -1850,14 +1653,6 @@ function MethodSettings({
               </div>
             </fieldset>
             </>}
-            <div className="nd-setting-note">
-              <span>Uncertainty</span>
-              <strong>{processRegression
-                ? "Equation-specific HC3 SE, Student-t residual df, two-sided 95% CI; persisted simple slopes and Johnson-Neyman diagnostics"
-                : logisticRegression
-                  ? "Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)"
-                  : "HC3 robust SE; two-sided 95% CI (fixed)"}</strong>
-            </div>
             <label className="wide" htmlFor="nd-calculation-regression-bootstrap">
               <span>Bootstrap inference</span>
               <select
@@ -1900,12 +1695,6 @@ function MethodSettings({
                     onChange={(event) => setSettings({ workers: Number(event.target.value) })}
                   />
                 </label>
-                <div className="nd-setting-note wide" id="nd-calculation-regression-bootstrap-scope">
-                  <span>Bootstrap requirements</span>
-                  <strong>{processRegression
-                    ? "10,000 complete-case resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa requires every delete-one PROCESS fit; unavailable intervals retain an explicit reason. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Indexed seeded streams are deterministic and worker-invariant."
-                    : "10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs. Percentile intervals are primary. BCa is reported when delete-one refits support it, otherwise an explicit reason is shown. Fixed two-sided 95% inference; studentized intervals, one-tailed tests, and custom alpha are excluded. Runtime grows with resamples. Indexed seeded streams make results deterministic and worker-invariant."}</strong>
-                </div>
               </>
             ) : null}
             {logisticRegression ? (
@@ -1958,12 +1747,6 @@ function MethodSettings({
               ) : null}
               </>
             ) : null}
-            <div className="nd-setting-note wide">
-              <span>{processRegression ? "Supported setup" : "Validated scope"}</span>
-              <strong>{processRegression
-                ? "Review the supported graph shapes and exclusions above; incompatible models are blocked before calculation."
-                : logisticRegression ? NATIVE_LOGISTIC_SCOPE_NOTE : NATIVE_OLS_SCOPE_NOTE}</strong>
-            </div>
           </div>
         ) : null}
 
@@ -2005,25 +1788,7 @@ function MethodSettings({
                 {numericColumns.map((column) => <option key={column} value={column}>{column}</option>)}
               </select>
             </label>
-            <div className="nd-setting-note wide">
-              <span>Case weights</span>
-              <strong>Positive finite values; the complete column is checked before calculation</strong>
-            </div>
           </>
-        ) : null}
-
-        {kind === "plsc" || kind === "plsc_bootstrap" ? (
-          <div className="nd-setting-note wide">
-            <span>Supported setup</span>
-            <strong>Reflective constructs with at least two indicators each; path or factor weighting; raw observations with listwise deletion</strong>
-          </div>
-        ) : null}
-
-        {kind === "cca" ? (
-          <div className="nd-setting-note wide">
-            <span>Supported setup</span>
-            <strong>Reflective composite path model; descriptive residual diagnostics only</strong>
-          </div>
         ) : null}
 
         {kind === "cta_pls" ? (
@@ -2032,72 +1797,8 @@ function MethodSettings({
             <strong>{ctaPlsBlocks.length
               ? ctaPlsBlocks.map((block) => `${block.constructLabel}: ${block.indicators.length} indicators, ${block.tetrads} tetrads`).join("; ")
               : "None - assign at least four indicators to one ordinary construct"}</strong>
-            <small>{NATIVE_CTA_PLS_SCOPE_NOTE}</small>
           </div>
         ) : null}
-
-        {kind === "cbsem" ? (
-          <>
-            <div className="nd-setting-note wide" id="nd-calculation-cbsem-estimator">
-              <span>Estimator and identification</span>
-              <strong>Maximum likelihood; first loading fixed to 1 for each latent factor</strong>
-            </div>
-            <div className="nd-setting-note wide" id="nd-calculation-cbsem-scope">
-              <span>Supported base estimator</span>
-              <strong>Single-group reflective raw-data CFA or recursive SEM with listwise-standardized indicators; no mean structure, robust/ordinal/FIML estimator, or invariance testing</strong>
-            </div>
-            <div className="nd-setting-note wide" id="nd-calculation-cbsem-bootstrap-status">
-              <span>Bootstrap route</span>
-              <strong>Exact CFA case bootstrap is available from the Exact CB-SEM model tab. Historical schema-3 v2 and analytical v1 bootstrap results remain readable but cannot be selected for a new calculation.</strong>
-            </div>
-          </>
-        ) : null}
-
-        {kind === "ipma" ? (
-          <>
-            <div className="nd-setting-note wide">
-              <span>Reported constructs</span>
-              <strong>Direct and indirect structural predecessors only; the target and unrelated constructs are omitted</strong>
-            </div>
-            <div className="nd-setting-note wide">
-              <span>Performance definition</span>
-              <strong>0-100 observed-range scaling of standardized composite scores; no theoretical-range correction</strong>
-            </div>
-          </>
-        ) : null}
-
-        {kind === "predict" ? (
-          <>
-            <div id="nd-calculation-prediction-plan" className="nd-setting-note wide">
-              <span>Cross-validation design</span>
-              <strong>{NATIVE_PREDICTION_PLAN_DESCRIPTION}</strong>
-            </div>
-            <div id="nd-calculation-prediction-targets" className="nd-setting-note wide">
-              <span>Prediction targets</span>
-              <strong>{NATIVE_PREDICTION_TARGET_DESCRIPTION}</strong>
-            </div>
-            <div id="nd-calculation-prediction-benchmarks" className="nd-setting-note wide">
-              <span>Benchmarks</span>
-              <strong>{NATIVE_PREDICTION_BENCHMARK_DESCRIPTION}</strong>
-            </div>
-            <div id="nd-calculation-prediction-cvpat" className="nd-setting-note wide">
-              <span>CVPAT design</span>
-              <strong>{NATIVE_PREDICTION_CVPAT_DESCRIPTION}</strong>
-            </div>
-          </>
-        ) : null}
-
-        {kind === "pls_algorithm" ? (
-          <div className="nd-setting-note">
-            <span>Execution</span>
-            <strong>Deterministic single worker</strong>
-          </div>
-        ) : null}
-
-        <div className="nd-setting-note">
-          <span>Missing data</span>
-          <strong>{kind === "pls_sample_size_power" ? "None in generated data (fixed)" : "Listwise deletion"}</strong>
-        </div>
       </div>
     </fieldset>
   );

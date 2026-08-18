@@ -65,10 +65,10 @@ describe("NativeGroupSetupDialog", () => {
     expect(markup).toContain("Established [A]");
     expect(markup).toContain("12 complete of 12");
     expect(markup).toContain("Complete model cases");
-    expect(markup).toContain("Group A − Group B");
-    expect(markup).toContain("combined MICOM and structural-path permutation MGA workflow");
-    expect(markup).toContain("Step 1 confirmation");
-    expect(markup).toContain("shared permutation plan");
+    expect(markup).not.toContain("Group A − Group B");
+    expect(markup).not.toContain("combined MICOM and structural-path permutation MGA workflow");
+    expect(markup).not.toContain("Step 1 confirmation");
+    expect(markup).not.toContain("shared permutation plan");
     expect(markup).not.toContain('<option value="x"');
     expect(markup).not.toContain('<option value="y"');
     expect(markup).toMatch(/type="submit">Apply Groups/);

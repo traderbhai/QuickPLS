@@ -84,6 +84,18 @@ describe("Method Details V2", () => {
     expect(result.items[1].availability_message).toBe("Available in Standard.");
   });
 
+  it("keeps supported use, defaults, and limitations in Method Details", () => {
+    const logistic = methodDetailsForSettingsV2(settings("regression", { regressionType: "logistic" }), true);
+    expect(logistic.status).toBe("ready");
+    expect(logistic.items[0].details.required_model_and_data).toContain("Supported use:");
+    expect(logistic.items[0].details.settings_and_defaults).toContain("exactly 0/1 numeric outcome");
+    expect(logistic.items[0].details.assumptions_and_cautions).toContain("Multinomial, ordinal, weighted, clustered, penalized, and Firth-corrected variants are not included.");
+
+    const power = methodDetailsForSettingsV2(settings("pls_sample_size_power"), true);
+    expect(power.items[0].details.required_model_and_data).toContain("Prospective Monte Carlo power");
+    expect(power.items[0].details.assumptions_and_cautions).toContain("not retrospective observed power");
+  });
+
   it("uses one concise option caution without repeating the session-level Labs warning", () => {
     const result = methodDetailsForRequirementsV2(
       "Nonlinear Relationships",

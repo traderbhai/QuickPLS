@@ -17,9 +17,10 @@ describe("NativeHigherOrderDialog", () => {
     />);
     expect(html).toContain("Reflective–reflective disjoint two-stage");
     expect(html).toContain("Use component scores as generated HOC indicators");
-    expect(html).toContain("one HOC-to-outcome relationship");
-    expect(html).toContain("no other structural path");
-    expect(html).toContain("HOC bootstrapping and permutation inference remain unavailable");
+    expect(html).toContain("Next, add one path from the higher-order construct to its outcome.");
+    expect(html).not.toContain("HOC bootstrapping and permutation inference remain unavailable");
+    expect(html).not.toContain("no other structural path");
+    expect(html).not.toContain("HOC bootstrapping and permutation inference remain unavailable");
     expect(html).toContain("Capability");
     expect(html).toContain("Formative block");
     expect(html).toContain("Only reflective lower-order components are supported.");

@@ -156,15 +156,15 @@ describe("native PROCESS v2 graph authoring", () => {
     expect(markup.match(/data-process-moderator-row/g)).toHaveLength(2);
     expect(markup.match(/data-process-moderation-row/g)).toHaveLength(3);
     expect(markup).toContain("Binary (must be exact 0/1; uncentered)");
-    expect(markup).toContain("original sample raw mean - SD, mean, and mean + SD");
+    expect(markup).not.toContain("original sample raw mean - SD, mean, and mean + SD");
     expect(markup).not.toMatch(/[\u00c2\u00c3\ufffd]|\u00e2[\u2020\u20ac]/u);
     expect(markup).toContain("Start graph-defined path analysis with bootstrap");
     expect(markup).toContain("id=\"nd-process-graph-preview\"");
     expect(markup).toContain("7/8 graph predictors");
     expect(markup).toMatch(/data-process-control="true" disabled=""[^>]*><span>D<\/span>/);
     expect(markup).toContain("40 global listwise-complete cases");
-    expect(markup).toContain("Experimental");
-    expect(markup).toContain("<span>Supported setup</span>");
+    expect(markup).not.toContain("Experimental scope");
+    expect(markup).not.toContain("<span>Supported setup</span>");
     expect(markup).not.toMatch(/PROCESS model [0-9]+/i);
   });
 });

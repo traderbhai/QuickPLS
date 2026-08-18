@@ -74,6 +74,66 @@ const OUTPUT_COPY: Readonly<Record<string, string>> = Object.freeze({
   "smartpls.ipma": "Importance and performance tables and the corresponding map for each selected target.",
 });
 
+const SCOPE_COPY: Readonly<Record<string, string>> = Object.freeze({
+  "smartpls.pls_algorithm": "Recursive composite PLS path models using the calculation options offered in the current workspace.",
+  "smartpls.pls_power_analysis": "Prospective Monte Carlo power for exactly two ordinary reflective constructs joined by one predictor-to-outcome path under the declared Gaussian design without missing values.",
+  "smartpls.permutation": "Either two-group MICOM and permutation MGA, or single-model direct-path randomization using fixed converged PLS scores.",
+  "smartpls.cta_pls": "Descriptive sample-covariance tetrad diagnostics for eligible PLS blocks with at least four numeric indicators and the same complete cases as the associated PLS run.",
+  "smartpls.micom": "MICOM Steps 1–3 for exactly two selected groups under one shared no-retry permutation plan.",
+  "smartpls.mga": "Two-group permutation differences for paths, outer loadings, and outer weights under the shared MICOM plan.",
+  "smartpls.cbsem": "Raw-data, single-group, continuous reflective maximum-likelihood CFA or recursive SEM with listwise deletion and marker identification.",
+  "smartpls.pca_cbsem": "The standalone raw-data PCA workflow used before covariance-based modeling.",
+});
+
+const SETTINGS_COPY: Readonly<Record<string, string>> = Object.freeze({
+  "smartpls.pls_algorithm": "Choose the available weighting and preprocessing options. The run uses deterministic execution and records every setting.",
+  "smartpls.pls_power_analysis": "Declare the scenario, population path, loadings, sample-size grid, Monte Carlo replications, indexed bootstrap plan, seed, and workers.",
+  "smartpls.wpls": "Select a positive finite case-weight variable together with the available PLS weighting and preprocessing options.",
+  "smartpls.plsc": "Use reflective constructs with at least two indicators, path or factor weighting, and listwise preprocessing.",
+  "smartpls.pca_core": "Select 2–50 numeric variables and choose a fixed component count, cumulative-variance target, or Kaiser retention rule.",
+  "smartpls.pca_cbsem": "Select 2–50 numeric variables and choose a fixed component count, cumulative-variance target, or Kaiser retention rule.",
+  "smartpls.pls_bootstrapping": "Choose resamples, confidence level, seed, workers, and optional studentized inner samples. Percentile and conditional BCa results use the recorded indexed plan.",
+  "smartpls.consistent_bootstrapping": "Choose 1,000–10,000 indexed full-PLSc refits, confidence level, seed, and workers. The run reports normal-reference, percentile, and conditional BCa results.",
+  "smartpls.permutation": "Choose the permitted permutation count, seed, workers, and the group or single-model design required by the selected option.",
+  "smartpls.plspredict": "The fixed design uses balanced seeded 10-fold cross-validation with 10 repeats, IA and LM benchmarks, and a secondary modulo-4 holdout check.",
+  "smartpls.cvpat": "The fixed design compares one fitted model with IA and LM benchmarks using a one-sided test at 95% confidence.",
+  "smartpls.nca": "Select one numeric condition and outcome, ceiling method, permutation count, bottleneck levels, seed, and workers.",
+  "smartpls.regression": "Select one numeric outcome plus predictors and optional controls. Inference uses HC3 standard errors and fixed two-sided 95% intervals.",
+  "smartpls.logistic_regression": "Select an exactly 0/1 numeric outcome plus predictors and optional controls. Inference uses maximum-likelihood standard errors, Wald tests, and fixed two-sided 95% intervals.",
+  "smartpls.regression_bootstrapping": "Choose 1,000–10,000 case resamples, seed, and workers. Percentile intervals are primary and BCa is reported when the required delete-one fits are usable.",
+  "smartpls.process": "Draw the supported graph directly, select its observed-variable roles, and use the fixed HC3, Student-t, and 95% inference settings.",
+  "smartpls.process_bootstrapping": "Choose 1,000–10,000 complete-case resamples, seed, and workers. Percentile intervals are primary and BCa requires all required delete-one fits.",
+  "smartpls.cbsem": "The estimator is maximum likelihood with the first loading fixed to 1, no mean structure, unstandardized output, and listwise deletion.",
+  "smartpls.cfa": "The estimator is maximum likelihood with the first loading fixed to 1, no mean structure, unstandardized output, and listwise deletion.",
+  "smartpls.cbsem_bootstrapping": "Choose 500–10,000 indexed no-retry case refits and one fixed 95% interval design: percentile Type-7, analytic-studentized Type-7, or complete-delete-one BCa Type-7.",
+});
+
+const CAUTION_COPY: Readonly<Record<string, string>> = Object.freeze({
+  "smartpls.pls_power_analysis": "This is prospective design analysis, not retrospective observed power or a heuristic sample-size rule.",
+  "smartpls.wpls": "Every included case weight must be finite and greater than zero.",
+  "smartpls.pca_core": "Rotation and inferential resampling are not part of this PCA workflow.",
+  "smartpls.pca_cbsem": "Rotation and inferential resampling are not part of this PCA workflow.",
+  "smartpls.permutation": "This is not an unrestricted generic permutation procedure.",
+  "smartpls.cca": "The output is descriptive; it does not classify the measurement model or provide inferential decisions.",
+  "smartpls.cta_pls": "The output is descriptive; inferential decisions and automatic measurement classification are not provided.",
+  "smartpls.micom": "The workflow is limited to exactly two groups and does not provide consistent-MICOM variants.",
+  "smartpls.mga": "The workflow is limited to exactly two groups under the shared fixed permutation plan.",
+  "smartpls.plspredict": "Prediction targets are endogenous indicators; construct-score metrics are supplementary and saved-model comparison is not included.",
+  "smartpls.cvpat": "CVPAT compares one fitted model with IA and LM benchmarks; it does not compare saved models.",
+  "smartpls.ipma": "Performance uses 0–100 observed-range scaling of standardized composite scores; the target and unrelated constructs are omitted.",
+  "smartpls.higher_order_models": "This workflow supports one reflective–reflective disjoint two-stage construct; HOC bootstrap and permutation inference are not available.",
+  "smartpls.gsca": "Bootstrap inference is not part of the GSCA point-estimate workflow.",
+  "smartpls.logistic_regression": "The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, and Firth-corrected variants are not included.",
+  "smartpls.nca": "The workflow analyzes one observed condition/outcome pair and should not be interpreted as evidence of sufficiency.",
+  "smartpls.process": "Numbered PROCESS templates are not executed; author the supported continuous-outcome graph directly.",
+  "smartpls.process_bootstrapping": "Studentized intervals, one-tailed tests, and custom alpha are not included.",
+  "smartpls.regression": "Categorical encoding, weights, clusters, logistic regression, and PROCESS graphs are separate workflows.",
+  "smartpls.regression_bootstrapping": "Studentized intervals, one-tailed tests, and custom alpha are not included.",
+  "smartpls.cbsem": "Mean structures, robust or ordinal estimators, FIML, and invariance testing are separate or unavailable workflows.",
+  "smartpls.cfa": "Mean structures, robust or ordinal estimators, FIML, and invariance testing are separate or unavailable workflows.",
+  "smartpls.cbsem_bootstrapping": "Studentized and BCa options are CFA-only and enforce the displayed sample, variable, parameter, delete-one, and worker limits. Failed indexed refits are retained without retry.",
+});
+
 const PREDICATE_COPY: Readonly<Record<string, string>> = Object.freeze({
   "model_family:pls_sem": "A PLS-SEM model",
   "model_family:cbsem": "A covariance-based SEM model",
@@ -106,7 +166,13 @@ function requirementsText(row: CapabilityRegistryRowV2, cell: CapabilityOptionCe
     model.length > 0 ? `Model: ${model.join("; ")}.` : "",
     data.length > 0 ? `Data: ${data.join("; ")}.` : "",
   ].filter(Boolean);
-  return parts.join(" ") || `Use ${row.official_method} only with the model and data choices offered in Calculate.`;
+  const requirements = parts.join(" ") || `Use ${row.official_method} only with the model and data choices offered in Calculate.`;
+  const supportedUse = SCOPE_COPY[row.capability_id] ?? row.scope_statement
+    .replace(/^Release-qualified\s+/i, "")
+    .replace(/^Scoped Standard\s+/i, "")
+    .replace(/\bbounded\b/gi, "documented")
+    .trim();
+  return `${requirements} Supported use: ${supportedUse}`;
 }
 
 function availabilityMessage(availability: CapabilityAvailabilityV2): string {
@@ -131,10 +197,11 @@ function cautionText(
   availability: CapabilityAvailabilityV2,
 ): string {
   const useRequirement = `Use ${row.official_method} only when the listed model and data requirements match your study.`;
+  const methodCaution = CAUTION_COPY[row.capability_id];
   if (availability.visibility === "experimental") {
-    return `This option is Experimental. Independently check the result before final reporting. ${useRequirement}`;
+    return `This option is Experimental. Independently check the result before final reporting. ${useRequirement}${methodCaution ? ` ${methodCaution}` : ""}`;
   }
-  return useRequirement;
+  return `${useRequirement}${methodCaution ? ` ${methodCaution}` : ""}`;
 }
 
 function optionName(row: CapabilityRegistryRowV2): string {
@@ -157,7 +224,8 @@ function buildDetails(
       ?? `What ${row.official_method} estimates or assesses for the specified model and data.`,
     when_to_use: `Use it when ${row.official_method} directly matches the research question and every requirement below is satisfied.`,
     required_model_and_data: requirementsText(row, cell),
-    settings_and_defaults: "Calculate shows the available settings and their defaults. The completed run records every selected value.",
+    settings_and_defaults: SETTINGS_COPY[row.capability_id]
+      ?? "Calculate shows the available settings and their defaults. The completed run records every selected value.",
     outputs: OUTPUT_COPY[row.capability_id]
       ?? `The completed run contains the tables, charts, diagnostics, and exportable values available for ${row.official_method}.`,
     assumptions_and_cautions: cautionText(row, availability),

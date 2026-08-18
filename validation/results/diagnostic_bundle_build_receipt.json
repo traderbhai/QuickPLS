@@ -2,7 +2,7 @@
   "schema_version": "quickpls.diagnostic_bundle_build_receipt.v1",
   "kind": "quickpls_diagnostic_packaged_frozen_build_v1",
   "passed": true,
-  "generated_at_utc": "2026-08-18T12:54:25.063746Z",
+  "generated_at_utc": "2026-08-18T15:16:22.331646Z",
   "build_command": [
     "npm.cmd",
     "run",
@@ -10,10 +10,10 @@
     "--",
     "build"
   ],
-  "build_started_at_utc": "2026-08-18T12:49:22.023873Z",
-  "build_finished_at_utc": "2026-08-18T12:54:22.306208Z",
-  "build_started_unix_ns": 1787057362023866500,
-  "build_finished_unix_ns": 1787057662306200500,
+  "build_started_at_utc": "2026-08-18T15:10:53.196955Z",
+  "build_finished_at_utc": "2026-08-18T15:16:19.381180Z",
+  "build_started_unix_ns": 1787065853196944400,
+  "build_finished_unix_ns": 1787066179381151600,
   "build_exit_code": 0,
   "source_before": {
     "discovery": {
@@ -1729,15 +1729,15 @@
       },
       {
         "path": "src/domain/methodDetailsV2.test.ts",
-        "size": 4923,
-        "sha256": "feb500abe40963c503131eb63b9b313534530f18611652d6cba7f944fc02c88d",
-        "mtime_ns": 1787002677093512600
+        "size": 5834,
+        "sha256": "7872c2bf5e01c3e9edd28e44b6a993712a067cc81ab21c4bdd5861586f09207e",
+        "mtime_ns": 1787065469713249000
       },
       {
         "path": "src/domain/methodDetailsV2.ts",
-        "size": 12225,
-        "sha256": "307ab61e3ff104c9903a18c3a523e5ad9175d242b072ae328fec10a6b3588124",
-        "mtime_ns": 1787002613055685600
+        "size": 20426,
+        "sha256": "d10bb28e617c934c92bb89a40f74843bd5c8bae940f7af6ae905e83ab2d8bb72",
+        "mtime_ns": 1787064541867017200
       },
       {
         "path": "src/domain/methodStatus.test.ts",
@@ -2059,15 +2059,15 @@
       },
       {
         "path": "src/native/NativeCalculationDialog.test.ts",
-        "size": 52360,
-        "sha256": "4294e5ee8618b090289ef68f1c77a1d3fe3902c830b4aa5972a5516a35b8c8b7",
-        "mtime_ns": 1787000964127142800
+        "size": 52144,
+        "sha256": "97bdf26670c7238175cbb85a5e26a7d3fcce1aa1d6cf3f7660e5f9e2beff7e53",
+        "mtime_ns": 1787065281100449500
       },
       {
         "path": "src/native/NativeCalculationDialog.tsx",
-        "size": 100621,
-        "sha256": "0ebb537485efa93f1877b7452c00c66026c4a9f524cf24866440d4675a35da97",
-        "mtime_ns": 1787018221252733900
+        "size": 84939,
+        "sha256": "4bfa68f038137f1fd8c3f3e66b8d87c11a7303e9ddce4845be80bd105c33f85b",
+        "mtime_ns": 1787065020459511900
       },
       {
         "path": "src/native/NativeDataImportDialog.tsx",
@@ -2107,9 +2107,9 @@
       },
       {
         "path": "src/native/NativeDesktopApp.tsx",
-        "size": 105025,
-        "sha256": "a2a89de40c9104d0d6cee8e582746681f15dba8822ad2bc8701169d0a392e635",
-        "mtime_ns": 1786999181311762700
+        "size": 104317,
+        "sha256": "a98e39ed360619e816a36931fd0e423923ec7f01097632f7d1fe3e45e457fe5b",
+        "mtime_ns": 1787064649736287000
       },
       {
         "path": "src/native/NativeDesktopController.tsx",
@@ -2131,39 +2131,39 @@
       },
       {
         "path": "src/native/NativeGroupSetupDialog.test.tsx",
-        "size": 3609,
-        "sha256": "826e979d8eca04edafb73e729a0b6e890eca6c5d1cb5bbca421855eb5f20851c",
-        "mtime_ns": 1786904351374673100
+        "size": 3625,
+        "sha256": "045194109d8cec6847c1d7802cffaabcdca04de1278ac75a5676ac8955249f01",
+        "mtime_ns": 1787065245443956100
       },
       {
         "path": "src/native/NativeGroupSetupDialog.tsx",
-        "size": 11821,
-        "sha256": "2d9a4627d5dd232170c19ca8d9074d998e77ef9488a6e6792cdbe40790e18d5c",
-        "mtime_ns": 1786904351372667600
+        "size": 11295,
+        "sha256": "ea27db04eb595e0a0932b83ff9bcc5a46e65dc2353ab3a90663f9ede6f3dbab9",
+        "mtime_ns": 1787064923218004600
       },
       {
         "path": "src/native/NativeHigherOrderDialog.test.tsx",
-        "size": 1671,
-        "sha256": "89f8d975a7871a251a445598fd1d28edd94475e502b9978430c3153f8037d36c",
-        "mtime_ns": 1786911877623451700
+        "size": 1812,
+        "sha256": "211588584de4a04bd10bbc80df4974ff2e1e864975c1bccaef140f7c31569a99",
+        "mtime_ns": 1787065281741501200
       },
       {
         "path": "src/native/NativeHigherOrderDialog.tsx",
-        "size": 4450,
-        "sha256": "bae5a0b5963c173a6b7657dde82cb6e18d1243e4c775ace65853ac4db40e82c7",
-        "mtime_ns": 1786911877621449200
+        "size": 4122,
+        "sha256": "f2c244b83d81092548465ea2952b67e8c048c13c7f67d4668130904672850e35",
+        "mtime_ns": 1787064923857754500
       },
       {
         "path": "src/native/NativeModelInspector.test.tsx",
-        "size": 13324,
-        "sha256": "98245f92ac479ef0f3130d7fc2795280807812ed5d4d0f80bd5df4fe82c3a705",
-        "mtime_ns": 1786915663960499100
+        "size": 13336,
+        "sha256": "09c5ec79a7ef5969f1b6dcb1d4d0eaf5f09558186fa73f64ad31d80d6d79a821",
+        "mtime_ns": 1787065247558074900
       },
       {
         "path": "src/native/NativeModelInspector.tsx",
-        "size": 35873,
-        "sha256": "f485f7564265e5d711c817a12050a20170185f15cd56d093a85a0ebb907fab2d",
-        "mtime_ns": 1786915663960499100
+        "size": 35440,
+        "sha256": "76fa99472850fa57420f7b06648a65994b9d285c2d1ad803e9a185e32fb3596b",
+        "mtime_ns": 1787064925221293200
       },
       {
         "path": "src/native/NativeModerationDialog.test.tsx",
@@ -2179,9 +2179,9 @@
       },
       {
         "path": "src/native/NativeProcessSetup.tsx",
-        "size": 23490,
-        "sha256": "70fe88737bd4a6f72ba883b9c8bbd080b5d94abdb2ee07908a66954d5e98b1ef",
-        "mtime_ns": 1786697475527665500
+        "size": 22918,
+        "sha256": "61791ee1056c45dd152784d38ab6c7fa5913be5ebea3dbec106f099754918a46",
+        "mtime_ns": 1787064830796782100
       },
       {
         "path": "src/native/NativeProcessSurface.test.tsx",
@@ -2191,15 +2191,15 @@
       },
       {
         "path": "src/native/NativeRecipeV4CbsemWorkspace.test.tsx",
-        "size": 10638,
-        "sha256": "61d0917b3a2a17cd6f28722fcb680132f7d0674508ba6442fb1bb912b19e14c1",
-        "mtime_ns": 1787011577546704600
+        "size": 10642,
+        "sha256": "a2079bf81b5b4bf0bccda83c3b0b432fc53fcd199848f4542611f9c7f17b170b",
+        "mtime_ns": 1787065246098306900
       },
       {
         "path": "src/native/NativeRecipeV4CbsemWorkspace.tsx",
-        "size": 43571,
-        "sha256": "9d0f8464083b1775c7205ae5930c1635785312f02829b856a804bdf905d9c21b",
-        "mtime_ns": 1787011576843135100
+        "size": 42602,
+        "sha256": "c751c0e766a69f466a79909be25a2f951e677e51c31189fa0892cdc06f1e1fb9",
+        "mtime_ns": 1787064924553080800
       },
       {
         "path": "src/native/NativeRecodeDialog.test.ts",
@@ -2263,15 +2263,15 @@
       },
       {
         "path": "src/native/NativeUtilityDialog.test.tsx",
-        "size": 3916,
-        "sha256": "e5596211b446ff12b5d87ee7f47a65d7bfbac6cfbba33254b69eb4218864cfab",
-        "mtime_ns": 1786754621648539200
+        "size": 4041,
+        "sha256": "b97cac92e74b155ecc665d3fafce77bd264cad5246bf784ee82f58e4a85ca8ac",
+        "mtime_ns": 1787065246836631700
       },
       {
         "path": "src/native/NativeUtilityDialog.tsx",
-        "size": 6904,
-        "sha256": "be30413b79d88ce4b8946b3dd1c5774758140493969dbee10939f25d8bc32990",
-        "mtime_ns": 1786754621644840400
+        "size": 6994,
+        "sha256": "2aa437a462663abb4d3703ac37f760dee7057ba5d78ebbb388a8e9c2e986ab5f",
+        "mtime_ns": 1787064558110122700
       },
       {
         "path": "src/native/NativeWorkspaceExplorer.test.tsx",
@@ -2581,9 +2581,9 @@
       },
       {
         "path": "src/native/nativeDesktop.css",
-        "size": 100019,
-        "sha256": "fc2c0954d2c2637f9b9f2fc44135847a3145b535dbba458cfab1e231d9276c18",
-        "mtime_ns": 1787011163186649900
+        "size": 99442,
+        "sha256": "5fddd14c6df7bbc437fad30eb4b10747e0f1963c51f4fb2170bdd83cb4a9a25a",
+        "mtime_ns": 1787064964752112900
       },
       {
         "path": "src/native/nativeEndogeneity.test.ts",
@@ -2815,9 +2815,9 @@
       },
       {
         "path": "src/native/nativeProcessAuthoring.test.tsx",
-        "size": 6142,
-        "sha256": "48c78a4a8c675f8f396830fbf5a08b4b1f4409fe3aa798fc6e996f7bca4ea3d2",
-        "mtime_ns": 1787002572403601000
+        "size": 6160,
+        "sha256": "a87c8bd40c357a9b19a93307f55031d63da4c5261e5cc535a359fe444f8e09df",
+        "mtime_ns": 1787065248271949500
       },
       {
         "path": "src/native/nativeProcessResults.test.ts",
@@ -2893,15 +2893,15 @@
       },
       {
         "path": "src/native/nativeResults.test.ts",
-        "size": 173105,
-        "sha256": "3476f90afc93fcb4882e3cbb84bdc487be9d398b04472fe302ef009d1201c268",
-        "mtime_ns": 1787018091990384300
+        "size": 172151,
+        "sha256": "aeb02ee55ad7ab8f68a6201c95121d3c24f884669a8273b4a8358a4d405e2063",
+        "mtime_ns": 1787065663207646800
       },
       {
         "path": "src/native/nativeResults.ts",
-        "size": 350624,
-        "sha256": "86159a6227f9c404ba7056f7002ccc8ccd637c003489e1e4cb1b5328275c4007",
-        "mtime_ns": 1786997203703882300
+        "size": 349517,
+        "sha256": "765cb115aeb7e44e6ac987abebf6a742cb04bd111249359d6fe228bb5ba60f7c",
+        "mtime_ns": 1787065634086750700
       },
       {
         "path": "src/native/nativeRunModelSnapshot.test.ts",
@@ -3210,7 +3210,7 @@
         "mtime_ns": 1784428287100314300
       }
     ],
-    "manifest_sha256": "16765bfd7ca08028e3e8c2a1ac4cced320ee23aee7a2493334138911b5551fdf"
+    "manifest_sha256": "aecfa7d3695d338d69fd256c4e627e31f196c1288520d6f144f53cdfaedbfec9"
   },
   "source_after": {
     "discovery": {
@@ -4926,15 +4926,15 @@
       },
       {
         "path": "src/domain/methodDetailsV2.test.ts",
-        "size": 4923,
-        "sha256": "feb500abe40963c503131eb63b9b313534530f18611652d6cba7f944fc02c88d",
-        "mtime_ns": 1787002677093512600
+        "size": 5834,
+        "sha256": "7872c2bf5e01c3e9edd28e44b6a993712a067cc81ab21c4bdd5861586f09207e",
+        "mtime_ns": 1787065469713249000
       },
       {
         "path": "src/domain/methodDetailsV2.ts",
-        "size": 12225,
-        "sha256": "307ab61e3ff104c9903a18c3a523e5ad9175d242b072ae328fec10a6b3588124",
-        "mtime_ns": 1787002613055685600
+        "size": 20426,
+        "sha256": "d10bb28e617c934c92bb89a40f74843bd5c8bae940f7af6ae905e83ab2d8bb72",
+        "mtime_ns": 1787064541867017200
       },
       {
         "path": "src/domain/methodStatus.test.ts",
@@ -5256,15 +5256,15 @@
       },
       {
         "path": "src/native/NativeCalculationDialog.test.ts",
-        "size": 52360,
-        "sha256": "4294e5ee8618b090289ef68f1c77a1d3fe3902c830b4aa5972a5516a35b8c8b7",
-        "mtime_ns": 1787000964127142800
+        "size": 52144,
+        "sha256": "97bdf26670c7238175cbb85a5e26a7d3fcce1aa1d6cf3f7660e5f9e2beff7e53",
+        "mtime_ns": 1787065281100449500
       },
       {
         "path": "src/native/NativeCalculationDialog.tsx",
-        "size": 100621,
-        "sha256": "0ebb537485efa93f1877b7452c00c66026c4a9f524cf24866440d4675a35da97",
-        "mtime_ns": 1787018221252733900
+        "size": 84939,
+        "sha256": "4bfa68f038137f1fd8c3f3e66b8d87c11a7303e9ddce4845be80bd105c33f85b",
+        "mtime_ns": 1787065020459511900
       },
       {
         "path": "src/native/NativeDataImportDialog.tsx",
@@ -5304,9 +5304,9 @@
       },
       {
         "path": "src/native/NativeDesktopApp.tsx",
-        "size": 105025,
-        "sha256": "a2a89de40c9104d0d6cee8e582746681f15dba8822ad2bc8701169d0a392e635",
-        "mtime_ns": 1786999181311762700
+        "size": 104317,
+        "sha256": "a98e39ed360619e816a36931fd0e423923ec7f01097632f7d1fe3e45e457fe5b",
+        "mtime_ns": 1787064649736287000
       },
       {
         "path": "src/native/NativeDesktopController.tsx",
@@ -5328,39 +5328,39 @@
       },
       {
         "path": "src/native/NativeGroupSetupDialog.test.tsx",
-        "size": 3609,
-        "sha256": "826e979d8eca04edafb73e729a0b6e890eca6c5d1cb5bbca421855eb5f20851c",
-        "mtime_ns": 1786904351374673100
+        "size": 3625,
+        "sha256": "045194109d8cec6847c1d7802cffaabcdca04de1278ac75a5676ac8955249f01",
+        "mtime_ns": 1787065245443956100
       },
       {
         "path": "src/native/NativeGroupSetupDialog.tsx",
-        "size": 11821,
-        "sha256": "2d9a4627d5dd232170c19ca8d9074d998e77ef9488a6e6792cdbe40790e18d5c",
-        "mtime_ns": 1786904351372667600
+        "size": 11295,
+        "sha256": "ea27db04eb595e0a0932b83ff9bcc5a46e65dc2353ab3a90663f9ede6f3dbab9",
+        "mtime_ns": 1787064923218004600
       },
       {
         "path": "src/native/NativeHigherOrderDialog.test.tsx",
-        "size": 1671,
-        "sha256": "89f8d975a7871a251a445598fd1d28edd94475e502b9978430c3153f8037d36c",
-        "mtime_ns": 1786911877623451700
+        "size": 1812,
+        "sha256": "211588584de4a04bd10bbc80df4974ff2e1e864975c1bccaef140f7c31569a99",
+        "mtime_ns": 1787065281741501200
       },
       {
         "path": "src/native/NativeHigherOrderDialog.tsx",
-        "size": 4450,
-        "sha256": "bae5a0b5963c173a6b7657dde82cb6e18d1243e4c775ace65853ac4db40e82c7",
-        "mtime_ns": 1786911877621449200
+        "size": 4122,
+        "sha256": "f2c244b83d81092548465ea2952b67e8c048c13c7f67d4668130904672850e35",
+        "mtime_ns": 1787064923857754500
       },
       {
         "path": "src/native/NativeModelInspector.test.tsx",
-        "size": 13324,
-        "sha256": "98245f92ac479ef0f3130d7fc2795280807812ed5d4d0f80bd5df4fe82c3a705",
-        "mtime_ns": 1786915663960499100
+        "size": 13336,
+        "sha256": "09c5ec79a7ef5969f1b6dcb1d4d0eaf5f09558186fa73f64ad31d80d6d79a821",
+        "mtime_ns": 1787065247558074900
       },
       {
         "path": "src/native/NativeModelInspector.tsx",
-        "size": 35873,
-        "sha256": "f485f7564265e5d711c817a12050a20170185f15cd56d093a85a0ebb907fab2d",
-        "mtime_ns": 1786915663960499100
+        "size": 35440,
+        "sha256": "76fa99472850fa57420f7b06648a65994b9d285c2d1ad803e9a185e32fb3596b",
+        "mtime_ns": 1787064925221293200
       },
       {
         "path": "src/native/NativeModerationDialog.test.tsx",
@@ -5376,9 +5376,9 @@
       },
       {
         "path": "src/native/NativeProcessSetup.tsx",
-        "size": 23490,
-        "sha256": "70fe88737bd4a6f72ba883b9c8bbd080b5d94abdb2ee07908a66954d5e98b1ef",
-        "mtime_ns": 1786697475527665500
+        "size": 22918,
+        "sha256": "61791ee1056c45dd152784d38ab6c7fa5913be5ebea3dbec106f099754918a46",
+        "mtime_ns": 1787064830796782100
       },
       {
         "path": "src/native/NativeProcessSurface.test.tsx",
@@ -5388,15 +5388,15 @@
       },
       {
         "path": "src/native/NativeRecipeV4CbsemWorkspace.test.tsx",
-        "size": 10638,
-        "sha256": "61d0917b3a2a17cd6f28722fcb680132f7d0674508ba6442fb1bb912b19e14c1",
-        "mtime_ns": 1787011577546704600
+        "size": 10642,
+        "sha256": "a2079bf81b5b4bf0bccda83c3b0b432fc53fcd199848f4542611f9c7f17b170b",
+        "mtime_ns": 1787065246098306900
       },
       {
         "path": "src/native/NativeRecipeV4CbsemWorkspace.tsx",
-        "size": 43571,
-        "sha256": "9d0f8464083b1775c7205ae5930c1635785312f02829b856a804bdf905d9c21b",
-        "mtime_ns": 1787011576843135100
+        "size": 42602,
+        "sha256": "c751c0e766a69f466a79909be25a2f951e677e51c31189fa0892cdc06f1e1fb9",
+        "mtime_ns": 1787064924553080800
       },
       {
         "path": "src/native/NativeRecodeDialog.test.ts",
@@ -5460,15 +5460,15 @@
       },
       {
         "path": "src/native/NativeUtilityDialog.test.tsx",
-        "size": 3916,
-        "sha256": "e5596211b446ff12b5d87ee7f47a65d7bfbac6cfbba33254b69eb4218864cfab",
-        "mtime_ns": 1786754621648539200
+        "size": 4041,
+        "sha256": "b97cac92e74b155ecc665d3fafce77bd264cad5246bf784ee82f58e4a85ca8ac",
+        "mtime_ns": 1787065246836631700
       },
       {
         "path": "src/native/NativeUtilityDialog.tsx",
-        "size": 6904,
-        "sha256": "be30413b79d88ce4b8946b3dd1c5774758140493969dbee10939f25d8bc32990",
-        "mtime_ns": 1786754621644840400
+        "size": 6994,
+        "sha256": "2aa437a462663abb4d3703ac37f760dee7057ba5d78ebbb388a8e9c2e986ab5f",
+        "mtime_ns": 1787064558110122700
       },
       {
         "path": "src/native/NativeWorkspaceExplorer.test.tsx",
@@ -5778,9 +5778,9 @@
       },
       {
         "path": "src/native/nativeDesktop.css",
-        "size": 100019,
-        "sha256": "fc2c0954d2c2637f9b9f2fc44135847a3145b535dbba458cfab1e231d9276c18",
-        "mtime_ns": 1787011163186649900
+        "size": 99442,
+        "sha256": "5fddd14c6df7bbc437fad30eb4b10747e0f1963c51f4fb2170bdd83cb4a9a25a",
+        "mtime_ns": 1787064964752112900
       },
       {
         "path": "src/native/nativeEndogeneity.test.ts",
@@ -6012,9 +6012,9 @@
       },
       {
         "path": "src/native/nativeProcessAuthoring.test.tsx",
-        "size": 6142,
-        "sha256": "48c78a4a8c675f8f396830fbf5a08b4b1f4409fe3aa798fc6e996f7bca4ea3d2",
-        "mtime_ns": 1787002572403601000
+        "size": 6160,
+        "sha256": "a87c8bd40c357a9b19a93307f55031d63da4c5261e5cc535a359fe444f8e09df",
+        "mtime_ns": 1787065248271949500
       },
       {
         "path": "src/native/nativeProcessResults.test.ts",
@@ -6090,15 +6090,15 @@
       },
       {
         "path": "src/native/nativeResults.test.ts",
-        "size": 173105,
-        "sha256": "3476f90afc93fcb4882e3cbb84bdc487be9d398b04472fe302ef009d1201c268",
-        "mtime_ns": 1787018091990384300
+        "size": 172151,
+        "sha256": "aeb02ee55ad7ab8f68a6201c95121d3c24f884669a8273b4a8358a4d405e2063",
+        "mtime_ns": 1787065663207646800
       },
       {
         "path": "src/native/nativeResults.ts",
-        "size": 350624,
-        "sha256": "86159a6227f9c404ba7056f7002ccc8ccd637c003489e1e4cb1b5328275c4007",
-        "mtime_ns": 1786997203703882300
+        "size": 349517,
+        "sha256": "765cb115aeb7e44e6ac987abebf6a742cb04bd111249359d6fe228bb5ba60f7c",
+        "mtime_ns": 1787065634086750700
       },
       {
         "path": "src/native/nativeRunModelSnapshot.test.ts",
@@ -6407,134 +6407,134 @@
         "mtime_ns": 1784428287100314300
       }
     ],
-    "manifest_sha256": "16765bfd7ca08028e3e8c2a1ac4cced320ee23aee7a2493334138911b5551fdf"
+    "manifest_sha256": "aecfa7d3695d338d69fd256c4e627e31f196c1288520d6f144f53cdfaedbfec9"
   },
   "source_stable_during_build": true,
   "dist_after": {
     "descriptors": [
       {
-        "path": "dist/assets/NativeCalculationDialog-DUmbxsTj.js",
-        "size": 67846,
-        "sha256": "f372826a4a196668ef0bda364ee447b4a81a6c504d734ea3b36fd422604a1626",
-        "mtime_ns": 1787057380790153100
+        "path": "dist/assets/NativeCalculationDialog-vLF9bqsh.js",
+        "size": 56166,
+        "sha256": "523bf5b313bd8c65c057990378fa04f412a8c8ae814256b248b9e55deb8003c3",
+        "mtime_ns": 1787065874758786700
       },
       {
-        "path": "dist/assets/NativeExportDialog-CMnug-uT.js",
+        "path": "dist/assets/NativeExportDialog-DCn3edZF.js",
         "size": 5329,
-        "sha256": "3e582cdb4f489aa86ddb2fb7f2d694b82da493358c917785b7e977aa2d5aa5dc",
-        "mtime_ns": 1787057380790153100
+        "sha256": "22c10808be29c0732a02222c201403dc1aebf7581f59e9c1076b658d6faff628",
+        "mtime_ns": 1787065874758786700
       },
       {
-        "path": "dist/assets/NativeGroupSetupDialog-B-zMqU4I.js",
-        "size": 6807,
-        "sha256": "882bfd8cab7eb5c3d8c1d51d75587385106f4a646e8c40ed9e622678eb041a9b",
-        "mtime_ns": 1787057380790153100
+        "path": "dist/assets/NativeGroupSetupDialog-BK_n2aNd.js",
+        "size": 6236,
+        "sha256": "e3cab9f9b54bb9fb9b9213f6efe2e833d9052ab42e8739f142dedfec7a5d5958",
+        "mtime_ns": 1787065874758786700
       },
       {
-        "path": "dist/assets/NativeHigherOrderDialog-DXoMqdTP.js",
-        "size": 2921,
-        "sha256": "f77ee4364421f29a7d1fe0c4af2d4948e95bf15383fb74c2cfd21a466a4d10fd",
-        "mtime_ns": 1787057380790153100
+        "path": "dist/assets/NativeHigherOrderDialog-DsviyDTI.js",
+        "size": 2580,
+        "sha256": "dc2befdf98a4e6b7ef899e254bb0e1c3cb5057010480a424ba5bc5c953dcaa06",
+        "mtime_ns": 1787065874758786700
       },
       {
-        "path": "dist/assets/NativeModerationDialog-DAf_lZbj.js",
+        "path": "dist/assets/NativeModerationDialog-DZW5XXYX.js",
         "size": 3070,
-        "sha256": "020ee7e2c4d17b99ea43929d093ba2232819a1e280a894e9ace79764bd6a01b0",
-        "mtime_ns": 1787057380790153100
+        "sha256": "5d74cd7af73b51852a6cd634703bd2cd17cbe4a1202ed7eb2fc71bd3f55e42f3",
+        "mtime_ns": 1787065874758786700
       },
       {
-        "path": "dist/assets/NativeResultsSurface-DzKE0-53.js",
+        "path": "dist/assets/NativeResultsSurface-BmcP9pKT.js",
         "size": 32644,
-        "sha256": "9431738fbd3da01babd5a1a1d262e68da515a85a0d77929b03b5597a9b77f3e9",
-        "mtime_ns": 1787057380789156400
+        "sha256": "b4ca1385a6de82aa1f51dab0052f819502baa82c92120765ece6833e67db9bd1",
+        "mtime_ns": 1787065874757414000
       },
       {
-        "path": "dist/assets/NativeUtilityDialog-DF4n3ckD.js",
-        "size": 24365,
-        "sha256": "f889bbbdbd3951b5157c0db1da89dcc6c5ab70eb39ffd8104114569002f40ee7",
-        "mtime_ns": 1787057380790153100
+        "path": "dist/assets/NativeUtilityDialog-KqrvBKwb.js",
+        "size": 32066,
+        "sha256": "77b74cdee518a7f8e39b4cfa1bdd21f8323ebad6c7af69d699b05d291c3e0a68",
+        "mtime_ns": 1787065874758786700
       },
       {
         "path": "dist/assets/flow-BnuhLJ6X.css",
         "size": 15869,
         "sha256": "1243b61a71923367ce620fb944427c80c9b03e863e18374fcf4f74d6d06f63fc",
-        "mtime_ns": 1787057380788152100
+        "mtime_ns": 1787065874753524500
       },
       {
         "path": "dist/assets/flow-DG_yhx79.js",
         "size": 84113,
         "sha256": "bc613b2f8b6af00ce0d183175180163e8d5c915dbfbe86518a803d95d7d44ba3",
-        "mtime_ns": 1787057380789156400
+        "mtime_ns": 1787065874757414000
       },
       {
         "path": "dist/assets/icons-Y9nJPltI.js",
         "size": 23471,
         "sha256": "44155ca0d3836bdee82cfa6034cd25738f5ae4688b880e896908a218ada17721",
-        "mtime_ns": 1787057380789156400
+        "mtime_ns": 1787065874757414000
       },
       {
-        "path": "dist/assets/index-BvBkp0W8.js",
-        "size": 1552889,
-        "sha256": "a40515133f3b5658585c7d771f0d8082e718aad930d884880b698bec5c28a5e6",
-        "mtime_ns": 1787057380793056400
+        "path": "dist/assets/index-7kENRxmh.js",
+        "size": 1547946,
+        "sha256": "02abf53208024aa35cc19a87c4215876cae42ac452ed83c275c119ec7e17f5ed",
+        "mtime_ns": 1787065874760244100
       },
       {
-        "path": "dist/assets/index-ClBrB-uD.css",
-        "size": 107701,
-        "sha256": "38d93b5265523c9836ac53141d9ebeca8e1609f3c42f8e1baade66dcfd9f9074",
-        "mtime_ns": 1787057380788152100
+        "path": "dist/assets/index-DCCOGUBY.css",
+        "size": 107180,
+        "sha256": "9b893f74f9bd93d5019ced6d3052fa4428ca1d6a71a971e6b2c7a301133f68a4",
+        "mtime_ns": 1787065874757414000
       },
       {
         "path": "dist/assets/largeModelSmoke-ChuXLqDH.js",
         "size": 983,
         "sha256": "fb24e9dddb7e5a48ae648cf23391b83a80e40d05f57cc3ef1f025cb6fbf1d22d",
-        "mtime_ns": 1787057380790153100
+        "mtime_ns": 1787065874758786700
       },
       {
         "path": "dist/assets/nativeMga-CQPrK7Ua.js",
         "size": 3745,
         "sha256": "e14a6c3728b9d157839875d8de4ae3128abce2f863458d143b8b3860520eb0fd",
-        "mtime_ns": 1787057380790153100
+        "mtime_ns": 1787065874758786700
       },
       {
-        "path": "dist/assets/publicationDiagram-BkF94kBm.js",
+        "path": "dist/assets/publicationDiagram-BE6hmvMW.js",
         "size": 8679,
-        "sha256": "d442211ac93704f176b57036ce8eb758e951fd72f6763394ceb282de9e7a0beb",
-        "mtime_ns": 1787057380790153100
+        "sha256": "9df325a3512c1875bceb611c70952740bf409e5cb16c474d6948644aa9b0517c",
+        "mtime_ns": 1787065874758786700
       },
       {
         "path": "dist/assets/smokeRun-DsBvJjQf.js",
         "size": 7145,
         "sha256": "e2b3a0beddc1838c8975b86fe64d9eb33af8f0ad4669b58db797ecef2214c718",
-        "mtime_ns": 1787057380790153100
+        "mtime_ns": 1787065874758786700
       },
       {
         "path": "dist/assets/tauri-CZBL8huA.js",
         "size": 15818,
         "sha256": "8fbb85b9879fc37af89bc405134891d8b7dec19829e03c6d7900ba79f71dbe77",
-        "mtime_ns": 1787057380789156400
+        "mtime_ns": 1787065874757414000
       },
       {
         "path": "dist/assets/vendor-DAfPu0rL.js",
         "size": 317222,
         "sha256": "61f10878d1ededa46b28c7b00d59492a03bbc88f903ea4a7a4fd5b5818d1d1c2",
-        "mtime_ns": 1787057380790153100
+        "mtime_ns": 1787065874757414000
       },
       {
         "path": "dist/index.html",
         "size": 821,
-        "sha256": "88071d1a5c606db7a34b5995a808895b5fc3d714597a51f2c674205ede153e0e",
-        "mtime_ns": 1787057380793056400
+        "sha256": "e5990c5f9af531317344a50c904b459647218b9eac4d417c0a8ece3120f46ba6",
+        "mtime_ns": 1787065874760244100
       }
     ],
-    "manifest_sha256": "5e9d389a340fc2da587772f23401460bf573eaa57b65187497f5b298e2085ef9"
+    "manifest_sha256": "f18dcf137b9daf1a844c7433f22b6793c95f61e1b9dd552d43911fe9469b3ba5"
   },
   "cargo_dep_info": {
     "descriptor": {
       "path": "target/release/quickpls-desktop.d",
       "size": 8840,
-      "sha256": "dfb983a6e487ecca84d964133ca7819401ecdf02ac12486d0b4be891a2bf8102",
-      "mtime_ns": 1787057526864146400
+      "sha256": "0e07ec65e37932f09a343390f12cec80a71ca76dcd65160cfcf94501fd3fe540",
+      "mtime_ns": 1787066045618100500
     },
     "repository_dependency_paths": [
       "THIRD_PARTY_NOTICES.md",
@@ -6589,21 +6589,21 @@
       "crates/qpls-runner/src/recipe_v4_cbsem_execution.rs",
       "crates/qpls-runner/src/recipe_v4_cbsem_product_indicator_execution.rs",
       "crates/qpls-runner/src/recipe_v4_pls_execution.rs",
-      "dist/assets/NativeCalculationDialog-DUmbxsTj.js",
-      "dist/assets/NativeExportDialog-CMnug-uT.js",
-      "dist/assets/NativeGroupSetupDialog-B-zMqU4I.js",
-      "dist/assets/NativeHigherOrderDialog-DXoMqdTP.js",
-      "dist/assets/NativeModerationDialog-DAf_lZbj.js",
-      "dist/assets/NativeResultsSurface-DzKE0-53.js",
-      "dist/assets/NativeUtilityDialog-DF4n3ckD.js",
+      "dist/assets/NativeCalculationDialog-vLF9bqsh.js",
+      "dist/assets/NativeExportDialog-DCn3edZF.js",
+      "dist/assets/NativeGroupSetupDialog-BK_n2aNd.js",
+      "dist/assets/NativeHigherOrderDialog-DsviyDTI.js",
+      "dist/assets/NativeModerationDialog-DZW5XXYX.js",
+      "dist/assets/NativeResultsSurface-BmcP9pKT.js",
+      "dist/assets/NativeUtilityDialog-KqrvBKwb.js",
       "dist/assets/flow-BnuhLJ6X.css",
       "dist/assets/flow-DG_yhx79.js",
       "dist/assets/icons-Y9nJPltI.js",
-      "dist/assets/index-BvBkp0W8.js",
-      "dist/assets/index-ClBrB-uD.css",
+      "dist/assets/index-7kENRxmh.js",
+      "dist/assets/index-DCCOGUBY.css",
       "dist/assets/largeModelSmoke-ChuXLqDH.js",
       "dist/assets/nativeMga-CQPrK7Ua.js",
-      "dist/assets/publicationDiagram-BkF94kBm.js",
+      "dist/assets/publicationDiagram-BE6hmvMW.js",
       "dist/assets/smokeRun-DsBvJjQf.js",
       "dist/assets/tauri-CZBL8huA.js",
       "dist/assets/vendor-DAfPu0rL.js",
@@ -6630,24 +6630,24 @@
       "src-tauri/tauri.conf.json",
       "target/release/build/quickpls-desktop-5403f0f184d77c24/out/b507f2d6327216dfb0d3dcd2d704e1a885ba5f13918f7b8165ff1458c4fa843d",
       "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/261c69729e66a5ba87fc9631111f2132621a18ed9fe90e5ec7cd707f7dfbf046.js",
-      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/2c23f2af277ca79edfac646fd95e2bd50d89aedbb20742a964806f6e134901f7.js",
+      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/337b9fa914d7fbbeafdaf648ad3e81dbb35bd26c77a58bd91636bd19427955cb.js",
       "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/3a509c84ede17da506648e9cfeba8325842885758652d711b36f9849ab26abf7.js",
-      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/425f74bf2f7eda5b73854b1021117202527bc5b28c3244c9be2c66cacf7decf2.js",
       "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/611ad10961b3bae7e51345bac134dd5da0016d2de4c1eb4c4bcfd32c05ff5495.js",
+      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/6d83b5ba9a8d142aa111d697164ae3812f288d8eb577dafe766940163faae88e.js",
+      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/6ff1c7785b42460e9480e0e93a8d0c14cceab105b97b29d6d450f7000e6b2efc.js",
+      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/725ade0a3706e91e496dc89056531058260406ebfca3f2d92f4b8319f3b53da1.js",
       "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/7310118ed36fa74195e89ed644a6a25cf70528f7540f5ec116cb64272e78dd64.js",
-      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/78f386cedd80bdf1380f65c887f4bf7e247efc388e0f894a69c66204e9d1804e.js",
-      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/7a7c414235b7bd00bcd7f2c259d210198a55d429eda23b2e6c81d1fab9776fde.js",
+      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/8006df9a726cff7ba01b416255593e9016731f38c20c1d61b17ea370c4c2540f.css",
       "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/84c454e5a0c4fa69b0c70cf4b6a47870e5bffdca5422617ab25a6c6b059a8603.js",
-      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/86b39572e82fe07ec9eac3f070dea4636e55c19d2d9822984b3d173ef2b0c8e0.js",
+      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/8947a304011dfc347a9b50a7d87e35e355f67efc9a09fd704ca75a2fcd79e8ff.html",
       "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/8db30889cd25dc6d35ba6dcd10a9b586292a2a554be1f6b7043811cbdbd1f40f.js",
-      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/8fa1f9fc41165575186f99be725de5bfb69d50aa19a07a7eac130b8084b5ecef.js",
-      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/995504815666c9d5a2b3a982f9a83488b263a06bb3f8ca736eb44ecfbd81c5cd.js",
-      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/a7130554482935a19b116f91a9889719a384d2cb48126f0d851c609415ed3796.css",
+      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/9bd8dc24f15ac2c4974fc4ddab519becebbc1107149ae4ee3bba3bdbaeef6715.js",
       "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/ae3d681cd9f4d4163dbeb21b55517e96e3c8f0961c0f6ec29fa0a112e6b8c633.css",
-      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/c93ba3d5633ceaccc1b54723ef90c116618be0c148370109a5765ee70b4c09f4.html",
-      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/d4175332ec48c30b2cb60a44bbdee0bbd5995f070f2df199ccd2d50f5e7cc123.js",
+      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/c046c122dfb86a919c4fb569c20a2bc278a7d7cbd8b6c9a90c73fa88fabf7afd.js",
+      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/d99c5b16acaebce9b7c25d8bf6a665a828ffdd672b513925c6976f60a6995407.js",
       "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/e19c6d6b0baa11b6d7afc6a0cdf2b231f1f1bb15a636b77ef635bfe3d349c247.js",
-      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/fbcbaa408c72732adfc9415a0926929d69d6c6890d57c9781e31859cf4226997.js",
+      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/e4ada9fbab99f60de9e93fdd218b674308c7b1d4ee9c4a3a3648698cdbeb7698.js",
+      "target/release/build/quickpls-desktop-5403f0f184d77c24/out/tauri-codegen-assets/e6eacb991b5dd95e00004c03e84ef31b09b369dd0392de9e89187769e5ffb8a0.js",
       "validation/capabilities/capability_registry_v2.json",
       "validation/development_slices.json",
       "validation/fixtures/corporate_reputation.csv",
@@ -6655,21 +6655,21 @@
       "validation/fixtures/simple_reflective.csv"
     ],
     "dist_dependency_paths": [
-      "dist/assets/NativeCalculationDialog-DUmbxsTj.js",
-      "dist/assets/NativeExportDialog-CMnug-uT.js",
-      "dist/assets/NativeGroupSetupDialog-B-zMqU4I.js",
-      "dist/assets/NativeHigherOrderDialog-DXoMqdTP.js",
-      "dist/assets/NativeModerationDialog-DAf_lZbj.js",
-      "dist/assets/NativeResultsSurface-DzKE0-53.js",
-      "dist/assets/NativeUtilityDialog-DF4n3ckD.js",
+      "dist/assets/NativeCalculationDialog-vLF9bqsh.js",
+      "dist/assets/NativeExportDialog-DCn3edZF.js",
+      "dist/assets/NativeGroupSetupDialog-BK_n2aNd.js",
+      "dist/assets/NativeHigherOrderDialog-DsviyDTI.js",
+      "dist/assets/NativeModerationDialog-DZW5XXYX.js",
+      "dist/assets/NativeResultsSurface-BmcP9pKT.js",
+      "dist/assets/NativeUtilityDialog-KqrvBKwb.js",
       "dist/assets/flow-BnuhLJ6X.css",
       "dist/assets/flow-DG_yhx79.js",
       "dist/assets/icons-Y9nJPltI.js",
-      "dist/assets/index-BvBkp0W8.js",
-      "dist/assets/index-ClBrB-uD.css",
+      "dist/assets/index-7kENRxmh.js",
+      "dist/assets/index-DCCOGUBY.css",
       "dist/assets/largeModelSmoke-ChuXLqDH.js",
       "dist/assets/nativeMga-CQPrK7Ua.js",
-      "dist/assets/publicationDiagram-BkF94kBm.js",
+      "dist/assets/publicationDiagram-BE6hmvMW.js",
       "dist/assets/smokeRun-DsBvJjQf.js",
       "dist/assets/tauri-CZBL8huA.js",
       "dist/assets/vendor-DAfPu0rL.js",
@@ -6679,19 +6679,19 @@
   },
   "tested_desktop": {
     "path": "target/release/quickpls-desktop.exe",
-    "size": 49983488,
-    "sha256": "3c7643f8893b4389e5c94168757bba7614bc216267a819e95588310bd0a03476",
-    "mtime_ns": 1787057662249356300
+    "size": 49981440,
+    "sha256": "d4aebe4e5d7b07005c58c77bbc0cb67452e3640d1e599afc0deb9b9a9a9900f6",
+    "mtime_ns": 1787066179294194000
   },
   "dist_bound_to_dep_info": true,
   "freshness": {
     "passed": true,
     "tested_desktop_path": "target/release/quickpls-desktop.exe",
-    "tested_desktop_mtime_unix_ns": 1787057662249356300,
-    "newest_product_input_path": "dist/assets/index-BvBkp0W8.js",
-    "newest_product_input_mtime_unix_ns": 1787057380793056400,
-    "build_started_unix_ns": 1787057362023866500,
-    "build_finished_unix_ns": 1787057662306200500,
+    "tested_desktop_mtime_unix_ns": 1787066179294194000,
+    "newest_product_input_path": "dist/assets/index-7kENRxmh.js",
+    "newest_product_input_mtime_unix_ns": 1787065874760244100,
+    "build_started_unix_ns": 1787065853196944400,
+    "build_finished_unix_ns": 1787066179381151600,
     "desktop_not_older_than_every_product_input": true,
     "desktop_created_during_recorded_build": true
   }

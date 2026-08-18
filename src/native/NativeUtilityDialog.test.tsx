@@ -48,7 +48,9 @@ describe("NativeUtilityDialog", () => {
     expect(html).toContain("Required model and data");
     expect(html).toContain("Main settings and defaults");
     expect(html).toContain("Outputs");
-    expect(html).toContain("Assumptions and cautions");
+    expect(html).toContain("Assumptions and limitations");
+    expect(html).toContain('data-method-guidance-home="true"');
+    expect(html).not.toContain("Available in Standard.");
     expect(html).toContain("Interpretation guidance");
     expect(html).toContain("Method references");
     expect(html).toContain("Advanced technical details");

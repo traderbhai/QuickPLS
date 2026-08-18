@@ -437,7 +437,6 @@ export function NativeDesktopApp() {
   const [selectedTableId, setSelectedTableId] = useState("model_estimates");
   const [calculationKind, setCalculationKind] = useState<NativeWorkbenchAnalysisKind>(() => nativeWorkbenchAnalysisKindForSettings(analysisSettings));
   const [calculationDraft, setCalculationDraft] = useState<AnalysisUiSettings>(() => ({ ...analysisSettings }));
-  const [experimentalWarningShownSessionKeys, setExperimentalWarningShownSessionKeys] = useState<ReadonlySet<string>>(() => new Set());
   const [nativeRegistryVerification, setNativeRegistryVerification] = useState<"browser" | "pending" | "verified" | "failed">(
     () => isNativeDesktop() ? "pending" : "browser",
   );
@@ -517,18 +516,6 @@ export function NativeDesktopApp() {
     () => nativePlsReadiness({ dataset, nodes, edges, settings: calculationSettings, nativeDesktop: isNativeDesktop() }),
     [calculationSettings, dataset, edges, nodes],
   );
-  const recordExperimentalWarningShown = useCallback((sessionKeys: readonly string[]) => {
-    setExperimentalWarningShownSessionKeys((current) => {
-      const next = new Set(current);
-      let changed = false;
-      for (const sessionKey of sessionKeys) {
-        if (next.has(sessionKey)) continue;
-        next.add(sessionKey);
-        changed = true;
-      }
-      return changed ? next : current;
-    });
-  }, []);
   const commandContext = useMemo<NativeCommandContext>(() => {
     const selectedConstructs = new Set([
       ...nodes.filter((node) => node.selected).map((node) => node.id),
@@ -1401,8 +1388,6 @@ export function NativeDesktopApp() {
         nodes={nodes}
         edges={edges}
         experimentalLabsEnabled={uiPreferences.experimentalLabsEnabled}
-        experimentalWarningShownSessionKeys={experimentalWarningShownSessionKeys}
-        onExperimentalWarningShown={recordExperimentalWarningShown}
         openMethodDetails={() => openDialog("trust")}
         registryUnavailableReason={nativeRegistryVerification === "pending"
           ? "Checking the installed calculation catalogue."

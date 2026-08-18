@@ -450,7 +450,7 @@ export function NativeRecipeV4CbsemWorkspace({
 
   return <section id="nd-model-cbsem-labs-panel" className="nd-cbsem-v4-workspace" role="tabpanel" aria-labelledby="nd-model-cbsem-labs-tab">
     <header className="nd-cbsem-v4-header">
-      <div><h2>Exact CB-SEM workspace</h2><p>Runs the native compiler, exact CFA case bootstrap, and immutable schema-6 result workflow against one resident dataset.</p></div>
+      <div><h2>Exact CB-SEM workspace</h2></div>
       <FlaskConical size={24} aria-hidden="true" />
     </header>
 
@@ -561,16 +561,14 @@ export function NativeRecipeV4CbsemWorkspace({
                 <option value="one_sided_less">One-sided less</option>
               </select>
             </label>
-            <p>Exactly one preplanned fit is attempted per indexed draw; failures are retained with no retries. The 500-draw pilot is typed unavailable, while interval inference requires at least 1,000 usable refits. Studentized and BCa options are CFA-only and additionally enforce N≤180, V≤9, P≤18, D≤18, and at most 12 workers.</p>
-            <p>Archive verification covers identity, structure, accounting, digests, and interval arithmetic. It is not trusted authentication against a malicious coordinated rewrite of an unsigned local archive.</p>
-          </> : <p>Leave disabled for point-only exact CB-SEM estimation.</p>}
+          </> : null}
         </fieldset>
         <details><summary>Engine settings</summary><div className="nd-cbsem-v4-engine-grid">
           <label>Tolerance<input type="number" min="0.000000000001" max="0.01" step="any" value={engine.tolerance} disabled={running} onChange={(event) => setEngine((current) => ({ ...current, tolerance: Number(event.target.value) }))} /></label>
           <label>Maximum iterations<input type="number" min="100" max="100000" value={engine.maxIterations} disabled={running} onChange={(event) => setEngine((current) => ({ ...current, maxIterations: Number(event.target.value) }))} /></label>
           <label>Workers<input type="number" min="1" max="64" value={engine.workers} disabled={running} onChange={(event) => setEngine((current) => ({ ...current, workers: Number(event.target.value) }))} /></label>
           <label>Seed<input type="number" min="0" max="4294967295" value={engine.seed} disabled={running} onChange={(event) => setEngine((current) => ({ ...current, seed: Number(event.target.value) }))} /></label>
-        </div><p>Estimator: ML · mean structure off · unstandardized · single group</p></details>
+        </div></details>
       </section>
 
       <section id="nd-cbsem-v4-preflight" className="nd-cbsem-v4-card" aria-labelledby="nd-cbsem-v4-preflight-heading" tabIndex={-1}>
@@ -598,7 +596,6 @@ export function NativeRecipeV4CbsemWorkspace({
 
     <section className="nd-cbsem-v4-card nd-cbsem-v4-archive" aria-labelledby="nd-cbsem-v4-archive-heading">
       <h3 id="nd-cbsem-v4-archive-heading"><Archive size={17} aria-hidden="true" />Schema-6 attachment</h3>
-      <p>Inspect a digest-bound schema-6 project to select a previously stored exact result. A newly completed result can also be attached here.</p>
       <div className="nd-cbsem-v4-archive-path"><label>Schema-6 archive path<input value={archivePath} disabled={archiveBusy} onChange={(event) => { setArchivePath(event.target.value); setArchiveIdentity(null); setAppendOutcome(null); setStoredEntries([]); setReopenedEntry(null); }} /></label><button ref={browseButtonRef} type="button" disabled={archiveBusy} onClick={() => void chooseArchive()}>Browse…</button><button type="button" disabled={archiveBusy || !archivePath.trim()} onClick={() => void inspectArchive()}><FileSearch size={14} aria-hidden="true" />Inspect</button></div>
       {archiveIdentity ? <dl className="nd-cbsem-v4-receipt"><div><dt>Project</dt><dd>{archiveIdentity.projectId}</dd></div><div><dt>Source digest</dt><dd>{archiveIdentity.sourceSha256}</dd></div></dl> : null}
       {archiveIdentity ? <label className="nd-cbsem-v4-stored-results">Stored exact result<select id="nd-cbsem-v4-stored-results" value={reopenedEntry?.documentId ?? ""} disabled={archiveBusy || storedEntries.length === 0} onChange={(event) => {

@@ -585,6 +585,5 @@ export function NativeModelInspector({
       <button type="button" className="danger" onClick={deleteSelection}>{selectedPathSupportsModeration ? "Delete relationship and interaction" : selected?.data.semantic === "interaction" ? "Delete interaction" : selected?.data.semantic === "higher_order" ? "Delete higher-order construct" : selected ? "Delete construct" : "Delete relationship"}</button>
     </div> : null}
     {authorityFeedback ? <p className={`nd-authority-feedback ${authorityFeedback.tone}`} role={authorityFeedback.tone === "blocked" || authorityFeedback.tone === "rejected" ? "alert" : "status"} aria-live="polite">{authorityFeedback.message}</p> : null}
-    <p className="nd-inspector-mode-status" role="status" aria-live="polite">{mode === "basic" ? "Basic mode: core model controls." : strictAuthority ? "Expert mode: strict Standard scientific controls, including the complete canonical document fallback." : experimentalSemAuthoringEnabled ? "Expert mode: scientific and detailed controls." : "Expert mode: detailed controls. Scientific authoring remains in Experimental Labs."}</p>
   </aside>;
 }

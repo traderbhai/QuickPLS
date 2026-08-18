@@ -77,7 +77,7 @@ describe("native model inspector customer workflow", () => {
     expect(html).toContain('aria-selected="true" aria-controls="nd-model-inspector-parameter-panel"');
     expect(html).toContain("Measurement model");
     expect(html).toContain("Scientific representation");
-    expect(html).toContain("Expert mode: scientific and detailed controls.");
+    expect(html).not.toContain("Expert mode: scientific and detailed controls.");
   });
 
   it("keeps Expert mode useful in Standard builds without exposing Labs authoring", () => {
@@ -85,7 +85,7 @@ describe("native model inspector customer workflow", () => {
 
     expect(html).toContain("Stable construct ID");
     expect(html).toContain("Bound indicators");
-    expect(html).toContain("Scientific authoring remains in Experimental Labs.");
+    expect(html).not.toContain("Scientific authoring remains in Experimental Labs.");
     expect(html).not.toContain("Scientific representation");
   });
 
@@ -117,7 +117,7 @@ describe("native model inspector customer workflow", () => {
 
     expect(basic).not.toContain("Advanced canonical document");
     expect(expert).toContain("Advanced canonical document");
-    expect(expert).toContain("strict Standard scientific controls, including the complete canonical document fallback");
+    expect(expert).not.toContain("strict Standard scientific controls, including the complete canonical document fallback");
   });
 
   it("renders a plain-language Basic preflight and preserves the real calculation plan verbatim", () => {

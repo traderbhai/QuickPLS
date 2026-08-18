@@ -1389,7 +1389,7 @@ describe("native result navigation", () => {
       ["Usable permutations", "19"],
       ["Method version", "nca_v2"],
     ]));
-    expect(table("nca_scope")?.warning).toBe(NATIVE_NCA_ENGINE_SCOPE_WARNING);
+    expect(table("nca_scope")?.warning).toBeNull();
     expect(navigation.tables.flatMap((candidate) => candidate.rows).flat()).not.toContain("N/A");
     expect(navigation.groups.some((group) => group.id === "graphical" || group.id === "quality_criteria")).toBe(false);
     expect(tablesToCsv(navigation.tables)).toContain("Observed-range bottlenecks");
@@ -1453,10 +1453,10 @@ describe("native result navigation", () => {
       ["Selected variables", "a, b"],
       ["Retention rule", "Cumulative variance threshold"],
       ["Stored component scores", "6"],
-      ["Validated scope", "Correlation-matrix PCA of 2 to 50 selected numeric variables with listwise deletion, deterministic component orientation, and no rotation or inferential resampling."],
       ["Method version", "pca_v1"],
     ]));
-    expect(table("pca_scope")?.title).toBe("Calculation scope");
+    expect(table("pca_scope")?.title).toBe("Run details");
+    expect(table("pca_scope")?.rows.flat()).not.toContain("Validated scope");
     expect(navigation.groups.some((group) => group.id === "graphical" || group.id === "quality_criteria")).toBe(false);
     expect(tablesToCsv(navigation.tables)).not.toContain("N/A");
 
@@ -1491,10 +1491,10 @@ describe("native result navigation", () => {
       ["Outcome", "y"],
       ["Predictors", "x"],
       ["Controls", "m"],
-      ["Validated scope", "Raw numeric ordinary least squares with an intercept, listwise deletion, HC3 robust standard errors, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa inference. Categorical encoding, weights, clusters, generic PLS resampling, logistic regression, and PROCESS models are not included."],
       ["Method version", "regression_ols_v1"],
     ]));
-    expect(navigation.tables.find((table) => table.id === "ols_scope")?.title).toBe("Calculation scope");
+    expect(navigation.tables.find((table) => table.id === "ols_scope")?.title).toBe("Run details");
+    expect(navigation.tables.find((table) => table.id === "ols_scope")?.rows.flat()).not.toContain("Validated scope");
     expect(tablesToCsv(navigation.tables)).not.toContain("N/A");
 
     const tampered = completedOlsRun();
@@ -1670,7 +1670,7 @@ describe("native result navigation", () => {
       ["McFadden pseudo-R²", "0.243458"],
     ]));
     expect(table("logistic_classification")).toMatchObject({
-      warning: "In-sample descriptive classification; not out-of-sample predictive performance.",
+      warning: null,
       rows: [["2", "2", "1", "1", "0.6667", "0.6667", "0.6667"]],
     });
     expect(table("logistic_outcome_profile")?.rows).toEqual([[
@@ -1686,11 +1686,10 @@ describe("native result navigation", () => {
       ["Predictors", "score"],
       ["Controls", "None"],
       ["Execution", "Deterministic Newton IRLS; one worker"],
-      ["Classification interpretation", "In-sample descriptive classification; not out-of-sample predictive performance."],
-      ["Validated scope", "Binary logistic regression with an intercept, raw numeric predictors, listwise deletion, deterministic maximum-likelihood estimation, Wald inference, odds ratios, fitted probabilities, and fixed two-sided 95% confidence intervals. Optional regression case-resampling reports percentile-primary and conditional BCa coefficient and odds-ratio inference. The outcome must be coded exactly 0/1. Multinomial, ordinal, weighted, clustered, penalized, generic PLS resampling, and Firth-corrected models are not included."],
       ["Method version", "regression_logistic_v2"],
     ]));
-    expect(table("logistic_scope")?.title).toBe("Calculation scope");
+    expect(table("logistic_scope")?.title).toBe("Run details");
+    expect(table("logistic_scope")?.rows.flat()).not.toContain("Validated scope");
     expect(navigation.groups.some((group) => group.id === "graphical" || group.id === "quality_criteria")).toBe(false);
     expect(tablesToCsv(navigation.tables)).not.toContain("N/A");
   });
@@ -3256,8 +3255,9 @@ describe("native result navigation", () => {
       ["Organizational strength", "Resources", "Disjoint two-stage", "0.900000", "0.550000"],
     ]);
     expect(table("hoc_structural_paths")?.rows).toEqual([["Organizational strength → Performance", "0.740000"]]);
-    expect(table("hoc_scope")?.title).toBe("Higher-order calculation scope");
-    expect(table("hoc_scope")?.rows[0]?.at(-1)).toContain("HOC bootstrapping and permutation inference remain unavailable");
+    expect(table("hoc_scope")?.title).toBe("Higher-order run details");
+    expect(table("hoc_scope")?.rows[0]).toHaveLength(4);
+    expect(table("hoc_scope")?.rows.flat().join(" ")).not.toContain("HOC bootstrapping and permutation inference remain unavailable");
     expect(table("model_fit")).toBeUndefined();
     expect(table("outer_loadings")?.rows).toEqual([
       ["Capability", "x1", "0.910000"],
@@ -3489,7 +3489,8 @@ describe("native result navigation", () => {
     const csv = tablesToCsv(navigation.tables);
     expect(csv).not.toContain("N/A");
     expect(csv).not.toMatch(/bootstrap interval|percentile|p-value/i);
-    expect(csv).toContain("Point estimates only; no bootstrap or permutation inference");
+    expect(csv).toContain("Inference,Point estimates only");
+    expect(csv).not.toContain("broader GSCA variants are not included");
   });
 
   it("rejects stale, internally inconsistent, or inference-bearing GSCA payloads", () => {
@@ -3550,9 +3551,9 @@ describe("native result navigation", () => {
     expect(navigation.tables.find((table) => table.id === "cbsem_scope")?.rows).toEqual(expect.arrayContaining([
       ["Estimator", "Maximum likelihood"],
       ["Analyzed observations", "120"],
-      ["Unsupported in this workflow", expect.stringContaining("robust/ordinal/FIML")],
     ]));
-    expect(navigation.tables.find((table) => table.id === "cbsem_scope")?.title).toBe("Calculation scope");
+    expect(navigation.tables.find((table) => table.id === "cbsem_scope")?.title).toBe("Run details");
+    expect(navigation.tables.find((table) => table.id === "cbsem_scope")?.rows.flat()).not.toContain("Unsupported in this workflow");
     expect(tablesToCsv(navigation.tables)).not.toContain("N/A");
     expect(navigation.tables.map((table) => table.id)).not.toEqual(expect.arrayContaining(["path_coefficients", "outer_loadings", "construct_reliability"]));
 

@@ -15,7 +15,6 @@ import {
   NATIVE_PROCESS_MAX_MODERATORS,
   NATIVE_PROCESS_MAX_PATHS,
   NATIVE_PROCESS_MAX_PREDICTORS,
-  NATIVE_PROCESS_SCOPE_NOTE,
   nativeProcessGraphAssessment,
   parseNativeProcessGraph,
 } from "./nativeProcess";
@@ -307,7 +306,6 @@ export default function NativeProcessSetup({
       <header>
         <div>
           <h3 id="nd-process-setup-title">Graph-defined relationships</h3>
-          <p>Author paths and moderation terms directly. QuickPLS does not execute numbered PROCESS templates.</p>
         </div>
         <span>{graph.paths.length}/{NATIVE_PROCESS_MAX_PATHS} paths</span>
       </header>
@@ -410,10 +408,6 @@ export default function NativeProcessSetup({
       </fieldset>
 
       <ProcessGraphPreview graph={graph} outcome={outcome} />
-      <div className="nd-setting-note wide" id="nd-calculation-process-scope">
-        <span>Experimental</span>
-        <strong>{NATIVE_PROCESS_SCOPE_NOTE} Continuous simple-slope and plot probes use the original sample raw mean - SD, mean, and mean + SD; binary probes use original raw 0/1. Resamples and delete-one fits re-center their equations internally while retaining that original raw probe grid.</strong>
-      </div>
       <div className={`nd-process-assessment ${assessment.canRun ? "ready" : "blocked"}`} role="status" aria-live="polite">
         <strong>{assessment.canRun ? "Graph structure ready" : "Graph needs attention"}</strong>
         <span>{assessment.detail}</span>

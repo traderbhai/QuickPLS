@@ -249,10 +249,10 @@ describe("NativeCalculationDialog contracts", () => {
 
     expect(markup).toContain("Post-hoc Technical Minimum Sample Size");
     expect(markup).not.toContain('<strong>Post-hoc Technical Minimum Sample Size</strong><span class="nd-form-status nd-inline-warning" data-method-chip="experimental">Experimental</span>');
-    expect(markup).toContain("Inference contract");
+    expect(markup).not.toContain("Inference contract");
     expect(markup).toContain('id="nd-calculation-bootstrap-samples"');
     expect(markup).not.toContain('id="nd-calculation-studentized"');
-    expect(markup).toContain("two-sided normal-reference probabilities at alpha 0.05");
+    expect(markup).not.toContain("two-sided normal-reference probabilities at alpha 0.05");
   });
 
   it("shows point-estimate PLSc as Supported while keeping its inference add-ons separate", () => {
@@ -281,7 +281,7 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).toMatch(/id="nd-calculation-method-plsc_bootstrap"[^>]*aria-selected="true"/);
     expect(selectedOption).not.toContain('data-method-chip="experimental"');
     expect(selectedOption).not.toContain('data-method-chip="limited-scope"');
-    expect(markup).toContain("full-PLSc delete-one refit");
+    expect(markup).not.toContain("full-PLSc delete-one refit");
     expect(markup).not.toContain('data-experimental-warning');
   });
 
@@ -294,10 +294,9 @@ describe("NativeCalculationDialog contracts", () => {
       confidenceLevel: 0.95,
     });
 
-    expect(markup).toContain('id="nd-calculation-cbsem-exact-bootstrap-route"');
-    expect(markup).toContain("Run percentile Type-7, analytic studentized Type-7, or BCa Type-7 case bootstrap from the Exact CB-SEM model tab");
-    expect(markup).toContain("historical percentile-only schema-3 recipe");
-    expect(markup).toContain("Clear archived bootstrap setting");
+    expect(markup).toContain('id="nd-calculation-cbsem-archived-bootstrap"');
+    expect(markup).toContain("Clear the archived bootstrap setting before running this point-estimate setup.");
+    expect(markup).toContain("Clear setting");
     expect(markup).not.toContain('id="nd-calculation-cbsem-bootstrap-samples"');
   });
 
@@ -313,7 +312,7 @@ describe("NativeCalculationDialog contracts", () => {
       confidenceLevel: 0.95,
     });
 
-    expect(markup).toContain('id="nd-calculation-cbsem-exact-bootstrap-route"');
+    expect(markup).toContain('id="nd-calculation-cbsem-archived-bootstrap"');
     expect(markup).not.toContain('id="nd-calculation-cbsem-bootstrap-interval"');
     expect(markup).not.toContain("Analytic studentized Type 7 (Labs)");
     expect(markup).toMatch(/id="nd-calculation-workers"[^>]*max="12"[^>]*value="12"/);
@@ -331,7 +330,7 @@ describe("NativeCalculationDialog contracts", () => {
       confidenceLevel: 0.95,
     });
 
-    expect(markup).toContain('id="nd-calculation-cbsem-exact-bootstrap-route"');
+    expect(markup).toContain('id="nd-calculation-cbsem-archived-bootstrap"');
     expect(markup).not.toContain('aria-describedby="nd-calculation-cbsem-bootstrap-interval-note"');
     expect(markup).not.toContain("BCa Type 7 (Labs, complete-only)");
     expect(markup).toMatch(/id="nd-calculation-workers"[^>]*max="12"[^>]*value="12"/);
@@ -347,7 +346,7 @@ describe("NativeCalculationDialog contracts", () => {
       confidenceLevel: 0.95,
     });
 
-    expect(markup).toContain('id="nd-calculation-cbsem-exact-bootstrap-route"');
+    expect(markup).toContain('id="nd-calculation-cbsem-archived-bootstrap"');
     expect(markup).not.toContain('id="nd-calculation-cbsem-bootstrap-test-tail"');
     expect(markup).not.toContain("One-sided: parameter is greater than zero");
   });
@@ -383,7 +382,7 @@ describe("NativeCalculationDialog contracts", () => {
       cbsemBootstrapSamples: 1_000,
     });
     expect(markup).toContain('id="nd-calculation-method-cbsem"');
-    expect(markup).toContain('id="nd-calculation-cbsem-exact-bootstrap-route"');
+    expect(markup).toContain('id="nd-calculation-cbsem-archived-bootstrap"');
     expect(markup).not.toContain('id="nd-calculation-cbsem-bootstrap-samples"');
     const pointMarkup = renderWithLiveRegistry("cbsem", {
       ...settings,
@@ -401,10 +400,10 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).not.toContain('data-limited-scope-warning="true"');
     expect(markup).not.toContain("Calculation method unavailable");
     expect(markup).toMatch(/class="primary" type="submit" disabled=""/);
-    expect(markup).toContain("Clear archived bootstrap setting");
+    expect(markup).toContain("Clear setting");
   });
 
-  it("shows the exact Experimental warning once per capability cell and application session", () => {
+  it("keeps experimental capability accounting internal while the method picker stays clean", () => {
     const entries = nativeCalculationCatalogEntriesV2(settings, true, executableLabsRegistry);
     const algorithm = entries.find((entry) => entry.item.kind === "pls_algorithm");
     const bootstrap = entries.find((entry) => entry.item.kind === "pls_bootstrap");
@@ -423,12 +422,12 @@ describe("NativeCalculationDialog contracts", () => {
     expect(pcaPending.every((key) => key.includes("::qpls3.standalone.pca::"))).toBe(true);
 
     const firstMarkup = renderReadyDialog("pls_algorithm", settings);
-    expect(firstMarkup.split(EXPERIMENTAL_LABS_WARNING)).toHaveLength(2);
-    expect(firstMarkup).toContain('class="nd-form-status nd-inline-warning" data-method-chip="experimental">Experimental</span>');
+    expect(firstMarkup).not.toContain(EXPERIMENTAL_LABS_WARNING);
+    expect(firstMarkup).not.toContain('data-method-chip="experimental"');
 
     const repeatedMarkup = renderReadyDialog("pls_algorithm", settings, nodes, true, shown);
     expect(repeatedMarkup).not.toContain(EXPERIMENTAL_LABS_WARNING);
-    expect(repeatedMarkup).toContain('class="nd-form-status nd-inline-warning" data-method-chip="experimental">Experimental</span>');
+    expect(repeatedMarkup).not.toContain('data-method-chip="experimental"');
   });
 
   it("renders an accessible requirements state and no hidden settings when Standard has no methods", () => {
@@ -535,7 +534,7 @@ describe("NativeCalculationDialog contracts", () => {
       "nd-calculation-pls-power-workers",
       "nd-calculation-pls-power-workload",
     ]) expect(markup).toContain(`id="${id}"`);
-    expect(markup).toContain("Prospective Monte Carlo power");
+    expect(markup).not.toContain("Prospective Monte Carlo power");
     expect(markup).not.toContain("Calculation method unavailable");
     expect(markup).not.toContain('data-method-chip="experimental"');
     expect(markup).not.toContain('data-method-chip="limited-scope"');
@@ -583,7 +582,7 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).toContain('id="nd-calculation-micom-configural"');
     // The selected MGA option has no availability chip. Other catalogue
     // options may independently remain Experimental or Limited scope.
-    expect(markup).toMatch(/id="nd-calculation-method-mga"[\s\S]*?<strong>MICOM and Two-Group Permutation MGA<\/strong><small/);
+    expect(markup).toMatch(/id="nd-calculation-method-mga"[\s\S]*?<strong>MICOM and Two-Group Permutation MGA<\/strong><\/span>/);
     expect(markup).not.toContain('data-limited-scope-warning="true"');
     expect(markup).not.toContain('data-experimental-warning="true"');
     expect(markup).not.toContain("Calculation method unavailable");
@@ -601,12 +600,12 @@ describe("NativeCalculationDialog contracts", () => {
 
     expect(markup).toContain('id="nd-calculation-category-assessment"');
     expect(markup).toMatch(/id="nd-calculation-method-cca"[^>]*role="option"[^>]*aria-selected="true"/);
-    expect(markup).toContain('aria-describedby="nd-calculation-method-cca-description"');
+    expect(markup).not.toContain('aria-describedby="nd-calculation-method-cca-description"');
     expect(markup).toContain('id="nd-calculation-panel-cca-title"');
     expect(markup).toContain("CCA composite residual diagnostics");
-    expect(markup).toContain("Standardized (fixed)");
-    expect(markup).toContain("Reflective composite path model; descriptive residual diagnostics only");
-    expect(markup).toContain("Listwise deletion");
+    expect(markup).not.toContain("Standardized (fixed)");
+    expect(markup).not.toContain("Reflective composite path model; descriptive residual diagnostics only");
+    expect(markup).not.toContain("Listwise deletion");
     expect(markup).toContain("Start composite diagnostics");
     expect(markup).not.toContain('id="nd-calculation-preprocessing"');
     expect(markup).not.toContain('id="nd-calculation-bootstrap-samples"');
@@ -632,7 +631,7 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).toMatch(/id="nd-calculation-method-cta_pls"[^>]*role="option"[^>]*aria-selected="true"/);
     expect(markup).toContain('id="nd-calculation-cta-pls-scope"');
     expect(markup).toContain("Capability: 4 indicators, 3 tetrads");
-    expect(markup).toContain("Descriptive sample-covariance tetrads only");
+    expect(markup).not.toContain("Descriptive sample-covariance tetrads only");
     expect(markup).toContain("Start tetrad diagnostics");
     expect(markup).not.toContain('id="nd-calculation-bootstrap-samples"');
     expect(markup).not.toContain('id="nd-calculation-permutations"');
@@ -665,11 +664,10 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).toContain('id="nd-calculation-ipma-target"');
     expect(markup).toMatch(/id="nd-calculation-ipma-target"[^>]*required=""/);
     expect(markup).toContain('<option value="">Select one endogenous construct</option><option value="y" selected="">Retention [y]</option>');
-    expect(markup).toContain("Path weighting (fixed)");
-    expect(markup).toContain("Standardized (fixed)");
-    expect(markup).toContain("Listwise deletion");
-    expect(markup).toContain("Direct and indirect structural predecessors only; the target and unrelated constructs are omitted");
-    expect(markup).toContain("0-100 observed-range scaling of standardized composite scores; no theoretical-range correction");
+    expect(markup).not.toContain("Path weighting (fixed)");
+    expect(markup).not.toContain("Standardized (fixed)");
+    expect(markup).not.toContain("Direct and indirect structural predecessors only; the target and unrelated constructs are omitted");
+    expect(markup).not.toContain("0-100 observed-range scaling of standardized composite scores; no theoretical-range correction");
     expect(markup).toContain("Start importance-performance analysis");
     expect(markup).not.toContain('id="nd-calculation-weighting"');
     expect(markup).not.toContain('id="nd-calculation-preprocessing"');
@@ -689,11 +687,10 @@ describe("NativeCalculationDialog contracts", () => {
 
     expect(markup).toMatch(/id="nd-calculation-method-predict"[^>]*aria-selected="true"/);
     expect(markup).toContain("PLSpredict / CVPAT");
-    expect(markup).toContain('id="nd-calculation-prediction-plan"');
-    expect(markup).toContain("10-fold × 10-repeat");
-    expect(markup).toContain("Endogenous indicators are primary");
-    expect(markup).toContain("Indicator average (IA) and Linear model (LM, where estimable)");
-    expect(markup).toContain("one-sided test, 95% confidence; not a comparison of saved models");
+    expect(markup).not.toContain('id="nd-calculation-prediction-plan"');
+    expect(markup).not.toContain("Endogenous indicators are primary");
+    expect(markup).not.toContain("Indicator average (IA) and Linear model (LM, where estimable)");
+    expect(markup).not.toContain("one-sided test, 95% confidence; not a comparison of saved models");
     expect(markup).toContain("Start prediction");
     expect(markup).toContain('id="nd-calculation-seed"');
     expect(markup).not.toContain('id="nd-calculation-confidence"');
@@ -753,7 +750,7 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).toContain('<option value="outcome" selected="">outcome</option>');
     expect(markup).toMatch(/id="nd-calculation-nca-permutations"[^>]*min="1"[^>]*max="10000"[^>]*step="1"[^>]*value="999"/);
     expect(markup).toContain("CE-FDH and CR-FDH");
-    expect(markup).toContain("Multiple conditions, latent-score NCA, cIPMA");
+    expect(markup).not.toContain("Multiple conditions, latent-score NCA, cIPMA");
     expect(markup).toContain("Start necessary condition analysis");
     expect(markup).not.toContain('id="nd-calculation-weighting"');
     expect(markup).not.toContain('id="nd-calculation-max-iterations"');
@@ -769,7 +766,7 @@ describe("NativeCalculationDialog contracts", () => {
       ncaCeiling: "both",
       ncaPermutationSamples: 999,
     });
-    expect(supportedMarkup).toMatch(/id="nd-calculation-method-nca"[\s\S]*?<strong>Necessary Condition Analysis<\/strong><small/);
+    expect(supportedMarkup).toMatch(/id="nd-calculation-method-nca"[\s\S]*?<strong>Necessary Condition Analysis<\/strong><\/span>/);
     expect(supportedMarkup).not.toContain('data-limited-scope-warning="true"');
     expect(supportedMarkup).not.toContain('data-experimental-warning="true"');
   });
@@ -791,10 +788,10 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).toContain('id="nd-calculation-category-covariance"');
     expect(markup).toContain('id="nd-calculation-cbsem-model-type"');
     expect(markup).toContain('<option value="sem" selected="">Structural equation model (paths required)</option>');
-    expect(markup).toContain('id="nd-calculation-cbsem-estimator"');
-    expect(markup).toContain("Maximum likelihood; first loading fixed to 1 for each latent factor");
-    expect(markup).toContain('id="nd-calculation-cbsem-scope"');
-    expect(markup).toContain("Single-group reflective raw-data CFA or recursive SEM");
+    expect(markup).not.toContain('id="nd-calculation-cbsem-estimator"');
+    expect(markup).not.toContain("Maximum likelihood; first loading fixed to 1 for each latent factor");
+    expect(markup).not.toContain('id="nd-calculation-cbsem-scope"');
+    expect(markup).not.toContain("Single-group reflective raw-data CFA or recursive SEM");
     expect(markup).toContain("Start CB-SEM / CFA");
     expect(markup).toContain('id="nd-calculation-max-iterations"');
     expect(markup).toContain('id="nd-calculation-tolerance"');
@@ -815,10 +812,10 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).toMatch(/id="nd-calculation-method-gsca"[^>]*role="option"[^>]*aria-selected="true"/);
     expect(markup).toContain('id="nd-calculation-category-component_models"');
     expect(markup).toContain('id="nd-calculation-panel-gsca-title"');
-    expect(markup).toContain('id="nd-calculation-gsca-estimator"');
-    expect(markup).toContain('id="nd-calculation-gsca-scope"');
-    expect(markup).toContain("Joint global least-squares alternating least squares");
-    expect(markup).toContain("GSCA bootstrapping, or other inference");
+    expect(markup).not.toContain('id="nd-calculation-gsca-estimator"');
+    expect(markup).not.toContain('id="nd-calculation-gsca-scope"');
+    expect(markup).not.toContain("Joint global least-squares alternating least squares");
+    expect(markup).not.toContain("GSCA bootstrapping, or other inference");
     expect(markup).toContain("Start GSCA");
     expect(markup).not.toContain('id="nd-calculation-weighting"');
     expect(markup).not.toContain('id="nd-calculation-preprocessing"');
@@ -830,7 +827,7 @@ describe("NativeCalculationDialog contracts", () => {
       ...settings,
       method: "gsca",
     });
-    expect(supportedMarkup).toMatch(/id="nd-calculation-method-gsca"[\s\S]*?<strong>GSCA<\/strong><small/);
+    expect(supportedMarkup).toMatch(/id="nd-calculation-method-gsca"[\s\S]*?<strong>GSCA<\/strong><\/span>/);
     expect(supportedMarkup).not.toContain('data-limited-scope-warning="true"');
     expect(supportedMarkup).not.toContain('data-experimental-warning="true"');
   });
@@ -879,10 +876,10 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).toContain("Variables (3 selected)");
     expect(markup).toContain('id="nd-calculation-pca-rule"');
     expect(markup).toMatch(/id="nd-calculation-pca-threshold"[^>]*min="1"[^>]*max="99.9"[^>]*step="0.1"[^>]*value="80"/);
-    expect(markup).toContain("Correlation matrix (fixed)");
-    expect(markup).toContain("Standardized numeric values (fixed)");
-    expect(markup).toContain("<span>Validated scope</span>");
-    expect(markup).toContain("deterministic component orientation");
+    expect(markup).not.toContain("Correlation matrix (fixed)");
+    expect(markup).not.toContain("Standardized numeric values (fixed)");
+    expect(markup).not.toContain("<span>Validated scope</span>");
+    expect(markup).not.toContain("deterministic component orientation");
     expect(markup).toContain("Start principal component analysis");
     expect(markup).not.toContain('id="nd-calculation-seed"');
     expect(markup).not.toContain('id="nd-calculation-workers"');
@@ -937,9 +934,9 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).toContain('<option value="y" selected="">y</option>');
     expect(markup).toContain("Predictors (1 selected)");
     expect(markup).toContain("Controls (1 selected, optional)");
-    expect(markup).toContain("HC3 robust SE; two-sided 95% CI (fixed)");
-    expect(markup).toContain("<span>Validated scope</span>");
-    expect(markup).toContain("Raw numeric ordinary least squares with an intercept");
+    expect(markup).not.toContain("HC3 robust SE; two-sided 95% CI (fixed)");
+    expect(markup).not.toContain("<span>Validated scope</span>");
+    expect(markup).not.toContain("Raw numeric ordinary least squares with an intercept");
     expect(markup).toContain("Start OLS regression");
     expect(markup).not.toContain('id="nd-calculation-weighting"');
     expect(markup).not.toContain('id="nd-calculation-preprocessing"');
@@ -953,7 +950,7 @@ describe("NativeCalculationDialog contracts", () => {
       method: "regression",
       regressionType: "ols",
     });
-    expect(supportedMarkup).toMatch(/id="nd-calculation-method-regression"[\s\S]*?<strong>Regression<\/strong><small/);
+    expect(supportedMarkup).toMatch(/id="nd-calculation-method-regression"[\s\S]*?<strong>Regression<\/strong><\/span>/);
     expect(supportedMarkup).not.toContain('data-limited-scope-warning="true"');
     expect(supportedMarkup).not.toContain('data-experimental-warning="true"');
   });
@@ -1003,11 +1000,11 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).toContain('<option value="enabled" selected="">Case-resampling bootstrap</option>');
     expect(markup).toMatch(/id="nd-calculation-regression-bootstrap-samples"[^>]*min="99"[^>]*max="10000"[^>]*value="10000"/);
     expect(markup).toMatch(/id="nd-calculation-regression-bootstrap-workers"[^>]*min="1"[^>]*max="64"[^>]*value="4"/);
-    expect(markup).toContain("10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs");
-    expect(markup).toContain("Percentile intervals are primary");
-    expect(markup).toContain("BCa is reported when delete-one refits support it");
-    expect(markup).toContain("studentized intervals, one-tailed tests, and custom alpha are excluded");
-    expect(markup).toContain("worker-invariant");
+    expect(markup).not.toContain("10,000 resamples are recommended for final results; 1,000 can be used for exploratory runs");
+    expect(markup).not.toContain("Percentile intervals are primary");
+    expect(markup).not.toContain("BCa is reported when delete-one refits support it");
+    expect(markup).not.toContain("studentized intervals, one-tailed tests, and custom alpha are excluded");
+    expect(markup).not.toContain("worker-invariant");
     expect(markup).toContain("Start OLS regression with bootstrap");
     expect(markup).toContain('id="nd-calculation-seed"');
 
@@ -1131,9 +1128,9 @@ describe("NativeCalculationDialog contracts", () => {
     expect(markup).toContain('<option value="logistic" selected="">Binary logistic (outcome coded 0/1)</option>');
     expect(markup).toContain('id="nd-calculation-logistic-profile"');
     expect(markup).toContain("12 complete cases: 8 class 0 and 4 class 1; 0 omitted by listwise deletion");
-    expect(markup).toContain("Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)");
-    expect(markup).toContain("<span>Validated scope</span>");
-    expect(markup).toContain("The outcome must be coded exactly 0/1");
+    expect(markup).not.toContain("Maximum-likelihood SE; Wald z and two-sided 95% CI; odds ratios (fixed)");
+    expect(markup).not.toContain("<span>Validated scope</span>");
+    expect(markup).not.toContain("The outcome must be coded exactly 0/1");
     expect(markup).toContain("Start binary logistic regression");
     expect(markup).not.toContain('id="nd-calculation-seed"');
     expect(markup).not.toContain('id="nd-calculation-workers"');
@@ -1143,7 +1140,7 @@ describe("NativeCalculationDialog contracts", () => {
       method: "regression",
       regressionType: "logistic",
     });
-    expect(supportedMarkup).toMatch(/id="nd-calculation-method-regression"[\s\S]*?<strong>Regression<\/strong><small/);
+    expect(supportedMarkup).toMatch(/id="nd-calculation-method-regression"[\s\S]*?<strong>Regression<\/strong><\/span>/);
     expect(supportedMarkup).not.toContain('data-limited-scope-warning="true"');
     expect(supportedMarkup).not.toContain('data-experimental-warning="true"');
   });

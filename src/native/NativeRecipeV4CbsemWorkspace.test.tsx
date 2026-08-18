@@ -94,7 +94,7 @@ describe("Exact CB-SEM Recipe-v4 workspace accessibility", () => {
     expect(html).toContain("Layered preflight");
     expect(html).toContain("Start native job");
     expect(html).toContain("Schema-6 attachment");
-    expect(html).toContain("select a previously stored exact result");
+    expect(html).not.toContain("select a previously stored exact result");
     expect(html).toContain("Reopen and verify completed run");
     expect(html).toMatch(/Append exact native document<\/button>/);
     expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Append exact native document<\/button>/);

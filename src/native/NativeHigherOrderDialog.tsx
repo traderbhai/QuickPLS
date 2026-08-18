@@ -48,7 +48,6 @@ export default function NativeHigherOrderDialog({
       else setCreationError(result.detail);
     }}
   >
-    <p className="nd-dialog-intro">Create one reflective–reflective higher-order construct from lower-order component scores.</p>
     <div className="nd-form-grid">
       <label htmlFor="nd-hoc-name">Name
         <input id="nd-hoc-name" autoFocus value={name} onChange={(event) => { setName(event.target.value); setSubmitted(false); }} />
@@ -79,7 +78,7 @@ export default function NativeHigherOrderDialog({
         <span>{option.label} <small>[{option.shortName}]</small>{option.reason ? <small>{option.reason}</small> : null}</span>
       </label>)}
     </fieldset>
-    <p className="nd-dialog-note">After creation, use the Path tool to add one HOC-to-outcome relationship and no other structural path. This workflow uses PLS-SEM Algorithm, path weighting, standardized data, and listwise deletion. HOC bootstrapping and permutation inference remain unavailable.</p>
+    <p className="nd-dialog-note">Next, add one path from the higher-order construct to its outcome.</p>
     {blocker || visibleProblems.length || creationError ? <div className="nd-form-error" role="alert">{blocker ?? creationError ?? visibleProblems[0]}</div> : null}
     <footer><button type="button" onClick={close}>Cancel</button><button className="primary" type="submit" disabled={Boolean(blocker) || problems.length > 0}>Create higher-order construct</button></footer>
   </form>;

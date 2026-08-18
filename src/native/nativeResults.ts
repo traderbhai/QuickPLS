@@ -28,12 +28,11 @@ import {
   LEGACY_PLS_PREDICT_REPEATED_METHOD_VERSION,
 } from "./nativeCalculationMode";
 import { NATIVE_NCA_ENGINE_SCOPE_WARNING, NATIVE_STANDALONE_ASSESSMENT_WARNING } from "./nativeNca";
-import { NATIVE_PCA_ENGINE_SCOPE_WARNING, NATIVE_PCA_SCOPE_NOTE } from "./nativePca";
-import { NATIVE_OLS_ENGINE_SCOPE_WARNING, NATIVE_OLS_SCOPE_NOTE } from "./nativeOls";
+import { NATIVE_PCA_ENGINE_SCOPE_WARNING } from "./nativePca";
+import { NATIVE_OLS_ENGINE_SCOPE_WARNING } from "./nativeOls";
 import {
   NATIVE_LEGACY_LOGISTIC_ENGINE_SCOPE_WARNING,
   NATIVE_LOGISTIC_ENGINE_SCOPE_WARNING,
-  NATIVE_LOGISTIC_SCOPE_NOTE,
 } from "./nativeLogistic";
 import { isStandaloneNativeAnalysis } from "./nativeStandaloneAnalysis";
 import { parseCbsemCfaScoreLmBundleV1 } from "../domain/internalRecipeV4CbsemExecution";
@@ -43,7 +42,6 @@ import {
   NATIVE_GSCA_ASSESSMENT_WARNING,
   NATIVE_GSCA_ENGINE_SCOPE_WARNING,
   NATIVE_GSCA_METHOD_VERSION,
-  NATIVE_GSCA_SCOPE_NOTE,
 } from "./nativeGsca";
 import {
   NATIVE_CTA_PLS_COVARIANCE_VERSION,
@@ -51,7 +49,6 @@ import {
   NATIVE_CTA_PLS_METHOD_VERSION,
   NATIVE_CTA_PLS_PAIRINGS,
   NATIVE_CTA_PLS_RESULT_WARNING,
-  NATIVE_CTA_PLS_SCOPE_NOTE,
   nativeCtaPlsEligibleBlocks,
   type NativeCtaPlsEligibleBlock,
 } from "./nativeCtaPls";
@@ -64,7 +61,6 @@ import {
   nativeProcessResultTables,
 } from "./nativeProcessResults";
 import {
-  NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING,
   nativeStructuralPathRandomizationProjection,
   nativeStructuralPathRandomizationTable,
 } from "./nativeStructuralPathRandomization";
@@ -825,15 +821,11 @@ function nativePlsSampleSizePowerResultTables(
     "Design assumptions": "pls_power_design_assumptions",
     "Run provenance": "pls_power_run_provenance",
   } as const;
-  const scopeWarning = [
-    ...projection.result.warnings,
-    ...projection.result.exclusions.map((exclusion) => `Excluded: ${exclusion}`),
-  ].join(" ");
   return nativePlsSampleSizePowerExportTables(projection.recipe, projection.result).map((table) => ({
     id: ids[table.name],
     title: table.name,
     status: projection.result.schema_version === 2 ? "validated" : "experimental",
-    warning: scopeWarning || null,
+    warning: null,
     columns: table.columns,
     rows: table.rows,
   }));
@@ -2100,7 +2092,6 @@ function nativeHigherOrderProjection(
     declaration.componentIds.map(constructLabel).join(", "),
     "Reflective-reflective disjoint two-stage",
     "Stage 1 component scores; stage 2 generated score indicators",
-    "Point estimates only in the bounded native workflow; HOC bootstrapping and permutation inference remain unavailable",
   ]);
   return { constructIds, componentRows, structuralRows, scopeRows };
 }
@@ -2653,9 +2644,9 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
     });
     addTable(tables, {
       id: "hoc_scope",
-      title: "Higher-order calculation scope",
+      title: "Higher-order run details",
       warning: null,
-      columns: ["Higher-order construct", "Components", "Method", "Generated measurement", "Inference"],
+      columns: ["Higher-order construct", "Components", "Method", "Generated measurement"],
       rows: higherOrder.scopeRows,
     });
   }
@@ -2926,7 +2917,7 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
       id: "cta_pls_summary",
       title: "CTA-PLS tetrad summary",
       status: "validated",
-      warning: NATIVE_CTA_PLS_RESULT_WARNING,
+      warning: null,
       columns: ["Construct", "Indicators", "Four-indicator subsets", "Tetrads", "Maximum absolute tetrad"],
       rows: ctaPls.blocks.map((block) => [
         constructLabel(block.constructId),
@@ -2940,7 +2931,7 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
       id: "cta_pls_tetrads",
       title: "CTA-PLS tetrads",
       status: "validated",
-      warning: NATIVE_CTA_PLS_RESULT_WARNING,
+      warning: null,
       columns: ["Construct", "Indicator A", "Indicator B", "Indicator C", "Indicator D", "Pairing", "Tetrad", "Absolute tetrad"],
       rows: ctaPls.estimates.map((row) => [
         constructLabel(row.construct),
@@ -2955,17 +2946,15 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
     });
     addTable(tables, {
       id: "cta_pls_scope",
-      title: "CTA-PLS requirements and exclusions",
+      title: "CTA-PLS run details",
       status: "validated",
-      warning: NATIVE_CTA_PLS_RESULT_WARNING,
+      warning: null,
       columns: ["Field", "Value"],
       rows: [
         ["Method version", ctaPls.methodVersion],
         ["Covariance convention", ctaPls.covarianceVersion],
         ["Complete cases", String(ctaPls.usedObservations)],
         ["Omitted cases", String(ctaPls.omittedObservations)],
-        ["Interpretation", NATIVE_CTA_PLS_SCOPE_NOTE],
-        ["Excluded inference", "Bootstrap, permutation, asymptotic, and vanishing-tetrad decisions"],
       ],
     });
   }
@@ -3011,7 +3000,7 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
       });
       addTable(tables, {
         id: "ipma_scope",
-        title: "Analysis details",
+        title: "Run details",
         warning: null,
         columns: ["Field", "Value"],
         rows: [
@@ -4012,7 +4001,7 @@ function addModerationInferenceTables(
       id: "moderation_randomization",
       title: "Interaction effect path randomization",
       status: "experimental",
-      warning: NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING,
+      warning: null,
       columns: ["Interaction", "Original", "Exceedances", "Permutations", "Raw two-sided p"],
       rows: randomizationRows.map(({ estimate, parameter }) => [
         label(estimate),
@@ -4099,7 +4088,7 @@ function addControlInferenceTables(
       id: "control_randomization",
       title: "Control effects path randomization",
       status: "experimental",
-      warning: NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING,
+      warning: null,
       columns: ["Control", "Original", "Exceedances", "Permutations", "Raw two-sided p"],
       rows: randomizationRows.map(({ control, parameter }) => [
         label(control),
@@ -5368,7 +5357,7 @@ function addCbsemResultTables(
     });
     tables.push({
       id: "cbsem_exact_bootstrap_settings",
-      title: "Exact case-bootstrap settings and validation scope",
+      title: "Exact case-bootstrap run details",
       warning,
       status: "experimental",
       columns: ["Field", "Value"],
@@ -5699,8 +5688,8 @@ function addCbsemResultTables(
     });
   addTable(tables, {
     id: "cbsem_scope",
-    title: "Calculation scope",
-    warning: analysis.warnings.join(" "),
+    title: "Run details",
+    warning: null,
     columns: ["Field", "Value"],
     rows: [
       ["Model type", projection.modelType === "cfa" ? "Confirmatory factor analysis" : "Recursive structural equation model"],
@@ -5717,14 +5706,10 @@ function addCbsemResultTables(
       ["Fit method version", analysis.fit.method_version],
       ...(rmseaIntervalAttribution ? [["RMSEA interval method version", rmseaIntervalAttribution.method_version]] : []),
       ...(!analysis.score_lm ? [["Modification-diagnostic version", CBSEM_MODIFICATION_METHOD_VERSION]] : []),
-      ...(analysis.score_lm ? [
-        ["Score/LM method version", CBSEM_SCORE_LM_METHOD_VERSION],
-        ["Score/LM scope", "Covariance-only CFA; explicitly declared zero residual covariances"],
-      ] : []),
+      ...(analysis.score_lm ? [["Score/LM method version", CBSEM_SCORE_LM_METHOD_VERSION]] : []),
       ["CB-SEM bootstrap", exactBootstrap
         ? `${exactBootstrap.requested_replicates.toLocaleString()} preplanned full exact-ML case-resampling draws${studentizedBootstrap ? " with analytic studentization" : bcaBootstrap ? " with complete-only BCa delete-one inference" : ""}`
         : bootstrap ? `${bootstrap.requested_replicates.toLocaleString()} preplanned full-ML case-resampling draws` : "Not requested"],
-      ["Unsupported in this workflow", "Multigroup/invariance, robust/ordinal/FIML estimators, interactions, higher-order constructs, and mean structures"],
     ],
   });
 }
@@ -5811,8 +5796,8 @@ function addGscaResultTables(
   });
   addTable(tables, {
     id: "gsca_scope",
-    title: "Analysis details",
-    warning: analysis.warnings.join(" "),
+    title: "Run details",
+    warning: null,
     columns: ["Field", "Value"],
     rows: [
       ["Estimator", "Joint global least-squares alternating least squares"],
@@ -5824,8 +5809,7 @@ function addGscaResultTables(
       ["Input", "Raw case-level data with listwise-standardized numeric indicators"],
       ["Measurement models", "Disjoint reflective and formative blocks"],
       ["Structural model", "Recursive single-group paths; every construct connected"],
-      ["Inference", "Point estimates only; no bootstrap or permutation inference"],
-      ["Supported setup", NATIVE_GSCA_SCOPE_NOTE],
+      ["Inference", "Point estimates only"],
     ],
   });
 }
@@ -5884,8 +5868,8 @@ function addNcaResultTables(
 
   addTable(tables, {
     id: "nca_scope",
-    title: "Analysis details",
-    warning: projection.warnings.join(" "),
+    title: "Run details",
+    warning: visibleResultWarning(projection.warnings, [NATIVE_NCA_ENGINE_SCOPE_WARNING]),
     columns: ["Field", "Value"],
     rows: [
       ["Condition variable (X)", projection.x],
@@ -5937,8 +5921,8 @@ function addPcaResultTables(
 
   addTable(tables, {
     id: "pca_scope",
-    title: "Calculation scope",
-    warning: projection.warnings.join(" "),
+    title: "Run details",
+    warning: visibleResultWarning(projection.warnings, [NATIVE_PCA_ENGINE_SCOPE_WARNING]),
     columns: ["Field", "Value"],
     rows: [
       ["Variables", String(projection.variables.length)],
@@ -5950,7 +5934,6 @@ function addPcaResultTables(
       ["Input matrix", "Correlation matrix of standardized variables"],
       ["Missing data", "Listwise deletion"],
       ["Rotation", "None"],
-      ["Validated scope", NATIVE_PCA_SCOPE_NOTE],
       ["Method version", projection.methodVersion],
     ],
   });
@@ -6005,8 +5988,8 @@ function addOlsResultTables(
 
   addTable(tables, {
     id: "ols_scope",
-    title: "Calculation scope",
-    warning: projection.warnings.join(" "),
+    title: "Run details",
+    warning: visibleResultWarning(projection.warnings, [NATIVE_OLS_ENGINE_SCOPE_WARNING]),
     columns: ["Field", "Value"],
     rows: [
       ["Outcome", projection.outcome],
@@ -6019,7 +6002,6 @@ function addOlsResultTables(
       ["Confidence intervals", "Two-sided 95%"],
       ["Variable data", "Unstandardized observed numeric values"],
       ["Missing data", "Listwise deletion"],
-      ["Validated scope", NATIVE_OLS_SCOPE_NOTE],
       ["Method version", projection.methodVersion],
     ],
   });
@@ -6143,7 +6125,6 @@ function addLogisticResultTables(
   const projection = nativeLogisticResultProjection(run);
   if (!projection) return;
   const { classification, convergence, outcome_profile: profile } = projection.diagnostics;
-  const classificationWarning = "In-sample descriptive classification; not out-of-sample predictive performance.";
 
   addTable(tables, {
     id: "logistic_coefficients",
@@ -6187,7 +6168,7 @@ function addLogisticResultTables(
   addTable(tables, {
     id: "logistic_classification",
     title: "Classification at probability threshold 0.5",
-    warning: classificationWarning,
+    warning: null,
     columns: ["True positive", "True negative", "False positive", "False negative", "Accuracy", "Sensitivity", "Specificity"],
     rows: [[
       String(classification.true_positive),
@@ -6247,8 +6228,8 @@ function addLogisticResultTables(
 
   addTable(tables, {
     id: "logistic_scope",
-    title: "Calculation scope",
-    warning: projection.warnings.join(" "),
+    title: "Run details",
+    warning: visibleResultWarning(projection.warnings, [NATIVE_LOGISTIC_ENGINE_SCOPE_WARNING]),
     columns: ["Field", "Value"],
     rows: [
       ["Outcome", projection.outcome],
@@ -6260,10 +6241,8 @@ function addLogisticResultTables(
         : "Deterministic Newton IRLS; one worker"],
       ["Coefficient inference", "Maximum-likelihood SE; Wald z; two-sided 95% confidence intervals"],
       ["Classification threshold", "0.5"],
-      ["Classification interpretation", classificationWarning],
       ["Variable data", "Unstandardized observed numeric values"],
       ["Missing data", "Listwise deletion"],
-      ["Validated scope", NATIVE_LOGISTIC_SCOPE_NOTE],
       ["Method version", projection.methodVersion],
     ],
   });
@@ -7073,6 +7052,17 @@ function addTable(tables: ResultTable[], draft: TableDraft) {
   const rows = draft.rows.filter((row) => row.length === draft.columns.length && row.some(hasText));
   if (!rows.length) return;
   tables.push({ ...draft, status: draft.status ?? "validated", rows });
+}
+
+function visibleResultWarning(
+  warnings: readonly string[],
+  methodGuidance: readonly string[],
+): string | null {
+  const guidance = new Set(methodGuidance);
+  const visible = warnings
+    .map((warning) => warning.trim())
+    .filter((warning) => warning.length > 0 && !guidance.has(warning));
+  return visible.join(" ") || null;
 }
 
 function finiteRecordRows(record: Record<string, number>, constructLabel: ConstructDisplayLabel): string[][] {

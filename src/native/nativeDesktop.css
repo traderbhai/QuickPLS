@@ -323,7 +323,6 @@
 .nd-binding-list button:focus-visible { position: relative; z-index: 1; outline: 2px solid var(--nd-color-focus); outline-offset: -2px; }
 .nd-inspector-panel { min-height: 0; flex: 1; overflow: auto; scrollbar-gutter: stable; }
 .nd-inspector-object-actions { flex: 0 0 auto; margin: 0; padding: 7px 9px; border-top: 1px solid var(--nd-color-border); background: var(--nd-gray-50); }
-.nd-inspector-mode-status { flex: 0 0 auto; margin: 0; padding: 5px 8px; border-top: 1px solid var(--nd-color-border); color: var(--nd-color-text-muted); background: var(--nd-color-surface); font-size: 10px; }
 .nd-binding-list { display: grid; gap: 3px; margin-top: 8px; }
 .nd-binding-list > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 5px; min-height: 28px; padding: 3px 4px 3px 7px; border: 1px solid var(--nd-color-border); background: var(--nd-color-surface); }
 .nd-binding-list span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -818,9 +817,6 @@ ul.nd-sem-editor-errors { padding-left: 30px; }
 .nd-group-warnings svg { flex: 0 0 auto; margin-top: 1px; color: var(--nd-amber-700); }
 .nd-group-setup-dialog .nd-form-error strong { display: block; margin-bottom: 3px; }
 .nd-group-setup-dialog .nd-form-error ul { margin: 0; padding-left: 18px; }
-.nd-group-scope { display: flex; align-items: flex-start; gap: 7px; margin: 0; padding: 8px; border-left: 3px solid var(--nd-blue-600); background: var(--nd-blue-50); color: var(--nd-color-text-muted); line-height: 1.35; }
-.nd-group-scope svg { flex: 0 0 auto; margin-top: 1px; color: var(--nd-blue-700); }
-.nd-group-scope strong { color: var(--nd-color-text); }
 
 .nd-dialog-calculation { width: min(850px, calc(100vw - 48px)); }
 .nd-calculation-dialog { display: grid; grid-template-columns: var(--nd-method-browser-width) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; min-height: 470px; overflow: hidden; }
@@ -833,7 +829,7 @@ ul.nd-sem-editor-errors { padding-left: 30px; }
 .nd-method-count { min-height: 20px; padding: 4px 1px 2px; color: var(--nd-color-text-muted); font-size: 10px; }
 .nd-method-list { min-height: 0; flex: 1; overflow: auto; scrollbar-gutter: stable; }
 .nd-method-category { position: sticky; z-index: 1; top: 0; padding: 6px 5px 3px; color: var(--nd-color-text-muted); background: var(--nd-gray-50); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .02em; }
-.nd-dialog-sidebar button { display: flex; align-items: flex-start; width: 100%; min-height: 43px; gap: 8px; margin-bottom: 2px; padding: 6px; border-color: transparent; text-align: left; background: transparent; }
+.nd-dialog-sidebar button { display: flex; align-items: center; width: 100%; min-height: 34px; gap: 8px; margin-bottom: 2px; padding: 6px; border-color: transparent; text-align: left; background: transparent; }
 .nd-dialog-sidebar button > span { display: grid; }
 .nd-dialog-sidebar button strong { font-weight: 600; line-height: 1.3; }
 .nd-dialog-sidebar button small { margin-top: 1px; color: var(--nd-color-text-muted); font-size: 10px; line-height: 1.25; }

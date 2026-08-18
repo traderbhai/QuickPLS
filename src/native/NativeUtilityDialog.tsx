@@ -61,8 +61,8 @@ function TrustDialog({
     : methodDetailsForSettingsV2(settings, experimentalLabsEnabled);
   const datasetFingerprint = run?.provenance?.dataset_fingerprint ?? dataset.fingerprint;
 
-  return <div className="nd-utility-dialog" data-method-details-context={run ? "completed-run" : "workspace-settings"}>
-    <p>Review what the selected method answers, its requirements, settings, outputs, assumptions, interpretation, and references.</p>
+  return <div className="nd-utility-dialog" data-method-details-context={run ? "completed-run" : "workspace-settings"} data-method-guidance-home="true">
+    <p>Purpose, requirements, settings, outputs, assumptions, limitations, interpretation, and references for the selected method.</p>
     {resolution.issues.length > 0 ? <div className="nd-inline-error" role="alert">
       <strong>Method information is unavailable.</strong>
       <ul>{resolution.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul>
@@ -90,14 +90,14 @@ function MethodDetailsCard({ item }: { item: CapabilityMethodDetailsV2 }) {
       <div><span>{item.family}</span><h3>{item.option_name}</h3></div>
       <span className={`nd-method-availability is-${item.availability.visibility}`}>{status}</span>
     </header>
-    <p className="nd-method-availability-message">{item.availability_message}</p>
+    {item.availability.visibility === "hidden" ? <p className="nd-method-availability-message">{item.availability_message}</p> : null}
     <div className="nd-method-details-grid">
       <section><h4>What this method answers</h4><p>{details.what_it_answers}</p></section>
       <section><h4>When to use it</h4><p>{details.when_to_use}</p></section>
       <section><h4>Required model and data</h4><p>{details.required_model_and_data}</p></section>
       <section><h4>Main settings and defaults</h4><p>{details.settings_and_defaults}</p></section>
       <section><h4>Outputs</h4><p>{details.outputs}</p></section>
-      <section><h4>Assumptions and cautions</h4><p>{details.assumptions_and_cautions}</p></section>
+      <section><h4>Assumptions and limitations</h4><p>{details.assumptions_and_cautions}</p></section>
       <section><h4>Interpretation guidance</h4><p>{details.interpretation_guidance}</p></section>
       <section><h4>Advanced technical details</h4><p>{details.advanced_technical_details}</p></section>
       <section className="nd-method-references"><h4>Method references</h4><ol>{details.method_references.map((reference) => <li key={reference}><a href={reference} target="_blank" rel="noreferrer">{reference}</a></li>)}</ol></section>

@@ -1,4 +1,4 @@
-import { AlertTriangle, Info, LoaderCircle, UsersRound } from "lucide-react";
+import { AlertTriangle, Info, LoaderCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { profileNativeDatasetGroups } from "../services/projectService";
 import type { AnalysisUiSettings, Dataset, DatasetGroupProfile } from "../types";
@@ -188,7 +188,6 @@ export default function NativeGroupSetupDialog({
 
   return <form className="nd-group-setup-dialog" onSubmit={(event) => { event.preventDefault(); submit(); }}>
     <div className="nd-group-setup-content">
-      <p className="nd-dialog-intro">Choose two observed values from the complete dataset. The grouping variable remains separate from model indicators.</p>
       {!projectWritable ? <p className="nd-group-notice" role="status"><Info size={14} aria-hidden="true" />This project is read-only. Save a writable copy before changing groups.</p> : null}
       {!eligibleColumns.length ? <p className="nd-form-error" role="alert">No unassigned variable is available. Remove a candidate variable from all constructs first.</p> : null}
       <label className="nd-group-column" htmlFor={`${fieldPrefix}-column`}>Grouping variable
@@ -247,7 +246,6 @@ export default function NativeGroupSetupDialog({
         {assessment.blockers.length ? <div className="nd-form-error" role="alert"><strong>Groups cannot be applied</strong><ul>{assessment.blockers.map((blocker) => <li key={blocker}>{blocker}</li>)}</ul></div> : null}
       </> : null}
 
-      <p className="nd-group-scope"><UsersRound size={14} aria-hidden="true" /><span><strong>Two-group scope</strong> This screen selects Group A and Group B; results report Group A − Group B. Configure the combined MICOM and structural-path permutation MGA workflow in Calculate, including Step 1 confirmation and the shared permutation plan.</span></p>
     </div>
     <footer>
       {configuredColumn ? <button type="button" className="danger" disabled={!projectWritable} onClick={clear}>Clear groups</button> : null}
